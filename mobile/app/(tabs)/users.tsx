@@ -1,10 +1,10 @@
-import { View, Text } from 'react-native';
 import { StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 
-export default function Home() {
+export default function UsersManagement() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
+      <Text style={styles.title}>Users Management</Text>
     </View>
   );
 }
