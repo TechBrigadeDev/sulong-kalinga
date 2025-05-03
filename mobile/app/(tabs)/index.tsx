@@ -4,7 +4,7 @@ import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 import { useLogout } from '../../features/auth/auth.hook';
 
-export default function TabOneScreen() {
+export default function HomeScreen() {
   const {
     logout
   } = useLogout();
