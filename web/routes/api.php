@@ -19,7 +19,7 @@ Route::get('/public-test', function () {
 Route::post('/login', [AuthApiController::class, 'login']);
 
 // Protected Routes
-Route::middleware('auth:unified_api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     // Auth Routes
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);

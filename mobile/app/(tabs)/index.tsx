@@ -1,13 +1,17 @@
 import { Button, StyleSheet } from 'react-native';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
 import { useLogout } from '../../features/auth/auth.hook';
+import { Text, View } from '../../components/Themed';
+import EditScreenInfo from '../../components/EditScreenInfo';
 
 export default function HomeScreen() {
   const {
     logout
   } = useLogout();
+
+  const onPress = async () => {
+    await logout();
+  }
 
   return (
     <View style={styles.container}>
@@ -16,7 +20,7 @@ export default function HomeScreen() {
       <EditScreenInfo path="app/(tabs)/index.tsx" />
       <Button 
         title="Logout"
-        onPress={logout}
+        onPress={onPress}
       />
     </View>
   );
