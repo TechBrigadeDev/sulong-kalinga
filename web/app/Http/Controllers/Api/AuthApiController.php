@@ -35,6 +35,21 @@ class AuthApiController extends Controller
         
         $token = $user->createToken('mobile-app')->plainTextToken;
         
+        if ($user->role_id == 4) {
+            $beneficiary = \App\Models\Beneficiary::where('portal_account_id', $user->portal_account_id)->first();
+            $familyMembers = \App\Models\FamilyMember::where('portal_account_id', $user->portal_account_id)->get();
+
+            return response()->json([
+                'success' => true,
+                'select_user_required' => true,
+                'users' => [
+                    'beneficiary' => $beneficiary,
+                    'family_members' => $familyMembers,
+                ],
+                'token' => $token,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'user' => [
@@ -75,11 +90,35 @@ class AuthApiController extends Controller
             1 => 'admin',
             2 => 'care_manager',
             3 => 'care_worker',
-            4 => 'family',
-            5 => 'beneficiary',
+            4 => 'portal',
         ];
         $role = $roleNames[$user->role_id] ?? 'unknown';
 
+        // If portal user, return selected beneficiary or family member
+        if ($user->role_id == 4) {
+            $type = session('portal_user_type');
+            $id = session('portal_user_id');
+            if ($type === 'beneficiary') {
+                $selected = \App\Models\Beneficiary::find($id);
+            } elseif ($type === 'family_member') {
+                $selected = \App\Models\FamilyMember::find($id);
+            } else {
+                $selected = null;
+            }
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'role' => $role,
+                    'selected_type' => $type,
+                    'selected_user' => $selected,
+                    'email' => $user->email,
+                    'status' => $user->status ?? null,
+                ]
+            ]);
+        }
+
+        // For other users, return unified user data
         return response()->json([
             'success' => true,
             'user' => [

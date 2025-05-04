@@ -1,0 +1,29 @@
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 56px;
+    background: rgba( 255, 255, 255, 0.2 );
+    box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+    backdrop-filter: blur( 11.5px );
+    -webkit-backdrop-filter: blur( 11.5px );
+    border-radius: 10px;
+    border: 1px solid rgba( 255, 255, 255, 0.18 );
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    border-radius: 10px;
+    padding-left: 15px;
+    margin: auto 5px auto 5px;
+
+}
+.navbar .nav-link.active {
+    background-color: #5a595d;
+    color: white;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.dropdown-menu {
+    overflow-wrap: break-word;
+}

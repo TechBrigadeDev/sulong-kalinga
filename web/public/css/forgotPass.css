@@ -1,0 +1,82 @@
+body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(261deg,#2d7bfa,#88f1fb,#3ae07d,#3bd09c);
+            background-size: 240% 240%;
+            animation: gradient-animation 28s ease infinite;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        @keyframes gradient-animation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+
+h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 22px;
+    color: #333;
+}
+
+.form-label {
+    font-size: 16px;
+    color: #333;
+    text-align: left;
+    display: block;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#forgotSubmit {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #0056b3;
+
+}
+
+#forgot-password {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 56px);
+}
+
+.row {
+    width: 100%;
+    padding: 20px;
+}
+
+.modal-header {
+    background-color: rgb(92, 184, 92);
+}
+.backtoLogin{
+    padding: 10px;
+}
+
+.backtoLogin a{
+    text-decoration: underline;
+    color: #333;
+    font-size: 14px;
+}

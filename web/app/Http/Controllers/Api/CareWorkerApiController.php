@@ -18,6 +18,11 @@ class CareWorkerApiController extends Controller
      */
     public function index(Request $request)
     {
+        // Only allow Admin and CM to view care workers
+        if (!in_array($request->user()->role_id, [1, 2])) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+        
         $query = User::where('role_id', 3)
             ->with('municipality');
             

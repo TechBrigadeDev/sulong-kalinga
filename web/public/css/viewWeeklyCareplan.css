@@ -1,0 +1,192 @@
+body, html{
+    font-family: Roboto;
+}
+
+input, textarea, button {
+    font-family: Roboto, sans-serif;
+}
+
+.home-section .container-fluid {
+    height: calc(100% - 50px);
+}
+
+.home-section{
+    position: relative;
+    background: #E4E9F7;
+    height: calc(100vh - 56px);
+    padding: 10px;
+    left: 342px;
+    width: calc(100% - 345px);
+    transition: all 0.5s ease;
+  }
+
+.home-section .home-content .bx-menu,
+.home-section .home-content .text{
+  color: #11101d;
+  font-size: 35px;
+}
+.home-section .home-content .bx-menu{
+  cursor: pointer;
+}
+.home-section .home-content .text{
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.home-section .col-3 {
+    height: 100%; 
+    border-radius: 10px;
+}
+
+#weeklyCareplanDetails {
+    height: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.home-section {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    overflow: hidden; 
+}
+
+.home-section .container-fluid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+}
+
+#weeklyCareplanDetails .d-flex {
+    flex-direction: row; 
+}
+
+#weeklyCareplanDetails {
+    flex: 1;
+    overflow-y: auto;
+    background-color: white;
+    padding: 10px;
+}
+
+.care-needs-column {
+    width: 200px;
+    max-width: 200px;
+}
+
+.row table{
+    border: 1px solid black;
+}
+
+.table h6 {
+    font-size: 14px;
+}
+
+ /* Base styles for the table */
+ .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.care-needs-column {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    word-wrap: break-word;
+}
+
+.minutes-header::after {
+    content: "Minutes";
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table, .personal-details {
+        font-size: clamp(12px, 3vw, 14px);
+    }
+    
+    .care-needs-column {
+        width: 120px;
+        min-width: 120px;
+        max-width: 120px;
+    }
+    
+    /* Make Minutes column smaller */
+    .minute-column {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+    }
+    
+    /* Word wrapping for Interventions column */
+    .interventions-column {
+        word-wrap: break-word;
+        white-space: normal;
+        min-width: 100px;
+    }
+}
+
+
+
+/* Breakpoint: 1024px to 769px */
+@media (max-width: 1024px) and (min-width: 769px) {
+    #profileDetails {
+        padding: 8px;
+        margin: 8px;
+    }
+    table h5 {
+        font-size: 16px;
+    }
+    
+    table strong, th{
+        font-size: 12px;
+    }
+    table p {
+        font-size: 12px;
+    }
+}
+
+.original-back-btn {
+    display: inline-block;
+}
+
+
+.original-back-btn {
+    display: inline-block;
+}
+
+.hidden-back-btn {
+    display: none;
+}
+
+/* Breakpoint: 555px and below */
+@media (max-width: 555px) {
+    .original-back-btn {
+        display: none; 
+    }
+
+    .hidden-back-btn {
+        display: inline-block; 
+        margin-bottom: 8px; 
+        width: 100px;
+        text-align: center; 
+        transform: translateY(-4px);
+    }
+
+    .d-flex {
+        flex-wrap: wrap; 
+        justify-content: center; 
+    }
+
+    .d-flex .btn-primary, .d-flex .btn-danger {
+        width: 100px; 
+        margin-bottom: 8px; 
+    }
+}
+
+@media (max-width: 625px) {
+    .minutes-header::after {
+        content: "Min";
+    }
+}

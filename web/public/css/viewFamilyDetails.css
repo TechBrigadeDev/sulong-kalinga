@@ -1,0 +1,40 @@
+@media (max-width: 700px) {
+    #profilePic {
+        text-align: center; /* Center-align all content inside #profilePic */
+    }
+
+    #profilePic .row {
+        flex-direction: column; /* Stack the profile picture and details vertically */
+        align-items: center; /* Center-align the content */
+    }
+
+    #profilePic .col-lg-4 {
+        display: flex;
+        justify-content: center; /* Center the profile picture horizontally */
+        margin-bottom: 15px; /* Add spacing below the profile picture */
+    }
+
+    #profilePic img {
+        width: 120px; /* Adjust the image size for smaller screens */
+        height: 120px;
+        border: 1px solid #ced4da;
+        margin: 0 auto; /* Ensure the image is centered */
+    }
+
+    #profilePic .col-lg-8 {
+        text-align: center; /* Center-align the name and dropdown */
+    }
+
+    #profilePic h4 {
+        font-size: 18px; /* Adjust font size for smaller screens */
+        margin-bottom: 10px; /* Add spacing below the name */
+        text-align: center; /* Ensure the text is centered */
+        width: 100%; /* Ensure it spans the full width for proper centering */
+    }
+
+    #profilePic .form-group {
+        width: 100%; /* Make the dropdown take full width */
+        max-width: 200px; /* Limit the dropdown width */
+        margin: 0 auto; /* Center the dropdown */
+    }
+}

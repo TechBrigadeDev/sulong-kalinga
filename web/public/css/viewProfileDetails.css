@@ -1,0 +1,224 @@
+body, html{
+    font-family: Roboto;
+}
+
+input, textarea, button {
+    font-family: Roboto, sans-serif;
+}
+
+.home-section .container-fluid {
+    height: calc(100% - 50px);
+}
+
+.home-section{
+    position: relative;
+    background: #E4E9F7;
+    height: calc(100vh - 56px);
+    padding: 10px;
+    left: 342px;
+    width: calc(100% - 345px);
+    transition: all 0.5s ease;
+  }
+
+.home-section .home-content .bx-menu,
+.home-section .home-content .text{
+  color: #11101d;
+  font-size: 35px;
+}
+.home-section .home-content .bx-menu{
+  cursor: pointer;
+}
+.home-section .home-content .text{
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.home-section .col-3 {
+    height: 100%; 
+    border-radius: 10px;
+}
+
+#profileDetails {
+    height: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.home-section {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    overflow: hidden; 
+}
+
+.home-section .container-fluid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+}
+
+#profilePic .d-flex {
+    flex-direction: row; 
+}
+
+#profileDetails {
+    flex: 1;
+    overflow-y: auto;
+    background-color: white;
+    padding: 10px;
+}
+
+.row table{
+    border: 1px solid black;
+}
+
+table h5 {
+    font-size: 18px;
+}
+
+table strong, th{
+    font-size: 14px;
+}
+table p {
+    font-size: 14px;
+}
+
+.medical-history td:nth-child(1),
+.emergency-details td:nth-child(1), .mobility td:nth-child(1), 
+.cognitive-function td:nth-child(1), .emotional-wellbeing td:nth-child(1){
+        width: 40%;
+} 
+
+.personal-details td:nth-child(2), .medical-history td:nth-child(2),
+.emergency-details td:nth-child(2), .mobility td:nth-child(2), 
+.cognitive-function td:nth-child(2), .emotional-wellbeing td:nth-child(2){
+        width: 60%;
+} 
+
+
+/* Breakpoint: 1024px to 769px */
+@media (max-width: 1024px) and (min-width: 769px) {
+    #profileDetails {
+        padding: 8px;
+        margin: 8px;
+    }
+    table h5 {
+        font-size: 16px;
+    }
+    
+    table strong, th{
+        font-size: 12px;
+    }
+    table p {
+        font-size: 12px;
+    }
+}
+
+/* Breakpoint: 768px to 375px */
+@media (max-width: 768px) and (min-width: 375px) {
+    #profileDetails {
+        padding: 4px;
+        margin: 4px;
+    }
+}
+
+
+@media (max-width: 542px) {
+    .medication-management th:nth-child(4),
+    .medication-management td:nth-child(4) {
+        display: none;
+    }
+}
+
+@media (max-width: 542px) {
+    .care-needs th:nth-child(2),
+    .care-needs td:nth-child(2) {
+        display: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    #profilePic h4 {
+        font-size: 18px; 
+    }
+
+    #profilePic .text-muted {
+        font-size: 14px;
+    }
+
+    #profilePic .form-group select {
+        font-size: 14px;
+    }
+    #profilePic .d-flex {
+        flex-direction: column; 
+        align-items: flex-start; 
+    }
+
+}
+
+.d-flex {
+    flex-wrap: nowrap; 
+}
+
+.d-flex .btn {
+    width: auto;
+    margin-bottom: 0; 
+}
+
+@media (max-width: 731px) {
+    .d-flex {
+        flex-wrap: wrap; 
+    }
+
+    .d-flex > div:last-child {
+        width: 100%;
+        text-align: center;
+        margin-top: 8px; 
+    }
+
+    .d-flex .btn-primary, .d-flex .btn-danger {
+        width: 100px; 
+        margin-bottom: 8px;
+    }
+}
+
+
+.original-back-btn {
+    display: inline-block;
+}
+
+
+.original-back-btn {
+    display: inline-block;
+}
+
+.hidden-back-btn {
+    display: none;
+}
+
+/* Breakpoint: 555px and below */
+@media (max-width: 555px) {
+    .original-back-btn {
+        display: none; 
+    }
+
+    .hidden-back-btn {
+        display: inline-block; 
+        margin-bottom: 8px; 
+        width: 100px;
+        text-align: center; 
+        transform: translateY(-4px);
+    }
+
+    .d-flex {
+        flex-wrap: wrap; 
+        justify-content: center; 
+    }
+
+    .d-flex .btn-primary, .d-flex .btn-danger {
+        width: 100px; 
+        margin-bottom: 8px; 
+    }
+}

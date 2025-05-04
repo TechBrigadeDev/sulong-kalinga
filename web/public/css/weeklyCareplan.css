@@ -1,0 +1,270 @@
+body, html{
+    font-family: Roboto;
+}
+
+input, textarea, button {
+    font-family: Roboto, sans-serif;
+}
+
+.home-section .container-fluid {
+    height: calc(100% - 50px);
+}
+
+.home-section{
+    position: relative;
+    background: #E4E9F7;
+    height: calc(100vh - 56px);
+    padding: 10px;
+    left: 342px;
+    width: calc(100% - 345px);
+    transition: all 0.5s ease;
+  }
+
+.home-section .home-content .bx-menu,
+.home-section .home-content .text{
+  color: #11101d;
+  font-size: 35px;
+}
+.home-section .home-content .bx-menu{
+  cursor: pointer;
+}
+.home-section .home-content .text{
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.home-section .col-3 {
+    height: 100%; 
+    border-radius: 10px;
+}
+
+#weeklyCareplanForm {
+    height: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.home-section {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    overflow: hidden; 
+}
+
+.home-section .container-fluid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+}
+
+#weeklyCareplanForm {
+    flex: 1;
+    overflow-y: auto;
+    background-color: white;
+    padding: 10px;
+}
+
+ /* Custom checkbox styling */
+ .form-check-input {
+    width: 20px; /* Increase checkbox size */
+    height: 20px; /* Increase checkbox size */
+    background-color: white; /* Default background */
+    border: 2px solid black; /* Black border */
+    cursor: pointer;
+}
+
+/* Change checkbox color when checked */
+.form-check-input:checked {
+    background-color: black; /* Black background when checked */
+    border-color: black; /* Black border when checked */
+}
+
+/* Custom checkmark color (white when checked) */
+.form-check-input:checked::before {
+    color: white; /* White checkmark */
+}
+
+
+/* Responsive Layout */
+@media (min-width: 768px){
+    .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+label {
+    font-size: 16px;
+    color: #000;
+}
+
+h4 {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+h5{
+    font-size: 18px;
+    text-align: center;
+}
+
+input::placeholder {
+    color: rgba(0, 0, 0, 0.3); 
+    font-size: 16px;
+}
+
+input, textarea, select {
+    font-size: 16px; 
+    height: auto;
+}
+
+.form-control, .form-select {
+    font-size: 16px;
+    height: auto;
+}
+
+.form-page {
+    display: none; /* Hide all pages by default */
+}
+.form-page.active {
+    display: block; /* Show the active page */
+}
+/* Ensure breadcrumbs stay in a single line */
+.breadcrumb-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Prevent wrapping */
+    padding: 10px 0; /* Add some padding */
+    margin-bottom: 15px;
+    background-color: #f8f9fa; /* Light background */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    scrollbar-width: none;
+}
+.breadcrumb-container::-webkit-scrollbar {
+    display: none;
+}
+
+.breadcrumb {
+    display: inline-block; /* Keep breadcrumbs in a single line */
+    padding: 0.5rem 1rem; /* Add padding */
+    margin: 0; /* Remove default margin */
+    font-size: clamp(0.5rem, 2.5vw, 1rem);
+}
+
+.breadcrumb-item {
+    display: inline-block; /* Keep items in a single line */
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">"; /* Use ">" as the separator */
+    padding: 0 0.5rem; /* Add spacing around the separator */
+}
+
+/* Optional: Style for active breadcrumb item */
+.breadcrumb-item.active {
+    font-weight: bold;
+    color: #000; /* Darker color for active item */
+    scale: 1.1;
+    text-decoration: underline;
+}
+.breadcrumb a{
+    color: black;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .input-group {
+        width: 100%;
+    }
+
+    .form-control {
+        width: 100%;
+    }
+
+    .table td, .table th {
+        white-space: normal;
+    }
+}
+
+@media (max-width: 375px) {
+    .sidebar {
+        width: 100%;
+        position: fixed;
+        z-index: 1050; 
+        top: 0;
+        left: 0;
+        height: 100vh; 
+        background-color: #343a40;
+        overflow-y: auto;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar.hidden {
+        transform: translateX(-100%); 
+    }
+
+    .sidebar.visible {
+        transform: translateX(0); 
+    }
+
+    .home-section {
+        margin-left: 0; 
+    }
+}
+
+@media (max-width: 576px) {
+    .table td, .table th {
+        padding: 0.5rem;
+        max-width: 100px;
+    }
+}
+
+@media (max-width: 1024px) {
+    #weeklyCareplanForm {
+        padding: 15px;
+    }
+
+    .form-label {
+        font-size: 14px;
+    }
+
+    .form-control, .form-select {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    h5 {
+        font-size: 16px;
+    }
+
+    .btn-lg {
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+}
+
+.is-invalid {
+    border: 2px solid red;
+    background-color: #ffe6e6;
+}
+
+/* Ensure the canvas is responsive */
+.signature-pad-body canvas {
+    width: 100%; /* Make the canvas take up the full width of its container */
+    height: auto; /* Maintain aspect ratio */
+    border: 1px solid #ced4da;
+    display: block; /* Prevent inline-block spacing issues */
+}
+
+/* Adjust the height for smaller screens */
+@media (max-width: 768px) {
+    .signature-pad-body canvas {
+        height: 150px; /* Reduce height for smaller screens */
+    }
+}

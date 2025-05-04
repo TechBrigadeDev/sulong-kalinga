@@ -1,0 +1,238 @@
+.home-section .container-fluid {
+    height: calc(100% - 50px);
+}
+
+.text-left {
+    text-align: left;
+    height: auto;
+    padding: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.home-section{
+    position: relative;
+    background: #E4E9F7;
+    height: calc(100vh - 56px);
+    padding: 10px;
+    left: 342px;
+    width: calc(100% - 345px);
+    transition: all 0.5s ease;
+  }
+
+.home-section .home-content .bx-menu,
+.home-section .home-content .text{
+  color: #11101d;
+  font-size: 35px;
+}
+.home-section .home-content .bx-menu{
+  cursor: pointer;
+}
+.home-section .home-content .text{
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.home-section .col-3 {
+    height: 100%; 
+    border-radius: 10px;
+}
+
+#municipality {
+    height: 100%;
+    padding: 10px;
+}
+
+.action-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.action-icons i {
+  font-size: 22px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.action-icons i:hover {
+  transform: scale(1.2); 
+}
+
+.table tbody tr {
+  height: auto; 
+}
+.home-section {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    overflow: hidden; 
+}
+
+.home-section .container-fluid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Ensure the table is scrollable if content overflows */
+#municipality {
+    flex: 1;
+    overflow-y: auto;
+    background-color: white;
+    padding: 10px;
+}
+
+
+.table-responsive {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 0;
+    font-size: 16px;
+}
+
+.table td, .table th {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden; 
+    max-width: 200px;
+}
+
+/* Responsive Layout */
+@media (min-width: 768px){
+    .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .input-group {
+        width: 100%;
+    }
+
+    .form-control {
+        width: 100%; 
+    }
+
+    .table td, .table th {
+        white-space: normal; 
+    }
+}
+
+/* Sidebar styles for smaller screens */
+@media (max-width: 375px) {
+    .sidebar {
+        width: 100%; 
+        position: fixed; 
+        z-index: 1050; 
+        top: 0;
+        left: 0;
+        height: 100vh; 
+        background-color: #343a40; 
+        overflow-y: auto; 
+        transition: transform 0.3s ease-in-out; 
+    }
+
+    .sidebar.hidden {
+        transform: translateX(-100%); 
+    }
+
+    .sidebar.visible {
+        transform: translateX(0);
+    }
+
+    .home-section {
+        margin-left: 0; 
+    }
+}
+
+@media (max-width: 576px) {
+    .table td, .table th {
+        padding: 0.5rem; 
+        max-width: 100px;
+    }
+}
+
+@media (max-width: 1024px) {
+  .d-inline-block[style*="transform: translateY(-3px);"] {
+    transform: none !important;
+}
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .col-lg-2:nth-child(1) { /* Add Report Button */
+        flex: 0 0 50%; 
+        max-width: 50%;
+    }
+
+    .col-lg-2:nth-child(2), /* Export Button */
+    .col-lg-2:nth-child(3) { /* Add Report Button */
+        flex: 0 0 50%; /* Move to the second row */
+        max-width: 50%;
+    }
+}
+
+/* Breakpoint: 576px to 768px (3 rows: Search Bar, Filter, Export + Add Button) */
+@media (max-width: 991px) and (min-width: 426px) {
+    .row.mb-3 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .col-12:nth-child(1) { /* Filter Dropdown */
+        flex: 0 0 100%; /* Each occupies full width */
+        max-width: 100%;
+    }
+
+    .col-6:nth-child(2), /* Export Button */
+    .col-6:nth-child(3) { /* Add Report Button */
+        flex: 0 0 50%; /* Each occupies half the row */
+        max-width: 50%;
+    }
+}
+
+/* Breakpoint: 425px to 576px (4 rows: Search Bar, Filter, Export, Add Button) */
+@media (max-width: 425px) {
+    .row.mb-3 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .col-12:nth-child(1), /* Search Bar */
+    .col-12:nth-child(2), /* Filter Dropdown */
+    .col-6:nth-child(3) { /* Add Report Button */
+        flex: 0 0 100%; /* Each occupies full width */
+        max-width: 100%;
+    }
+}
+
+.action-icons {
+    position: relative; 
+}
+
+.dropdown-menu {
+    z-index: 1050; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    background: #fff; 
+    border: 1px solid #ddd;
+    padding: 0.5rem; 
+    list-style: none; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: none; 
+    min-width: 150px; 
+}

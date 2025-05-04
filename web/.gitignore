@@ -23,6 +23,3 @@ yarn-error.log
 /.zed
 
 storage/logs/laravel.log
-
-public/css/*
-public/js/*

@@ -1,0 +1,331 @@
+/* Message Dropdown in Navigation - Separated from messaging.css */
+
+.nav-notification-link {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.conversation-item {
+    position: relative;
+}
+
+.unread-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    box-shadow: 0 0 0 2px white;
+}
+
+.message-preview .d-flex {
+    position: relative;
+}
+
+/* Message Dropdown - MATCHING NOTIFICATION STYLES */
+.message-dropdown {
+    width: clamp(350px, 30vw, 450px);
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+@media (max-width: 992px) and (min-width: 768px) {
+    .message-dropdown {
+        width: 80vw !important;
+        border-radius: 0.25rem !important;
+    }
+}
+
+/* Small screens (mobile) */
+@media (max-width: 768px) {
+    .message-dropdown {
+        width: calc(100vw - 40px) !important;
+        left: 20px !important;
+        right: 20px !important;
+        top: 60px !important;
+        margin: 0 !important;
+    }
+}
+
+.message-preview {
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    text-decoration: none !important;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.message-preview.unread {
+    border-left-color: var(--bs-primary);
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.message-preview:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    text-decoration: none !important;
+}
+
+.message-preview.highlight {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-left: 4px solid #0d6efd;
+    transition: background-color 0.3s ease;
+}
+
+.message-dropdown .dropdown-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1 !important;
+    background-color: white !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.message-dropdown .dropdown-header span {
+    font-size: 16px;
+    font-weight: 600;
+    color: #212529;
+}
+
+.mark-all-read {
+    cursor: pointer;
+    color: #0d6efd;
+    font-size: 0.85rem;
+}
+
+/* Message nav link with badge */
+.nav-message-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.nav-message-link .bi {
+    font-size: 1.2rem;
+}
+
+.nav-message-link .badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.55em;
+    min-width: 1.75em;
+    height: 1.75em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: static;
+    transform: none;
+    margin-left: 0.25rem;
+}
+
+/* Medium screens adjustment */
+@media (max-width: 992px) {
+    .nav-message-link {
+        padding: 0.5rem 0.75rem;
+    }
+    .nav-message-link .badge {
+        font-size: 0.85rem;
+        min-width: 1.8em;
+        height: 1.8em;
+    }
+}
+
+/* Small screens adjustment */
+@media (max-width: 768px) {
+    .nav-message-link {
+        padding: 0.5rem;
+    }
+    .nav-message-link .badge {
+        font-size: 0.9rem;
+        min-width: 2em;
+        height: 2em;
+    }
+}
+
+.message-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+    background-color: #0d6efd;  /* Solid blue background */
+    color: white;               /* White text */
+    position: relative;
+}
+
+.message-preview-content {
+    flex: 1;
+    min-width: 0; /* Prevent text overflow */
+}
+
+/* Fix the styling of message content in dropdown */
+.message-preview .message-content {
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: #6c757d;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    max-height: 2.8em;
+    line-height: 1.4;
+    border-radius: 0;
+}
+
+.message-preview.unread .message-content {
+    color: #212529;
+    font-weight: normal;
+}
+
+/* Name/sender styling */
+.message-preview .sender-name {
+    font-weight: 500;
+    color: #212529;
+    font-size: 14px;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.message-preview.unread .sender-name {
+    font-weight: 600;
+}
+
+.dropdown-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: white;
+    border-top: 1px solid #dee2e6;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.dropdown-footer a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+/* Empty messages */
+.empty-messages {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+/* Profile image for message dropdown */
+.message-dropdown .profile-img-sm {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* Fix dropdown group chat avatar display */
+.message-dropdown .profile-img-sm.d-flex {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Unread message badge styling */
+.message-badge {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-right: 5px;
+    padding: 0 4px;
+}
+
+/* Small dot indicator for unread messages */
+.unread-indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
+/* Improved styling for unread message preview */
+.message-preview.unread {
+    border-left-color: var(--bs-primary);
+    background-color: rgba(13, 110, 253, 0.1); /* Slightly darker for better visibility */
+}
+
+.message-preview.unread .sender-name {
+    font-weight: 600;
+}
+
+.message-preview.unread .message-content {
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Special styling for unread message icons */
+.message-preview.unread .message-icon {
+    background-color: #0b5ed7;  /* Slightly darker blue for unread */
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);  /* Add subtle white outline */
+}
+
+/* Style for success confirmation */
+.read-confirmation {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f8fff8;
+    border-top: 1px solid #d1e7dd;
+    padding: 8px;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.attachment-indicator {
+    display: inline-flex;
+    align-items: center;
+    color: #0a58ca;
+    font-style: normal;
+}
+
+.attachment-indicator i {
+    margin-right: 5px;
+}

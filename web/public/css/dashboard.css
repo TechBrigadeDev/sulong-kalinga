@@ -1,0 +1,73 @@
+
+.home-section .container-fluid {
+    height: calc(100% - 50px);
+}
+
+.text-left {
+    text-align: left;
+    height: auto;
+    padding: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+h6 {
+    text-align: left;
+    height: auto;
+    padding: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#filterForm, #filterGroup {
+  padding-top: 10px;
+  padding-top: 10px;
+}
+
+.recentReportBox, 
+.beneficiaryStatsBox,
+.caregiverStatsBox,
+.eventsBox, .performanceBox {
+  border: 2px solid black;
+}
+
+.home-section{
+    position: relative;
+    background: #E4E9F7;
+    height: calc(100vh - 56px);
+    padding: 10px;
+    left: 342px;
+    width: calc(100% - 345px);
+    transition: all 0.5s ease;
+  }
+
+.home-section .row.boxbox {
+    height: 100%; 
+}
+
+#statistics {
+    height: 30%;
+    border-radius: 10px;
+}
+
+#recentReports {
+    height: 70%;
+    padding: 5px;
+    padding-top: 0;
+}
+
+#events {
+    height: 50%;
+    padding: 5px;
+    padding-left: 0;
+    border-radius: 10px;
+}
+
+#performance {
+  height: 50%;
+    padding: 5px;
+    padding-top: 0;
+    padding-left: 0;
+    border-radius: 10px;
+
+}
