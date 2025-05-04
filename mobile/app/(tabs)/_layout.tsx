@@ -26,10 +26,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarShowLabel: false,
         headerShown: false,
+        animation: 'shift'
       }}
     >
       <Tabs.Screen
-        name="users"
+        name="user-management"
         options={{
           title: 'Users',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,

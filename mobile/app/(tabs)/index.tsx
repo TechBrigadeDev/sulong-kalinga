@@ -1,8 +1,10 @@
-import { Button, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Image } from "expo-image";
 
 import { useLogout } from '../../features/auth/auth.hook';
 import { Text, View } from '../../components/Themed';
 import EditScreenInfo from '../../components/EditScreenInfo';
+import { Button } from 'tamagui';
 
 export default function HomeScreen() {
   const {
@@ -15,13 +17,13 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-      <Button 
-        title="Logout"
-        onPress={onPress}
-      />
+      <Image source={require("../../assets/images/icon.png")} style={styles.image}/>
+      <Button
+        onPressIn={onPress}
+      >
+        Logout
+      </Button>
+        
     </View>
   );
 }
@@ -40,5 +42,10 @@ const styles = StyleSheet.create({
     marginVertical: 30,
     height: 1,
     width: '80%',
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
   },
 });

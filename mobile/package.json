@@ -17,6 +17,8 @@
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/native": "^7.1.6",
+    "@tamagui/config": "^1.126.4",
+    "@tamagui/core": "^1.126.4",
     "@tanstack/react-query": "^5.75.1",
     "axios": "^1.9.0",
     "expo": "~53.0.6",
@@ -35,8 +37,10 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-web": "~0.20.0",
+    "tamagui": "^1.126.4",
     "zod": "^3.24.3",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.4",
+    "expo-image": "~2.1.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

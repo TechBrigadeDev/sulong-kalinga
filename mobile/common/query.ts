@@ -7,4 +7,9 @@ export const QK = {
         login: "auth/login",
         logout: "auth/logout",
     },
+    user: {
+        management: {
+            getBeneficiaries: "user/management/getBeneficiaries",
+        }
+    }
 }
