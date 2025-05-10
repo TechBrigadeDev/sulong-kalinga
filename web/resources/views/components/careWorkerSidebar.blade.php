@@ -1,5 +1,4 @@
 <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-<link rel="stylesheet" href="{{ asset('css/boxicons.min.css') }}">
 
 <div class="sidebar">
   <div class="logo-details" id="logoToggle">
@@ -48,6 +47,21 @@
         <li><a class="link_name" href="{{ route('care-worker.weeklycareplans.create') }}">Weekly Care Plan</a></li>
       </ul>
     </li>
+    <li class="{{ Request::routeIs('care-worker.careworker.appointments.*') || Request::routeIs('care-worker.internal.appointments.*') || Request::routeIs('care-worker.medication.schedule.*')? 'active' : '' }}">
+      <div class="icon-link">
+        <a>
+          <i class="bi bi-calendar-week"></i>
+          <span class="link_name">Schedules & Appointments</span>
+        </a>
+          <i class='bi bi-chevron-down arrow dropdown-arrow'></i>
+      </div>
+      <ul class="sub-menu m-auto">
+        <li><a class="link_name">Schedules & Appointments</a></li>
+        <li><a href="{{ route('care-worker.careworker.appointments.index') }}" class="{{ Request::routeIs('care-worker.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
+        <li><a href="#" class="">Internal Appointment</a></li>
+        <li><a href="#" class="">Medical Schedule</a></li>
+      </ul>
+    </li>
   </ul>
 </div>
 
@@ -69,4 +83,22 @@
     const parent = element.closest('li');
     parent.classList.toggle('showMenu');
   }
+  
+  // Add click event to all dropdown arrows
+  document.querySelectorAll('.dropdown-arrow').forEach(arrow => {
+    arrow.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const parent = this.closest('li');
+      parent.classList.toggle('showMenu');
+    });
+  });
+  
+  // Add click event to all link names in dropdown items
+  document.querySelectorAll('.icon-link .link_name').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const parent = this.closest('li');
+      parent.classList.toggle('showMenu');
+    });
+  });
 </script>

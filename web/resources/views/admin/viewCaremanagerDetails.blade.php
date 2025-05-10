@@ -21,24 +21,24 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <!-- Original Back Button -->
                 <a href="{{ route('admin.caremanagers.index') }}" class="btn btn-secondary original-back-btn">
-                    <i class="bx bx-arrow-back"></i> Back
+                    <i class="bi bi-arrow-bar-left"></i> Back
                 </a>
                 <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">VIEW CARE MANAGER PROFILE DETAILS</div>
                 <div>
                     <!-- Hidden Back Button -->
                     <a href="viewCareworkerProfile" class="btn btn-secondary hidden-back-btn">
-                        <i class="bx bx-arrow-back"></i> Back
+                        <i class="bi bi-arrow-bar-left"></i> Back
                     </a>
                     <!-- Edit Button with Routing - Only visible to administrators -->
                     @if(Auth::user()->role_id == 1)
                         <!-- Edit Button -->
                         <a href="{{ route('admin.caremanagers.edit', $caremanager->id) }}" class="btn btn-primary">
-                            <i class="bx bxs-edit"></i> Edit
+                            <i class="bi bi-pencil-square"></i> Edit
                         </a>
 
                         <!-- Delete Button -->
                         <button type="button" class="btn btn-danger" onclick="openDeleteCaremanagerModal('{{ $caremanager->id }}', '{{ $caremanager->first_name }} {{ $caremanager->last_name }}')">
-                            <i class="bx bxs-trash"></i> Delete
+                            <i class="bi bi-trash-fill"></i> Delete
                         </button>
                     @endif
                 </div>

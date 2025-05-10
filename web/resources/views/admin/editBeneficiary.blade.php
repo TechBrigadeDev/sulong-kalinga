@@ -18,7 +18,7 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <a href="{{ route('admin.beneficiaries.index') }}" class="btn btn-secondary">
-                    <i class="bx bx-arrow-back"></i> Back
+                    <i class="bi bi-arrow-bar-left"></i> Back
                 </a>
                 <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">EDIT BENEFICIARY</div>
             </div>
@@ -614,7 +614,7 @@
                                 title="Only PNG and JPEG images are allowed.">
                                 @if($beneficiary->photo)
                                     <div class="d-flex align-items-center mt-1">
-                                        <i class="bx bx-file text-primary"></i>
+                                        <i class="bi bi-file-earmark-text text-primary"></i>
                                         <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->photo) }}">
                                             Current file: {{ substr(basename($beneficiary->photo), 0, 30) }}{{ strlen(basename($beneficiary->photo)) > 30 ? '...' : '' }}
                                         </small>
@@ -643,7 +643,7 @@
                                     title="Only PDF, DOC, and DOCX files are allowed.">
                                     @if($beneficiary->care_service_agreement_doc)
                                         <div class="d-flex align-items-center mt-1">
-                                            <i class="bx bx-file text-primary"></i>
+                                            <i class="bi bi-file-earmark-text text-primary"></i>
                                             <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->care_service_agreement_doc) }}">
                                                 Current file: {{ substr(basename($beneficiary->care_service_agreement_doc), 0, 30) }}{{ strlen(basename($beneficiary->care_service_agreement_doc)) > 30 ? '...' : '' }}
                                             </small>
@@ -661,7 +661,7 @@
                                     title="Only PDF, DOC, and DOCX files are allowed.">
                                     @if($beneficiary->general_care_plan_doc)
                                         <div class="d-flex align-items-center mt-1">
-                                            <i class="bx bx-file text-primary"></i>
+                                            <i class="bi bi-file-earmark-text text-primary"></i>
                                             <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->general_care_plan_doc) }}">
                                                 Current file: {{ substr(basename($beneficiary->general_care_plan_doc), 0, 30) }}{{ strlen(basename($beneficiary->general_care_plan_doc)) > 30 ? '...' : '' }}
                                             </small>
@@ -700,7 +700,7 @@
                                         <input type="file" class="form-control" id="beneficiarySignatureUpload" name="beneficiary_signature_upload" accept="image/png, image/jpeg">
                                                 @if($beneficiary->beneficiary_signature)
                                                     <div class="d-flex align-items-center mt-1">
-                                                        <i class="bx bx-file text-primary"></i>
+                                                        <i class="bi bi-file-earmark-text text-primary"></i>
                                                         <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->beneficiary_signature) }}">
                                                             Current signature: {{ substr(basename($beneficiary->beneficiary_signature), 0, 50) }}{{ strlen(basename($beneficiary->beneficiary_signature)) > 50 ? '...' : '' }}
                                                         </small>
@@ -741,7 +741,7 @@
                                         <input type="file" class="form-control" id="careWorkerSignatureUpload" name="care_worker_signature_upload" accept="image/png, image/jpeg">
                                                 @if($beneficiary->care_worker_signature)
                                                     <div class="d-flex align-items-center mt-1">
-                                                        <i class="bx bx-file text-primary"></i>
+                                                        <i class="bi bi-file-earmark-text text-primary"></i>
                                                         <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->care_worker_signature) }}">
                                                             Current signature: {{ substr(basename($beneficiary->care_worker_signature), 0, 60) }}{{ strlen(basename($beneficiary->care_worker_signature)) > 60 ? '...' : '' }}
                                                         </small>
@@ -799,7 +799,7 @@
                         <div class="row mt-4">
                             <div class="col-12 d-flex justify-content-center align-items-center">
                                 <button type="submit" class="btn btn-success btn-lg d-flex align-items-center" id="saveBeneficiaryButton">
-                                    <i class='bx bx-save me-2' style="font-size: 24px;"></i>
+                                    <i class='bi bi-floppy me-2' style="font-size: 24px;"></i>
                                     Save Beneficiary
                                 </button>
                             </div>

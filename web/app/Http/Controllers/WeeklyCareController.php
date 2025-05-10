@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Beneficiary;
 use App\Models\WeeklyCarePlan;
 use App\Models\CareCategory;
@@ -118,9 +119,11 @@ class WeeklyCareController extends Controller
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
             'evaluation_recommendations' => 'required|string|min:20|max:5000',
+            'upload_picture' => 'required|image|mimes:jpeg,png,jpg|max:10240',
             'selected_interventions' => 'required|array',
             'duration_minutes' => 'required|array',
             'duration_minutes.*' => 'required|numeric|min:0.01|max:999.99',
+            'illness' => 'nullable|string|max:500',  // Add this line for illness validation
 
             // Custom interventions validations
             'custom_category.*' => 'sometimes|nullable|exists:care_categories,care_category_id',
@@ -170,6 +173,13 @@ class WeeklyCareController extends Controller
             'custom_duration.*.numeric' => 'Custom intervention duration must be a number',
             'custom_duration.*.min' => 'Custom intervention duration must be greater than 0',
             'custom_duration.*.max' => 'Custom intervention duration cannot exceed 999.99 minutes',
+
+            'upload_picture.required' => 'A photo is required for documentation purposes',
+            'upload_picture.image' => 'The uploaded file must be an image',
+            'upload_picture.mimes' => 'The photo must be a file of type: jpeg, png, jpg',
+            'upload_picture.max' => 'The photo size should not exceed 10MB',
+
+            'illness.max' => 'The illnesses list cannot exceed 500 characters',
         ]);
         
         Log::info('Validation passed');
@@ -188,7 +198,7 @@ class WeeklyCareController extends Controller
             
             DB::beginTransaction();
 
-            // 1. Create vital signs record
+            // 1. Create vital signs and illness record
             $vitalSigns = VitalSigns::create([
                 'blood_pressure' => $request->blood_pressure,
                 'body_temperature' => $request->body_temperature,
@@ -198,6 +208,26 @@ class WeeklyCareController extends Controller
             ]);
             Log::info('Vital signs created: ' . $vitalSigns->id);
 
+            $illnesses = null;
+            if ($request->has('illness') && !empty($request->illness)) {
+                // Split by comma, trim spaces, filter out empty values, and convert to array
+                $illnessesArray = array_filter(array_map('trim', explode(',', $request->illness)), function($value) {
+                    return !empty($value);
+                });
+                // Only store if there are actual values
+                if (count($illnessesArray) > 0) {
+                    $illnesses = json_encode($illnessesArray);
+                }
+            }
+
+            // Handle photo upload
+            $photoPath = '';
+            if ($request->hasFile('upload_picture')) {
+                $photo = $request->file('upload_picture');
+                $fileName = time() . '_' . $photo->getClientOriginalName();
+                $photoPath = $photo->storeAs('weekly_care_plans/photos', $fileName, 'public');
+            }
+
             // 2. Create weekly care plan
             $weeklyCarePlan = WeeklyCarePlan::create([
                 'beneficiary_id' => $request->beneficiary_id,
@@ -205,7 +235,9 @@ class WeeklyCareController extends Controller
                 'vital_signs_id' => $vitalSigns->vital_signs_id,
                 'date' => now(),
                 'assessment' => $request->assessment,
+                'illnesses' => $illnesses,
                 'evaluation_recommendations' => $request->evaluation_recommendations,
+                'photo_path' => $photoPath,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
@@ -324,15 +356,47 @@ class WeeklyCareController extends Controller
         
         // For care workers, only show their own plans
         if ($user->role_id == 3) {
-            $weeklyCarePlans = WeeklyCarePlan::with(['beneficiary', 'vitalSigns', 'interventions'])
+            $weeklyCarePlans = WeeklyCarePlan::with(['beneficiary', 'vitalSigns', 'interventions', 'careWorker', 'careManager'])
                 ->where('care_worker_id', $user->id)
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
-        } else {
-            // For admins and care managers, show all plans
-            $weeklyCarePlans = WeeklyCarePlan::with(['beneficiary', 'vitalSigns', 'interventions'])
+        } 
+        // For care managers, show all plans by them and other care managers, plus care workers assigned to them
+        elseif ($user->role_id == 2) {
+            $assignedCareWorkerIds = User::where('assigned_care_manager_id', $user->id)
+                ->pluck('id')
+                ->toArray();
+                
+            $weeklyCarePlans = WeeklyCarePlan::with(['beneficiary', 'vitalSigns', 'interventions', 'careWorker', 'careManager'])
+                ->where(function($query) use ($user, $assignedCareWorkerIds) {
+                    $query->whereIn('care_worker_id', $assignedCareWorkerIds)  // Plans by assigned care workers
+                        ->orWhere('created_by', $user->id)                   // Plans created by this care manager
+                        ->orWhere('created_by', function($subquery) {        // Plans created by other care managers
+                            $subquery->select('id')
+                                ->from('users')
+                                ->where('role_id', 2);
+                        });
+                })
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
+        }
+        // For admins, show all plans
+        else {
+            $weeklyCarePlans = WeeklyCarePlan::with(['beneficiary', 'vitalSigns', 'interventions', 'careWorker', 'careManager'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+        }
+        
+        // Add a flag to indicate who created each plan
+        foreach ($weeklyCarePlans as $plan) {
+            $creator = User::find($plan->created_by);
+            if ($creator) {
+                $plan->creator_name = $creator->first_name . ' ' . $creator->last_name;
+                $plan->creator_role = $creator->role_id == 1 ? 'Admin' : ($creator->role_id == 2 ? 'Care Manager' : 'Care Worker');
+            } else {
+                $plan->creator_name = 'Unknown';
+                $plan->creator_role = 'Unknown';
+            }
         }
         
         return view($rolePrefix . '.weeklyCarePlansList', compact('weeklyCarePlans'));
@@ -504,18 +568,28 @@ class WeeklyCareController extends Controller
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
             'evaluation_recommendations' => 'required|string|min:20|max:5000',
+            'upload_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'selected_interventions' => 'required|array',
             'duration_minutes' => 'required|array',
             'duration_minutes.*' => 'required|numeric|min:0.01|max:999.99',
             'custom_category.*' => 'sometimes|nullable|exists:care_categories,care_category_id',
             'custom_description.*' => 'sometimes|nullable|required_with:custom_category.*|string|min:5|max:255|regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s,.!?;:()\-\'\"]+$/',
             'custom_duration.*' => 'sometimes|nullable|required_with:custom_category.*|numeric|min:0.01|max:999.99',
+            'illness' => 'nullable|string|max:500', // Add validation for illness
+
+            // Add validation messages for illness
+            'illness.max' => 'The illnesses list cannot exceed 500 characters',
+            // And update the message for upload_picture
+            'upload_picture.image' => 'The uploaded file must be an image',
+            'upload_picture.mimes' => 'The photo must be a file of type: jpeg, png, jpg',
+            'upload_picture.max' => 'The photo size should not exceed 10MB',
+
         ]);
 
         try {
             DB::beginTransaction();
             
-            // 1. Update vital signs
+            // 1. Update vital signs and illnesses
             $vitalSigns = VitalSigns::findOrFail($weeklyCarePlan->vital_signs_id);
             $vitalSigns->update([
                 'blood_pressure' => $request->blood_pressure,
@@ -524,12 +598,39 @@ class WeeklyCareController extends Controller
                 'respiratory_rate' => $request->respiratory_rate,
                 'updated_by' => Auth::id(),
             ]);
+
+            $illnesses = null;
+            if ($request->has('illness') && !empty($request->illness)) {
+                // Split by comma, trim spaces, filter out empty values, and convert to array
+                $illnessesArray = array_filter(array_map('trim', explode(',', $request->illness)), function($value) {
+                    return !empty($value);
+                });
+                // Only store if there are actual values
+                if (count($illnessesArray) > 0) {
+                    $illnesses = json_encode($illnessesArray);
+                }
+            }
+
+           $photoPath = $weeklyCarePlan->photo_path; // Default to existing photo
+        if ($request->hasFile('upload_picture')) {
+            // Delete old photo if it exists
+            if ($weeklyCarePlan->photo_path && Storage::disk('public')->exists($weeklyCarePlan->photo_path)) {
+                Storage::disk('public')->delete($weeklyCarePlan->photo_path);
+            }
+            
+            // Store new photo
+            $photo = $request->file('upload_picture');
+            $fileName = time() . '_' . $photo->getClientOriginalName();
+            $photoPath = $photo->storeAs('weekly_care_plans/photos', $fileName, 'public');
+        }
             
             // 2. Update weekly care plan
             $weeklyCarePlan->update([
                 'beneficiary_id' => $request->beneficiary_id,
                 'assessment' => $request->assessment,
+                'illnesses' => $illnesses,
                 'evaluation_recommendations' => $request->evaluation_recommendations,
+                'photo_path' => $photoPath,
                 'updated_by' => Auth::id(),
                 'updated_at' => now(),
             ]);

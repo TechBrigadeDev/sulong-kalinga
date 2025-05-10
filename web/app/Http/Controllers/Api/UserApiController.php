@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\UnifiedUser;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -197,13 +197,13 @@ class UserApiController extends Controller
         $validator = \Validator::make($request->all(), [
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
-            'email' => [
+            'personal_email' => [
                 'sometimes', 'required', 'email',
-                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::unique('cose_users', 'personal_email')->ignore($user->id),
             ],
             'mobile' => [
                 'sometimes', 'required', 'string',
-                Rule::unique('users', 'mobile')->ignore($user->id),
+                Rule::unique('cose_users', 'mobile')->ignore($user->id),
             ],
             'address' => 'sometimes|required|string|max:255',
             'gender' => 'sometimes|required|in:Male,Female,Other',
@@ -239,7 +239,7 @@ class UserApiController extends Controller
 
         // Update basic info
         $fieldsToUpdate = [
-            'first_name', 'last_name', 'email', 'mobile',
+            'first_name', 'last_name', 'personal_email', 'mobile',
             'address', 'gender', 'civil_status', 'religion', 'nationality'
         ];
         foreach ($fieldsToUpdate as $field) {
