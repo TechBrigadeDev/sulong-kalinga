@@ -4,7 +4,9 @@ import { authStore } from "../../auth/auth.store"
 import UserManagementController from "./management.api";
 
 
-export const useGetBeneficiaries = () => {
+export const useGetBeneficiaries = (props?: {
+    search?: string;
+}) => {   
     const { token } = authStore();
     if (!token) {
         throw new Error("No token found");
@@ -14,10 +16,29 @@ export const useGetBeneficiaries = () => {
 
     
     return useQuery({
-        queryKey: [QK.user.management.getBeneficiaries, token],
+        queryKey: [QK.user.management.getBeneficiaries, token, props?.search],
         queryFn: async () => {
-            const response = await api.getBeneficiaries();
-            console.log("Beneficiaries response", response);
+            const response = await api.getBeneficiaries({
+                search: props?.search,
+            });
+            return response;
+        },
+        enabled: !!token,
+    })
+}
+
+export const useGetBeneficiary = (id?: string) => {
+    const { token } = authStore();
+    if (!token || !id) {
+        throw new Error("No token found");
+    }
+
+    const api = new UserManagementController(token);
+
+    return useQuery({
+        queryKey: QK.user.management.getBeneficiary(id),
+        queryFn: async () => {
+            const response = await api.getBeneficiary(id);
             return response;
         },
         enabled: !!token,

@@ -10,6 +10,7 @@ export const QK = {
     user: {
         management: {
             getBeneficiaries: "user/management/getBeneficiaries",
+            getBeneficiary: (id: string) => ["user/management/getBeneficiary", id],
         }
     }
 }
