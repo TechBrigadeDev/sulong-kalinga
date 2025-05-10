@@ -1,7 +1,8 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { Text, View } from "tamagui";
-import { useGetBeneficiary } from "../../../../features/user/management/management.hook";
-import BeneficiaryDetail from "../../../../features/user/management/components/beneficiaries/detail";
+import { useGetBeneficiary } from "../../../../../features/user/management/management.hook";
+import BeneficiaryForm from "../../../../../features/user/management/components/BeneficiaryForm";
+
 
 const Screen = () => {
     const { id } = useLocalSearchParams();
@@ -18,19 +19,14 @@ const Screen = () => {
             </View>
         )
     }
-
-    if (!data) {
-        return (
-            <View>
-                <Text>No beneficiary found</Text>
-            </View>
-        )
-    }
-
     return (
         <>
-            <Stack.Screen/>
-            <BeneficiaryDetail beneficiary={data}/>
+            <Stack.Screen
+                options={{
+                    title: 'Edit Beneficiary',
+                }}
+            />
+            <BeneficiaryForm beneficiary={data} />
         </>
     )
 }

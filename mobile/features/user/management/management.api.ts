@@ -31,7 +31,6 @@ class UserManagementController {
     const response = await this.api.get(`/beneficiaries/${id}`);
     const data = await response.data;
     
-    console.log("Beneficiary data", data);
     const valid = await userManagementSchema.getBeneficiary.safeParseAsync(data);
     if (!valid.success) {
       console.error("Beneficiary validation error", valid.error);

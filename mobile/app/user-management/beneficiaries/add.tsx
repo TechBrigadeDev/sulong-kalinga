@@ -1,21 +1,25 @@
-import { Stack } from "expo-router";
-import { SafeAreaView } from "react-native";
-import { Text, View } from "tamagui";
+import { Stack, useRouter } from "expo-router";
+import BeneficiaryForm from "../../../features/user/management/components/BeneficiaryForm";
+import { IBeneficiary } from "../../../features/user/user.schema";
 
 const BeneficiaryAdd = () => {
+    const router = useRouter();
+
+    const handleSubmit = (data: Partial<IBeneficiary>) => {
+        console.log("Submitting beneficiary data:", data);
+        // TODO: Add API call to create beneficiary
+        router.back();
+    };
 
     return (
-        <SafeAreaView>
+        <>
             <Stack.Screen options={{
                 headerShown: true,
                 title: "Add Beneficiary",
             }}/>
-            <View>
-                <Text>Add Beneficiary</Text>
-                <Text>Form to add a new beneficiary will go here</Text>
-            </View>
-        </SafeAreaView>
-    )
-}
+            <BeneficiaryForm onSubmit={handleSubmit} />
+        </>
+    );
+};
 
 export default BeneficiaryAdd;
