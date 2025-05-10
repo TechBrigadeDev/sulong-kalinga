@@ -1,4 +1,4 @@
-import { Card, H2, Paragraph, XStack } from "tamagui";
+import { Card, H2, H3, Paragraph, XStack } from "tamagui";
 import { LinkProps, useRouter } from "expo-router";
 
 
@@ -78,11 +78,8 @@ const MenuCard = ({
             onPressIn={handlePress}
         >
             <Card.Header padded>
-                <H2>{title}</H2>
-                <Paragraph>{link}</Paragraph>
+                <H3>{title}</H3>
             </Card.Header>
-            <XStack>
-            </XStack>
         </Card>
     );
 }
