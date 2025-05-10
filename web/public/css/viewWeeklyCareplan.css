@@ -15,8 +15,8 @@ input, textarea, button {
     background: #E4E9F7;
     height: calc(100vh - 56px);
     padding: 10px;
-    left: 342px;
-    width: calc(100% - 345px);
+    left: 310px;
+    width: calc(100% - 310px);
     transition: all 0.5s ease;
   }
 
@@ -171,7 +171,6 @@ input, textarea, button {
         margin-bottom: 8px; 
         width: 100px;
         text-align: center; 
-        transform: translateY(-4px);
     }
 
     .d-flex {

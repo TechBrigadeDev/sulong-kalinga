@@ -18,7 +18,7 @@
     
     <div class="home-section">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-center align-items-center mb-2">
                 <!-- Original Back Button -->
                 <a href="{{ route('admin.reports') }}" class="btn btn-secondary original-back-btn">
                     <i class="bi bi-arrow-bar-left"></i> Back
@@ -26,8 +26,11 @@
 
                 <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">VIEW WEEKLY CAREPLAN DETAILS</div>
 
-                <!-- Edit and Delete Buttons -->
                 <div>
+                    <!-- Hidden Back Button for Small Screens -->
+                    <a href="{{ route('admin.reports') }}" class="btn btn-secondary hidden-back-btn">
+                        <i class="bi bi-arrow-bar-left"></i> Back
+                    </a>
                     <!-- Edit Button with Routing -->
                     <a href="{{ route('admin.weeklycareplans.edit', $weeklyCareplan->weekly_care_plan_id) }}" title="Edit Weekly Care Plan" class="btn btn-primary">
                         <i class="bi bi-pencil-square"></i> Edit
@@ -43,7 +46,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            <div class="row mb-3" id="weeklyCareplanDetails">
+            <div class="row mb-2" id="weeklyCareplanDetails">
                 <div class="col-12">
                     <div class="row personal-details">
                         <div class="col-12">
@@ -52,7 +55,7 @@
                                 <h5>Personal Details</h5>
                             </div>
                         </div>
-                        <div class="row mb-1">
+                        <div class="row mb-2">
                             <div class="col-md-4 col-sm-9 position-relative">
                                 <label for="benficiary" class="form-label">Beneficiary Name</label>
                                 <input type="text" class="form-control" id="beneficiary" value="{{ $weeklyCareplan->beneficiary->first_name }} {{ $weeklyCareplan->beneficiary->last_name }}" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan" readonly>    
@@ -70,22 +73,50 @@
                                 <input type="text" class="form-control" id="gender" value="{{ $weeklyCareplan->beneficiary->gender }}" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan" readonly>
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-3 col-sm-4 position-relative">
+                        <div class="row mb-2">
+                            <div class="col-md-4 col-sm-4 position-relative">
                                 <label for="civilStatus" class="form-label">Civil Status</label>
                                 <input type="text" class="form-control" id="civilStatus" value="{{ $weeklyCareplan->beneficiary->civil_status }}" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan" readonly>
                                 </div>
-                            <div class="col-md-6 col-sm-8">
+                            <div class="col-md-8 col-sm-8">
                                 <label for="address" class="form-label">Address</label>
                                 <input type="text" class="form-control" id="address" value="{{ $weeklyCareplan->beneficiary->street_address }}" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan" readonly>
                                 </div>
-                            <div class="col-md-3 col-sm-12">
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-6 col-sm-12">
                                 <label for="condition" class="form-label">Medical Conditions</label>
                                 <input type="text" class="form-control" id="medicalConditions" 
-                                value="{{ $weeklyCareplan->beneficiary->generalCarePlan->healthHistory->medical_conditions ?? 'No medical conditions recorded' }}" 
-                                readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
-                                </div>
-                        </div>
+                                    value="@php
+                                        $medicalConditionsText = $weeklyCareplan->beneficiary->generalCarePlan->healthHistory->medical_conditions ?? '';
+                                        if ($medicalConditionsText) {
+                                            try {
+                                                $conditionsArray = json_decode($medicalConditionsText, true);
+                                                if (is_array($conditionsArray)) {
+                                                    echo implode(', ', $conditionsArray);
+                                                } else {
+                                                    echo $medicalConditionsText;
+                                                }
+                                            } catch (\Exception $e) {
+                                                echo $medicalConditionsText;
+                                            }
+                                        }
+                                    @endphp" 
+                                    readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
+                            </div>
+                            <div class="col-md-6 col-sm-12">
+                                <label for="condition" class="form-label">Illness</label>
+                                <input type="text" class="form-control" id="illness" 
+                                    value="@php
+                                        if ($weeklyCareplan->illnesses) {
+                                            $illnessesArray = json_decode($weeklyCareplan->illnesses, true);
+                                            if (is_array($illnessesArray)) {
+                                                echo implode(', ', $illnessesArray);
+                                            }
+                                        }
+                                    @endphp" 
+                                    readonly data-bs-toggle="tooltip" title="Edit in Weekly Care Plan">
+                            </div>
                         </div>
                     </div>
 
@@ -144,9 +175,13 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-12 col-md-12 col-sm-12">
-                                    <label class="form-label">Picture Preview</label>
+                                    <label class="form-label">Picture</label>
                                     <div class="border p-2 d-flex justify-content-center align-items-center" style="height: 200px;">
-                                        <img id="picture_preview" src="#" alt="Preview" class="img-fluid" style="max-height: 100%; display: none;">
+                                        @if($weeklyCareplan->photo_path)
+                                            <img src="{{ asset('storage/' . $weeklyCareplan->photo_path) }}" alt="Weekly Care Plan Photo" class="img-fluid" style="max-height: 100%;">
+                                        @else
+                                            <div class="text-center text-muted">No image available</div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

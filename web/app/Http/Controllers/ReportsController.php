@@ -53,7 +53,7 @@ class ReportsController extends Controller
                 $reportObj = (object)[
                     'id' => $plan->weekly_care_plan_id,
                     'report_id' => $plan->weekly_care_plan_id,
-                    'created_at' => $plan->created_at,
+                    'created_at' => $plan->date, // CHANGED FROM $plan->created_at
                     'author_id' => $plan->created_by,
                     'author_first_name' => optional($plan->author)->first_name ?? 'Unknown',
                     'author_last_name' => optional($plan->author)->last_name ?? '',

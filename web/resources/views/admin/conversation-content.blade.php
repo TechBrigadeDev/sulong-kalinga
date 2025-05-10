@@ -43,7 +43,7 @@
     </div>
     
     <!-- Search container -->
-    <div id="messageSearchContainer" class="message-search-container" style="display: none;">
+    <div class="message-search-container" id="messageSearchContainer" style="display: none;">
         <div class="input-group">
             <input type="text" class="form-control" id="messageSearchInput" placeholder="Search in conversation...">
             <button class="btn btn-outline-secondary search-nav-btn" id="searchPrevBtn" disabled>

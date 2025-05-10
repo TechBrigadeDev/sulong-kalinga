@@ -13,7 +13,7 @@
                 <!-- Success message container -->
                 <div id="editBarangaySuccessContainer" class="d-none">
                     <p class="text-success">
-                        <i class="bx bx-check-circle"></i>
+                        <i class="bi bi-check-circle"></i>
                         <strong>Success!</strong> <span id="editBarangaySuccessMessage">The barangay has been updated successfully.</span>
                     </p>
                     <p>The page will reload shortly.</p>
@@ -46,7 +46,7 @@
                         </div>
                         
                         <div class="alert alert-warning">
-                            <small><i class="bx bx-error-circle me-1"></i> Barangay names must be unique within their municipality.</small>
+                            <small><i class="bi bi-exclamation-circle me-1"></i> Barangay names must be unique within their municipality.</small>
                         </div>
                     </div>
                 </form>
@@ -54,7 +54,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelEditBarangayButton">Cancel</button>
                 <button type="button" class="btn btn-primary" id="submitEditBarangay">
-                    <i class="bx bx-save"></i> Update Barangay
+                    <i class="bi bi-floppy"></i> Update Barangay
                 </button>
             </div>
         </div>
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         editSuccessContainer.classList.add('d-none');
         submitEditButton.classList.remove('d-none');
         submitEditButton.disabled = false;
-        submitEditButton.innerHTML = '<i class="bx bx-save"></i> Update Barangay';
+        submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> Update Barangay';
         cancelEditButton.textContent = 'Cancel';
         
         // Set form values
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Main error message
         const errorMessage = document.createElement('p');
         errorMessage.className = 'mb-2';
-        errorMessage.innerHTML = `<i class="bx bx-error-circle text-danger me-1"></i> ${message}`;
+        errorMessage.innerHTML = `<i class="bi bi-exclamation-circle text-danger me-1"></i> ${message}`;
         errorContent.appendChild(errorMessage);
         
         // Add guidance for name errors
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Reset button
                 submitEditButton.disabled = false;
-                submitEditButton.innerHTML = '<i class="bx bx-save"></i> Update Barangay';
+                submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> Update Barangay';
             }
         })
         .catch(error => {
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Reset button
             submitEditButton.disabled = false;
-            submitEditButton.innerHTML = '<i class="bx bx-save"></i> Update Barangay';
+            submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> Update Barangay';
         });
     });
     
