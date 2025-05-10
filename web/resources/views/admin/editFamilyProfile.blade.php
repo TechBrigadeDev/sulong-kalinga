@@ -18,7 +18,7 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <a href="{{ route('admin.families.index') }}" class="btn btn-secondary">
-                    <i class="bx bx-arrow-back"></i> Back
+                    <i class="bi bi-arrow-bar-left"></i> Back
                 </a>
                 <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">EDIT FAMILY MEMBER</div>
             </div>
@@ -196,7 +196,7 @@
                         <div class="row mt-4">
                             <div class="col-12 d-flex justify-content-center align-items-center">
                                 <button type="submit" class="btn btn-success btn-lg d-flex align-items-center" id="saveBeneficiaryButton">
-                                    <i class='bx bx-save me-2' style="font-size: 24px;"></i>
+                                    <i class='bi bi-floppy me-2' style="font-size: 24px;"></i>
                                     Update Family Member
                                 </button>
                             </div>

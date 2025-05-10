@@ -32,6 +32,30 @@ class WeeklyCarePlanFactory extends Factory
         // Get a random user ID with role_id 2 for created_by and updated_by
         $userIdWithRole2 = User::where('role_id', 2)->inRandomOrder()->first()->id;
 
+        $illnesses = [
+            'Hypertension',
+            'Arthritis',
+            'Diabetes Type 2',
+            'Coronary Heart Disease',
+            'Chronic Obstructive Pulmonary Disease (COPD)',
+            'Osteoporosis',
+            'Alzheimer\'s Disease',
+            'Cataracts',
+            'Parkinson\'s Disease',
+            'Chronic Kidney Disease',
+            'Pneumonia',
+            'Depression',
+            'Influenza',
+            'Urinary Tract Infection',
+            'Anemia'
+        ];
+
+        // Select 0-3 illnesses randomly
+        $selectedIllnesses = $this->faker->randomElements(
+            $illnesses,
+            $this->faker->numberBetween(0, 3)
+        );
+
         // Base definition
         $definition = [
             'beneficiary_id' => $beneficiaryId,
@@ -39,6 +63,7 @@ class WeeklyCarePlanFactory extends Factory
             'vital_signs_id' => $vitalSignsId,
             'date' => $this->faker->date(),
             'assessment' => $this->faker->paragraph,
+            'illnesses' => !empty($selectedIllnesses) ? json_encode($selectedIllnesses) : null,
             'evaluation_recommendations' => $this->faker->paragraph,
             'assessment_summary_draft' => $this->faker->paragraph,
             'assessment_translation_draft' => $this->faker->paragraph,

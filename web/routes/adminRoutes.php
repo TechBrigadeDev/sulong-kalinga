@@ -20,6 +20,13 @@ use App\Http\Controllers\ViewAccountProfileController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HealthMonitoringController;
+use App\Http\Controllers\CareWorkerAppointmentController;
+use App\Http\Controllers\InternalAppointmentsController;
+use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\EmergencyAndRequestController;
+use App\Http\Controllers\ExpenseTrackerController;
+use App\Http\Controllers\VisitationController;
+
 
 // All routes with administrator role check
 
@@ -107,7 +114,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/{id}/edit', [WeeklyCareController::class, 'edit'])->name('edit');
         Route::put('/{id}', [WeeklyCareController::class, 'update'])->name('update');
         Route::get('/beneficiary/{id}', [WeeklyCareController::class, 'getBeneficiaryDetails'])->name('beneficiaryDetails');
-        Route::delete('/{id}/delete', [WeeklyCareController::class, 'destroy'])->name('delete');
+        Route::delete('/{id}', [WeeklyCareController::class, 'destroy'])->name('delete');
+
     });
 
     // Reports Management
@@ -132,7 +140,9 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/careworkers-pdf', [ExportController::class, 'exportCareworkersToPdf'])->name('careworkers.pdf');
         Route::post('/caremanagers-pdf', [ExportController::class, 'exportCaremanagersToPdf'])->name('caremanagers.pdf');
         Route::post('/administrators-pdf', [ExportController::class, 'exportAdministratorsToPdf'])->name('administrators.pdf');
-        
+        Route::post('/export/health-monitoring-pdf', [ExportController::class, 'exportHealthMonitoringToPdf'])->name('health.monitoring.pdf');
+        Route::post('/export/careworker-performance-pdf', [ExportController::class, 'exportCareWorkerPerformanceToPdf'])->name('careworker.performance.pdf');
+
         // Excel Exports
         Route::post('/beneficiaries-excel', [ExportController::class, 'exportBeneficiariesToExcel'])->name('beneficiaries.excel');
         Route::post('/family-excel', [ExportController::class, 'exportFamilyMembersToExcel'])->name('family.excel');
@@ -179,6 +189,27 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     Route::prefix('health-monitoring')->name('health.monitoring.')->group(function () {
         Route::get('/', [HealthMonitoringController::class, 'index'])->name('index');
     });
+    
+    // Internal appointments
+    Route::prefix('internal-appointments')->name('internal.appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+    });
+
+    // Medication Schedule
+    Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
+        Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+    });
+
+    // Emergency and Service Request
+    Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
+        Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
+        Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
+    });
+
+    // Expense Tracker
+    Route::prefix('expense-tracker')->name('expense.')->group(function () {
+        Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
+    });
 
     // Update email and password
     Route::post('/update-email', [AdminController::class, 'updateAdminEmail'])->name('update.email');
@@ -210,6 +241,29 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('add-group-member', [MessageController::class, 'addGroupMember'])->name('add-group-member');
         Route::post('unsend-message/{id}', [MessageController::class, 'unsendMessage'])->name('unsend');
     });
+
+    // Health Monitoring
+    Route::prefix('health-monitoring')->name('health.monitoring.')->group(function () {
+        Route::get('/', [HealthMonitoringController::class, 'index'])->name('index');
+    });
+
+    // Care Worker Performance
+    Route::prefix('care-worker-performance')->name('careworker.performance.')->group(function () {
+        Route::get('/', [CareWorkerPerformanceController::class, 'index'])->name('index');
+    });
+
+    // Care Worker Appointments
+    Route::prefix('careworker-appointments')->name('careworker.appointments.')->group(function () {
+        Route::get('/', [VisitationController::class, 'index'])->name('index');
+        Route::get('/get-visitations', [VisitationController::class, 'getVisitations'])->name('get');
+        Route::get('/beneficiaries', [VisitationController::class, 'getBeneficiaries'])->name('beneficiaries');
+        Route::get('/beneficiary/{id}', [VisitationController::class, 'getBeneficiaryDetails'])->name('beneficiary');
+        Route::get('/beneficiary/{id}', [VisitationController::class, 'getBeneficiaryDetails'])->name('beneficiary.details');
+        Route::post('/store', [VisitationController::class, 'storeAppointment'])->name('store');
+        Route::post('/update', [VisitationController::class, 'updateAppointment'])->name('update');
+        Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
+    });
+
 });
 
 // Route::get('/admin/viewProfile', function () {

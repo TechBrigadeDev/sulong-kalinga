@@ -18,7 +18,10 @@ class WeeklyCarePlan extends Model
      * @var array<string>
      */
     protected $fillable = [
-        'beneficiary_id', 'care_worker_id', 'care_manager_id', 'vital_signs_id', 'date', 'assessment', 'evaluation_recommendations', 'assessment_summary_draft', 'assessment_translation_draft', 'evaluation_summary_draft', 'evaluation_translation_draft', 'created_by', 'updated_by'
+        'beneficiary_id', 'care_worker_id', 'care_manager_id', 'vital_signs_id', 'date', 
+        'assessment', 'illnesses', 'evaluation_recommendations', 'photo_path',
+        'created_by', 'updated_by', 'acknowledged_by_beneficiary', 'acknowledged_by_family',
+        'acknowledgement_signature'
     ];
 
     public function author()

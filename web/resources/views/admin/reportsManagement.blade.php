@@ -59,7 +59,7 @@
                     <div class="col-6 col-md-3 col-lg-2 mb-2">
                         <button type="button" class="btn btn-outline-secondary w-100" id="sortToggle" 
                             onclick="toggleSortOrder()">
-                            <i class="bx {{ ($sortOrder ?? 'asc') == 'desc' ? 'bx-sort-z-a' : 'bx-sort-a-z' }}"></i> 
+                            <i class="bi {{ ($sortOrder ?? 'asc') == 'desc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up' }}"></i> 
                             {{ ($sortOrder ?? 'asc') == 'desc' ? 'Newest First' : 'Oldest First' }}
                         </button>
                         <input type="hidden" name="sort" id="sortOrder" value="{{ $sortOrder ?? 'asc' }}">
@@ -171,10 +171,10 @@
             
             // Always use date terminology since we're always sorting by date
             const buttonText = newOrder === 'desc' ? 'Newest First' : 'Oldest First';
-            const iconClass = newOrder === 'desc' ? 'bx-sort-z-a' : 'bx-sort-a-z';
+            const iconClass = newOrder === 'desc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up';
             
             document.getElementById('sortToggle').innerHTML = `
-                <i class="bx ${iconClass}"></i> ${buttonText}
+                <i class="bi ${iconClass}"></i> ${buttonText}
             `;
             
             document.getElementById('searchFilterForm').submit();

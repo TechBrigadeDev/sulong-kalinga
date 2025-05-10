@@ -20,6 +20,7 @@ use App\Http\Controllers\ViewAccountProfileController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HealthMonitoringController;
+use App\Http\Controllers\VisitationController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -117,6 +118,15 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::get('group-members/{id}', [MessageController::class, 'getGroupMembers'])->name('group-members');
         Route::post('add-group-member', [MessageController::class, 'addGroupMember'])->name('add-group-member');
         Route::post('unsend-message/{id}', [MessageController::class, 'unsendMessage'])->name('unsend');
+    });
+
+    // Care Worker Appointments
+    Route::prefix('careworker-appointments')->name('careworker.appointments.')->group(function () {
+        Route::get('/', [VisitationController::class, 'index'])->name('index');
+        Route::get('/get-visitations', [VisitationController::class, 'getVisitations'])->name('get');
+        Route::get('/beneficiaries', [VisitationController::class, 'getBeneficiaries'])->name('beneficiaries');
+        Route::get('/beneficiary/{id}', [VisitationController::class, 'getBeneficiaryDetails'])->name('beneficiary');
+        Route::get('/beneficiary/{id}', [VisitationController::class, 'getBeneficiaryDetails'])->name('beneficiary.details');
     });
 
 });

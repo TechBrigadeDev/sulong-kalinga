@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/viewProfileDetails.css') }}">
 </head>
 <body>
@@ -21,20 +19,20 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <!-- Original Back Button -->
                 <a href="{{ route('admin.careworkers.index') }}" class="btn btn-secondary original-back-btn">
-                    <i class="bx bx-arrow-back"></i> Back
+                    <i class="bi bi-arrow-bar-left"></i> Back
                 </a>
                 <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">VIEW CARE WORKER PROFILE DETAILS</div>
                 <div>
                     <!-- Hidden Back Button -->
                     <a href="beneficiaryProfile" class="btn btn-secondary hidden-back-btn">
-                        <i class="bx bx-arrow-back"></i> Back
+                        <i class="bi bi-arrow-bar-left"></i> Back
                     </a>
                     <!-- Edit Button with Routing -->
                     <a href="{{ route('admin.careworkers.edit', $careworker->id) }}" class="btn btn-primary">
-                        <i class="bx bxs-edit"></i> Edit
+                        <i class="bi bi-pencil-square"></i> Edit
                     </a>
                     <button class="btn btn-danger" onclick="openDeleteCareworkerModal('{{ $careworker->id }}', '{{ $careworker->first_name }} {{ $careworker->last_name }}')">
-                        <i class="bx bxs-trash"></i> Delete
+                        <i class="bi bi-trash-fill"></i> Delete
                     </button>
                 </div>
             </div>

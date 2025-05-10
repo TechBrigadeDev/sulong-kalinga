@@ -109,7 +109,7 @@
                                                     <h5>Personal Details</h5>
                                                 </div>
                                             </div>
-                                            <div class="row mb-1">
+                                            <div class="row mb-2">
                                                 <div class="col-md-4 col-sm-9 position-relative">
                                                     <label for="beneficiary_id" class="form-label">Select Beneficiary</label>
                                                     <select class="form-select" id="beneficiary_id" name="beneficiary_id">
@@ -133,7 +133,7 @@
                                                     <input type="text" class="form-control" id="gender" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                 </div>
                                             </div>
-                                            <div class="row mb-3">
+                                            <div class="row mb-2">
                                                 <div class="col-md-3 col-sm-4 position-relative">
                                                     <label for="civilStatus" class="form-label">Civil Status</label>
                                                     <input type="text" class="form-control" id="civilStatus" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
@@ -143,11 +143,27 @@
                                                     <input type="text" class="form-control" id="address" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                     </div>
                                             </div>
-                                            <div class="row mb-3">
+                                            <div class="row mb-2">
                                                 <div class="col-md-6 col-sm-6">
                                                     <label for="condition" class="form-label">Medical Conditions</label>
                                                     <input type="text" class="form-control" id="medicalConditions" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
-                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-12">
+                                                    <label for="illness" class="form-label">Illness</label>
+                                                    @php
+                                                        $illnessesString = '';
+                                                        if ($weeklyCarePlan->illnesses) {
+                                                            $illnessesArray = json_decode($weeklyCarePlan->illnesses, true);
+                                                            if (is_array($illnessesArray)) {
+                                                                $illnessesString = implode(', ', $illnessesArray);
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    <input type="text" class="form-control" id="illness" name="illness" 
+                                                        placeholder="e.g. Cough, Fever (separate multiple illnesses with commas)" 
+                                                        value="{{ old('illness', $illnessesString) }}">
+                                                    <small class="form-text text-muted">Leave blank if no illness recorded. Separate multiple illnesses with commas.</small>
+                                                </div>
                                             </div>
                                             <hr my-4>
                                             <!-- Assessment, Vital Signs -->
@@ -315,8 +331,37 @@
                                         <div class="form-page" id="page9">
                                         <div class="validation-error-container alert alert-danger mb-3" style="display: none;"></div>
                                             <div class="row mb-3 mt-2 justify-content-center">
-                                                <div class="col-lg-8 col-md-12 col-sm-12 text-center">
-                                                    <label for="evaluation_recommendations" class="form-label"><h5>Recommendations and Evaluations</h5></label>
+                                                <div class="col-lg-6 col-md-6 col-sm-12 text-center">
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-12 col-sm-12">
+                                                            <label for="upload_picture" class="form-label">Upload Picture <span class="text-danger">*</span></label>
+                                                            <input type="file" class="form-control @error('upload_picture') is-invalid @enderror" 
+                                                                id="upload_picture" name="upload_picture" 
+                                                                accept="image/*" onchange="previewImage(event)">
+                                                            @if($weeklyCarePlan->photo_path)
+                                                                <small class="form-text text-muted">Current file: {{ basename($weeklyCarePlan->photo_path) }}</small>
+                                                            @else
+                                                                <small class="form-text text-muted">No image currently uploaded. Please select a new image.</small>
+                                                            @endif
+                                                            @error('upload_picture')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                        <div class="col-md-12 col-sm-12 text-center mt-2">
+                                                            <label class="form-label">Picture Preview</label>
+                                                            <div class="border p-2 d-flex justify-content-center align-items-center" style="height: 200px;">
+                                                                @if($weeklyCarePlan->photo_path)
+                                                                    <img id="picture_preview" src="{{ asset('storage/' . $weeklyCarePlan->photo_path) }}" alt="Current Picture" class="img-fluid" style="max-height: 100%;">
+                                                                @else
+                                                                    <img id="picture_preview" src="#" alt="Preview" class="img-fluid" style="max-height: 100%; display: none;">
+                                                                    <span id="no_preview_text">No image selected</span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6 col-md-6 col-sm-12 text-center">
+                                                <label for="evaluation_recommendations" class="form-label"><h5>Recommendations and Evaluations</h5></label>
                                                     <textarea class="form-control @error('evaluation_recommendations') is-invalid @enderror" 
                                                         id="evaluation_recommendations" name="evaluation_recommendations" 
                                                         rows="6">{{ old('evaluation_recommendations', $weeklyCarePlan->evaluation_recommendations) }}</textarea>
@@ -538,11 +583,24 @@
                     
                     // Set medical conditions if available
                     let medicalConditions = 'No medical conditions recorded';
-                    
+
                     if (beneficiary.general_care_plan && beneficiary.general_care_plan.health_history) {
-                        medicalConditions = beneficiary.general_care_plan.health_history.medical_conditions || 'None';
+                        const medicalConditionsData = beneficiary.general_care_plan.health_history.medical_conditions || 'None';
+                        
+                        // Format as comma-separated list if it's JSON
+                        try {
+                            const conditionsArray = JSON.parse(medicalConditionsData);
+                            if (Array.isArray(conditionsArray)) {
+                                medicalConditions = conditionsArray.join(', ');
+                            } else {
+                                medicalConditions = medicalConditionsData;
+                            }
+                        } catch (e) {
+                            // If not valid JSON, use as is
+                            medicalConditions = medicalConditionsData;
+                        }
                     }
-                    
+
                     document.getElementById('medicalConditions').value = medicalConditions;
                 } else {
                     alert('Failed to load beneficiary details');
@@ -1145,6 +1203,36 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 });
+</script>
+
+<script>
+function previewImage(event) {
+    const preview = document.getElementById('picture_preview');
+    const noPreviewText = document.getElementById('no_preview_text');
+    const file = event.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        
+        reader.onload = function() {
+            preview.src = reader.result;
+            preview.style.display = 'block';
+            if (noPreviewText) {
+                noPreviewText.style.display = 'none';
+            }
+        }
+        
+        reader.readAsDataURL(file);
+    } else {
+        // If there's already a saved image, don't hide the preview
+        if (!preview.src.includes('storage/')) {
+            preview.style.display = 'none';
+            if (noPreviewText) {
+                noPreviewText.style.display = 'block';
+            }
+        }
+    }
+}
 </script>
 
 </body>

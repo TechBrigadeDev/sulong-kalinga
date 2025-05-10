@@ -21,4 +21,9 @@ class WeeklyCarePlanInterventions extends Model
     protected $fillable = [
         'weekly_care_plan_id', 'intervention_id', 'care_category_id', 'intervention_description', 'duration_minutes', 'implemented'
     ];
+
+    public function intervention()
+    {
+        return $this->belongsTo(Intervention::class, 'intervention_id', 'intervention_id');
+    }
 }

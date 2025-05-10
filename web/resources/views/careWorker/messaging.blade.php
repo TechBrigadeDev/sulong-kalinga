@@ -109,6 +109,7 @@
                                     <option value="beneficiary">Beneficiary</option>
                                     <option value="family_member">Family Member</option>
                                 </select>
+                                <small class="form-text text-muted">Care Workers can message Care Managers, Beneficiaries assigned to them, and their Family Members.</small>
                             </div>
                             
                             <div class="mb-3">
@@ -154,6 +155,7 @@
                             <div class="mb-3">
                                 <label for="groupName" class="form-label">Group Name</label>
                                 <input type="text" class="form-control" id="groupName" name="name" required placeholder="Enter a name for this group">
+                                <small class="form-text text-muted">Care Workers can message Care Managers, Beneficiaries assigned to them, and their Family Members.</small>
                             </div>
                             
                             <div class="mb-3">
@@ -319,6 +321,7 @@
                                 <option value="beneficiary">Beneficiary</option>
                                 <option value="family_member">Family Member</option>
                             </select>
+                            <small class="form-text text-muted">Care Workers can message Care Managers, Beneficiaries assigned to them, and their Family Members.</small>
                         </div>
                         
                         <div class="mb-3">
@@ -543,68 +546,90 @@
             fileName.textContent = file.name;
             filePreview.appendChild(fileName);
             
-            // Add remove button
+            // Add remove button with IMPROVED handler
             const removeBtn = document.createElement('div');
             removeBtn.className = 'remove-file';
             removeBtn.innerHTML = '&times;';
-            removeBtn.addEventListener('click', function() {
+            removeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
                 console.log('Remove button clicked - starting file removal process');
+                
+                // First remove the preview from UI
                 filePreview.remove();
                 
-                // Create a new FileList without this file
-                const dataTransfer = new DataTransfer();
+                // Use simplified file input reset approach
                 const fileInput = document.getElementById('fileUpload');
-                
-                // Log the current state of the file input
-                console.log('Current files in input:', fileInput?.files?.length);
-                
-                if (fileInput && fileInput.files) {
-                    Array.from(fileInput.files || []).forEach(f => {
-                        if (f.name !== file.name || f.size !== file.size) {
-                            dataTransfer.items.add(f);
+                if (fileInput) {
+                    try {
+                        // This is the safest way to reset a file input
+                        fileInput.value = '';
+                        
+                        // If clearing value doesn't work, recreate the element (with improved error handling)
+                        if (fileInput.files && fileInput.files.length > 0) {
+                            console.log('Value reset didn\'t work, recreating file input');
+                            const newInput = document.createElement('input');
+                            // Copy all attributes from the original input
+                            Array.from(fileInput.attributes).forEach(attr => {
+                                if (attr.name !== 'value') {
+                                    newInput.setAttribute(attr.name, attr.value);
+                                }
+                            });
+                            
+                            // Replace the old input
+                            if (fileInput.parentNode) {
+                                fileInput.parentNode.replaceChild(newInput, fileInput);
+                                
+                                // Restore event handler
+                                newInput.addEventListener('change', handleFileInputChange);
+                                
+                                console.log('File input recreated successfully');
+                            }
                         }
-                    });
-                    
-                    // Update the file input with new FileList
-                    fileInput.files = dataTransfer.files;
-                    console.log('Updated files in input after removal:', fileInput.files.length);
+                    } catch (err) {
+                        console.error('Error resetting file input:', err);
+                    }
                 }
                 
                 // Update any stored files in global storage
                 const conversationId = document.querySelector('input[name="conversation_id"]')?.value;
                 if (conversationId && window.savedAttachments && window.savedAttachments.has(conversationId)) {
-                    const files = window.savedAttachments.get(conversationId);
+                    const files = window.savedAttachments.get(conversationId) || [];
                     const updatedFiles = files.filter(f => f.name !== file.name || f.size !== file.size);
                     window.savedAttachments.set(conversationId, updatedFiles);
                     console.log(`Updated stored files after removal: ${updatedFiles.length} files remaining`);
                 }
                 
-                // CRITICAL FIX: Ensure the input can receive new files
-                // We'll use a simpler approach that doesn't replace the element
-                if (fileInput) {
-                    // Remove all existing event listeners by cloning and replacing
-                    const newFileInput = fileInput.cloneNode(true);
-                    fileInput.parentNode.replaceChild(newFileInput, fileInput);
-                    
-                    // Add the handleFileInputChange event listener to the new input
-                    newFileInput.addEventListener('change', handleFileInputChange);
-                    console.log('Reinstalled file input change handler');
-                    
-                    // Reconnect the attachment button to the new file input
-                    const attachmentBtn = document.getElementById('attachmentBtn');
-                    if (attachmentBtn) {
-                        // First, remove any existing listeners by cloning
-                        const newAttachmentBtn = attachmentBtn.cloneNode(true);
+                // Reconnect attachment button - SAFER approach
+                const attachmentBtn = document.getElementById('attachmentBtn');
+                if (attachmentBtn) {
+                    // Remove existing click listeners
+                    const newAttachmentBtn = attachmentBtn.cloneNode(true);
+                    if (attachmentBtn.parentNode) {
                         attachmentBtn.parentNode.replaceChild(newAttachmentBtn, attachmentBtn);
                         
-                        // Add the click event listener
-                        newAttachmentBtn.addEventListener('click', function() {
-                            document.getElementById('fileUpload').click();
+                        // Add new click listener
+                        newAttachmentBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const fileInput = document.getElementById('fileUpload');
+                            if (fileInput) {
+                                fileInput.click();
+                                
+                                // Clear errors when opening file picker
+                                const errorContainer = document.getElementById('fileErrorContainer');
+                                if (errorContainer) {
+                                    errorContainer.classList.add('d-none');
+                                    errorContainer.innerHTML = '';
+                                }
+                            }
                         });
-                        console.log('Reconnected attachment button to file input');
+                        
+                        console.log('Attachment button reconnected safely');
                     }
                 }
             });
+            
             filePreview.appendChild(removeBtn);
             container.appendChild(filePreview);
             
@@ -639,7 +664,7 @@
                     window.savedAttachments.set(conversationId, []);
                 }
                 
-                const files = window.savedAttachments.get(conversationId);
+                const files = window.savedAttachments.get(conversationId) || [];
                 // Only add if not already there
                 if (!files.some(f => f.name === file.name && f.size === file.size)) {
                     files.push(file);
@@ -757,20 +782,41 @@
             const fileInput = event.target;
             const files = fileInput.files;
             
-            if (files.length === 0) return;
+            if (!files || files.length === 0) return;
             
             const filePreviewContainer = document.getElementById('filePreviewContainer');
             if (!filePreviewContainer) return;
+            
+            // Clear error messages first
+            const fileErrorContainer = document.getElementById('fileErrorContainer');
+            if (fileErrorContainer) {
+                fileErrorContainer.classList.add('d-none');
+                fileErrorContainer.innerHTML = '';
+            }
             
             // Process each selected file
             for (let i = 0; i < files.length; i++) {
                 if (isValidFileType(files[i])) {
                     createFilePreview(files[i], filePreviewContainer);
                 } else {
-                    const fileErrorContainer = document.getElementById('fileErrorContainer') || createErrorContainer();
-                    fileErrorContainer.innerHTML = 'Invalid file type. Please select images, PDFs, Word, Excel, or text files.';
-                    fileErrorContainer.classList.remove('d-none');
+                    const errorContainer = document.getElementById('fileErrorContainer') || createErrorContainer();
+                    errorContainer.innerHTML = 'Invalid file type. Please select images, PDFs, Word, Excel, or text files.';
+                    errorContainer.classList.remove('d-none');
                 }
+            }
+            
+            // Update global storage - safer implementation
+            function createErrorContainer() {
+                const container = document.createElement('div');
+                container.id = 'fileErrorContainer';
+                container.className = 'file-error-container alert alert-danger d-none';
+                
+                const filePreviewContainer = document.getElementById('filePreviewContainer');
+                if (filePreviewContainer && filePreviewContainer.parentNode) {
+                    filePreviewContainer.parentNode.insertBefore(container, filePreviewContainer);
+                }
+                
+                return container;
             }
         }
 
@@ -963,6 +1009,7 @@
         }
 
         // Function to load conversation
+        // Fix for loadConversation function
         function loadConversation(conversationId) {
             console.log('Loading conversation:', conversationId);
             
@@ -992,24 +1039,28 @@
             
             // Fetch conversation content via AJAX
             fetch(url, {
-                method: 'GET',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
             })
             .then(response => {
-                console.log('Response status:', response.status);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    throw new Error('Network response was not ok: ' + response.status);
                 }
                 return response.json();
             })
             .then(data => {
                 console.log('Received conversation data successfully');
+
+                // First, check if we have the required HTML content
+                if (!data || !data.html) {
+                    throw new Error('Invalid response format: Missing HTML content');
+                }
                 
-                if (data.success) {
+                // If we have HTML and there's no explicit failure message, proceed
+                if (!data.hasOwnProperty('success') || data.success !== false) {
                     // Update the message area with the conversation
                     messageArea.innerHTML = data.html;
                     
@@ -1017,10 +1068,12 @@
                     window.messageFormInitialized = false;
                     initializeMessageForm(conversationId);
                     
-                   // Initialize the search button with a specific delay to ensure DOM is ready
+                    // Initialize the search button with a specific delay to ensure DOM is ready
                     setTimeout(() => {
                         console.log('Initializing search after conversation load');
-                        window.initializeSearchButton();
+                        if (typeof window.initializeSearchButton === 'function') {
+                            window.initializeSearchButton();
+                        }
                     }, 500);
                     
                     // Scroll to bottom of messages container
@@ -1064,7 +1117,7 @@
                         }
                     }
 
-                     // Reset search UI after loading a new conversation
+                    // Reset search UI after loading a new conversation
                     if (typeof window.resetSearchAfterConversationLoad === 'function') {
                         window.resetSearchAfterConversationLoad();
                     }
@@ -1072,8 +1125,8 @@
                     setTimeout(() => {
                         initializeMessageActions();
                     }, 500);
-
                 } else {
+                    // Only show error if there's an explicit failure
                     messageArea.innerHTML = `
                         <div class="empty-state">
                             <i class="bi bi-exclamation-triangle-fill empty-icon"></i>
@@ -1084,7 +1137,7 @@
                     console.error('Failed to load conversation:', data.message);
                 }
 
-                // Mark conversation as read
+                // Mark conversation as read regardless of success/failure
                 markConversationAsRead(conversationId);
             })
             .catch(error => {
@@ -1093,7 +1146,10 @@
                     <div class="empty-state">
                         <i class="bi bi-exclamation-triangle-fill empty-icon"></i>
                         <h4>Error Loading Conversation</h4>
-                        <p>Could not load conversation. Please try again.</p>
+                        <p>Could not load conversation: ${error.message}. Please try again.</p>
+                        <button class="btn btn-primary mt-3" onclick="loadConversation('${conversationId}')">
+                            <i class="bi bi-arrow-repeat me-2"></i>Try Again
+                        </button>
                     </div>
                 `;
             });
@@ -1102,38 +1158,26 @@
         // ============= MESSAGE FORM HANDLING =============
         // Initialize message form
         function initializeMessageForm(conversationId, isRefresh = false) {
+            console.log(`Initializing message form for conversation ${conversationId}, isRefresh: ${isRefresh}`);
+            
             const messageForm = document.getElementById('messageForm');
-            if (!messageForm) return;
+            if (!messageForm) {
+                console.error('Message form not found');
+                return;
+            }
             
-            // If already initialized and not a refresh, skip
-            if (window.messageFormInitialized && !isRefresh) return;
+            // CRITICAL FIX: Remove any existing submit event listeners
+            const newForm = messageForm.cloneNode(true);
+            messageForm.parentNode.replaceChild(newForm, messageForm);
             
-            // Set flag to prevent duplicate initialization
-            window.messageFormInitialized = true;
-            
-            // Get form elements
+            // Get fresh references
             const textarea = document.getElementById('messageContent');
             const fileInput = document.getElementById('fileUpload');
             const filePreviewContainer = document.getElementById('filePreviewContainer');
             const attachmentBtn = document.getElementById('attachmentBtn');
-            
-            // Create error container if it doesn't exist
             const fileErrorContainer = document.getElementById('fileErrorContainer') || createErrorContainer();
-
-            function createErrorContainer() {
-                const fileErrorContainer = document.createElement('div');
-                fileErrorContainer.id = 'fileErrorContainer';
-                fileErrorContainer.className = 'file-error-container alert alert-danger d-none';
-                
-                const filePreviewContainer = document.getElementById('filePreviewContainer');
-                if (filePreviewContainer) {
-                    filePreviewContainer.parentNode.insertBefore(fileErrorContainer, filePreviewContainer);
-                }
-                
-                return fileErrorContainer;
-            }
-
-            // Restore previous content if this is first initialization (not refresh)
+            
+            // Restore previous content if needed
             if (!isRefresh && textarea && textarea.value.trim() === '' && conversationId) {
                 const savedContent = localStorage.getItem('messageContent_' + conversationId);
                 if (savedContent) {
@@ -1143,19 +1187,12 @@
                 }
             }
             
-            // Auto-resize textarea
+            // Set up textarea auto-resize
             if (textarea) {
-                // Initial resize
-                if (textarea.value) {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = (textarea.scrollHeight) + 'px';
-                }
-                
                 textarea.addEventListener('input', function() {
                     this.style.height = 'auto';
                     this.style.height = (this.scrollHeight) + 'px';
                     
-                    // Save content to local storage
                     if (conversationId) {
                         localStorage.setItem('messageContent_' + conversationId, this.value);
                     }
@@ -1163,235 +1200,85 @@
                     // Update typing timestamp
                     window.lastTypingTime = Date.now();
                 });
-                
-                // Focus/blur protection
-                textarea.addEventListener('blur', function() {
-                    window.lastBlurTime = Date.now();
-                    window.lastBlurContent = this.value;
-                });
-                
-                textarea.addEventListener('focus', function() {
-                    // If content was cleared unexpectedly, restore it
-                    if (this.value === '' && window.lastBlurContent && 
-                        Date.now() - window.lastBlurTime < 3000) {
-                        console.warn('Restored textarea content after unexpected clear');
-                        this.value = window.lastBlurContent;
-                    }
-                });
-            }
-
-            if (textarea) {
-                // Clear error message when typing starts
-                textarea.addEventListener('input', function() {
-                    const fileErrorContainer = document.getElementById('fileErrorContainer');
-                    if (fileErrorContainer && !fileErrorContainer.classList.contains('d-none')) {
-                        fileErrorContainer.classList.add('d-none');
-                        fileErrorContainer.innerHTML = '';
-                    }
-                });
             }
             
-            // File attachment handling
+            // FIXED attachment button handler - direct approach
             if (attachmentBtn && fileInput) {
-                // Handle attachment button click
-                attachmentBtn.addEventListener('click', function() {
+                attachmentBtn.onclick = function(e) {
+                    e.preventDefault();
                     fileInput.click();
+                    
                     // Clear errors when opening file picker
-                    fileErrorContainer.classList.add('d-none');
-                    fileErrorContainer.textContent = '';
-                });
-                
-                if (fileInput && filePreviewContainer) {
-                    fileInput.addEventListener('change', function() {
-                        // Clear previous error messages
+                    if (fileErrorContainer) {
                         fileErrorContainer.classList.add('d-none');
-                        fileErrorContainer.innerHTML = '';
-                        
-                        if (this.files.length === 0) return;
-                        
-                        // Check for maximum of 5 files
-                        const existingFiles = filePreviewContainer.querySelectorAll('.file-preview').length;
-                        const totalFilesAfterAdd = existingFiles + this.files.length;
-                        
-                        if (totalFilesAfterAdd > 5) {
-                            fileErrorContainer.innerHTML = 'You can upload a maximum of 5 files at once';
-                            fileErrorContainer.classList.remove('d-none');
-                            return;
-                        }
-                        
-                        const errors = [];
-                        const maxFileSize = 10 * 1024 * 1024; // 10MB
-                        
-                        // Validate each file
-                        Array.from(this.files).forEach(file => {
-                            // Size validation
-                            if (file.size > maxFileSize) {
-                                errors.push(`File "${file.name}" exceeds the 10MB limit`);
-                                return;
-                            }
-                            
-                            // Type validation
-                            if (!isValidFileType(file)) {
-                                errors.push(`File "${file.name}" is not an allowed type. Please use JPG, PNG, GIF, WEBP, PDF, DOC, DOCX, XLS, XLSX, or TXT files.`);
-                                return;
-                            }
-                            
-                            // Create preview for valid files
-                            createFilePreview(file, filePreviewContainer);
-                        });
-                        
-                        // Show errors if any
-                        if (errors.length > 0) {
-                            fileErrorContainer.innerHTML = errors.map(msg => `<div>${msg}</div>`).join('');
-                            fileErrorContainer.classList.remove('d-none');
-                        }
-                        
-                        // Reset the file input value to allow selecting the same file again
-                        // but preserve the FileList for form submission
-                        const fileList = this.files;
-                        this.value = '';  
-                        Object.defineProperty(this, 'files', {
-                            value: fileList,
-                            writable: true
-                        });
-                    });
-                }
+                        fileErrorContainer.textContent = '';
+                    }
+                };
             }
             
-            // Message form submission
-            messageForm.addEventListener('submit', function(e) {
+            // FIXED file input change handler - direct assignment
+            if (fileInput) {
+                fileInput.onchange = handleFileInputChange;
+            }
+            
+            // FIXED form submission with direct assignment to avoid replaceChild errors
+            newForm.onsubmit = function(e) {
                 e.preventDefault();
-
-                // Clear any existing error messages
-                const fileErrorContainer = document.getElementById('fileErrorContainer');
+                
+                // Validation
+                const hasText = textarea && textarea.value.trim() !== '';
+                const hasFiles = filePreviewContainer && 
+                    filePreviewContainer.querySelectorAll('.file-preview').length > 0;
+                
+                // Must have text or files
+                if (!hasText && !hasFiles) {
+                    console.log('Form validation failed: no content');
+                    
+                    if (fileErrorContainer) {
+                        fileErrorContainer.innerHTML = 'Please enter a message or attach a file.';
+                        fileErrorContainer.classList.remove('d-none');
+                    }
+                    return false;
+                }
+                
+                // Clear errors
                 if (fileErrorContainer) {
                     fileErrorContainer.classList.add('d-none');
                     fileErrorContainer.innerHTML = '';
                 }
                 
-                // Get direct references to all required elements
-                const textarea = document.getElementById('messageContent');
-                const fileInput = document.getElementById('fileUpload');
-                const filePreviewContainer = document.getElementById('filePreviewContainer');
-
-                // Ensure global storage exists
-                if (!window.savedAttachments) {
-                    window.savedAttachments = new Map();
-                }
-                
-                // Store the conversation ID
-                const conversationId = document.querySelector('input[name="conversation_id"]').value;
-
-                // Debug the current file input state
-                console.log('Before sync - fileInput files:', fileInput?.files?.length || 0);
-
-                // Basic validation
-                const hasTextContent = textarea.value.trim() !== '';
-                const hasFilePreview = filePreviewContainer && filePreviewContainer.querySelectorAll('.file-preview').length > 0;
-                
-                if (!hasTextContent && !hasFilePreview) {
-                    const errorContainer = document.getElementById('fileErrorContainer') || createErrorContainer();
-                    errorContainer.innerHTML = 'Please enter a message or attach a file.';
-                    errorContainer.classList.remove('d-none');
-                    return;
-                }
-                
-                // Show "sending" state
+                // Show spinner
                 const sendBtn = document.getElementById('sendMessageBtn');
                 const originalBtnContent = sendBtn.innerHTML;
                 sendBtn.disabled = true;
                 sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
                 
-                // Create a completely fresh FormData object
+                // Create FormData
                 const formData = new FormData();
-                
-                // Add form fields manually
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
                 formData.append('conversation_id', document.querySelector('input[name="conversation_id"]').value);
-                formData.append('content', textarea.value);
+                formData.append('content', textarea ? textarea.value : '');
                 
-                // Add files directly from the input element without any manipulation
+                // Add files if present
                 if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                    console.log(`DIRECT UPLOAD: Found ${fileInput.files.length} files`);
+                    console.log(`Adding ${fileInput.files.length} files to form data`);
                     
                     for (let i = 0; i < fileInput.files.length; i++) {
-                        // Log file details before appending
-                        console.log(`File ${i+1}: ${fileInput.files[i].name} (${fileInput.files[i].size} bytes)`);
-                        
-                        // Just append with standard array notation
                         formData.append('attachments[]', fileInput.files[i]);
                     }
-                }
-
-                // Check if we have previews but no files
-                if (filePreviewContainer && filePreviewContainer.querySelectorAll('.file-preview').length > 0) {
-                    if (!fileInput.files || fileInput.files.length === 0) {
-                        console.log('Detected file previews without fileInput.files - fixing');
+                } else if (window.savedAttachments && window.savedAttachments.has(conversationId)) {
+                    // Try to use saved attachments as fallback
+                    const savedFiles = window.savedAttachments.get(conversationId) || [];
+                    if (savedFiles.length > 0) {
+                        console.log(`Using ${savedFiles.length} saved attachments`);
                         
-                        // Create new Files list
-                        const dataTransfer = new DataTransfer();
-                        
-                        // Get file objects from preview elements
-                        filePreviewContainer.querySelectorAll('.file-preview').forEach(preview => {
-                            const fileName = preview.querySelector('.file-name')?.textContent;
-                            if (fileName) {
-                                // Try to find the file in savedAttachments or recreate it
-                                let foundFile = null;
-                                
-                                // Look in global storage
-                                if (window.savedAttachments && window.savedAttachments.has(conversationId)) {
-                                    const savedFiles = window.savedAttachments.get(conversationId);
-                                    if (savedFiles && savedFiles.length > 0) {
-                                        console.log(`Using ${savedFiles.length} files from savedAttachments`);
-                                        
-                                        for (let i = 0; i < savedFiles.length; i++) {
-                                            // IMPORTANT: Use the exact name format Laravel expects
-                                            formData.append('attachments[]', savedFiles[i]);
-                                            console.log(`Directly added file to FormData: ${savedFiles[i].name} (${Math.round(savedFiles[i].size/1024)}KB)`);
-                                        }
-                                    }
-                                } else if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                                    // Fall back to fileInput.files if savedAttachments doesn't have entries
-                                    console.log(`Using ${fileInput.files.length} files from fileInput`);
-                                    
-                                    for (let i = 0; i < fileInput.files.length; i++) {
-                                        formData.append('attachments[]', fileInput.files[i]);
-                                        console.log(`Added file from input to FormData: ${fileInput.files[i].name} (${Math.round(fileInput.files[i].size/1024)}KB)`);
-                                    }
-                                }
-                                
-                                if (foundFile) {
-                                    dataTransfer.items.add(foundFile);
-                                    console.log(`Retrieved file from storage: ${foundFile.name}`);
-                                }
-                            }
-                        });
-                        
-                        // If we found any files, set them to the input
-                        if (dataTransfer.files.length > 0) {
-                            fileInput.files = dataTransfer.files;
-                            console.log(`Restored ${dataTransfer.files.length} files to input`);
+                        for (let i = 0; i < savedFiles.length; i++) {
+                            formData.append('attachments[]', savedFiles[i]);
                         }
                     }
                 }
-
-                // Log what we have after sync attempt
-                console.log('After sync - fileInput files:', fileInput?.files?.length || 0);
-                if (fileInput?.files?.length > 0) {
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        console.log(`File ${i+1}:`, fileInput.files[i].name, fileInput.files[i].size);
-                    }
-                }
                 
-                // Log all form data to verify contents
-                console.log('FINAL FORM DATA:');
-                for (let pair of formData.entries()) {
-                    console.log(`${pair[0]}: ${pair[1] instanceof File ? 
-                        `File: ${pair[1].name} (${Math.round(pair[1].size/1024)}KB)` : 
-                        pair[1].toString().substring(0, 30)}`);
-                }
-                
-                // Make a direct fetch request with proper AJAX headers
+                // Submit form - CRITICAL FIX: Use fetch with safer cleanup
                 fetch(this.action, {
                     method: 'POST',
                     body: formData,
@@ -1399,185 +1286,101 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
-                        // DO NOT SET 'Content-Type' here - it will be set automatically with proper boundary
                     }
                 })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    
-                    // Check content type before parsing
-                    const contentType = response.headers.get('content-type');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    
-                    // Only parse as JSON if it's actually JSON
-                    if (contentType && contentType.includes('application/json')) {
-                        return response.json();
-                    } else {
-                        // Handle HTML or other non-JSON responses
-                        return response.text().then(text => {
-                            console.error('Received non-JSON response:', text.substring(0, 500) + '...');
-                            throw new Error('Server returned non-JSON response');
-                        });
-                    }
-                })
-                
+                .then(response => response.json())
                 .then(data => {
-                    console.log('Message sent successfully:', data);
-                    
                     if (data.success) {
-                        // BRUTE FORCE APPROACH - Find the text area and forcefully clear it multiple ways
-                        const textarea = document.getElementById('messageContent');
+                        console.log('Message sent successfully');
                         
-                        console.log('Before clearing, textarea value:', textarea?.value);
-                        
+                        // SAFELY clear textarea - direct value assignment avoids DOM issues
                         if (textarea) {
-                            // Try all possible ways to clear it
                             textarea.value = '';
+                            textarea.style.height = 'auto';
                             
-                            
-                            // Also directly modify the DOM element via innerHTML
-                            textarea.innerHTML = '';
-                            
-                            console.log('After first clearing attempt, value is:', textarea?.value);
-                            
-                            // Do it again with a delay to make sure it happens
-                            setTimeout(() => {
-                                textarea.value = '';
-                                textarea.innerHTML = '';
-                                
-                                // Reset height
-                                if (textarea.style) {
-                                    textarea.style.height = 'auto';
-                                }
-                                
-                                // Clear any localStorage drafts
-                                const conversationId = document.querySelector('input[name="conversation_id"]')?.value;
-                                if (conversationId) {
-                                    localStorage.removeItem('messageContent_' + conversationId);
-                                }
-                                
-                                console.log('After delayed clearing, textarea value:', textarea?.value);
-                                
-                                // Clear global variables that might restore content
-                                window.lastBlurContent = '';
-                            }, 50);
-                            
-                            // NUCLEAR OPTION - Replace the entire textarea with a new one
-                            setTimeout(() => {
-                                if (textarea.value !== '') {
-                                    console.log('Textarea still not cleared, using nuclear option');
-                                    
-                                    // Create a new textarea with same attributes but empty value
-                                    const newTextarea = document.createElement('textarea');
-                                    newTextarea.id = textarea.id;
-                                    newTextarea.name = textarea.name;
-                                    newTextarea.className = textarea.className;
-                                    newTextarea.placeholder = textarea.placeholder;
-                                    
-                                    // Replace the old one
-                                    textarea.parentNode.replaceChild(newTextarea, textarea);
-                                    
-                                    // Initialize height adjust for the new textarea
-                                    newTextarea.addEventListener('input', function() {
-                                        this.style.height = 'auto';
-                                        this.style.height = (this.scrollHeight) + 'px';
-                                    });
-                                }
-                            }, 100);
-                
-                            // 5. Clear any stored content
                             if (conversationId) {
                                 localStorage.removeItem('messageContent_' + conversationId);
                             }
-                            window.lastBlurContent = '';
-
-                            // After the message is sent and processed, reinitialize the action handlers
-                            setTimeout(() => {
-                                addMessageActionHandlers();
-                            }, 100);
                         }
-                                        
-                        // 2. Clear file previews if they exist
-                        // Also properly reset the file input
-                        fileUpload.value = '';
+                        
+                        // Clear file previews with innerHTML
                         if (filePreviewContainer) {
                             filePreviewContainer.innerHTML = '';
                         }
                         
-                        // 3. Clear file input by resetting value
-                        // After sending a message and clearing the input, we need to reattach handlers
+                        // SAFE file input reset
                         if (fileInput) {
-                            // First, clear the FileList by resetting value
                             fileInput.value = '';
-
-                            // Clone and replace the file input to completely reset it
-                            const newFileInput = fileInput.cloneNode(false);
-                            fileInput.parentNode.replaceChild(newFileInput, fileInput);
-                            newFileInput.addEventListener('change', handleFileInputChange);
-
-                            const attachmentBtn = document.getElementById('attachmentBtn');
-                            if (attachmentBtn) {
-                                // Remove any existing click handlers
-                                attachmentBtn.replaceWith(attachmentBtn.cloneNode(true));
-                                
-                                // Get the fresh reference
-                                const newAttachmentBtn = document.getElementById('attachmentBtn');
-                                
-                                // Add the click handler to the button
-                                newAttachmentBtn.addEventListener('click', function() {
-                                    document.getElementById('fileUpload').click();
-                                });
-                                
-                                console.log('Attachment button reconnected to new file input');
-                            }
                             
-                            console.log('File input completely reset with new event handlers');
+                            // Create a new file input if needed
+                            const newFileInput = fileInput.cloneNode(false);
+                            if (fileInput.parentNode) {
+                                fileInput.parentNode.replaceChild(newFileInput, fileInput);
+                                
+                                // Use direct assignment, not addEventListener
+                                newFileInput.onchange = handleFileInputChange;
+                            }
                         }
-
-                        // Clear window.savedAttachments for this conversation
+                        
+                        // Clear saved attachments
                         if (window.savedAttachments && window.savedAttachments.has(conversationId)) {
                             window.savedAttachments.set(conversationId, []);
-                            console.log('Cleared saved attachments for conversation', conversationId);
+                            console.log('Cleared saved attachments');
                         }
                         
-                        // 4. Reset the sending state IMMEDIATELY
+                        // Reset button state
                         sendBtn.disabled = false;
                         sendBtn.innerHTML = originalBtnContent;
                         
-                        // 5. Trigger conversation refresh with delay to ensure server processing
+                        // IMPROVED: Simpler refresh strategy
+                        const hadAttachments = filePreviewContainer && 
+                            filePreviewContainer.querySelectorAll('.file-preview').length > 0;
+                        
                         setTimeout(function() {
-                            const conversationId = document.querySelector('input[name="conversation_id"]').value;
-                            console.log("Refreshing conversation:", conversationId);
-                            forceRefreshConversation(conversationId);
+                            console.log("Smart refresh after sending message");
+                            bruteForceFinalRefresh(conversationId);
                             
-                            // Also refresh the conversation list
-                            setTimeout(() => {
-                                smoothRefreshConversationList();
-                            }, 300);
-                        }, 90);
+                            setTimeout(() => smoothRefreshConversationList(), 500);
+                        }, hadAttachments ? 1500 : 800);
                     } else {
-                        // Handle failure
-                        console.error('Failed to send message:', data.error || 'Unknown error');
+                        console.error('Error sending message:', data.error || 'Unknown error');
+                        
                         sendBtn.disabled = false;
                         sendBtn.innerHTML = originalBtnContent;
                         
-                        const errorContainer = document.getElementById('fileErrorContainer') || createErrorContainer();
-                        errorContainer.innerHTML = 'Failed to send message. Please try again.';
-                        errorContainer.classList.remove('d-none');
+                        if (fileErrorContainer) {
+                            fileErrorContainer.innerHTML = data.message || 'Failed to send message. Please try again.';
+                            fileErrorContainer.classList.remove('d-none');
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error sending message:', error);
+                    
                     sendBtn.disabled = false;
                     sendBtn.innerHTML = originalBtnContent;
                     
-                    const errorContainer = document.getElementById('fileErrorContainer') || createErrorContainer();
-                    errorContainer.innerHTML = 'An error occurred while sending your message. Please try again.';
-                    errorContainer.classList.remove('d-none');
+                    if (fileErrorContainer) {
+                        fileErrorContainer.innerHTML = 'An error occurred while sending your message. Please try again.';
+                        fileErrorContainer.classList.remove('d-none');
+                    }
                 });
-            });
+            };
+            
+            console.log('Message form initialized successfully');
+            
+            function createErrorContainer() {
+                const container = document.createElement('div');
+                container.id = 'fileErrorContainer';
+                container.className = 'file-error-container alert alert-danger d-none';
+                
+                const filePreviewContainer = document.getElementById('filePreviewContainer');
+                if (filePreviewContainer && filePreviewContainer.parentNode) {
+                    filePreviewContainer.parentNode.insertBefore(container, filePreviewContainer);
+                }
+                
+                return container;
+            }
         }
 
         // To ensure the overridden value property of textareas works correctly
@@ -2100,23 +1903,134 @@
             document.getElementById('newConversationForm')?.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const formData = new FormData(this);
+                const submitButton = document.getElementById('startConversationBtn');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...';
+                }
                 
-                fetch(getRouteUrl(route_prefix + '.create-conversation'), {
+                // Get form data with CORRECTED names
+                const userType = document.getElementById('userType').value;
+                const userId = document.getElementById('recipientSelect').value;
+                const initialMessage = document.getElementById('initialMessage')?.value || '';
+                
+                if (!userType || !userId) {
+                    alert('Please select both user type and recipient');
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Start Conversation';
+                    }
+                    return;
+                }
+                
+                // Create FormData with CORRECTED parameter names
+                const formData = new FormData();
+                formData.append('recipient_type', userType);  // CORRECTED from participant_type
+                formData.append('recipient_id', userId);      // CORRECTED from participant_id
+                formData.append('initial_message', initialMessage);
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                
+                // Create overlay for visual feedback
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.7);z-index:9999;display:flex;justify-content:center;align-items:center;';
+                loadingOverlay.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+                document.body.appendChild(loadingOverlay);
+                
+                // Flag to track if we're already redirecting
+                let isRedirecting = false;
+                
+                fetch(`/${rolePrefix}/messaging/create-conversation`, {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    redirect: 'follow'
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status, 'Redirected:', response.redirected);
+                    
+                    if (response.redirected) {
+                        isRedirecting = true;
+                        window.location.href = response.url;
+                        return null;
+                    }
+                    
+                    // Success case
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    
+                    // Even for error responses, try to parse the response
+                    return response.text().then(text => {
+                        // Try to find a conversation ID in the response even if it's an error
+                        const match = text.match(/conversation=(\d+)/i);
+                        if (match && match[1]) {
+                            isRedirecting = true;
+                            window.location.href = `/${rolePrefix}/messaging?conversation=${match[1]}`;
+                            return null;
+                        }
+                        
+                        try {
+                            return JSON.parse(text);
+                        } catch {
+                            throw new Error(`Server error (${response.status}): ${text.substring(0, 100)}...`);
+                        }
+                    });
+                })
                 .then(data => {
-                    if (data.success) {
-                        window.location.href = role_base_url + '/messaging?conversation=' + data.conversation_id;
+                    // Skip processing if already redirecting
+                    if (isRedirecting || data === null) return;
+                    
+                    if (data && (data.success || data.conversation_id)) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('newConversationModal'));
+                        if (modal) modal.hide();
+                        
+                        // Navigate to conversation
+                        const conversationId = data.conversation_id || data.exists_id;
+                        if (conversationId) {
+                            window.location.href = `/${rolePrefix}/messaging?conversation=${conversationId}`;
+                        } else {
+                            window.location.reload();
+                        }
+                    } else {
+                        throw new Error(data?.message || 'Unknown error occurred');
                     }
                 })
                 .catch(error => {
                     console.error('Error creating conversation:', error);
+                    
+                    // Don't show error if redirecting
+                    if (isRedirecting) return;
+                    
+                    // Check if URL already has conversation ID (success case)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('conversation')) {
+                        console.log('Found conversation in URL, ignoring error');
+                        return;
+                    }
+                    
+                    // Remove overlay
+                    if (document.contains(loadingOverlay)) {
+                        document.body.removeChild(loadingOverlay);
+                    }
+                    
+                    // Reset button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Start Conversation';
+                    }
+                })
+                .finally(() => {
+                    // Clean up overlay after 3 seconds in any case
+                    setTimeout(() => {
+                        if (document.contains(loadingOverlay)) {
+                            document.body.removeChild(loadingOverlay);
+                        }
+                    }, 3000);
                 });
             });
             
@@ -2125,6 +2039,30 @@
                 e.preventDefault();
                 
                 const formData = new FormData(this);
+
+                 // Flag to track if navigation has started
+                 let navigationStarted = false;
+                
+                // Show a loading overlay to prevent multiple clicks
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(255,255,255,0.7);
+                    z-index: 9999;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                `;
+                loadingOverlay.innerHTML = `
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                `;
+                document.body.appendChild(loadingOverlay);
                 
                 fetch(getRouteUrl(route_prefix + '.create-group'), {
                     method: 'POST',
@@ -2361,92 +2299,62 @@
         function forceRefreshConversation(conversationId) {
             if (!conversationId) return;
             
-            const activeConversationId = document.querySelector('.conversation-item.active')?.dataset.conversationId;
-            if (activeConversationId !== conversationId) return;
+            console.log('Forcing refresh for conversation:', conversationId);
             
-            // Add a timestamp parameter to prevent caching
-            const cacheBuster = '&_=' + new Date().getTime();
+            // Use stronger cache busting with multiple parameters
+            const timestamp = new Date().getTime();
+            const random = Math.floor(Math.random() * 1000000);
+            const cacheBuster = `&_=${timestamp}&r=${random}`;
+            
             fetch(getRouteUrl(route_prefix + '.get-conversation') + '?id=' + conversationId + cacheBuster, {
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Refresh response received:', response.status);
+                return response.json();
+            })
             .then(data => {
-                if (data.success) {
-                    // Create an off-screen div to prepare the content
-                    const tempDiv = document.createElement('div');
-                    tempDiv.style.position = 'absolute';
-                    tempDiv.style.left = '-9999px';
-                    tempDiv.style.visibility = 'hidden';
-                    tempDiv.innerHTML = data.html;
-                    document.body.appendChild(tempDiv);
-                    
-                    // Get references to current containers
-                    const currentMessagesContainer = document.getElementById('messagesContainer');
-                    if (!currentMessagesContainer) {
-                        document.body.removeChild(tempDiv);
-                        return;
-                    }
-                    
-                    // Keep scroll position at bottom
-                    const wasAtBottom = isAtBottom(currentMessagesContainer);
-                    
-                    // Preload all images in the temp container
-                    const images = tempDiv.querySelectorAll('img');
-                    let loadedImages = 0;
-                    const totalImages = images.length;
-                                        
-                    const updateContent = function() {
-                        const newMessagesContainer = tempDiv.querySelector('.messages-container');
-                        if (newMessagesContainer) {
-                            // Instead of replacing the whole container, just update its content
-                            const currentMessagesContainer = document.getElementById('messagesContainer');
-                            if (currentMessagesContainer) {
-                                // Keep scroll position at bottom
-                                const wasAtBottom = isAtBottom(currentMessagesContainer);
-                                
-                                // Update content
-                                currentMessagesContainer.innerHTML = newMessagesContainer.innerHTML;
-                                
-                                // Restore scroll position
-                                if (wasAtBottom) {
-                                    currentMessagesContainer.scrollTop = currentMessagesContainer.scrollHeight;
-                                }
+                console.log('Refresh data received, has HTML:', !!data.html);
+                
+                if (data.html) {
+                    const contentDiv = document.getElementById('conversationContent');
+                    if (contentDiv) {
+                        // CRITICAL FIX: Add strong visual indication that content is updating
+                        const messagesContainer = document.getElementById('messagesContainer');
+                        const wasAtBottom = messagesContainer && 
+                            (messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50);
+                        
+                        // Replace content
+                        contentDiv.innerHTML = data.html;
+                        
+                        // CRITICAL FIX: Force DOM reflow to ensure content is updated
+                        void contentDiv.offsetHeight;
+                        
+                        // CRITICAL FIX: Force browser to process the HTML
+                        setTimeout(() => {
+                            // Restore scroll position to bottom
+                            const newMessagesContainer = document.getElementById('messagesContainer');
+                            if (newMessagesContainer && wasAtBottom) {
+                                newMessagesContainer.scrollTop = newMessagesContainer.scrollHeight;
                             }
-                        }
-                        
-                        // Clean up
-                        document.body.removeChild(tempDiv);
-                    };
-                    
-                    // If no images, update immediately
-                    if (totalImages === 0) {
-                        updateContent();
-                    } else {
-                        // Set a timeout to ensure we don't wait forever
-                        const timeout = setTimeout(() => {
-                            updateContent();
-                        }, 2000);
-                        
-                        // Preload each image
-                        images.forEach(img => {
-                            const tempImg = new Image();
-                            tempImg.onload = tempImg.onerror = function() {
-                                loadedImages++;
-                                if (loadedImages >= totalImages) {
-                                    clearTimeout(timeout);
-                                    updateContent();
-                                }
-                            };
-                            tempImg.src = img.src;
-                        });
+                            
+                            // Reattach event handlers
+                            initializeMessageForm(conversationId, true);
+                            addMessageActionHandlers();
+                        }, 10);
                     }
+                } else {
+                    console.error('No HTML content in response');
                 }
             })
             .catch(error => {
-                console.error('Error refreshing conversation after sending:', error);
+                console.error('Error in forced refresh:', error);
             });
         }
 
@@ -4166,8 +4074,29 @@
                             // Add unsent class to the entire message element for CSS styling
                             messageElement.classList.add('has-unsent');
                             
-                            // Check if this message had attachments
-                            const hadAttachments = !!attachmentsElement;
+                             // Check if this was an attachment message
+                            const hadAttachments = !!messageElement.querySelector('.message-attachments');
+                            
+                            if (hadAttachments) {
+                                // Add double refresh for attachment unsends
+                                const conversationId = document.querySelector('input[name="conversation_id"]')?.value;
+                                if (conversationId) {
+                                    // First quick refresh
+                                    setTimeout(() => {
+                                        console.log("First refresh after unsending attachment");
+                                        forceRefreshConversation(conversationId);
+                                    }, 500);
+                                    
+                                    // Second refresh with longer delay
+                                    setTimeout(() => {
+                                        console.log("Second refresh after unsending attachment");
+                                        forceRefreshConversation(conversationId);
+                                    }, 2000);
+                                }
+                            }
+                        
+                        // Force refresh the conversation list
+                        smoothRefreshConversationList();
                             
                             if (contentElement) {
                                 // Replace content with "unsent" message
@@ -4190,13 +4119,19 @@
                                 timeElement.classList.add('unsent-time');
                             }
                             
-                            // Force a conversation refresh after a short delay if this was a message with attachments
+                            // Force a conversation refresh after unsend if this had attachments
                             if (hadAttachments || data.had_attachments) {
                                 setTimeout(() => {
                                     const conversationId = document.querySelector('input[name="conversation_id"]')?.value;
                                     if (conversationId) {
                                         console.log("Message had attachments - forcing conversation refresh");
                                         forceRefreshConversation(conversationId);
+                                        
+                                        // *** ADD THIS LINE - Second refresh to ensure content updates ***
+                                        setTimeout(() => {
+                                            ensureConversationContentContainer();
+                                            bruteForceFinalRefresh(conversationId);
+                                        }, 2000);
                                     }
                                 }, 300);
                             }
@@ -4272,6 +4207,353 @@
             }
         }
 
+        function bruteForceFinalRefresh(conversationId) {
+            if (!conversationId) return;
+            
+            console.log('NO-FLICKER REFRESH for conversation:', conversationId);
+            
+            // Prevent refreshes too close to each other
+            const now = Date.now();
+            if (window.lastRefreshTime && now - window.lastRefreshTime < 1000) {
+                console.log('Skipping refresh - too soon after last refresh');
+                return;
+            }
+            window.lastRefreshTime = now;
+            
+            // Ensure container exists
+            ensureConversationContentContainer();
+            
+            const contentDiv = document.getElementById('conversationContent');
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (!contentDiv || !messagesContainer) return;
+            
+            // IMPORTANT: Save scroll position BEFORE any DOM operations
+            const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+            const exactScrollTop = messagesContainer.scrollTop;
+            
+            // CRITICAL FIX: Use a hidden iframe approach that's completely invisible
+            const hiddenFrame = document.createElement('iframe');
+            hiddenFrame.style.position = 'absolute';
+            hiddenFrame.style.left = '-9999px';
+            hiddenFrame.style.width = '1px';
+            hiddenFrame.style.height = '1px';
+            hiddenFrame.style.opacity = '0';
+            hiddenFrame.style.pointerEvents = 'none';
+            document.body.appendChild(hiddenFrame);
+            
+            // Build cache-busting URL
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 15);
+            const url = `${window.location.origin}/${rolePrefix}/messaging/get-conversation?id=${conversationId}&_=${timestamp}&r=${random}`;
+            
+            // Fetch content using XMLHttpRequest for more control
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+            
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (!data.html) {
+                            console.error('No HTML content in response');
+                            document.body.removeChild(hiddenFrame);
+                            return;
+                        }
+                        
+                        // Load content into the hidden iframe first
+                        const frameDoc = hiddenFrame.contentDocument || hiddenFrame.contentWindow.document;
+                        frameDoc.open();
+                        frameDoc.write(data.html);
+                        frameDoc.close();
+                        
+                        // CRITICAL: Pause to let the iframe render and process the content
+                        setTimeout(() => {
+                            // Find the new messages container in the iframe
+                            const frameMessagesContainer = frameDoc.getElementById('messagesContainer');
+                            
+                            if (frameMessagesContainer) {
+                                // CRITICAL FIX: Smart DOM updating
+                                // Lock scroll position during update
+                                messagesContainer.style.overflowY = 'hidden';
+                                
+                                // INSTEAD OF replacing the entire HTML, just replace the messages
+                                messagesContainer.innerHTML = frameMessagesContainer.innerHTML;
+                                
+                                // Immediately restore scroll position BEFORE unlocking scroll
+                                if (wasAtBottom) {
+                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                } else {
+                                    messagesContainer.scrollTop = exactScrollTop;
+                                }
+                                
+                                // Force a reflow before enabling scrolling again
+                                void messagesContainer.offsetHeight;
+                                
+                                // Re-enable scrolling
+                                messagesContainer.style.overflowY = 'auto';
+                                
+                                // Re-initialize handlers
+                                initializeMessageActions();
+                                
+                                // Check if we need to re-init the form
+                                if (typeof initializeMessageForm === 'function') {
+                                    initializeMessageForm(conversationId, true);
+                                }
+                            }
+                            
+                            // Clean up the hidden frame
+                            document.body.removeChild(hiddenFrame);
+                        }, 50);
+                    } catch (error) {
+                        console.error('Error processing refresh response:', error);
+                        document.body.removeChild(hiddenFrame);
+                    }
+                } else {
+                    console.error('Error fetching conversation content:', xhr.status);
+                    document.body.removeChild(hiddenFrame);
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Network error during refresh');
+                document.body.removeChild(hiddenFrame);
+            };
+            
+            xhr.send();
+        }
+
+        // Add this function to prevent accidental page refreshes
+        function preventAccidentalRefresh() {
+            // Stop automatic page reloads
+            window.onbeforeunload = function(e) {
+                const messagesContainer = document.getElementById('messagesContainer');
+                const textarea = document.getElementById('messageContent');
+                
+                // Only prevent unload if actively messaging
+                if (messagesContainer && textarea && textarea.value.trim() !== '') {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+                
+                // Let normal navigation proceed otherwise
+                return undefined;
+            };
+            
+            // Intercept and prevent form submissions that might cause page refresh
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                
+                // Skip interception for the message form which we handle separately
+                if (form.id === 'messageForm') {
+                    return;
+                }
+                
+                // For other forms, prevent default and handle with fetch when possible
+                if (!form.hasAttribute('data-no-intercept')) {
+                    e.preventDefault();
+                    
+                    // Create FormData from the form
+                    const formData = new FormData(form);
+                    
+                    // Submit with fetch instead
+                    fetch(form.action, {
+                        method: form.method || 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Handle response without page reload
+                        console.log('Form submitted via fetch:', data);
+                        
+                        // Optional: Call form's onsubmit handler with the response
+                        if (form.hasAttribute('data-success-handler')) {
+                            const handlerName = form.getAttribute('data-success-handler');
+                            if (typeof window[handlerName] === 'function') {
+                                window[handlerName](data);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting form:', error);
+                    });
+                    
+                    return false;
+                }
+            }, true);
+            
+            // Add global refresh rate limiting
+            window.lastRefreshTime = 0;
+            window.minRefreshInterval = 1000; // Minimum 1 second between refreshes
+            
+            // Override the default message refresh functions with rate-limited versions
+            const originalForceRefresh = window.forceRefreshConversation;
+            window.forceRefreshConversation = function(conversationId) {
+                const now = Date.now();
+                if (now - window.lastRefreshTime < window.minRefreshInterval) {
+                    console.log('Skipping refresh - too soon after last refresh');
+                    return;
+                }
+                window.lastRefreshTime = now;
+                return originalForceRefresh(conversationId);
+            };
+        }
+
+        function ensureConversationContentContainer() {
+            // Check if conversation content container exists
+            let contentDiv = document.getElementById('conversationContent');
+            
+            // If not, try to find the message-area and add the required ID
+            if (!contentDiv) {
+                const messageArea = document.querySelector('.message-area');
+                if (messageArea) {
+                    messageArea.id = 'conversationContent';
+                    console.log('Added conversationContent ID to message-area');
+                    return true;
+                } else {
+                    console.error('Could not find message-area to create content container');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Safely clear message content textarea without causing replaceChild errors
+            function safelyClearMessageContent() {
+                const textarea = document.getElementById('messageContent');
+                if (!textarea) return;
+                
+                console.log('Safe clearing of textarea initiated');
+                
+                // Simple direct value clearing instead of DOM manipulation
+                textarea.value = '';
+                
+                // Reset height if needed
+                if (textarea.style) {
+                    textarea.style.height = 'auto';
+                }
+                
+                // Clear any localStorage drafts
+                const conversationId = document.querySelector('input[name="conversation_id"]')?.value;
+                if (conversationId) {
+                    localStorage.removeItem('messageContent_' + conversationId);
+                }
+                
+                console.log('Textarea safely cleared');
+            }
+            
+            // Override the problematic textarea clearing in message send success handler
+            const originalMessageFormSubmit = HTMLFormElement.prototype.submit;
+            
+            // Create a new version of the message form submit handler
+            const messageForm = document.getElementById('messageForm');
+            if (messageForm) {
+                const originalSubmitHandler = messageForm.onsubmit;
+                
+                messageForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form data for submission
+                    const formData = new FormData(this);
+                    
+                    // Backup textarea content in case we need to restore
+                    const textarea = document.getElementById('messageContent');
+                    const originalContent = textarea ? textarea.value : '';
+                    const conversationId = document.querySelector('input[name="conversation_id"]').value;
+                    
+                    // Show sending state
+                    const sendBtn = document.getElementById('sendMessageBtn');
+                    const originalBtnContent = sendBtn.innerHTML;
+                    sendBtn.disabled = true;
+                    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                    
+                    // Submit using direct fetch to avoid DOM manipulation issues
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Safely clear the textarea without DOM replacement
+                            safelyClearMessageContent();
+                            
+                            // Clear file previews
+                            const filePreviewContainer = document.getElementById('filePreviewContainer');
+                            if (filePreviewContainer) {
+                                filePreviewContainer.innerHTML = '';
+                            }
+                            
+                            // Reset file input value
+                            const fileInput = document.getElementById('fileUpload');
+                            if (fileInput) {
+                                fileInput.value = '';
+                            }
+                            
+                            // Reset button state
+                            sendBtn.disabled = false;
+                            sendBtn.innerHTML = originalBtnContent;
+                            
+                            // Refresh conversation
+                            setTimeout(function() {
+                                bruteForceFinalRefresh(conversationId);
+                                
+                                setTimeout(() => {
+                                    smoothRefreshConversationList();
+                                }, 500);
+                            }, 800);
+                        } else {
+                            // Handle failure
+                            console.error('Failed to send message:', data.error || 'Unknown error');
+                            sendBtn.disabled = false;
+                            sendBtn.innerHTML = originalBtnContent;
+                            
+                            // Show error message
+                            const errorContainer = document.getElementById('fileErrorContainer');
+                            if (errorContainer) {
+                                errorContainer.innerHTML = 'Failed to send message. Please try again.';
+                                errorContainer.classList.remove('d-none');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending message:', error);
+                        sendBtn.disabled = false;
+                        sendBtn.innerHTML = originalBtnContent;
+                        
+                        // Restore textarea content if there was an error
+                        if (textarea && originalContent) {
+                            textarea.value = originalContent;
+                        }
+                        
+                        // Show error message
+                        const errorContainer = document.getElementById('fileErrorContainer');
+                        if (errorContainer) {
+                            errorContainer.innerHTML = 'An error occurred while sending your message. Please try again.';
+                            errorContainer.classList.remove('d-none');
+                        }
+                    });
+                });
+            }
+        });
+
+        
     </script>
+    
 </body>
 </html>
