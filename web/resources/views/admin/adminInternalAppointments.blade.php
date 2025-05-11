@@ -1857,6 +1857,10 @@
             document.querySelectorAll('.attendee-checkbox').forEach(checkbox => {
                 checkbox.checked = false; // Reset all checkboxes first
             });
+        });
+        
+        function resetAppointmentForm() {
+            if (!addAppointmentForm) return; // Add this safety check
             
             // Group participants by type
             const groupedParticipants = {
