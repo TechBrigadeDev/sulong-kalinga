@@ -29,6 +29,7 @@ use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\AiSummaryController;
 
 
+
 // All routes with administrator role check
 
 // This route group is for the administrator role and will be prefixed with 'admin'
@@ -190,11 +191,6 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     Route::prefix('health-monitoring')->name('health.monitoring.')->group(function () {
         Route::get('/', [HealthMonitoringController::class, 'index'])->name('index');
     });
-    
-    // Internal appointments
-    Route::prefix('internal-appointments')->name('internal.appointments.')->group(function () {
-        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
-    });
 
     // Medication Schedule
     Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
@@ -268,6 +264,11 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/store', [VisitationController::class, 'storeAppointment'])->name('store');
         Route::post('/update', [VisitationController::class, 'updateAppointment'])->name('update');
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
+    });
+
+     Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+        Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
     });
 
 });

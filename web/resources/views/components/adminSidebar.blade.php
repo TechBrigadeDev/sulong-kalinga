@@ -75,7 +75,7 @@
       <ul class="sub-menu m-auto">
         <li><a class="link_name">Schedules & Appointments</a></li>
         <li><a href="{{ route('admin.careworker.appointments.index') }}" class="{{ Request::routeIs('admin.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
-        <li><a href="{{ route('admin.internal.appointments.index') }}" class="{{ Request::routeIs('admin.internal.appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
+        <li><a href="{{ route('admin.internal-appointments.index') }}" class="{{ Request::routeIs('admin.internal.appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
         <li><a href="{{ route('admin.medication.schedule.index') }}" class="{{ Request::routeIs('admin.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
       </ul>
     </li>
