@@ -1042,6 +1042,11 @@
             beneficiaryCheckboxes.forEach(checkbox => {
                 checkbox.disabled = !isAssessmentOrOther;
             });
+        });
+        
+        // Handle appointment type change
+        document.getElementById('appointmentType').addEventListener('change', function() {
+            const selectedType = this.value;
             
             // Family member options
             const familyAttendees = document.getElementById('familyAttendees');
@@ -1147,6 +1152,17 @@
                 delay: 5000,
                 autohide: true
             });
+        });
+        
+        // Setup attendee search and selection for each participant type
+        setupAttendeeSearch('staffSearch', 'staffDropdown', 'staffAttendees');
+        setupAttendeeSearch('beneficiarySearch', 'beneficiaryDropdown', 'beneficiaryAttendees');
+        setupAttendeeSearch('familySearch', 'familyDropdown', 'familyAttendees');
+        
+        function setupAttendeeSearch(searchId, dropdownId, containerDivId) {
+            const searchInput = document.getElementById(searchId);
+            const dropdown = document.getElementById(dropdownId);
+            const containerDiv = document.getElementById(containerDivId);
             
             toast.show();
             
