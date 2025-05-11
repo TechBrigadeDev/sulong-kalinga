@@ -10,6 +10,20 @@ export const QK = {
     user: {
         management: {
             getBeneficiaries: "user/management/getBeneficiaries",
+            getBeneficiary: (id: string) => ["user/management/getBeneficiary", id],
+
+            getFamilyMembers: (
+                params: {
+                    search: string;
+                }
+            ) => [
+                "user/management/getFamilyMembers",
+                params.search,
+            ],
+            getFamilyMember: (id: string) => [
+                "user/management/getFamilyMember",
+                id,
+            ],
         }
     }
 }

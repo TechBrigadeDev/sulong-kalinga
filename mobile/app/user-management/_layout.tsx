@@ -1,10 +1,17 @@
-import { Stack, useRouter } from "expo-router";
-import { Button } from "tamagui";
+import { Stack } from "expo-router";
 
 const screens = [
     {
-        name: "beneficiaries",
-        title: "Beneficiaries",
+        name: "beneficiaries/edit",
+        title: "Edit Beneficiary",
+    },
+    {
+        name: "beneficiaries/view",
+        title: "View Beneficiary",
+    },
+    {
+        name: "beneficiaries/search",
+        title: "Search Beneficiary",   
     },
     {
         name: "family",
@@ -26,20 +33,7 @@ const screens = [
 
 const Layout = () => {
     return (
-        <Stack screenOptions={{
-            headerShown: true,
-            headerBackButtonMenuEnabled: true,
-            headerBackVisible: true,
-            
-        }}>
-            {screens.map((screen) => (
-                <Stack.Screen 
-                    key={screen.name} 
-                    name={screen.name} 
-                    options={{ title: screen.title }} 
-                />
-            ))}
-        </Stack>
+        <Stack/>
     )
 }
 
