@@ -1,55 +1,44 @@
-import { Button, TextInput } from "react-native";
-import { View } from "../components/Themed";
-import { useState } from "react";
-import { useLogin } from "../features/auth/auth.hook";
+import { StyleSheet } from "react-native";
 
-const LoginScreen = () => {
-    const {
-        login
-    } = useLogin();
+import GradientBackground from "../components/GradientContainer";
+import { Stack } from "expo-router";
+import Login from "../features/auth/components/login";
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
-    const onLogin = async () => {
-        await login({
-            email,
-            password
-        });
-    }
-
+const Screen = () => {
     return (
-        <View>
-            <TextInput
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                style={{
-                    borderWidth: 1,
-                    borderColor: "black",
-                    padding: 10,
-                    marginTop: 10,
-                    width: "100%",
-                }}
+        <>
+            <Stack.Screen
+            options={{
+                headerShown: false,
+            }}
             />
-            <TextInput
-                placeholder="Password"
-                secureTextEntry
-                onChangeText={setPassword}
-                style={{
-                    borderWidth: 1,
-                    borderColor: "black",
-                    padding: 10,
-                    marginTop: 10,
-                    width: "100%",
-                }}
-            />
-            <Button 
-                title="Login"
-                onPress={onLogin}
-            />
-        </View>
-    )
+            <GradientBackground
+                colors={["#ff6ec7", "#ffa100", "#00d2ff"]}
+                animationDuration={10000}
+                style={styles.gradientContainer}
+            >
+                <Login/>
+            </GradientBackground>
+        </>
+    );
 }
 
-export default LoginScreen;
+const styles = StyleSheet.create({
+    safe: { 
+        flex: 1, 
+        backgroundColor: "#000"
+    },
+    gradientContainer: { 
+        justifyContent: "center", 
+        alignItems: "center",
+        // paddingHorizontal: 30,
+        // paddingVertical: 10,
+    },
+    title: { 
+        color: "#fff", 
+        fontSize: 24, 
+        fontWeight: "bold"
+    },
+});
+
+export default Screen;
