@@ -220,6 +220,12 @@ class VisitationController extends Controller
                         'phone' => $visitation->beneficiary->mobile ?? 'Not Available',
                         'address' => $visitation->beneficiary->street_address,
                         'recurring' => $visitation->recurringPattern ? true : false,
+                        'recurring_pattern' => $visitation->recurringPattern ? [
+                            'type' => $visitation->recurringPattern->pattern_type,
+                            'day_of_week' => $visitation->recurringPattern->day_of_week,
+                            'recurrence_end' => $visitation->recurringPattern->recurrence_end ? 
+                                $visitation->recurringPattern->recurrence_end->format('Y-m-d') : null,
+                        ] : null,
                     ]
                 ];
                 
