@@ -440,12 +440,15 @@ class InternalAppointmentsController extends Controller
      */
     public function update(Request $request)
     {
-        // Debug logging
-        \Log::info('Update Internal Appointment Request', [
-            'request_data' => $request->except(['participants']),
-            'day_of_week_type' => gettype($request->day_of_week),
-            'day_of_week_value' => $request->day_of_week
-        ]);
+        // Create a fresh copy of the request data that we can safely modify
+        $data = $request->all();
+        
+        // Explicitly check flexible time value in ANY format
+        $isFlexibleTime = false;
+        if (isset($data['is_flexible_time'])) {
+            // Accept any truthy value: '1', 1, 'true', true, 'on', etc.
+            $isFlexibleTime = filter_var($data['is_flexible_time'], FILTER_VALIDATE_BOOLEAN);
+        }
 
         // First, check recurring options
         if ($request->has('is_recurring') && $request->is_recurring) {
@@ -515,8 +518,6 @@ class InternalAppointmentsController extends Controller
             'date' => 'required|date',
             'meeting_location' => 'required|string|max:200|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
             'is_flexible_time' => 'sometimes|boolean',
-            'start_time' => 'nullable|required_unless:is_flexible_time,1|date_format:H:i',
-            'end_time' => 'nullable|required_unless:is_flexible_time,1|date_format:H:i|after:start_time',
             'is_recurring' => 'sometimes|boolean',
             'pattern_type' => 'required_if:is_recurring,true|in:daily,weekly,monthly',
             'recurrence_end' => 'required_if:is_recurring,true|nullable|date|after:date',
@@ -532,9 +533,13 @@ class InternalAppointmentsController extends Controller
             'meeting_location.regex' => 'The location contains invalid characters.',
             'notes.regex' => 'The notes contain invalid characters.',
             'other_type_details.regex' => 'The meeting type details contain invalid characters.',
-            'start_time.required_unless' => 'Start time is required when flexible time is not selected.',
-            'end_time.required_unless' => 'End time is required when flexible time is not selected.',
         ]);
+
+            // Only add time validation if flexible time is NOT checked
+            if (!$isFlexibleTime) {
+                $validationRules['start_time'] = 'required|date_format:H:i';
+                $validationRules['end_time'] = 'required|date_format:H:i|after:start_time';
+            }
         
         if ($validator->fails()) {
             return response()->json([
@@ -661,6 +666,10 @@ class InternalAppointmentsController extends Controller
                     $appointment->title = $request->title;
                     $appointment->description = $request->description ?? null;
                     $appointment->other_type_details = $request->other_type_details;
+
+                    // Explicitly parse and format the date to ensure it's saved correctly
+                    $appointment->date = Carbon::parse($request->date)->format('Y-m-d');
+
                     $appointment->date = $request->date;
                     $appointment->start_time = $request->is_flexible_time ? null : $request->start_time;
                     $appointment->end_time = $request->is_flexible_time ? null : $request->end_time;
@@ -669,6 +678,15 @@ class InternalAppointmentsController extends Controller
                     $appointment->notes = $request->notes;
                     $appointment->updated_by = $user->id;
                     $appointment->save();
+
+                    // IMPORTANT: Update occurrence dates for non-recurring appointments
+                    if (!$wasRecurring) {
+                        $appointment->occurrences()->update([
+                            'occurrence_date' => $appointment->date,
+                            'start_time' => $appointment->start_time,
+                            'end_time' => $appointment->end_time
+                        ]);
+                    }
                     
                     // Update recurring pattern if needed
                     if ($wasRecurring) {
@@ -735,32 +753,35 @@ class InternalAppointmentsController extends Controller
     }
 
     /**
-     * Create appointment exceptions for dates after the given date
+     * Delete only future appointment occurrences for dates on or after the given date
      */
     private function createExceptionsAfterDate($appointment, $date)
     {
         $formattedDate = $date instanceof Carbon ? $date->format('Y-m-d') : Carbon::parse($date)->format('Y-m-d');
         
-        // Get all future occurrences
-        $futureOccurrences = $appointment->occurrences()
-            ->where('occurrence_date', '>=', $formattedDate)
-            ->where('status', '!=', 'canceled')
-            ->get();
+        // Get today's date to preserve past occurrences
+        $today = Carbon::today()->format('Y-m-d');
         
-        foreach ($futureOccurrences as $occurrence) {
-            // Create an exception for this date
-            $exception = new AppointmentException();
-            $exception->appointment_id = $appointment->appointment_id;
-            $exception->exception_date = $occurrence->occurrence_date;
-            $exception->status = 'canceled';
-            $exception->reason = 'Appointment series modified';
-            $exception->created_by = Auth::id();
-            $exception->save();
-            
-            // Mark the occurrence as canceled
-            $occurrence->status = 'canceled';
-            $occurrence->save();
-        }
+        // Log what we're about to do
+        \Log::info("Handling occurrences for appointment ID {$appointment->appointment_id}, preserving dates before {$today}");
+        
+        // Get count of occurrences before making changes
+        $totalCount = $appointment->occurrences()->count();
+        $futureCount = $appointment->occurrences()->where('occurrence_date', '>=', $formattedDate)->count();
+        $pastCount = $totalCount - $futureCount;
+        
+        \Log::info("Total occurrences: {$totalCount}, Future: {$futureCount}, Past: {$pastCount}");
+        
+        // FIXED: Only delete occurrences on or after the given date
+        // AND ensure the date is not in the past (this is the key fix)
+        $deleted = $appointment->occurrences()
+            ->where('occurrence_date', '>=', $formattedDate)
+            ->where('occurrence_date', '>=', $today) // CRITICAL: Only delete future occurrences
+            ->delete();
+        
+        \Log::info("Deleted {$deleted} future occurrences for appointment ID {$appointment->appointment_id}");
+        
+        // No need to create exceptions - we're fully deleting the occurrences
     }
 
     /**
