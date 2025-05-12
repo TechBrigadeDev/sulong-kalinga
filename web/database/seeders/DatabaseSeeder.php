@@ -1234,9 +1234,24 @@ class DatabaseSeeder extends Seeder
             
             // Create recurring pattern
             $patternType = $patternTypes[array_rand($patternTypes)];
-            $dayOfWeek = $patternType === 'weekly' ? Carbon::parse($date)->dayOfWeek : null;
             $endDate = Carbon::now()->addMonths(rand(1, 6));
-            
+
+            // For weekly patterns, set 1-3 random days as a comma-separated string
+            $dayOfWeek = null;
+            if ($patternType === 'weekly') {
+                // Either use just the current day, or randomly select 1-3 days
+                if (rand(0, 1) === 0) {
+                    $dayOfWeek = (string)Carbon::parse($date)->dayOfWeek;
+                } else {
+                    $numberOfDays = rand(1, 3);
+                    $possibleDays = range(0, 6);
+                    shuffle($possibleDays);
+                    $selectedDays = array_slice($possibleDays, 0, $numberOfDays);
+                    sort($selectedDays); // Sort numerically
+                    $dayOfWeek = implode(',', $selectedDays);
+                }
+            }
+
             RecurringPattern::create([
                 'appointment_id' => $appointment->appointment_id,
                 'pattern_type' => $patternType,
