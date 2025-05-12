@@ -10,22 +10,24 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Clear existing appointment types before adding new ones
+        DB::table('appointment_types')->delete();
+        
         $types = [
-            ['type_name' => 'Skills Training', 'color_code' => '#4e73df', 'description' => 'Staff skills development and training sessions'],
-            ['type_name' => 'Feedback Session', 'color_code' => '#1cc88a', 'description' => 'Performance feedback and evaluation meetings'],
-            ['type_name' => 'Council Meeting', 'color_code' => '#36b9cc', 'description' => 'Regular council and committee meetings'],
-            ['type_name' => 'Health Protocols', 'color_code' => '#f6c23e', 'description' => 'Health and safety protocol discussions'],
-            ['type_name' => 'Liga Meetings', 'color_code' => '#e74a3b', 'description' => 'Liga ng mga Barangay meetings and coordination'],
-            ['type_name' => 'Referrals Discussion', 'color_code' => '#6f42c1', 'description' => 'Discussing beneficiary referrals and services'],
-            ['type_name' => 'Assessment Review', 'color_code' => '#fd7e14', 'description' => 'Reviewing beneficiary assessments and reports'],
-            ['type_name' => 'Care Plan Review', 'color_code' => '#20c997', 'description' => 'Reviewing and updating care plans'],
-            ['type_name' => 'Team Building', 'color_code' => '#5a5c69', 'description' => 'Staff team-building activities'],
-            ['type_name' => 'Mentoring Session', 'color_code' => '#858796', 'description' => 'One-on-one mentoring sessions'],
-            ['type_name' => 'Other', 'color_code' => '#a435f0', 'description' => 'Other meeting types not categorized above'],
+            ['type_name' => 'Quarterly Feedback Sessions', 'color_code' => '#4e73df', 'description' => 'Regular feedback sessions held quarterly'],
+            ['type_name' => 'Skills Enhancement Training', 'color_code' => '#1cc88a', 'description' => 'Training sessions to enhance staff skills'],
+            ['type_name' => 'Municipal Development Council Participation', 'color_code' => '#36b9cc', 'description' => 'Participation in municipal development council meetings'],
+            ['type_name' => 'Municipal Local Health Board Meeting', 'color_code' => '#f6c23e', 'description' => 'Meetings with the municipal local health board'],
+            ['type_name' => 'Liga Meeting', 'color_code' => '#e74a3b', 'description' => 'Liga ng mga Barangay meetings'],
+            ['type_name' => 'HMO Referral', 'color_code' => '#6f42c1', 'description' => 'Health maintenance organization referral discussions'],
+            ['type_name' => 'Assessment and Review of Care Needs', 'color_code' => '#fd7e14', 'description' => 'Assessing and reviewing beneficiary care needs'],
+            ['type_name' => 'General Care Plan Finalization', 'color_code' => '#20c997', 'description' => 'Finalizing care plans for beneficiaries'],
+            ['type_name' => 'Project Team Meetings', 'color_code' => '#3949ab', 'description' => 'Meetings with project teams'],
+            ['type_name' => 'Mentoring and Feedback Sessions', 'color_code' => '#ec407a', 'description' => 'Sessions for mentoring and providing feedback'],
+            ['type_name' => 'Others', 'color_code' => '#a435f0', 'description' => 'Other meeting types not categorized above'],
         ];
 
         foreach ($types as $type) {
-            // Use insertOrIgnore to prevent errors if the record already exists
             DB::table('appointment_types')->insertOrIgnore($type);
         }
     }
@@ -36,7 +38,5 @@ return new class extends Migration
     public function down(): void
     {
         // We don't want to delete data when rolling back
-        // If needed, you could delete specific types:
-        // DB::table('appointment_types')->whereIn('type_name', ['Skills Training', 'Feedback Session', ...])->delete();
     }
 };
