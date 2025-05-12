@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\BeneficiaryApiController;
 use App\Http\Controllers\Api\FamilyMemberApiController;
 use App\Http\Controllers\Api\MunicipalityApiController;
 use App\Http\Controllers\Api\PortalAccountApiController;
+use App\Http\Controllers\Api\UploadController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -19,6 +20,9 @@ Route::get('/public-test', function () {
 
 // Authentication Routes
 Route::post('/login', [AuthApiController::class, 'login']);
+
+// Uploads (move back inside middleware after testing)
+Route::post('/upload', [UploadController::class, 'upload']);
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -65,4 +69,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Notifications (initial)
     // Route::post('/mobile-notifications', [MobileNotificationApiController::class, 'store']);
+
 });
