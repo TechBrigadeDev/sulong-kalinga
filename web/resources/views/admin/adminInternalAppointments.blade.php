@@ -686,7 +686,7 @@
                     <div id="recurringWarningMessage" class="alert alert-warning mb-3" style="display: none;">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <strong>Note:</strong> Editing a recurring appointment will only affect this and future occurrences. 
-                        Past occurrences will remain unchanged.
+                        Past occurrences will remain unchanged. You cannot change a recurring appointment to a single appointment or vice versa.
                     </div>
                     <form id="addAppointmentForm">
                         <input type="hidden" id="appointmentId" name="appointment_id" value="">
@@ -1827,7 +1827,12 @@
                 document.getElementById('recurringWarningMessage').style.display = 'none';
                 
                 // Set modal title
-                document.getElementById('addAppointmentModalLabel').textContent = 'Edit Appointment';
+                const modalTitle = document.getElementById('addAppointmentModalLabel');
+                if (modalTitle) {
+                    modalTitle.textContent = 'Edit Appointment';
+                } else {
+                    console.warn('Modal title element not found');
+                }
                 
                 // Show warning for recurring appointments
                 const isRecurring = !!currentEvent.extendedProps.recurring_pattern;
@@ -1859,14 +1864,14 @@
                 
                 // Set time values if not flexible
                 if (!isFlexibleTime && currentEvent.start && currentEvent.end) {
-                    document.getElementById('startTime').value = formatTime(currentEvent.start);
-                    document.getElementById('endTime').value = formatTime(currentEvent.end);
+                    document.getElementById('appointmentTime').value = formatTime(currentEvent.start);
+                    document.getElementById('appointmentEndTime').value = formatTime(currentEvent.end);
                 }
                 
                 // Handle other type details if relevant
                 if (currentEvent.extendedProps.type_id == 11) { // "Others" type
                     document.getElementById('otherTypeContainer').style.display = 'block';
-                    document.getElementById('otherTypeDetails').value = currentEvent.extendedProps.other_type_details || '';
+                    document.getElementById('otherAppointmentType').value = currentEvent.extendedProps.other_type_details || '';
                 }
                 
                 // Handle recurring settings
@@ -1874,12 +1879,40 @@
                 document.getElementById('recurringOptions').style.display = isRecurring ? 'block' : 'none';
                 
                 if (isRecurring) {
-                    // Set pattern type
-                    const patternType = currentEvent.extendedProps.recurring_pattern.pattern_type;
-                    document.querySelector(`input[name="pattern_type"][value="${patternType}"]`).checked = true;
+                    // Set pattern type - make this more robust
+                    const pattern = currentEvent.extendedProps.recurring_pattern;
+                    
+                    // Log pattern data to help diagnose the issue
+                    console.log("Pattern data:", pattern);
+                    
+                    // Account for different property naming
+                    const patternType = pattern.pattern_type || pattern.type || 'weekly';
+                    console.log("Using pattern type:", patternType);
+                    
+                    // Try to find the matching radio button
+                    const patternRadio = document.querySelector(`input[name="pattern_type"][value="${patternType}"]`);
+                    
+                    // Add null check and fallback
+                    if (patternRadio) {
+                        patternRadio.checked = true;
+                        console.log(`Selected pattern radio for: ${patternType}`);
+                    } else {
+                        console.warn(`No pattern radio found for: ${patternType}`);
+                        // Set default to weekly
+                        const defaultRadio = document.querySelector('input[name="pattern_type"][value="weekly"]');
+                        if (defaultRadio) {
+                            defaultRadio.checked = true;
+                            console.log("Defaulted to weekly pattern");
+                        } else {
+                            console.error("Could not find any pattern radio buttons");
+                        }
+                    }
                     
                     // Show relevant options based on pattern type
-                    document.getElementById('weeklyOptions').style.display = patternType === 'weekly' ? 'block' : 'none';
+                    const weeklyOptions = document.getElementById('weeklyOptions');
+                    if (weeklyOptions) {
+                        weeklyOptions.style.display = patternType === 'weekly' ? 'block' : 'none';
+                    }
                     
                     // Set days of week for weekly pattern
                     if (patternType === 'weekly') {
