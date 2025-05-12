@@ -546,19 +546,28 @@ class VisitationController extends Controller
             $visitation->save();
             
             // NOW create the recurring pattern if needed, AFTER creating the visitation
-            if ($request->has('is_recurring')) {
+            if ($request->has('is_recurring') && $request->is_recurring) {
                 $pattern = new RecurringPattern();
                 $pattern->visitation_id = $visitation->visitation_id;
                 $pattern->pattern_type = $request->pattern_type;
                 
-                // Convert day_of_week array to comma-separated string
-                if (is_array($request->day_of_week)) {
-                    $pattern->day_of_week = implode(',', $request->day_of_week);
+                // Update this part to handle multiple days
+                if ($request->pattern_type === 'weekly' && $request->has('day_of_week')) {
+                    // Make sure we handle array or single value properly
+                    $daysOfWeek = is_array($request->day_of_week) 
+                        ? array_unique($request->day_of_week) 
+                        : [$request->day_of_week];
+                    
+                    // Store as comma-separated string
+                    $pattern->day_of_week = implode(',', $daysOfWeek);
                 } else {
-                    $pattern->day_of_week = $request->day_of_week;
+                    $pattern->day_of_week = null;
                 }
                 
-                $pattern->recurrence_end = $request->recurrence_end;
+                if ($request->has('recurrence_end')) {
+                    $pattern->recurrence_end = $request->recurrence_end;
+                }
+                
                 $pattern->save();
             }
             
@@ -741,16 +750,23 @@ class VisitationController extends Controller
      */
     public function updateAppointment(Request $request)
     {
+        // Add debug logging
+        \Log::info('Update Appointment Request', [
+            'request_data' => $request->all(),
+            'day_of_week_type' => gettype($request->day_of_week),
+            'day_of_week_value' => $request->day_of_week
+        ]);
+
         if ($request->has('is_recurring') && $request->is_recurring) {
             $recurringValidator = Validator::make($request->all(), [
                 'pattern_type' => 'required|in:daily,weekly,monthly', 
-                'day_of_week' => 'required_if:pattern_type,weekly|array|min:1',
+                'day_of_week' => 'required_if:pattern_type,weekly',
                 'recurrence_end' => 'required|date|after:visitation_date'
             ], [
                 'pattern_type.required' => 'Please specify the recurring pattern type.',
                 'day_of_week.required_if' => 'Please select at least one day of the week for weekly patterns.',
-                'day_of_week.array' => 'Days of week must be selected for weekly patterns.',
-                'day_of_week.min' => 'At least one day must be selected for weekly patterns.',
+                //'day_of_week.array' => 'Days of week must be selected for weekly patterns.',
+                //'day_of_week.min' => 'At least one day must be selected for weekly patterns.',
                 'recurrence_end.required' => 'End date is required for recurring appointments.',
                 'recurrence_end.after' => 'End date must be after the visit date.'
             ]);
@@ -861,11 +877,37 @@ class VisitationController extends Controller
                     if ($pattern) {
                         $pattern->pattern_type = $request->pattern_type;
                         
-                        // Handle day_of_week field properly
-                        if (is_array($request->day_of_week)) {
-                            $pattern->day_of_week = implode(',', $request->day_of_week);
+                        // Handle day_of_week field properly - UPDATED for multiple days
+                        if ($request->pattern_type === 'weekly') {
+                            // Handle day_of_week field properly
+                            if ($request->has('day_of_week')) {
+                                $dayOfWeek = $request->input('day_of_week');
+                                
+                                // Fix error handling for array or string inputs
+                                try {
+                                    if (is_array($dayOfWeek)) {
+                                        $uniqueDays = array_unique($dayOfWeek);
+                                        $pattern->day_of_week = implode(',', $uniqueDays);
+                                    } else if (is_string($dayOfWeek) && strpos($dayOfWeek, ',') !== false) {
+                                        // Already a comma-separated string, keep as is
+                                        $pattern->day_of_week = $dayOfWeek;
+                                    } else {
+                                        // Single value
+                                        $pattern->day_of_week = (string)$dayOfWeek;
+                                    }
+                                } catch (\Exception $e) {
+                                    \Log::error('Error processing day_of_week field:', [
+                                        'error' => $e->getMessage(),
+                                        'value' => $dayOfWeek
+                                    ]);
+                                    $pattern->day_of_week = (string)Carbon::parse($visitation->visitation_date)->dayOfWeek;
+                                }
+                            } else {
+                                // Default to the day of the appointment if no day specified
+                                $pattern->day_of_week = (string)Carbon::parse($visitation->visitation_date)->dayOfWeek;
+                            }
                         } else {
-                            $pattern->day_of_week = $request->day_of_week;
+                            $pattern->day_of_week = null;
                         }
                         
                         $pattern->recurrence_end = $request->recurrence_end ?? null;
@@ -876,11 +918,19 @@ class VisitationController extends Controller
                         $pattern->visitation_id = $visitation->visitation_id;
                         $pattern->pattern_type = $request->pattern_type;
                         
-                        // Handle day_of_week field properly
-                        if (is_array($request->day_of_week)) {
-                            $pattern->day_of_week = implode(',', $request->day_of_week);
+                        // Handle day_of_week field properly - UPDATED for multiple days
+                        if ($request->pattern_type === 'weekly' && $request->has('day_of_week')) {
+                            // Make sure we handle array or single value properly
+                            if (is_array($request->day_of_week)) {
+                                // Remove duplicates and ensure we have clean values
+                                $daysOfWeek = array_unique($request->day_of_week);
+                                $pattern->day_of_week = implode(',', $daysOfWeek);
+                            } else {
+                                // Single day value
+                                $pattern->day_of_week = $request->day_of_week;
+                            }
                         } else {
-                            $pattern->day_of_week = $request->day_of_week;
+                            $pattern->day_of_week = null;
                         }
                         
                         $pattern->recurrence_end = $request->recurrence_end ?? null;
