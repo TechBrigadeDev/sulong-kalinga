@@ -237,8 +237,202 @@ class InternalAppointmentsController extends Controller
      */
     public function store(Request $request)
     {
-        // Method stub for creating new appointments
-        // Will be implemented in future updates
+        
+        // Check recurring pattern requirements if it's recurring
+        if ($request->has('is_recurring') && $request->is_recurring) {
+            if (!$request->has('pattern_type') || !in_array($request->pattern_type, ['daily', 'weekly', 'monthly'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A valid recurrence pattern must be specified'
+                ], 422);
+            }
+            
+            // For weekly pattern, day of week is required
+            if ($request->pattern_type === 'weekly' && (!$request->has('day_of_week') || empty($request->day_of_week))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'At least one day of the week must be selected for weekly recurrence'
+                ], 422);
+            }
+        }
+
+        // Check that at least one staff participant is selected
+        if (!$request->has('participants') || 
+            !isset($request->participants['cose_user']) || 
+            !is_array($request->participants['cose_user']) || 
+            count($request->participants['cose_user']) === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one staff attendee is required'
+            ], 422);
+        }
+
+        // Validate beneficiary/family participants for specific appointment types
+        $typeRequiresBeneficiary = in_array($request->appointment_type_id, [7, 11]); // 7=Assessment, 11=Others
+        if ($typeRequiresBeneficiary) {
+            // Validate that beneficiaries exist in our system
+            if (isset($request->participants['beneficiary']) && is_array($request->participants['beneficiary'])) {
+                foreach ($request->participants['beneficiary'] as $id) {
+                    if (!Beneficiary::where('beneficiary_id', $id)->exists()) {
+                        return response()->json([
+                            'success' => false, 
+                            'message' => 'One or more selected beneficiaries are invalid'
+                        ], 422);
+                    }
+                }
+            }
+            
+            // Validate that family members exist in our system
+            if (isset($request->participants['family_member']) && is_array($request->participants['family_member'])) {
+                foreach ($request->participants['family_member'] as $id) {
+                    if (!FamilyMember::where('family_member_id', $id)->exists()) {
+                        return response()->json([
+                            'success' => false, 
+                            'message' => 'One or more selected family members are invalid'
+                        ], 422);
+                    }
+                }
+            }
+        }
+        
+        // Validate main appointment data
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:100|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
+            'appointment_type_id' => 'required|exists:appointment_types,appointment_type_id',
+            'date' => 'required|date|after_or_equal:today',
+            'meeting_location' => 'required|string|max:200|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
+            'is_flexible_time' => 'sometimes|boolean',
+            'start_time' => 'nullable|required_unless:is_flexible_time,1|date_format:H:i',
+            'end_time' => 'nullable|required_unless:is_flexible_time,1|date_format:H:i|after:start_time',
+            'is_recurring' => 'sometimes|boolean',
+            'pattern_type' => 'required_if:is_recurring,true|in:daily,weekly,monthly',
+            'recurrence_end' => 'required_if:is_recurring,true|nullable|date|after:date',
+            'notes' => 'nullable|string|max:500|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
+            'other_type_details' => 'required_if:appointment_type_id,11|nullable|string|max:200|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
+        ], [
+            'date.after_or_equal' => 'The appointment date cannot be in the past.',
+            'end_time.after' => 'End time must be after start time.',
+            'other_type_details.required_if' => 'Please specify the meeting type.',
+            'recurrence_end.required_if' => 'An end date is required for recurring appointments.',
+            'recurrence_end.after' => 'The recurrence end date must be after the appointment date.',
+            'title.regex' => 'The title contains invalid characters.',
+            'meeting_location.regex' => 'The location contains invalid characters.',
+            'notes.regex' => 'The notes contain invalid characters.',
+            'other_type_details.regex' => 'The meeting type details contain invalid characters.',
+            'start_time.required_unless' => 'Start time is required when flexible time is not selected.',
+            'end_time.required_unless' => 'End time is required when flexible time is not selected.',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        DB::beginTransaction();
+            
+        try {
+            $user = Auth::user();
+            
+            // Create appointment record
+            $appointment = new Appointment();
+            $appointment->appointment_type_id = $request->appointment_type_id;
+            $appointment->title = $request->title;
+            $appointment->description = $request->description ?? null;
+            $appointment->other_type_details = $request->other_type_details;
+            $appointment->date = $request->date;
+            $appointment->start_time = $request->is_flexible_time ? null : $request->start_time;
+            $appointment->end_time = $request->is_flexible_time ? null : $request->end_time;
+            $appointment->is_flexible_time = (bool) $request->is_flexible_time;
+            $appointment->meeting_location = $request->meeting_location;
+            $appointment->status = 'scheduled';
+            $appointment->notes = $request->notes;
+            $appointment->created_by = $user->id;
+            $appointment->save();
+            
+            // Process participants
+            if ($request->has('participants') && is_array($request->participants)) {
+                foreach ($request->participants as $type => $ids) {
+                    if (is_array($ids)) {
+                        foreach ($ids as $id) {
+                            $participant = new AppointmentParticipant();
+                            $participant->appointment_id = $appointment->appointment_id;
+                            $participant->participant_type = $type;
+                            $participant->participant_id = $id;
+                            // The first user (creator) is set as organizer
+                            $participant->is_organizer = ($type === 'cose_user' && (int)$id === $user->id);
+                            $participant->save();
+                        }
+                    }
+                }
+            }
+            
+            // Ensure the current user is always added as a participant/organizer
+            $userParticipantExists = AppointmentParticipant::where('appointment_id', $appointment->appointment_id)
+                ->where('participant_type', 'cose_user')
+                ->where('participant_id', $user->id)
+                ->exists();
+                
+            if (!$userParticipantExists) {
+                $participant = new AppointmentParticipant();
+                $participant->appointment_id = $appointment->appointment_id;
+                $participant->participant_type = 'cose_user';
+                $participant->participant_id = $user->id;
+                $participant->is_organizer = true;
+                $participant->save();
+            }
+            
+            // Create recurring pattern if needed
+            if ($request->has('is_recurring') && $request->is_recurring) {
+                $pattern = new RecurringPattern();
+                $pattern->appointment_id = $appointment->appointment_id;
+                $pattern->pattern_type = $request->pattern_type;
+                
+                if ($request->pattern_type === 'weekly' && $request->has('day_of_week')) {
+                    // Make sure we're handling the day_of_week values correctly
+                    // First, make sure we have an array of unique values
+                    $daysOfWeek = is_array($request->day_of_week) 
+                        ? array_unique($request->day_of_week) 
+                        : [$request->day_of_week];
+                    
+                    // Then implode to create the comma-separated list
+                    $pattern->day_of_week = implode(',', $daysOfWeek);
+                } else {
+                    // Ensure null for other pattern types
+                    $pattern->day_of_week = null;
+                }
+                
+                if ($request->has('recurrence_end') && $request->recurrence_end) {
+                    $pattern->recurrence_end = $request->recurrence_end;
+                }
+                
+                $pattern->save();
+            }
+            
+            // Generate occurrences
+            $appointment->generateOccurrences(3); // Generate for 3 months
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Appointment created successfully',
+                'appointment_id' => $appointment->appointment_id
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Error creating appointment: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     /**

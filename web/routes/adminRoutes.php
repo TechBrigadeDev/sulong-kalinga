@@ -270,6 +270,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
      Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
         Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
         Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+        Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
     });
 
 });
