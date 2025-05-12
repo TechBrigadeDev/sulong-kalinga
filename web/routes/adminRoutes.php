@@ -267,11 +267,12 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
     });
 
-     Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+    Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
         Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
         Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
         Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
-        Route::post('/internal-appointments/update', [InternalAppointmentsController::class, 'update'])->name('internal-appointments.update');
+        Route::post('/update', [InternalAppointmentsController::class, 'update'])->name('update');  // Fixed path
+        Route::post('/cancel', [InternalAppointmentsController::class, 'cancel'])->name('cancel');
     });
 
 });
