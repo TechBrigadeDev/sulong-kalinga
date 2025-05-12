@@ -370,4 +370,5 @@ class InternalAppointmentsController extends Controller
         
         return false;
     }
+    
 }
