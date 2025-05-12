@@ -19,8 +19,17 @@ use App\Models\Notification;
 use App\Models\FamilyMember;
 use App\Models\User;
 
+use App\Services\LogService;
+use App\Enums\LogType;
+
 class WeeklyCareController extends Controller
 {
+    protected $logService;
+
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
 
     protected function getRolePrefixRoute()
     {
@@ -243,6 +252,15 @@ class WeeklyCareController extends Controller
             ]);
             Log::info('Weekly care plan created: ' . $weeklyCarePlan->id);
 
+            // Log the creation
+            $this->logService->createLog(
+                'weekly_care_plan',
+                $weeklyCarePlan->weekly_care_plan_id,
+                LogType::CREATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' created a weekly care plan for beneficiary ID ' . $weeklyCarePlan->beneficiary_id,
+                Auth::id()
+            );
+
             // 3. Save ONLY selected interventions with valid durations
             if ($request->has('selected_interventions') && is_array($request->selected_interventions)) {
                 foreach ($request->selected_interventions as $interventionId) {
@@ -444,6 +462,15 @@ class WeeklyCareController extends Controller
         
         $categories = CareCategory::all();
         
+        // Log the view action
+        $this->logService->createLog(
+            'weekly_care_plan',
+            $weeklyCareplan->weekly_care_plan_id,
+            LogType::VIEW,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed weekly care plan for beneficiary ' . $weeklyCareplan->beneficiary->first_name . ' ' . $weeklyCareplan->beneficiary->last_name,
+            Auth::id()
+        );
+
         // Return view based on user role
         return view($rolePrefix . '.viewWeeklyCareplan', compact(
             'weeklyCareplan',
@@ -680,6 +707,15 @@ class WeeklyCareController extends Controller
                 }
             }
             
+            // Log the update
+            $this->logService->createLog(
+                'weekly_care_plan',
+                $weeklyCarePlan->weekly_care_plan_id,
+                LogType::UPDATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated weekly care plan for beneficiary ID ' . $weeklyCarePlan->beneficiary_id,
+                Auth::id()
+            );
+            
             DB::commit();
 
             // Send notifications about the update
@@ -841,6 +877,15 @@ class WeeklyCareController extends Controller
                     \Log::warning('Failed to send weekly care plan deletion notifications: ' . $notifyEx->getMessage());
                 }
                 
+                // Log the deletion
+                $this->logService->createLog(
+                    'weekly_care_plan',
+                    $id,
+                    LogType::DELETE,
+                    Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted weekly care plan for beneficiary ' . $beneficiaryName,
+                    Auth::id()
+                );
+
                 DB::commit();
                 
                 $reportsRoute = auth()->user()->role_id == 2 

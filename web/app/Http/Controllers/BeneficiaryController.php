@@ -27,6 +27,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Services\LogService;
+use App\Enums\LogType;
 
 use App\Services\UserManagementService;
 
@@ -37,6 +39,7 @@ class BeneficiaryController extends Controller
     public function __construct(UserManagementService $userManagementService)
     {
         $this->userManagementService = $userManagementService;
+        $this->logService = $logService;
     }
 
     private function resetGeneralCarePlanSequence()
@@ -255,6 +258,15 @@ class BeneficiaryController extends Controller
                 abort(403, 'Unauthorized. You can only view details of beneficiaries assigned to you.');
             }
         }
+
+        // Log the view action
+        $this->logService->createLog(
+            'beneficiary',
+            $beneficiary->beneficiary_id,
+            LogType::VIEW,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name,
+            Auth::id()
+        );
 
         $careNeeds1 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 1);
         $careNeeds2 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 2);
@@ -837,6 +849,15 @@ class BeneficiaryController extends Controller
                 'updated_at' => now(),
                 'remember_token' => $remember_token,
             ]);
+
+            // Log the creation of the beneficiary
+            $this->logService->createLog(
+                'beneficiary',
+                $beneficiary->beneficiary_id,
+                LogType::CREATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' created beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name,
+                Auth::id()
+            );
         
             // Insert into emotional_wellbeing table
             EmotionalWellbeing::create([
@@ -1362,6 +1383,15 @@ class BeneficiaryController extends Controller
             $beneficiary->updated_by = Auth::id();
             $beneficiary->updated_at = now();
             $beneficiary->save();
+
+            // Log the update of the beneficiary
+            $this->logService->createLog(
+                'beneficiary',
+                $beneficiary->beneficiary_id,
+                LogType::UPDATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name,
+                Auth::id()
+            );
             
             // Update general care plan details
             if ($generalCarePlanId) {
@@ -1632,6 +1662,15 @@ class BeneficiaryController extends Controller
             $result = $this->userManagementService->deleteBeneficiary(
                 $beneficiaryId,
                 Auth::user()
+            );
+
+            // Log the deletion
+            $this->logService->createLog(
+                'beneficiary',
+                $beneficiary->beneficiary_id,
+                LogType::DELETE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name,
+                Auth::id()
             );
             
             return response()->json($result);

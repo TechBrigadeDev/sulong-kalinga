@@ -20,16 +20,20 @@ use App\Models\FamilyMember;
 use App\Models\OrganizationRole;
 use App\Models\Notification;
 use Carbon\Carbon;
+use App\Services\LogService;
+use App\Enums\LogType;
 
 use App\Services\UserManagementService;
 
 class AdminController extends Controller
 {
     protected $userManagementService;
+    protected $logService;
     
-    public function __construct(UserManagementService $userManagementService)
+    public function __construct(UserManagementService $userManagementService, LogService $logService)
     {
         $this->userManagementService = $userManagementService;
+        $this->logService = $logService;
     }
 
     public function storeAdministrator(Request $request)
@@ -213,8 +217,15 @@ class AdminController extends Controller
         // Generate and save the remember_token
         $administrator->remember_token = Str::random(60);
 
-
+        
         $administrator->save();
+        // Log the creation of the administrator
+        $this->logService->createLog(
+            'administrator',
+            $administrator->id,
+            LogType::CREATE,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' created administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+        );
 
         // Send welcome notification to the new administrator
         $welcomeTitle = 'Welcome to SULONG KALINGA';
@@ -495,6 +506,13 @@ class AdminController extends Controller
 
         // Save the updated administrator
         $administrator->save();
+        $this->logService->createLog(
+            'administrator',
+            $administrator->id,
+            LogType::UPDATE,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+        );
+
 
         // Only notify if the user is not updating their own profile
         if (Auth::id() != $administrator->id) {
@@ -556,6 +574,14 @@ class AdminController extends Controller
         if (!$administrator) {
             return redirect()->route('administratorProfile')->with('error', 'Administrator not found.');
         }
+
+        // Log the view action here
+        $this->logService->createLog(
+            'administrator',
+            $administrator->id,
+            LogType::VIEW,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+        );
 
         return view('admin.viewAdminDetails', compact('administrator'));
     }
@@ -760,6 +786,12 @@ class AdminController extends Controller
 
             // Delete the administrator
             $administrator->delete();
+            $this->logService->createLog(
+                'administrator',
+                $administrator->id,
+                LogType::DELETE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+            );
             
             DB::commit();
             
@@ -1760,6 +1792,14 @@ class AdminController extends Controller
                 'new_email' => $user->email
             ]);
 
+            // Log the email change to the logs table
+            $this->logService->createLog(
+                'administrator',
+                $administrator->id,
+                LogType::VIEW,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+            );
+
             return redirect()->route('admin.account.profile.index')
                 ->with('success', 'Your email has been updated successfully.')
                 ->with('activeTab', 'settings');
@@ -1821,6 +1861,14 @@ class AdminController extends Controller
                 'timestamp' => now()
             ]);
 
+            // Log the password change to the logs table
+            $this->logService->createLog(
+                'administrator',
+                $administrator->id,
+                LogType::VIEW,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+            );
+
             return redirect()->route('admin.account.profile.index')
                 ->with('success', 'Your password has been updated successfully.')
                 ->with('activeTab', 'settings');
@@ -1832,5 +1880,4 @@ class AdminController extends Controller
                 ->with('activeTab', 'settings');
         }
     }
-
 }

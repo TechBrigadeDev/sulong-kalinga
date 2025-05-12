@@ -14,6 +14,8 @@ use App\Models\Barangay;
 use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use App\Services\LogService;
+use App\Enums\LogType;
 
 use App\Services\UserManagementService;
 
@@ -21,9 +23,10 @@ class CareManagerController extends Controller
 {
     protected $userManagementService;
     
-    public function __construct(UserManagementService $userManagementService)
+    public function __construct(UserManagementService $userManagementService, LogService $logService)
     {
         $this->userManagementService = $userManagementService;
+        $this->logService = $logService;
     }
 
     public function index(Request $request)
@@ -64,6 +67,15 @@ class CareManagerController extends Controller
         if (!$caremanager) {
             return redirect()->route('admin.caremanagers.index')->with('error', 'Care manager not found.');
         }
+
+        // Log the view action
+        $this->logService->createLog(
+            'care_manager',
+            $caremanager->id,
+            LogType::VIEW,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed care manager ' . $caremanager->first_name . ' ' . $caremanager->last_name,
+            Auth::id()
+        );
 
         return view('admin.viewCareManagerDetails', compact('caremanager'));
     }
@@ -252,6 +264,14 @@ class CareManagerController extends Controller
 
 
         $caremanager->save();
+
+        $this->logService->createLog(
+            'care_manager',
+            $caremanager->id,
+            LogType::CREATE,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' created care manager ' . $caremanager->first_name . ' ' . $caremanager->last_name,
+            Auth::id()
+        );
 
         // Send welcome notification to the new care manager
         try {
@@ -447,6 +467,15 @@ class CareManagerController extends Controller
         // Save the changes
         $caremanager->save();
 
+        // Log the update
+        $this->logService->createLog(
+            'care_manager',
+            $caremanager->id,
+            LogType::UPDATE,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated care manager ' . $caremanager->first_name . ' ' . $caremanager->last_name,
+            Auth::id()
+        );
+
         // Only notify if the user is not updating their own profile
         if (Auth::id() != $caremanager->id) {
             try {
@@ -524,6 +553,15 @@ class CareManagerController extends Controller
             $caremanager->status = $status;
             $caremanager->updated_at = now();
             $caremanager->save();
+
+            // Log the status change
+            $this->logService->createLog(
+                'care_manager',
+                $caremanager->id,
+                LogType::UPDATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' changed status of care manager ' . $caremanager->first_name . ' ' . $caremanager->last_name . ' to ' . $status,
+                Auth::id()
+            );
             
             // Only send notifications if care manager is active or being reactivated
             if ($status === 'Active') {
@@ -778,6 +816,15 @@ class CareManagerController extends Controller
             $user->save();
 
             // Log the email change
+            $this->logService->createLog(
+                'care_manager',
+                $user->id,
+                LogType::UPDATE,
+                $user->first_name . ' ' . $user->last_name . ' updated their email.',
+                $user->id
+            );
+
+            // Log the email change
             \Log::info('Care manager email updated', [
                 'care_manager_id' => $user->id,
                 'old_email' => $user->getOriginal('email'),
@@ -838,6 +885,15 @@ class CareManagerController extends Controller
             $user->password = bcrypt($request->input('account_password'));
             $user->updated_at = now();
             $user->save();
+
+            // Log the password change
+            $this->logService->createLog(
+                'care_manager',
+                $user->id,
+                LogType::UPDATE,
+                $user->first_name . ' ' . $user->last_name . ' updated their password.',
+                $user->id
+            );
 
             // Log the password change (without revealing the actual password)
             \Log::info('Care manager password updated', [

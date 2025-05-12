@@ -16,8 +16,18 @@ use App\Models\User;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 
+use App\Services\LogService;
+use App\Enums\LogType;
+
 class MessageController extends Controller
 {
+
+    protected $logService;
+
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
 
     /**
      * Display the messaging interface based on user role.
@@ -68,6 +78,17 @@ class MessageController extends Controller
         // Add this to handle the conversation parameter from dropdown
         $selectedConversationId = $request->input('conversation');
         
+
+        // Log the selected conversation ID
+        $userName = $user->first_name . ' ' . $user->last_name;
+        $this->logService->createLog(
+            'message',
+            0,
+            LogType::VIEW,
+            $userName . ' viewed their messages.',
+            $user->id
+        );
+
         return view('admin.messaging', [
             'conversations' => $conversations,
             'rolePrefix' => $this->getRoleRoutePrefix(),
@@ -154,6 +175,17 @@ class MessageController extends Controller
             // Get role prefix for routes
             $rolePrefix = $this->getRoleRoutePrefix();
             
+            // Log the view action
+            $user = Auth::user();
+            $userName = $user->first_name . ' ' . $user->last_name;
+            $this->logService->createLog(
+                'message',
+                $conversation->conversation_id,
+                LogType::VIEW,
+                $userName . ' viewed conversation #' . $conversation->conversation_id . '.',
+                $user->id
+            );
+
             // Check if the request is AJAX
             if (request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
@@ -200,6 +232,16 @@ class MessageController extends Controller
                     'read_at' => now()
                 ]);
             }
+            
+            $user = User::find($userId);
+            $userName = $user ? $user->first_name . ' ' . $user->last_name : 'Unknown User';
+            $this->logService->createLog(
+                'message',
+                $messageId,
+                LogType::UPDATE,
+                $userName . ' read message #' . $messageId . '.',
+                $userId
+            );
             
             return true;
         } catch (\Exception $e) {
@@ -248,6 +290,16 @@ class MessageController extends Controller
                 'message_timestamp' => now(),
             ]);
             $message->save();
+
+            // Log the message creation
+            $userName = $user->first_name . ' ' . $user->last_name;
+            $this->logService->createLog(
+                'message',
+                $message->message_id,
+                LogType::CREATE,
+                $userName . ' sent a message in conversation #' . $message->conversation_id . '.',
+                $user->id
+            );
             
             // Handle attachments
             if ($request->hasFile('attachments')) {
@@ -1074,6 +1126,16 @@ class MessageController extends Controller
                 ]);
             }
             
+            // Log the count of unread messages marked as read
+            $userName = $user->first_name . ' ' . $user->last_name;
+            $this->logService->createLog(
+                'message',
+                0,
+                LogType::UPDATE,
+                $userName . ' marked all messages as read.',
+                $user->id
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'All messages marked as read',
@@ -1953,6 +2015,17 @@ class MessageController extends Controller
             // Mark message as unsent
             $message->is_unsent = true;
             $message->save();
+            
+            // Log the unsent message
+            $user = Auth::user();
+            $userName = $user->first_name . ' ' . $user->last_name;
+            $this->logService->createLog(
+                'message',
+                $message->message_id,
+                LogType::DELETE,
+                $userName . ' unsent message #' . $message->message_id . '.',
+                $user->id
+            );
             
             return $this->jsonResponse(true, 'Message unsent successfully');
         } catch (\Exception $e) {
