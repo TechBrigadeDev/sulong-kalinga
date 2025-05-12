@@ -270,6 +270,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
         Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
         Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
+        Route::post('/internal-appointments/update', [InternalAppointmentsController::class, 'update'])->name('internal-appointments.update');
     });
 
 });
