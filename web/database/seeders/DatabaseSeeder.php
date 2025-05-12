@@ -1429,7 +1429,7 @@ class DatabaseSeeder extends Seeder
         }
         
         // Fallback to generic title
-        return 'Meeting: ' . $type;
+        return $type;
     }
 
     /**
