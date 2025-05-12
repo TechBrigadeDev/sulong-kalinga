@@ -610,6 +610,9 @@
                                         <i class="bi bi-calendar3"></i> Internal Appointment Calendar
                                     </h5>
                                     <div class="calendar-actions d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="resetCalendarButton">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset
+                                        </button>
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="toggleWeekView">
                                             <i class="bi bi-calendar-week"></i> Week View
                                         </button>
@@ -1037,6 +1040,107 @@
                 checkbox.disabled = !isAssessmentOrOther;
             });
         });
+
+        document.getElementById('resetCalendarButton').addEventListener('click', function() {
+            // Clear search input
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            
+            // Reset calendar view to month if not already
+            if (currentView !== 'dayGridMonth') {
+                calendar.changeView('dayGridMonth');
+                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                currentView = 'dayGridMonth';
+            }
+            
+            // First remove all events (like in CareworkerAppointments)
+            calendar.removeAllEvents();
+            
+            // Go to current month/date
+            calendar.today();
+            
+            // Refresh events data
+            calendar.refetchEvents();
+            
+            // Clear current event selection
+            currentEvent = null;
+            editButton.disabled = true;
+            deleteButton.disabled = true;
+            
+            // Clear details panel
+            appointmentDetailsEl.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    <p class="mt-3 mb-0">Select an appointment to view details</p>
+                </div>
+            `;
+            
+            // Show success message
+            showToast('Success', 'Calendar reset successfully', 'success');
+        });
+
+        // Add the toast function from CareworkerAppointments
+        function showToast(title, message, type) {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+                toastContainer.style.zIndex = '5000';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // Create unique ID for this toast
+            const toastId = 'toast-' + Date.now();
+            
+            // Determine background color based on type
+            let bgClass = 'bg-primary';
+            let iconClass = 'bi-info-circle-fill';
+            
+            if (type === 'success') {
+                bgClass = 'bg-success';
+                iconClass = 'bi-check-circle-fill';
+            } else if (type === 'danger' || type === 'error') {
+                bgClass = 'bg-danger';
+                iconClass = 'bi-exclamation-circle-fill';
+            } else if (type === 'warning') {
+                bgClass = 'bg-warning';
+                iconClass = 'bi-exclamation-triangle-fill';
+            }
+            
+            // Create toast HTML
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi ${iconClass} me-2"></i>
+                            <strong>${title}</strong> ${message ? ': ' + message : ''}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Add toast to container
+            toastContainer.innerHTML += toastHtml;
+            
+            // Initialize and show the toast
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, {
+                delay: 5000,
+                autohide: true
+            });
+            
+            toast.show();
+            
+            // Remove from DOM after hiding
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        }
         
         // Setup attendee search and selection for each participant type
         setupAttendeeSearch('staffSearch', 'staffDropdown', 'staffAttendees');
