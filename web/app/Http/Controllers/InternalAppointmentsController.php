@@ -328,12 +328,12 @@ class InternalAppointmentsController extends Controller
     private function getEventClass($typeId)
     {
         $typeClasses = [
-            1 => 'skills',
-            2 => 'feedback',
+            1 => 'quarterly-feedback',
+            2 => 'skills-enhancement',
             3 => 'council',
-            4 => 'health',
+            4 => 'health-board',
             5 => 'liga',
-            6 => 'referrals',
+            6 => 'hmo',
             7 => 'assessment',
             8 => 'careplan',
             9 => 'team',
@@ -341,7 +341,7 @@ class InternalAppointmentsController extends Controller
             11 => 'other',
         ];
         
-        return $typeClasses[$typeId] ?? 'other';
+        return 'event-' . ($typeClasses[$typeId] ?? 'other');
     }
     
     /**
