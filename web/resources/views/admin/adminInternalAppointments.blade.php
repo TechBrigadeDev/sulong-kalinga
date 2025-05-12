@@ -668,13 +668,12 @@
         </div>
     </div>
    
-    <!-- Add Appointment Modal -->
     <div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="appointmentModalLabel"><i class="bi bi-plus-circle"></i> Add New Appointment</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAppointmentModalLabel">Add Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div id="modalErrorContainer" class="alert alert-danger mb-3" style="display: none;">
@@ -682,6 +681,12 @@
                         <ul id="modalErrorList" class="mb-0 ms-3">
                             <!-- Errors will be inserted here dynamically -->
                         </ul>
+                    </div>
+                    
+                    <div id="recurringWarningMessage" class="alert alert-warning mb-3" style="display: none;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Note:</strong> Editing a recurring appointment will only affect this and future occurrences. 
+                        Past occurrences will remain unchanged.
                     </div>
                     <form id="addAppointmentForm">
                         <input type="hidden" id="appointmentId" name="appointment_id" value="">
@@ -1457,10 +1462,23 @@
                         <p class="mb-0">${event.extendedProps.notes || 'No notes available'}</p>
                     </div>
                 `;
+
+                const status = event.extendedProps.status?.toLowerCase() || '';
+                const isEditable = status !== 'completed' && status !== 'canceled';
                 
-                // Enable edit and delete buttons when an event is selected
-                editButton.disabled = !event.extendedProps.can_edit;
-                deleteButton.disabled = !event.extendedProps.can_edit;
+                // Enable edit and delete buttons only if event is editable
+                // First check if can_edit property is true, then check if status allows editing
+                editButton.disabled = !event.extendedProps.can_edit || !isEditable;
+                deleteButton.disabled = !event.extendedProps.can_edit || !isEditable;
+                
+                // Add visual indicator if buttons are disabled due to status
+                if (!isEditable) {
+                    editButton.title = `Cannot edit ${status} appointments`;
+                    deleteButton.title = `Cannot cancel ${status} appointments`;
+                } else {
+                    editButton.title = '';
+                    deleteButton.title = '';
+                }
             }
         });
 
@@ -1684,107 +1702,6 @@
             }
         }
         
-        // Edit button click handler
-        editButton.addEventListener('click', function() {
-            if (!currentEvent) return;
-            
-            const event = currentEvent;
-            
-            // Reset form first
-            resetAppointmentForm();
-            
-            // Set form ID and title
-            document.getElementById('appointmentId').value = event.extendedProps.appointment_id;
-            document.getElementById('appointmentModalLabel').innerHTML = '<i class="bi bi-pencil-square"></i> Edit Appointment';
-            
-            // Set basic fields
-            document.getElementById('appointmentTitle').value = event.title;
-            document.getElementById('appointmentType').value = event.extendedProps.type_id;
-            document.getElementById('appointmentPlace').value = event.extendedProps.meeting_location || '';
-            document.getElementById('appointmentNotes').value = event.extendedProps.notes || '';
-            
-            // Set date and time
-            if (event.start) {
-                document.getElementById('appointmentDate').value = event.start.toISOString().split('T')[0];
-                if (!event.extendedProps.is_flexible_time && event.start) {
-                    document.getElementById('appointmentTime').value = 
-                        event.start.toTimeString().substring(0, 5);
-                }
-            }
-            
-            // Handle flexible time checkbox
-            document.getElementById('flexibleTimeCheck').addEventListener('change', function() {
-                const timeFieldsContainer = document.getElementById('timeFieldsContainer');
-                if (this.checked) {
-                    timeFieldsContainer.style.display = 'none';
-                } else {
-                    timeFieldsContainer.style.display = 'flex';
-                }
-            });
-            
-            // Handle other appointment type
-            if (event.extendedProps.type_id === '11') { // ID for "Other" type
-                document.getElementById('otherTypeContainer').style.display = 'block';
-                document.getElementById('otherAppointmentType').value = event.extendedProps.other_type_details || '';
-            }
-            
-            // Handle recurring appointment
-            if (event.extendedProps.recurring) {
-                document.getElementById('recurringCheck').checked = true;
-                document.getElementById('recurringOptions').style.display = 'block';
-                
-                // Set pattern type
-                const pattern = event.extendedProps.recurring_pattern;
-                if (pattern) {
-                    document.getElementById(`pattern${pattern.type.charAt(0).toUpperCase() + pattern.type.slice(1)}`).checked = true;
-                    
-                    // Show/hide weekly options
-                    document.getElementById('weeklyOptions').style.display = pattern.type === 'weekly' ? 'block' : 'none';
-                    
-                    // Set day of week for weekly pattern
-                    if (pattern.type === 'weekly' && pattern.day_of_week) {
-                        const days = pattern.day_of_week.split(',').map(d => d.trim());
-                        days.forEach(day => {
-                            const checkbox = document.querySelector(`input[name="day_of_week[]"][value="${day}"]`);
-                            if (checkbox) checkbox.checked = true;
-                        });
-                    }
-                    
-                    // Set recurrence end date
-                    if (pattern.recurrence_end) {
-                        document.getElementById('recurrenceEnd').value = pattern.recurrence_end;
-                    }
-                }
-            }
-            
-            // Set participants
-            if (event.extendedProps.participants) {
-                // Process staff participants
-                event.extendedProps.participants.forEach(participant => {
-                    if (participant.type === 'cose_user') {
-                        // Check the corresponding checkbox
-                        const checkbox = document.querySelector(`.attendee-option[data-id="${participant.id}"][data-type="cose_user"] input`);
-                        if (checkbox) {
-                            checkbox.checked = true;
-                            // Add tag
-                            addAttendeeTag(
-                                document.getElementById('staffAttendees'),
-                                participant.id,
-                                'cose_user',
-                                participant.name
-                            );
-                        }
-                    }
-                });
-            }
-            
-            // Update submit button text
-            document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-save"></i> Save Changes';
-            
-            // Show modal
-            addAppointmentModal.show();
-        });
-        
         // Delete button click handler
         deleteButton.addEventListener('click', function() {
             if (!currentEvent) return;
@@ -1904,6 +1821,323 @@
                 }
             });
         });
+        
+        // Edit button click handler
+        editButton.addEventListener('click', function() {
+            if (!currentEvent) {
+                console.log('No event selected');
+                return;
+            }
+            
+            // Set editing flag to true
+            const isEditing = true;
+            
+            try {
+                // Reset form
+                resetAppointmentForm();
+
+                // Hide any displayed errors
+                hideModalErrors();
+                
+                // Hide recurring warning message
+                document.getElementById('recurringWarningMessage').style.display = 'none';
+                
+                // Set modal title
+                document.getElementById('addAppointmentModalLabel').textContent = 'Edit Appointment';
+                
+                // Show warning for recurring appointments
+                const isRecurring = !!currentEvent.extendedProps.recurring_pattern;
+                document.getElementById('recurringWarningMessage').style.display = 
+                    (isEditing && isRecurring) ? 'block' : 'none';
+                    
+                // Fill form with event data
+                const form = document.getElementById('addAppointmentForm');
+                
+                // Set hidden ID field
+                const appointmentIdInput = document.createElement('input');
+                appointmentIdInput.type = 'hidden';
+                appointmentIdInput.name = 'appointment_id';
+                appointmentIdInput.value = currentEvent.id;
+                form.appendChild(appointmentIdInput);
+                
+                // Fill basic details
+                document.getElementById('appointmentTitle').value = currentEvent.title;
+                document.getElementById('appointmentType').value = currentEvent.extendedProps.type_id;
+                document.getElementById('appointmentDate').value = currentEvent.startStr.split('T')[0];
+                document.getElementById('appointmentPlace').value = currentEvent.extendedProps.meeting_location || '';
+                document.getElementById('appointmentNotes').value = currentEvent.extendedProps.notes || '';
+                
+                // Handle flexible time setting
+                const isFlexibleTime = currentEvent.extendedProps.is_flexible_time;
+                document.getElementById('flexibleTimeCheck').checked = isFlexibleTime;
+                document.getElementById('timeFieldsContainer').style.display = isFlexibleTime ? 'none' : 'block';
+
+                
+                // Set time values if not flexible
+                if (!isFlexibleTime && currentEvent.start && currentEvent.end) {
+                    document.getElementById('startTime').value = formatTime(currentEvent.start);
+                    document.getElementById('endTime').value = formatTime(currentEvent.end);
+                }
+                
+                // Handle other type details if relevant
+                if (currentEvent.extendedProps.type_id == 11) { // "Others" type
+                    document.getElementById('otherTypeContainer').style.display = 'block';
+                    document.getElementById('otherTypeDetails').value = currentEvent.extendedProps.other_type_details || '';
+                }
+                
+                // Handle recurring settings
+                document.getElementById('recurringCheck').checked = isRecurring;
+                document.getElementById('recurringOptions').style.display = isRecurring ? 'block' : 'none';
+                
+                if (isRecurring) {
+                    // Set pattern type
+                    const patternType = currentEvent.extendedProps.recurring_pattern.pattern_type;
+                    document.querySelector(`input[name="pattern_type"][value="${patternType}"]`).checked = true;
+                    
+                    // Show relevant options based on pattern type
+                    document.getElementById('weeklyOptions').style.display = patternType === 'weekly' ? 'block' : 'none';
+                    
+                    // Set days of week for weekly pattern
+                    if (patternType === 'weekly') {
+                        const daysOfWeek = currentEvent.extendedProps.recurring_pattern.day_of_week || '';
+                        
+                        // Reset all checkboxes first
+                        document.querySelectorAll('input[name="day_of_week[]"]').forEach(cb => {
+                            cb.checked = false;
+                        });
+                        
+                        // If there are days selected, check the appropriate boxes
+                        if (daysOfWeek) {
+                            // Split into array if it contains commas
+                            const dayArray = daysOfWeek.includes(',') ? 
+                                daysOfWeek.split(',').map(d => d.trim()) : 
+                                [daysOfWeek];
+                                
+                            // Check the appropriate checkboxes
+                            dayArray.forEach(day => {
+                                const checkbox = document.querySelector(`input[name="day_of_week[]"][value="${day}"]`);
+                                if (checkbox) checkbox.checked = true;
+                            });
+                        }
+                    }
+                    
+                    // Set recurrence end date
+                    if (currentEvent.extendedProps.recurring_pattern.recurrence_end) {
+                        document.getElementById('recurrenceEnd').value = 
+                            currentEvent.extendedProps.recurring_pattern.recurrence_end.split('T')[0];
+                    }
+                }
+                
+                // Handle participants
+                loadParticipantsForEdit(currentEvent.extendedProps.participants);
+                
+                // Show the modal
+                addAppointmentModal.show();
+                
+                console.log('Edit modal should now be visible');
+            } catch (error) {
+                console.error('Error setting up edit form:', error);
+            }
+        });
+
+        // Helper function to load participants into the edit form
+        function loadParticipantsForEdit(participants) {
+            if (!participants) return;
+            
+            // Clear existing selections
+            document.querySelectorAll('.attendee-tag').forEach(tag => tag.remove());
+            
+            // Group participants by type
+            const groupedParticipants = {
+                cose_user: [],
+                beneficiary: [],
+                family_member: []
+            };
+            
+            participants.forEach(p => {
+                if (groupedParticipants[p.type]) {
+                    groupedParticipants[p.type].push(p);
+                }
+            });
+            
+            // Add staff participants
+            const staffContainer = document.getElementById('staffAttendees');
+            groupedParticipants.cose_user.forEach(p => {
+                addAttendeeTag(staffContainer, p.id, 'cose_user', p.name);
+            });
+            
+            // Add beneficiary participants
+            const beneficiaryContainer = document.getElementById('beneficiaryAttendees');
+            groupedParticipants.beneficiary.forEach(p => {
+                addAttendeeTag(beneficiaryContainer, p.id, 'beneficiary', p.name);
+            });
+            
+            // Add family member participants
+            const familyContainer = document.getElementById('familyAttendees');
+            groupedParticipants.family_member.forEach(p => {
+                addAttendeeTag(familyContainer, p.id, 'family_member', p.name);
+            });
+        }
+
+        // Update the form submission handler to handle editing
+        document.getElementById('submitAppointment').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Reset error messages
+            hideModalErrors();
+            
+            // Build the form data
+            const formData = new FormData(document.getElementById('addAppointmentForm'));
+            const appointmentId = formData.get('appointment_id');
+            const isEditing = appointmentId !== null;
+            
+            // Handle recurring pattern data
+            if (document.getElementById('recurringCheck').checked) {
+                formData.append('is_recurring', '1');
+                
+                // Get pattern type
+                const patternType = document.querySelector('input[name="pattern_type"]:checked').value;
+                formData.append('pattern_type', patternType);
+                
+                // For weekly pattern, get selected days
+                if (patternType === 'weekly') {
+                    // Clear any existing day_of_week entries to avoid duplication
+                    const entries = [...formData.entries()];
+                    entries.forEach(entry => {
+                        if (entry[0] === 'day_of_week[]') {
+                            formData.delete('day_of_week[]');
+                        }
+                    });
+                    
+                    // Collect selected days
+                    const selectedDays = [];
+                    document.querySelectorAll('input[name="day_of_week[]"]:checked').forEach(checkbox => {
+                        selectedDays.push(checkbox.value);
+                    });
+                    
+                    console.log('Selected days for weekly pattern:', selectedDays);
+                    
+                    // If no days selected, use the current day from the appointment date
+                    if (selectedDays.length === 0) {
+                        const appointmentDate = document.getElementById('appointmentDate').value;
+                        if (appointmentDate) {
+                            const date = new Date(appointmentDate);
+                            const dayOfWeek = date.getDay();
+                            selectedDays.push(dayOfWeek.toString());
+                            console.log('No days selected, using appointment date day:', dayOfWeek);
+                        }
+                    }
+                    
+                    // Add each day as separate form field entry
+                    selectedDays.forEach(day => {
+                        formData.append('day_of_week[]', day);
+                    });
+                }
+                
+                // Add recurrence end date
+                const recurrenceEnd = document.getElementById('recurrenceEnd').value;
+                if (recurrenceEnd) {
+                    formData.append('recurrence_end', recurrenceEnd);
+                }
+            }
+            
+            // Add participants data
+            const participants = {
+                cose_user: [],
+                beneficiary: [],
+                family_member: []
+            };
+            
+            // Staff participants
+            document.querySelectorAll('#staffAttendees .attendee-tag').forEach(tag => {
+                participants.cose_user.push(tag.dataset.id);
+            });
+            
+            // Beneficiary participants
+            document.querySelectorAll('#beneficiaryAttendees .attendee-tag').forEach(tag => {
+                participants.beneficiary.push(tag.dataset.id);
+            });
+            
+            // Family members
+            document.querySelectorAll('#familyAttendees .attendee-tag').forEach(tag => {
+                participants.family_member.push(tag.dataset.id);
+            });
+            
+            // Add participants data to form
+            formData.append('participants[cose_user]', JSON.stringify(participants.cose_user));
+            formData.append('participants[beneficiary]', JSON.stringify(participants.beneficiary));
+            formData.append('participants[family_member]', JSON.stringify(participants.family_member));
+            
+            // Show loading state
+            this.disabled = true;
+            const originalBtnHtml = this.innerHTML;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
+            // Determine URL based on whether this is a create or update
+            const url = appointmentId ? 
+                '/admin/internal-appointments/update' : 
+                '/admin/internal-appointments/store';
+            
+            // Send the AJAX request
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        addAppointmentModal.hide();
+                        
+                        // Show success message
+                        showToast('Success', 
+                            isEditing ? 'Appointment updated successfully!' : 'Appointment created successfully!',
+                            'success');
+                        
+                        // Refresh calendar
+                        setTimeout(function() {
+                            calendar.refetchEvents();
+                        }, 500);
+                    } else {
+                        // Show error message
+                        showModalErrors([response.message || 'An unknown error occurred']);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error submitting form:', xhr);
+                    
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        // Show validation errors
+                        const errorMessages = [];
+                        for (const field in xhr.responseJSON.errors) {
+                            errorMessages.push(xhr.responseJSON.errors[field][0]);
+                        }
+                        showModalErrors(errorMessages);
+                    } else {
+                        // Show general error
+                        showModalErrors(['An error occurred while saving the appointment. Please try again.']);
+                    }
+                },
+                complete: function() {
+                    // Reset button state
+                    document.getElementById('submitAppointment').disabled = false;
+                    document.getElementById('submitAppointment').innerHTML = originalBtnHtml;
+                }
+            });
+        });
+
+        // Helper function to format time from a Date object to HH:MM format
+        function formatTime(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            const hours = d.getHours().toString().padStart(2, '0');
+            const minutes = d.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
     });
     </script>
 </body>
