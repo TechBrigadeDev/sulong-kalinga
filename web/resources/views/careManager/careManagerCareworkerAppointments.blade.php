@@ -1679,6 +1679,13 @@
                 // Ensure is_flexible_time is explicitly set
                 const isFlexibleTime = document.getElementById('openTimeCheck').checked;
                 formData.set('is_flexible_time', isFlexibleTime ? '1' : '0');
+
+                // ADD THIS CODE: Make sure is_recurring is sent even when the checkbox is disabled
+                const recurringCheck = document.getElementById('recurringCheck');
+                if (recurringCheck && recurringCheck.disabled) {
+                    // If we're editing and the checkbox is disabled, use the original value
+                    formData.set('is_recurring', currentEvent.extendedProps.recurring ? '1' : '0');
+                }
                 
                 // Add debugging
                 console.log('Form submission - isEditing:', isEditing);
