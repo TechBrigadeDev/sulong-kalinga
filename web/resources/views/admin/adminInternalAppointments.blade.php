@@ -533,57 +533,57 @@
             border-radius: 6px;
         }
         
-        /* Color coding for different appointment types */
-        .event-skills {
+       /* Color coding for different appointment types */
+        .event-quarterly-feedback {
             background-color: #4e73df !important;
             border-color: #4668cc !important;
         }
-        
-        .event-feedback {
+
+        .event-skills-enhancement {
             background-color: #1cc88a !important;
             border-color: #19b77d !important;
         }
-        
+
         .event-council {
             background-color: #36b9cc !important;
             border-color: #31a8ba !important;
         }
-        
-        .event-health {
+
+        .event-health-board {
             background-color: #f6c23e !important;
             border-color: #e4b138 !important;
         }
-        
+
         .event-liga {
             background-color: #e74a3b !important;
             border-color: #d93a2b !important;
         }
-        
-        .event-referrals {
+
+        .event-hmo {
             background-color: #6f42c1 !important;
             border-color: #643ab0 !important;
         }
-        
+
         .event-assessment {
             background-color: #fd7e14 !important;
             border-color: #e77014 !important;
         }
-        
+
         .event-careplan {
             background-color: #20c997 !important;
             border-color: #1cb888 !important;
         }
-        
+
         .event-team {
-            background-color: #5a5c69 !important;
-            border-color: #505259 !important;
+            background-color: #3949ab !important;
+            border-color: #303f9f !important;
         }
-        
+
         .event-mentoring {
-            background-color: #858796 !important;
-            border-color: #7a7c89 !important;
+            background-color: #ec407a !important;
+            border-color: #d81b60 !important;
         }
-        
+
         .event-other {
             background-color: #a435f0 !important;
             border-color: #9922e8 !important;
@@ -968,6 +968,12 @@
                 
                 // Reset submit button text
                 document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
+
+                // Reset appointment ID to ensure we're in "create" mode
+                document.getElementById('appointmentId').value = '';
+                
+                // THIS IS THE CRITICAL LINE THAT'S MISSING:
+                currentEvent = null;
             });
 
         var calendarEl = document.getElementById('calendar');
@@ -1010,13 +1016,15 @@
         // Handle appointment type change
         document.getElementById('appointmentType').addEventListener('change', function() {
             const selectedType = this.value;
+            const selectedTypeText = this.options[this.selectedIndex].text;
             
             // Show/hide other field based on selection
             document.getElementById('otherTypeContainer').style.display = 
-                selectedType === 'other' ? 'block' : 'none';
+                selectedTypeText === 'Others' ? 'block' : 'none';
             
             // Enable/disable beneficiary and family attendance based on type
-            const isAssessmentOrOther = selectedType === 'assessment' || selectedType === 'other';
+            // Now checking by text content for greater reliability
+            const isAssessmentOrOther = selectedTypeText === 'Assessment and Review of Care Needs' || selectedTypeText === 'Others';
             
             // Beneficiary options
             const beneficiaryAttendees = document.getElementById('beneficiaryAttendees');
