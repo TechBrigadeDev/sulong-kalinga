@@ -2080,26 +2080,37 @@
                 beneficiary: [],
                 family_member: []
             };
-            
-            // Staff participants
+
+            // Staff participants 
             document.querySelectorAll('#staffAttendees .attendee-tag').forEach(tag => {
                 participants.cose_user.push(tag.dataset.id);
             });
-            
+
             // Beneficiary participants
             document.querySelectorAll('#beneficiaryAttendees .attendee-tag').forEach(tag => {
                 participants.beneficiary.push(tag.dataset.id);
             });
-            
+
             // Family members
             document.querySelectorAll('#familyAttendees .attendee-tag').forEach(tag => {
                 participants.family_member.push(tag.dataset.id);
             });
-            
-            // Add participants data to form
-            formData.append('participants[cose_user]', JSON.stringify(participants.cose_user));
-            formData.append('participants[beneficiary]', JSON.stringify(participants.beneficiary));
-            formData.append('participants[family_member]', JSON.stringify(participants.family_member));
+
+            // Add participants data to form - IMPORTANT: Don't use JSON.stringify
+            participants.cose_user.forEach(id => {
+                formData.append('participants[cose_user][]', id);
+            });
+
+            participants.beneficiary.forEach(id => {
+                formData.append('participants[beneficiary][]', id);
+            });
+
+            participants.family_member.forEach(id => {
+                formData.append('participants[family_member][]', id);
+            });
+
+            // Console log for debugging
+            console.log("Staff participants:", participants.cose_user);
             
             // Show loading state
             this.disabled = true;
