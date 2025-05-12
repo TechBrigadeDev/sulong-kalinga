@@ -21,14 +21,17 @@ use App\Models\Beneficiary;
 use App\Models\GeneralCarePlan;
 use App\Models\Notification;
 use App\Services\UserManagementService;
+use App\Services\LogService;
+use App\Enums\LogType;
 
 class FamilyMemberController extends Controller
 {
     protected $userManagementService;
     
-    public function __construct(UserManagementService $userManagementService)
+    public function __construct(UserManagementService $userManagementService, LogService $logService)
     {
         $this->userManagementService = $userManagementService;
+        $this->logService = $logService;
     }
 
     protected function getRolePrefix()
@@ -142,6 +145,15 @@ class FamilyMemberController extends Controller
 
         // Add the status property based on the access value
         $family_member->status = $family_member->access ? 'Approved' : 'Denied';
+
+        // Log the view action
+        $this->logService->createLog(
+            'family_member',
+            $family_member->family_member_id,
+            LogType::VIEW,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed family member ' . $family_member->first_name . ' ' . $family_member->last_name,
+            Auth::id()
+        );
 
         return view($rolePrefix . '.viewFamilyDetails', compact('family_member'));
     }
@@ -312,6 +324,15 @@ class FamilyMemberController extends Controller
 
 
         $familymember->save();
+
+        // Log the creation of the family member
+        $this->logService->createLog(
+            'family_member',
+            $familymember->family_member_id,
+            LogType::CREATE,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' created family member ' . $familymember->first_name . ' ' . $familymember->last_name,
+            Auth::id()
+        );
 
         try {
             // Get the role-specific name
@@ -606,6 +627,15 @@ class FamilyMemberController extends Controller
 
             $familyMember->save();
 
+            // Log the update of the family member
+            $this->logService->createLog(
+                'family_member',
+                $familyMember->family_member_id,
+                LogType::UPDATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated family member ' . $familyMember->first_name . ' ' . $familyMember->last_name,
+                Auth::id()
+            );
+
             try {
                 // Get the role-specific name
                 $actorRole = Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Care Manager' : 'Care Worker');
@@ -765,6 +795,15 @@ class FamilyMemberController extends Controller
             $result = $this->userManagementService->deleteFamilyMember(
                 $family_member_id,
                 Auth::user()
+            );
+
+            // Log the deletion of the family member to the logs table
+            $this->logService->createLog(
+                'family_member',
+                $family_member_id,
+                LogType::DELETE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted family member ' . $familyMemberName,
+                Auth::id()
             );
             
             return response()->json($result);

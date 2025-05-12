@@ -11,8 +11,18 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\PasswordResetMail;
 
+use App\Services\LogService;
+use App\Enums\LogType;
+
 class PasswordResetController extends Controller
 {
+    protected $logService;
+
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
+
     public function showForgotPasswordForm()
     {
         return view('forgot-password');
@@ -65,6 +75,17 @@ class PasswordResetController extends Controller
         // Send email
         Mail::to($email)->send(new PasswordResetMail($resetUrl, $user));
         
+        
+        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? $email);
+        // Log password reset request
+        $this->logService->createLog(
+            $userType === 'cose' ? 'user' : 'portal_account',
+            $user->id,
+            LogType::CREATE,
+            $userName . ' requested a password reset link.',
+            $user->id
+        );
+
         return redirect()->back()
             ->with('status', 'Password reset link has been sent to your email address.');
     }
@@ -118,7 +139,17 @@ class PasswordResetController extends Controller
             $user->password = Hash::make($request->password);
             $user->save();
         }
-        
+
+        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? $request->email);
+        // Log password reset
+        $this->logService->createLog(
+            $request->type === 'cose' ? 'user' : 'portal_account',
+            $user->id,
+            LogType::UPDATE,
+            $userName . ' reset their password.',
+            $user->id
+        );
+
         // Mark the token as used
         PasswordReset::markAsUsed($request->token, $request->email);
         

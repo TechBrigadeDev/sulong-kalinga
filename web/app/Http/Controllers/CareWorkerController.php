@@ -17,6 +17,9 @@ use App\Models\Beneficiary;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use App\Services\UserManagementService;
+
+use App\Services\LogService;
+use App\Enums\LogType;
  
 
 class CareWorkerController extends Controller
@@ -24,9 +27,10 @@ class CareWorkerController extends Controller
 
     protected $userManagementService;
     
-    public function __construct(UserManagementService $userManagementService)
+    public function __construct(UserManagementService $userManagementService, LogService $logService)
     {
         $this->userManagementService = $userManagementService;
+        $this->logService = $logService;
     }
 
     protected function getRolePrefixView()
@@ -113,6 +117,15 @@ class CareWorkerController extends Controller
 
         // Fetch all beneficiaries associated with these general care plans
         $beneficiaries = Beneficiary::whereIn('general_care_plan_id', $generalCarePlans->pluck('general_care_plan_id'))->get();
+
+        // Log the view action
+        $this->logService->createLog(
+            'care_worker',
+            $careworker->id,
+            LogType::VIEW,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed care worker ' . $careworker->first_name . ' ' . $careworker->last_name,
+            Auth::id()
+        );
 
         return view($rolePrefix . '.viewCareworkerDetails', compact('careworker', 'beneficiaries'));
     }
@@ -322,6 +335,15 @@ class CareWorkerController extends Controller
             $careworker->pagibig_id_number = $request->input('pagibig_ID') === '' ? null : $request->input('pagibig_ID');
             
             $careworker->save();
+
+            // Log the update
+            $this->logService->createLog(
+                'care_worker',
+                $careworker->id,
+                LogType::UPDATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated care worker ' . $careworker->first_name . ' ' . $careworker->last_name,
+                Auth::id()
+            );
 
             // Only notify if the user is not updating their own profile
             if (Auth::id() != $careworker->id) {
@@ -604,6 +626,15 @@ class CareWorkerController extends Controller
 
         $careworker->save();
 
+        // Log the creation of the care worker
+        $this->logService->createLog(
+            'care_worker',
+            $careworker->id,
+            LogType::CREATE,
+            Auth::user()->first_name . ' ' . Auth::user()->last_name . ' created care worker ' . $careworker->first_name . ' ' . $careworker->last_name,
+            Auth::id()
+        );
+
          // Send welcome notification to the new care worker
          try {
             $welcomeTitle = 'Welcome to SULONG KALINGA';
@@ -697,6 +728,15 @@ class CareWorkerController extends Controller
             $careWorker->status = $status;
             $careWorker->updated_at = now();
             $careWorker->save();
+
+            // Log the status update
+            $this->logService->createLog(
+                'care_worker',
+                $careWorker->id,
+                LogType::UPDATE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' changed status of care worker ' . $careWorker->first_name . ' ' . $careWorker->last_name . ' to ' . $status,
+                Auth::id()
+            );
             
             // Attempt to send notifications, but don't let failures break the main functionality
             try {
@@ -824,6 +864,15 @@ class CareWorkerController extends Controller
                 Auth::user()
             );
             
+            // Log the deletion
+            $this->logService->createLog(
+                'care_worker',
+                $careWorkerId,
+                LogType::DELETE,
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted care worker ' . $careWorkerName,
+                Auth::id()
+            );
+
             return response()->json($result);
             
         } catch (\Exception $e) {
@@ -973,6 +1022,15 @@ class CareWorkerController extends Controller
                 'new_email' => $user->email
             ]);
 
+            // Log the email change to the logs table
+            $this->logService->createLog(
+                'care_worker',
+                $user->id,
+                LogType::UPDATE,
+                $user->first_name . ' ' . $user->last_name . ' updated their email.',
+                $user->id
+            );
+
             return redirect()->route('care-worker.account.profile.index')
                 ->with('success', 'Your email has been updated successfully.')
                 ->with('activeTab', 'settings');
@@ -1033,6 +1091,15 @@ class CareWorkerController extends Controller
                 'care_worker_id' => $user->id,
                 'timestamp' => now()
             ]);
+
+            // Log the password change to the logs table
+            $this->logService->createLog(
+                'care_worker',
+                $user->id,
+                LogType::UPDATE,
+                $user->first_name . ' ' . $user->last_name . ' updated their password.',
+                $user->id
+            );
 
             return redirect()->route('care-worker.account.profile.index')
                 ->with('success', 'Your password has been updated successfully.')

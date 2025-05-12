@@ -10,9 +10,16 @@ use App\Models\FamilyMember;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Services\LogService;
+use App\Enums\LogType;
 
 class NotificationsController extends Controller
 {
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
+
     /**
      * Get notifications for the authenticated user
      */
@@ -56,6 +63,16 @@ class NotificationsController extends Controller
             
             $unreadCount = $notifications->where('is_read', false)->count();
             
+            // Log the view action
+            $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? 'Unknown User');
+            $this->logService->createLog(
+                'notification',
+                0,
+                LogType::VIEW,
+                $userName . ' viewed their notifications.',
+                $user->id
+            );
+
             return response()->json([
                 'success' => true,
                 'notifications' => $notifications,
@@ -82,6 +99,17 @@ class NotificationsController extends Controller
         if (Auth::user()->role_id != 1) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
+
+        $user = Auth::user();
+        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? 'Unknown User');
+
+        $this->logService->createLog(
+            'notification',
+            0,
+            LogType::VIEW,
+            $userName . ' viewed all notifications.',
+            $user->id
+        );
         
         // Get all notifications, newest first
         $notifications = Notification::orderBy('date_created', 'desc')
@@ -127,6 +155,16 @@ class NotificationsController extends Controller
         // Mark as read
         $notification->is_read = true;
         $notification->save();
+
+        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? 'Unknown User');
+
+        $this->logService->createLog(
+            'notification',
+            $notification->notification_id,
+            LogType::UPDATE,
+            $userName . ' marked notification #' . $notification->notification_id . ' as read.',
+            $user->id
+        );
         
         return response()->json([
             'success' => true,
@@ -153,6 +191,17 @@ class NotificationsController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
         
+        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? 'Unknown User');
+        
+        // Log the mark all as read action
+        $this->logService->createLog(
+            'notification',
+            0,
+            LogType::UPDATE,
+            $userName . ' marked all notifications as read.',
+            $user->id
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'All notifications marked as read',
@@ -182,6 +231,18 @@ class NotificationsController extends Controller
             'date_created' => Carbon::now(),
             'is_read' => false
         ]);
+
+        $user = Auth::user();
+        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? 'Unknown User');
+
+        // Log the creation of the notification
+        $this->logService->createLog(
+            'notification',
+            $notification->notification_id,
+            LogType::CREATE,
+            $userName . ' created a notification for user #' . $notification->user_id . '.',
+            $user->id
+        );
         
         return response()->json([
             'success' => true,
