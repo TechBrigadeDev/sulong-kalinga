@@ -1234,9 +1234,24 @@ class DatabaseSeeder extends Seeder
             
             // Create recurring pattern
             $patternType = $patternTypes[array_rand($patternTypes)];
-            $dayOfWeek = $patternType === 'weekly' ? Carbon::parse($date)->dayOfWeek : null;
             $endDate = Carbon::now()->addMonths(rand(1, 6));
-            
+
+            // For weekly patterns, set 1-3 random days as a comma-separated string
+            $dayOfWeek = null;
+            if ($patternType === 'weekly') {
+                // Either use just the current day, or randomly select 1-3 days
+                if (rand(0, 1) === 0) {
+                    $dayOfWeek = (string)Carbon::parse($date)->dayOfWeek;
+                } else {
+                    $numberOfDays = rand(1, 3);
+                    $possibleDays = range(0, 6);
+                    shuffle($possibleDays);
+                    $selectedDays = array_slice($possibleDays, 0, $numberOfDays);
+                    sort($selectedDays); // Sort numerically
+                    $dayOfWeek = implode(',', $selectedDays);
+                }
+            }
+
             RecurringPattern::create([
                 'appointment_id' => $appointment->appointment_id,
                 'pattern_type' => $patternType,
@@ -1510,10 +1525,30 @@ class DatabaseSeeder extends Seeder
             
             // Add recurring pattern to 60% of visitations
             if ($this->faker->boolean(60)) {
+                $patternType = $this->faker->randomElement(['weekly', 'monthly']);
+
+                // For weekly patterns, set day_of_week as a string
+                $dayOfWeek = null;
+                if ($patternType === 'weekly') {
+                    // Either single day or multiple days (30% chance)
+                    if ($this->faker->boolean(30)) {
+                        // Multiple days (1-3)
+                        $numberOfDays = rand(1, 3);
+                        $possibleDays = range(0, 6);
+                        shuffle($possibleDays);
+                        $selectedDays = array_slice($possibleDays, 0, $numberOfDays);
+                        sort($selectedDays);
+                        $dayOfWeek = implode(',', $selectedDays);
+                    } else {
+                        // Single day
+                        $dayOfWeek = (string)$this->faker->numberBetween(0, 6);
+                    }
+                }
+
                 \App\Models\RecurringPattern::create([
                     'visitation_id' => $visitation->visitation_id,
-                    'pattern_type' => $this->faker->randomElement(['weekly', 'monthly']),
-                    'day_of_week' => $this->faker->randomElement(['weekly', 'monthly']) ? $this->faker->numberBetween(0, 6) : null,
+                    'pattern_type' => $patternType,
+                    'day_of_week' => $dayOfWeek,
                     'recurrence_end' => Carbon::parse($visitationDate)->addMonths($this->faker->numberBetween(1, 6)),
                     'created_at' => $visitation->created_at,
                     'updated_at' => $visitation->created_at,

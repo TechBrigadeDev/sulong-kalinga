@@ -677,6 +677,12 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div id="modalErrorContainer" class="alert alert-danger mb-3" style="display: none;">
+                        <h6 class="alert-heading mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following:</h6>
+                        <ul id="modalErrorList" class="mb-0 ms-3">
+                            <!-- Errors will be inserted here dynamically -->
+                        </ul>
+                    </div>
                     <form id="addAppointmentForm">
                         <input type="hidden" id="appointmentId" name="appointment_id" value="">
                         
@@ -1461,142 +1467,172 @@
         document.getElementById('submitAppointment').addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Reset error messages
-            document.querySelectorAll('.is-invalid').forEach(el => {
-                el.classList.remove('is-invalid');
-            });
-            document.querySelectorAll('.invalid-feedback').forEach(el => {
-                el.remove();
+            // Clear previous errors
+            hideModalErrors();
+            
+            // Check if any required fields are empty
+            const form = document.getElementById('addAppointmentForm');
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
             });
             
-            // Get form values
-            const formData = new FormData(addAppointmentForm);
-            const appointmentId = document.getElementById('appointmentId')?.value || '';
-            
-            // Add appointment ID if editing
-            if (appointmentId) {
-                formData.append('appointment_id', appointmentId);
+            if (!isValid) {
+                showModalErrors(['Please fill in all required fields']);
+                return;
             }
             
-            // Add recurring data if checked
-            if (recurringCheck.checked) {
+            // Check if editing or adding new
+            const isEditing = document.getElementById('appointmentId').value !== '';
+            const endpoint = isEditing ? '/admin/internal-appointments/update' : '/admin/internal-appointments/store';
+            
+            // Get form data
+            const formData = new FormData(form);
+            
+            // Add recurring pattern data if applicable
+            if (document.getElementById('recurringCheck').checked) {
                 formData.append('is_recurring', '1');
                 
                 // Get selected pattern type
-                const patternType = document.querySelector('input[name="pattern_type"]:checked')?.value || 'weekly';
+                const patternType = document.querySelector('input[name="pattern_type"]:checked').value;
                 formData.append('pattern_type', patternType);
                 
                 // For weekly pattern, get selected days
                 if (patternType === 'weekly') {
                     const selectedDays = [];
                     document.querySelectorAll('input[name="day_of_week[]"]:checked').forEach(checkbox => {
-                        selectedDays.push(checkbox.value);
+                        // Ensure we're only adding unique values
+                        if (!selectedDays.includes(checkbox.value)) {
+                            selectedDays.push(checkbox.value);
+                        }
                     });
                     
-                    // Ensure at least one day is selected
                     if (selectedDays.length === 0) {
-                        // Select the day of the selected date
-                        const selectedDate = new Date(document.getElementById('appointmentDate').value);
-                        const dayOfWeek = selectedDate.getDay().toString();
-                        document.getElementById(`day${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(dayOfWeek)]}`).checked = true;
-                        selectedDays.push(dayOfWeek);
+                        showToast('Error', 'Please select at least one day of the week for weekly recurrence', 'error');
+                        return;
                     }
                     
+                    // Append each day as a separate form field entry - this ensures proper array handling
                     selectedDays.forEach(day => {
                         formData.append('day_of_week[]', day);
                     });
                 }
                 
-                // Get recurrence end date
+                // Add recurrence end date if specified
                 const recurrenceEnd = document.getElementById('recurrenceEnd').value;
                 if (recurrenceEnd) {
                     formData.append('recurrence_end', recurrenceEnd);
                 }
-            } else {
-                formData.append('is_recurring', '0');
             }
             
-            // Add participants data
-            const staffAttendees = document.querySelectorAll('#staffAttendees .attendee-tag');
-            const beneficiaryAttendees = document.querySelectorAll('#beneficiaryAttendees .attendee-tag');
-            const familyAttendees = document.querySelectorAll('#familyAttendees .attendee-tag');
+            // Add flexible time flag if checked
+            if (document.getElementById('flexibleTimeCheck').checked) {
+                formData.append('is_flexible_time', '1');
+            }
             
-            // Check if at least one staff member is selected
-            if (staffAttendees.length === 0) {
-                const staffContainer = document.getElementById('staffAttendees');
-                staffContainer.classList.add('is-invalid');
-                const errorFeedback = document.createElement('div');
-                errorFeedback.className = 'invalid-feedback';
-                errorFeedback.textContent = 'Please select at least one staff member';
-                staffContainer.after(errorFeedback);
+            // Get selected participants
+            const staffCheckboxes = document.querySelectorAll('input[name="participants[cose_user][]"]:checked');
+            const beneficiaryCheckboxes = document.querySelectorAll('input[name="participants[beneficiary][]"]:checked');
+            const familyCheckboxes = document.querySelectorAll('input[name="participants[family_member][]"]:checked');
+            
+            if (staffCheckboxes.length === 0) {
+                showToast('Error', 'Please select at least one staff attendee', 'error');
                 return;
             }
             
-            // Add staff participants
-            staffAttendees.forEach(tag => {
-                formData.append('participants[cose_user][]', tag.dataset.id);
-            });
-            
-            // Add beneficiary participants if not disabled
-            if (!document.getElementById('beneficiarySearch').disabled) {
-                beneficiaryAttendees.forEach(tag => {
-                    formData.append('participants[beneficiary][]', tag.dataset.id);
-                });
-            }
-            
-            // Add family participants if not disabled
-            if (!document.getElementById('familySearch').disabled) {
-                familyAttendees.forEach(tag => {
-                    formData.append('participants[family_member][]', tag.dataset.id);
-                });
-            }
-            
-            // Add organizer flag (first staff member is organizer by default)
-            if (staffAttendees.length > 0) {
-                formData.append('organizer_id', staffAttendees[0].dataset.id);
-                formData.append('organizer_type', 'cose_user');
-            }
-            
-            // Submit form via AJAX
-            fetch('/admin/internal-appointments' + (appointmentId ? '/update' : '/store'), {
+            // Submit the form
+            fetch(endpoint, {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': csrf_token,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'An error occurred');
-                    });
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
-                return response.json();
             })
+            .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
-                    // Close modal and refresh calendar
+                if (data.success) {
+                    // Reset form and close modal
+                    resetAppointmentForm();
                     addAppointmentModal.hide();
+                    
+                    // Refresh calendar with new data
                     calendar.refetchEvents();
                     
-                    // Reset form
-                    resetAppointmentForm();
-                    
                     // Show success message
-                    alert(data.message || 'Appointment saved successfully');
+                    showToast('Success', data.message, 'success');
                 } else {
-                    alert(data.message || 'Failed to save appointment');
+                    // Display validation errors if any
+                    if (data.errors) {
+                        const errorMessages = Object.values(data.errors).flat();
+                        showModalErrors(errorMessages);
+                        errorMessages.forEach(message => {
+                            showToast('Error', message, 'error');
+                        });
+                    } else {
+                        showModalErrors([data.message || 'An error occurred']);
+                        showToast('Error', data.message || 'An error occurred', 'error');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert(error.message || 'Failed to process request');
+                showModalErrors(['An unexpected error occurred']);
+                showToast('Error', 'An unexpected error occurred', 'error');
             });
         });
+
+        function showModalErrors(errors) {
+            const errorContainer = document.getElementById('modalErrorContainer');
+            const errorList = document.getElementById('modalErrorList');
+            
+            // Clear previous errors
+            errorList.innerHTML = '';
+            
+            // Add each error as a list item
+            errors.forEach(error => {
+                const li = document.createElement('li');
+                li.textContent = error;
+                errorList.appendChild(li);
+            });
+            
+            // Show the error container
+            errorContainer.style.display = 'block';
+            
+            // Scroll to the top of the modal
+            const modalBody = errorContainer.closest('.modal-body');
+            if (modalBody) {
+                modalBody.scrollTop = 0;
+            }
+        }
+
+        function hideModalErrors() {
+            const errorContainer = document.getElementById('modalErrorContainer');
+            const errorList = document.getElementById('modalErrorList');
+            
+            // Clear error list
+            errorList.innerHTML = '';
+            
+            // Hide the container
+            errorContainer.style.display = 'none';
+            
+            // Remove invalid feedback from all fields
+            document.querySelectorAll('.is-invalid').forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+        }
         
         function resetAppointmentForm() {
             if (!addAppointmentForm) return; // Add this safety check
+
+            // Hide any displayed errors
+            hideModalErrors();
             
             addAppointmentForm.reset();
             
@@ -1660,10 +1696,15 @@
                 }
             }
             
-            // Handle flexible time
-            document.getElementById('flexibleTimeCheck').checked = event.extendedProps.is_flexible_time;
-            document.getElementById('timeFieldsContainer').style.display = 
-                event.extendedProps.is_flexible_time ? 'none' : 'flex';
+            // Handle flexible time checkbox
+            document.getElementById('flexibleTimeCheck').addEventListener('change', function() {
+                const timeFieldsContainer = document.getElementById('timeFieldsContainer');
+                if (this.checked) {
+                    timeFieldsContainer.style.display = 'none';
+                } else {
+                    timeFieldsContainer.style.display = 'flex';
+                }
+            });
             
             // Handle other appointment type
             if (event.extendedProps.type_id === '11') { // ID for "Other" type
