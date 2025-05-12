@@ -13,7 +13,8 @@ return new class extends Migration
             $table->unsignedBigInteger('appointment_id')->nullable();
             $table->unsignedBigInteger('visitation_id')->nullable();
             $table->enum('pattern_type', ['daily', 'weekly', 'monthly']);
-            $table->integer('day_of_week')->nullable(); // 0-6 for Sunday-Saturday
+            // Changed from integer to string to support multiple days of week
+            $table->string('day_of_week', 20)->nullable(); // Comma-separated values like "1,3,5" for Mon,Wed,Fri
             $table->date('recurrence_end')->nullable();
             $table->timestamps();
             

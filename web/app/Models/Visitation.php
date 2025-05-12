@@ -117,34 +117,138 @@ class Visitation extends Model
         }
         
         $occurrenceIds = [];
-        $currentDate = clone $startDate;
         
-        while ($currentDate <= $endDate) {
-            $occurrence = VisitationOccurrence::create([
-                'visitation_id' => $this->visitation_id,
-                'occurrence_date' => $currentDate->format('Y-m-d'),
-                'start_time' => $this->start_time,
-                'end_time' => $this->end_time,
-                'status' => $currentDate < now() ? 'completed' : 'scheduled'
-            ]);
-            
-            $occurrenceIds[] = $occurrence->occurrence_id;
-            
-            // Calculate next occurrence date based on pattern
-            switch ($pattern->pattern_type) {
-                case 'daily':
-                    $currentDate->addDay();
-                    break;
-                case 'weekly':
-                    $currentDate->addWeek();
-                    break;
-                case 'monthly':
-                    $currentDate->addMonth();
-                    break;
-            }
+        // Generate based on pattern type
+        switch ($pattern->pattern_type) {
+            case 'daily':
+                $this->generateDailyOccurrences($startDate, $endDate, $occurrenceIds);
+                break;
+                
+            case 'weekly':
+                $this->generateWeeklyOccurrences($startDate, $endDate, $pattern->day_of_week, $occurrenceIds);
+                break;
+                
+            case 'monthly':
+                $this->generateMonthlyOccurrences($startDate, $endDate, $occurrenceIds);
+                break;
         }
         
         return $occurrenceIds;
+    }
+
+    /**
+     * Generate daily occurrences
+     */
+    private function generateDailyOccurrences($startDate, $endDate, &$occurrenceIds)
+    {
+        $currentDate = clone $startDate;
+        
+        while ($currentDate <= $endDate) {
+            $occurrence = $this->createOccurrence($currentDate);
+            if ($occurrence) {
+                $occurrenceIds[] = $occurrence->occurrence_id;
+            }
+            $currentDate->addDay();
+        }
+    }
+
+    /**
+     * Generate weekly occurrences, handling multiple days of week
+     */
+    private function generateWeeklyOccurrences($startDate, $endDate, $dayOfWeek, &$occurrenceIds)
+    {
+        // Parse day_of_week string into array of integers
+        $daysOfWeek = [];
+        if (strpos($dayOfWeek, ',') !== false) {
+            // Split the comma-separated string into an array of day numbers
+            $daysOfWeek = array_map('intval', explode(',', $dayOfWeek));
+        } else {
+            // Single day as integer
+            $daysOfWeek = [$dayOfWeek !== null ? intval($dayOfWeek) : $startDate->dayOfWeek];
+        }
+        
+        $currentDate = clone $startDate;
+        
+        // Create occurrences until the end date
+        while ($currentDate <= $endDate) {
+            foreach ($daysOfWeek as $day) {
+                // Calculate the next occurrence of this day of the week
+                $daysToAdd = ($day - $currentDate->dayOfWeek + 7) % 7;
+                if ($daysToAdd > 0 || $currentDate->dayOfWeek !== $day) {
+                    $occurrenceDate = $currentDate->copy()->addDays($daysToAdd);
+                } else {
+                    $occurrenceDate = $currentDate->copy();
+                }
+                
+                // Only create occurrence if it's not before the start date and not after the end date
+                if ($occurrenceDate >= $startDate && $occurrenceDate <= $endDate) {
+                    $occurrence = $this->createOccurrence($occurrenceDate);
+                    if ($occurrence) {
+                        $occurrenceIds[] = $occurrence->occurrence_id;
+                    }
+                }
+            }
+            
+            // Move to the next week
+            $currentDate->addWeek();
+        }
+    }
+
+    /**
+     * Generate monthly occurrences
+     */
+    private function generateMonthlyOccurrences($startDate, $endDate, &$occurrenceIds)
+    {
+        $currentDate = clone $startDate;
+        $dayOfMonth = $currentDate->day;
+        
+        while ($currentDate <= $endDate) {
+            $occurrence = $this->createOccurrence($currentDate);
+            if ($occurrence) {
+                $occurrenceIds[] = $occurrence->occurrence_id;
+            }
+            
+            // Move to next month
+            $currentDate->addMonth();
+            
+            // Handle edge cases like the 31st of the month
+            $daysInMonth = $currentDate->daysInMonth;
+            $currentDate->day = min($dayOfMonth, $daysInMonth);
+        }
+    }
+
+    /**
+     * Create a single occurrence for a specific date
+     */
+    private function createOccurrence($date)
+    {
+        // Check if occurrence already exists for this date
+        $existingOccurrence = $this->occurrences()
+            ->whereDate('occurrence_date', $date)
+            ->first();
+        
+        if ($existingOccurrence) {
+            return $existingOccurrence;
+        }
+        
+        // Check if this date has an exception
+        $hasException = $this->exceptions()
+            ->whereDate('exception_date', $date)
+            ->exists();
+        
+        if ($hasException) {
+            return null;
+        }
+        
+        // Create new occurrence
+        return VisitationOccurrence::create([
+            'visitation_id' => $this->visitation_id,
+            'occurrence_date' => $date->format('Y-m-d'),
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'is_flexible_time' => $this->is_flexible_time ?? false,
+            'status' => $date < now() ? 'completed' : 'scheduled'
+        ]);
     }
     
     /**

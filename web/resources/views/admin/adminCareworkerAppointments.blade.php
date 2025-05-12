@@ -831,6 +831,7 @@
         const confirmationModalBody = document.getElementById('confirmationModalBody');
         let currentEvent = null;
         let currentView = 'dayGridMonth';
+        let isEditing = false; // Add this variable to track editing state
 
         // Initialize tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -1261,6 +1262,9 @@
         if (addAppointmentBtn) {
             addAppointmentBtn.addEventListener('click', function(e) {
                 e.preventDefault(); // Prevent default button behavior
+
+                // Set editing flag to false for new appointments
+                isEditing = false;
                 
                 // Reset form and clear visitation ID (new appointment)
                 if (addAppointmentForm) {
@@ -1349,6 +1353,9 @@
                     console.log('No event selected');
                     return;
                 }
+
+                // Set editing flag to true
+                isEditing = true;
                 
                 try {
                     // Reset form
@@ -1673,6 +1680,54 @@
                 const isFlexibleTime = document.getElementById('openTimeCheck').checked;
                 formData.set('is_flexible_time', isFlexibleTime ? '1' : '0');
                 
+                // Add debugging
+                console.log('Form submission - isEditing:', isEditing);
+                console.log('Form submission - isRecurring:', recurringCheck && recurringCheck.checked);
+
+                // Handle recurring pattern data (consolidated approach)
+                if (recurringCheck && recurringCheck.checked) {
+                    // IMPORTANT: Add this line to explicitly set is_recurring in form data
+                    formData.append('is_recurring', '1'); 
+
+                    // Get selected pattern type
+                    const patternType = document.querySelector('input[name="pattern_type"]:checked').value;
+                    console.log('Pattern type:', patternType);
+                    
+                    // For weekly pattern, properly handle days - IMPORTANT: Only process once
+                    if (patternType === 'weekly') {
+                        // Clear any existing day_of_week entries to avoid duplication
+                        for(const pair of formData.entries()) {
+                            if (pair[0] === 'day_of_week[]') {
+                                formData.delete('day_of_week[]');
+                            }
+                        }
+                        
+                        // Collect selected days
+                        const selectedDays = [];
+                        document.querySelectorAll('input[name="day_of_week[]"]:checked').forEach(checkbox => {
+                            selectedDays.push(checkbox.value);
+                        });
+                        
+                        console.log('Selected days for weekly pattern:', selectedDays);
+                        
+                        // If no days selected, use the current day from the appointment date
+                        if (selectedDays.length === 0) {
+                            const visitDate = document.getElementById('visitDate').value;
+                            if (visitDate) {
+                                const date = new Date(visitDate);
+                                const dayOfWeek = date.getDay();
+                                selectedDays.push(dayOfWeek.toString());
+                                console.log('No days selected, using visit date day:', dayOfWeek);
+                            }
+                        }
+                        
+                        // Add each day as separate form field entry
+                        selectedDays.forEach(day => {
+                            formData.append('day_of_week[]', day);
+                        });
+                    }
+                }
+                
                 // Set appropriate URL based on whether this is an edit or new appointment
                 const url = visitationId ? 
                     '{{ route("admin.careworker.appointments.update") }}' : 
@@ -1682,6 +1737,9 @@
                 const originalBtnHtml = submitAppointment.innerHTML;
                 submitAppointment.disabled = true;
                 submitAppointment.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                // Add form data debugging
+                console.log('Form data day_of_week values:', formData.getAll('day_of_week[]'));
                 
                 $.ajax({
                     url: url,
@@ -1729,11 +1787,21 @@
                             }
                         }
                     },
-                    error: function(xhr) {
+                    error: function(xhr, textStatus, errorThrown) {
                         console.error('Error submitting form:', xhr);
+                        console.error('Status:', textStatus);
+                        console.error('Error thrown:', errorThrown);
                         
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            showValidationErrors(xhr.responseJSON.errors);
+                        // Add this to see detailed validation errors
+                        if (xhr.responseJSON) {
+                            console.error('Detailed error:', xhr.responseJSON);
+                            
+                            if (xhr.responseJSON.errors) {
+                                console.table(xhr.responseJSON.errors);
+                                showValidationErrors(xhr.responseJSON.errors);
+                            } else if (xhr.responseJSON.message) {
+                                showErrorModal(xhr.responseJSON.message);
+                            }
                         } else {
                             showErrorModal('An error occurred while saving the appointment. Please try again.');
                         }
