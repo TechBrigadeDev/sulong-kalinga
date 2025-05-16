@@ -26,6 +26,7 @@ use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\CareWorkerTrackingController;
 
 
 // All routes with administrator role check
@@ -210,6 +211,12 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     Route::prefix('expense-tracker')->name('expense.')->group(function () {
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
     });
+
+    // Expense Tracker
+    Route::prefix('careworker-tracking')->name('careworker.tracking.')->group(function () {
+        Route::get('/', [CareWorkerTrackingController::class, 'index'])->name('index');
+    });
+
 
     // Update email and password
     Route::post('/update-email', [AdminController::class, 'updateAdminEmail'])->name('update.email');
