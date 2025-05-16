@@ -26,6 +26,7 @@ use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\CareWorkerTrackingController;
 use App\Http\Controllers\AiSummaryController;
 
 
@@ -212,7 +213,12 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
     });
 
-    // Expense Tracker
+    // Care Worker Tracking
+    Route::prefix('careworker-tracking')->name('careworker.tracking.')->group(function () {
+        Route::get('/', [CareWorkerTrackingController::class, 'index'])->name('index');
+    });
+
+    // AI Summary
     Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
         Route::get('/', [AiSummaryController::class, 'index'])->name('index');
     });
