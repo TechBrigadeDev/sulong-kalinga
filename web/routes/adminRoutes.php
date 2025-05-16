@@ -26,6 +26,7 @@ use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\AiSummaryController;
 
 
 // All routes with administrator role check
@@ -209,6 +210,11 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     // Expense Tracker
     Route::prefix('expense-tracker')->name('expense.')->group(function () {
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
+    });
+
+    // Expense Tracker
+    Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
+        Route::get('/', [AiSummaryController::class, 'index'])->name('index');
     });
 
     // Update email and password

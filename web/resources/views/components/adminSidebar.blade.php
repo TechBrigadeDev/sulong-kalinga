@@ -124,6 +124,16 @@
         <li><a class="link_name" href="{{ route('admin.emergency.request.index') }}">Emergency & Request</a></li>
       </ul>
     </li>
+
+    <li class="{{ Request::routeIs('admin.aiSummary.*') ? 'active' : '' }}">
+      <a href="{{ route('admin.aiSummary.index') }}">
+        <i class="bi bi-stars"></i>
+        <span class="link_name">AI Summary</span>
+      </a>
+      <ul class="sub-menu blank">
+        <li><a class="link_name" href="{{ route('admin.aiSummary.index') }}">AI Summary</a></li>
+      </ul>
+    </li>
     
     <li class="{{ Request::routeIs('admin.donor.acknowledgement.*') || Request::routeIs('admin.highlights.events.*') ? 'active' : '' }}">
       <div class="icon-link">

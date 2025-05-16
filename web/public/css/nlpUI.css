@@ -1,0 +1,430 @@
+:root {
+            --primary: #5a67d8;
+            --secondary: #48bb78;
+            --accent: #9f7aea;
+            --neutral: #4a5568;
+            --light-bg: #f7fafc;
+            --border: 1px solid #e2e8f0;
+        }
+        
+        /* Base typography with clamp */
+        body {
+            font-size: clamp(0.875rem, 0.83rem + 0.2vw, 1rem);
+        }
+        
+        h3, .page-title {
+            font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+            margin-bottom: 1rem;
+        }
+        
+        h4, .section-title {
+            font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+        }
+        
+        h5, .card-title {
+            font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.1rem);
+        }
+        
+        small, .text-muted {
+            font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.85rem);
+        }
+        
+        .summary-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            height: 100%;
+            position: relative;
+        }
+        
+        .empty-summary {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 2rem;
+            text-align: center;
+            color: var(--neutral);
+        }
+        
+        .empty-summary i {
+            font-size: 3rem;
+            opacity: 0.2;
+            margin-bottom: 1rem;
+        }
+        
+        .summary-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+        }
+        
+        .patient-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        
+        .patient-meta-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .plan-type-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .general-plan-badge {
+            background-color: var(--secondary);
+        }
+        
+        .weekly-plan-badge {
+            background-color: var(--accent);
+        }
+        
+        .report-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+        
+        .report-meta-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Summary actions positioning */
+        .summary-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 5;
+        }
+        
+        .summary-actions .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .summary-actions {
+                position: static;
+                margin-top: 0.5rem;
+                justify-content: flex-end;
+                width: 100%;
+            }
+            
+            .patient-meta, .report-meta {
+                gap: 0.75rem;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .btn-container .btn {
+                width: 100%;
+            }
+        }
+        
+        /* Rest of your existing styles... */
+        .section-card {
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            border: var(--border);
+            background: white;
+            position: relative;
+        }
+        
+        .section-header {
+            padding: 0.75rem 1rem;
+            border-bottom: var(--border);
+            background-color: var(--light-bg);
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-body {
+            padding: 1rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .info-item {
+            padding: 0.75rem;
+            border-radius: 6px;
+            background-color: var(--light-bg);
+            font-size: 0.9rem;
+        }
+        
+        .info-item small {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: var(--neutral);
+        }
+        
+        .care-needs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .care-needs-table th, .care-needs-table td {
+            padding: 0.75rem;
+            border: var(--border);
+            text-align: left;
+        }
+        
+        .care-needs-table th {
+            background-color: var(--light-bg);
+            font-weight: 600;
+        }
+        
+        .medication-item {
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+            background-color: var(--light-bg);
+            font-size: 0.9rem;
+        }
+        
+        .intervention-item {
+            padding: 0.75rem;
+            border-bottom: var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        
+        .intervention-item:last-child {
+            border-bottom: none;
+        }
+        
+        .vital-card {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: var(--light-bg);
+            border-radius: 6px;
+            border: var(--border);
+        }
+        
+        .vital-value {
+            font-weight: 600;
+        }
+        
+        .select2-container--bootstrap-5 .select2-selection {
+            height: 40px;
+            padding: 0.5rem 1rem;
+            border-radius: 8px !important;
+            border: var(--border) !important;
+            font-size: 0.9rem;
+        }
+        
+        /* Full report modal styles */
+        .full-report-modal .modal-dialog {
+            max-width: 90%;
+            height: 90vh;
+        }
+        
+        .full-report-modal .modal-content {
+            height: 100%;
+        }
+        
+        .full-report-modal .modal-body {
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        
+        .editable-content {
+            min-height: 100px;
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: var(--light-bg);
+            border: 1px dashed #cbd5e0;
+        }
+        
+        .editable-content:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: white;
+        }
+        
+        /* Enhanced loader styles */
+        .loader-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid var(--primary);
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loader-text {
+            font-size: 1rem;
+            color: var(--neutral);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .btn-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-container .btn {
+            flex: 1;
+        }
+        
+        /* Edit/Save buttons */
+        .edit-summary-btn {
+            display: none;
+        }
+        
+        .save-summary-btn {
+            display: none;
+        }
+        
+        .summary-content-container {
+            position: relative;
+            min-height: 300px;
+        }
+        
+        /* Edit mode controls */
+        .edit-controls {
+            display: none;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 5;
+        }
+        
+        .section-card:hover .edit-controls {
+            display: block;
+        }
+        
+        .edit-controls .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+        }
+        
+        .add-section-btn {
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .section-title-input {
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-bottom: var(--border);
+        }
+        
+        .section-title-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        /* Form controls */
+        .form-select {
+            font-size: clamp(0.85rem, 0.8rem + 0.25vw, 0.95rem);
+        }
+        
+        .btn {
+            font-size: clamp(0.85rem, 0.8rem + 0.25vw, 0.95rem);
+            padding: 0.5rem 1rem;
+        }
+        
+        /* Card adjustments */
+        .card {
+            border-radius: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .summary-actions.mt-5 {
+                margin-top: 0 !important;
+            }
+        }

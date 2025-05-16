@@ -10,50 +10,50 @@
     <link rel="stylesheet" href="{{ asset('css/weeklyCareplan.css') }}">
 
     <style>
-    .breadcrumb-container {
-        overflow-x: auto;
-        white-space: nowrap;
-        scrollbar-width: thin;
-        -ms-overflow-style: none;
-        margin-bottom: 20px;
-        padding-bottom: 5px;
-    }
-    
-    .breadcrumb-container::-webkit-scrollbar {
-        height: 5px;
-    }
-    
-    .breadcrumb-container::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 5px;
-    }
-    
-    .breadcrumb {
-        flex-wrap: nowrap;
-        margin-bottom: 0;
-    }
-    
-    .breadcrumb-item {
-        float: none;
-        display: inline-block;
-    }
-    
-    .breadcrumb-item.active a {
-        font-weight: bold;
-        color: #0d6efd;
-        padding: 5px 10px;
-        background-color: rgba(13, 110, 253, 0.1);
-        border-radius: 5px;
-    }
-    
-    .form-page {
-        display: none;
-    }
-    
-    .form-page.active {
-        display: block;
-    }
-</style>
+        .breadcrumb-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            -ms-overflow-style: none;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+        }
+        
+        .breadcrumb-container::-webkit-scrollbar {
+            height: 5px;
+        }
+        
+        .breadcrumb-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        
+        .breadcrumb {
+            flex-wrap: nowrap;
+            margin-bottom: 0;
+        }
+        
+        .breadcrumb-item {
+            float: none;
+            display: inline-block;
+        }
+        
+        .breadcrumb-item.active a {
+            font-weight: bold;
+            color: #0d6efd;
+            padding: 5px 10px;
+            background-color: rgba(13, 110, 253, 0.1);
+            border-radius: 5px;
+        }
+        
+        .form-page {
+            display: none;
+        }
+        
+        .form-page.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
@@ -68,7 +68,16 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-        <h4 class="text-center mt-2">EDIT WEEKLY CARE PLAN FORM</h4>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="text-left d-flex align-items-center" style="height: 100%;">
+                <h4 class="m-0">EDIT WEEKLY CARE PLAN</h4>
+            </div>
+            <a href="{{ route('admin.aiSummary.index') }}">
+                <button class="btn btn-primary btn-md" id="exportPdfBtn">
+                    <i class="bi bi-stars"></i>AI Summary
+                </button>
+            </a>
+        </div>
         
             <div class="container-fluid">
                 <div class="row mb-1" id="weeklyCareplanForm">
