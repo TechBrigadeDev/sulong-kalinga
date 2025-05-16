@@ -1,0 +1,206 @@
+
+        :root {
+            --primary-dark: #2c3e50;
+            --primary-light: #3498db;
+            --secondary: #7f8c8d;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light-bg: #f5f7fa;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --card-border: 1px solid #e0e6ed;
+            --active-worker: #e8f4fc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: #34495e;
+            line-height: 1.6;
+        }
+
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            border: var(--card-border);
+        }
+
+        .card {
+            border: var(--card-border);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            background-color: white;
+        }
+
+        .card-header {
+            background-color: var(--primary-dark);
+            color: white;
+            font-size: clamp(1rem, 1.2vw, 1.25rem);
+            font-weight: 500;
+            border-bottom: none;
+            padding: 0.75rem 1.25rem;
+        }
+
+        .worker-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid var(--secondary);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .worker-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left-color: var(--primary-light);
+        }
+
+        .worker-card.active {
+            background-color: var(--active-worker);
+            border-left: 4px solid var(--success);
+            color: var(--primary-dark);
+        }
+
+        .shift-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-on-shift {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success);
+        }
+
+        .status-off-shift {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 9px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e0e6ed;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background-color: white;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary-light);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 12px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            z-index: 1;
+        }
+
+        .history-card {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .history-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-card::-webkit-scrollbar-thumb {
+            background-color: #bdc3c7;
+            border-radius: 3px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-light);
+            border-color: var(--primary-light);
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+
+        .text-muted {
+            color: var(--secondary) !important;
+        }
+
+        h5, h6 {
+            font-weight: 600;
+        }
+
+        h6 {
+            font-size: clamp(0.9rem, 1.05vw, 1rem);
+        }
+
+        p, small {
+            font-size: clamp(0.85rem, 0.95vw, 0.95rem);
+        }
+
+        .beneficiary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .beneficiary-item:last-child {
+            border-bottom: none;
+        }
+
+        .visit-day {
+            background-color: #eaf7ed;
+            color: #27ae60;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 992px) {
+            #map {
+                height: 400px;
+            }
+            
+            .col-lg-8, .col-lg-4 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                height: 350px;
+            }
+            
+            .worker-card {
+                padding: 0.6rem;
+            }
+        }
