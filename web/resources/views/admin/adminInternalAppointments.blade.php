@@ -995,6 +995,52 @@
 
             let originalIsRecurring = false;
 
+            // Find the button that opens the "Add Appointment" modal
+            const scheduleNewButton = document.querySelector('.action-btn[data-bs-toggle="modal"][data-bs-target="#addAppointmentModal"]');
+
+            // Remove the automatic modal trigger attributes
+            scheduleNewButton.removeAttribute('data-bs-toggle');
+            scheduleNewButton.removeAttribute('data-bs-target');
+
+            // Add a click handler that properly resets everything
+            scheduleNewButton.addEventListener('click', function() {
+                // Reset form completely
+                resetAppointmentForm();
+                
+                // Reset modal title
+                document.getElementById('addAppointmentModalLabel').innerHTML = '<i class="bi bi-plus-circle"></i> Add New Appointment';
+                
+                // Reset submit button text
+                document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
+                
+                // Clear any appointment ID
+                document.getElementById('appointmentId').value = '';
+                
+                // Set current date in the date field
+                document.getElementById('appointmentDate').valueAsDate = new Date();
+                
+                // Reset the recurring checkbox (and ensure it's enabled for new appointments)
+                const recurringCheckbox = document.getElementById('recurringCheck');
+                recurringCheckbox.checked = false;
+                recurringCheckbox.disabled = false;
+                
+                // Remove any lock icon added during edit
+                const checkboxLabel = recurringCheckbox.nextElementSibling;
+                if (checkboxLabel) {
+                    checkboxLabel.textContent = 'Recurring appointment'; // Reset to original text
+                }
+                
+                // Clear current event selection
+                currentEvent = null;
+                
+                // Hide recurring options and warning
+                document.getElementById('recurringOptions').style.display = 'none';
+                document.getElementById('recurringWarningMessage').style.display = 'none';
+                
+                // Show the modal
+                addAppointmentModal.show();
+            });
+
             // Listen for modal close event to reset the form to "add mode"
             document.getElementById('addAppointmentModal').addEventListener('hidden.bs.modal', function() {
                 // Reset form

@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\GenerateVisitationOccurrences::class,
         Commands\SendAppointmentReminders::class, // Add the new command here
+        Commands\SendInternalAppointmentReminders::class
     ];
 
     /**
@@ -30,6 +31,11 @@ class Kernel extends ConsoleKernel
                  ->monthly()
                  ->description('Generate upcoming visitation occurrences')
                  ->emailOutputOnFailure(env('ADMIN_EMAIL'));
+        
+                 // Add this to your existing schedules
+        $schedule->command('appointments:send-internal-reminders')
+                ->dailyAt('08:00')
+                ->withoutOverlapping();
         
         // Run the appointment reminders command hourly
         // This ensures both 6am notifications for flexible appointments
