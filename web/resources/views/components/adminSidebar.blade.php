@@ -80,7 +80,7 @@
       </ul>
     </li>
     
-    <li class="{{ Request::routeIs('admin.beneficiary.map.*') ? 'active' : '' }}">
+    <li class="{{ Request::routeIs('admin.beneficiary.map.*') || Request::routeIs('admin.careworker.tracking.*')  ? 'active' : '' }}">
       <div class="icon-link">
         <a>
           <i class="bi bi-geo-alt"></i>
@@ -91,7 +91,7 @@
       <ul class="sub-menu m-auto">
         <li><a class="link_name">Location Tracking</a></li>
         <li><a href="{{ route('admin.beneficiary.map.index') }}" class="{{ Request::routeIs('admin.beneficiary.map.*') ? 'active' : '' }}">Beneficiary Map</a></li>
-        <li><a href="#" class="">Care Worker Tracking</a></li>
+        <li><a href="{{ route('admin.careworker.tracking.index') }}" class="">Care Worker Tracking</a></li>
       </ul>
     </li>
     
