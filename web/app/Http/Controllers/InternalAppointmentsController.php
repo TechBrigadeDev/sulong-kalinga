@@ -572,6 +572,14 @@ class InternalAppointmentsController extends Controller
             // Check if this was recurring before
             $wasRecurring = $appointment->recurringPattern ? true : false;
             $wantsRecurring = $request->has('is_recurring') ? true : false;
+
+            // If converting between recurring and non-recurring, prevent it
+            if ($wasRecurring !== $wantsRecurring) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Converting between recurring and non-recurring appointments is not supported. Please cancel this appointment and create a new one instead.'
+                ], 422);
+            }
             
             // Store original date for comparison
             $originalDate = Carbon::parse($appointment->date)->format('Y-m-d');
