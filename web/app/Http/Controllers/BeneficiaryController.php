@@ -35,8 +35,9 @@ use App\Services\UserManagementService;
 class BeneficiaryController extends Controller
 {
     protected $userManagementService;
+    protected $logService;
 
-    public function __construct(UserManagementService $userManagementService)
+    public function __construct(UserManagementService $userManagementService, LogService $logService)
     {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
