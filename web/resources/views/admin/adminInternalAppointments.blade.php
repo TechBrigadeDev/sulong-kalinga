@@ -651,7 +651,7 @@
                             <!-- Appointment Details Panel -->
                             <div class="card details-container">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="section-heading text-white mb-0">
+                                    <h5 class="section-heading mb-0">
                                         <i class="bi bi-info-circle"></i> Appointment Details
                                     </h5>
                                 </div>
@@ -969,6 +969,8 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+            let originalIsRecurring = false;
 
             // Listen for modal close event to reset the form to "add mode"
             document.getElementById('addAppointmentModal').addEventListener('hidden.bs.modal', function() {
@@ -1767,6 +1769,23 @@
                 document.getElementById('recurringCheck').checked = isRecurring;
                 document.getElementById('recurringOptions').style.display = isRecurring ? 'block' : 'none';
                 
+                originalIsRecurring = isRecurring;
+                console.log("Original recurring status stored:", originalIsRecurring);
+
+                // DISABLE THE RECURRING CHECKBOX IN EDIT MODE
+                if (isEditing) {
+                    const recurringCheckbox = document.getElementById('recurringCheck');
+                    recurringCheckbox.disabled = true;
+                    recurringCheckbox.title = "Converting between recurring and non-recurring is not supported";
+                    
+                    // Add visual indicator next to the checkbox
+                    const checkboxLabel = recurringCheckbox.nextElementSibling;
+                    if (checkboxLabel) {
+                        // Add lock icon to indicate it's locked
+                        checkboxLabel.innerHTML += ' <i class="bi bi-lock-fill text-secondary" title="Cannot be changed"></i>';
+                    }
+                }
+
                 if (isRecurring) {
                     // Set pattern type - make this more robust
                     const pattern = currentEvent.extendedProps.recurring_pattern;
