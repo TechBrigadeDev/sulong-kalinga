@@ -1111,6 +1111,7 @@ class InternalAppointmentsController extends Controller
 
     /**
      * Cancel this and all future occurrences
+     * Keeps the selected occurrence marked as canceled in the database
      */
     private function cancelFutureOccurrences(Appointment $appointment, $occurrenceDate, $reason)
     {
@@ -1152,7 +1153,7 @@ class InternalAppointmentsController extends Controller
         } else {
             // We're canceling from a middle occurrence
             
-            // 1. Create exception for the chosen date
+            // 1. Create exception/cancel the selected occurrence
             $this->cancelSingleOccurrence($appointment, $occurrenceDate, $reason);
             
             // 2. Handle all future dates - update the recurrence end date to the day before
@@ -1160,15 +1161,17 @@ class InternalAppointmentsController extends Controller
             $recurringPattern->recurrence_end = $newEndDate;
             $recurringPattern->save();
             
-            // 3. Delete all occurrences after the target date
+            // 3. Delete all occurrences AFTER the target date (not including the selected date)
+            $nextDay = $occurrenceDate->copy()->addDay()->format('Y-m-d'); 
             $deletedCount = $appointment->occurrences()
-                ->whereDate('occurrence_date', '>=', $occurrenceDateStr)
+                ->whereDate('occurrence_date', '>', $occurrenceDateStr)
                 ->delete();
             
             \Log::info('Canceled future occurrences', [
                 'appointment_id' => $appointment->appointment_id,
+                'selected_date' => $occurrenceDateStr,
                 'new_end_date' => $newEndDate->format('Y-m-d'),
-                'deleted_occurrences' => $deletedCount
+                'deleted_future_occurrences' => $deletedCount
             ]);
         }
         
