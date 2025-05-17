@@ -1457,7 +1457,7 @@ class InternalAppointmentsController extends Controller
     {
         $formattedDate = Carbon::parse($appointment->date)->format('F j, Y');
         $timeInfo = $appointment->is_flexible_time ? 
-            "with flexible timing" : 
+            "with flexible scheduling (no specific time)" : 
             "from " . Carbon::parse($appointment->start_time)->format('g:i A') . " to " . 
             Carbon::parse($appointment->end_time)->format('g:i A');
         
@@ -1482,7 +1482,7 @@ class InternalAppointmentsController extends Controller
     {
         $formattedDate = Carbon::parse($appointment->date)->format('F j, Y');
         $timeInfo = $appointment->is_flexible_time ? 
-            "with flexible timing" : 
+            "with flexible scheduling (no specific time)" : 
             "from " . Carbon::parse($appointment->start_time)->format('g:i A') . " to " . 
             Carbon::parse($appointment->end_time)->format('g:i A');
         
@@ -1508,8 +1508,8 @@ class InternalAppointmentsController extends Controller
             Carbon::parse($occurrenceDate)->format('F j, Y') : 
             Carbon::parse($appointment->date)->format('F j, Y');
         
-        $timeInfo = $appointment->is_flexible_time ? 
-            "with flexible timing" : 
+       $timeInfo = $appointment->is_flexible_time ? 
+            "with flexible scheduling (no specific time)" : 
             "scheduled for " . Carbon::parse($appointment->start_time)->format('g:i A');
             
         if ($isFuture) {

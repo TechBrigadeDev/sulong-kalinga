@@ -1391,7 +1391,8 @@
                 const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: true };
                 const startTime = event.start ? event.start.toLocaleTimeString([], timeFormat) : '';
                 const endTime = event.end ? event.end.toLocaleTimeString([], timeFormat) : '';
-                const timeText = startTime && endTime ? `${startTime} - ${endTime}` : '';
+                const isFlexibleTime = event.extendedProps.is_flexible_time;
+                const timeText = isFlexibleTime ? 'Flexible' : (startTime && endTime ? `${startTime} - ${endTime}` : startTime);
                 
                 let eventEl = document.createElement('div');
                 eventEl.className = 'fc-event-main';
@@ -1401,7 +1402,7 @@
                     eventEl.innerHTML = `
                         <div class="event-title">${event.title}</div>
                         <div class="event-details">
-                            <div class="event-time"><i class="bi bi-clock"></i> ${startTime}</div>
+                            <div class="event-time"><i class="bi bi-clock"></i> ${isFlexibleTime ? 'Flexible' : startTime}</div>
                         </div>
                     `;
                 } else {
@@ -1409,12 +1410,11 @@
                     eventEl.innerHTML = `
                         <div class="event-title">${event.title}</div>
                         <div class="event-details">
-                            <div class="event-time"><i class="bi bi-clock"></i> ${timeText}</div>
-                            <div class="event-location"><i class="bi bi-geo-alt"></i> ${event.extendedProps.meeting_location || ''}</div>
+                            <div class="event-time"><i class="bi bi-clock"></i> ${isFlexibleTime ? 'Flexible' : timeText}</div>
+                            <div class="event-location"><i class="bi bi-geo-alt"></i> ${event.extendedProps.meeting_location || 'No location'}</div>
                         </div>
                     `;
                 }
-                
                 return { domNodes: [eventEl] };
             },
             eventDidMount: function(arg) {
@@ -1427,15 +1427,20 @@
                 // 2. Apply tooltips (from your second handler)
                 if (arg.el) {
                     const event = arg.event;
+                    const isFlexibleTime = event.extendedProps.is_flexible_time;
+                    
                     const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: true };
                     const startTime = event.start ? event.start.toLocaleTimeString([], timeFormat) : '';
                     const endTime = event.end ? event.end.toLocaleTimeString([], timeFormat) : '';
-                    const timeText = startTime && endTime ? `${startTime} - ${endTime}` : startTime;
+                    
+                    const timeText = isFlexibleTime ? 'Flexible Scheduling' : 
+                        (startTime && endTime ? `${startTime} - ${endTime}` : startTime);
                     
                     let tooltipTitle = `${event.title}\n` +
-                                    `Time: ${timeText}\n` +
-                                    `Location: ${event.extendedProps.meeting_location || ''}`;
+                                `Time: ${timeText}\n` +
+                                `Location: ${event.extendedProps.meeting_location || ''}`;
                     
+                    // Apply tooltip
                     arg.el.setAttribute('data-bs-toggle', 'tooltip');
                     arg.el.setAttribute('data-bs-placement', 'top');
                     arg.el.setAttribute('title', tooltipTitle);
@@ -1516,16 +1521,16 @@
                             <span class="detail-value">${event.start ? event.start.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not specified'}</span>
                         </div>
                         ${!event.extendedProps.is_flexible_time ? `
-                        <div class="detail-item">
-                            <span class="detail-label">Time:</span>
-                            <span class="detail-value">${event.start ? event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''} - ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</span>
-                        </div>
-                        ` : `
-                        <div class="detail-item">
-                            <span class="detail-label">Time:</span>
-                            <span class="detail-value"><span class="badge bg-warning text-dark">Flexible</span></span>
-                        </div>
-                        `}
+                            <div class="detail-item">
+                                <span class="detail-label">Time:</span>
+                                <span class="detail-value">${event.start ? event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''} - ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</span>
+                            </div>
+                            ` : `
+                            <div class="detail-item">
+                                <span class="detail-label">Time:</span>
+                                <span class="detail-value"><span class="badge bg-info">Flexible Scheduling</span></span>
+                            </div>
+                            `}
                         <div class="detail-item">
                             <span class="detail-label">Location:</span>
                             <span class="detail-value">${event.extendedProps.meeting_location || 'Not specified'}</span>
