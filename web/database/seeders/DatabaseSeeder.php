@@ -1182,92 +1182,269 @@ class DatabaseSeeder extends Seeder
             AppointmentParticipant::create([
                 'appointment_id' => $appointment->appointment_id,
                 'participant_type' => 'cose_user',
-                'participant_id' => $organizer->id,
-                'is_organizer' => true,
-                'created_at' => $appointment->created_at,
-                'updated_at' => $appointment->created_at,
+                'participant_id' => $selectedStaff->first()->id,
+                'is_organizer' => true
             ]);
-            $usedParticipantIds[] = 'cose_user_' . $organizer->id;
             
-            // Add other participants
-            for ($p = 0; $p < $participantCount - 1; $p++) {
-                // Determine participant type - weighted distribution
-                $rand = $this->faker->numberBetween(1, 100);
-                
-                if ($rand <= 70) {
-                    // Staff participant
-                    $staffPool = $admins->merge($careManagers)->merge($careWorkers);
-                    $participant = $staffPool->random();
-                    $participantType = 'cose_user';
-                    $participantId = $participant->id;
-                    $participantKey = $participantType . '_' . $participantId;
-                    
-                    // Skip if this participant already added
-                    if (in_array($participantKey, $usedParticipantIds)) {
-                        continue;
-                    }
-                    
-                    $usedParticipantIds[] = $participantKey;
-                }
-                elseif ($rand <= 90) {
-                    // Beneficiary participant
-                    $participant = $beneficiaries->random();
-                    $participantType = 'beneficiary';
-                    $participantId = $participant->beneficiary_id;
-                    $participantKey = $participantType . '_' . $participantId;
-                    
-                    // Skip if this participant already added
-                    if (in_array($participantKey, $usedParticipantIds)) {
-                        continue;
-                    }
-                    
-                    $usedParticipantIds[] = $participantKey;
-                }
-                else {
-                    // Family member participant
-                    $beneficiary = $beneficiaries->random();
-                    $familyMember = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->first();
-                    
-                    if (!$familyMember) {
-                        continue;
-                    }
-                    
-                    $participantType = 'family_member';
-                    $participantId = $familyMember->family_member_id;
-                    $participantKey = $participantType . '_' . $participantId;
-                    
-                    // Skip if this participant already added
-                    if (in_array($participantKey, $usedParticipantIds)) {
-                        continue;
-                    }
-                    
-                    $usedParticipantIds[] = $participantKey;
-                }
-                
-                \App\Models\AppointmentParticipant::create([
+            // Add the rest as participants
+            for ($j = 1; $j < $participantCount; $j++) {
+                AppointmentParticipant::create([
                     'appointment_id' => $appointment->appointment_id,
-                    'participant_type' => $participantType,
-                    'participant_id' => $participantId,
-                    'is_organizer' => false,
-                    'created_at' => $appointment->created_at,
-                    'updated_at' => $appointment->created_at,
-                ]);
-            }
-            
-            // Add recurring pattern to 40% of appointments
-            if ($this->faker->boolean(40)) {
-                \App\Models\RecurringPattern::create([
-                    'appointment_id' => $appointment->appointment_id,
-                    'pattern_type' => $this->faker->randomElement(['weekly', 'monthly']),
-                    'day_of_week' => $this->faker->randomElement(['weekly', 'monthly']) ? $this->faker->numberBetween(0, 6) : null,
-                    'recurrence_end' => Carbon::parse($appointmentDate)->addMonths($this->faker->numberBetween(1, 6)),
-                    'created_at' => $appointment->created_at,
-                    'updated_at' => $appointment->created_at,
+                    'participant_type' => 'cose_user',
+                    'participant_id' => $selectedStaff[$j]->id,
+                    'is_organizer' => false
                 ]);
             }
         }
+    }
+
+    /**
+     * Create recurring internal appointments
+     * 
+     * @param int $count Number of recurring appointments to create
+     * @param Collection $appointmentTypes Available appointment types
+     * @param Collection $staffUsers Available staff users
+     */
+    private function createRecurringInternalAppointments($count, $appointmentTypes, $staffUsers)
+    {
+        $patternTypes = ['daily', 'weekly', 'monthly'];
         
-        \Log::info("Created internal appointments with participants");
+        for ($i = 0; $i < $count; $i++) {
+            $appointmentType = $appointmentTypes->random();
+            $title = $this->getAppointmentTitle($appointmentType->type_name);
+            
+            $date = $this->faker->dateTimeBetween('-1 week', '+1 week')->format('Y-m-d');
+            $startTime = $this->faker->dateTimeBetween('08:00', '16:00')->format('H:i:s');
+            $endTime = Carbon::parse($startTime)->addHours(rand(1, 3))->format('H:i:s');
+            
+            // Create the appointment
+            $appointment = Appointment::create([
+                'appointment_type_id' => $appointmentType->appointment_type_id,
+                'title' => $title,
+                'description' => $this->faker->paragraph(),
+                'date' => $date,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'is_flexible_time' => false,
+                'meeting_location' => $this->faker->randomElement(['Conference Room', 'Office', 'Community Hall', 'Training Room']),
+                'status' => 'scheduled',
+                'notes' => $this->faker->optional(70)->paragraph(),
+                'created_by' => $staffUsers->where('role_id', '<=', 2)->random()->id
+            ]);
+            
+            // Create recurring pattern
+            $patternType = $patternTypes[array_rand($patternTypes)];
+            $endDate = Carbon::now()->addMonths(rand(1, 6));
+
+            // For weekly patterns, set 1-3 random days as a comma-separated string
+            $dayOfWeek = null;
+            if ($patternType === 'weekly') {
+                // Either use just the current day, or randomly select 1-3 days
+                if (rand(0, 1) === 0) {
+                    $dayOfWeek = (string)Carbon::parse($date)->dayOfWeek;
+                } else {
+                    $numberOfDays = rand(1, 3);
+                    $possibleDays = range(0, 6);
+                    shuffle($possibleDays);
+                    $selectedDays = array_slice($possibleDays, 0, $numberOfDays);
+                    sort($selectedDays); // Sort numerically
+                    $dayOfWeek = implode(',', $selectedDays);
+                }
+            }
+
+            RecurringPattern::create([
+                'appointment_id' => $appointment->appointment_id,
+                'pattern_type' => $patternType,
+                'day_of_week' => $dayOfWeek,
+                'recurrence_end' => $endDate
+            ]);
+            
+            // Generate occurrences
+            $this->generateAppointmentOccurrences($appointment);
+            
+            // Add 2-5 staff participants
+            $participantCount = rand(2, 5);
+            $selectedStaff = $staffUsers->random($participantCount);
+            
+            // The first staff member will be the organizer
+            AppointmentParticipant::create([
+                'appointment_id' => $appointment->appointment_id,
+                'participant_type' => 'cose_user',
+                'participant_id' => $selectedStaff->first()->id,
+                'is_organizer' => true
+            ]);
+            
+            // Add the rest as participants
+            for ($j = 1; $j < $participantCount; $j++) {
+                AppointmentParticipant::create([
+                    'appointment_id' => $appointment->appointment_id,
+                    'participant_type' => 'cose_user',
+                    'participant_id' => $selectedStaff[$j]->id,
+                    'is_organizer' => false
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Generate occurrences for a recurring appointment
+     * 
+     * @param Appointment $appointment The appointment to generate occurrences for
+     * @param int $months Number of months to generate occurrences for
+     * @return array Array of generated occurrence IDs
+     */
+    private function generateAppointmentOccurrences(Appointment $appointment, $months = 3)
+    {
+        // Only generate occurrences if this is a recurring appointment
+        if (!$appointment->recurringPattern) {
+            // For non-recurring, create a single occurrence
+            $occurrence = AppointmentOccurrence::create([
+                'appointment_id' => $appointment->appointment_id,
+                'occurrence_date' => $appointment->date,
+                'start_time' => $appointment->start_time,
+                'end_time' => $appointment->end_time,
+                'status' => $appointment->status
+            ]);
+            
+            return [$occurrence->occurrence_id];
+        }
+        
+        // For recurring appointments, generate multiple occurrences
+        $pattern = $appointment->recurringPattern;
+        $startDate = $appointment->date;
+        $endDate = $pattern->recurrence_end ?? Carbon::now()->addMonths($months);
+        
+        // Use the earlier date between the specified end date and the pattern's end date
+        if ($pattern->recurrence_end && $pattern->recurrence_end->lt($endDate)) {
+            $endDate = $pattern->recurrence_end;
+        }
+        
+        $occurrenceIds = [];
+        $currentDate = Carbon::parse($startDate);
+        
+        while ($currentDate <= $endDate) {
+            $occurrence = AppointmentOccurrence::create([
+                'appointment_id' => $appointment->appointment_id,
+                'occurrence_date' => $currentDate->format('Y-m-d'),
+                'start_time' => $appointment->start_time,
+                'end_time' => $appointment->end_time,
+                'status' => $currentDate < Carbon::now() ? 'completed' : 'scheduled'
+            ]);
+            
+            $occurrenceIds[] = $occurrence->occurrence_id;
+            
+            // Calculate next occurrence date based on pattern
+            switch ($pattern->pattern_type) {
+                case 'daily':
+                    $currentDate->addDay();
+                    break;
+                case 'weekly':
+                    $currentDate->addWeek();
+                    break;
+                case 'monthly':
+                    $currentDate->addMonth();
+                    break;
+            }
+        }
+        
+        return $occurrenceIds;
+    }
+
+    /**
+     * Generate a realistic appointment title based on the type
+     * 
+     * @param string $type The appointment type
+     * @return string A realistic title for the appointment
+     */
+    private function getAppointmentTitle($type)
+    {
+        $titles = [
+            'Skills Training' => [
+                'Advanced Elderly Care Techniques',
+                'Communication Skills Workshop',
+                'CPR and First Aid Training',
+                'Documentation Best Practices',
+                'Dementia Care Strategies'
+            ],
+            'Feedback Session' => [
+                'Monthly Performance Review',
+                'Client Feedback Discussion',
+                'Quarterly Assessment Meeting',
+                'Care Quality Evaluation',
+                'Service Improvement Discussion'
+            ],
+            'Council Meeting' => [
+                'Monthly Council Assembly',
+                'Emergency Response Planning',
+                'Budget Planning Session',
+                'Care Standards Review',
+                'Policy Update Meeting'
+            ],
+            'Health Protocols' => [
+                'COVID-19 Safety Updates',
+                'Infection Control Procedures',
+                'Sanitation Protocol Review',
+                'Emergency Health Response',
+                'Standard Precautions Training'
+            ],
+            'Liga Meetings' => [
+                'Liga ng mga Barangay Coordination',
+                'Community Health Program Planning',
+                'Barangay Services Integration',
+                'Local Resources Allocation',
+                'Barangay Leaders Conference'
+            ],
+            'Referrals Discussion' => [
+                'Medical Specialist Network Meeting',
+                'Service Referral Process Update',
+                'Healthcare Partners Coordination',
+                'Referral Tracking System Training',
+                'Community Resources Meeting'
+            ],
+            'Assessment Review' => [
+                'Client Assessment Standards Update',
+                'Assessment Tool Evaluation',
+                'Client Needs Analysis Meeting',
+                'Assessment Process Improvement',
+                'Case Assessment Round Table'
+            ],
+            'Care Plan Review' => [
+                'Monthly Care Plan Updates',
+                'Individualized Care Planning',
+                'Care Goal Setting Workshop',
+                'Intervention Strategies Review',
+                'Care Progress Evaluation'
+            ],
+            'Team Building' => [
+                'Staff Wellness Retreat',
+                'Team Cohesion Workshop',
+                'Staff Appreciation Event',
+                'Team Communication Exercise',
+                'Collaborative Problem Solving'
+            ],
+            'Mentoring Session' => [
+                'Career Development Planning',
+                'New Staff Orientation',
+                'Leadership Skills Development',
+                'Professional Growth Coaching',
+                'Skill Enhancement Meeting'
+            ],
+            'Other' => [
+                'Special Project Planning',
+                'Community Event Coordination',
+                'Stakeholder Meeting',
+                'Grant Proposal Discussion',
+                'Program Evaluation Session'
+            ]
+        ];
+        
+        // If we have predefined titles for this type, use them
+        if (isset($titles[$type])) {
+            return $titles[$type][array_rand($titles[$type])];
+        }
+        
+        // Fallback to generic title
+        return $type;
     }
 
     /**

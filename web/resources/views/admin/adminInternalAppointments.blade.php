@@ -1158,7 +1158,11 @@
                 delay: 5000,
                 autohide: true
             });
-        });
+
+            // Actually show the toast
+            toast.show();
+
+        };
         
         // Setup attendee search and selection for each participant type
         setupAttendeeSearch('staffSearch', 'staffDropdown', 'staffAttendees');
@@ -1926,7 +1930,13 @@
             const isEditing = appointmentId && appointmentId.trim() !== '';
 
             console.log("Edit mode detection - appointmentId:", appointmentId, "isEditing:", isEditing);
-                        
+            
+            if (isEditing && currentEvent) {
+                const occurrenceDate = currentEvent.start; // The date of the occurrence you're editing
+                formData.append('edit_from_date', occurrenceDate.toISOString().split('T')[0]);
+                console.log("Added edit_from_date:", occurrenceDate.toISOString().split('T')[0]);
+            }
+
             // Handle recurring pattern data
             if (document.getElementById('recurringCheck').checked) {
                 formData.append('is_recurring', '1');

@@ -30,6 +30,7 @@ use App\Http\Controllers\AiSummaryController;
 
 
 
+
 // All routes with administrator role check
 
 // This route group is for the administrator role and will be prefixed with 'admin'

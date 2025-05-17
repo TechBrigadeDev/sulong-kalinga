@@ -636,8 +636,27 @@ class InternalAppointmentsController extends Controller
             else {
                 // If this is recurring, create new appointment for future occurrences
                 if ($wasRecurring && $dateChanged) {
-                    // Get today as the split date
-                    $splitDate = Carbon::today();
+                    // Check if we're editing a specific occurrence date
+                    if ($request->has('edit_from_date') && $request->edit_from_date) {
+                        // Use the selected occurrence date as split point
+                        $splitDate = Carbon::parse($request->edit_from_date);
+                        
+                        \Log::info("Using selected occurrence date as split point", [
+                            'appointment_id' => $appointment->appointment_id,
+                            'original_date' => $appointment->date,
+                            'edit_from_date' => $request->edit_from_date,
+                            'new_date' => $request->date
+                        ]);
+                    } else {
+                        // Fall back to original appointment date
+                        $splitDate = Carbon::parse($appointment->date);
+                        
+                        \Log::info("Using original appointment date as split point", [
+                            'appointment_id' => $appointment->appointment_id,
+                            'original_date' => $appointment->date,
+                            'new_date' => $request->date
+                        ]);
+                    }
                     
                     // Create exceptions for all future occurrences of the original appointment
                     $this->createExceptionsAfterDate($appointment, $splitDate);
@@ -752,36 +771,113 @@ class InternalAppointmentsController extends Controller
         }
     }
 
-    /**
-     * Delete only future appointment occurrences for dates on or after the given date
+   /**
+     * Delete only future occurrences and properly preserve existing ones
+     * Uses direct SQL queries to ensure reliability
      */
     private function createExceptionsAfterDate($appointment, $date)
     {
-        $formattedDate = $date instanceof Carbon ? $date->format('Y-m-d') : Carbon::parse($date)->format('Y-m-d');
+        // Format the target date for comparison
+        $targetDate = $date instanceof Carbon ? $date : Carbon::parse($date);
+        $targetDateStr = $targetDate->format('Y-m-d');
         
-        // Get today's date to preserve past occurrences
-        $today = Carbon::today()->format('Y-m-d');
+        \Log::info("Starting occurrence preservation with direct SQL approach", [
+            'appointment_id' => $appointment->appointment_id,
+            'original_date' => $appointment->date,
+            'target_date' => $targetDateStr
+        ]);
         
-        // Log what we're about to do
-        \Log::info("Handling occurrences for appointment ID {$appointment->appointment_id}, preserving dates before {$today}");
+        // CRITICAL FIX: Use direct database query to get ALL occurrences
+        $allOccurrences = DB::table('appointment_occurrences')
+            ->where('appointment_id', $appointment->appointment_id)
+            ->get();
         
-        // Get count of occurrences before making changes
-        $totalCount = $appointment->occurrences()->count();
-        $futureCount = $appointment->occurrences()->where('occurrence_date', '>=', $formattedDate)->count();
-        $pastCount = $totalCount - $futureCount;
+        // Log ALL found occurrences for this appointment 
+        $allDates = [];
+        foreach ($allOccurrences as $occ) {
+            $allDates[] = ['id' => $occ->occurrence_id, 'date' => $occ->occurrence_date];
+        }
         
-        \Log::info("Total occurrences: {$totalCount}, Future: {$futureCount}, Past: {$pastCount}");
+        \Log::info("ALL occurrences found for appointment", [
+            'appointment_id' => $appointment->appointment_id,
+            'count' => count($allOccurrences),
+            'dates' => $allDates
+        ]);
         
-        // FIXED: Only delete occurrences on or after the given date
-        // AND ensure the date is not in the past (this is the key fix)
-        $deleted = $appointment->occurrences()
-            ->where('occurrence_date', '>=', $formattedDate)
-            ->where('occurrence_date', '>=', $today) // CRITICAL: Only delete future occurrences
+        // Use direct SQL to find occurrences to preserve - before target date
+        $preserveOccurrences = DB::table('appointment_occurrences')
+            ->where('appointment_id', $appointment->appointment_id)
+            ->where(DB::raw("DATE(occurrence_date)"), '<', $targetDateStr)
+            ->get();
+        
+        // Log preserved occurrences with detailed info
+        $preserveDates = [];
+        foreach ($preserveOccurrences as $occ) {
+            $preserveDates[] = ['id' => $occ->occurrence_id, 'date' => $occ->occurrence_date];
+        }
+        
+        \Log::info("Occurrences to preserve based on target date", [
+            'appointment_id' => $appointment->appointment_id,
+            'target_date' => $targetDateStr,
+            'preserve_count' => count($preserveOccurrences),
+            'preserve_dates' => $preserveDates
+        ]);
+        
+        // Create backup data for all preserved occurrences
+        $preserveData = [];
+        foreach ($preserveOccurrences as $occurrence) {
+            $preserveData[] = [
+                'appointment_id' => $occurrence->appointment_id,
+                'occurrence_date' => $occurrence->occurrence_date,
+                'start_time' => $occurrence->start_time,
+                'end_time' => $occurrence->end_time,
+                'status' => $occurrence->status,
+                'is_modified' => $occurrence->is_modified,
+                'notes' => $occurrence->notes,
+                'created_at' => $occurrence->created_at,
+                'updated_at' => now()
+            ];
+        }
+        
+        $preserveCount = count($preserveData);
+        $totalCount = count($allOccurrences);
+        
+        \Log::info("Preservation plan complete", [
+            'appointment_id' => $appointment->appointment_id,
+            'total' => $totalCount,
+            'to_preserve' => $preserveCount,
+            'to_delete' => $totalCount - $preserveCount
+        ]);
+        
+        // Delete ALL occurrences using direct query for reliability
+        $deleted = DB::table('appointment_occurrences')
+            ->where('appointment_id', $appointment->appointment_id)
             ->delete();
         
-        \Log::info("Deleted {$deleted} future occurrences for appointment ID {$appointment->appointment_id}");
+        \Log::info("All occurrences deleted", [
+            'deleted_count' => $deleted
+        ]);
         
-        // No need to create exceptions - we're fully deleting the occurrences
+        // Restore preserved occurrences with direct insert
+        if (!empty($preserveData)) {
+            DB::table('appointment_occurrences')->insert($preserveData);
+            \Log::info("Successfully restored {$preserveCount} preserved occurrences");
+        }
+        
+        // Verify the results
+        $remaining = DB::table('appointment_occurrences')
+            ->where('appointment_id', $appointment->appointment_id)
+            ->count();
+        
+        \Log::info("Final preservation results", [
+            'appointment_id' => $appointment->appointment_id,
+            'deleted' => $deleted,
+            'preserved' => $preserveCount,
+            'remaining' => $remaining,
+            'expected_remaining' => $preserveCount
+        ]);
+        
+        return $deleted - $preserveCount;
     }
 
     /**
