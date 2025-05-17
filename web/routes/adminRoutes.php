@@ -208,7 +208,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
     });
 
-    // Expense Tracker
+    // Careworker Tracking
     Route::prefix('careworker-tracking')->name('careworker.tracking.')->group(function () {
         Route::get('/', [CareWorkerTrackingController::class, 'index'])->name('index');
     });
@@ -274,6 +274,11 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
         Route::post('/update', [InternalAppointmentsController::class, 'update'])->name('update');  // Fixed path
         Route::post('/cancel', [InternalAppointmentsController::class, 'cancel'])->name('cancel');
+    });
+
+    // AI Summary
+    Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
+        Route::get('/', [AiSummaryController::class, 'index'])->name('index');
     });
 
 });
