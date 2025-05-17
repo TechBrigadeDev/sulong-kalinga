@@ -27,7 +27,6 @@ use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\CareWorkerTrackingController;
-use App\Http\Controllers\AiSummaryController;
 
 
 // All routes with administrator role check
@@ -213,15 +212,11 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
     });
 
-    // Care Worker Tracking
+    // Expense Tracker
     Route::prefix('careworker-tracking')->name('careworker.tracking.')->group(function () {
         Route::get('/', [CareWorkerTrackingController::class, 'index'])->name('index');
     });
 
-    // AI Summary
-    Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
-        Route::get('/', [AiSummaryController::class, 'index'])->name('index');
-    });
 
     // Update email and password
     Route::post('/update-email', [AdminController::class, 'updateAdminEmail'])->name('update.email');
