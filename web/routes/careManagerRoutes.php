@@ -21,6 +21,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HealthMonitoringController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\InternalAppointmentsController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -158,6 +159,11 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/store', [VisitationController::class, 'storeAppointment'])->name('store');
         Route::post('/update', [VisitationController::class, 'updateAppointment'])->name('update');
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
+    });
+
+    Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+        Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
     });
     
 });

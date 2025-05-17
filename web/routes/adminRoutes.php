@@ -29,6 +29,7 @@ use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\CareWorkerTrackingController;
 
 
+
 // All routes with administrator role check
 
 // This route group is for the administrator role and will be prefixed with 'admin'
@@ -190,11 +191,6 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     Route::prefix('health-monitoring')->name('health.monitoring.')->group(function () {
         Route::get('/', [HealthMonitoringController::class, 'index'])->name('index');
     });
-    
-    // Internal appointments
-    Route::prefix('internal-appointments')->name('internal.appointments.')->group(function () {
-        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
-    });
 
     // Medication Schedule
     Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
@@ -212,7 +208,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
     });
 
-    // Expense Tracker
+    // Careworker Tracking
     Route::prefix('careworker-tracking')->name('careworker.tracking.')->group(function () {
         Route::get('/', [CareWorkerTrackingController::class, 'index'])->name('index');
     });
@@ -269,6 +265,20 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/store', [VisitationController::class, 'storeAppointment'])->name('store');
         Route::post('/update', [VisitationController::class, 'updateAppointment'])->name('update');
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
+    });
+
+    // Internal Appointments
+    Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+        Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+        Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
+        Route::post('/update', [InternalAppointmentsController::class, 'update'])->name('update');  // Fixed path
+        Route::post('/cancel', [InternalAppointmentsController::class, 'cancel'])->name('cancel');
+    });
+
+    // AI Summary
+    Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
+        Route::get('/', [AiSummaryController::class, 'index'])->name('index');
     });
 
 });

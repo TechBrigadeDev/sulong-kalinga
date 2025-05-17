@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Appointment extends Model
 {
@@ -109,5 +110,178 @@ class Appointment extends Model
             'appointment_id',
             'participant_id'
         )->where('participant_type', 'family_member');
+    }
+    
+    /**
+     * Get all occurrences for this appointment
+     */
+    public function occurrences()
+    {
+        return $this->hasMany(AppointmentOccurrence::class, 'appointment_id', 'appointment_id');
+    }
+    
+    /**
+     * Get all exceptions for this appointment
+     */
+    public function exceptions()
+    {
+        return $this->hasMany(AppointmentException::class, 'appointment_id', 'appointment_id');
+    }
+    
+    /**
+     * Get the historical archive records for this appointment
+     */
+    public function archives()
+    {
+        return $this->hasMany(AppointmentArchive::class, 'original_appointment_id', 'appointment_id');
+    }
+    
+    /**
+     * Generate occurrences for this recurring appointment
+     * 
+     * @param int $months Number of months to generate occurrences for
+     * @return array Array of generated occurrence IDs
+     */
+    public function generateOccurrences($monthsAhead = 3)
+    {
+        // If no recurring pattern, just create a single occurrence
+        if (!$this->recurringPattern) {
+            $this->createSingleOccurrence();
+            return;
+        }
+        
+        $pattern = $this->recurringPattern;
+        $startDate = Carbon::parse($this->date);
+        $endDate = $pattern->recurrence_end ?? $startDate->copy()->addMonths($monthsAhead);
+        
+        // Generate occurrences based on pattern type
+        switch ($pattern->pattern_type) {
+            case 'daily':
+                $this->generateDailyOccurrences($startDate, $endDate);
+                break;
+                
+            case 'weekly':
+                $this->generateWeeklyOccurrences($startDate, $endDate, $pattern->day_of_week);
+                break;
+                
+            case 'monthly':
+                $this->generateMonthlyOccurrences($startDate, $endDate);
+                break;
+        }
+        
+        return true;
+    }
+
+    // Helper function for weekly occurrences - fix this method
+    private function generateWeeklyOccurrences($startDate, $endDate, $dayOfWeek)
+    {
+        // If dayOfWeek contains commas, it means multiple days were selected
+        $daysOfWeek = [];
+        if (strpos($dayOfWeek, ',') !== false) {
+            // Split the comma-separated string into an array of day numbers
+            $daysOfWeek = array_map('intval', explode(',', $dayOfWeek));
+        } else {
+            // Single day as integer
+            $daysOfWeek = [$dayOfWeek !== null ? intval($dayOfWeek) : $startDate->dayOfWeek];
+        }
+        
+        $currentDate = $startDate->copy();
+        
+        // Create occurrences until the end date
+        while ($currentDate <= $endDate) {
+            foreach ($daysOfWeek as $day) {
+                // Calculate the next occurrence of this day of the week
+                $daysToAdd = ($day - $currentDate->dayOfWeek + 7) % 7;
+                if ($daysToAdd > 0 || $currentDate->dayOfWeek !== $day) {
+                    $occurrenceDate = $currentDate->copy()->addDays($daysToAdd);
+                } else {
+                    $occurrenceDate = $currentDate->copy();
+                }
+                
+                // Only create occurrence if it's not before the start date and not after the end date
+                if ($occurrenceDate >= $startDate && $occurrenceDate <= $endDate) {
+                    $this->createOccurrence($occurrenceDate);
+                }
+            }
+            
+            // Move to the next week
+            $currentDate->addWeek();
+        }
+    }
+    
+    /**
+     * Move this appointment to the archive table
+     * 
+     * @param string $reason The reason for archiving
+     * @param int $archivedBy User ID who archived the record
+     * @return AppointmentArchive The created archive record
+     */
+    public function archive($reason, $archivedBy)
+    {
+        return AppointmentArchive::create([
+            'appointment_id' => $this->appointment_id,
+            'original_appointment_id' => $this->appointment_id,
+            'title' => $this->title,
+            'appointment_type_id' => $this->appointment_type_id,
+            'description' => $this->description,
+            'other_type_details' => $this->other_type_details,
+            'date' => $this->date,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'is_flexible_time' => $this->is_flexible_time,
+            'meeting_location' => $this->meeting_location,
+            'status' => $this->status,
+            'notes' => $this->notes,
+            'created_by' => $this->created_by,
+            'archived_at' => Carbon::now(),
+            'reason' => $reason,
+            'archived_by' => $archivedBy
+        ]);
+    }
+
+    /**
+     * Create a single occurrence for the given date
+     * 
+     * @param Carbon $date The date for the occurrence
+     * @return AppointmentOccurrence The created occurrence
+     */
+    private function createOccurrence($date)
+    {
+        // Check if occurrence already exists for this date
+        $existingOccurrence = $this->occurrences()
+            ->whereDate('occurrence_date', $date)
+            ->first();
+        
+        if ($existingOccurrence) {
+            return $existingOccurrence;
+        }
+        
+        // Check if this date has an exception
+        $hasException = $this->exceptions()
+            ->whereDate('exception_date', $date)
+            ->exists();
+        
+        if ($hasException) {
+            return null;
+        }
+        
+        // Create new occurrence
+        return AppointmentOccurrence::create([
+            'appointment_id' => $this->appointment_id,
+            'occurrence_date' => $date,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'is_flexible_time' => $this->is_flexible_time,
+            'status' => 'scheduled'
+        ]);
+    }
+
+    /**
+     * Create an occurrence for the appointment date
+     */
+    private function createSingleOccurrence()
+    {
+        // Use the appointment's own date
+        return $this->createOccurrence(Carbon::parse($this->date));
     }
 }
