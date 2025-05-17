@@ -1,6 +1,6 @@
 import { Input } from "tamagui";
 import { familyListStore } from "./store"
-import { useDebounce } from "../../../../../../common/hooks";
+import { useDebounce } from "~/common/hooks";
 
 const FamilySearch = () => {
     const {

@@ -1,5 +1,5 @@
 import { Avatar, Button, H2, Text, XStack, YStack } from "tamagui";
-import { IFamilyMember } from "../../../../../user.schema";
+import { IFamilyMember } from "~/user.schema";
 import { useRouter } from "expo-router";
 
 interface Props {

@@ -1,7 +1,7 @@
 import { Card, Text, View } from "tamagui";
 import LoginForm from "./form";
 import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
-import { AppIcon } from "../../../../components/Icon";
+import { AppIcon } from "~/components/Icon";
 
 const Login = () => {
     return (

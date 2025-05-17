@@ -1,5 +1,5 @@
 import { Card, H3, Input, Label, Switch, Text, XStack, YStack } from "tamagui";
-import { IFamilyMember } from "../../../../../user.schema";
+import { IFamilyMember } from "~/user.schema";
 
 interface Props {
     data: Partial<IFamilyMember>;

@@ -1,8 +1,7 @@
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Text, View } from "tamagui";
-import { useGetFamilyMember } from "../../../../../features/user/management/management.hook";
-import FamilyMemberForm from "../../../../../features/user/management/components/family/FamilyMemberForm";
-import { IFamilyMember } from "../../../../../features/user/user.schema";
+import { useGetFamilyMember } from "~/features/user/management/management.hook";
+import FamilyMemberForm from "~/features/user/management/components/family/FamilyMemberForm";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();
@@ -29,7 +28,7 @@ const Screen = () => {
         )
     }
 
-    const handleSubmit = (formData: Partial<IFamilyMember>) => {
+    const handleSubmit = (formData: FormData) => {
         // TODO: Add API call to update family member
         console.log("Updating family member:", formData);
         router.back();
@@ -42,7 +41,7 @@ const Screen = () => {
                     title: 'Edit Family Member',
                 }}
             />
-            <FamilyMemberForm 
+            <FamilyMemberForm
                 familyMember={data} 
                 onSubmit={handleSubmit}
             />

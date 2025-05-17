@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { authStore } from "./auth.store"
 import { useMutation } from "@tanstack/react-query";
-import { QK } from "../../common/query";
+import { QK } from "~/common/query";
 import authController from "./auth.api";
 
 

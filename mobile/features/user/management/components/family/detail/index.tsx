@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native";
 import { ScrollView, YStack } from "tamagui";
-import { IFamilyMember } from "../../../../user.schema";
+import { IFamilyMember } from "~/user.schema";
 import { Stack } from "expo-router";
 import FamilyMemberHeader from "./FamilyMemberHeader";
 import PersonalInformation from "./PersonalInformation";

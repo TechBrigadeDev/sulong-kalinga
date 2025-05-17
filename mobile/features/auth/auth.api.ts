@@ -1,5 +1,5 @@
 import { AxiosError, AxiosInstance } from "axios";
-import { axiosClient } from "../../common/api";
+import { axiosClient } from "~/common/api";
 import { loginSchema } from "./auth.schema";
 
 
