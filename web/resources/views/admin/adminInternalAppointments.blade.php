@@ -589,6 +589,19 @@
             background-color: #a435f0 !important;
             border-color: #9922e8 !important;
         }
+
+        .fc-event.canceled {
+            opacity: 0.7;
+            background-color: #6c757d !important;  /* Gray color for canceled */
+            border-color: #6c757d !important;
+            color: white !important;
+            text-decoration: line-through;
+        }
+
+        .fc-event.canceled .fc-event-title {
+            text-decoration: line-through;
+        }
+
     </style>
 </head>
 <body>
@@ -924,40 +937,50 @@
         </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm">
+    <!-- Cancellation Modal -->
+    <!-- Update the cancelModal to match careworker styling -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Cancellation</h5>
+                    <h5 class="modal-title" id="cancelModalLabel"><i class="bi bi-trash-fill"></i> Cancel Appointment</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to cancel this appointment?</p>
+                    <div class="mb-4">
+                        <p class="mb-1" id="cancelAppointmentDetails"></p>
+                    </div>
                     
-                    <div id="recurringCancellationOptions" style="display: none;">
+                    <div id="recurringCancelOptions" class="mb-3 border rounded p-3 bg-light" style="display:none;">
+                        <p class="mb-2"><strong>Cancellation Options:</strong></p>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="cancelOption" id="cancelSingle" value="single" checked>
                             <label class="form-check-label" for="cancelSingle">
                                 Cancel only this occurrence
                             </label>
                         </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="cancelOption" id="cancelSeries" value="series">
-                            <label class="form-check-label" for="cancelSeries">
-                                Cancel all future occurrences
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cancelOption" id="cancelFuture" value="future">
+                            <label class="form-check-label" for="cancelFuture">
+                                Cancel this and all future occurrences
                             </label>
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label">Reason for Cancellation</label>
+                        <textarea class="form-control" id="cancelReason" rows="3" placeholder="Please provide a reason for cancellation..."></textarea>
+                    </div>
                     
-                    <div class="form-group">
-                        <label for="confirmPassword" class="form-label">Enter password to confirm</label>
-                        <input type="password" class="form-control" id="confirmPassword" required>
+                    <div class="mb-3">
+                        <label for="cancelPassword" class="form-label">Confirm your password</label>
+                        <input type="password" class="form-control" id="cancelPassword" placeholder="Enter your password">
+                        <div id="passwordError" class="text-danger mt-1"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep It</button>
-                    <button type="button" class="btn btn-danger" id="confirmDelete">Yes, Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="confirmCancel">Confirm Cancellation</button>
                 </div>
             </div>
         </div>
@@ -994,7 +1017,7 @@
         var appointmentDetailsEl = document.getElementById('appointmentDetails');
         var addAppointmentForm = document.getElementById('addAppointmentForm');
         var addAppointmentModal = new bootstrap.Modal(document.getElementById('addAppointmentModal'));
-        var confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        var cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
         var editButton = document.getElementById('editAppointmentButton');
         var deleteButton = document.getElementById('deleteAppointmentButton');
         var toggleWeekButton = document.getElementById('toggleWeekView');
@@ -1345,6 +1368,13 @@
                 return { domNodes: [eventEl] };
             },
             eventDidMount: function(arg) {
+                // 1. Apply special styling for canceled events (case-insensitive check)
+                const status = arg.event.extendedProps.status?.toLowerCase() || '';
+                if (status === 'canceled') {
+                    arg.el.classList.add('canceled');
+                }
+                
+                // 2. Apply tooltips (from your second handler)
                 if (arg.el) {
                     const event = arg.event;
                     const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: true };
@@ -1579,88 +1609,6 @@
                 submitButton.innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
             }
         }
-        
-        // Delete button click handler
-        deleteButton.addEventListener('click', function() {
-            if (!currentEvent) return;
-            document.getElementById('confirmPassword').value = '';
-            confirmationModal.show();
-        });
-        
-        // Confirm delete handler
-        document.getElementById('confirmDelete').addEventListener('click', function() {
-            if (!currentEvent) return;
-            
-            const appointmentId = currentEvent.extendedProps.appointment_id;
-            const occurrenceId = currentEvent.extendedProps.occurrence_id;
-            const isRecurring = currentEvent.extendedProps.recurring;
-            
-            // Prepare form data
-            const formData = new FormData();
-            formData.append('appointment_id', appointmentId);
-            formData.append('occurrence_id', occurrenceId);
-            formData.append('password', document.getElementById('confirmPassword').value);
-            
-            // For recurring appointments, ask if they want to cancel just this instance or the whole series
-            let cancelType = 'single';
-            if (isRecurring) {
-                const cancelOptions = document.getElementsByName('cancelOption');
-                for (const option of cancelOptions) {
-                    if (option.checked) {
-                        cancelType = option.value;
-                        break;
-                    }
-                }
-            }
-            formData.append('cancel_type', cancelType);
-            
-            // Submit cancellation request
-            fetch('/admin/internal-appointments/cancel', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrf_token,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'An error occurred');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // Close modal and refresh calendar
-                    confirmationModal.hide();
-                    calendar.refetchEvents();
-                    
-                    // Reset current event
-                    currentEvent = null;
-                    editButton.disabled = true;
-                    deleteButton.disabled = true;
-                    
-                    // Clear details panel
-                    appointmentDetailsEl.innerHTML = `
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                            <p class="mt-3 mb-0">Select an appointment to view details</p>
-                        </div>
-                    `;
-                    
-                    // Show success message
-                    alert(data.message || 'Appointment cancelled successfully');
-                } else {
-                    alert(data.message || 'Failed to cancel appointment');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert(error.message || 'Failed to process request');
-            });
-        });
         
         // Search functionality
         const searchInput = document.querySelector('.search-input');
@@ -2117,6 +2065,142 @@
             const minutes = d.getMinutes().toString().padStart(2, '0');
             return `${hours}:${minutes}`;
         }
+
+        // Delete button click handler
+        deleteButton.addEventListener('click', function() {
+            if (!currentEvent) return;
+            
+            // Clear previous values
+            document.getElementById('cancelPassword').value = '';
+            document.getElementById('cancelReason').value = '';
+            document.getElementById('passwordError').textContent = '';
+            
+            // Get appointment details
+            const eventDate = new Date(currentEvent.start).toLocaleDateString();
+            const appointmentTitle = currentEvent.title || "Unknown";
+            const appointmentLocation = currentEvent.extendedProps.meeting_location || "Not specified";
+            const appointmentType = currentEvent.extendedProps.type || "Not specified";
+            
+            // Set appointment details in the modal
+            document.getElementById('cancelAppointmentDetails').innerHTML = `
+                <strong>Appointment:</strong> ${appointmentTitle}<br>
+                <strong>Date:</strong> ${eventDate}<br>
+                <strong>Location:</strong> ${appointmentLocation}<br>
+                <strong>Type:</strong> ${appointmentType}
+            `;
+            
+            // Determine if this is a recurring event
+            const isRecurring = currentEvent.extendedProps.recurring;
+            document.getElementById('recurringCancelOptions').style.display = isRecurring ? 'block' : 'none';
+            
+            // Set default option to "single" for recurring events
+            if (isRecurring) {
+                document.getElementById('cancelSingle').checked = true;
+            }
+            
+            // Show the modal
+            cancelModal.show();
+        });
+
+        // Confirm cancel button handler
+        document.getElementById('confirmCancel').addEventListener('click', function() {
+            const appointmentId = currentEvent.extendedProps.appointment_id;
+            const occurrenceId = currentEvent.extendedProps.occurrence_id || '';
+            const isRecurring = currentEvent.extendedProps.recurring;
+            const password = document.getElementById('cancelPassword').value;
+            const reason = document.getElementById('cancelReason').value;
+            
+            // Clear previous errors
+            document.getElementById('passwordError').textContent = '';
+            document.getElementById('cancelPassword').classList.remove('is-invalid');
+            
+            // Validate password
+            if (!password) {
+                document.getElementById('passwordError').textContent = 'Password is required';
+                document.getElementById('cancelPassword').classList.add('is-invalid');
+                return;
+            }
+            
+            // Get the cancellation type for recurring appointments
+            let cancelType = 'single';
+            if (isRecurring) {
+                const cancelOptions = document.getElementsByName('cancelOption');
+                for (const option of cancelOptions) {
+                    if (option.checked) {
+                        cancelType = option.value;
+                        break;
+                    }
+                }
+            }
+            
+            // Show loading state on button
+            const confirmButton = document.getElementById('confirmCancel');
+            const originalButtonText = confirmButton.innerHTML;
+            confirmButton.disabled = true;
+            confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('appointment_id', appointmentId);
+            if (occurrenceId) {
+                formData.append('occurrence_id', occurrenceId);
+            }
+            formData.append('password', password);
+            formData.append('reason', reason);
+            formData.append('cancel_type', cancelType);
+            formData.append('occurrence_date', currentEvent.start ? currentEvent.start.toISOString().split('T')[0] : '');
+            
+            // Send cancel request
+            fetch('/admin/internal-appointments/cancel', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 500) {
+                        throw new Error('Server error: The server encountered an issue. Please try again later.');
+                    } else if (response.status === 422) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Validation error. Please check your input.');
+                        });
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
+                
+                // Show success message
+                showToast('Success', data.message || 'Appointment cancelled successfully', 'success');
+                
+                // Update the calendar
+                calendar.refetchEvents();
+                
+                // Clear the details panel
+                if (appointmentDetailsEl) {
+                    appointmentDetailsEl.innerHTML = '<div class="alert alert-info">Select an appointment to view details</div>';
+                }
+                
+                // Clear current event selection
+                currentEvent = null;
+                editButton.disabled = true;
+                deleteButton.disabled = true;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error', error.message || 'An unexpected error occurred', 'danger');
+            })
+            .finally(() => {
+                // Reset button state
+                confirmButton.disabled = false;
+                confirmButton.innerHTML = originalButtonText;
+            });
+        });
 
     });
     </script>
