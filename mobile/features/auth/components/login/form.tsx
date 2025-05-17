@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useLogin } from "../../auth.hook";
 import { Button, Input, View } from "tamagui";
 import { StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
 const LoginForm = () => {
+  const router = useRouter();
   const { login } = useLogin();
 
   const [email, setEmail] = useState("");
@@ -14,6 +16,7 @@ const LoginForm = () => {
       email,
       password,
     });
+    router.replace("/(drawer)");
   };
 
   return (
