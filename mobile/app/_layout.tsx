@@ -8,6 +8,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { authStore } from '~/features/auth/auth.store';
 import Providers from '~/components/Providers';
+import { useUser } from '../features/user/user.hook';
+import Dialogs from '../components/Dialogs';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,17 +52,18 @@ function RootLayoutNav() {
   const isAuthenticated = authStore((state) => state.token) !== null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Providers>
-        <Stack>
-          <Stack.Protected guard={isAuthenticated}>
-            <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-            <Stack.Screen name="user-management" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          </Stack.Protected>
-          <Stack.Screen name="login"/>
-        </Stack>
-      </Providers>
-    </GestureHandlerRootView>
+    <Providers>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Protected guard={isAuthenticated}>
+              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+              <Stack.Screen name="user-management" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            </Stack.Protected>
+            <Stack.Screen name="login"/>
+          </Stack>
+      </GestureHandlerRootView>
+      <Dialogs />
+    </Providers>
   );
 }

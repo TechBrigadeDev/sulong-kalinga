@@ -6,6 +6,8 @@ import Colors from '~/constants/Colors';
 import { useColorScheme } from 'react-native';
 import { View, Text, StyleSheet } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
+import { useUser } from '../../features/user/user.hook';
+import { userStore } from '../../features/user/user.store';
 
 function DrawerIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -15,14 +17,16 @@ function DrawerIcon(props: {
 }
 
 function CustomDrawerContent(props: any) {
+  const { user } = userStore();
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
       <View style={styles.avatarContainer}>
         <View style={styles.avatarCircle}>
-          {/* Placeholder avatar icon */}
           <FontAwesome name="user-circle" size={64} color="#ccc" />
         </View>
-        <Text style={styles.userName}>User Name</Text>
+        <Text style={styles.userName}>
+          {user?.first_name} {user?.last_name}
+        </Text>
       </View>
       <View style={{ flex: 1 }}>
         <DrawerItemList {...props} />
@@ -67,6 +71,7 @@ const styles = StyleSheet.create({
 
 export default function DrawerLayout() {
   const colorScheme = useColorScheme();
+  useUser();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

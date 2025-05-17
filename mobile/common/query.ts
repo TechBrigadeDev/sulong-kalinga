@@ -8,10 +8,10 @@ export const QK = {
         logout: "auth/logout",
     },
     user: {
+        getUser: (token: string) => ["user/getUser", token],
         management: {
             getBeneficiaries: "user/management/getBeneficiaries",
             getBeneficiary: (id: string) => ["user/management/getBeneficiary", id],
-
             getFamilyMembers: (
                 params: {
                     search: string;

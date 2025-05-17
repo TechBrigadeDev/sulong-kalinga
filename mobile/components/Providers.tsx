@@ -14,15 +14,15 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   const colorScheme = useColorScheme();
   return (
     <TamaguiProvider config={config}>
-      <PortalProvider shouldAddRootHost>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            {children}
+            <PortalProvider shouldAddRootHost>
+              {children}
+            </PortalProvider>
           </ThemeProvider>
         </QueryClientProvider>
-      </PortalProvider>
     </TamaguiProvider>
   );
 };
