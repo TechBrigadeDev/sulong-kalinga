@@ -533,6 +533,10 @@ class DatabaseSeeder extends Seeder
             // Admin notifications (role_id = 1)
             1 => [
                 'System Update' => 'The system has been updated with new features.',
+                'Internal Appointment Created' => 'A new internal appointment has been created.',
+                'Internal Appointment Updated' => 'An internal appointment has been updated.',
+                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
+                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
                 'Security Alert' => 'A new security patch has been applied.',
                 'New User Registration' => 'A new user has registered in the system.',
                 'Data Backup Complete' => 'Automatic data backup has completed successfully.',
@@ -541,6 +545,10 @@ class DatabaseSeeder extends Seeder
             // Care Manager notifications (role_id = 2)
             2 => [
                 'New Case Assigned' => 'You have been assigned a new case to manage.',
+                'Internal Appointment Created' => 'A new internal appointment has been created.',
+                'Internal Appointment Updated' => 'An internal appointment has been updated.',
+                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
+                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
                 'Care Plan Review' => 'A care plan is due for review this week.',
                 'Staff Schedule Update' => 'There are changes to the staff schedule.',
                 'Patient Status Alert' => 'A patient status has been updated.',
@@ -552,7 +560,12 @@ class DatabaseSeeder extends Seeder
                 'Medication Update' => 'Medication schedule has been updated for a patient.',
                 'Training Available' => 'New training modules are available for you.',
                 'Shift Change Request' => 'A shift change has been requested.',
+                'Internal Appointment Created' => 'A new internal appointment has been created.',
+                'Internal Appointment Updated' => 'An internal appointment has been updated.',
+                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
+                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
                 'Documentation Reminder' => 'Please complete your visit documentation.'
+                
             ]
         ];
         

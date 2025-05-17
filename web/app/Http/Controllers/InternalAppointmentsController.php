@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use App\Models\Notification;
 
 class InternalAppointmentsController extends Controller
 {
@@ -416,6 +417,9 @@ class InternalAppointmentsController extends Controller
             $appointment->generateOccurrences(3); // Generate for 3 months
             
             DB::commit();
+
+            // Send notifications
+            $this->notifyNewAppointment($appointment);
             
             return response()->json([
                 'success' => true,
@@ -618,6 +622,9 @@ class InternalAppointmentsController extends Controller
                     $newAppointment->generateOccurrences(3);
                     
                     DB::commit();
+
+                    // Send notifications about the update
+                    $this->notifyUpdatedAppointment($appointment);
                     
                     return response()->json([
                         'success' => true,
@@ -631,6 +638,9 @@ class InternalAppointmentsController extends Controller
                     $occurrence->end_time = $request->is_flexible_time ? null : Carbon::parse($request->end_time);
                     $occurrence->is_modified = true;
                     $occurrence->save();
+
+                    // Add this notification call
+                    $this->notifyUpdatedAppointment($appointment);
                     
                     DB::commit();
                     
@@ -678,6 +688,9 @@ class InternalAppointmentsController extends Controller
                     
                     // Generate occurrences for the new appointment
                     $newAppointment->generateOccurrences(3);
+
+                    // Add this notification call
+                    $this->notifyUpdatedAppointment($newAppointment);
                     
                     DB::commit();
                     
@@ -755,6 +768,7 @@ class InternalAppointmentsController extends Controller
                     
                     // Update participants
                     $this->updateAppointmentParticipants($appointment, $request);
+                    $this->notifyUpdatedAppointment($appointment);
                     
                     DB::commit();
                     
@@ -1117,10 +1131,14 @@ class InternalAppointmentsController extends Controller
                     // Cancel only this occurrence
                     $this->cancelSingleOccurrence($appointment, $occurrenceDate, $reason);
                     $message = 'The selected occurrence has been canceled.';
+
+                    $this->notifyCanceledAppointment($appointment, $occurrenceDate, false);
                 } else {
                     // Cancel this and all future occurrences
                     $this->cancelFutureOccurrences($appointment, $occurrenceDate, $reason);
                     $message = 'This and all future occurrences have been canceled.';
+
+                    $this->notifyCanceledAppointment($appointment, $occurrenceDate, true);
                 }
             } else {
                 // Handle non-recurring appointment cancellation
@@ -1136,6 +1154,9 @@ class InternalAppointmentsController extends Controller
                 }
                 
                 $message = 'Appointment has been canceled.';
+
+                // Send notification for appointment cancellation
+                $this->notifyCanceledAppointment($appointment);
             }
             
             DB::commit();
@@ -1384,6 +1405,181 @@ class InternalAppointmentsController extends Controller
         }
         
         return false;
+    }
+
+    /**
+     * Send notification to all participants of an appointment
+     */
+    private function notifyAppointmentParticipants($appointment, $type, $message, $title = null)
+    {
+        // Get all participants
+        $participants = $appointment->participants;
+        $notifiedUsers = [];
+        
+        foreach ($participants as $participant) {
+            $userId = $participant->participant_id;
+            $userType = $participant->participant_type;
+            
+            // Convert participant type for notification system
+            if ($userType === 'cose_user') {
+                $userType = 'cose_staff';
+            }
+            
+            // Skip duplicates
+            $key = $userType . '-' . $userId;
+            if (in_array($key, $notifiedUsers)) {
+                continue;
+            }
+            
+            // Create notification with ALL required fields
+            Notification::create([
+                'user_id' => $userId,
+                'user_type' => $userType,
+                'message_title' => $title ?? 'Appointment Notification',
+                'message' => $message,
+                'date_created' => now(),
+                'is_read' => false
+            ]);
+            
+            $notifiedUsers[] = $key;
+        }
+        
+        \Log::info("Sent notifications about appointment {$appointment->appointment_id}", [
+            'type' => $type,
+            'recipient_count' => count($notifiedUsers)
+        ]);
+    }
+
+    /**
+     * Notify participants about a new appointment
+     */
+    private function notifyNewAppointment($appointment)
+    {
+        $formattedDate = Carbon::parse($appointment->date)->format('F j, Y');
+        $timeInfo = $appointment->is_flexible_time ? 
+            "with flexible timing" : 
+            "from " . Carbon::parse($appointment->start_time)->format('g:i A') . " to " . 
+            Carbon::parse($appointment->end_time)->format('g:i A');
+        
+        $location = $appointment->meeting_location;
+        $type = $appointment->type ? $appointment->type->type_name : "Meeting";
+        
+        $message = "You have a new {$type}: \"{$appointment->title}\" scheduled on {$formattedDate} {$timeInfo} at {$location}. Please mark your calendar!";
+        $title = "New Appointment Scheduled";
+        
+        $this->notifyAppointmentParticipants(
+            $appointment, 
+            'internal_appointment_created',
+            $message,
+            $title
+        );
+    }
+
+    /**
+     * Notify participants about an updated appointment
+     */
+    private function notifyUpdatedAppointment($appointment)
+    {
+        $formattedDate = Carbon::parse($appointment->date)->format('F j, Y');
+        $timeInfo = $appointment->is_flexible_time ? 
+            "with flexible timing" : 
+            "from " . Carbon::parse($appointment->start_time)->format('g:i A') . " to " . 
+            Carbon::parse($appointment->end_time)->format('g:i A');
+        
+        $location = $appointment->meeting_location;
+        
+        $message = "Important: Your appointment \"{$appointment->title}\" on {$formattedDate} has been updated. The meeting is now scheduled for {$formattedDate} {$timeInfo} at {$location}. Please update your calendar!";
+        $title = "Appointment Details Updated";
+        
+        $this->notifyAppointmentParticipants(
+            $appointment, 
+            'internal_appointment_updated',
+            $message,
+            $title
+        );
+    }
+
+    /**
+     * Notify participants about a canceled appointment
+     */
+    private function notifyCanceledAppointment($appointment, $occurrenceDate = null, $isFuture = false)
+    {
+        $formattedDate = $occurrenceDate ? 
+            Carbon::parse($occurrenceDate)->format('F j, Y') : 
+            Carbon::parse($appointment->date)->format('F j, Y');
+        
+        $timeInfo = $appointment->is_flexible_time ? 
+            "with flexible timing" : 
+            "scheduled for " . Carbon::parse($appointment->start_time)->format('g:i A');
+            
+        if ($isFuture) {
+            $message = "CANCELLATION NOTICE: Your appointment \"{$appointment->title}\" on {$formattedDate} {$timeInfo} has been canceled, along with all future occurrences of this series. Please update your calendar accordingly.";
+        } else {
+            $message = "CANCELLATION NOTICE: Your appointment \"{$appointment->title}\" on {$formattedDate} {$timeInfo} has been canceled. Please update your calendar.";
+        }
+        
+        $title = "Appointment Canceled";
+        
+        $this->notifyAppointmentParticipants(
+            $appointment, 
+            'internal_appointment_canceled',
+            $message,
+            $title
+        );
+    }
+
+    /**
+     * Send reminder notifications for upcoming appointments
+     * This is called by the scheduled command SendInternalAppointmentReminders
+     *
+     * @return int Number of notifications sent
+     */
+    public function sendAppointmentReminders()
+    {
+        // Get appointments occurring tomorrow
+        $tomorrow = Carbon::tomorrow()->format('Y-m-d');
+        
+        // Find all occurrences scheduled for tomorrow
+        $occurrences = AppointmentOccurrence::with(['appointment', 'appointment.participants', 'appointment.type'])
+            ->where('occurrence_date', $tomorrow)
+            ->where('status', 'scheduled')
+            ->get();
+        
+        $count = 0;
+        
+        foreach ($occurrences as $occurrence) {
+            $appointment = $occurrence->appointment;
+            
+            if (!$appointment) {
+                continue;
+            }
+            
+            // Format date and time for notification
+            $formattedDate = Carbon::parse($occurrence->occurrence_date)->format('F j, Y');
+            $timeInfo = $appointment->is_flexible_time ? 
+                "with flexible timing" : 
+                "from " . Carbon::parse($occurrence->start_time)->format('g:i A') . " to " . 
+                Carbon::parse($occurrence->end_time)->format('g:i A');
+            
+            $location = $appointment->meeting_location;
+            $type = $appointment->type ? $appointment->type->type_name : "Meeting";
+            
+            $message = "REMINDER: You have a {$type} tomorrow - \"{$appointment->title}\" on {$formattedDate} {$timeInfo} at {$location}. We look forward to your participation!";
+            $title = "Tomorrow's Appointment Reminder";
+            
+            // Send notifications to all participants
+            $this->notifyAppointmentParticipants(
+                $appointment, 
+                'internal_appointment_reminder',
+                $message,
+                $title
+            );
+            
+            $count++;
+        }
+        
+        \Log::info("Sent {$count} internal appointment reminders for tomorrow");
+        return $count;
     }
     
 }
