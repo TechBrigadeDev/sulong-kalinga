@@ -13,6 +13,7 @@ use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\AppointmentException;
 use App\Models\AppointmentArchive;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -1056,12 +1057,218 @@ class InternalAppointmentsController extends Controller
     }
     
     /**
-     * Cancel an appointment or occurrences
+     * Cancel an appointment with enhanced options for recurring events
      */
     public function cancel(Request $request)
     {
-        // Method stub for cancelling appointments/occurrences
-        // Will be implemented in future updates
+        $validator = Validator::make($request->all(), [
+            'appointment_id' => 'required|exists:appointments,appointment_id',
+            'occurrence_date' => 'sometimes|date',
+            'cancel_type' => 'required|in:single,future',
+            'reason' => 'nullable|string|max:500',
+            'password' => 'required'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Verify user password
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'invalid_password',
+                'message' => 'The provided password is incorrect.'
+            ], 422);
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            $appointmentId = $request->appointment_id;
+            $appointment = Appointment::with(['recurringPattern', 'occurrences'])->findOrFail($appointmentId);
+            
+            // Check if user has permission to cancel this appointment
+            if (!$this->hasManagePermission($appointmentId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to cancel this appointment.'
+                ], 403);
+            }
+            
+            $isRecurring = $appointment->recurringPattern ? true : false;
+            $occurrenceDate = $request->has('occurrence_date') ? Carbon::parse($request->occurrence_date) : null;
+            $reason = $request->reason ?: 'Canceled by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name;
+            
+            \Log::info('Canceling appointment', [
+                'appointment_id' => $appointmentId,
+                'is_recurring' => $isRecurring,
+                'cancel_type' => $request->cancel_type,
+                'occurrence_date' => $occurrenceDate ? $occurrenceDate->format('Y-m-d') : null
+            ]);
+            
+            if ($isRecurring) {
+                // Handle recurring appointment cancellation
+                if ($request->cancel_type === 'single') {
+                    // Cancel only this occurrence
+                    $this->cancelSingleOccurrence($appointment, $occurrenceDate, $reason);
+                    $message = 'The selected occurrence has been canceled.';
+                } else {
+                    // Cancel this and all future occurrences
+                    $this->cancelFutureOccurrences($appointment, $occurrenceDate, $reason);
+                    $message = 'This and all future occurrences have been canceled.';
+                }
+            } else {
+                // Handle non-recurring appointment cancellation
+                $appointment->status = 'canceled';
+                $appointment->notes = $appointment->notes . "\n\nCanceled: " . $reason;
+                $appointment->save();
+                
+                // Also update the occurrence status
+                if ($appointment->occurrences()->exists()) {
+                    $appointment->occurrences()->update([
+                        'status' => 'canceled'
+                    ]);
+                }
+                
+                $message = 'Appointment has been canceled.';
+            }
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error canceling appointment: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel a single occurrence by creating an exception
+     */
+    private function cancelSingleOccurrence(Appointment $appointment, $occurrenceDate, $reason)
+    {
+        if (!$occurrenceDate) {
+            throw new \Exception('Occurrence date is required');
+        }
+        
+        // Format the date for consistency
+        $formattedDate = $occurrenceDate->format('Y-m-d');
+        
+        \Log::info('Creating exception for single occurrence', [
+            'date' => $formattedDate
+        ]);
+        
+        // Delete any existing exception for this date to avoid conflicts
+        AppointmentException::where('appointment_id', $appointment->appointment_id)
+            ->where('exception_date', $formattedDate)
+            ->delete();
+        
+        // Create a new exception record
+        $exception = new AppointmentException();
+        $exception->appointment_id = $appointment->appointment_id;
+        $exception->exception_date = $formattedDate;
+        $exception->status = 'canceled';
+        $exception->reason = $reason;
+        $exception->created_by = Auth::id();
+        $exception->save();
+        
+        // Also update the occurrence status if it exists
+        $occurrence = $appointment->occurrences()
+            ->whereDate('occurrence_date', $formattedDate)
+            ->first();
+        
+        if ($occurrence) {
+            $occurrence->status = 'canceled';
+            $occurrence->save();
+        }
+        
+        \Log::info('Exception created successfully', [
+            'status' => $exception->status
+        ]);
+        
+        return $exception;
+    }
+
+    /**
+     * Cancel this and all future occurrences
+     */
+    private function cancelFutureOccurrences(Appointment $appointment, $occurrenceDate, $reason)
+    {
+        if (!$occurrenceDate) {
+            throw new \Exception('Occurrence date is required');
+        }
+        
+        $recurringPattern = $appointment->recurringPattern;
+        
+        if (!$recurringPattern) {
+            throw new \Exception('Appointment is not recurring');
+        }
+        
+        // Format both dates as strings for proper comparison
+        $originalDate = $appointment->date->format('Y-m-d');
+        $occurrenceDateStr = $occurrenceDate->format('Y-m-d');
+        
+        \Log::info('Processing cancel future occurrences', [
+            'original_date' => $originalDate,
+            'occurrence_date' => $occurrenceDateStr,
+            'are_equal' => ($originalDate == $occurrenceDateStr)
+        ]);
+        
+        // If canceling from the very first occurrence:
+        if ($originalDate == $occurrenceDateStr) {
+            // Update the main appointment status
+            $appointment->status = 'canceled';
+            $appointment->notes = $appointment->notes . "\n\nCanceled: " . $reason;
+            $appointment->save();
+            
+            // Update all occurrences to canceled
+            $appointment->occurrences()->update([
+                'status' => 'canceled'
+            ]);
+            
+            \Log::info('Canceled entire recurring appointment', [
+                'appointment_id' => $appointment->appointment_id
+            ]);
+        } else {
+            // We're canceling from a middle occurrence
+            
+            // 1. Create exception for the chosen date
+            $this->cancelSingleOccurrence($appointment, $occurrenceDate, $reason);
+            
+            // 2. Handle all future dates - update the recurrence end date to the day before
+            $newEndDate = $occurrenceDate->copy()->subDay();
+            $recurringPattern->recurrence_end = $newEndDate;
+            $recurringPattern->save();
+            
+            // 3. Delete all occurrences after the target date
+            $deletedCount = $appointment->occurrences()
+                ->whereDate('occurrence_date', '>=', $occurrenceDateStr)
+                ->delete();
+            
+            \Log::info('Canceled future occurrences', [
+                'appointment_id' => $appointment->appointment_id,
+                'new_end_date' => $newEndDate->format('Y-m-d'),
+                'deleted_occurrences' => $deletedCount
+            ]);
+        }
+        
+        return true;
     }
     
     /**
