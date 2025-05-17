@@ -1229,7 +1229,7 @@
                 delay: 5000,
                 autohide: true
             });
-        });
+        }
         
         // Setup attendee search and selection for each participant type
         setupAttendeeSearch('staffSearch', 'staffDropdown', 'staffAttendees');
@@ -1875,7 +1875,7 @@
             document.querySelectorAll('.attendee-checkbox').forEach(checkbox => {
                 checkbox.checked = false; // Reset all checkboxes first
             });
-        });
+        }
         
         function resetAppointmentForm() {
             if (!addAppointmentForm) return; // Add this safety check
