@@ -16,7 +16,7 @@
       </ul>
     </li>
     <li>
-      <a href="{{ route('care-worker.reports') }}" class="{{ Request::routeIs('admin.reports') ? 'active' : '' }}">
+      <a href="{{ route('care-worker.reports') }}" class="{{ Request::routeIs('care-worker.reports') ? 'active' : '' }}">
         <i class='bx bx-file'></i>
         <span class="link_name">Reports Management</span>
       </a>
@@ -39,7 +39,7 @@
       </ul>
     </li>
     <li>
-      <a href="{{ route('care-worker.weeklycareplans.create') }}" class="{{ Request::routeIs('admin.weeklycareplans.*') ? 'active' : '' }}">
+      <a href="{{ route('care-worker.weeklycareplans.create') }}" class="{{ Request::routeIs('care-worker.weeklycareplans.*') ? 'active' : '' }}">
         <i class='bx bx-task'></i>
         <span class="link_name">Weekly Care Plan</span>
       </a>
@@ -59,7 +59,7 @@
         <li><a class="link_name">Schedules & Appointments</a></li>
         <li><a href="{{ route('care-worker.careworker.appointments.index') }}" class="{{ Request::routeIs('care-worker.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
         <li><a href="#" class="">Internal Appointment</a></li>
-        <li><a href="#" class="">Medical Schedule</a></li>
+        <li><a href="{{ route('care-worker.medication.schedule.index') }}" class="{{ Request::routeIs('care-worker.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
       </ul>
     </li>
   </ul>

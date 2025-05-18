@@ -70,4 +70,15 @@ class MedicationSchedule extends Model
     {
         return $this->belongsTo(User::class, 'updated_by', 'id');
     }
+
+    /**
+     * Get the health history for this medication schedule
+     */
+    public function getHealthHistory()
+    {
+        if ($this->beneficiary && $this->beneficiary->generalCarePlan) {
+            return $this->beneficiary->generalCarePlan->healthHistory;
+        }
+        return null;
+    }
 }

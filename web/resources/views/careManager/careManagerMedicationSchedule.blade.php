@@ -511,8 +511,8 @@
 </head>
 <body>
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="text-left">MEDICATION SCHEDULE</div>
@@ -532,7 +532,7 @@
                             <!-- Search and Filter Controls -->
                             <div class="row mb-3">
                                 <div class="col-md-6 mb-2 mb-md-0">
-                                    <form action="{{ route('admin.medication.schedule.index') }}" method="GET" id="searchForm">
+                                    <form action="{{ route('care-manager.medication.schedule.index') }}" method="GET" id="searchForm">
                                         <div class="search-container">
                                             <input type="text" class="form-control search-input" id="scheduleSearch" name="search" 
                                                 placeholder="Enter beneficiary name or medication name..." value="{{ $search }}">
@@ -772,7 +772,7 @@
                         </ul>
                     </div>
 
-                    <form action="{{ route('admin.medication.schedule.store') }}" method="POST" id="addScheduleForm">
+                    <form action="{{ route('care-manager.medication.schedule.store') }}" method="POST" id="addScheduleForm">
                         @csrf
                         <!-- Beneficiary Selection -->
                         <div class="form-group">
@@ -1213,7 +1213,7 @@
                         <ul></ul>
                     </div>
                     
-                    <form id="deleteMedicationForm" action="{{ route('admin.medication.schedule.delete') }}" method="POST">
+                    <form id="deleteMedicationForm" action="{{ route('care-manager.medication.schedule.delete') }}" method="POST">
                         @csrf
                         <input type="hidden" name="medication_id" id="delete_medication_id">
                         
@@ -1668,7 +1668,7 @@
             
             // Function to fetch medication schedule data for editing
             function fetchMedicationSchedule(id) {
-                fetch(`{{ route('admin.medication.schedule.edit', ':id') }}`.replace(':id', id))
+                fetch(`{{ route('care-manager.medication.schedule.edit', ':id') }}`.replace(':id', id))
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok');
@@ -1691,7 +1691,7 @@
                 document.getElementById('editScheduleForm').reset();
                 
                 // Set the form action URL
-                document.getElementById('editScheduleForm').action = `{{ route('admin.medication.schedule.update', '') }}/${id}`;
+                document.getElementById('editScheduleForm').action = `{{ route('care-manager.medication.schedule.update', '') }}/${id}`;
                 
                 // Set the medication ID
                 document.getElementById('edit_medication_id').value = id;
@@ -2102,7 +2102,7 @@
                 }
                             
                 // Validate password via AJAX
-                fetch('{{ route("admin.validate-password") }}', {
+                fetch('{{ route("care-manager.validate-password") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

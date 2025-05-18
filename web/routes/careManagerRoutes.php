@@ -22,6 +22,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HealthMonitoringController;
 use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\InternalAppointmentsController;
+use App\Http\Controllers\MedicationScheduleController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -164,6 +165,15 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
     Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
         Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
         Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+    });
+
+    // Medication Schedule
+    Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
+        Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+        Route::post('/store', [MedicationScheduleController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [MedicationScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MedicationScheduleController::class, 'update'])->name('update');
+        Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
     });
     
 });
