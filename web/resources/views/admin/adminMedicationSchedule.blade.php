@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
     <style>
         /* Card Design */
         .card {
@@ -123,10 +124,13 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            margin-bottom: 1rem;
         }
         
         .table {
             margin-bottom: 0;
+            table-layout: fixed; /* Control column widths */
+            width: 100%;
         }
         
         .table thead {
@@ -149,6 +153,39 @@
             padding: 12px 15px;
         }
         
+        /* Default behavior - allow wrapping for desktop */
+        .table td, .table th {
+            vertical-align: middle;
+            word-wrap: break-word;
+            white-space: normal;
+            overflow: hidden;
+        }
+        
+        /* Column widths for desktop */
+        .table .col-beneficiary {
+            width: 25%;
+        }
+        
+        .table .col-medication {
+            width: 15%;
+        }
+        
+        .table .col-schedule {
+            width: 20%;
+        }
+        
+        .table .col-instructions {
+            width: 23%;
+        }
+        
+        .table .col-status {
+            width: 10%;
+        }
+        
+        .table .col-actions {
+            width: 10%;
+        }
+        
         /* Medication time badges */
         .badge-time {
             background-color: #e8f4fd;
@@ -161,6 +198,7 @@
             margin-bottom: 4px;
             display: inline-block;
             border: 1px solid rgba(13, 110, 253, 0.2);
+            white-space: nowrap; /* Never wrap badges */
         }
         
         /* Beneficiary row styling */
@@ -229,6 +267,7 @@
         
         .medical-info-item {
             margin-bottom: 5px;
+            white-space: normal; /* Allow these to wrap always */
         }
         
         /* Action buttons */
@@ -273,6 +312,7 @@
             display: inline-block;
             text-align: center;
             min-width: 80px;
+            white-space: nowrap; /* Never wrap status badges */
         }
         
         .status-active {
@@ -295,6 +335,7 @@
             font-style: italic;
             color: #555;
             font-size: 0.9rem;
+            white-space: normal; /* Always allow these to wrap */
         }
 
         /* Medication Modal Styling */
@@ -381,8 +422,8 @@
             border-color: #4e73df;
         }
 
-        /* Responsive styles */
-        @media (max-width: 768px) {
+        /* Mobile-specific styles */
+        @media (max-width: 992px) {
             .filter-bar {
                 flex-direction: column;
                 align-items: flex-end;
@@ -397,8 +438,25 @@
                 width: 100%;
             }
             
+            /* Table specific mobile styles */
             .table-responsive {
-                font-size: 0.9rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table {
+                min-width: 800px; /* Force horizontal scroll on mobile */
+                table-layout: auto; /* Let columns expand as needed on mobile */
+            }
+            
+            /* Prevent text wrapping on mobile for better horizontal scrolling */
+            .table td, .table th {
+                white-space: nowrap;
+            }
+            
+            /* Exception for instructions - always allow wrapping */
+            .table .col-instructions {
+                white-space: normal;
             }
             
             .beneficiary-name {
@@ -409,8 +467,46 @@
                 font-size: 0.7rem;
                 padding: 3px 8px;
             }
+
+            .times-container {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            /* Make table header sticky for better UX during scrolling */
+            .table thead {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+            
+            /* Set minimum widths for mobile view */
+            .table .col-beneficiary {
+                min-width: 220px;
+            }
+            
+            .table .col-medication {
+                min-width: 150px;
+            }
+            
+            .table .col-schedule {
+                min-width: 200px;
+            }
+            
+            .table .col-instructions {
+                min-width: 200px;
+            }
+            
+            .table .col-status {
+                min-width: 100px;
+            }
+            
+            .table .col-actions {
+                min-width: 100px;
+            }
         }
     </style>
+
 </head>
 <body>
 
@@ -491,12 +587,12 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>Beneficiary</th>
-                                            <th>Medication</th>
-                                            <th>Schedule</th>
-                                            <th>Special Instructions</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th class="col-beneficiary">Beneficiary</th>
+                                            <th class="col-medication">Medication</th>
+                                            <th class="col-schedule">Schedule</th>
+                                            <th class="col-instructions">Special Instructions</th>
+                                            <th class="col-status">Status</th>
+                                            <th class="col-actions">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
