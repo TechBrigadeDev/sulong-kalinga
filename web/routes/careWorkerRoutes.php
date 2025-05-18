@@ -135,4 +135,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
     });
 
+    Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
+        Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+    });
+
 });

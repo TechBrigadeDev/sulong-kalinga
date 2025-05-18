@@ -351,7 +351,7 @@
                             <!-- Search and Filter Controls -->
                             <div class="row mb-3">
                                 <div class="col-md-6 mb-2 mb-md-0">
-                                    <form action="{{ route('admin.medication.schedule.index') }}" method="GET" id="searchForm">
+                                    <form action="{{ route('care-worker.medication.schedule.index') }}" method="GET" id="searchForm">
                                         <div class="search-container">
                                             <input type="text" class="form-control search-input" id="scheduleSearch" name="search" 
                                                 placeholder="Enter beneficiary name or medication name..." value="{{ $search }}">
