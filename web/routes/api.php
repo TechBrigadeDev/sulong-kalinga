@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\FamilyMemberApiController;
 use App\Http\Controllers\Api\MunicipalityApiController;
 use App\Http\Controllers\Api\PortalAccountApiController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\ReportsApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -70,4 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Notifications (initial)
     // Route::post('/mobile-notifications', [MobileNotificationApiController::class, 'store']);
 
+    // Reports Management API
+    Route::get('/reports', [ReportsApiController::class, 'index']);
+    Route::get('/reports/{id}', [ReportsApiController::class, 'show']);
+    Route::put('/reports/{id}', [ReportsApiController::class, 'update']);
 });
