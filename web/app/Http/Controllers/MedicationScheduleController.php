@@ -10,6 +10,8 @@ use App\Models\GeneralCarePlan;
 use App\Models\FamilyMember;
 use App\Models\User;
 use App\Models\Notification;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -714,5 +716,133 @@ class MedicationScheduleController extends Controller
         }
     }
 
+    /**
+     * Delete a medication schedule
+     */
+    public function destroy(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'medication_id' => 'required|exists:medication_schedules,medication_schedule_id',
+            'password' => 'required',
+            'reason' => 'required|string|max:255', // Changed from nullable to required
+        ]);
+        
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+        
+        // Verify the user's password
+        $user = Auth::user();
+        if (!Hash::check($request->password, $user->password)) {
+            return redirect()->back()
+                ->withErrors(['password' => 'The provided password is incorrect.'])
+                ->withInput();
+        }
+        
+        // Find the medication schedule
+        $medicationSchedule = MedicationSchedule::with(['beneficiary'])->findOrFail($request->medication_id);
+        
+        // Store schedule info for notifications
+        $beneficiaryId = $medicationSchedule->beneficiary_id;
+        $beneficiary = $medicationSchedule->beneficiary;
+        $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+        $medicationName = $medicationSchedule->medication_name;
+        $dosage = $medicationSchedule->dosage;
+        $reason = $request->reason ?: 'No specific reason provided.';
+        
+        // Delete the medication schedule
+        $medicationSchedule->delete();
+        
+        // Send notifications about the deletion
+        $this->sendMedicationScheduleDeletionNotifications(
+            $beneficiaryId, 
+            $beneficiaryName, 
+            $medicationName, 
+            $dosage, 
+            $reason,
+            $beneficiary
+        );
+        
+        // Redirect back with success message
+        return redirect()->back()->with('success', 'Medication schedule deleted successfully!');
+    }
+
+    /**
+     * Send notifications about the deleted medication schedule to relevant users.
+     */
+    private function sendMedicationScheduleDeletionNotifications($beneficiaryId, $beneficiaryName, $medicationName, $dosage, $reason, $beneficiary)
+    {
+        if (!$beneficiary) {
+            return;
+        }
+        
+        // Get the current user
+        $user = Auth::user();
+        $deletedBy = $user->first_name . ' ' . $user->last_name;
+        
+        // Fix: Use getRoleName() instead of accessing role->name directly
+        $userRole = $user->getRoleName();
+        
+        // Convert role name to more readable format
+        switch ($userRole) {
+            case 'administrator':
+                $userRole = 'Administrator';
+                break;
+            case 'executive_director':
+                $userRole = 'Executive Director';
+                break;
+            case 'care_manager':
+                $userRole = 'Care Manager';
+                break;
+            case 'care_worker':
+                $userRole = 'Care Worker';
+                break;
+            default:
+                $userRole = 'Staff';
+        }
+        
+        // Create notification message
+        $messageTitle = 'Medication Schedule Deleted';
+        
+        $message = "🗑️ MEDICATION SCHEDULE DELETED\n\n";
+        $message .= "The following medication schedule has been deleted:\n";
+        $message .= "• Beneficiary: {$beneficiaryName}\n";
+        $message .= "• Medication: {$medicationName}\n";
+        $message .= "• Dosage: {$dosage}\n\n";
+        $message .= "Deleted by: {$deletedBy} ({$userRole})\n";
+        $message .= "Reason for deletion: {$reason}\n\n";
+        $message .= "This medication is no longer part of the treatment plan.";
+        
+        // 1. Notify the beneficiary
+        $this->createNotification($beneficiaryId, 'beneficiary', $messageTitle, $message);
+        
+        // 2. Notify all family members related to the beneficiary
+        $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
+        foreach ($familyMembers as $familyMember) {
+            $this->createNotification($familyMember->family_member_id, 'family_member', $messageTitle, $message);
+        }
+        
+        // 3. Notify the care worker assigned to the beneficiary
+        if ($beneficiary->generalCarePlan) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            if ($careWorkerId && $careWorkerId != $user->id) {
+                $this->createNotification($careWorkerId, 'cose_staff', $messageTitle, $message);
+            }
+        }
+        
+        // 4. If a care worker or admin is deleting, notify the care manager too
+        if ($user->role_id == 1 || $user->role_id == 3) {  // Admin or Care Worker
+            // Find responsible care manager through care worker assignment
+            if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+                $careWorker = User::find($beneficiary->generalCarePlan->care_worker_id);
+                if ($careWorker && $careWorker->care_manager_id) {
+                    $this->createNotification($careWorker->care_manager_id, 'cose_staff', $messageTitle, $message);
+                }
+            }
+        }
+    }
 
 }

@@ -198,6 +198,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/store', [MedicationScheduleController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [MedicationScheduleController::class, 'edit'])->name('edit');
         Route::put('/{id}', [MedicationScheduleController::class, 'update'])->name('update');
+        Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
     });
 
     // Emergency and Service Request

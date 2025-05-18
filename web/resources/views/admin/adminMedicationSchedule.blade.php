@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Medication Schedule</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
@@ -704,14 +705,17 @@
                                                 <!-- Actions column -->
                                                 <td>
                                                     <div class="d-flex">
-                                                        <button class="btn btn-sm btn-outline-primary action-btn me-1 edit-btn" 
+                                                        <button class="btn btn-sm btn-primary action-btn me-1 edit-btn" 
                                                             title="Edit" 
                                                             data-id="{{ $schedule->medication_schedule_id }}">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
-                                                        <button class="btn btn-sm btn-outline-danger action-btn delete-btn" 
-                                                            title="Delete" 
-                                                            data-id="{{ $schedule->medication_schedule_id }}">
+                                                        <button class="btn btn-sm btn-danger action-btn delete-btn" 
+                                                            data-id="{{ $schedule->medication_schedule_id }}" 
+                                                            data-beneficiary="{{ $schedule->beneficiary->first_name }} {{ $schedule->beneficiary->last_name }}"
+                                                            data-medication="{{ $schedule->medication_name }}"
+                                                            data-dosage="{{ $schedule->dosage }}"
+                                                            title="Delete schedule">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </div>
@@ -1187,6 +1191,75 @@
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" form="editScheduleForm" class="btn btn-primary" id="updateScheduleBtn">
                         <i class="bi bi-check-lg me-1"></i> Update Medication Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Medication Schedule Modal -->
+    <div class="modal fade" id="deleteMedicationModal" tabindex="-1" aria-labelledby="deleteMedicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteMedicationModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="deleteModalErrors" class="alert alert-danger" style="display: none;">
+                        <strong>Please correct the following errors:</strong>
+                        <ul></ul>
+                    </div>
+                    
+                    <form id="deleteMedicationForm" action="{{ route('admin.medication.schedule.delete') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="medication_id" id="delete_medication_id">
+                        
+                        <div class="medication-info-display mb-3 p-3 border rounded bg-light">
+                            <h6 class="mb-2">Medication details:</h6>
+                            <div><strong>Beneficiary:</strong> <span id="delete_beneficiary_name"></span></div>
+                            <div><strong>Medication:</strong> <span id="delete_medication_name"></span></div>
+                            <div><strong>Dosage:</strong> <span id="delete_medication_dosage"></span></div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-lightbulb-fill me-2"></i>
+                            <strong>Consider an alternative:</strong> If the medication course is simply complete, you can 
+                            <a href="#" id="editInsteadLink" class="alert-link">edit the schedule</a> and change its status to "Completed" instead of deleting it.
+                        </div>
+                        
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Warning:</strong> This action cannot be undone. Deleting this medication schedule will permanently remove it from the system's records and from the beneficiary's view.
+                        </div>
+                        
+                        <p>Please enter your password to confirm deletion:</p>
+                        
+                        <div class="mb-3">
+                            <label for="confirmation_password" class="form-label">Your Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                                <input type="password" class="form-control" id="confirmation_password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Enter your password to confirm this action</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="delete_reason" class="form-label">Reason for deletion <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="delete_reason" name="reason" rows="2" placeholder="Please provide a reason for deleting this medication schedule" required></textarea>
+                            <div class="form-text">This will be included in notifications sent to the beneficiary and family members</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete Medication Schedule
                     </button>
                 </div>
             </div>
@@ -1945,6 +2018,114 @@
             // Clear edit modal errors when modal is closed
             document.getElementById('editScheduleModal').addEventListener('hidden.bs.modal', function() {
                 document.getElementById('editModalErrors').style.display = 'none';
+            });
+
+            // Initialize delete modal
+            var deleteMedicationModal = new bootstrap.Modal(document.getElementById('deleteMedicationModal'));
+
+            // Click handler for delete buttons
+            document.querySelectorAll('.delete-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Get the medication data from data attributes
+                    const id = this.dataset.id;
+                    const beneficiaryName = this.dataset.beneficiary;
+                    const medicationName = this.dataset.medication;
+                    const dosage = this.dataset.dosage;
+                    
+                    // Set the values in the modal
+                    document.getElementById('delete_medication_id').value = id;
+                    document.getElementById('delete_beneficiary_name').textContent = beneficiaryName;
+                    document.getElementById('delete_medication_name').textContent = medicationName;
+                    document.getElementById('delete_medication_dosage').textContent = dosage;
+                    
+                    // Clear previous inputs
+                    document.getElementById('confirmation_password').value = '';
+                    document.getElementById('delete_reason').value = '';
+                    document.getElementById('deleteModalErrors').style.display = 'none';
+                    
+                    // Set up the "edit instead" link to open edit modal
+                    document.getElementById('editInsteadLink').onclick = function(e) {
+                        e.preventDefault();
+                        deleteMedicationModal.hide();
+                        fetchMedicationSchedule(id);
+                    };
+                    
+                    // Show modal
+                    deleteMedicationModal.show();
+                });
+            });
+
+            // Toggle password visibility
+            document.getElementById('togglePassword').addEventListener('click', function() {
+                const passwordField = document.getElementById('confirmation_password');
+                const icon = this.querySelector('i');
+                
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    passwordField.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+
+            // Handle delete form submission with password validation
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                const password = document.getElementById('confirmation_password').value;
+                const reason = document.getElementById('delete_reason').value.trim();
+                const errorDisplay = document.getElementById('deleteModalErrors');
+
+                // Clear previous errors
+                errorDisplay.querySelector('ul').innerHTML = '';
+                
+                // Validation errors
+                let hasErrors = false;
+                
+                // Basic validation
+                if (!password) {
+                    errorDisplay.style.display = '';
+                    errorDisplay.querySelector('ul').innerHTML = '<li>Password is required to confirm deletion.</li>';
+                    return;
+                }
+
+                // Reason validation
+                if (!reason) {
+                    hasErrors = true;
+                    errorDisplay.style.display = '';
+                    errorDisplay.querySelector('ul').innerHTML += '<li>Please provide a reason for deletion.</li>';
+                }
+
+                if (hasErrors) {
+                    return;
+                }
+                            
+                // Validate password via AJAX
+                fetch('{{ route("admin.validate-password") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ password: password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        // Password is valid, submit the form
+                        document.getElementById('deleteMedicationForm').submit();
+                    } else {
+                        // Password is invalid, show error
+                        errorDisplay.style.display = '';
+                        errorDisplay.querySelector('ul').innerHTML = '<li>The password you entered is incorrect.</li>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error validating password:', error);
+                    errorDisplay.style.display = '';
+                    errorDisplay.querySelector('ul').innerHTML = '<li>An error occurred while validating your password. Please try again.</li>';
+                });
             });
         });
     </script>
