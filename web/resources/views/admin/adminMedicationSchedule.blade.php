@@ -608,10 +608,14 @@
                                                 <!-- Actions column -->
                                                 <td>
                                                     <div class="d-flex">
-                                                        <button class="btn btn-sm btn-outline-primary action-btn me-1" title="Edit" data-id="{{ $schedule->medication_schedule_id }}">
+                                                        <button class="btn btn-sm btn-outline-primary action-btn me-1 edit-btn" 
+                                                            title="Edit" 
+                                                            data-id="{{ $schedule->medication_schedule_id }}">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
-                                                        <button class="btn btn-sm btn-outline-danger action-btn" title="Delete" data-id="{{ $schedule->medication_schedule_id }}">
+                                                        <button class="btn btn-sm btn-outline-danger action-btn delete-btn" 
+                                                            title="Delete" 
+                                                            data-id="{{ $schedule->medication_schedule_id }}">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </div>
@@ -866,6 +870,232 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Medication Schedule Modal -->
+    <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editScheduleModalLabel">
+                        <i class="bi bi-calendar-check"></i> Edit Medication Schedule
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Error Alert for Validation -->
+                    <div id="editModalErrors" class="alert alert-danger" style="{{ $errors->any() && session('show_edit_modal') ? '' : 'display: none;' }}">
+                        <strong>Please correct the following errors:</strong>
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <form action="" method="POST" id="editScheduleForm">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" id="edit_medication_id" name="medication_id">
+                        
+                        <!-- Beneficiary Selection -->
+                        <div class="form-group">
+                            <label for="editBeneficiarySelect" class="form-label">
+                                <i class="bi bi-person-fill"></i> Beneficiary
+                            </label>
+                            <div class="beneficiary-select-container">
+                                <div class="select-container">
+                                    <select class="form-select" id="editBeneficiarySelect" name="beneficiary_id" required>
+                                        <option value="" disabled>Select a beneficiary</option>
+                                        @foreach($beneficiaries as $beneficiary)
+                                            <option value="{{ $beneficiary['id'] }}" 
+                                                data-allergies="{{ $beneficiary['allergies'] }}"
+                                                data-conditions="{{ $beneficiary['medical_conditions'] }}"
+                                                data-immunizations="{{ $beneficiary['immunizations'] }}">
+                                                {{ $beneficiary['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Alert for allergies -->
+                        <div class="alert alert-warning d-flex align-items-center" role="alert" id="editAllergiesAlert" style="display: none !important;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                <strong>Allergies:</strong> <span id="editAllergiesContent">None on record</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Medication Details -->
+                        <hr>
+                        <h6 class="fw-bold mb-3">Medication Details</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="editMedicationName" class="form-label">
+                                        <i class="bi bi-capsule"></i> Medication Name
+                                    </label>
+                                    <input type="text" class="form-control" id="editMedicationName" name="medication_name" placeholder="Enter medication name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editDosage" class="form-label">
+                                        <i class="bi bi-diagram-3"></i> Dosage
+                                    </label>
+                                    <input type="text" class="form-control" id="editDosage" name="dosage" placeholder="e.g., 500mg" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editMedicationType" class="form-label">
+                                        <i class="bi bi-archive"></i> Medication Type
+                                    </label>
+                                    <div class="select-container">
+                                        <select class="form-select" id="editMedicationType" name="medication_type" required>
+                                            <option value="" disabled>Select medication type</option>
+                                            <option value="tablet">Tablet</option>
+                                            <option value="capsule">Capsule</option>
+                                            <option value="liquid">Liquid</option>
+                                            <option value="injection">Injection</option>
+                                            <option value="inhaler">Inhaler</option>
+                                            <option value="topical">Topical</option>
+                                            <option value="drops">Drops</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editStatus" class="form-label">
+                                        <i class="bi bi-toggle-on"></i> Status
+                                    </label>
+                                    <div class="select-container">
+                                        <select class="form-select" id="editStatus" name="status" required>
+                                            <option value="active">Active</option>
+                                            <option value="paused">Paused</option>
+                                            <option value="completed">Completed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Schedule Times -->
+                        <hr>
+                        <h6 class="fw-bold mb-3">Schedule Times</h6>
+                        
+                        <div class="time-group">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="editMorningSwitch" name="morning_time">
+                                <label class="form-check-label" for="editMorningSwitch">Morning</label>
+                            </div>
+                            <input type="time" class="form-control time-input" id="editMorningTime" name="morning_time_value" value="08:00">
+                            <div class="form-check ms-2">
+                                <input class="form-check-input" type="checkbox" value="1" id="editMorningWithFood" name="with_food_morning">
+                                <label class="form-check-label" for="editMorningWithFood">
+                                    With food
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="time-group">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="editNoonSwitch" name="noon_time">
+                                <label class="form-check-label" for="editNoonSwitch">Afternoon</label>
+                            </div>
+                            <input type="time" class="form-control time-input" id="editNoonTime" name="noon_time_value" value="13:00">
+                            <div class="form-check ms-2">
+                                <input class="form-check-input" type="checkbox" value="1" id="editNoonWithFood" name="with_food_noon">
+                                <label class="form-check-label" for="editNoonWithFood">
+                                    With food
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="time-group">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="editEveningSwitch" name="evening_time">
+                                <label class="form-check-label" for="editEveningSwitch">Evening</label>
+                            </div>
+                            <input type="time" class="form-control time-input" id="editEveningTime" name="evening_time_value" value="18:00">
+                            <div class="form-check ms-2">
+                                <input class="form-check-input" type="checkbox" value="1" id="editEveningWithFood" name="with_food_evening">
+                                <label class="form-check-label" for="editEveningWithFood">
+                                    With food
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="time-group">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="editNightSwitch" name="night_time">
+                                <label class="form-check-label" for="editNightSwitch">Night</label>
+                            </div>
+                            <input type="time" class="form-control time-input" id="editNightTime" name="night_time_value" value="21:00">
+                            <div class="form-check ms-2">
+                                <input class="form-check-input" type="checkbox" value="1" id="editNightWithFood" name="with_food_night">
+                                <label class="form-check-label" for="editNightWithFood">
+                                    With food
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="time-group">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="editAsNeededSwitch" name="as_needed" value="1">
+                                <label class="form-check-label" for="editAsNeededSwitch">As needed (PRN)</label>
+                            </div>
+                            <div class="text-muted ms-auto" style="font-size: 0.85rem;">
+                                <i class="bi bi-info-circle"></i> No fixed time
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Instructions -->
+                        <div class="form-group mt-3">
+                            <label for="editInstructions" class="form-label">
+                                <i class="bi bi-journal-text"></i> Special Instructions
+                            </label>
+                            <textarea class="form-control" id="editInstructions" name="special_instructions" rows="3" 
+                                placeholder="Enter any special instructions for administration..."></textarea>
+                        </div>
+                        
+                        <!-- Duration -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editStartDate" class="form-label">
+                                        <i class="bi bi-calendar-check"></i> Start Date
+                                    </label>
+                                    <input type="date" class="form-control" id="editStartDate" name="start_date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editEndDate" class="form-label">
+                                        <i class="bi bi-calendar-x"></i> End Date (Optional)
+                                    </label>
+                                    <input type="date" class="form-control" id="editEndDate" name="end_date">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="editScheduleForm" class="btn btn-primary" id="updateScheduleBtn">
+                        <i class="bi bi-check-lg me-1"></i> Update Medication Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
    
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
@@ -891,11 +1121,124 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Show modal with errors when validation fails
-            @if($errors->any() || session('show_modal'))
-                var addScheduleModal = new bootstrap.Modal(document.getElementById('addScheduleModal'));
+            // Initialize modal references
+            var addScheduleModal = new bootstrap.Modal(document.getElementById('addScheduleModal'));
+            var editScheduleModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
+            
+            // Only show add modal if there are errors but NOT from edit form
+            @if(($errors->any() && !session('show_edit_modal')) || session('show_modal'))
                 addScheduleModal.show();
             @endif
+            
+            // Only show edit modal if errors are from edit form
+            @if($errors->any() && session('show_edit_modal'))
+                editScheduleModal.show();
+                
+                // If we have an edit ID, load the data again
+                @if(session('edit_id'))
+                    fetchMedicationSchedule({{ session('edit_id') }});
+                @endif
+            @endif
+
+            // Add this function to handle proper modal cleanup
+            function clearModalBackdrops() {
+                // Remove any modal backdrops that may be stuck
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    backdrop.remove();
+                });
+                
+                // Also remove modal-open class from body
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }
+            
+            // Update the hidden event handlers for both modals
+            document.getElementById('editScheduleModal').addEventListener('hidden.bs.modal', function() {
+                document.getElementById('editModalErrors').style.display = 'none';
+                clearModalBackdrops();
+            });
+            
+            document.getElementById('addScheduleModal').addEventListener('hidden.bs.modal', function() {
+                document.getElementById('modalErrors').style.display = 'none';
+                clearModalBackdrops();
+            });
+            
+            // Cleanup when clicking close buttons
+            const closeButtons = document.querySelectorAll('[data-bs-dismiss="modal"]');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Short timeout to allow Bootstrap to process the click first
+                    setTimeout(clearModalBackdrops, 200);
+                });
+            });
+
+            // Add a click handler for the "Add New Schedule" button
+            document.querySelector('[data-bs-target="#addScheduleModal"]').addEventListener('click', function() {
+                // First, clear any errors
+                document.getElementById('modalErrors').style.display = 'none';
+                document.getElementById('modalErrors').innerHTML = '<strong>Please correct the following errors:</strong>';
+                
+                // Reset form to clear any values
+                const form = document.getElementById('addScheduleForm');
+                form.reset();
+                
+                // Clear any hidden inputs that might have been added dynamically
+                const hiddenInputs = form.querySelectorAll('input[type="hidden"]:not([name="_token"])');
+                hiddenInputs.forEach(input => input.remove());
+                
+                // Reset dropdown selections properly
+                document.getElementById('beneficiarySelect').selectedIndex = 0;
+                document.getElementById('medicationType').selectedIndex = 0;
+                
+                // Force hide allergies alert (important to use both methods)
+                const allergiesAlert = document.getElementById('allergiesAlert');
+                allergiesAlert.style.display = 'none';
+                allergiesAlert.setAttribute('style', 'display: none !important');
+                
+                // Reset all time fields to unchecked state
+                document.getElementById('morningSwitch').checked = false;
+                document.getElementById('noonSwitch').checked = false;
+                document.getElementById('eveningSwitch').checked = false;
+                document.getElementById('nightSwitch').checked = false;
+                document.getElementById('asNeededSwitch').checked = false;
+                
+                // Reset all "with food" checkboxes
+                document.getElementById('morningWithFood').checked = false;
+                document.getElementById('noonWithFood').checked = false;
+                document.getElementById('eveningWithFood').checked = false;
+                document.getElementById('nightWithFood').checked = false;
+                
+                // Reset all time values to defaults
+                document.getElementById('morningTime').value = '08:00';
+                document.getElementById('noonTime').value = '13:00';
+                document.getElementById('eveningTime').value = '18:00';
+                document.getElementById('nightTime').value = '21:00';
+                
+                // Update time field enabled/disabled states
+                updateTimeFields('morning');
+                updateTimeFields('noon');
+                updateTimeFields('evening');
+                updateTimeFields('night');
+                
+                // Set current date as default for start date
+                document.getElementById('startDate').valueAsDate = new Date();
+                document.getElementById('endDate').value = '';
+                
+                // Clear instructions
+                document.getElementById('instructions').value = '';
+                
+                // Ensure "As Needed" state is consistent
+                if (document.getElementById('asNeededSwitch').checked) {
+                    document.getElementById('asNeededSwitch').checked = false;
+                    // Make sure time switches are enabled
+                    document.getElementById('morningSwitch').disabled = false;
+                    document.getElementById('noonSwitch').disabled = false;
+                    document.getElementById('eveningSwitch').disabled = false;
+                    document.getElementById('nightSwitch').disabled = false;
+                }
+            });
             
             // Client-side validation for medication name and dosage
             document.getElementById('medicationName').addEventListener('input', function() {
@@ -1142,6 +1485,371 @@
             
             // Attach filter function to global scope for the onchange attributes
             window.applyFilters = applyFilters;
+
+            // Initialize edit modal
+            var editScheduleModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
+            
+            // Click handler for edit buttons
+            document.querySelectorAll('.edit-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    fetchMedicationSchedule(id);
+                });
+            });
+            
+            // Function to fetch medication schedule data for editing
+            function fetchMedicationSchedule(id) {
+                fetch(`{{ route('admin.medication.schedule.edit', ':id') }}`.replace(':id', id))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        populateEditForm(data, id);
+                        editScheduleModal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching medication schedule:', error);
+                        alert('Failed to load medication schedule data. Please try again.');
+                    });
+            }
+            
+            // Function to populate the edit form with medication schedule data
+            function populateEditForm(data, id) {
+                // Clear previous form data
+                document.getElementById('editScheduleForm').reset();
+                
+                // Set the form action URL
+                document.getElementById('editScheduleForm').action = `{{ route('admin.medication.schedule.update', '') }}/${id}`;
+                
+                // Set the medication ID
+                document.getElementById('edit_medication_id').value = id;
+
+                // Store original values for comparison on submit
+                const originalValues = {
+                    beneficiaryId: data.beneficiary_id,
+                    medicationName: data.medication_name,
+                    dosage: data.dosage,
+                    medicationType: data.medication_type.toLowerCase(),
+                    status: data.status,
+                    instructions: data.special_instructions || '',
+                    startDate: data.formatted_start_date,
+                    endDate: data.formatted_end_date || '',
+                    asNeeded: data.as_needed,
+                    morningTime: data.morning_time ? true : false,
+                    withFoodMorning: data.with_food_morning,
+                    noonTime: data.noon_time ? true : false,
+                    withFoodNoon: data.with_food_noon,
+                    eveningTime: data.evening_time ? true : false,
+                    withFoodEvening: data.with_food_evening,
+                    nightTime: data.night_time ? true : false,
+                    withFoodNight: data.with_food_night
+                };
+                
+                // Store original values as dataset attribute on the form
+                const editForm = document.getElementById('editScheduleForm');
+                editForm.dataset.originalValues = JSON.stringify(originalValues);
+                
+                // Set basic info
+                document.getElementById('editBeneficiarySelect').value = data.beneficiary_id;
+                document.getElementById('editMedicationName').value = data.medication_name;
+                document.getElementById('editDosage').value = data.dosage;
+                document.getElementById('editMedicationType').value = data.medication_type.toLowerCase();
+                document.getElementById('editStatus').value = data.status;
+                document.getElementById('editInstructions').value = data.special_instructions || '';
+                
+                // Use formatted dates for proper display in date inputs
+                document.getElementById('editStartDate').value = data.formatted_start_date;
+                document.getElementById('editEndDate').value = data.formatted_end_date || '';
+                
+                // Handle allergies alert
+                const selectedOption = document.getElementById('editBeneficiarySelect').options[document.getElementById('editBeneficiarySelect').selectedIndex];
+                const allergiesData = selectedOption ? selectedOption.dataset.allergies : null;
+                const allergiesAlert = document.getElementById('editAllergiesAlert');
+                const allergiesContent = document.getElementById('editAllergiesContent');
+                
+                if (allergiesData && allergiesData !== 'null') {
+                    allergiesContent.textContent = allergiesData;
+                    allergiesAlert.style.display = 'flex !important';
+                    allergiesAlert.removeAttribute('style');
+                } else {
+                    allergiesAlert.style.display = 'none !important';
+                }
+                
+                // Handle schedule times
+                document.getElementById('editAsNeededSwitch').checked = data.as_needed;
+                
+                // Reset all time switches first
+                document.getElementById('editMorningSwitch').checked = false;
+                document.getElementById('editNoonSwitch').checked = false;
+                document.getElementById('editEveningSwitch').checked = false;
+                document.getElementById('editNightSwitch').checked = false;
+                
+                // Set time values if present
+                if (data.morning_time) {
+                    document.getElementById('editMorningSwitch').checked = true;
+                    document.getElementById('editMorningTime').value = data.formatted_morning_time;
+                    document.getElementById('editMorningWithFood').checked = data.with_food_morning;
+                }
+                
+                if (data.noon_time) {
+                    document.getElementById('editNoonSwitch').checked = true;
+                    document.getElementById('editNoonTime').value = data.formatted_noon_time;
+                    document.getElementById('editNoonWithFood').checked = data.with_food_noon;
+                }
+                
+                if (data.evening_time) {
+                    document.getElementById('editEveningSwitch').checked = true;
+                    document.getElementById('editEveningTime').value = data.formatted_evening_time;
+                    document.getElementById('editEveningWithFood').checked = data.with_food_evening;
+                }
+                
+                if (data.night_time) {
+                    document.getElementById('editNightSwitch').checked = true;
+                    document.getElementById('editNightTime').value = data.formatted_night_time;
+                    document.getElementById('editNightWithFood').checked = data.with_food_night;
+                }
+                
+                // Handle "As needed" disabling of time fields
+                handleEditAsNeeded();
+                
+                // Update time field states
+                updateEditTimeFields('morning');
+                updateEditTimeFields('noon');
+                updateEditTimeFields('evening');
+                updateEditTimeFields('night');
+            }
+            
+            // Handle "As needed" switch in edit form
+            document.getElementById('editAsNeededSwitch').addEventListener('change', handleEditAsNeeded);
+            
+            function handleEditAsNeeded() {
+                const asNeeded = document.getElementById('editAsNeededSwitch').checked;
+                if (asNeeded) {
+                    // Disable other time switches
+                    document.getElementById('editMorningSwitch').checked = false;
+                    document.getElementById('editNoonSwitch').checked = false;
+                    document.getElementById('editEveningSwitch').checked = false;
+                    document.getElementById('editNightSwitch').checked = false;
+                    
+                    // Disable the time input fields
+                    document.getElementById('editMorningSwitch').disabled = true;
+                    document.getElementById('editNoonSwitch').disabled = true;
+                    document.getElementById('editEveningSwitch').disabled = true;
+                    document.getElementById('editNightSwitch').disabled = true;
+                    
+                    document.getElementById('editMorningTime').disabled = true;
+                    document.getElementById('editNoonTime').disabled = true;
+                    document.getElementById('editEveningTime').disabled = true;
+                    document.getElementById('editNightTime').disabled = true;
+                    
+                    document.getElementById('editMorningWithFood').disabled = true;
+                    document.getElementById('editNoonWithFood').disabled = true;
+                    document.getElementById('editEveningWithFood').disabled = true;
+                    document.getElementById('editNightWithFood').disabled = true;
+                } else {
+                    // Enable the time switches again
+                    document.getElementById('editMorningSwitch').disabled = false;
+                    document.getElementById('editNoonSwitch').disabled = false;
+                    document.getElementById('editEveningSwitch').disabled = false;
+                    document.getElementById('editNightSwitch').disabled = false;
+                    
+                    // Re-enable time fields based on their switch state
+                    updateEditTimeFields('morning');
+                    updateEditTimeFields('noon');
+                    updateEditTimeFields('evening');
+                    updateEditTimeFields('night');
+                }
+            }
+            
+            // Handle time switch controls in edit form
+            ['morning', 'noon', 'evening', 'night'].forEach(function(time) {
+                document.getElementById('edit' + time.charAt(0).toUpperCase() + time.slice(1) + 'Switch').addEventListener('change', function() {
+                    updateEditTimeFields(time);
+                });
+            });
+            
+            // Update edit time fields based on switch state
+            function updateEditTimeFields(timePeriod) {
+                const capitalizedTime = timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1);
+                const isChecked = document.getElementById('edit' + capitalizedTime + 'Switch').checked;
+                document.getElementById('edit' + capitalizedTime + 'Time').disabled = !isChecked;
+                document.getElementById('edit' + capitalizedTime + 'WithFood').disabled = !isChecked;
+            }
+            
+            // Form validation for edit
+            document.getElementById('editScheduleForm').addEventListener('submit', function(event) {
+
+                // Get the form reference and original values
+                const form = this;
+                const originalValues = JSON.parse(form.dataset.originalValues || '{}');
+                
+                // Get current values
+                const currentValues = {
+                    beneficiaryId: document.getElementById('editBeneficiarySelect').value,
+                    medicationName: document.getElementById('editMedicationName').value,
+                    dosage: document.getElementById('editDosage').value, 
+                    medicationType: document.getElementById('editMedicationType').value,
+                    status: document.getElementById('editStatus').value,
+                    instructions: document.getElementById('editInstructions').value || '',
+                    startDate: document.getElementById('editStartDate').value,
+                    endDate: document.getElementById('editEndDate').value || '',
+                    asNeeded: document.getElementById('editAsNeededSwitch').checked,
+                    morningTime: document.getElementById('editMorningSwitch').checked,
+                    withFoodMorning: document.getElementById('editMorningWithFood').checked,
+                    noonTime: document.getElementById('editNoonSwitch').checked,
+                    withFoodNoon: document.getElementById('editNoonWithFood').checked,
+                    eveningTime: document.getElementById('editEveningSwitch').checked,
+                    withFoodEvening: document.getElementById('editEveningWithFood').checked,
+                    nightTime: document.getElementById('editNightSwitch').checked,
+                    withFoodNight: document.getElementById('editNightWithFood').checked
+                };
+                
+                // Check if anything has changed
+                let hasChanges = false;
+                for (const key in originalValues) {
+                    if (originalValues[key] !== currentValues[key]) {
+                        hasChanges = true;
+                        break;
+                    }
+                }
+                
+                // If nothing has changed, show an error and prevent submission
+                if (!hasChanges) {
+                    event.preventDefault();
+                    
+                    const modalErrors = document.getElementById('editModalErrors');
+                    modalErrors.style.display = '';
+                    
+                    let errorList = modalErrors.querySelector('ul');
+                    if (!errorList) {
+                        errorList = document.createElement('ul');
+                        modalErrors.appendChild(errorList);
+                    }
+                    
+                    // Clear previous errors
+                    errorList.innerHTML = '';
+                    
+                    const errorItem = document.createElement('li');
+                    errorItem.textContent = 'No changes were made to the medication schedule.';
+                    errorList.appendChild(errorItem);
+                    
+                    return false;
+                }
+                
+                // Client-side validation for medication name
+                const medicationName = document.getElementById('editMedicationName').value;
+                if (medicationName && !isNaN(medicationName) && medicationName.trim() !== '') {
+                    event.preventDefault();
+                    const modalErrors = document.getElementById('editModalErrors');
+                    modalErrors.style.display = '';
+                    
+                    let errorList = modalErrors.querySelector('ul');
+                    if (!errorList) {
+                        errorList = document.createElement('ul');
+                        modalErrors.appendChild(errorList);
+                    }
+                    
+                    // Clear previous errors
+                    errorList.innerHTML = '';
+                    
+                    const errorItem = document.createElement('li');
+                    errorItem.textContent = 'The medication name cannot be purely numeric.';
+                    errorList.appendChild(errorItem);
+                    return false;
+                }
+                
+                // Client-side validation for dosage
+                const dosage = document.getElementById('editDosage').value;
+                if (dosage && !isNaN(dosage) && dosage.trim() !== '') {
+                    event.preventDefault();
+                    const modalErrors = document.getElementById('editModalErrors');
+                    modalErrors.style.display = '';
+                    
+                    let errorList = modalErrors.querySelector('ul');
+                    if (!errorList) {
+                        errorList = document.createElement('ul');
+                        modalErrors.appendChild(errorList);
+                    }
+                    
+                    // Clear previous errors
+                    errorList.innerHTML = '';
+                    
+                    const errorItem = document.createElement('li');
+                    errorItem.textContent = 'The dosage must include units (e.g., 500mg, 10ml).';
+                    errorList.appendChild(errorItem);
+                    return false;
+                }
+                
+                // Check if at least one time or "as needed" is selected
+                const asNeeded = document.getElementById('editAsNeededSwitch').checked;
+                const morningChecked = document.getElementById('editMorningSwitch').checked;
+                const noonChecked = document.getElementById('editNoonSwitch').checked;
+                const eveningChecked = document.getElementById('editEveningSwitch').checked;
+                const nightChecked = document.getElementById('editNightSwitch').checked;
+                
+                if (!asNeeded && !morningChecked && !noonChecked && !eveningChecked && !nightChecked) {
+                    event.preventDefault();
+                    
+                    const modalErrors = document.getElementById('editModalErrors');
+                    modalErrors.style.display = '';
+                    
+                    let errorList = modalErrors.querySelector('ul');
+                    if (!errorList) {
+                        errorList = document.createElement('ul');
+                        modalErrors.appendChild(errorList);
+                    }
+                    
+                    // Clear previous errors
+                    errorList.innerHTML = '';
+                    
+                    const errorItem = document.createElement('li');
+                    errorItem.textContent = 'Please select at least one schedule time or "As Needed".';
+                    errorList.appendChild(errorItem);
+                    
+                    return false;
+                }
+                
+                // If a time checkbox is checked, make sure we send the corresponding time value
+                if (morningChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'morning_time';
+                    hiddenField.value = document.getElementById('editMorningTime').value;
+                    this.appendChild(hiddenField);
+                }
+                
+                if (noonChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'noon_time';
+                    hiddenField.value = document.getElementById('editNoonTime').value;
+                    this.appendChild(hiddenField);
+                }
+                
+                if (eveningChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'evening_time';
+                    hiddenField.value = document.getElementById('editEveningTime').value;
+                    this.appendChild(hiddenField);
+                }
+                
+                if (nightChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'night_time';
+                    hiddenField.value = document.getElementById('editNightTime').value;
+                    this.appendChild(hiddenField);
+                }
+            });
+            
+            // Clear edit modal errors when modal is closed
+            document.getElementById('editScheduleModal').addEventListener('hidden.bs.modal', function() {
+                document.getElementById('editModalErrors').style.display = 'none';
+            });
         });
     </script>
 </body>
