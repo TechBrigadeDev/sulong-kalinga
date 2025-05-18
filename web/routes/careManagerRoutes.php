@@ -168,6 +168,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
 
     Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
         Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+        Route::post('/store', [MedicationScheduleController::class, 'store'])->name('store');
     });
     
 });

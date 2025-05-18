@@ -297,6 +297,90 @@
             font-size: 0.9rem;
         }
 
+        /* Medication Modal Styling */
+        .time-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: #f8f9fc;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .time-group .form-check-input {
+            margin-right: 8px;
+        }
+
+        .time-group .form-check {
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .time-group .form-check-label {
+            margin-bottom: 0;
+        }
+
+        .time-input {
+            width: 120px;
+            margin: 0 10px;
+        }
+
+        .time-group .form-check-input:checked {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-label i {
+            color: #4e73df;
+        }
+
+        .modal-header {
+            background-color: #4e73df;
+            color: white;
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        /* Allergy alert styling */
+        #allergiesAlert {
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f57f17;
+        }
+
+        hr {
+            margin: 20px 0;
+            color: #e0e0e0;
+        }
+
+        /* Status toggle switch styling */
+        .form-switch .form-check-input {
+            width: 40px;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+
         /* Responsive styles */
         @media (max-width: 768px) {
             .filter-bar {
@@ -351,7 +435,7 @@
                             <!-- Search and Filter Controls -->
                             <div class="row mb-3">
                                 <div class="col-md-6 mb-2 mb-md-0">
-                                    <form action="{{ route('care-manager.medication.schedule.index') }}" method="GET" id="searchForm">
+                                    <form action="{{ route('admin.medication.schedule.index') }}" method="GET" id="searchForm">
                                         <div class="search-container">
                                             <input type="text" class="form-control search-input" id="scheduleSearch" name="search" 
                                                 placeholder="Enter beneficiary name or medication name..." value="{{ $search }}">
@@ -394,6 +478,14 @@
                                 </div>
                             </div>
                             
+                            <!-- Success Message -->
+                            @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            @endif
+
                             <!-- Medication Schedule Table -->
                             <div class="table-responsive">
                                 <table class="table table-hover">
@@ -565,7 +657,19 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    
+                    <!-- Error Alert for Validation -->
+                    <div id="modalErrors" class="alert alert-danger" style="{{ $errors->any() ? '' : 'display: none;' }}">
+                        <strong>Please correct the following errors:</strong>
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <form action="{{ route('admin.medication.schedule.store') }}" method="POST" id="addScheduleForm">
+                        @csrf
                         <!-- Beneficiary Selection -->
                         <div class="form-group">
                             <label for="beneficiarySelect" class="form-label">
@@ -573,34 +677,18 @@
                             </label>
                             <div class="beneficiary-select-container">
                                 <div class="select-container">
-                                    <select class="form-select" id="beneficiarySelect" required>
-                                        <option value="" selected disabled>Select a beneficiary</option>
-                                        <option value="1">John Doe (B-001-24)</option>
-                                        <option value="2">Mary Smith (B-002-24)</option>
-                                        <option value="3">Robert Johnson (B-003-24)</option>
-                                        <option value="4">Sarah Williams (B-004-24)</option>
-                                        <option value="5">Michael Brown (B-005-24)</option>
+                                    <select class="form-select" id="beneficiarySelect" name="beneficiary_id" required>
+                                        <option value="" disabled {{ old('beneficiary_id') ? '' : 'selected' }}>Select a beneficiary</option>
+                                        @foreach($beneficiaries as $beneficiary)
+                                            <option value="{{ $beneficiary['id'] }}" 
+                                                data-allergies="{{ $beneficiary['allergies'] }}"
+                                                data-conditions="{{ $beneficiary['medical_conditions'] }}"
+                                                data-immunizations="{{ $beneficiary['immunizations'] }}"
+                                                {{ old('beneficiary_id') == $beneficiary['id'] ? 'selected' : '' }}>
+                                                {{ $beneficiary['name'] }}
+                                            </option>
+                                        @endforeach
                                     </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Medical Information (Read-only) -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="medicalCondition" class="form-label">
-                                        <i class="bi bi-heart-pulse"></i> Medical Condition
-                                    </label>
-                                    <input type="text" class="form-control" id="medicalCondition" placeholder="No condition on record" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="illnessInfo" class="form-label">
-                                        <i class="bi bi-bandaid"></i> Illness Information
-                                    </label>
-                                    <input type="text" class="form-control" id="illnessInfo" placeholder="No illness on record" readonly>
                                 </div>
                             </div>
                         </div>
@@ -609,7 +697,7 @@
                         <div class="alert alert-warning d-flex align-items-center" role="alert" id="allergiesAlert" style="display: none !important;">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
                             <div>
-                                Allergies: <span id="allergiesContent">None on record</span>
+                                <strong>Allergies:</strong> <span id="allergiesContent">None on record</span>
                             </div>
                         </div>
                         
@@ -623,7 +711,8 @@
                                     <label for="medicationName" class="form-label">
                                         <i class="bi bi-capsule"></i> Medication Name
                                     </label>
-                                    <input type="text" class="form-control" id="medicationName" placeholder="Enter medication name" required>
+                                    <input type="text" class="form-control" id="medicationName" name="medication_name" 
+                                        placeholder="Enter medication name" required value="{{ old('medication_name') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -631,7 +720,8 @@
                                     <label for="dosage" class="form-label">
                                         <i class="bi bi-diagram-3"></i> Dosage
                                     </label>
-                                    <input type="text" class="form-control" id="dosage" placeholder="e.g., 500mg" required>
+                                    <input type="text" class="form-control" id="dosage" name="dosage" 
+                                        placeholder="e.g., 500mg" required value="{{ old('dosage') }}">
                                 </div>
                             </div>
                         </div>
@@ -641,16 +731,16 @@
                                 <i class="bi bi-archive"></i> Medication Type
                             </label>
                             <div class="select-container">
-                                <select class="form-select" id="medicationType" required>
-                                    <option value="" selected disabled>Select medication type</option>
-                                    <option value="tablet">Tablet</option>
-                                    <option value="capsule">Capsule</option>
-                                    <option value="liquid">Liquid</option>
-                                    <option value="injection">Injection</option>
-                                    <option value="inhaler">Inhaler</option>
-                                    <option value="topical">Topical</option>
-                                    <option value="drops">Drops</option>
-                                    <option value="other">Other</option>
+                                <select class="form-select" id="medicationType" name="medication_type" required>
+                                    <option value="" disabled {{ old('medication_type') ? '' : 'selected' }}>Select medication type</option>
+                                    <option value="tablet" {{ old('medication_type') == 'tablet' ? 'selected' : '' }}>Tablet</option>
+                                    <option value="capsule" {{ old('medication_type') == 'capsule' ? 'selected' : '' }}>Capsule</option>
+                                    <option value="liquid" {{ old('medication_type') == 'liquid' ? 'selected' : '' }}>Liquid</option>
+                                    <option value="injection" {{ old('medication_type') == 'injection' ? 'selected' : '' }}>Injection</option>
+                                    <option value="inhaler" {{ old('medication_type') == 'inhaler' ? 'selected' : '' }}>Inhaler</option>
+                                    <option value="topical" {{ old('medication_type') == 'topical' ? 'selected' : '' }}>Topical</option>
+                                    <option value="drops" {{ old('medication_type') == 'drops' ? 'selected' : '' }}>Drops</option>
+                                    <option value="other" {{ old('medication_type') == 'other' ? 'selected' : '' }}>Other</option>
                                 </select>
                             </div>
                         </div>
@@ -659,65 +749,75 @@
                         <hr>
                         <h6 class="fw-bold mb-3">Schedule Times</h6>
                         
+                        <!-- Morning -->
                         <div class="time-group">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="morningSwitch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="morningSwitch" 
+                                    name="morning_time" {{ old('morning_time') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="morningSwitch">Morning</label>
                             </div>
-                            <input type="time" class="form-control time-input" id="morningTime" value="08:00">
+                            <input type="time" class="form-control time-input" id="morningTime" 
+                                name="morning_time_value" value="{{ old('morning_time_value', '08:00') }}">
                             <div class="form-check ms-2">
-                                <input class="form-check-input" type="checkbox" value="" id="morningWithFood">
-                                <label class="form-check-label" for="morningWithFood">
-                                    With food
-                                </label>
+                                <input class="form-check-input" type="checkbox" value="1" id="morningWithFood" 
+                                    name="with_food_morning" {{ old('with_food_morning') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="morningWithFood">With food</label>
                             </div>
                         </div>
-                        
+        
+                        <!-- Afternoon -->
                         <div class="time-group">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="noonSwitch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="noonSwitch" 
+                                    name="noon_time" {{ old('noon_time') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="noonSwitch">Afternoon</label>
                             </div>
-                            <input type="time" class="form-control time-input" id="noonTime" value="13:00">
+                            <input type="time" class="form-control time-input" id="noonTime" 
+                                name="noon_time_value" value="{{ old('noon_time_value', '13:00') }}">
                             <div class="form-check ms-2">
-                                <input class="form-check-input" type="checkbox" value="" id="noonWithFood">
-                                <label class="form-check-label" for="noonWithFood">
-                                    With food
-                                </label>
+                                <input class="form-check-input" type="checkbox" value="1" id="noonWithFood" 
+                                    name="with_food_noon" {{ old('with_food_noon') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="noonWithFood">With food</label>
                             </div>
                         </div>
                         
+                        <!-- Evening -->
                         <div class="time-group">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="eveningSwitch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="eveningSwitch" 
+                                    name="evening_time" {{ old('evening_time') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="eveningSwitch">Evening</label>
                             </div>
-                            <input type="time" class="form-control time-input" id="eveningTime" value="18:00">
+                            <input type="time" class="form-control time-input" id="eveningTime" 
+                                name="evening_time_value" value="{{ old('evening_time_value', '18:00') }}">
                             <div class="form-check ms-2">
-                                <input class="form-check-input" type="checkbox" value="" id="eveningWithFood">
-                                <label class="form-check-label" for="eveningWithFood">
-                                    With food
-                                </label>
+                                <input class="form-check-input" type="checkbox" value="1" id="eveningWithFood" 
+                                    name="with_food_evening" {{ old('with_food_evening') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="eveningWithFood">With food</label>
                             </div>
                         </div>
                         
+                        <!-- Night -->
                         <div class="time-group">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="nightSwitch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="nightSwitch" 
+                                    name="night_time" {{ old('night_time') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="nightSwitch">Night</label>
                             </div>
-                            <input type="time" class="form-control time-input" id="nightTime" value="21:00">
+                            <input type="time" class="form-control time-input" id="nightTime" 
+                                name="night_time_value" value="{{ old('night_time_value', '21:00') }}">
                             <div class="form-check ms-2">
-                                <input class="form-check-input" type="checkbox" value="" id="nightWithFood">
-                                <label class="form-check-label" for="nightWithFood">
-                                    With food
-                                </label>
+                                <input class="form-check-input" type="checkbox" value="1" id="nightWithFood" 
+                                    name="with_food_night" {{ old('with_food_night') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="nightWithFood">With food</label>
                             </div>
                         </div>
                         
+                        <!-- As Needed -->
                         <div class="time-group">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="asNeededSwitch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="asNeededSwitch" 
+                                    name="as_needed" value="1" {{ old('as_needed') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="asNeededSwitch">As needed (PRN)</label>
                             </div>
                             <div class="text-muted ms-auto" style="font-size: 0.85rem;">
@@ -730,7 +830,8 @@
                             <label for="instructions" class="form-label">
                                 <i class="bi bi-journal-text"></i> Special Instructions
                             </label>
-                            <textarea class="form-control" id="instructions" rows="3" placeholder="Enter any special instructions for administration..."></textarea>
+                            <textarea class="form-control" id="instructions" name="special_instructions" rows="3" 
+                                placeholder="Enter any special instructions for administration...">{{ old('special_instructions') }}</textarea>
                         </div>
                         
                         <!-- Duration -->
@@ -740,7 +841,8 @@
                                     <label for="startDate" class="form-label">
                                         <i class="bi bi-calendar-check"></i> Start Date
                                     </label>
-                                    <input type="date" class="form-control" id="startDate" required>
+                                    <input type="date" class="form-control" id="startDate" name="start_date" 
+                                        required value="{{ old('start_date') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -748,7 +850,8 @@
                                     <label for="endDate" class="form-label">
                                         <i class="bi bi-calendar-x"></i> End Date (Optional)
                                     </label>
-                                    <input type="date" class="form-control" id="endDate">
+                                    <input type="date" class="form-control" id="endDate" name="end_date" 
+                                        value="{{ old('end_date') }}">
                                 </div>
                             </div>
                         </div>
@@ -756,7 +859,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveScheduleBtn">
+                    <button type="submit" form="addScheduleForm" class="btn btn-primary" id="saveScheduleBtn">
                         <i class="bi bi-check-lg me-1"></i> Save Medication Schedule
                     </button>
                 </div>
@@ -767,40 +870,124 @@
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        /*
         document.addEventListener('DOMContentLoaded', function() {
+            // Filter handling
+            function applyFilters() {
+                const statusValue = document.getElementById('statusFilter').value;
+                const timeValue = document.getElementById('timeFilter').value;
+                const searchValue = document.getElementById('scheduleSearch').value;
+                
+                // Update hidden form fields
+                document.querySelector('input[name="status"]').value = statusValue;
+                document.querySelector('input[name="period"]').value = timeValue;
+                
+                // Submit the form
+                document.getElementById('searchForm').submit();
+            }
+            
+            // Attach filter function to global scope for the onchange attributes
+            window.applyFilters = applyFilters;
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show modal with errors when validation fails
+            @if($errors->any() || session('show_modal'))
+                var addScheduleModal = new bootstrap.Modal(document.getElementById('addScheduleModal'));
+                addScheduleModal.show();
+            @endif
+            
+            // Client-side validation for medication name and dosage
+            document.getElementById('medicationName').addEventListener('input', function() {
+                if (this.value && !isNaN(this.value) && this.value.trim() !== '') {
+                    this.setCustomValidity('Medication name cannot be purely numeric');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+
+            document.getElementById('dosage').addEventListener('input', function() {
+                if (this.value && !isNaN(this.value) && this.value.trim() !== '') {
+                    this.setCustomValidity('Dosage must include units (e.g., 500mg, 10ml)');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Initialize modal reference for use in showing/hiding
+            var addScheduleModal = new bootstrap.Modal(document.getElementById('addScheduleModal'));
+
+            // When modal is hidden, clear errors
+            document.getElementById('addScheduleModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('modalErrors').style.display = 'none';
+            });
+
+            // Reset errors when form is reset
+            document.getElementById('addScheduleForm').addEventListener('reset', function() {
+                document.getElementById('modalErrors').style.display = 'none';
+            });
+
+            // Set current date as default for start date
+            document.getElementById('startDate').valueAsDate = new Date();
+
+            // When the page loads, check if we need to display allergies for a previously selected beneficiary
+            const beneficiarySelect = document.getElementById('beneficiarySelect');
+            if (beneficiarySelect.value) {
+                const selectedOption = beneficiarySelect.options[beneficiarySelect.selectedIndex];
+                const allergiesData = selectedOption.dataset.allergies;
+                
+                // Handle allergies alert
+                const allergiesAlert = document.getElementById('allergiesAlert');
+                const allergiesContent = document.getElementById('allergiesContent');
+                
+                if (allergiesData && allergiesData !== 'null') {
+                    allergiesContent.textContent = allergiesData;
+                    allergiesAlert.style.display = 'flex !important';
+                    allergiesAlert.removeAttribute('style');
+                }
+            }
+            
+            // Make sure time fields are properly enabled/disabled based on saved state
+            const asNeeded = document.getElementById('asNeededSwitch').checked;
+            if (asNeeded) {
+                // Disable time switches if "as needed" was checked
+                document.getElementById('morningSwitch').disabled = true;
+                document.getElementById('noonSwitch').disabled = true;
+                document.getElementById('eveningSwitch').disabled = true;
+                document.getElementById('nightSwitch').disabled = true;
+                
+                document.getElementById('morningTime').disabled = true;
+                document.getElementById('noonTime').disabled = true;
+                document.getElementById('eveningTime').disabled = true;
+                document.getElementById('nightTime').disabled = true;
+                
+                document.getElementById('morningWithFood').disabled = true;
+                document.getElementById('noonWithFood').disabled = true;
+                document.getElementById('eveningWithFood').disabled = true;
+                document.getElementById('nightWithFood').disabled = true;
+            } else {
+                // Make sure time fields are enabled/disabled based on their checkbox state
+                updateTimeFields('morning');
+                updateTimeFields('noon');
+                updateTimeFields('evening');
+                updateTimeFields('night');
+            }
+            
             // Show/hide allergies alert based on beneficiary selection
             document.getElementById('beneficiarySelect').addEventListener('change', function() {
-                // Sample data - would come from your database in reality
-                const beneficiaryData = {
-                    '1': { condition: 'Type 2 Diabetes', illness: 'Hypertension', allergies: 'Penicillin' },
-                    '2': { condition: 'Hypothyroidism', illness: 'Asthma', allergies: '' },
-                    '3': { condition: 'Heart Disease', illness: 'Edema', allergies: 'Sulfa drugs' },
-                    '4': { condition: 'Type 1 Diabetes', illness: 'High Blood Pressure', allergies: 'Latex, Iodine' },
-                    '5': { condition: 'COPD', illness: 'Arthritis', allergies: '' }
-                };
+                const selectedOption = this.options[this.selectedIndex];
+                const allergiesData = selectedOption.dataset.allergies;
                 
-                const selectedValue = this.value;
-                if (selectedValue && beneficiaryData[selectedValue]) {
-                    // Set medical condition and illness
-                    document.getElementById('medicalCondition').value = beneficiaryData[selectedValue].condition || 'No condition on record';
-                    document.getElementById('illnessInfo').value = beneficiaryData[selectedValue].illness || 'No illness on record';
-                    
-                    // Handle allergies alert
-                    const allergiesAlert = document.getElementById('allergiesAlert');
-                    const allergiesContent = document.getElementById('allergiesContent');
-                    
-                    if (beneficiaryData[selectedValue].allergies) {
-                        allergiesContent.textContent = beneficiaryData[selectedValue].allergies;
-                        allergiesAlert.style.display = 'flex';
-                    } else {
-                        allergiesAlert.style.display = 'none';
-                    }
+                // Handle allergies alert
+                const allergiesAlert = document.getElementById('allergiesAlert');
+                const allergiesContent = document.getElementById('allergiesContent');
+                
+                if (allergiesData && allergiesData !== 'null') {
+                    allergiesContent.textContent = allergiesData;
+                    allergiesAlert.style.display = 'flex !important';
+                    allergiesAlert.removeAttribute('style');
                 } else {
-                    // Reset fields if no beneficiary is selected
-                    document.getElementById('medicalCondition').value = '';
-                    document.getElementById('illnessInfo').value = '';
-                    document.getElementById('allergiesAlert').style.display = 'none';
+                    allergiesAlert.style.display = 'none !important';
                 }
             });
             
@@ -850,100 +1037,95 @@
                 });
             });
             
+            // Initialize time fields
             function updateTimeFields(timePeriod) {
                 const isChecked = document.getElementById(timePeriod + 'Switch').checked;
                 document.getElementById(timePeriod + 'Time').disabled = !isChecked;
                 document.getElementById(timePeriod + 'WithFood').disabled = !isChecked;
             }
             
-            // Search functionality
-            document.getElementById('scheduleSearch').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                
-                // Get all beneficiary groups (all rows with the same beneficiary)
-                const rows = document.querySelectorAll('tbody tr');
-                
-                // Create a map to group rows by beneficiary
-                const beneficiaryGroups = new Map();
-                
-                rows.forEach(row => {
-                    // Check if this row has a beneficiary name (first cell with class beneficiary-name)
-                    const beneficiaryCell = row.querySelector('.beneficiary-name');
-                    
-                    if (beneficiaryCell) {
-                        // This is the first row of a beneficiary group
-                        const beneficiaryName = beneficiaryCell.textContent.trim();
-                        beneficiaryGroups.set(row, [row]);
-                        
-                        // Find all rows that belong to this beneficiary (until next beneficiary-name)
-                        let nextRow = row.nextElementSibling;
-                        while (nextRow && !nextRow.querySelector('.beneficiary-name')) {
-                            beneficiaryGroups.get(row).push(nextRow);
-                            nextRow = nextRow.nextElementSibling;
-                        }
-                    }
-                });
-                
-                // Now search within each group
-                beneficiaryGroups.forEach((groupRows, firstRow) => {
-                    // Get searchable content from the group
-                    let groupContent = '';
-                    
-                    // Get beneficiary name and info
-                    const beneficiaryName = firstRow.querySelector('.beneficiary-name').textContent.trim();
-                    const medicalInfo = firstRow.querySelector('.medical-info').textContent.trim();
-                    
-                    // Add to searchable content
-                    groupContent += beneficiaryName + ' ' + medicalInfo;
-                    
-                    // Get all medication info from all rows in group
-                    groupRows.forEach(row => {
-                        const medicationInfo = row.querySelector('.medication-info');
-                        if (medicationInfo) {
-                            groupContent += ' ' + medicationInfo.textContent.trim();
-                        }
-                        
-                        // Get schedule info
-                        const scheduleCell = row.cells[3]; // Assuming schedule is the 4th cell
-                        if (scheduleCell) {
-                            groupContent += ' ' + scheduleCell.textContent.trim();
-                        }
-                    });
-                    
-                    // Check if the search term is found in the group's content
-                    const isMatch = groupContent.toLowerCase().includes(searchTerm);
-                    
-                    // Show/hide all rows in the group
-                    groupRows.forEach(row => {
-                        row.style.display = isMatch || searchTerm.length < 2 ? '' : 'none';
-                    });
-                });
-            });
-            
-            // Filter functionality
-            document.getElementById('statusFilter').addEventListener('change', filterSchedules);
-            document.getElementById('timeFilter').addEventListener('change', filterSchedules);
-            
-            function filterSchedules() {
-                const statusValue = document.getElementById('statusFilter').value;
-                const timeValue = document.getElementById('timeFilter').value;
-                
-                // Here you would implement filtering logic based on status and time
-                // For this demo, we'll just log the filter values
-                console.log('Filtering by:', {status: statusValue, time: timeValue});
-                
-                // In a real implementation, you would update the visible rows based on these filters
-            }
-            
-            // Initialize time fields
+            // Initialize all time fields
             updateTimeFields('morning');
             updateTimeFields('noon');
             updateTimeFields('evening');
             updateTimeFields('night');
-        });*/
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Form submission handler
+            document.getElementById('addScheduleForm').addEventListener('submit', function(event) {
+                // Check if at least one time or "as needed" is selected
+                const asNeeded = document.getElementById('asNeededSwitch').checked;
+                const morningChecked = document.getElementById('morningSwitch').checked;
+                const noonChecked = document.getElementById('noonSwitch').checked;
+                const eveningChecked = document.getElementById('eveningSwitch').checked;
+                const nightChecked = document.getElementById('nightSwitch').checked;
+                
+                if (!asNeeded && !morningChecked && !noonChecked && !eveningChecked && !nightChecked) {
+                    event.preventDefault();
+                    
+                    // Show the error in the modal errors section instead of an alert
+                    const modalErrors = document.getElementById('modalErrors');
+                    modalErrors.style.display = '';
+                    
+                    // Check if there's already a list
+                    let errorList = modalErrors.querySelector('ul');
+                    if (!errorList) {
+                        errorList = document.createElement('ul');
+                        modalErrors.appendChild(errorList);
+                    }
+                    
+                    // Check if this specific error is already in the list
+                    let errorExists = false;
+                    const existingErrors = errorList.querySelectorAll('li');
+                    existingErrors.forEach(item => {
+                        if (item.textContent.includes('Please select at least one schedule time')) {
+                            errorExists = true;
+                        }
+                    });
+                    
+                    // Add the error if it doesn't exist
+                    if (!errorExists) {
+                        const errorItem = document.createElement('li');
+                        errorItem.textContent = 'Please select at least one schedule time or "As Needed".';
+                        errorList.appendChild(errorItem);
+                    }
+                    
+                    return false;
+                }
+                
+                // If a time checkbox is checked, make sure we send the corresponding time value
+                if (morningChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'morning_time';
+                    hiddenField.value = document.getElementById('morningTime').value;
+                    this.appendChild(hiddenField);
+                }
+                
+                if (noonChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'noon_time';
+                    hiddenField.value = document.getElementById('noonTime').value;
+                    this.appendChild(hiddenField);
+                }
+                
+                if (eveningChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'evening_time';
+                    hiddenField.value = document.getElementById('eveningTime').value;
+                    this.appendChild(hiddenField);
+                }
+                
+                if (nightChecked) {
+                    const hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = 'night_time';
+                    hiddenField.value = document.getElementById('nightTime').value;
+                    this.appendChild(hiddenField);
+                }
+            });
+            
             // Filter handling
             function applyFilters() {
                 const statusValue = document.getElementById('statusFilter').value;
