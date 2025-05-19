@@ -284,4 +284,45 @@ class Appointment extends Model
         // Use the appointment's own date
         return $this->createOccurrence(Carbon::parse($this->date));
     }
+
+    /**
+     * Generate daily occurrences for a recurring appointment
+     * 
+     * @param Carbon $startDate The start date for generating occurrences
+     * @param Carbon $endDate The end date for generating occurrences
+     * @return int Number of occurrences created
+     */
+    public function generateDailyOccurrences($startDate, $endDate)
+    {
+        if (!$this->recurringPattern) {
+            return 0;
+        }
+        
+        // Make sure we're working with Carbon instances
+        $startDate = $startDate instanceof Carbon ? $startDate : Carbon::parse($startDate);
+        $endDate = $endDate instanceof Carbon ? $endDate : Carbon::parse($endDate);
+        
+        // Don't continue if end date is in the past
+        if ($endDate->isBefore($startDate)) {
+            return 0;
+        }
+        
+        // Counter for created occurrences
+        $count = 0;
+        
+        // Generate daily occurrences
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            // Create an occurrence for this date
+            $occurrence = $this->createOccurrence($currentDate);
+            if ($occurrence) {
+                $count++;
+            }
+            
+            // Move to the next day
+            $currentDate->addDay();
+        }
+        
+        return $count;
+    }
 }

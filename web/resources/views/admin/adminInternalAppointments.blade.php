@@ -12,6 +12,37 @@
     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     <style>
+
+        /* Add these styles to your CSS section to ensure checkboxes are visible */
+        .attendee-option {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.15s ease;
+        }
+        
+        .attendee-option:hover {
+            background-color: #f0f4ff;
+        }
+        
+        .attendee-option.selected {
+            background-color: #e9ecff;
+        }
+        
+        .attendee-checkbox {
+            margin-right: 10px;
+            min-width: 16px;
+            min-height: 16px;
+            opacity: 1 !important;
+            position: static !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
+            display: inline-block !important;
+            border: 1px solid #adb5bd;
+        }
+
         /* Card Design */
         .card {
             border-radius: 8px;
@@ -1059,6 +1090,45 @@
                 currentEvent = null;
             });
 
+            // Add this new function and call it right away
+            function initializeAttendeeCheckboxes() {
+                // Initialize checkboxes for all dropdowns immediately
+                document.querySelectorAll('.attendees-dropdown').forEach(dropdown => {
+                    dropdown.querySelectorAll('.attendee-option').forEach(option => {
+                        // Check if option already has a checkbox
+                        let checkbox = option.querySelector('.attendee-checkbox');
+                        
+                        // If no checkbox found or checkbox is just an attribute without an element
+                        if (!checkbox || checkbox.tagName !== 'INPUT') {
+                            // Remove any existing checkbox attribute
+                            if (option.attributes.checkbox) {
+                                option.removeAttribute('checkbox');
+                            }
+                            
+                            // Create a proper checkbox element
+                            checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.className = 'attendee-checkbox';
+                            checkbox.name = `participants[${option.dataset.type}][]`;
+                            checkbox.value = option.dataset.id;
+                            
+                            // Insert checkbox as the first child of the option
+                            option.insertBefore(checkbox, option.firstChild);
+                            
+                            // Remove any unwanted text nodes
+                            Array.from(option.childNodes).forEach(node => {
+                                if (node.nodeType === 3 && node.textContent.trim()) {
+                                    node.remove();
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+            
+            // Call the initialization function immediately
+            initializeAttendeeCheckboxes();
+
         var calendarEl = document.getElementById('calendar');
         var appointmentDetailsEl = document.getElementById('appointmentDetails');
         var addAppointmentForm = document.getElementById('addAppointmentForm');
@@ -1106,7 +1176,6 @@
                 selectedTypeText === 'Others' ? 'block' : 'none';
             
             // Enable/disable beneficiary and family attendance based on type
-            // Now checking by text content for greater reliability
             const isAssessmentOrOther = selectedTypeText === 'Assessment and Review of Care Needs' || selectedTypeText === 'Others';
             
             // Beneficiary options
@@ -1114,9 +1183,20 @@
             const beneficiarySearch = document.getElementById('beneficiarySearch');
             const beneficiaryCheckboxes = document.querySelectorAll('input[name="participants[beneficiary][]"]');
             
-            beneficiaryAttendees.classList.toggle('disabled', !isAssessmentOrOther);
-            beneficiarySearch.disabled = !isAssessmentOrOther;
+            if (beneficiaryAttendees) beneficiaryAttendees.classList.toggle('disabled', !isAssessmentOrOther);
+            if (beneficiarySearch) beneficiarySearch.disabled = !isAssessmentOrOther;
             beneficiaryCheckboxes.forEach(checkbox => {
+                checkbox.disabled = !isAssessmentOrOther;
+            });
+            
+            // Family member options
+            const familyAttendees = document.getElementById('familyAttendees');
+            const familySearch = document.getElementById('familySearch');
+            const familyCheckboxes = document.querySelectorAll('input[name="participants[family_member][]"]');
+            
+            if (familyAttendees) familyAttendees.classList.toggle('disabled', !isAssessmentOrOther);
+            if (familySearch) familySearch.disabled = !isAssessmentOrOther;
+            familyCheckboxes.forEach(checkbox => {
                 checkbox.disabled = !isAssessmentOrOther;
             });
         });
@@ -1124,14 +1204,33 @@
         // Handle appointment type change
         document.getElementById('appointmentType').addEventListener('change', function() {
             const selectedType = this.value;
+            const selectedTypeText = this.options[this.selectedIndex].text;
+            
+            // Show/hide other field based on selection
+            document.getElementById('otherTypeContainer').style.display = 
+                selectedTypeText === 'Others' ? 'block' : 'none';
+            
+            // Enable/disable beneficiary and family attendance based on type
+            const isAssessmentOrOther = selectedTypeText === 'Assessment and Review of Care Needs' || selectedTypeText === 'Others';
+            
+            // Beneficiary options
+            const beneficiaryAttendees = document.getElementById('beneficiaryAttendees');
+            const beneficiarySearch = document.getElementById('beneficiarySearch');
+            const beneficiaryCheckboxes = document.querySelectorAll('input[name="participants[beneficiary][]"]');
+            
+            if (beneficiaryAttendees) beneficiaryAttendees.classList.toggle('disabled', !isAssessmentOrOther);
+            if (beneficiarySearch) beneficiarySearch.disabled = !isAssessmentOrOther;
+            beneficiaryCheckboxes.forEach(checkbox => {
+                checkbox.disabled = !isAssessmentOrOther;
+            });
             
             // Family member options
             const familyAttendees = document.getElementById('familyAttendees');
             const familySearch = document.getElementById('familySearch');
             const familyCheckboxes = document.querySelectorAll('input[name="participants[family_member][]"]');
             
-            familyAttendees.classList.toggle('disabled', !isAssessmentOrOther);
-            familySearch.disabled = !isAssessmentOrOther;
+            if (familyAttendees) familyAttendees.classList.toggle('disabled', !isAssessmentOrOther);
+            if (familySearch) familySearch.disabled = !isAssessmentOrOther;
             familyCheckboxes.forEach(checkbox => {
                 checkbox.disabled = !isAssessmentOrOther;
             });
@@ -1229,24 +1328,7 @@
                 delay: 5000,
                 autohide: true
             });
-        }
-        
-        // Setup attendee search and selection for each participant type
-        setupAttendeeSearch('staffSearch', 'staffDropdown', 'staffAttendees');
-        setupAttendeeSearch('beneficiarySearch', 'beneficiaryDropdown', 'beneficiaryAttendees');
-        setupAttendeeSearch('familySearch', 'familyDropdown', 'familyAttendees');
-        
-        function setupAttendeeSearch(searchId, dropdownId, containerDivId) {
-            const searchInput = document.getElementById(searchId);
-            const dropdown = document.getElementById(dropdownId);
-            const containerDiv = document.getElementById(containerDivId);
-            
-            toast.show();
-            
-            // Remove from DOM after hiding
-            toastElement.addEventListener('hidden.bs.toast', function() {
-                this.remove();
-            });
+            toast.show(); // Add this line
         }
         
         // Setup attendee search and selection for each participant type
@@ -1264,6 +1346,18 @@
             // Show dropdown when clicking on the container
             containerDiv.addEventListener('click', function(e) {
                 if (!searchInput.disabled) {
+                    // Make sure checkboxes exist before showing dropdown
+                    dropdown.querySelectorAll('.attendee-option').forEach(option => {
+                        if (!option.querySelector('.attendee-checkbox')) {
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.className = 'attendee-checkbox';
+                            checkbox.name = `participants[${option.dataset.type}][]`;
+                            checkbox.value = option.dataset.id;
+                            option.insertBefore(checkbox, option.firstChild);
+                        }
+                    });
+                    
                     dropdown.style.display = 'block';
                     searchInput.focus();
                 }
@@ -1282,71 +1376,140 @@
                 const options = dropdown.querySelectorAll('.attendee-option');
                 
                 options.forEach(option => {
-                    const name = option.querySelector('span').textContent.toLowerCase();
-                    option.style.display = name.includes(searchTerm) ? 'block' : 'none';
+                    const nameEl = option.querySelector('span');
+                    if (nameEl) {
+                        const name = nameEl.textContent.toLowerCase();
+                        option.style.display = name.includes(searchTerm) ? 'block' : 'none';
+                    }
                 });
             });
             
-            // Handle checkbox selection
-            const checkboxes = dropdown.querySelectorAll('.attendee-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const option = this.closest('.attendee-option');
-                    const id = option.dataset.id;
-                    const type = option.dataset.type;
-                    const name = option.querySelector('span').textContent;
+            // Fix all attendee options to ensure they have checkboxes
+            dropdown.querySelectorAll('.attendee-option').forEach(option => {
+                // Check if option already has a checkbox
+                let checkbox = option.querySelector('.attendee-checkbox');
+                if (!checkbox) {
+                    // If not, create and insert a checkbox
+                    checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'attendee-checkbox';
+                    checkbox.name = `participants[${option.dataset.type}][]`;
+                    checkbox.value = option.dataset.id;
                     
-                    if (this.checked) {
-                        addAttendeeTag(containerDiv, id, type, name);
-                    } else {
-                        removeAttendeeTag(containerDiv, id, type);
-                    }
-                });
+                    // Insert checkbox as the first child of the option
+                    option.insertBefore(checkbox, option.firstChild);
+                    
+                    // Remove any text nodes that might be present (like "flex")
+                    option.childNodes.forEach(node => {
+                        if (node.nodeType === 3 && node.textContent.trim()) {
+                            node.remove();
+                        }
+                    });
+                }
+            });
+            
+            // Make entire attendee option clickable
+            dropdown.addEventListener('click', function(e) {
+                // Find the closest attendee-option from the click target
+                const option = e.target.closest('.attendee-option');
+                if (!option) return; // Click wasn't on an option
+                
+                // Don't handle if clicking directly on the checkbox
+                if (e.target.type === 'checkbox') return;
+                
+                // Find or create checkbox inside this option
+                let checkbox = option.querySelector('.attendee-checkbox');
+                if (!checkbox) {
+                    checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'attendee-checkbox';
+                    checkbox.name = `participants[${option.dataset.type}][]`;
+                    checkbox.value = option.dataset.id;
+                    option.insertBefore(checkbox, option.firstChild);
+                }
+                
+                // Toggle checkbox
+                checkbox.checked = !checkbox.checked;
+                
+                // Get the data we need
+                const id = option.dataset.id;
+                const type = option.dataset.type;
+                const nameEl = option.querySelector('span');
+                const name = nameEl ? nameEl.textContent : 'Unknown';
+                
+                // Handle selection status
+                if (checkbox.checked) {
+                    addAttendeeTag(containerDiv, id, type, name);
+                    option.classList.add('selected');
+                } else {
+                    removeAttendeeTag(containerDiv, id, type);
+                    option.classList.remove('selected');
+                }
             });
         }
         
         // Add attendee tag to the container
         function addAttendeeTag(container, id, type, name) {
             // Check if tag already exists
-            if (container.querySelector(`.attendee-tag[data-id="${id}"][data-type="${type}"]`)) {
-                return;
+            const existingTag = container.querySelector(`.attendee-tag[data-id="${id}"][data-type="${type}"]`);
+            if (existingTag) {
+                return; // Tag already exists, don't add again
             }
             
+            // Create tag element
             const tag = document.createElement('div');
             tag.className = 'attendee-tag';
             tag.dataset.id = id;
             tag.dataset.type = type;
-            tag.innerHTML = `
-                ${name}
-                <span class="attendee-remove"><i class="bi bi-x"></i></span>
-            `;
             
-            // Add remove event
-            tag.querySelector('.attendee-remove').addEventListener('click', function(e) {
-                e.stopPropagation();
-                const tagElement = this.closest('.attendee-tag');
-                const id = tagElement.dataset.id;
-                const type = tagElement.dataset.type;
-                
-                // Uncheck the corresponding checkbox
-                const dropdown = container.nextElementSibling;
-                const checkbox = dropdown.querySelector(`.attendee-option[data-id="${id}"][data-type="${type}"] input`);
-                if (checkbox) checkbox.checked = false;
-                
-                // Remove the tag
-                tagElement.remove();
+            // Add text content
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+            tag.appendChild(nameSpan);
+            
+            // Add remove button
+            const removeBtn = document.createElement('span');
+            removeBtn.className = 'attendee-remove';
+            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+            removeBtn.addEventListener('click', function() {
+                removeAttendeeTag(container, id, type);
             });
+            tag.appendChild(removeBtn);
             
-            // Add before the input
-            const input = container.querySelector('input');
-            container.insertBefore(tag, input);
+            // Add tag to container
+            container.insertBefore(tag, container.querySelector('.attendees-input'));
+            
+            // Create hidden input for form submission and add it to the FORM element
+            const form = document.getElementById('addAppointmentForm');
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = `participants[${type}][]`;
+            hiddenInput.value = id;
+            hiddenInput.className = `participant-input-${type}-${id}`; // Add a class for easier identification
+            
+            // Add the hidden input to the form element, not the container
+            form.appendChild(hiddenInput);
         }
         
         // Remove attendee tag from the container
         function removeAttendeeTag(container, id, type) {
+            // Remove the tag
             const tag = container.querySelector(`.attendee-tag[data-id="${id}"][data-type="${type}"]`);
             if (tag) {
                 tag.remove();
+            }
+            
+            // Remove the hidden input from the form
+            const form = document.getElementById('addAppointmentForm');
+            const input = form.querySelector(`.participant-input-${type}-${id}`);
+            if (input) {
+                input.remove();
+            }
+            
+            // If it's a checkbox, uncheck it
+            const checkbox = document.querySelector(`input[type="checkbox"][value="${id}"][data-type="${type}"]`);
+            if (checkbox) {
+                checkbox.checked = false;
             }
         }
         
@@ -1450,10 +1613,13 @@
                 // Display full details in the side panel
                 const event = info.event;
                 
-                // Format participants list
+                // Format participants list - WITH DEDUPLICATION
                 let attendeesList = '';
                 if (event.extendedProps.participants && event.extendedProps.participants.length > 0) {
-                    attendeesList = event.extendedProps.participants.map(p => 
+                    // Deduplicate participants first
+                    const uniqueParticipants = deduplicateParticipants(event.extendedProps.participants);
+                    
+                    attendeesList = uniqueParticipants.map(p => 
                         `<li>${p.name} ${p.is_organizer ? '<span class="badge bg-info">Organizer</span>' : ''}</li>`
                     ).join('');
                 } else {
@@ -1635,6 +1801,11 @@
             // Reset attendance tags
             document.querySelectorAll('#staffAttendees .attendee-tag, #beneficiaryAttendees .attendee-tag, #familyAttendees .attendee-tag')
                 .forEach(tag => tag.remove());
+
+            // Remove all participant hidden inputs
+            document.querySelectorAll('input[name^="participants["]').forEach(input => {
+                input.remove();
+            });
             
             // Reset checkboxes
             document.querySelectorAll('.attendee-checkbox').forEach(checkbox => {
@@ -1875,10 +2046,16 @@
             document.querySelectorAll('.attendee-checkbox').forEach(checkbox => {
                 checkbox.checked = false; // Reset all checkboxes first
             });
+            
+             // Deduplicate participants before processing
+            const uniqueParticipants = deduplicateParticipants(participants);
+
+            // Process participants using the new function
+            processParticipantsForEdit(participants);
         }
         
-        function resetAppointmentForm() {
-            if (!addAppointmentForm) return; // Add this safety check
+        function processParticipantsForEdit(participants) {
+            if (!participants) return;
             
             // Group participants by type
             const groupedParticipants = {
@@ -1890,15 +2067,6 @@
             participants.forEach(p => {
                 if (p && p.type && groupedParticipants[p.type]) {
                     groupedParticipants[p.type].push(p);
-                    
-                    // Also check the corresponding checkbox
-                    const checkbox = document.querySelector(`.attendee-option[data-id="${p.id}"][data-type="${p.type}"] input`);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                        console.log(`Checked checkbox for ${p.type} ${p.id} (${p.name})`);
-                    } else {
-                        console.warn(`Checkbox not found for ${p.type} ${p.id} (${p.name})`);
-                    }
                 }
             });
             
@@ -1938,7 +2106,10 @@
         // Update the form submission handler to handle editing
         document.getElementById('submitAppointment').addEventListener('click', function(e) {
             e.preventDefault();
-            
+
+            // Store a reference to the button
+            const submitButton = this;
+
             // Reset error messages
             hideModalErrors();
             
@@ -2065,18 +2236,23 @@
                     if (response.success) {
                         addAppointmentModal.hide();
                         
-                        // Show success message
-                        showToast('Success', 
-                            isEditing ? 'Appointment updated successfully!' : 'Appointment created successfully!',
-                            'success');
-                        
-                        // Refresh calendar
+                        // IMPORTANT: Add a slight delay to show the toast after modal is hidden
                         setTimeout(function() {
+                            // Show success message
+                            showToast('Success', 
+                                isEditing ? 'Appointment updated successfully!' : 'Appointment created successfully!',
+                                'success');
+                            
+                            // Refresh calendar
                             calendar.refetchEvents();
-                        }, 500);
+                        }, 300);
                     } else {
                         // Show error message
                         showModalErrors([response.message || 'An unknown error occurred']);
+
+                        // Always re-enable the button on error
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalBtnHtml;
                     }
                 },
                 error: function(xhr) {
@@ -2099,11 +2275,22 @@
                     } else {
                         showModalErrors(['An error occurred while saving the appointment. Please try again.']);
                     }
+
+                    // Always re-enable the button on error
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalBtnHtml;
+
                 },
                 complete: function() {
                     // Reset button state
                     document.getElementById('submitAppointment').disabled = false;
                     document.getElementById('submitAppointment').innerHTML = originalBtnHtml;
+
+                    // Reset button state if modal is still open
+                    if (document.getElementById('addAppointmentModal').classList.contains('show')) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalBtnHtml;
+                    }
                 }
             });
         });
@@ -2252,6 +2439,23 @@
                 confirmButton.innerHTML = originalButtonText;
             });
         });
+
+        function deduplicateParticipants(participants) {
+            if (!participants || !Array.isArray(participants)) return [];
+            
+            const uniqueMap = new Map();
+            
+            // Use a Map with composite key of type+id to ensure uniqueness
+            participants.forEach(p => {
+                if (p && p.id && p.type) {
+                    const key = `${p.type}-${p.id}`;
+                    uniqueMap.set(key, p);
+                }
+            });
+            
+            // Convert back to array
+            return Array.from(uniqueMap.values());
+        }
 
     });
     
