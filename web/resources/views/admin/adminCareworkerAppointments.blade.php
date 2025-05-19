@@ -490,9 +490,15 @@
                                 </div>
                                 <div class="card-body p-0">
                                     <div id="calendar-container">
-                                        <div id="calendar-loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
+                                        <!-- Loading spinner -->
+                                        <div id="calendar-spinner" class="position-absolute w-100 h-100" style="display: none; z-index: 10; background: rgba(255,255,255,0.8);">
+                                            <div class="d-flex justify-content-center align-items-center h-100">
+                                                <div class="text-center">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    <p class="mt-2 spinner-message">Loading appointments...</p>
+                                                </div>
                                             </div>
                                         </div>
                                         <div id="calendar" class="p-3"></div>
@@ -804,7 +810,23 @@
     <!-- Add this line to include the timegrid plugin -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/timegrid/main.min.js"></script>
     <script>
+
+        function showCalendarSpinner(message = 'Loading appointments...') {
+            const spinner = document.getElementById('calendar-spinner');
+            const spinnerMessage = spinner.querySelector('.spinner-message');
+            spinnerMessage.textContent = message;
+            spinner.style.display = 'block';
+        }
+
+        function hideCalendarSpinner() {
+            const spinner = document.getElementById('calendar-spinner');
+            spinner.style.display = 'none';
+        }
+
     document.addEventListener('DOMContentLoaded', function() {
+        // Show spinner initially
+        showCalendarSpinner('Loading appointments...');
+
         // Setup CSRF token for all AJAX requests
         $.ajaxSetup({
             headers: {
@@ -952,10 +974,7 @@
                         console.error('Error fetching events:', xhr.responseText);
                     },
                     complete: function() {
-                        // Always ensure loading indicator is hidden
-                        if (document.getElementById('calendar-loading-indicator')) {
-                            document.getElementById('calendar-loading-indicator').style.display = 'none';
-                        }
+                        hideCalendarSpinner();
                     }
                 });
             },
@@ -1073,10 +1092,23 @@
             resetButton.className = 'btn btn-sm btn-outline-secondary';
             resetButton.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
             resetButton.addEventListener('click', function() {
+                // Clear search input field
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                
+                // Reset care worker filter if it exists
+                const careWorkerSelect = document.getElementById('careWorkerSelect');
+                if (careWorkerSelect && careWorkerSelect.tagName === 'SELECT') {
+                    careWorkerSelect.selectedIndex = 0;
+                }
+                
+                // Reset calendar
                 calendar.removeAllEvents();
                 calendar.today();
                 calendar.refetchEvents();
-                showSuccessMessage('Calendar reset successfully');
+                showSuccessMessage('Calendar and search filters reset successfully');
             });
             
             calendarActions.insertBefore(resetButton, calendarActions.firstChild);
@@ -1220,6 +1252,33 @@
                     <div class="detail-section">
                         <div class="section-title"><i class="bi bi-geo-alt-fill"></i> Location</div>
                         <div class="detail-value">${event.extendedProps.address || 'Not Available'}</div>
+                    </div>
+                    
+                    <!-- Add confirmation status section -->
+                    <div class="detail-section">
+                        <div class="section-title"><i class="bi bi-check-circle"></i> Confirmation Status</div>
+                        <div class="detail-item">
+                            <div class="detail-label">Beneficiary: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_beneficiary ? 'Confirmed' : 'Not Confirmed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Family: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_family ? 'Confirmed' : 'Not Confirmed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Confirmed On: </div>
+                            <div class="detail-value">
+                                ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : 'Not confirmed yet'}
+                            </div>
+                        </div>
                     </div>
                     
                     ${event.extendedProps.notes ? `
