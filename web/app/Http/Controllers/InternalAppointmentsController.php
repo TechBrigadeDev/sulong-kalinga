@@ -58,12 +58,6 @@ class InternalAppointmentsController extends Controller
             $familyMembers = FamilyMember::orderBy('first_name')
                 ->get(['family_member_id', 'first_name', 'last_name', 'related_beneficiary_id']);
         }
-        if ($user->role_id === 3) {
-            $appointmentsQuery->whereHas('participants', function ($query) use ($user) {
-                $query->where('participant_type', 'cose_user')
-                    ->where('participant_id', $user->id);
-            });
-        }
         
         // Base view data
         $viewData = [
@@ -145,9 +139,10 @@ class InternalAppointmentsController extends Controller
         $startDateFormatted = $startDate->format('Y-m-d');
         $endDateFormatted = $endDate->format('Y-m-d');
         
-        try {
-            $events = [];
-            
+        // Initialize events array
+        $events = [];
+        
+        // Define query outside of try block to ensure it's always available
         $appointmentsQuery = Appointment::with([
             'type',                   
             'participants',          
@@ -158,14 +153,15 @@ class InternalAppointmentsController extends Controller
             $query->whereBetween('occurrence_date', [$startDateFormatted, $endDateFormatted]);
         });
             
-            // If user is a care worker, only show appointments they're participating in
-            if ($user->role_id === 3) {
-                $appointmentsQuery->whereHas('participants', function ($query) use ($user) {
-                    $query->where('participant_type', 'cose_user')
-                        ->where('participant_id', $user->id);
-                });
-            }
-            
+        // For care workers, only get appointments they're involved in
+        if ($user->role_id >= 3) {
+            $appointmentsQuery->whereHas('participants', function ($query) use ($user) {
+                $query->where('participant_type', 'cose_user')
+                    ->where('participant_id', $user->id);
+            });
+        }
+        
+        try {
             $appointments = $appointmentsQuery->get();
                 
             foreach ($appointments as $appointment) {
@@ -199,6 +195,7 @@ class InternalAppointmentsController extends Controller
                             'status' => ucfirst($occurrence->status),
                             'is_flexible_time' => $appointment->is_flexible_time,
                             'notes' => $occurrence->notes ?? $appointment->notes,
+                            'date' => $occurrence->occurrence_date->format('Y-m-d'),
                             'participants' => $this->formatParticipants($appointment->participants),
                             'recurring' => $appointment->recurringPattern ? true : false,
                             'recurring_pattern' => $appointment->recurringPattern ? [
