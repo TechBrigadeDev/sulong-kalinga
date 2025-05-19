@@ -606,25 +606,26 @@ class VisitationController extends Controller
      */
     private function splitRecurringAppointment(Visitation $originalVisitation, Carbon $splitDate, array $newData)
     {
-        // STEP 1: Create a new visitation for future occurrences using direct SQL
+        // STEP 1: Create a new visitation for future occurrences
         $newVisitationId = DB::table('visitations')->insertGetId([
             'care_worker_id' => $newData['care_worker_id'],
             'beneficiary_id' => $newData['beneficiary_id'],
-            'visitation_date' => $newData['visitation_date'],
             'visit_type' => $newData['visit_type'],
+            'visitation_date' => $newData['visitation_date'],
             'is_flexible_time' => $newData['is_flexible_time'] ? 1 : 0,
             'start_time' => $newData['is_flexible_time'] ? null : $newData['start_time'],
             'end_time' => $newData['is_flexible_time'] ? null : $newData['end_time'],
-            'notes' => $newData['notes'],
-            'status' => 'scheduled',
+            'notes' => $newData['notes'] ?? null,
             'date_assigned' => now(),
             'assigned_by' => Auth::id(),
+            'status' => 'scheduled',
             'created_at' => now(),
             'updated_at' => now()
-        ], 'visitation_id');  // Specify the primary key column name here
+        ], 'visitation_id');
         
         // STEP 2: Create the new pattern for future occurrences if needed
         if ($newData['is_recurring']) {
+            // Create new recurring pattern
             $newPatternId = DB::table('recurring_patterns')->insertGetId([
                 'visitation_id' => $newVisitationId,
                 'pattern_type' => $newData['pattern_type'] ?? 'weekly',
@@ -634,114 +635,88 @@ class VisitationController extends Controller
                 'recurrence_end' => $newData['recurrence_end'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now()
-            ], 'pattern_id');  // Specify the primary key column name here
+            ], 'pattern_id');
             
+            // STEP 2.5: Generate occurrences for the new visitation
+            $newVisitation = Visitation::find($newVisitationId);
+            if ($newVisitation) {
+                $newVisitation->generateOccurrences(6); // Generate 6 months of occurrences
+            }
         }
 
-       // STEP 2.5: Create exceptions for the original pattern for all dates that will be covered by the new pattern
+        // STEP 3: Create exceptions for the original pattern for all dates covered by the new pattern
         if ($newData['is_recurring']) {
             $newStartDate = Carbon::parse($newData['visitation_date']);
             
-            // Get the original pattern FIRST
+            // Get the original pattern details
             $originalPattern = $originalVisitation->recurringPattern;
-            
-            // Now use the pattern
-            $originalEndDate = $newData['original_recurrence_end'] ?? $originalPattern->recurrence_end;
-            $originalDate = Carbon::parse($originalVisitation->visitation_date);
-            $patternType = $originalPattern->pattern_type;
-            $currentDate = $originalDate->copy();
-            
-            // Calculate the end date for exception creation 
-            $exceptionEndDate = null;
-            if ($originalEndDate) {
-                $exceptionEndDate = Carbon::parse($originalEndDate);
-            } else {
-                // If no end date, use a reasonable future date (e.g., 1 year from now)
-                $exceptionEndDate = Carbon::now()->addYear();
-            }
-            
-            // Create exceptions for all future occurrences from the new start date
-            while ($currentDate <= $exceptionEndDate) {
-                // Only create exceptions for dates on or after the new pattern start date
-                if ($currentDate >= $newStartDate) {
-                    // Add an exception for this date
-                    DB::table('visitation_exceptions')->insert([
-                        'visitation_id' => $originalVisitation->visitation_id,
-                        'exception_date' => $currentDate->format('Y-m-d'),
-                        'status' => 'skipped',  // Use 'skipped' instead of 'canceled' to hide it without showing as canceled
-                        'reason' => 'Modified - see updated appointment',
-                        'created_by' => Auth::id(),
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
+            if ($originalPattern) {
+                // Calculate the end date for exception creation 
+                $exceptionEndDate = $originalPattern->recurrence_end ?? Carbon::now()->addYear();
                 
-                // Advance to next occurrence based on pattern type
-                if ($patternType === 'daily') {
-                    $currentDate->addDay();
-                } elseif ($patternType === 'weekly') {
-                    if ($originalVisitation->recurringPattern->day_of_week) {
-                        // Handle weekly pattern with specific days
-                        // (Use the same logic as in your getVisitations method)
-                        $dayArray = is_string($originalVisitation->recurringPattern->day_of_week) ? 
-                            array_map('intval', explode(',', $originalVisitation->recurringPattern->day_of_week)) : 
-                            [intval($originalVisitation->recurringPattern->day_of_week)];
-                        
-                        // Sort days to find the next one
-                        sort($dayArray);
-                        
-                        $currentDayOfWeek = $currentDate->dayOfWeek;
-                        $nextDay = null;
-                        
-                        foreach ($dayArray as $day) {
-                            if ($day > $currentDayOfWeek) {
-                                $nextDay = $day;
-                                break;
-                            }
-                        }
-                        
-                        if ($nextDay === null) {
-                            // No days left in this week, move to first day of next week
-                            $nextDay = $dayArray[0];
-                            $daysToAdd = 7 - $currentDayOfWeek + $nextDay;
-                            $currentDate->addDays($daysToAdd);
-                        } else {
-                            // Move to next day in the same week
-                            $daysToAdd = $nextDay - $currentDayOfWeek;
-                            $currentDate->addDays($daysToAdd);
-                        }
-                    } else {
-                        // Simple weekly pattern (same day each week)
-                        $currentDate->addWeek();
+                // Get the pattern type
+                $patternType = $originalPattern->pattern_type;
+                
+                // Start from the original visitation date
+                $currentDate = Carbon::parse($originalVisitation->visitation_date);
+                
+                // Create exceptions for all future occurrences from the split date
+                while ($currentDate <= $exceptionEndDate) {
+                    // Only create exceptions for dates on or after the new pattern start date
+                    if ($currentDate >= $splitDate) {
+                        // Add an exception for this date
+                        DB::table('visitation_exceptions')->insert([
+                            'visitation_id' => $originalVisitation->visitation_id,
+                            'exception_date' => $currentDate->format('Y-m-d'),
+                            'status' => 'skipped',  // Use 'skipped' instead of 'canceled' to hide it without showing as canceled
+                            'reason' => 'Modified - see updated appointment',
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
                     }
-                } elseif ($patternType === 'monthly') {
-                    $currentDate->addMonth();
+                    
+                    // Advance to next occurrence based on pattern type
+                    if ($patternType === 'daily') {
+                        $currentDate->addDay();
+                    } elseif ($patternType === 'weekly') {
+                        if (strpos($originalPattern->day_of_week, ',') !== false) {
+                            // Handle multiple days per week
+                            $dayArray = array_map('intval', explode(',', $originalPattern->day_of_week));
+                            sort($dayArray);
+                            
+                            $currentDayOfWeek = $currentDate->dayOfWeek;
+                            $nextDay = null;
+                            
+                            foreach ($dayArray as $day) {
+                                if ($day > $currentDayOfWeek) {
+                                    $nextDay = $day;
+                                    break;
+                                }
+                            }
+                            
+                            if ($nextDay === null) {
+                                // No days left in this week, move to first day of next week
+                                $nextDay = $dayArray[0];
+                                $daysToAdd = 7 - $currentDayOfWeek + $nextDay;
+                                $currentDate->addDays($daysToAdd);
+                            } else {
+                                // Move to next day in the same week
+                                $daysToAdd = $nextDay - $currentDayOfWeek;
+                                $currentDate->addDays($daysToAdd);
+                            }
+                        } else {
+                            // Simple weekly pattern (same day each week)
+                            $currentDate->addWeek();
+                        }
+                    } elseif ($patternType === 'monthly') {
+                        $currentDate->addMonth();
+                    }
                 }
             }
         }
         
-        // STEP 3: Update the original pattern - ACTUALLY preserve the original end date
-        $originalPattern = $originalVisitation->recurringPattern;
-        $originalEndDate = $newData['original_recurrence_end'] ?? $originalPattern->recurrence_end;
-        
-        // RESTORE the original end date 
-        DB::table('recurring_patterns')
-            ->where('pattern_id', $originalPattern->pattern_id)
-            ->update([
-                'recurrence_end' => $originalEndDate,
-                'updated_at' => now()
-            ]);
-        
-        // STEP 4: Verify both records exist through direct SQL
-        $originalStillExists = DB::table('visitations')
-            ->where('visitation_id', $originalVisitation->visitation_id)
-            ->exists();
-        
-        $newExists = DB::table('visitations')
-            ->where('visitation_id', $newVisitationId)
-            ->exists();
-        
-        // Return a new Visitation model instance for the new record
+        // Return the newly created visitation
         return Visitation::find($newVisitationId);
     }
 
@@ -855,16 +830,22 @@ class VisitationController extends Controller
             // Store the new date here to ensure it's defined for all code paths
             $newVisitationDate = $visitation->visitation_date->format('Y-m-d');
 
-            // IMPORTANT: Delete the old base occurrence if date changed, regardless of recurrence
-            if ($originalVisitationDate !== $newVisitationDate) {
-                // Delete the occurrence for the old date
-                $this->forceDeleteOccurrencesByDate($visitation->visitation_id, $originalVisitationDate);
+            // IMPORTANT: Handle date changes for recurring appointments properly
+            if ($originalVisitationDate !== $newVisitationDate && $visitation->recurringPattern) {
+                $originalDate = Carbon::parse($originalVisitationDate);
+                $newDate = Carbon::parse($newVisitationDate);
                 
-                \Log::info('Base date changed for appointment, deleted old occurrence', [
-                    'visitation_id' => $visitation->visitation_id,
-                    'old_date' => $originalVisitationDate,
-                    'new_date' => $newVisitationDate
-                ]);
+                // Special handling for daily pattern - need to clean up all intermediate dates too
+                if ($visitation->recurringPattern->pattern_type === 'daily') {
+                    \Log::info('Cleaning up all occurrences for daily recurring pattern after date change', [
+                        'visitation_id' => $visitation->visitation_id,
+                        'original_date' => $originalVisitationDate,
+                        'new_date' => $newVisitationDate
+                    ]);
+                    
+                    // Delete ALL occurrences - we'll regenerate them properly afterward
+                    VisitationOccurrence::where('visitation_id', $visitation->visitation_id)->delete();
+                }
             }
             
             // 3. Handle recurring pattern updates
@@ -988,23 +969,6 @@ class VisitationController extends Controller
                 // For non-recurring appointments, handle date changes properly
                 $newVisitationDate = $visitation->visitation_date->format('Y-m-d');
                 
-                // If the date was changed, delete the old occurrence
-                // Inside the date change block for non-recurring appointments:
-                if ($originalVisitationDate !== $newVisitationDate) {
-                    // Delete the old occurrence with a forced approach
-                    $this->forceDeleteOccurrencesByDate($visitation->visitation_id, $originalVisitationDate);
-                    
-                    // Force the removal through a direct SQL query as a backup
-                    DB::statement('DELETE FROM visitation_occurrences WHERE visitation_id = ? AND occurrence_date = ?', 
-                        [$visitation->visitation_id, $originalVisitationDate]);
-                        
-                    \Log::info('Date change detected - deleted old occurrence', [
-                        'visitation_id' => $visitation->visitation_id,
-                        'old_date' => $originalVisitationDate,
-                        'new_date' => $newVisitationDate
-                    ]);
-                }
-
                 // Now create/update the occurrence for the new date
                 $occurrence = VisitationOccurrence::updateOrCreate(
                     ['visitation_id' => $visitation->visitation_id, 'occurrence_date' => $newVisitationDate],
