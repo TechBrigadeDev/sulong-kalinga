@@ -1,5 +1,5 @@
 import { Button, Form, ScrollView, XStack, YStack } from "tamagui";
-import { IFamilyMember } from "../../../../user.schema";
+import { IFamilyMember } from "~/user.schema";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import PersonalDetailsSection from "./PersonalDetailsSection";

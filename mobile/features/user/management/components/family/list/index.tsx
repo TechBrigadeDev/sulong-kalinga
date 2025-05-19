@@ -4,7 +4,7 @@ import { Button, Card, Text, View } from "tamagui";
 import { familyListStore } from "./store";
 import { useRouter } from "expo-router";
 import FamilySearch from "./search";
-import { IFamilyMember } from "../../../../user.schema";
+import { IFamilyMember } from "~/user.schema";
 
 const FamilyList = () => {
     const router = useRouter();

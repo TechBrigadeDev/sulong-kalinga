@@ -35,3 +35,18 @@ export const beneficiarySchema = z.object({
     updated_by: z.number(),
 })
 export type IBeneficiary = z.infer<typeof beneficiarySchema>; 
+
+export const userStatusSchema = z.enum(["Active", "Inactive"]);
+export type IUserStatus = z.infer<typeof userStatusSchema>;
+
+export const userSchema = z.object({
+    email: z.string(),
+    first_name: z.string(),
+    id: z.number(),
+    last_name: z.string(),
+    mobile: z.string(),
+    photo: z.string().nullable(),
+    role: z.enum(["admin", "user"]),
+    status: userStatusSchema,
+})
+export type IUser = z.infer<typeof userSchema>;

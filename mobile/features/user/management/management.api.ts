@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { axiosClient } from "../../../common/api";
+import { axiosClient } from "~/common/api";
 import { userManagementSchema } from "./management.schema";
 
 class UserManagementController {

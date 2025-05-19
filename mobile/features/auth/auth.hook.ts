@@ -1,15 +1,13 @@
 import { useRouter } from "expo-router";
 import { authStore } from "./auth.store"
 import { useMutation } from "@tanstack/react-query";
-import { QK } from "../../common/query";
+import { QK } from "~/common/query";
 import authController from "./auth.api";
-
 
 export const useLogin = () => {
     const { 
         setToken
     } = authStore();
-    const router = useRouter();
 
     const {
         mutateAsync: login,
@@ -22,7 +20,6 @@ export const useLogin = () => {
         },
         onSuccess: (data) => {
             setToken(data.token);
-            router.replace("/(tabs)");
         },
         onError: (error) => {
             console.error("Login failed", error);

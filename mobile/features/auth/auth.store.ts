@@ -1,6 +1,6 @@
 import { create, StateCreator } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { secureStorage } from "../../common/storage/secure.store";
+import { secureStorage } from "~/common/storage/secure.store";
 
 
 interface State {

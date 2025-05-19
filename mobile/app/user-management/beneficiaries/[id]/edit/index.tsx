@@ -3,7 +3,6 @@ import { Text, View } from "tamagui";
 import { useGetBeneficiary } from "../../../../../features/user/management/management.hook";
 import BeneficiaryForm from "../../../../../features/user/management/components/beneficiaries/BeneficiaryForm";
 
-
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
