@@ -19,7 +19,10 @@ function DrawerIcon(props: {
 function CustomDrawerContent(props: any) {
   const { user } = userStore();
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
+    <DrawerContentScrollView 
+      {...props} 
+      contentContainerStyle={{ flex: 1 }}
+    >
       <View style={styles.avatarContainer}>
         <View style={styles.avatarCircle}>
           <FontAwesome name="user-circle" size={64} color="#ccc" />
@@ -79,31 +82,10 @@ export default function DrawerLayout() {
         drawerContent={props => <CustomDrawerContent {...props} />}
         screenOptions={{
           drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          drawerType: 'front',
           headerShown: true,
         }}
       >
-        <Drawer.Screen
-          name="index"
-          options={{
-            title: 'Home',
-            drawerIcon: ({ color }) => <DrawerIcon name="home" color={color} />, 
-          }}
-        />
-        <Drawer.Screen
-          name="user-management"
-          options={{
-            title: 'User Management',
-            drawerIcon: ({ color }) => <DrawerIcon name="user" color={color} />, 
-          }}
-        />
-        <Drawer.Screen
-          name="options"
-          options={{
-            title: 'Options',
-            drawerIcon: ({ color }) => <DrawerIcon name="cog" color={color} />, 
-          }}
-           
-        />
       </Drawer>
     </GestureHandlerRootView>
   );
