@@ -27,7 +27,7 @@ use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\CareWorkerTrackingController;
-
+use App\Http\Controllers\AiSummaryController;
 
 
 // All routes with administrator role check

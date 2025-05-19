@@ -74,6 +74,7 @@
             padding: 1rem;
             margin-bottom: 1.5rem;
             overflow-x: auto; /* Enable horizontal scrolling */
+            position: relative;
         }
         
         #calendar {
@@ -650,6 +651,16 @@
                         <!-- Calendar Column -->
                         <div class="col-lg-8 col-md-7 mb-4">
                             <div class="card">
+
+                            <div id="calendar-spinner" class="calendar-loading-overlay">
+                                <div class="spinner-container">
+                                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-primary">Loading appointments...</p>
+                                </div>
+                            </div>
+
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="section-heading">
                                         <i class="bi bi-calendar3"></i> Internal Appointment Calendar
@@ -1024,7 +1035,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
+            let currentSearchTerm = '';
+            let isApplyingStoredSearch = false;
             let originalIsRecurring = false;
+            let eventCache = new Map();  // <-- Moved for persistent filtering
 
             // Find the button that opens the "Add Appointment" modal
             const scheduleNewButton = document.querySelector('.action-btn[data-bs-toggle="modal"][data-bs-target="#addAppointmentModal"]');
@@ -1241,7 +1255,11 @@
             const searchInput = document.querySelector('.search-input');
             if (searchInput) {
                 searchInput.value = '';
+                currentSearchTerm = '';
             }
+            
+            // Show spinner during reset
+            showCalendarSpinner('Resetting calendar...');
             
             // Reset calendar view to month if not already
             if (currentView !== 'dayGridMonth') {
@@ -1271,9 +1289,12 @@
                     <p class="mt-3 mb-0">Select an appointment to view details</p>
                 </div>
             `;
-            
-            // Show success message
-            showToast('Success', 'Calendar reset successfully', 'success');
+
+             // Hide spinner when done
+            setTimeout(() => {
+                hideCalendarSpinner();
+                showToast('Success', 'Calendar reset successfully', 'success');
+            }, 300);
         });
 
         // Add the toast function from CareworkerAppointments
@@ -1523,6 +1544,7 @@
             },
             eventDisplay: 'block',
             events: function(info, successCallback, failureCallback) {
+                showCalendarSpinner('Loading appointments...');
                 // Fetch events from server based on date range
                 fetch('/care-manager/internal-appointments/get-appointments?start=' + info.startStr + '&end=' + info.endStr + '&view_type=' + currentView, {
                     method: 'GET',
@@ -1538,11 +1560,35 @@
                     return response.json();
                 })
                 .then(data => {
-                    successCallback(data);
+                    // First provide the data to the calendar
+                    successCallback(data);                    
+                    // If there's an active search term, reapply it after the events are rendered
+                    if (currentSearchTerm && currentSearchTerm.trim() !== '') {
+                        // Clear the event cache when loading new data
+                        eventCache.clear();
+
+                        // Keep spinner visible during filtering with message
+                        showCalendarSpinner('Filtering appointments...');
+                        
+                        // Give calendar time to render the events
+                        setTimeout(() => {
+                            applySearchFilter(currentSearchTerm);
+
+                            // Hide spinner only after filtering is complete
+                            hideCalendarSpinner();
+                        }, 150);
+                    }
+                    
+                    // Only hide spinner immediately if no filtering is needed
+                    hideCalendarSpinner();
                 })
                 .catch(error => {
                     console.error('Error loading appointments:', error);
                     failureCallback(error);
+                    hideCalendarSpinner();
+            
+                    // Show error message
+                    showToast('Error', 'Failed to load appointments', 'error');
                 });
             },
             eventContent: function(arg) {
@@ -1604,6 +1650,14 @@
                     arg.el.setAttribute('data-bs-placement', 'top');
                     arg.el.setAttribute('title', tooltipTitle);
                     new bootstrap.Tooltip(arg.el);
+                }
+            }, 
+            datesSet: function(info) {
+                // This fires when the calendar view changes (month/week/day) or navigates between periods
+                
+                // Only show spinner for initial page load or if we have an active search
+                if (currentSearchTerm) {
+                    showCalendarSpinner('Loading appointments...');
                 }
             },
             eventClick: function(info) {
@@ -1832,43 +1886,246 @@
             }
         }
         
-        // Search functionality
+                // Search functionality
         const searchInput = document.querySelector('.search-input');
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
+        if (searchInput) {
+            let searchTimeout = null;
             
-            if (searchTerm.length < 2) {
-                // If search term is too short, show all events
-                calendar.getEvents().forEach(event => {
-                    event.setProp('display', 'auto');
+            // Create a search spinner container and add it to the DOM
+            const searchSpinner = document.createElement('div');
+            searchSpinner.className = 'search-spinner';
+            searchSpinner.innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Searching...</span>
+                </div>
+            `;
+            document.querySelector('.search-container').appendChild(searchSpinner);
+            
+            // Add CSS for the search spinner
+            const spinnerStyle = document.createElement('style');
+            spinnerStyle.textContent = `
+                .search-spinner {
+                    position: absolute;
+                    top: calc(50% - 10px);
+                    right: 10px;
+                    display: none;
+                    z-index: 100;
+                }
+                .search-spinner .spinner-border {
+                    width: 20px;
+                    height: 20px;
+                }
+                .searching .search-spinner {
+                    display: block;
+                }
+            `;
+            document.head.appendChild(spinnerStyle);
+            
+            searchInput.addEventListener('input', function(e) {
+                // Show spinner and set up UI
+                this.classList.add('searching');
+                searchSpinner.style.display = 'block';
+                
+                // Force browser to repaint spinner before continuing
+                if (this.value.length > 1) {
+                    // Show the calendar spinner
+                    showCalendarSpinner('Searching appointments...');
+                    
+                    // Force a browser reflow/repaint to ensure spinner is visible
+                    document.getElementById('calendar-spinner').getBoundingClientRect();
+                }
+                
+                // Clear any existing timeout
+                if (searchTimeout) {
+                    clearTimeout(searchTimeout);
+                }
+                
+                // IMPORTANT: Use zero-delay timeout to let the UI update with the spinner before filtering
+                setTimeout(() => {
+                    // Set longer timeout for the actual search operation
+                    searchTimeout = setTimeout(() => {
+                        // Store the current search term
+                        currentSearchTerm = this.value.toLowerCase().trim();
+                        
+                        // Skip full filtering for empty search or very short terms
+                        if (!currentSearchTerm || currentSearchTerm.length < 2) {
+                            // Simple reset for empty searches - much faster
+                            calendar.getEvents().forEach(event => {
+                                event.setProp('display', 'block');
+                            });
+                            
+                            // Hide spinners quickly for empty searches
+                            hideCalendarSpinner();
+                            this.classList.remove('searching');
+                            searchSpinner.style.display = 'none';
+                            return;
+                        }
+                        
+                        // We'll break the filtering into chunks using requestAnimationFrame
+                        requestAnimationFrame(() => {
+                            // Start the filtering process
+                            applySearchFilter(currentSearchTerm);
+                            
+                            // Hide spinners AFTER filtering is complete
+                            hideCalendarSpinner();
+                            this.classList.remove('searching');
+                            searchSpinner.style.display = 'none';
+                        });
+                    }, 700); // Reduced timeout for better responsiveness
+                }, 0); // Zero-delay timeout to ensure UI updates first
+            });
+
+            // Extract search filter logic to a reusable function
+            function applySearchFilter(searchTerm) {
+                if (isApplyingStoredSearch) return; // Prevent recursion
+                
+                // Get all events
+                const allEvents = calendar.getEvents();
+                
+                // Cache event data if needed
+                allEvents.forEach(event => {
+                    const eventId = event.id;
+                    if (!eventCache.has(eventId)) {
+                        eventCache.set(eventId, {
+                            title: (event.title || '').toLowerCase(),
+                            type: (event.extendedProps.type || '').toLowerCase(),
+                            location: (event.extendedProps.meeting_location || '').toLowerCase(),
+                            notes: (event.extendedProps.notes || '').toLowerCase(),
+                            date: event.start ? event.start.toLocaleDateString().toLowerCase() : '',
+                            participants: event.extendedProps.participants && Array.isArray(event.extendedProps.participants) ?
+                                event.extendedProps.participants
+                                    .map(p => (p && p.name) ? p.name.toLowerCase() : '')
+                                    .filter(name => name)
+                                    .join(' ') : '',
+                            bgColor: event.extendedProps.backgroundColor || event.backgroundColor,
+                            status: event.extendedProps.status?.toLowerCase() || ''
+                        });
+                    }
                 });
-                return;
+                
+                // If search is empty, reset all events
+                if (!searchTerm) {
+                    allEvents.forEach(event => {
+                        event.setProp('display', 'block');
+                        
+                        const cachedData = eventCache.get(event.id);
+                        if (cachedData && cachedData.bgColor) {
+                            event.setProp('backgroundColor', cachedData.bgColor);
+                            event.setProp('borderColor', cachedData.bgColor);
+                        }
+                    });
+                    return;
+                }
+                
+                // Track matches for feedback message
+                let matchCount = 0;
+                
+                // Process all events
+                allEvents.forEach(event => {
+                    const cachedData = eventCache.get(event.id);
+                    if (!cachedData) return;
+                    
+                    // Check if any field includes the search term
+                    const matches = 
+                        cachedData.title.includes(searchTerm) || 
+                        cachedData.type.includes(searchTerm) || 
+                        cachedData.location.includes(searchTerm) || 
+                        cachedData.notes.includes(searchTerm) || 
+                        cachedData.participants.includes(searchTerm) ||
+                        cachedData.date.includes(searchTerm);
+                    
+                    // Toggle visibility based on match
+                    event.setProp('display', matches ? 'block' : 'none');
+                    
+                    if (matches) {
+                        matchCount++;
+                        
+                        // Restore colors for matches
+                        if (cachedData.bgColor) {
+                            event.setProp('backgroundColor', cachedData.bgColor);
+                            event.setProp('borderColor', cachedData.bgColor);
+                        }
+                    }
+                });
+                
+                // Apply special styling for canceled events
+                setTimeout(() => {
+                    document.querySelectorAll('.fc-event.canceled').forEach(el => {
+                        if (el.style.display !== 'none') {
+                            el.classList.add('canceled');
+                        }
+                    });
+                }, 50);
+                
+                // Show feedback if no matches and search term is significant
+                if (matchCount === 0 && searchTerm.length >= 2 && !isApplyingStoredSearch) {
+                    showToast('Search', 'No appointments match your search criteria', 'info');
+                }
+            }
+        }
+
+
+
+        function showCalendarSpinner(message = 'Loading appointments...') {
+            const spinner = document.getElementById('calendar-spinner');
+            if (spinner) {
+                // Update message if provided
+                const messageEl = spinner.querySelector('p');
+                if (messageEl) messageEl.textContent = message;
+                
+                // Show spinner by adding class
+                spinner.classList.add('show');
+            }
+        }
+
+        function hideCalendarSpinner() {
+            const spinner = document.getElementById('calendar-spinner');
+            if (spinner) {
+                spinner.classList.remove('show');
+            }
+        }
+
+        const spinnerStyles = document.createElement('style');
+        spinnerStyles.textContent = `
+            #calendar-container {
+                position: relative;
             }
             
-            // Filter events
-            calendar.getEvents().forEach(event => {
-                const title = event.title.toLowerCase();
-                const type = (event.extendedProps.type || '').toLowerCase();
-                const location = (event.extendedProps.meeting_location || '').toLowerCase();
-                const notes = (event.extendedProps.notes || '').toLowerCase();
-                
-                // Search in participants
-                let participantsText = '';
-                if (event.extendedProps.participants) {
-                    participantsText = event.extendedProps.participants.map(p => p.name.toLowerCase()).join(' ');
-                }
-                
-                if (title.includes(searchTerm) || 
-                    type.includes(searchTerm) || 
-                    location.includes(searchTerm) || 
-                    notes.includes(searchTerm) || 
-                    participantsText.includes(searchTerm)) {
-                    event.setProp('display', 'auto');
-                } else {
-                    event.setProp('display', 'none');
-                }
-            });
-        });
+            #calendar-spinner {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(255, 255, 255, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1050;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.2s ease;
+            }
+
+            /* These are the new styles that fix the alignment */
+            .spinner-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+            
+            .spinner-container .spinner-border {
+                margin-bottom: 0.75rem;
+            }
+            
+            #calendar-spinner.show {
+                opacity: 1;
+                visibility: visible;
+            }
+        `;
+        document.head.appendChild(spinnerStyles);
         
         // Edit button click handler
         editButton.addEventListener('click', function() {
