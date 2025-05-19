@@ -325,4 +325,57 @@ class Appointment extends Model
         
         return $count;
     }
+
+    /**
+     * Generate monthly occurrences for a recurring appointment
+     * 
+     * @param Carbon $startDate The start date for generating occurrences
+     * @param Carbon $endDate The end date for generating occurrences
+     * @return int Number of occurrences created
+     */
+    public function generateMonthlyOccurrences($startDate, $endDate)
+    {
+        if (!$this->recurringPattern) {
+            return 0;
+        }
+        
+        // Make sure we're working with Carbon instances
+        $startDate = $startDate instanceof Carbon ? $startDate : Carbon::parse($startDate);
+        $endDate = $endDate instanceof Carbon ? $endDate : Carbon::parse($endDate);
+        
+        // Don't continue if end date is in the past
+        if ($endDate->isBefore($startDate)) {
+            return 0;
+        }
+        
+        // Counter for created occurrences
+        $count = 0;
+        
+        // Generate monthly occurrences - keep the same day of the month
+        $dayOfMonth = $startDate->day;
+        $currentDate = $startDate->copy();
+        
+        while ($currentDate->lte($endDate)) {
+            // Create an occurrence for this date
+            $occurrence = $this->createOccurrence($currentDate);
+            if ($occurrence) {
+                $count++;
+            }
+            
+            // Try to move to the same day next month
+            $nextMonth = $currentDate->copy()->addMonth();
+            
+            // Handle edge cases like Feb 30 becoming Mar 2/3
+            // by setting the day explicitly to ensure we maintain the same day of month
+            try {
+                $currentDate = $nextMonth->setDay($dayOfMonth);
+            } catch (\Exception $e) {
+                // If the next month doesn't have this day (e.g., trying to get Feb 30),
+                // use the last day of the next month instead
+                $currentDate = $nextMonth->endOfMonth();
+            }
+        }
+        
+        return $count;
+    }
 }

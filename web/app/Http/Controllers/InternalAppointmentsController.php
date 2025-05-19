@@ -791,12 +791,15 @@ class InternalAppointmentsController extends Controller
         
         \Log::info("Total occurrences: {$totalCount}, Future: {$futureCount}, Past: {$pastCount}");
         
-        // Check if this is a weekly recurring pattern with day change
-        $isWeeklyWithDayChange = false;
+        // Flag to track if we need special handling for pattern day changes
+        $isPatternDayChange = false;
+        
         if ($request && $appointment->recurringPattern) {
             $oldPattern = $appointment->recurringPattern;
+            
+            // Weekly pattern day change detection
             if ($oldPattern->pattern_type === 'weekly' && $request->has('pattern_type') && $request->pattern_type === 'weekly') {
-                // Get old and new days of week
+                // Old weekly day change detection code...
                 $oldDays = $oldPattern->day_of_week ? explode(',', $oldPattern->day_of_week) : [];
                 $newDays = [];
                 
@@ -809,20 +812,40 @@ class InternalAppointmentsController extends Controller
                 }
                 
                 // Check if days have changed
-                $isWeeklyWithDayChange = count(array_diff($oldDays, $newDays)) > 0 || count(array_diff($newDays, $oldDays)) > 0;
+                $isPatternDayChange = count(array_diff($oldDays, $newDays)) > 0 || count(array_diff($newDays, $oldDays)) > 0;
                 
-                if ($isWeeklyWithDayChange) {
+                if ($isPatternDayChange) {
                     \Log::info("Weekly pattern day change detected", [
                         'old_days' => $oldDays,
                         'new_days' => $newDays
                     ]);
                 }
             }
+            
+            // ADDED: Monthly pattern day change detection
+            else if ($oldPattern->pattern_type === 'monthly' && $request->has('pattern_type') && $request->pattern_type === 'monthly') {
+                // Check if the day of month has changed
+                $oldDate = Carbon::parse($appointment->date);
+                $newDate = Carbon::parse($request->date);
+                
+                $oldDayOfMonth = $oldDate->day;
+                $newDayOfMonth = $newDate->day;
+                
+                // If the day of month changed, flag it
+                $isPatternDayChange = ($oldDayOfMonth !== $newDayOfMonth);
+                
+                if ($isPatternDayChange) {
+                    \Log::info("Monthly pattern day change detected", [
+                        'old_day' => $oldDayOfMonth,
+                        'new_day' => $newDayOfMonth
+                    ]);
+                }
+            }
         }
         
-        // For weekly pattern with day change, delete ALL future occurrences
+        // For any pattern with day change, delete ALL future occurrences
         // For other patterns, delete only occurrences on or after the edited date
-        if ($isWeeklyWithDayChange) {
+        if ($isPatternDayChange) {
             // Get today's date for safety
             $today = Carbon::today()->format('Y-m-d');
             
@@ -831,7 +854,7 @@ class InternalAppointmentsController extends Controller
                 ->where('occurrence_date', '>=', $today)
                 ->delete();
                 
-            \Log::info("Deleted {$deleted} future occurrences due to weekly pattern day change");
+            \Log::info("Deleted {$deleted} future occurrences due to pattern day change");
         } else {
             // Standard deletion for other cases
             $deleted = $appointment->occurrences()
