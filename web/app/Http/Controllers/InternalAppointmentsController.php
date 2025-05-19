@@ -610,7 +610,7 @@ class InternalAppointmentsController extends Controller
                     $splitDate = $occurrence->occurrence_date;
                     
                     // Create exceptions for all future occurrences
-                    $this->createExceptionsAfterDate($appointment, $splitDate);
+                    $this->createExceptionsAfterDate($appointment, $splitDate, $request);
                     
                     // Create a new appointment for the future with the modified data
                     $newAppointment = $this->createAppointmentFromRequest($request, $user->id);
@@ -655,11 +655,11 @@ class InternalAppointmentsController extends Controller
             else {
                 // If this is recurring, create new appointment for future occurrences
                 if ($wasRecurring && $dateChanged) {
-                    // Get today as the split date
-                    $splitDate = Carbon::today();
+                    // CHANGE THIS LINE: Use the edited date as the split date, not today
+                    $splitDate = Carbon::parse($request->date);
                     
                     // Create exceptions for all future occurrences of the original appointment
-                    $this->createExceptionsAfterDate($appointment, $splitDate);
+                    $this->createExceptionsAfterDate($appointment, $splitDate, $request);
                     
                     // Create a new appointment for the future with the modified data
                     $newAppointment = $this->createAppointmentFromRequest($request, $user->id);
@@ -776,17 +776,13 @@ class InternalAppointmentsController extends Controller
     }
 
     /**
-     * Delete only future appointment occurrences for dates on or after the given date
+     * Delete future appointment occurrences based on date and pattern changes
      */
-    private function createExceptionsAfterDate($appointment, $date)
+    private function createExceptionsAfterDate($appointment, $date, $request = null)
     {
         $formattedDate = $date instanceof Carbon ? $date->format('Y-m-d') : Carbon::parse($date)->format('Y-m-d');
         
-        // Get today's date to preserve past occurrences
-        $today = Carbon::today()->format('Y-m-d');
-        
-        // Log what we're about to do
-        \Log::info("Handling occurrences for appointment ID {$appointment->appointment_id}, preserving dates before {$today}");
+        \Log::info("Handling occurrences for appointment ID {$appointment->appointment_id}, preserving dates before {$formattedDate}");
         
         // Get count of occurrences before making changes
         $totalCount = $appointment->occurrences()->count();
@@ -795,16 +791,55 @@ class InternalAppointmentsController extends Controller
         
         \Log::info("Total occurrences: {$totalCount}, Future: {$futureCount}, Past: {$pastCount}");
         
-        // FIXED: Only delete occurrences on or after the given date
-        // AND ensure the date is not in the past (this is the key fix)
-        $deleted = $appointment->occurrences()
-            ->where('occurrence_date', '>=', $formattedDate)
-            ->where('occurrence_date', '>=', $today) // CRITICAL: Only delete future occurrences
-            ->delete();
+        // Check if this is a weekly recurring pattern with day change
+        $isWeeklyWithDayChange = false;
+        if ($request && $appointment->recurringPattern) {
+            $oldPattern = $appointment->recurringPattern;
+            if ($oldPattern->pattern_type === 'weekly' && $request->has('pattern_type') && $request->pattern_type === 'weekly') {
+                // Get old and new days of week
+                $oldDays = $oldPattern->day_of_week ? explode(',', $oldPattern->day_of_week) : [];
+                $newDays = [];
+                
+                if ($request->has('day_of_week')) {
+                    if (is_array($request->day_of_week)) {
+                        $newDays = $request->day_of_week;
+                    } else if (is_string($request->day_of_week)) {
+                        $newDays = explode(',', $request->day_of_week);
+                    }
+                }
+                
+                // Check if days have changed
+                $isWeeklyWithDayChange = count(array_diff($oldDays, $newDays)) > 0 || count(array_diff($newDays, $oldDays)) > 0;
+                
+                if ($isWeeklyWithDayChange) {
+                    \Log::info("Weekly pattern day change detected", [
+                        'old_days' => $oldDays,
+                        'new_days' => $newDays
+                    ]);
+                }
+            }
+        }
         
-        \Log::info("Deleted {$deleted} future occurrences for appointment ID {$appointment->appointment_id}");
-        
-        // No need to create exceptions - we're fully deleting the occurrences
+        // For weekly pattern with day change, delete ALL future occurrences
+        // For other patterns, delete only occurrences on or after the edited date
+        if ($isWeeklyWithDayChange) {
+            // Get today's date for safety
+            $today = Carbon::today()->format('Y-m-d');
+            
+            // Delete all occurrences from today forward
+            $deleted = $appointment->occurrences()
+                ->where('occurrence_date', '>=', $today)
+                ->delete();
+                
+            \Log::info("Deleted {$deleted} future occurrences due to weekly pattern day change");
+        } else {
+            // Standard deletion for other cases
+            $deleted = $appointment->occurrences()
+                ->where('occurrence_date', '>=', $formattedDate)
+                ->delete();
+                
+            \Log::info("Deleted {$deleted} future occurrences for appointment ID {$appointment->appointment_id}");
+        }
     }
 
     /**
@@ -859,14 +894,25 @@ class InternalAppointmentsController extends Controller
      */
     private function updateFutureOccurrences($appointment)
     {
-        // Delete all future occurrences
-        $today = Carbon::today()->format('Y-m-d');
-        $appointment->occurrences()
-            ->where('occurrence_date', '>=', $today)
+        // Get the appointment original date
+        $appointmentDate = Carbon::parse($appointment->date);
+        $today = Carbon::today();
+        
+        // Use the later of today or appointment date as the start point
+        $startDate = $today->gt($appointmentDate) ? $today : $appointmentDate;
+        
+        \Log::info("Updating future occurrences for appointment {$appointment->appointment_id} from {$startDate->format('Y-m-d')}");
+        
+        // Delete only occurrences from the start date forward
+        $deleted = $appointment->occurrences()
+            ->where('occurrence_date', '>=', $startDate->format('Y-m-d'))
             ->delete();
+            
+        \Log::info("Deleted {$deleted} future occurrences");
         
         // Generate new occurrences
-        $appointment->generateOccurrences(3);
+        $generated = $appointment->generateOccurrences(3);
+        \Log::info("Generated {$generated} new occurrences");
     }
 
     /**
