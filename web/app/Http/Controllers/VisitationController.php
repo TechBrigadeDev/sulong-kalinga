@@ -991,6 +991,58 @@ class VisitationController extends Controller
                             ]);
                         }
                     }
+                    // WEEKLY PATTERN CLEANUP: Same concept as monthly, but for weeks
+                    else if ($request->pattern_type === 'weekly') {
+                        $newDate = Carbon::parse($request->visitation_date);
+                        $startOfWeek = $newDate->copy()->startOfWeek();
+                        $endOfWeek = $newDate->copy()->endOfWeek();
+                        
+                        // Get the specified days of week from the pattern
+                        $allowedDays = [];
+                        if ($visitation->recurringPattern && $visitation->recurringPattern->day_of_week) {
+                            $dayString = $visitation->recurringPattern->day_of_week;
+                            $allowedDays = explode(',', $dayString);
+                        }
+                        
+                        \Log::info("Weekly pattern: Checking for cleanup", [
+                            'visitation_id' => $visitation->visitation_id,
+                            'week_range' => $startOfWeek->format('Y-m-d') . ' to ' . $endOfWeek->format('Y-m-d'),
+                            'allowed_days' => $allowedDays
+                        ]);
+                        
+                        // Count occurrences in this week
+                        $weekOccurrences = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+                            ->whereBetween('occurrence_date', [
+                                $startOfWeek->format('Y-m-d'), 
+                                $endOfWeek->format('Y-m-d')
+                            ])
+                            ->get();
+                        
+                        // If we have occurrences in this week, check if any should be removed
+                        if ($weekOccurrences->count() > 0 && !empty($allowedDays)) {
+                            $toDelete = [];
+                            
+                            foreach ($weekOccurrences as $occurrence) {
+                                $occDay = Carbon::parse($occurrence->occurrence_date)->dayOfWeek;
+                                
+                                // If this day of week is not in our allowed days, mark it for deletion
+                                if (!in_array($occDay, $allowedDays)) {
+                                    $toDelete[] = $occurrence->occurrence_id;
+                                }
+                            }
+                            
+                            // Delete any occurrences on days that aren't in our pattern
+                            if (!empty($toDelete)) {
+                                $deleteCount = VisitationOccurrence::whereIn('occurrence_id', $toDelete)->delete();
+                                
+                                \Log::info("Weekly pattern: Cleaned up occurrences on wrong days", [
+                                    'visitation_id' => $visitation->visitation_id,
+                                    'week_of' => $startOfWeek->format('Y-m-d'),
+                                    'deleted_count' => $deleteCount
+                                ]);
+                            }
+                        }
+                    }
                 } else {
                     // It was recurring but now it's not
                     if ($visitation->recurringPattern) {
