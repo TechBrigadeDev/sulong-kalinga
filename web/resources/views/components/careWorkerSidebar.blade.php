@@ -58,7 +58,7 @@
       <ul class="sub-menu m-auto">
         <li><a class="link_name">Schedules & Appointments</a></li>
         <li><a href="{{ route('care-worker.careworker.appointments.index') }}" class="{{ Request::routeIs('care-worker.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
-        <li><a href="#" class="">Internal Appointment</a></li>
+        <li><a href="{{ route('care-worker.internal-appointments.index') }}" class="{{ Request::routeIs('care-worker.internal.appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
         <li><a href="{{ route('care-worker.medication.schedule.index') }}" class="{{ Request::routeIs('care-worker.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
       </ul>
     </li>

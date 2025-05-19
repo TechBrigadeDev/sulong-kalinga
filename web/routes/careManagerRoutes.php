@@ -162,9 +162,13 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
     });
 
+    // Internal Appointments
     Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
         Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
         Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+        Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
+        Route::post('/update', [InternalAppointmentsController::class, 'update'])->name('update');  // Fixed path
+        Route::post('/cancel', [InternalAppointmentsController::class, 'cancel'])->name('cancel');
     });
 
     // Medication Schedule

@@ -638,8 +638,8 @@
 </head>
 <body>
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="text-left">INTERNAL APPOINTMENTS</div>
@@ -1546,7 +1546,7 @@
             events: function(info, successCallback, failureCallback) {
                 showCalendarSpinner('Loading appointments...');
                 // Fetch events from server based on date range
-                fetch('/admin/internal-appointments/get-appointments?start=' + info.startStr + '&end=' + info.endStr + '&view_type=' + currentView, {
+                fetch('/care-manager/internal-appointments/get-appointments?start=' + info.startStr + '&end=' + info.endStr + '&view_type=' + currentView, {
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -1886,7 +1886,7 @@
             }
         }
         
-        // Search functionality
+                // Search functionality
         const searchInput = document.querySelector('.search-input');
         if (searchInput) {
             let searchTimeout = null;
@@ -2434,8 +2434,8 @@
             
             // Determine URL based on whether this is a create or update
             const url = appointmentId ? 
-                '/admin/internal-appointments/update' : 
-                '/admin/internal-appointments/store';
+                '/care-manager/internal-appointments/update' : 
+                '/care-manager/internal-appointments/store';
 
            // Add explicit debug for date value
             const appointmentDate = document.getElementById('appointmentDate').value;
@@ -2646,7 +2646,7 @@
             formData.append('occurrence_date', currentEvent.start ? currentEvent.start.toISOString().split('T')[0] : '');
             
             // Send cancel request
-            fetch('/admin/internal-appointments/cancel', {
+            fetch('/care-manager/internal-appointments/cancel', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
