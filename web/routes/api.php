@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\MunicipalityApiController;
 use App\Http\Controllers\Api\PortalAccountApiController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\ReportsApiController;
+use App\Http\Controllers\Api\ViewAccountProfileApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -31,6 +32,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
     Route::put('/profile', [UserApiController::class, 'updateProfile']);
+
+    // Mobile Account Profile API 
+    Route::get('/account-profile', [ViewAccountProfileApiController::class, 'show']);
+    Route::patch('/account-profile/email', [ViewAccountProfileApiController::class, 'updateEmail']);
+    Route::patch('/account-profile/password', [ViewAccountProfileApiController::class, 'updatePassword']);
 
     // Beneficiary Management
     Route::get('/beneficiaries', [BeneficiaryApiController::class, 'index']);
