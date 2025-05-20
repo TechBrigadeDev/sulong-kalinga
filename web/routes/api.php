@@ -23,8 +23,6 @@ Route::get('/public-test', function () {
 // Authentication Routes
 Route::post('/login', [AuthApiController::class, 'login']);
 
-// Uploads (move back inside middleware after testing)
-Route::post('/upload', [UploadController::class, 'upload']);
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -81,4 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports', [ReportsApiController::class, 'index']);
     Route::get('/reports/{id}', [ReportsApiController::class, 'show']);
     Route::put('/reports/{id}', [ReportsApiController::class, 'update']);
+
+    // Uploads (move back inside middleware after testing)
+    // Moved backed inside middleware in sk-74/family-api-fix
+    Route::post('/upload', [UploadController::class, 'upload']);
 });
