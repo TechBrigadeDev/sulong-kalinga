@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Visitation extends Model
 {
@@ -196,16 +198,158 @@ class Visitation extends Model
 
     /**
      * Generate monthly occurrences
+     * 
+     * @param Carbon $startDate The date being edited or start date
+     * @param Carbon $endDate The end date for generation
+     * @param array $occurrenceIds Array to store generated occurrence IDs
      */
     private function generateMonthlyOccurrences($startDate, $endDate, &$occurrenceIds)
     {
+        // Get the exact date being edited and target day
+        $editedDate = $startDate->format('Y-m-d');
+        $targetDayOfMonth = $startDate->day;
+        
+        \Log::info("Monthly pattern: Starting with additional debugging", [
+            'visitation_id' => $this->visitation_id,
+            'edited_date' => $editedDate, 
+            'target_day' => $targetDayOfMonth
+        ]);
+        
+        // STEP 1: Get ALL existing occurrences for this visitation
+        $allOccurrences = VisitationOccurrence::where('visitation_id', $this->visitation_id)
+            ->get();
+        
+        // Group occurrences into different categories
+        $pastOccurrences = [];
+        $editedDateOccurrences = [];
+        $wrongDayFutureOccurrences = [];
+        
+        // IMPORTANT FIX: Add additional logging for each occurrence to debug date matching
+        foreach ($allOccurrences as $occurrence) {
+            $occDate = Carbon::parse($occurrence->occurrence_date);
+            $occDateStr = $occDate->format('Y-m-d');
+            $occYear = $occDate->year;
+            $occMonth = $occDate->month;
+            $occDay = $occDate->day;
+            
+            \Log::info("Analyzing occurrence", [
+                'occurrence_id' => $occurrence->occurrence_id,
+                'raw_date' => $occurrence->occurrence_date,
+                'parsed_date' => $occDateStr,
+                'y-m-d' => "$occYear-$occMonth-$occDay",
+                'edited_date' => $editedDate,
+                'comparison' => ($occDateStr === $editedDate ? 'MATCH' : 'NO MATCH')
+            ]);
+            
+            // IMPROVED COMPARISON: Compare year, month, day separately
+            $editedDateTime = Carbon::parse($editedDate);
+            
+            // Is this the exact occurrence being edited?
+            if ($occDate->isSameDay($editedDateTime)) {
+                $editedDateOccurrences[] = $occurrence->occurrence_id;
+                \Log::info("Found occurrence on edited date", [
+                    'occurrence_id' => $occurrence->occurrence_id,
+                    'date' => $occDateStr
+                ]);
+            }
+            // Is this a future occurrence with the wrong day?
+            elseif ($occDate > $startDate && $occDate->day !== $targetDayOfMonth) {
+                $wrongDayFutureOccurrences[] = $occurrence->occurrence_id;
+            }
+            // Is this a past occurrence?
+            elseif ($occDate < $startDate) {
+                $pastOccurrences[] = $occurrence->occurrence_id;
+            }
+        }
+        
+        \Log::info("Occurrence analysis complete", [
+            'visitation_id' => $this->visitation_id,
+            'past_count' => count($pastOccurrences),
+            'edited_date_count' => count($editedDateOccurrences),
+            'future_wrong_day_count' => count($wrongDayFutureOccurrences),
+            'all_occurrences' => $allOccurrences->count()
+        ]);
+        
+        // DIRECT APPROACH: If no occurrences found, try with direct PostgreSQL date casting
+        if (empty($editedDateOccurrences)) {
+            $directSQLResult = DB::select(
+                "SELECT occurrence_id FROM visitation_occurrences 
+                WHERE visitation_id = ? 
+                AND DATE(occurrence_date) = ?::date",
+                [$this->visitation_id, $editedDate]
+            );
+            
+            foreach ($directSQLResult as $result) {
+                $editedDateOccurrences[] = $result->occurrence_id;
+            }
+            
+            \Log::info("Direct SQL attempt to find occurrence", [
+                'visitation_id' => $this->visitation_id,
+                'edited_date' => $editedDate,
+                'found_count' => count($editedDateOccurrences)
+            ]);
+        }
+        
+        // STEP 2: Delete edited date occurrences by ID
+        if (!empty($editedDateOccurrences)) {
+            $deleteCount = VisitationOccurrence::whereIn('occurrence_id', $editedDateOccurrences)->delete();
+            
+            \Log::info("Deleted occurrences on the edited date", [
+                'visitation_id' => $this->visitation_id,
+                'edited_date' => $editedDate,
+                'occurrence_ids' => $editedDateOccurrences,
+                'deleted_count' => $deleteCount
+            ]);
+        } else {
+            // LAST RESORT: Use raw SQL to directly delete the occurrence
+            $lastResortCount = DB::delete(
+                "DELETE FROM visitation_occurrences 
+                WHERE visitation_id = ? 
+                AND DATE(occurrence_date) = ?::date",
+                [$this->visitation_id, $editedDate]
+            );
+            
+            \Log::info("Last resort direct SQL delete attempt", [
+                'visitation_id' => $this->visitation_id,
+                'edited_date' => $editedDate,
+                'deleted_count' => $lastResortCount
+            ]);
+        }
+        
+        // STEP 3: Delete future occurrences with wrong day by ID
+        if (!empty($wrongDayFutureOccurrences)) {
+            $deleteCount = VisitationOccurrence::whereIn('occurrence_id', $wrongDayFutureOccurrences)->delete();
+            
+            \Log::info("Deleted future occurrences with wrong day", [
+                'visitation_id' => $this->visitation_id,
+                'deleted_count' => $deleteCount
+            ]);
+        }
+        
+        // STEP 4: Generate new occurrences from edited date forward
         $currentDate = clone $startDate;
-        $dayOfMonth = $currentDate->day;
         
         while ($currentDate <= $endDate) {
-            $occurrence = $this->createOccurrence($currentDate);
+            // Create new occurrence using a forced insert (not checking if exists)
+            $occurrence = VisitationOccurrence::create([
+                'visitation_id' => $this->visitation_id,
+                'occurrence_date' => $currentDate->format('Y-m-d'),
+                'start_time' => $this->start_time,
+                'end_time' => $this->end_time,
+                'is_flexible_time' => $this->is_flexible_time ?? false,
+                'status' => $currentDate < now() ? 'completed' : 'scheduled'
+            ]);
+            
             if ($occurrence) {
                 $occurrenceIds[] = $occurrence->occurrence_id;
+                
+                if ($currentDate->format('Y-m-d') === $editedDate) {
+                    \Log::info("Force created occurrence for edited date", [
+                        'visitation_id' => $this->visitation_id,
+                        'date' => $currentDate->format('Y-m-d'),
+                        'occurrence_id' => $occurrence->occurrence_id
+                    ]);
+                }
             }
             
             // Move to next month
@@ -213,7 +357,7 @@ class Visitation extends Model
             
             // Handle edge cases like the 31st of the month
             $daysInMonth = $currentDate->daysInMonth;
-            $currentDate->day = min($dayOfMonth, $daysInMonth);
+            $currentDate->day = min($targetDayOfMonth, $daysInMonth);
         }
     }
 

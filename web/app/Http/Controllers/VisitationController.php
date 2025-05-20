@@ -788,6 +788,16 @@ class VisitationController extends Controller
         try {
             // Get the visitation
             $visitation = Visitation::findOrFail($request->visitation_id);
+
+            // IMPORTANT: Store the original date BEFORE updating
+            $originalVisitationDate = $visitation->visitation_date->format('Y-m-d');
+            $newVisitationDate = Carbon::parse($request->visitation_date)->format('Y-m-d');
+            
+            \Log::info('Deleting the specific occurrence for the ORIGINAL date', [
+                'visitation_id' => $visitation->visitation_id,
+                'original_date' => $originalVisitationDate,
+                'new_date' => $newVisitationDate
+            ]);
             
             // Check if user is trying to change between recurring and non-recurring
             $wasRecurring = $visitation->recurringPattern ? true : false;
@@ -854,18 +864,6 @@ class VisitationController extends Controller
             
             // Store the new date here to ensure it's defined for all code paths
             $newVisitationDate = $visitation->visitation_date->format('Y-m-d');
-
-            // IMPORTANT: Delete the old base occurrence if date changed, regardless of recurrence
-            if ($originalVisitationDate !== $newVisitationDate) {
-                // Delete the occurrence for the old date
-                $this->forceDeleteOccurrencesByDate($visitation->visitation_id, $originalVisitationDate);
-                
-                \Log::info('Base date changed for appointment, deleted old occurrence', [
-                    'visitation_id' => $visitation->visitation_id,
-                    'old_date' => $originalVisitationDate,
-                    'new_date' => $newVisitationDate
-                ]);
-            }
             
             // 3. Handle recurring pattern updates
             if ($request->has('is_recurring')) {
@@ -953,6 +951,98 @@ class VisitationController extends Controller
                         'visitation_id' => $visitation->visitation_id,
                         'generated_occurrences' => count($occurrenceIds)
                     ]);
+
+                    // FINAL CLEANUP: Make sure we don't have duplicates in the same month
+                    if ($request->pattern_type === 'monthly') {
+                        $newDate = Carbon::parse($request->visitation_date);
+                        $year = $newDate->year;
+                        $month = $newDate->month;
+                        
+                        // Count occurrences in this month to see if there are duplicates
+                        $monthOccurrences = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+                            ->whereRaw("EXTRACT(YEAR FROM occurrence_date) = ?", [$year])
+                            ->whereRaw("EXTRACT(MONTH FROM occurrence_date) = ?", [$month])
+                            ->orderBy('occurrence_date')
+                            ->get();
+                        
+                        // If there's more than one occurrence in this month, keep only the one with the target day
+                        if ($monthOccurrences->count() > 1) {
+                            $targetDay = $newDate->day;
+                            
+                            \Log::info("Found multiple occurrences in month {$year}-{$month}", [
+                                'visitation_id' => $visitation->visitation_id,
+                                'count' => $monthOccurrences->count(),
+                                'target_day' => $targetDay
+                            ]);
+                            
+                            // Delete all occurrences in this month EXCEPT the one with our target day
+                            $deleteCount = DB::delete(
+                                "DELETE FROM visitation_occurrences 
+                                WHERE visitation_id = ? 
+                                AND EXTRACT(YEAR FROM occurrence_date) = ? 
+                                AND EXTRACT(MONTH FROM occurrence_date) = ?
+                                AND EXTRACT(DAY FROM occurrence_date) <> ?",
+                                [$visitation->visitation_id, $year, $month, $targetDay]
+                            );
+                            
+                            \Log::info("Cleaned up duplicate occurrences", [
+                                'visitation_id' => $visitation->visitation_id,
+                                'deleted_count' => $deleteCount
+                            ]);
+                        }
+                    }
+                    // WEEKLY PATTERN CLEANUP: Same concept as monthly, but for weeks
+                    else if ($request->pattern_type === 'weekly') {
+                        $newDate = Carbon::parse($request->visitation_date);
+                        $startOfWeek = $newDate->copy()->startOfWeek();
+                        $endOfWeek = $newDate->copy()->endOfWeek();
+                        
+                        // Get the specified days of week from the pattern
+                        $allowedDays = [];
+                        if ($visitation->recurringPattern && $visitation->recurringPattern->day_of_week) {
+                            $dayString = $visitation->recurringPattern->day_of_week;
+                            $allowedDays = explode(',', $dayString);
+                        }
+                        
+                        \Log::info("Weekly pattern: Checking for cleanup", [
+                            'visitation_id' => $visitation->visitation_id,
+                            'week_range' => $startOfWeek->format('Y-m-d') . ' to ' . $endOfWeek->format('Y-m-d'),
+                            'allowed_days' => $allowedDays
+                        ]);
+                        
+                        // Count occurrences in this week
+                        $weekOccurrences = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+                            ->whereBetween('occurrence_date', [
+                                $startOfWeek->format('Y-m-d'), 
+                                $endOfWeek->format('Y-m-d')
+                            ])
+                            ->get();
+                        
+                        // If we have occurrences in this week, check if any should be removed
+                        if ($weekOccurrences->count() > 0 && !empty($allowedDays)) {
+                            $toDelete = [];
+                            
+                            foreach ($weekOccurrences as $occurrence) {
+                                $occDay = Carbon::parse($occurrence->occurrence_date)->dayOfWeek;
+                                
+                                // If this day of week is not in our allowed days, mark it for deletion
+                                if (!in_array($occDay, $allowedDays)) {
+                                    $toDelete[] = $occurrence->occurrence_id;
+                                }
+                            }
+                            
+                            // Delete any occurrences on days that aren't in our pattern
+                            if (!empty($toDelete)) {
+                                $deleteCount = VisitationOccurrence::whereIn('occurrence_id', $toDelete)->delete();
+                                
+                                \Log::info("Weekly pattern: Cleaned up occurrences on wrong days", [
+                                    'visitation_id' => $visitation->visitation_id,
+                                    'week_of' => $startOfWeek->format('Y-m-d'),
+                                    'deleted_count' => $deleteCount
+                                ]);
+                            }
+                        }
+                    }
                 } else {
                     // It was recurring but now it's not
                     if ($visitation->recurringPattern) {
