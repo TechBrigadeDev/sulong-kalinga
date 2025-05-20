@@ -1852,9 +1852,9 @@
             const appointmentId = document.getElementById('appointmentId');
             if (appointmentId) appointmentId.value = '';
 
-            const occurrenceDate = currentEvent.start ? currentEvent.start.toISOString().split('T')[0] : '';
-            document.getElementById('edited_occurrence_date').value = occurrenceDate;
-            console.log("Setting edited occurrence date to:", occurrenceDate);
+            //const occurrenceDate = currentEvent.start ? currentEvent.start.toISOString().split('T')[0] : '';
+            //document.getElementById('edited_occurrence_date').value = occurrenceDate;
+            //console.log("Setting edited occurrence date to:", occurrenceDate);
             
             // Reset attendance tags
             document.querySelectorAll('#staffAttendees .attendee-tag, #beneficiaryAttendees .attendee-tag, #familyAttendees .attendee-tag')
@@ -2178,6 +2178,11 @@
                 document.getElementById('appointmentPlace').value = currentEvent.extendedProps.meeting_location || '';
                 document.getElementById('appointmentNotes').value = currentEvent.extendedProps.notes || '';
                 
+                // CRITICAL FIX: Set the original occurrence date for proper deletion
+                // For monthly patterns, we need to store the date being edited
+                document.getElementById('edited_occurrence_date').value = currentEvent.startStr.split('T')[0];
+                console.log("Setting edited occurrence date to original occurrence date:", currentEvent.startStr.split('T')[0]);
+
                 // Handle flexible time setting
                 const isFlexibleTime = currentEvent.extendedProps.is_flexible_time;
                 document.getElementById('flexibleTimeCheck').checked = isFlexibleTime;
