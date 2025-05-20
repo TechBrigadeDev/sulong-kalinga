@@ -105,20 +105,87 @@
             margin-bottom: 0;
         }
         
-        /* Calendar Enhancements */
         #calendar-container {
+            height: 650px; /* Fixed height - adjust as needed */
+            overflow-y: auto; /* Enable vertical scrolling */
+            overflow-x: auto; /* Keep horizontal scrolling */
             border-radius: 8px;
             background-color: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 1rem;
+            padding: 0;
             margin-bottom: 1.5rem;
-            overflow-x: auto; /* Enable horizontal scrolling */
+            position: relative;
+        }
+
+        /* Make table cells more stable during scroll */
+        .fc-scrollgrid-sync-table {
+            width: 100% !important;
+        }
+
+        /* Fix event rendering during scroll */
+        .fc-event {
+            position: relative !important;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* Fix for the day headers to stay consistent */
+        .fc .fc-col-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Improve row stability during scrolling */
+        .fc-daygrid-body {
+            width: 100% !important;
+        }
+
+        .fc-daygrid-day-frame {
+            min-height: 100px; /* Ensure consistent cell height */
+        }
+
+        /* Add subtle scroll shadow effect */
+        #calendar-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        /* Optional: Improve scrollbar appearance */
+        #calendar-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        #calendar-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #calendar-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        #calendar-container::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
         }
         
+        /* Make sure the calendar itself doesn't have a fixed height */
         #calendar {
             background-color: white;
-            min-height: 600px;
-            min-width: 800px; /* Set minimum width to ensure functionality */
+            min-width: 800px; /* Keep minimum width */
+            height: auto !important; /* Override any fixed height */
         }
         
         /* Event Styling */
