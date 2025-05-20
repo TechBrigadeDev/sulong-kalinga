@@ -559,6 +559,14 @@ class InternalAppointmentsController extends Controller
             
             $appointment = Appointment::with(['recurringPattern', 'occurrences', 'participants'])
                 ->findOrFail($appointmentId);
+
+            // CRITICAL FIX: Store original date value BEFORE updating the appointment
+            $originalAppointmentDate = $appointment->date;
+
+            // Store original date for comparison
+            $originalDate = Carbon::parse($appointment->date)->format('Y-m-d');
+            $newDate = Carbon::parse($request->date)->format('Y-m-d');
+            $dateChanged = $originalDate !== $newDate;
                 
             // Check permissions
             if (!$this->hasManagePermission($appointmentId)) {
@@ -608,7 +616,7 @@ class InternalAppointmentsController extends Controller
                     
                     // Create exceptions for all future occurrences
                     $this->createExceptionsAfterDate($appointment, $splitDate, $request);
-                    
+
                     // Create a new appointment for the future with the modified data
                     $newAppointment = $this->createAppointmentFromRequest($request, $user->id);
                     
@@ -747,6 +755,154 @@ class InternalAppointmentsController extends Controller
                     // Update participants
                     $this->updateAppointmentParticipants($appointment, $request);
                     $this->notifyUpdatedAppointment($appointment);
+
+                    // CRITICAL FIX: Delete original occurrence when editing recurring appointments
+                    if ($request->has('is_recurring') && $request->is_recurring && $dateChanged) {
+                        // If we're editing a specific occurrence, use that date, otherwise use the original date
+                        $dateToDelete = null;
+                        
+                        if ($request->has('occurrence_date') && $request->occurrence_date) {
+                            // For specific occurrence edits, delete that specific date
+                            $dateToDelete = Carbon::parse($request->occurrence_date)->format('Y-m-d');
+                        } else {
+                            // For regular edits, delete the original appointment date occurrence
+                            $dateToDelete = Carbon::parse($originalAppointmentDate)->format('Y-m-d');
+                        }
+                        
+                        $originalDateObj = Carbon::parse($dateToDelete);
+                        
+                        \Log::info("Deleting specific occurrence that was edited", [
+                            'appointment_id' => $appointment->appointment_id,
+                            'occurrence_date' => $dateToDelete
+                        ]);
+                        
+                        // The specific date that was edited needs to be explicitly deleted
+                        $deleteResult = DB::delete(
+                            "DELETE FROM appointment_occurrences 
+                            WHERE appointment_id = ? 
+                            AND DATE(occurrence_date) = ?::date",
+                            [$appointment->appointment_id, $originalDateObj->format('Y-m-d')]
+                        );
+                        
+                        \Log::info("Explicit deletion of edited occurrence date", [
+                            'appointment_id' => $appointment->appointment_id,
+                            'date_deleted' => $originalDateObj->format('Y-m-d'),
+                            'deleted_count' => $deleteResult
+                        ]);
+                        
+                        // Double check for duplicates within the same week (for weekly patterns)
+                        if ($request->pattern_type === 'weekly') {
+                            $newDateObj = Carbon::parse($newDate);
+                            $startOfWeek = $newDateObj->copy()->startOfWeek()->format('Y-m-d');
+                            $endOfWeek = $newDateObj->copy()->endOfWeek()->format('Y-m-d');
+                            
+                            // Get all occurrences in this week
+                            $weekOccurrences = AppointmentOccurrence::where('appointment_id', $appointment->appointment_id)
+                                ->whereBetween('occurrence_date', [$startOfWeek, $endOfWeek])
+                                ->orderBy('occurrence_date')
+                                ->get();
+                            
+                            // If we have more than allowed occurrences in this week,
+                            // keep only those on the specific days defined in the pattern
+                            if ($weekOccurrences->count() > 0) {
+                                $allowedDays = [];
+                                if ($appointment->recurringPattern && $appointment->recurringPattern->day_of_week) {
+                                    $allowedDays = explode(',', $appointment->recurringPattern->day_of_week);
+                                }
+                                
+                                $toDelete = [];
+                                foreach ($weekOccurrences as $occurrence) {
+                                    $occurrenceDate = Carbon::parse($occurrence->occurrence_date);
+                                    $dayOfWeek = $occurrenceDate->dayOfWeek;
+                                    
+                                    // If this date is not the newly selected date AND it's not in the allowed days
+                                    if ($occurrenceDate->format('Y-m-d') != $newDateObj->format('Y-m-d') && 
+                                        !in_array($dayOfWeek, $allowedDays)) {
+                                        $toDelete[] = $occurrence->occurrence_id;
+                                    }
+                                }
+                                
+                                if (!empty($toDelete)) {
+                                    $dupDeleteCount = AppointmentOccurrence::whereIn('occurrence_id', $toDelete)->delete();
+                                    \Log::info("Cleaned up additional duplicate occurrences in the same week", [
+                                        'deleted_count' => $dupDeleteCount
+                                    ]);
+                                }
+                            }
+                        }
+                        
+                        // Double check for duplicates within the same month (for monthly patterns)
+                        if ($request->pattern_type === 'monthly') {
+                            $newDateObj = Carbon::parse($newDate);
+                            $year = $newDateObj->year;
+                            $month = $newDateObj->month;
+                            $targetDay = $newDateObj->day;
+                            
+                            // Find duplicates in the same month
+                            $monthOccurrences = AppointmentOccurrence::where('appointment_id', $appointment->appointment_id)
+                                ->whereRaw("EXTRACT(YEAR FROM occurrence_date) = ?", [$year])
+                                ->whereRaw("EXTRACT(MONTH FROM occurrence_date) = ?", [$month])
+                                ->get();
+                                
+                            if ($monthOccurrences->count() > 1) {
+                                // Delete all except the target day
+                                $dupMonthlyCount = DB::delete(
+                                    "DELETE FROM appointment_occurrences 
+                                    WHERE appointment_id = ? 
+                                    AND EXTRACT(YEAR FROM occurrence_date) = ? 
+                                    AND EXTRACT(MONTH FROM occurrence_date) = ?
+                                    AND EXTRACT(DAY FROM occurrence_date) <> ?",
+                                    [$appointment->appointment_id, $year, $month, $targetDay]
+                                );
+                                
+                                \Log::info("Cleaned up duplicate monthly occurrences", [
+                                    'deleted_count' => $dupMonthlyCount
+                                ]);
+                            }
+                        }
+                    }
+
+                    // Find the day before the new date - which is always the occurrence we're editing
+                    $newDateObj = Carbon::parse($request->date);
+                    $dayBeforeNew = $newDateObj->copy()->subDay()->format('Y-m-d');
+
+                    // Create a direct database query to find and delete that occurrence
+                    $forceDeleteResult = DB::delete(
+                        "DELETE FROM appointment_occurrences 
+                        WHERE appointment_id = ? 
+                        AND DATE(occurrence_date) = ?::date",
+                        [$appointment->appointment_id, $dayBeforeNew]
+                    );
+
+                    \Log::info("Force deletion of original occurrence before the edited date", [
+                        'appointment_id' => $appointment->appointment_id,
+                        'search_date' => $dayBeforeNew,
+                        'deleted_count' => $forceDeleteResult
+                    ]);
+
+                    // EMERGENCY DIRECT CLEANUP - guaranteed to run
+                    \Log::info("Final cleanup checkpoint reached", [
+                        'is_recurring' => $request->has('is_recurring'),
+                        'pattern_type' => $request->pattern_type ?? 'none',
+                        'date_changed' => $dateChanged
+                    ]);
+
+                    // UNCONDITIONAL CLEANUP: Delete the original date occurrence no matter what
+                    $originalOccurrenceDateObj = Carbon::parse($originalAppointmentDate);
+
+                    // Find the occurrence in database directly using original date    
+                    $lastDeleteResult = DB::delete(
+                        "DELETE FROM appointment_occurrences 
+                        WHERE appointment_id = ? 
+                        AND DATE(occurrence_date) = ?::date",
+                        [$appointment->appointment_id, $originalOccurrenceDateObj->format('Y-m-d')]
+                    );
+
+                    \Log::info("Emergency final cleanup of specific occurrence", [
+                        'appointment_id' => $appointment->appointment_id,
+                        'original_date' => $originalOccurrenceDateObj->format('Y-m-d'), 
+                        'deleted_count' => $lastDeleteResult
+                    ]);
                     
                     DB::commit();
                     
@@ -774,6 +930,7 @@ class InternalAppointmentsController extends Controller
 
     /**
      * Delete future appointment occurrences based on date and pattern changes
+     * while preserving past occurrences
      */
     private function createExceptionsAfterDate($appointment, $date, $request = null)
     {
@@ -792,74 +949,76 @@ class InternalAppointmentsController extends Controller
         $isPatternDayChange = false;
         
         if ($request && $appointment->recurringPattern) {
-            $oldPattern = $appointment->recurringPattern;
-            
-            // Weekly pattern day change detection
-            if ($oldPattern->pattern_type === 'weekly' && $request->has('pattern_type') && $request->pattern_type === 'weekly') {
-                // Old weekly day change detection code...
-                $oldDays = $oldPattern->day_of_week ? explode(',', $oldPattern->day_of_week) : [];
-                $newDays = [];
-                
-                if ($request->has('day_of_week')) {
-                    if (is_array($request->day_of_week)) {
-                        $newDays = $request->day_of_week;
-                    } else if (is_string($request->day_of_week)) {
-                        $newDays = explode(',', $request->day_of_week);
-                    }
-                }
-                
-                // Check if days have changed
-                $isPatternDayChange = count(array_diff($oldDays, $newDays)) > 0 || count(array_diff($newDays, $oldDays)) > 0;
-                
-                if ($isPatternDayChange) {
-                    \Log::info("Weekly pattern day change detected", [
-                        'old_days' => $oldDays,
-                        'new_days' => $newDays
-                    ]);
-                }
-            }
-            
-            // ADDED: Monthly pattern day change detection
-            else if ($oldPattern->pattern_type === 'monthly' && $request->has('pattern_type') && $request->pattern_type === 'monthly') {
-                // Check if the day of month has changed
-                $oldDate = Carbon::parse($appointment->date);
+            // IMPORTANT: Check if the day of occurrence is changing for weekly/monthly patterns
+            if ($request->has('pattern_type')) {
                 $newDate = Carbon::parse($request->date);
                 
-                $oldDayOfMonth = $oldDate->day;
-                $newDayOfMonth = $newDate->day;
-                
-                // If the day of month changed, flag it
-                $isPatternDayChange = ($oldDayOfMonth !== $newDayOfMonth);
-                
-                if ($isPatternDayChange) {
-                    \Log::info("Monthly pattern day change detected", [
-                        'old_day' => $oldDayOfMonth,
-                        'new_day' => $newDayOfMonth
-                    ]);
+                if ($request->pattern_type === 'monthly') {
+                    // For monthly patterns, check if day of month changed
+                    $currentDay = Carbon::parse($appointment->date)->day;
+                    $newDay = $newDate->day;
+                    
+                    if ($currentDay != $newDay) {
+                        $isPatternDayChange = true;
+                        \Log::info("Monthly pattern day changing from {$currentDay} to {$newDay}");
+                    }
+                } elseif ($request->pattern_type === 'weekly') {
+                    // For weekly, check if the specific day of week configuration changed
+                    $currentDayOfWeek = Carbon::parse($appointment->date)->dayOfWeek;
+                    $newDayOfWeek = $newDate->dayOfWeek;
+                    
+                    // Get the current pattern's day_of_week
+                    $currentPattern = $appointment->recurringPattern->day_of_week ?? '';
+                    
+                    // FIX: Convert the day_of_week array to a string for comparison
+                    $newPatternArray = $request->day_of_week ?? [];
+                    $newPattern = '';
+                    
+                    if (is_array($newPatternArray)) {
+                        $newPattern = implode(',', $newPatternArray);
+                    } else {
+                        $newPattern = (string)$newPatternArray;
+                    }
+                    
+                    if ($currentPattern != $newPattern) {
+                        $isPatternDayChange = true;
+                        \Log::info("Weekly pattern days changing from [{$currentPattern}] to [{$newPattern}]");
+                    }
                 }
             }
         }
         
-        // For any pattern with day change, delete ALL future occurrences
-        // For other patterns, delete only occurrences on or after the edited date
-        if ($isPatternDayChange) {
-            // Get today's date for safety
-            $today = Carbon::today()->format('Y-m-d');
+        // CRITICAL FIX: First, explicitly delete the original occurrence being edited
+        if ($request && $request->has('edited_occurrence_date')) {
+            $originalDate = $request->edited_occurrence_date;
+            $deleteResult = DB::delete(
+                "DELETE FROM appointment_occurrences 
+                WHERE appointment_id = ? 
+                AND DATE(occurrence_date) = ?::date",
+                [$appointment->appointment_id, $originalDate]
+            );
             
-            // Delete all occurrences from today forward
-            $deleted = $appointment->occurrences()
-                ->where('occurrence_date', '>=', $today)
-                ->delete();
-                
-            \Log::info("Deleted {$deleted} future occurrences due to pattern day change");
-        } else {
-            // Standard deletion for other cases
+            \Log::info("Explicitly deleted edited occurrence at {$originalDate}: {$deleteResult}");
+        }
+        
+        // ORIGINAL CODE: Delete ONLY future occurrences, NEVER delete past occurrences
+        if ($isPatternDayChange) {
+            // Delete ALL FUTURE occurrences (after the edited date) because the pattern day is changing
             $deleted = $appointment->occurrences()
                 ->where('occurrence_date', '>=', $formattedDate)
                 ->delete();
-                
-            \Log::info("Deleted {$deleted} future occurrences for appointment ID {$appointment->appointment_id}");
+            
+            \Log::info("Deleted {$deleted} future occurrences due to pattern day change");
+        } else {
+            // Delete only the SPECIFIC occurrence being edited
+            $deleted = $appointment->occurrences()
+                ->whereDate('occurrence_date', $formattedDate)
+                ->delete();
+            
+            \Log::info("Deleted occurrence for exact edited date {$formattedDate}: {$deleted}");
         }
+        
+        return true;
     }
 
     /**
