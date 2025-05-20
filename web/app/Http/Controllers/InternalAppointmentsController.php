@@ -1009,6 +1009,50 @@ class InternalAppointmentsController extends Controller
                 ->delete();
             
             \Log::info("Deleted {$deleted} future occurrences due to pattern day change");
+            
+            // MONTHLY PATTERN SPECIFIC FIX: Ensure original edited date is deleted
+            if ($request->pattern_type === 'monthly') {
+                // Get current date information 
+                $newDate = Carbon::parse($request->date);
+                $currentDay = Carbon::parse($appointment->date)->day;
+                $newDay = $newDate->day;
+                
+                // Calculate the date that needs to be deleted (the one we're editing)
+                // This ensures we use the actual day from the pattern (23 in your case)
+                $originalMonthlyDate = null;
+                
+                // First priority: Use explicit edited_occurrence_date if available
+                if ($request->has('edited_occurrence_date')) {
+                    $originalMonthlyDate = Carbon::parse($request->edited_occurrence_date);
+                } 
+                // Second priority: Calculate based on month pattern change
+                else {
+                    // Build the date using the current month/year but with the ORIGINAL day
+                    $originalMonthlyDate = $newDate->copy()->setDay($currentDay);
+                }
+                
+                // Log what we're about to delete
+                \Log::info("Monthly pattern: Attempting to delete specific edited occurrence", [
+                    'appointment_id' => $appointment->appointment_id,
+                    'original_date' => $originalMonthlyDate->format('Y-m-d'),
+                    'original_day' => $currentDay,
+                    'new_day' => $newDay
+                ]);
+                
+                // Delete with direct SQL for maximum reliability
+                $deleteCount = DB::delete(
+                    "DELETE FROM appointment_occurrences 
+                    WHERE appointment_id = ? 
+                    AND DATE(occurrence_date) = ?::date",
+                    [$appointment->appointment_id, $originalMonthlyDate->format('Y-m-d')]
+                );
+                
+                \Log::info("Monthly pattern: Deleted specific edited occurrence", [
+                    'appointment_id' => $appointment->appointment_id,
+                    'original_date' => $originalMonthlyDate->format('Y-m-d'),
+                    'deleted_count' => $deleteCount
+                ]);
+            }
         } else {
             // Delete only the SPECIFIC occurrence being edited
             $deleted = $appointment->occurrences()
@@ -1017,7 +1061,6 @@ class InternalAppointmentsController extends Controller
             
             \Log::info("Deleted occurrence for exact edited date {$formattedDate}: {$deleted}");
         }
-        
         return true;
     }
 
