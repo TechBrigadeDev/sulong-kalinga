@@ -242,6 +242,56 @@
                             </div>
                         </div>
                     </form>
+
+                    <!-- Summary Cards -->
+                    <div class="row mb-3">
+                        <!-- Total Care Hours -->
+                        <div class="col-md-4 mb-2">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Total Care Hours</h5>
+                                    <h2 class="text-primary" style="font-size: clamp(1.5rem, 2vw, 2rem);">
+                                        {{ isset($totalCareTime) ? $totalCareTime : '0 hrs' }}
+                                    </h2>
+                                    <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">{{ $dateRangeLabel ?? 'All time' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Active Beneficiaries -->
+                        <div class="col-md-4 mb-2">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Active Beneficiaries</h5>
+                                    <h2 class="text-success" style="font-size: clamp(1.5rem, 2vw, 2rem);">
+                                        {{ $totalPopulation ?? 0 }}
+                                    </h2>
+                                    <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">Currently active</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Care Services -->
+                        <div class="col-md-4 mb-2">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Total Care Services</h5>
+                                    @php
+                                        $totalInterventions = 0;
+                                        foreach($careServicesSummary ?? [] as $category) {
+                                            if(isset($category['interventions'])) {
+                                                foreach($category['interventions'] as $intervention) {
+                                                    $totalInterventions += isset($intervention['implementations']) ? $intervention['implementations'] : 0;
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    <h2 class="text-warning" style="font-size: clamp(1.5rem, 2vw, 2rem);">{{ $totalInterventions }}</h2>
+                                    <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">{{ $dateRangeLabel ?? 'All time' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- Beneficiary Details Row -->
                     <div class="row mb-3 {{ !$selectedBeneficiary ? 'd-none' : '' }}" id="beneficiaryDetailsRow">
