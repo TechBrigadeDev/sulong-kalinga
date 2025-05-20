@@ -710,6 +710,8 @@
                     <form id="addAppointmentForm">
                         @csrf
                         <input type="hidden" id="visitationId" name="visitation_id">
+                        <input type="hidden" id="original_care_worker_id" name="original_care_worker_id" value="">
+                        <input type="hidden" id="edited_occurrence_date" name="edited_occurrence_date" value="">
                         
                         <!-- Care Worker Selection -->
                         <div class="form-group">
@@ -1620,6 +1622,49 @@
                     // Update modal title
                     if (addAppointmentModalLabel) {
                         addAppointmentModalLabel.innerHTML = '<i class="bi bi-pencil-square"></i> Edit Appointment';
+                    }
+
+                    // CRITICAL: Store the exact date being edited for proper cleanup
+                    if (currentEvent && currentEvent.start) {
+                        try {
+                            // Convert to a definite Date object to ensure we're working with a proper date
+                            let occDate = new Date(currentEvent.start);
+                            
+                            // Double-check that we have a valid date
+                            if (isNaN(occDate.getTime())) {
+                                console.error('Invalid date object:', currentEvent.start);
+                                // Fall back to current date as a last resort
+                                occDate = new Date();
+                            }
+                            
+                            // Format with direct string manipulation for maximum browser compatibility
+                            const year = occDate.getFullYear();
+                            const month = String(occDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(occDate.getDate()).padStart(2, '0');
+                            const formattedDate = `${year}-${month}-${day}`;
+                            
+                            console.log('Current event start date:', occDate);
+                            console.log('Formatted date (YYYY-MM-DD):', formattedDate);
+                            
+                            // Explicitly set the value of the hidden field
+                            const editedOccurrenceField = document.getElementById('edited_occurrence_date');
+                            if (editedOccurrenceField) {
+                                editedOccurrenceField.value = formattedDate;
+                                // Verify the value was set correctly
+                                console.log('Field value after setting:', editedOccurrenceField.value);
+                            } else {
+                                console.error('Could not find edited_occurrence_date field');
+                            }
+                        } catch (err) {
+                            console.error('Error formatting date:', err);
+                        }
+                    }
+
+                    // Store original care worker ID for comparing with the new selection
+                    const originalCareWorkerId = document.getElementById('original_care_worker_id');
+                    if (originalCareWorkerId) {
+                        originalCareWorkerId.value = currentEvent.extendedProps.care_worker_id;
+                        console.log('Setting original care worker ID:', currentEvent.extendedProps.care_worker_id);
                     }
                     
                     // Set form data from event
