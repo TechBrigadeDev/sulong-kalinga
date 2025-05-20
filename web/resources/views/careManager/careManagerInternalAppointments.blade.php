@@ -746,7 +746,8 @@
                     </div>
                     <form id="addAppointmentForm">
                         <input type="hidden" id="appointmentId" name="appointment_id" value="">
-                        
+                        <input type="hidden" id="edited_occurrence_date" name="edited_occurrence_date" value="">
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -2173,7 +2174,9 @@
                 document.getElementById('appointmentDate').value = currentEvent.startStr.split('T')[0];
                 document.getElementById('appointmentPlace').value = currentEvent.extendedProps.meeting_location || '';
                 document.getElementById('appointmentNotes').value = currentEvent.extendedProps.notes || '';
-                
+                document.getElementById('edited_occurrence_date').value = currentEvent.startStr.split('T')[0];
+                console.log("Setting edited occurrence date to original occurrence date:", currentEvent.startStr.split('T')[0]);
+
                 // Handle flexible time setting
                 const isFlexibleTime = currentEvent.extendedProps.is_flexible_time;
                 document.getElementById('flexibleTimeCheck').checked = isFlexibleTime;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports Management</title>
+    <title>Records Management</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
@@ -39,7 +39,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-        <div class="text-left">MY REPORTS</div>
+        <div class="text-left">RECORDS MANAGEMENT</div>
         <div class="container-fluid text-center">
         <form action="{{ route('care-worker.reports') }}" method="GET" id="searchFilterForm">
                 <div class="row mb-3 align-items-center">

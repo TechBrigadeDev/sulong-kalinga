@@ -82,8 +82,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::get('/beneficiary/{id}', [WeeklyCareController::class, 'getBeneficiaryDetails'])->name('beneficiaryDetails');
     });
 
-    // Reports Management
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    // Records Management
+    Route::get('/records', [ReportsController::class, 'index'])->name('reports');
     
     // Password validation route
     Route::post('/validate-password', [UserController::class, 'validatePassword'])->name('validate-password');

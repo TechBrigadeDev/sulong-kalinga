@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports Management</title>
+    <title>Records Management</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/reportsManagement.css') }}">
     <style>
@@ -24,7 +24,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-        <div class="text-left">REPORTS MANAGEMENT</div>
+        <div class="text-left">RECORDS MANAGEMENT</div>
         <div class="container-fluid text-center">
         <form action="{{ route('admin.reports') }}" method="GET" id="searchFilterForm">
                 <div class="row mb-3 align-items-center">
