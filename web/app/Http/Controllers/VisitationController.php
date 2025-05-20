@@ -809,6 +809,187 @@ class VisitationController extends Controller
                     'message' => 'Converting between recurring and non-recurring appointments is not allowed. Please cancel this appointment and create a new one instead.'
                 ], 422);
             }
+
+            // Check if care worker is being changed
+            $originalCareWorkerId = $visitation->care_worker_id;
+            $careWorkerChanged = $originalCareWorkerId != $request->care_worker_id;
+
+            // Log care worker change if detected
+            if ($careWorkerChanged) {
+                \Log::info('Care worker change detected', [
+                    'visitation_id' => $visitation->visitation_id,
+                    'original_care_worker' => $originalCareWorkerId,
+                    'new_care_worker' => $request->care_worker_id
+                ]);
+            }
+
+            // For recurring appointments with care worker change, 
+            // split into past and future to preserve history
+            if ($wasRecurring && $careWorkerChanged) {
+                // Use the visitation date from the request as the split point
+                $splitDate = Carbon::parse($request->visitation_date);
+                
+                // Get the occurrence date being edited from the request
+                $originalOccurrenceDate = null;
+                if ($request->has('edited_occurrence_date')) {
+                    $originalOccurrenceDate = Carbon::parse($request->edited_occurrence_date);
+                    \Log::info('Using explicit edited_occurrence_date from form', ['date' => $originalOccurrenceDate->format('Y-m-d')]);
+                } else if ($request->has('occurrence_date')) {
+                    $originalOccurrenceDate = Carbon::parse($request->occurrence_date);
+                    \Log::info('Using occurrence_date from request', ['date' => $originalOccurrenceDate->format('Y-m-d')]);
+                } else {
+                    // Fall back to original visitation date
+                    $originalOccurrenceDate = Carbon::parse($originalVisitationDate);
+                    \Log::info('Falling back to original visitation date', ['date' => $originalOccurrenceDate->format('Y-m-d')]);
+                }
+                
+                \Log::info('Splitting recurring appointment for care worker change', [
+                    'visitation_id' => $visitation->visitation_id,
+                    'split_date' => $splitDate->format('Y-m-d'),
+                    'original_occurrence_date' => $originalOccurrenceDate->format('Y-m-d'),
+                    'old_care_worker' => $originalCareWorkerId,
+                    'new_care_worker' => $request->care_worker_id
+                ]);
+                
+                // Explicitly delete the specific original occurrence being edited
+                if ($originalOccurrenceDate) {
+                    $deleteResult = DB::delete(
+                        "DELETE FROM visitation_occurrences 
+                        WHERE visitation_id = ? 
+                        AND DATE(occurrence_date) = ?::date",
+                        [$visitation->visitation_id, $originalOccurrenceDate->format('Y-m-d')]
+                    );
+                    
+                    \Log::info("Explicitly deleted occurrence that was being edited", [
+                        'original_date' => $originalOccurrenceDate->format('Y-m-d'),
+                        'delete_count' => $deleteResult
+                    ]);
+                }
+                
+                // Create exceptions for all future occurrences of the original appointment
+                $deletedCount = DB::delete(
+                    "DELETE FROM visitation_occurrences 
+                    WHERE visitation_id = ? 
+                    AND DATE(occurrence_date) >= ?::date",
+                    [$visitation->visitation_id, $splitDate->format('Y-m-d')]
+                );
+                
+                \Log::info("Deleted {$deletedCount} future occurrences for exception creation", [
+                    'visitation_id' => $visitation->visitation_id,
+                    'split_date' => $splitDate->format('Y-m-d')
+                ]);
+                
+                // Create exceptions for all deleted future occurrences
+                $pattern = $visitation->recurringPattern;
+                $currentDate = $splitDate->copy();
+                $endDate = $pattern->recurrence_end ?? Carbon::now()->addYear();
+                $exceptionCount = 0;
+                
+                while ($currentDate <= $endDate) {
+                    DB::table('visitation_exceptions')->insert([
+                        'visitation_id' => $visitation->visitation_id,
+                        'exception_date' => $currentDate->format('Y-m-d'),
+                        'status' => 'skipped',
+                        'reason' => 'Care worker changed',
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                    
+                    $exceptionCount++;
+                    
+                    // Advance to next date based on pattern
+                    if ($pattern->pattern_type === 'weekly') {
+                        // Handle weekly patterns with multiple days correctly
+                        if ($pattern->day_of_week) {
+                            // CRITICAL FIX: Ensure we're working with an array of integers, not strings
+                            $dayArray = array_map('intval', explode(',', $pattern->day_of_week));
+                            
+                            // Find next day in pattern
+                            $currentDayOfWeek = (int)$currentDate->dayOfWeek; // Ensure integer
+                            $nextDay = null;
+                            sort($dayArray);
+                            
+                            foreach ($dayArray as $day) {
+                                // CRITICAL: Ensure $day is an integer
+                                $day = (int)$day;
+                                if ($day > $currentDayOfWeek) {
+                                    $nextDay = $day;
+                                    break;
+                                }
+                            }
+                            
+                            if ($nextDay === null) {
+                                // Move to first day of next week
+                                $nextDay = (int)$dayArray[0]; // Ensure integer
+                                $currentDate->addWeek()->startOfWeek()->addDays($nextDay);
+                            } else {
+                                // Move to next day in current week
+                                $daysToAdd = (int)($nextDay - $currentDayOfWeek); // Ensure integer
+                                $currentDate->addDays($daysToAdd);
+                            }
+                        } else {
+                            $currentDate->addWeek();
+                        }
+                    } elseif ($pattern->pattern_type === 'monthly') {
+                        $currentDate->addMonth();
+                    } else {
+                        $currentDate->addDay(); // Default for daily
+                    }
+                }
+                
+                \Log::info("Created {$exceptionCount} exceptions for visitation {$visitation->visitation_id}", [
+                    'split_date' => $splitDate->format('Y-m-d')
+                ]);
+                
+                // Create a new visitation for future dates with the new care worker
+                $newVisitation = new Visitation();
+                $newVisitation->care_worker_id = $request->care_worker_id;
+                $newVisitation->beneficiary_id = $request->beneficiary_id;
+                $newVisitation->visitation_date = $request->visitation_date;
+                $newVisitation->visit_type = $request->visit_type;
+                $newVisitation->is_flexible_time = $request->has('is_flexible_time') && $request->is_flexible_time;
+                $newVisitation->start_time = $request->is_flexible_time ? null : $request->start_time;
+                $newVisitation->end_time = $request->is_flexible_time ? null : $request->end_time;
+                $newVisitation->notes = $request->notes;
+                $newVisitation->status = 'scheduled';
+                $newVisitation->date_assigned = now();
+                $newVisitation->assigned_by = Auth::id();
+                $newVisitation->save();
+                
+                // Create recurring pattern for the new visitation
+                if ($pattern) {
+                    $newPattern = new RecurringPattern();
+                    $newPattern->visitation_id = $newVisitation->visitation_id;
+                    $newPattern->pattern_type = $request->pattern_type;
+                    
+                    // Handle day_of_week field properly
+                    if ($request->pattern_type === 'weekly' && $request->has('day_of_week')) {
+                        if (is_array($request->day_of_week)) {
+                            $newPattern->day_of_week = implode(',', array_unique($request->day_of_week));
+                        } else {
+                            $newPattern->day_of_week = $request->day_of_week;
+                        }
+                    }
+                    
+                    $newPattern->recurrence_end = $request->recurrence_end ?? $pattern->recurrence_end;
+                    $newPattern->save();
+                }
+                
+                // Generate occurrences for the new visitation
+                $newVisitation->generateOccurrences();
+                
+                // Send notifications about the care worker change
+                $this->notifyCareWorkerChange($visitation, $newVisitation, $originalCareWorkerId, $request->care_worker_id);
+                
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Appointment updated and care worker changed for future occurrences',
+                    'visitation_id' => $newVisitation->visitation_id
+                ]);
+            }
             
             $originalVisitationDate = $visitation->visitation_date->format('Y-m-d'); // Store original date
             $newVisitationDate = null; // Initialize the variable here
@@ -1434,8 +1615,9 @@ class VisitationController extends Controller
      * @param string $action The action performed (created, updated, canceled)
      * @param string|null $reason Reason for cancellation if applicable
      * @param int|null $authorId User ID of the person who performed the action
+     * @param int|null $originalCareWorkerId Original care worker ID if changed
      */
-    private function sendAppointmentNotifications(Visitation $visitation, string $action, string $reason = null, int $authorId = null)
+    private function sendAppointmentNotifications(Visitation $visitation, string $action, string $reason = null, int $authorId = null, int $originalCareWorkerId = null)
     {
         // Set author ID to current user if not provided
         if ($authorId === null) {
@@ -1446,6 +1628,14 @@ class VisitationController extends Controller
         $beneficiary = Beneficiary::find($visitation->beneficiary_id);
         $careWorker = User::find($visitation->care_worker_id);
         $familyMembers = FamilyMember::where('related_beneficiary_id', $visitation->beneficiary_id)->get();
+        
+        // Get original care worker if it changed
+        $originalCareWorker = null;
+        $careWorkerChanged = false;
+        if ($originalCareWorkerId && $originalCareWorkerId != $visitation->care_worker_id) {
+            $originalCareWorker = User::find($originalCareWorkerId);
+            $careWorkerChanged = true;
+        }
         
         // Get care manager of the care worker
         $careManager = null;
@@ -1473,8 +1663,17 @@ class VisitationController extends Controller
                 
             case 'updated':
                 $title = "Appointment Updated";
+                
+                // Add care worker change information if applicable
+                $careWorkerInfo = "";
+                if ($careWorkerChanged && $originalCareWorker) {
+                    $careWorkerInfo = " Care worker has been changed from {$originalCareWorker->first_name} {$originalCareWorker->last_name} " .
+                                    "to {$careWorker->first_name} {$careWorker->last_name}.";
+                }
+                
                 $message = "The appointment for {$beneficiary->first_name} {$beneficiary->last_name} " . 
-                        "with care worker {$careWorker->first_name} {$careWorker->last_name} has been updated. " .
+                        "with care worker {$careWorker->first_name} {$careWorker->last_name} has been updated." .
+                        "{$careWorkerInfo} " .
                         "New schedule: {$dateFormatted} at {$timeInfo}. " .
                         "Visit type: {$visitType}.";
                 break;
@@ -1546,6 +1745,129 @@ class VisitationController extends Controller
             'action' => $action,
             'visitation_id' => $visitation->visitation_id,
             'author_id' => $authorId
+        ]);
+    }
+
+    /**
+     * Send notifications when a care worker is changed for an appointment
+     * 
+     * @param Visitation $originalVisitation Original visitation record
+     * @param Visitation $newVisitation New visitation record
+     * @param int $originalCareWorkerId Original care worker ID
+     * @param int $newCareWorkerId New care worker ID
+     * @return void
+     */
+    private function notifyCareWorkerChange(Visitation $originalVisitation, Visitation $newVisitation, $originalCareWorkerId, $newCareWorkerId)
+    {
+        // Get care worker details
+        $originalCareWorker = User::find($originalCareWorkerId);
+        $newCareWorker = User::find($newCareWorkerId);
+        
+        if (!$originalCareWorker || !$newCareWorker) {
+            return;
+        }
+        
+        $beneficiary = Beneficiary::find($newVisitation->beneficiary_id);
+        if (!$beneficiary) {
+            return;
+        }
+        
+        $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+        
+        // Get care managers for both care workers
+        $careManagers = [];
+        if ($originalCareWorker->assigned_care_manager_id) {
+            $careManagers[$originalCareWorker->assigned_care_manager_id] = User::find($originalCareWorker->assigned_care_manager_id);
+        }
+        
+        if ($newCareWorker->assigned_care_manager_id) {
+            $careManagers[$newCareWorker->assigned_care_manager_id] = User::find($newCareWorker->assigned_care_manager_id);
+        }
+        
+        // Format date information
+        $dateFormatted = Carbon::parse($newVisitation->visitation_date)->format('l, F j, Y');
+        $scheduleChanged = $originalVisitation->visitation_date->format('Y-m-d') !== $newVisitation->visitation_date->format('Y-m-d');
+        
+        // Prepare notification message
+        $title = "Care Worker Changed for Appointment";
+        $scheduleInfo = $scheduleChanged ? 
+            " The appointment was also rescheduled to {$dateFormatted}." : 
+            " on {$dateFormatted}";
+        
+        $message = "The care worker for {$beneficiary->first_name} {$beneficiary->last_name}'s appointment" .
+                "{$scheduleInfo} " .
+                "has been changed from {$originalCareWorker->first_name} {$originalCareWorker->last_name} " .
+                "to {$newCareWorker->first_name} {$newCareWorker->last_name}.";
+        
+        // Notify original care worker
+        if ($originalCareWorker->id != Auth::id()) {
+            Notification::create([
+                'user_id' => $originalCareWorker->id,
+                'user_type' => 'cose_staff',
+                'message_title' => $title,
+                'message' => $message . " You have been unassigned from this appointment.",
+                'date_created' => now(),
+                'is_read' => false
+            ]);
+        }
+        
+        // Notify new care worker
+        if ($newCareWorker->id != Auth::id()) {
+            Notification::create([
+                'user_id' => $newCareWorker->id,
+                'user_type' => 'cose_staff',
+                'message_title' => $title,
+                'message' => $message . " You have been assigned to this appointment.",
+                'date_created' => now(),
+                'is_read' => false
+            ]);
+        }
+        
+        // Notify care managers
+        foreach ($careManagers as $careManager) {
+            if ($careManager && $careManager->id != Auth::id()) {
+                Notification::create([
+                    'user_id' => $careManager->id,
+                    'user_type' => 'cose_staff',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+            }
+        }
+        
+        // Notify beneficiary if they have portal access
+        if ($beneficiary->portal_account_id) {
+            Notification::create([
+                'user_id' => $beneficiary->beneficiary_id,
+                'user_type' => 'beneficiary',
+                'message_title' => $title,
+                'message' => $message,
+                'date_created' => now(),
+                'is_read' => false
+            ]);
+        }
+        
+        // Notify family members
+        foreach ($familyMembers as $familyMember) {
+            if ($familyMember->portal_account_id) {
+                Notification::create([
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+            }
+        }
+        
+        \Log::info("Care worker change notifications sent", [
+            'old_worker' => $originalCareWorkerId,
+            'new_worker' => $newCareWorkerId,
+            'beneficiary' => $beneficiary->beneficiary_id,
+            'split_date' => $dateFormatted
         ]);
     }
 
