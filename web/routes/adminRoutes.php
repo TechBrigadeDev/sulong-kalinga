@@ -120,8 +120,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
 
     });
 
-    // Reports Management
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    // Record Management
+    Route::get('/records', [ReportsController::class, 'index'])->name('reports');
 
     // Municipality and Barangay Management
     Route::prefix('locations')->name('locations.')->group(function () {
