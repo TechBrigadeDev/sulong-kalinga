@@ -16,6 +16,67 @@
 
 
     <style>
+        #careWorkerFilter {
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid #4e73df;
+            background-color: #fff;
+            padding-left: 30px; /* Space for the icon */
+            background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234e73df' class='bi bi-person-badge' viewBox='0 0 16 16'><path d='M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/><path d='M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: 8px center;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-width: 220px;
+            position: relative;
+        }
+
+        #careWorkerFilter:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.15rem rgba(78, 115, 223, 0.25);
+            border-color: #3a5fc8;
+        }
+
+        #careWorkerFilter:hover {
+            border-color: #3a5fc8;
+            background-color: #f8f9fc;
+        }
+
+        /* Add custom arrow instead of browser default */
+        #careWorkerFilter {
+            background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234e73df' class='bi bi-person-badge' viewBox='0 0 16 16'><path d='M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/><path d='M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z'/></svg>"),
+            url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234e73df' class='bi bi-chevron-down' viewBox='0 0 16 16'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>");
+            background-position: 8px center, right 8px center;
+            background-repeat: no-repeat, no-repeat;
+            padding-right: 30px; /* Space for the arrow */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            #careWorkerFilter {
+                width: 100% !important;
+                min-width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+            
+            .calendar-actions {
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            
+            .calendar-actions > * {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Add a wrapper for better alignment if needed */
+        .filter-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
         /* Card Design */
         .modal-header-danger {
             background-color: #dc3545;
@@ -486,6 +547,15 @@
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="toggleWeekView">
                                             <i class="bi bi-calendar-week"></i> Week View
                                         </button>
+                                        <!-- Care worker filter with improved styling -->
+                                        <div class="filter-wrapper">
+                                            <select id="careWorkerFilter" class="form-select form-select-sm" aria-label="Filter by care worker">
+                                                <option value="">All Care Workers</option>
+                                                @foreach($careWorkers as $worker)
+                                                    <option value="{{ $worker->id }}">{{ $worker->first_name }} {{ $worker->last_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="card-body p-0">
@@ -855,6 +925,26 @@
         let currentView = 'dayGridMonth';
         let isEditing = false; // Add this variable to track editing state
 
+        // Global variable to track selected care worker
+        let currentCareWorkerId = '';
+
+        // Store reference to the care worker filter dropdown
+        const careWorkerFilter = document.getElementById('careWorkerFilter');
+
+        // Add event listener to care worker filter dropdown
+        if (careWorkerFilter) {
+            careWorkerFilter.addEventListener('change', function() {
+                // Store the selected care worker ID
+                currentCareWorkerId = this.value;
+                
+                // Show spinner during filtering
+                showCalendarSpinner('Filtering by care worker...');
+                
+                // Refresh calendar with new filter
+                calendar.refetchEvents();
+            });
+        }
+
         // Initialize tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
@@ -933,7 +1023,6 @@
                 const start = info.startStr;
                 const end = info.endStr;
                 const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
-                const careWorkerId = document.getElementById('careWorkerSelect') ? document.getElementById('careWorkerSelect').value : '';
                 
                 // Show loading indicator
                 if (document.getElementById('calendar-loading-indicator')) {
@@ -956,7 +1045,7 @@
                         start: start,
                         end: end,
                         search: searchTerm,
-                        care_worker_id: careWorkerId,
+                        care_worker_id: currentCareWorkerId, // Add care worker filter parameter
                         view_type: info.view ? info.view.type : 'dayGridMonth' // Safe access with fallback
                     },
                     success: function(response) {
@@ -1092,23 +1181,56 @@
             resetButton.className = 'btn btn-sm btn-outline-secondary';
             resetButton.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
             resetButton.addEventListener('click', function() {
-                // Clear search input field
-                const searchInput = document.getElementById('searchInput');
+                // Clear search input
+                const searchInput = document.querySelector('.search-input');
                 if (searchInput) {
                     searchInput.value = '';
+                    currentSearchTerm = '';
                 }
                 
-                // Reset care worker filter if it exists
-                const careWorkerSelect = document.getElementById('careWorkerSelect');
-                if (careWorkerSelect && careWorkerSelect.tagName === 'SELECT') {
-                    careWorkerSelect.selectedIndex = 0;
+                // Clear care worker filter - ADD THIS
+                if (careWorkerFilter) {
+                    careWorkerFilter.selectedIndex = 0;
+                    currentCareWorkerId = '';
                 }
                 
-                // Reset calendar
+                // Show spinner during reset
+                showCalendarSpinner('Resetting calendar...');
+                
+                // Reset calendar view to month if not already
+                if (currentView !== 'dayGridMonth') {
+                    calendar.changeView('dayGridMonth');
+                    toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                    currentView = 'dayGridMonth';
+                }
+                
+                // First remove all events
                 calendar.removeAllEvents();
+                
+                // Go to current month/date
                 calendar.today();
+                
+                // Refresh events data
                 calendar.refetchEvents();
-                showSuccessMessage('Calendar and search filters reset successfully');
+                
+                // Clear current event selection
+                currentEvent = null;
+                editButton.disabled = true;
+                deleteButton.disabled = true;
+                
+                // Clear details panel
+                appointmentDetailsEl.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                        <p class="mt-3 mb-0">Select an appointment to view details</p>
+                    </div>
+                `;
+
+                // Hide spinner when done
+                setTimeout(() => {
+                    hideCalendarSpinner();
+                    showToast('Success', 'Calendar reset successfully', 'success');
+                }, 300);
             });
             
             calendarActions.insertBefore(resetButton, calendarActions.firstChild);
