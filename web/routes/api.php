@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PortalAccountApiController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\ReportsApiController;
 use App\Http\Controllers\Api\ViewAccountProfileApiController;
+use App\Http\Controllers\Api\WeeklyCarePlanApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -81,4 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports', [ReportsApiController::class, 'index']);
     Route::get('/reports/{id}', [ReportsApiController::class, 'show']);
     Route::put('/reports/{id}', [ReportsApiController::class, 'update']);
+
+    // Weekly Care Plan (WCP) API
+    // Create only with store
+    Route::post('/weekly-care-plans', [WeeklyCarePlanApiController::class, 'store']);
 });
