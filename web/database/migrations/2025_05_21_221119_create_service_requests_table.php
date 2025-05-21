@@ -21,10 +21,10 @@ return new class extends Migration
             $table->date('service_date')->nullable();
             $table->time('service_time')->nullable();
             $table->text('message');
-            $table->enum('status', ['new', 'approved', 'rejected', 'completed', 'archived'])->default('new');
+            $table->enum('status', ['new', 'approved', 'rejected', 'completed'])->default('new');
             $table->boolean('read_status')->default(false);
             $table->timestamp('read_at')->nullable();
-            $table->enum('action_type', ['approved', 'rejected', null])->nullable();
+            $table->enum('action_type', ['approved', 'rejected', 'completed', null])->nullable();
             $table->unsignedBigInteger('action_taken_by')->nullable();
             $table->timestamp('action_taken_at')->nullable();
             $table->timestamps();

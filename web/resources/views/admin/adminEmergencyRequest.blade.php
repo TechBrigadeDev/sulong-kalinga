@@ -581,7 +581,6 @@
                 <select class="form-select" id="serviceUpdateType" name="update_type" required>
                 <option value="approval">Approve Request</option>
                 <option value="rejection">Reject Request</option>
-                <option value="assignment">Assign Care Worker</option>
                 <option value="completion">Mark as Completed</option>
                 <option value="note">Add Note Only</option>
                 </select>
