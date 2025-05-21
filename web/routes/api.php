@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ReportsApiController;
 use App\Http\Controllers\Api\ViewAccountProfileApiController;
 use App\Http\Controllers\Api\WeeklyCarePlanApiController;
 use App\Http\Controllers\Api\MedicationScheduleApiController;
+use App\Http\Controllers\Api\InternalAppointmentsApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -97,4 +98,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/medication-schedules', [MedicationScheduleApiController::class, 'store']);
     Route::put('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'update']);
     Route::delete('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'destroy']);
+
+    // Internal Appointments API
+    // GET /internal-appointments - List all internal appointments (for calendar and management)
+    Route::get('/internal-appointments', [InternalAppointmentsApiController::class, 'index']);
+    // GET /internal-appointments/{id} - Show a single internal appointment
+    Route::get('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'show']);
+    // POST /internal-appointments - Create a new internal appointment
+    Route::post('/internal-appointments', [InternalAppointmentsApiController::class, 'store']);
+    // PUT /internal-appointments/{id} - Update an internal appointment
+    Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
+    // POST /internal-appointments/{id}/cancel - Cancel (archive) an internal appointment
+    Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
 });
