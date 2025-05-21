@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\ReportsApiController;
 use App\Http\Controllers\Api\ViewAccountProfileApiController;
 use App\Http\Controllers\Api\WeeklyCarePlanApiController;
+use App\Http\Controllers\Api\MedicationScheduleApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -88,4 +89,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Uploads (move back inside middleware after testing)
     // Moved backed inside middleware in sk-74/family-api-fix
     Route::post('/upload', [UploadController::class, 'upload']);
+
+    // Medication Schedule API
+    // GET /medication-schedules - List all medication schedules (used for the Medication Schedule Management page in the web)
+    Route::get('/medication-schedules', [MedicationScheduleApiController::class, 'index']);
+    Route::get('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'show']);
+    Route::post('/medication-schedules', [MedicationScheduleApiController::class, 'store']);
+    Route::put('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'update']);
+    Route::delete('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'destroy']);
 });
