@@ -28,6 +28,7 @@ use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\CareWorkerTrackingController;
 use App\Http\Controllers\AiSummaryController;
+use App\Http\Controllers\ShiftHistoryController;
 
 
 // All routes with administrator role check
@@ -283,6 +284,12 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     // AI Summary
     Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
         Route::get('/', [AiSummaryController::class, 'index'])->name('index');
+    });
+
+    // Shift Histories
+    Route::prefix('shift-histories')->name('shift.histories.')->group(function () {
+        Route::get('/', [ShiftHistoryController::class, 'index'])->name('index');
+        Route::get('/archived', [ShiftHistoryController::class, 'archived'])->name('archived');
     });
 
 });

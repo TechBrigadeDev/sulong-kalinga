@@ -92,6 +92,7 @@
         <li><a class="link_name">Location Tracking</a></li>
         <li><a href="{{ route('admin.beneficiary.map.index') }}" class="{{ Request::routeIs('admin.beneficiary.map.*') ? 'active' : '' }}">Beneficiary Map</a></li>
         <li><a href="{{ route('admin.careworker.tracking.index') }}" class="">Care Worker Tracking</a></li>
+        <li><a href="{{ route('admin.shift.histories.index') }}" class="{{ Request::routeIs('admin.shift.histories.*') ? 'active' : '' }}">Shift Histories</a></li>
       </ul>
     </li>
     
