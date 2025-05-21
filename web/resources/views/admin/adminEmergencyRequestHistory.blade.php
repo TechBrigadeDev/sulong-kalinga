@@ -1099,6 +1099,7 @@
             $('#pendingEmergencies').text(stats.pending);
             
             
+            
             // Add this block to update the emergency type breakdown
             let breakdownHtml = '';
             if (stats.byType && stats.byType.length > 0) {
