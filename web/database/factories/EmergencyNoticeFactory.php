@@ -37,8 +37,7 @@ class EmergencyNoticeFactory extends Factory
         $statusChoices = [
             'new' => 20,
             'in_progress' => 30,
-            'resolved' => 40, 
-            'archived' => 10
+            'resolved' => 50  // Increased weight since we removed 'archived'
         ];
         
         $status = $this->faker->randomElement(
@@ -95,7 +94,7 @@ class EmergencyNoticeFactory extends Factory
         ];
     }
     
-    public function new(): Factory
+    public function asNew(): Factory
     {
         return $this->state(function (array $attributes) {
             return [
