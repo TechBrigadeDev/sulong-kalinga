@@ -37,9 +37,8 @@ class ServiceRequestFactory extends Factory
         $statusChoices = [
             'new' => 20,
             'approved' => 25,
-            'rejected' => 15, 
-            'completed' => 30,
-            'archived' => 10
+            'rejected' => 25, 
+            'completed' => 30
         ];
         
         $status = $this->faker->randomElement(
@@ -100,7 +99,7 @@ class ServiceRequestFactory extends Factory
         ];
     }
     
-    public function new(): Factory
+    public function asNew(): Factory
     {
         return $this->state(function (array $attributes) {
             return [
