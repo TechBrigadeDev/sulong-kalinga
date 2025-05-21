@@ -92,6 +92,16 @@
         <li><a href="#" class="">Care Worker Tracking</a></li>
       </ul>
     </li>
+
+    <li class="{{ Request::routeIs('care-manager.emergency.request.*') ? 'active' : '' }}">
+      <a href="{{ route('care-manager.emergency.request.index') }}" class="">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span class="link_name">Emergency & Request</span>
+      </a>
+      <ul class="sub-menu blank">
+        <li><a class="link_name" href="{{ route('care-manager.emergency.request.index') }}">Emergency & Request</a></li>
+      </ul>
+    </li>
     
     <li class="{{ Request::routeIs('care-manager.municipalities.*') ? 'active' : '' }}">
       <a href="{{ route('care-manager.municipalities.index') }}">

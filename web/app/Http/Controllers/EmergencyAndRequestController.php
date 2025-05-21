@@ -82,30 +82,20 @@ class EmergencyAndRequestController extends Controller
             return view('careManager.careManagerEmergencyRequest', compact(
                 'emergencyNotices',
                 'serviceRequests',
-                'pendingEmergencies',
-                'pendingServiceRequests',
                 'newEmergencyCount',
                 'inProgressEmergencyCount',
-                'resolvedEmergencyCount',
                 'newServiceRequestCount',
-                'approvedServiceRequestCount',
-                'rejectedServiceRequestCount',
-                'completedServiceRequestCount'
+                'approvedServiceRequestCount'
             ));
         } else {
             // Care Worker view (read-only)
             return view('careWorker.careWorkerEmergencyRequest', compact(
                 'emergencyNotices',
                 'serviceRequests',
-                'pendingEmergencies',
-                'pendingServiceRequests',
                 'newEmergencyCount',
                 'inProgressEmergencyCount',
-                'resolvedEmergencyCount',
                 'newServiceRequestCount',
-                'approvedServiceRequestCount',
-                'rejectedServiceRequestCount',
-                'completedServiceRequestCount'
+                'approvedServiceRequestCount'
             ));
         }
     }
@@ -476,23 +466,8 @@ class EmergencyAndRequestController extends Controller
             ], 422);
         }
 
-        if ($request->update_type == 'approval' && $serviceRequest->status == 'approved') {
-            return response()->json([
-                'success' => false,
-                'message' => 'This service request is already approved.'
-            ], 422);
-        }
-
         $user = Auth::user();
         
-        if ($request->update_type == 'completion' && (!$request->has('password') || !Hash::check($request->password, $user->password))) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['password' => ['The provided password is incorrect. Please try again.']],
-                'message' => 'Password verification failed'
-            ], 422);
-        }
-
         try {
             // Get the service request
             $serviceRequest = ServiceRequest::findOrFail($request->service_request_id);
@@ -502,6 +477,30 @@ class EmergencyAndRequestController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Only approved service requests can be marked as completed.'
+                ], 422);
+            }
+
+            if ($request->update_type == 'approval' && $serviceRequest->status == 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This service request is already approved.'
+                ], 422);
+            }
+
+            // Additional validation: require care_worker_id for approval
+            if ($request->update_type === 'approval' && !$request->filled('care_worker_id')) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['care_worker_id' => ['Please assign a care worker when approving a service request.']],
+                    'message' => 'Care worker assignment is required'
+                ], 422);
+            }
+
+            if ($request->update_type == 'completion' && (!$request->has('password') || !Hash::check($request->password, $user->password))) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['password' => ['The provided password is incorrect. Please try again.']],
+                    'message' => 'Password verification failed'
                 ], 422);
             }
             

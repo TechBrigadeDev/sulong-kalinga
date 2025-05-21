@@ -23,6 +23,7 @@ use App\Http\Controllers\HealthMonitoringController;
 use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\InternalAppointmentsController;
 use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\EmergencyAndRequestController;
 
 
 require_once __DIR__.'/routeHelpers.php';

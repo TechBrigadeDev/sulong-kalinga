@@ -282,13 +282,13 @@
 </head>
 <body>
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('admin.emergency.request.viewHistory') }}'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('care-manager.emergency.request.viewHistory') }}'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
         </div>
@@ -795,7 +795,7 @@
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "{{ route('care-manager.emergency.request.get.emergency', '') }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -827,7 +827,7 @@
             // If noticeId is provided, fetch fresh data, otherwise use current emergency
             if (noticeId) {
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                    url: "{{ route('care-manager.emergency.request.get.emergency', '') }}/" + noticeId,
                     method: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -958,7 +958,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('admin.emergency.request.respond.emergency') }}",
+                url: "{{ route('care-manager.emergency.request.respond.emergency') }}",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1064,17 +1064,6 @@
                     toastr.error('Please enter a response message');
                     return;
                 }
-
-                 // Add care worker validation for approval
-                if (updateType === 'approval' && !careWorkerId) {
-                    toastr.error('Please assign a care worker when approving a service request');
-                    // Highlight the select box to indicate it needs attention
-                    $('#serviceCareWorkerId').addClass('is-invalid');
-                    return;
-                }
-                
-                // Clear any previous validation error styling
-                $('#serviceCareWorkerId').removeClass('is-invalid');
                 
                 // Show loading state
                 $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
@@ -1102,7 +1091,7 @@
                 
                 // Submit request
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.handle.service') }}",
+                    url: "{{ route('care-manager.emergency.request.handle.service') }}",
                     method: 'POST',
                     data: formData,
                     processData: false,
@@ -1187,7 +1176,7 @@
             
             // Fetch service request details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "{{ route('care-manager.emergency.request.get.service', '') }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1220,7 +1209,7 @@
         // ===== COMMON FUNCTIONS =====
         function loadCareWorkers() {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.careworkers') }}",
+                url: "{{ route('care-manager.emergency.request.get.careworkers') }}",
                 method: 'GET',
                 success: function(response) {
                     console.log("Care workers loaded:", response); // Debug line
@@ -1267,7 +1256,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('admin.emergency.request.archive') }}",
+                url: "{{ route('care-manager.emergency.request.archive') }}",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1382,7 +1371,7 @@
             // If requestId is provided, fetch fresh data, otherwise use current service request
             if (requestId) {
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                    url: "{{ route('care-manager.emergency.request.get.service', '') }}/" + requestId,
                     method: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -1679,7 +1668,7 @@
         function openResolveEmergencyModal(noticeId) {
             // Fetch emergency details and then open modal with resolution pre-selected
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "{{ route('care-manager.emergency.request.get.emergency', '') }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1702,7 +1691,7 @@
 
         function openCompleteServiceRequestModal(requestId) {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "{{ route('care-manager.emergency.request.get.service', '') }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
