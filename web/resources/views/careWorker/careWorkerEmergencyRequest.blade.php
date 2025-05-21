@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emergency & Request</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Emergency Notices & Service Requests</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
@@ -190,6 +192,27 @@
             background-color: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
         }
+        /* Timeline styling */
+        .timeline-indicator {
+            position: relative;
+            width: 20px;
+        }
+        .timeline-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            top: 5px;
+            left: 0;
+        }
+        .timeline-content {
+            border-left: 1px solid #dee2e6;
+            padding-left: 15px;
+            flex: 1;
+        }
+        .timeline-item:last-child .timeline-content {
+            border-left-color: transparent;
+        }
         @media (max-width: 991.98px) {
             .main-content-column {
                 order: 1;
@@ -208,17 +231,64 @@
                 padding: 0.5rem 0.75rem;
             }
         }
+
+        .card-footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 0.75rem;
+        }
+        
+        .card-footer-actions .btn-group {
+            white-space: nowrap;
+        }
+        
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-content {
+            flex-grow: 1;
+        }
+
+        .clickable-card {
+            cursor: pointer;
+        }
+
+        /* Prevent text selection when clicking */
+        .clickable-card:not(.btn) {
+            user-select: none;
+        }
+
+        /* Hover effect */
+        .clickable-card:hover {
+            background-color: rgba(0, 0, 0, 0.01);
+        }
+
+        #successAlert {
+            margin: 0 15px 15px 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        #successAlert .btn-close:focus {
+            box-shadow: none;
+            outline: none;
+        }
     </style>
 </head>
 <body>
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careWorkerNavbar')
+    @include('components.careWorkerSidebar')
 
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('admin.emergency.request.viewHistory') }}'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('care-worker.emergency.request.viewHistory') }}'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
         </div>
@@ -245,170 +315,111 @@
                                 <div class="tab-content p-3" id="requestTypeTabContent">
                                     <!-- Emergency Tab -->
                                     <div class="tab-pane fade show active" id="emergency" role="tabpanel">
-                                        <div class="card notification-card emergency-card">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h5 class="card-title fw-bold mb-0 text-dark">Lola Remedios</h5>
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger">New</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Address:</span>
-                                                    <span>Mondragon, Barangay 12</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Contact:</span>
-                                                    <span>0912-345-6789</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Emergency Contact:</span>
-                                                    <span>Maria (Daughter) - 0917-890-1234</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-3">
-                                                    <span class="info-label">Assigned To:</span>
-                                                    <span>Nurse Juan Dela Cruz</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-clock me-1"></i> 15 min ago
-                                                    </small>
-                                                    <button class="btn btn-sm btn-outline-danger">
-                                                        <i class="bi bi-arrow-right-circle me-1"></i> Respond
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="card notification-card emergency-card">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h5 class="card-title fw-bold mb-0 text-dark">Tatay Juan</h5>
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger">New</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Address:</span>
-                                                    <span>San Roque, Barangay 5</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Contact:</span>
-                                                    <span>0922-333-4444</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Emergency Contact:</span>
-                                                    <span>Pedro (Son) - 0918-555-6666</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-3">
-                                                    <span class="info-label">Assigned To:</span>
-                                                    <span>Care Worker Maria Santos</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-clock me-1"></i> 1 hour ago
-                                                    </small>
-                                                    <button class="btn btn-sm btn-outline-danger">
-                                                        <i class="bi bi-arrow-right-circle me-1"></i> Respond
-                                                    </button>
+                                        @forelse($emergencyNotices->where('status', 'new') as $notice)
+                                            <div class="card notification-card emergency-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h5 class="card-title fw-bold mb-0 text-dark">{{ $notice->beneficiary->first_name }} {{ $notice->beneficiary->last_name }}</h5>
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger">New</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Address:</span>
+                                                        <span>{{ $notice->beneficiary->street_address }} ({{ $notice->beneficiary->barangay->barangay_name }}, {{ $notice->beneficiary->municipality->municipality_name }})</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Contact:</span>
+                                                        <span >{{ $notice->beneficiary->mobile }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Emergency Contact: </span>
+                                                        <span class="ms-2">{{ $notice->beneficiary->emergency_contact_name }} ({{ $notice->beneficiary->emergency_contact_relation }}) {{ $notice->beneficiary->emergency_contact_mobile }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Emergency Type: </span>
+                                                        <span class="ms-2"><span class="badge" style="background-color: {{ $notice->emergencyType->color_code }}">{{ $notice->emergencyType->name }}</span></span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-3">
+                                                        <span class="info-label">Message: </span>
+                                                        <span>{{ Str::limit($notice->message, 100) }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">{{ \Carbon\Carbon::parse($notice->created_at)->diffForHumans() }}</small>
+                                                        <div class="btn-group">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewEmergencyDetails({{ $notice->notice_id }})">
+                                                                <i class="bi bi-eye me-1"></i> View
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
+                                                                <i class="bi bi-bell me-1"></i> Send Reminder
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        @empty
+                                            <div class="empty-state">
+                                                <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                                                <h5 class="mt-3">No New Emergency Notices</h5>
+                                                <p>There are no new emergency notices at the moment.</p>
+                                            </div>
+                                        @endforelse
                                     </div>
                                     
                                     <!-- Service Request Tab -->
                                     <div class="tab-pane fade" id="service" role="tabpanel">
-                                        <div class="card notification-card request-card">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h5 class="card-title fw-bold mb-0 text-dark">Lolo Carlos</h5>
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary">New</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Request Type:</span>
-                                                    <span>Home Care Visit</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Address:</span>
-                                                    <span>San Roque, Barangay 8</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-3">
-                                                    <span class="info-label">Contact:</span>
-                                                    <span>0933-444-5555</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-3">
-                                                    <span class="info-label">Details:</span>
-                                                    <span>Requests weekly hygiene assistance. Family caregiver is temporarily unavailable.</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-clock me-1"></i> 3 hours ago
-                                                    </small>
-                                                    <div>
-                                                        <button class="btn btn-sm btn-success me-1">
-                                                            <i class="bi bi-check-circle me-1"></i> Approve
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger">
-                                                            <i class="bi bi-x-circle me-1"></i> Reject
-                                                        </button>
+                                        @forelse($serviceRequests->where('status', 'new') as $request)
+                                            <div class="card notification-card request-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h5 class="card-title fw-bold mb-0 text-dark">{{ $request->beneficiary->first_name }} {{ $request->beneficiary->last_name }}</h5>
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary">New</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Service Type:</span>
+                                                        <span><span class="badge" style="background-color: {{ $request->serviceType->color_code }}">{{ $request->serviceType->name }}</span></span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Requested Date:</span>
+                                                        <span>{{ \Carbon\Carbon::parse($request->service_date)->format('M d, Y') }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Requested Time:</span>
+                                                        <span>{{ $request->service_time ? \Carbon\Carbon::parse($request->service_time)->format('h:i A') : 'Flexible' }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-3">
+                                                        <span class="info-label">Message:</span>
+                                                        <span>{{ Str::limit($request->message, 100) }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">{{ \Carbon\Carbon::parse($request->created_at)->diffForHumans() }}</small>
+                                                        <div class="btn-group">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewServiceRequestDetails({{ $request->service_request_id }})">
+                                                                <i class="bi bi-eye me-1"></i> View
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $request->service_request_id }}, 'service')">
+                                                                <i class="bi bi-bell me-1"></i> Send Reminder
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="card notification-card request-card">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h5 class="card-title fw-bold mb-0 text-dark">Lola Feliza</h5>
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary">New</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Request Type:</span>
-                                                    <span>Transportation</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Address:</span>
-                                                    <span>Mondragon, Barangay 14</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-3">
-                                                    <span class="info-label">Contact:</span>
-                                                    <span>0944-555-6666</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-3">
-                                                    <span class="info-label">Details:</span>
-                                                    <span>Needs transport for monthly check-up on Friday.</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-clock me-1"></i> 5 hours ago
-                                                    </small>
-                                                    <div>
-                                                        <button class="btn btn-sm btn-success me-1">
-                                                            <i class="bi bi-check-circle me-1"></i> Approve
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger">
-                                                            <i class="bi bi-x-circle me-1"></i> Reject
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                        @empty
+                                            <div class="empty-state">
+                                                <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                                                <h5 class="mt-3">No New Service Requests</h5>
+                                                <p>There are no new service requests at the moment.</p>
                                             </div>
-                                        </div>
+                                        @endforelse
                                     </div>
                                 </div>
                             </div>
@@ -424,94 +435,98 @@
                                 </h5>
                             </div>
                             <div class="card-body p-3">
-                                <div class="card notification-card pending-card">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h6 class="fw-bold mb-0 text-dark">Lola Remedios - Emergency</h6>
-                                            <span class="badge bg-info bg-opacity-10 text-info">In Progress</span>
+                                <!-- Tab-specific content containers -->
+                                <div id="emergency-pending-content" class="pending-tab-content active">
+                                    <!-- In Progress Emergency Notices -->
+                                    @forelse($emergencyNotices->where('status', 'in_progress') as $notice)
+                                        <div class="card notification-card pending-card mb-3 clickable-card" onclick="viewEmergencyDetails({{ $notice->notice_id }})">
+                                            <div class="card-body">
+                                                <div class="card-content">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h6 class="fw-bold mb-0 text-dark">{{ $notice->beneficiary->first_name }} {{ $notice->beneficiary->last_name }}</h6>
+                                                        <span class="badge bg-info bg-opacity-10 text-info">In Progress</span>
+                                                    </div>
+                                                    
+                                                    @if($notice->action_taken_by)
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Responded:</span>
+                                                        <span>{{ $notice->actionTakenBy ? $notice->actionTakenBy->first_name . ' ' . $notice->actionTakenBy->last_name : 'Unknown' }}</span>
+                                                    </div>
+                                                    @endif
+                                                    
+                                                    <div class="d-flex flex-wrap mb-3">
+                                                        <span class="info-label">Type:</span>
+                                                        <span><span class="badge" style="background-color: {{ $notice->emergencyType->color_code }}">{{ $notice->emergencyType->name }}</span></span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="card-footer-actions">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-clock me-1"></i> Started {{ \Carbon\Carbon::parse($notice->action_taken_at)->diffForHumans() }}
+                                                    </small>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
+                                                        <i class="bi bi-bell me-1"></i> Send Reminder
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        <div class="d-flex flex-wrap mb-1">
-                                            <span class="info-label">Responded:</span>
-                                            <span>Nurse Juan Dela Cruz</span>
+                                    @empty
+                                        <div class="empty-state">
+                                            <i class="bi bi-hourglass text-muted" style="font-size: 2rem;"></i>
+                                            <h6 class="mt-3">No Active Emergencies</h6>
+                                            <p class="small">No in-progress emergency notices at the moment.</p>
                                         </div>
-                                        
-                                        <div class="d-flex flex-wrap mb-3">
-                                            <span class="info-label">Status:</span>
-                                            <span>On route to location, ETA 10 minutes</span>
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="bi bi-clock me-1"></i> Started 25 min ago
-                                            </small>
-                                            <button class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-pencil-square me-1"></i> Update
-                                            </button>
-                                        </div>
-                                    </div>
+                                    @endforelse
                                 </div>
                                 
-                                <div class="card notification-card pending-card">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h6 class="fw-bold mb-0 text-dark">Lolo Carlos - Home Care</h6>
-                                            <span class="badge bg-warning bg-opacity-10 text-warning">Pending</span>
+                                <div id="service-pending-content" class="pending-tab-content" style="display: none;">
+                                    <!-- Approved Service Requests -->
+                                    @forelse($serviceRequests->where('status', 'approved') as $request)
+                                        <div class="card notification-card pending-card mb-3 clickable-card" onclick="viewServiceRequestDetails({{ $request->service_request_id }})">
+                                            <div class="card-body">
+                                                <div class="card-content">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h6 class="fw-bold mb-0 text-dark">{{ $request->beneficiary->first_name }} {{ $request->beneficiary->last_name }}</h6>
+                                                        <span class="badge bg-success bg-opacity-10 text-success">Approved</span>
+                                                    </div>
+
+                                                    <div class="d-flex flex-wrap mb-2">
+                                                        <h6 class="fw mb-0 text-primary">{{ $request->serviceType->name }}</h6>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Approved:</span>
+                                                        <span>{{ $request->actionTakenBy ? $request->actionTakenBy->first_name . ' ' . $request->actionTakenBy->last_name : 'Unknown' }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-3">
+                                                        <span class="info-label">Assigned To:</span>
+                                                        <span>{{ $request->careWorker ? $request->careWorker->first_name . ' ' . $request->careWorker->last_name : 'Not assigned' }}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="card-footer-actions">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-calendar-event me-1"></i> {{ \Carbon\Carbon::parse($request->service_date)->format('M d') }}
+                                                    </small>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $request->service_request_id }}, 'service')">
+                                                        <i class="bi bi-bell me-1"></i> Send Reminder
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        <div class="d-flex flex-wrap mb-1">
-                                            <span class="info-label">Approved:</span>
-                                            <span>Admin User</span>
+                                    @empty
+                                        <div class="empty-state">
+                                            <i class="bi bi-hourglass text-muted" style="font-size: 2rem;"></i>
+                                            <h6 class="mt-3">No Active Service Requests</h6>
+                                            <p class="small">No approved service requests at the moment.</p>
                                         </div>
-                                        
-                                        <div class="d-flex flex-wrap mb-3">
-                                            <span class="info-label">Assigned To:</span>
-                                            <span>Care Worker Ana (starts tomorrow)</span>
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="bi bi-clock me-1"></i> Requested 5 hours ago
-                                            </small>
-                                            <button class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-pencil-square me-1"></i> Update
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="card notification-card pending-card">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h6 class="fw-bold mb-0 text-dark">Tatay Juan - Emergency</h6>
-                                            <span class="badge bg-info bg-opacity-10 text-info">In Progress</span>
-                                        </div>
-                                        
-                                        <div class="d-flex flex-wrap mb-1">
-                                            <span class="info-label">Responded:</span>
-                                            <span>Dr. Santos</span>
-                                        </div>
-                                        
-                                        <div class="d-flex flex-wrap mb-3">
-                                            <span class="info-label">Status:</span>
-                                            <span>Stabilized, monitoring vitals</span>
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="bi bi-clock me-1"></i> Started 2 hours ago
-                                            </small>
-                                            <button class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-pencil-square me-1"></i> Update
-                                            </button>
-                                        </div>
-                                    </div>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                    
             </div>
         </div>
     </div>
@@ -538,13 +553,15 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="respondToEmergencyBtn">Respond</button>
+            <button type="button" class="btn btn-info" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
+                <i class="bi bi-bell me-1"></i> Send Reminder
+            </button>
         </div>
         </div>
     </div>
     </div>
 
-    <!-- Service Request Details Modal (Read-only) -->
+    <!-- Service Request Details Modal -->
     <div class="modal fade" id="serviceRequestDetailsModal" tabindex="-1" aria-labelledby="serviceRequestDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -557,52 +574,25 @@
             <!-- Service request details will be loaded here -->
             </div>
             
-            <div class="service-updates-history mt-4">
+            <div class="updates-history mt-4">
             <h6 class="border-bottom pb-2">Updates History</h6>
             <div id="serviceUpdatesTimeline">
                 <!-- Updates will be loaded here -->
             </div>
             </div>
         </div>
-        <div class="modal-footer">
+       <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="handleServiceRequestBtn">Respond</button>
+            <button type="button" class="btn btn-info" onclick="openSendReminderModal(currentServiceRequest.service_request_id, 'service')">
+                <i class="bi bi-bell me-1"></i> Send Reminder
+            </button>
         </div>
         </div>
     </div>
     </div>
-
-    <!-- Care Worker Reminder Modal -->
-    <div class="modal fade" id="sendReminderModal" tabindex="-1" aria-labelledby="sendReminderModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header bg-info text-white">
-            <h5 class="modal-title" id="sendReminderModalLabel"><i class="bi bi-bell-fill"></i> Send Reminder to Care Manager</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form id="sendReminderForm">
-            <input type="hidden" id="reminderRecordId" name="record_id">
-            <input type="hidden" id="reminderRecordType" name="record_type">
-            
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle-fill"></i> This will send a notification to your care manager about this urgent item.
-            </div>
-            
-            <div class="mb-3">
-                <label for="reminderMessage" class="form-label">Additional Message (Optional)</label>
-                <textarea class="form-control" id="reminderMessage" name="message" rows="3" placeholder="Add any additional details to tell your care manager"></textarea>
-            </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-info text-white" id="submitReminder">Send Reminder</button>
-        </div>
-        </div>
-    </div>
-    </div>
-   
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
@@ -611,6 +601,501 @@
         tabEls.forEach(function(tabEl) {
             new bootstrap.Tab(tabEl);
         });
+    </script>
+
+    <script>
+        // Global variables to track current records
+        let currentEmergency = null;
+        let currentServiceRequest = null;
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        // Fallback for toastr if it's not defined
+        if (typeof toastr === 'undefined') {
+            window.toastr = {
+                success: function(message) { alert('Success: ' + message); },
+                error: function(message) { alert('Error: ' + message); },
+                warning: function(message) { alert('Warning: ' + message); },
+                info: function(message) { alert('Info: ' + message); }
+            };
+        }
+
+        // ===== EMERGENCY NOTICE HANDLERS =====
+        function viewEmergencyDetails(noticeId) {
+            // Show loading state
+            $('#emergencyDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            
+            // Open the modal
+            $('#emergencyDetailsModal').modal('show');
+            
+            // Fetch emergency details
+            $.ajax({
+                url: "{{ route('care-worker.emergency.request.get.emergency', '') }}/" + noticeId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Store current emergency for later use
+                        currentEmergency = response.emergency_notice;
+                        
+                        // Render emergency details
+                        renderEmergencyDetails(currentEmergency);
+                        
+                        // Show or hide respond button based on role
+                        const userRole = '{{ Auth::user()->role_id }}';
+                        if (userRole <= 2) { // Admin or Care Manager
+                            $('#respondToEmergencyBtn').show();
+                        } else {
+                            // For care workers, show remind button instead
+                            $('#respondToEmergencyBtn').text('Send Reminder').removeClass('btn-primary').addClass('btn-info');
+                        }
+                    } else {
+                        $('#emergencyDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                    }
+                },
+                error: function() {
+                    $('#emergencyDetailsContent').html('<div class="alert alert-danger">Failed to load emergency details. Please try again.</div>');
+                }
+            });
+        }
+
+        // Helper function to get badge class based on update type
+        function getUpdateTypeBadgeClass(updateType) {
+            switch(updateType) {
+                case 'response': return 'bg-primary';
+                case 'status_change': return 'bg-warning text-dark';
+                case 'assignment': return 'bg-info text-dark';
+                case 'resolution': return 'bg-success';
+                case 'note': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Helper function to format update type
+        function formatUpdateType(updateType) {
+            switch(updateType) {
+                case 'response': return 'Response';
+                case 'status_change': return 'Status Change';
+                case 'assignment': return 'Assignment';
+                case 'resolution': return 'Resolution';
+                case 'note': return 'Note';
+                default: return updateType;
+            }
+        }
+
+        // Add code to check for stored messages on page load
+        $(document).ready(function() {
+            const storedMessage = sessionStorage.getItem('emergencySuccessMessage');
+            if (storedMessage) {
+                showSuccessAlert(storedMessage);
+                // Clear the message so it doesn't show again on next refresh
+                sessionStorage.removeItem('emergencySuccessMessage');
+            }
+
+             // Check if we need to switch to the service tab
+            const activeTab = sessionStorage.getItem('activeTab');
+            if (activeTab === 'service') {
+                // Activate the service tab
+                $('#service-tab').tab('show');
+                
+                // Update the pending column view
+                $('#emergency-pending-content').hide();
+                $('#service-pending-content').show();
+                
+                // Clear the stored tab
+                sessionStorage.removeItem('activeTab');
+            }
+
+            // Service request action success message
+            const serviceActionType = sessionStorage.getItem('serviceActionType');
+            if (serviceActionType) {
+                // Show success message if not already shown
+                if (!storedMessage) {
+                    const message = `Service request has been ${serviceActionType} successfully.`;
+                    showSuccessAlert(message);
+                }
+                // Clear the stored action type
+                sessionStorage.removeItem('serviceActionType');
+            }
+            
+            // For debugging
+            console.log('Service request handlers initialized');
+        });
+
+        // ===== SERVICE REQUEST HANDLERS =====
+        function viewServiceRequestDetails(requestId) {
+            // Show loading state
+            $('#serviceRequestDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            
+            // Open the modal
+            $('#serviceRequestDetailsModal').modal('show');
+            
+            // Fetch service request details
+            $.ajax({
+                url: "{{ route('care-worker.emergency.request.get.service', '') }}/" + requestId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Store current service request for later use
+                        currentServiceRequest = response.service_request;
+                        
+                        // Render service request details
+                        renderServiceRequestDetails(currentServiceRequest);
+                        
+                        // Show or hide respond button based on role
+                        const userRole = '{{ Auth::user()->role_id }}';
+                        if (userRole <= 2) { // Admin or Care Manager
+                            $('#handleServiceRequestBtn').show();
+                        } else {
+                            // For care workers, show remind button instead
+                            $('#handleServiceRequestBtn').text('Send Reminder').removeClass('btn-primary').addClass('btn-info');
+                        }
+                    } else {
+                        $('#serviceRequestDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                    }
+                },
+                error: function() {
+                    $('#serviceRequestDetailsContent').html('<div class="alert alert-danger">Failed to load service request details. Please try again.</div>');
+                }
+            });
+        }
+
+        // Similar functions for service requests...
+
+        // ===== COMMON FUNCTIONS =====
+
+        // Archive record function
+        function openArchiveModal(recordId, recordType) {
+            $('#archiveRecordId').val(recordId);
+            $('#archiveRecordType').val(recordType);
+            $('#archiveNote').val('');
+            $('#archivePassword').val('');
+            $('#archiveRecordModal').modal('show');
+        }
+
+        // Care Worker Send Reminder Function
+        function openSendReminderModal(recordId, recordType) {
+            // Set form values
+            $('#reminderRecordId').val(recordId);
+            $('#reminderRecordType').val(recordType);
+            $('#reminderMessage').val('');
+            
+            // Update modal title based on record type
+            if (recordType === 'service') {
+                $('#reminderModalLabel').text('Send Service Request Reminder');
+                $('#reminderTypeLabel').text('Service Request');
+            } else {
+                $('#reminderModalLabel').text('Send Emergency Reminder');
+                $('#reminderTypeLabel').text('Emergency');
+            }
+            
+            // Show modal
+            $('#sendReminderModal').modal('show');
+        }
+
+        // Submit reminder
+        $('#submitReminder').on('click', function() {
+            const form = $('#sendReminderForm');
+            const formData = new FormData(form[0]);
+            
+            // Show loading state
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
+            
+            // Submit form
+            $.ajax({
+                url: "{{ route('care-worker.emergency.request.send.reminder') }}",
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        toastr.success('Reminder sent successfully to your care manager');
+                        
+                        // Close modal
+                        $('#sendReminderModal').modal('hide');
+                    } else {
+                        // Show error message
+                        toastr.error(response.message || 'Failed to send reminder');
+                    }
+                },
+                error: function() {
+                    toastr.error('Failed to send reminder. Please try again.');
+                },
+                complete: function() {
+                    // Reset button state
+                    $('#submitReminder').prop('disabled', false).html('Send Reminder');
+                }
+            });
+        });
+
+        // Initialize tooltips
+        $(function () {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+
+        // Connect modal opening buttons
+        $('#respondToEmergencyBtn').on('click', function() {
+            $('#emergencyDetailsModal').modal('hide');
+            openRespondEmergencyModal();
+        });
+
+        $('#handleServiceRequestBtn').on('click', function() {
+            $('#serviceRequestDetailsModal').modal('hide');
+            openHandleServiceRequestModal();
+        });
+
+        // Tab switcher for main tabs and pending column
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            const targetId = $(e.target).attr('data-bs-target');
+            
+            // Update pending column content based on active tab
+            if (targetId === '#emergency') {
+                $('#emergency-pending-content').show();
+                $('#service-pending-content').hide();
+            } else if (targetId === '#service') {
+                $('#emergency-pending-content').hide();
+                $('#service-pending-content').show();
+            }
+        });
+
+        // Event handler for service update type change
+        $('#serviceUpdateType').on('change', handleServiceUpdateTypeChange);
+
+        // Render emergency details in view modal
+        function renderEmergencyDetails(emergency) {
+            let content = `
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Emergency Information</h5>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Beneficiary:</div>
+                        <div class="col-md-8">${emergency.beneficiary.first_name} ${emergency.beneficiary.last_name}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Address:</div>
+                        <div class="col-md-8">${emergency.beneficiary.street_address} (${emergency.beneficiary.barangay.barangay_name}, ${emergency.beneficiary.municipality.municipality_name})</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Contact Number:</div>
+                        <div class="col-md-8">${emergency.beneficiary.mobile || 'Not provided'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Emergency Contact:</div>
+                        <div class="col-md-8">${emergency.beneficiary.emergency_contact_name || 'Not provided'} ${emergency.beneficiary.emergency_contact_name ? `(${emergency.beneficiary.emergency_contact_relation}) - ${emergency.beneficiary.emergency_contact_mobile}` : ''}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Type:</div>
+                        <div class="col-md-8"><span class="badge me-2" style="background-color: ${emergency.emergency_type.color_code}">${emergency.emergency_type.name}</span></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">${formatStatus(emergency.status)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-8">${formatDateTime(emergency.created_at)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Message:</div>
+                        <div class="col-md-8">${emergency.message}</div>
+                    </div>
+                </div>
+            `;
+            
+            $('#emergencyDetailsContent').html(content);
+            
+            // Load updates timeline if any
+            if (emergency.updates && emergency.updates.length > 0) {
+                let updatesHtml = '';
+                
+                emergency.updates.forEach(update => {
+                    updatesHtml += `
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-indicator">
+                                    <div class="timeline-badge ${getUpdateTypeBadgeClass(update.update_type)}"></div>
+                                </div>
+                                <div class="timeline-content ms-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-bold">${formatUpdateType(update.update_type)}</span>
+                                        <small class="text-muted">${formatDateTime(update.created_at)}</small>
+                                    </div>
+                                    <p class="mb-1">${update.message}</p>
+                                    <small class="text-muted">By: ${update.updated_by_name || 'System'}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#emergencyUpdatesTimeline').html(updatesHtml);
+            } else {
+                $('#emergencyUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+            }
+        }
+
+        // Render service request details in view modal
+        function renderServiceRequestDetails(request) {
+            let content = `
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Service Request Information</h5>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Beneficiary:</div>
+                        <div class="col-md-8">${request.beneficiary.first_name} ${request.beneficiary.last_name}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Service Type:</div>
+                        <div class="col-md-8"><span class="badge" style="background-color: ${request.service_type.color_code}">${request.service_type.name}</span></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">${formatStatus(request.status)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Requested Date:</div>
+                        <div class="col-md-8">${formatDate(request.service_date)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-8">${formatDateTime(request.created_at)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Message:</div>
+                        <div class="col-md-8">${request.message}</div>
+                    </div>
+                </div>
+            `;
+            
+            $('#serviceRequestDetailsContent').html(content);
+            
+            // Load updates timeline if any
+            if (request.updates && request.updates.length > 0) {
+                let updatesHtml = '';
+                
+                request.updates.forEach(update => {
+                    updatesHtml += `
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-indicator">
+                                    <div class="timeline-badge ${getUpdateTypeBadgeClass(update.update_type)}"></div>
+                                </div>
+                                <div class="timeline-content ms-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-bold">${formatUpdateType(update.update_type)}</span>
+                                        <small class="text-muted">${formatDateTime(update.created_at)}</small>
+                                    </div>
+                                    <p class="mb-1">${update.message}</p>
+                                    <small class="text-muted">By: ${update.updated_by_name || 'System'}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#serviceUpdatesTimeline').html(updatesHtml);
+            } else {
+                $('#serviceUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+            }
+        }
+
+        // Helper functions for formatting
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString();
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString();
+        }
+
+        function formatStatus(status) {
+            switch(status) {
+                case 'new': return '<span class="badge bg-danger">New</span>';
+                case 'in_progress': return '<span class="badge bg-info">In Progress</span>';
+                case 'approved': return '<span class="badge bg-success">Approved</span>';
+                case 'rejected': return '<span class="badge bg-danger">Rejected</span>';
+                case 'completed': return '<span class="badge bg-primary">Completed</span>';
+                case 'resolved': return '<span class="badge bg-success">Resolved</span>';
+                case 'archived': return '<span class="badge bg-secondary">Archived</span>';
+                default: return `<span class="badge bg-secondary">${status}</span>`;
+            }
+        }
+
+        function openResolveEmergencyModal(noticeId) {
+            // Fetch emergency details and then open modal with resolution pre-selected
+            $.ajax({
+                url: "{{ route('care-worker.emergency.request.get.emergency', '') }}/" + noticeId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        currentEmergency = response.emergency_notice;
+                        populateEmergencyResponseModal(currentEmergency);
+                        
+                        // Pre-select resolution
+                        $('#updateType').val('resolution').trigger('change');
+                        $('#responseMessage').val('Emergency has been resolved.');
+                        
+                        // Show modal
+                        $('#respondEmergencyModal').modal('show');
+                    }
+                },
+                error: function() {
+                    toastr.error('Failed to load emergency details. Please try again.');
+                }
+            });
+        }
+
+        function openCompleteServiceRequestModal(requestId) {
+            $.ajax({
+                url: "{{ route('care-worker.emergency.request.get.service', '') }}/" + requestId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        currentServiceRequest = response.service_request;
+                        
+                        // Validate if the request can be completed
+                        if (currentServiceRequest.status !== 'approved') {
+                            toastr.error('Only approved service requests can be marked as completed.');
+                            return;
+                        }
+                        
+                        populateServiceRequestModal(currentServiceRequest);
+                        
+                        // Pre-select completion
+                        $('#serviceUpdateType').val('completion').trigger('change');
+                        $('#serviceResponseMessage').val('Service request has been completed successfully.');
+                        
+                        // Show modal
+                        $('#handleServiceRequestModal').modal('show');
+                    }
+                },
+                error: function() {
+                    toastr.error('Failed to load service request details. Please try again.');
+                }
+            });
+        }
+
+        function showSuccessAlert(message) {
+            $('#successAlertMessage').text(message);
+            $('#successAlert').removeClass('d-none');
+            
+            // Save to session storage so it persists after page reload
+            // Check if this is an emergency message or service message
+            if (message.includes('Emergency')) {
+                sessionStorage.setItem('emergencySuccessMessage', message);
+            } else if (message.includes('Service')) {
+                sessionStorage.setItem('serviceSuccessMessage', message);
+            } else {
+                sessionStorage.setItem('generalSuccessMessage', message);
+            }
+        }
+        
+
     </script>
 </body>
 </html>
