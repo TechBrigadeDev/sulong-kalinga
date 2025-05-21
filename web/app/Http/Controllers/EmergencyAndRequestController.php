@@ -15,6 +15,7 @@ use App\Models\FamilyMember;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use App\Services\LogService;
 use App\Enums\LogType;
@@ -475,8 +476,23 @@ class EmergencyAndRequestController extends Controller
             ], 422);
         }
 
+        if ($request->update_type == 'approval' && $serviceRequest->status == 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This service request is already approved.'
+            ], 422);
+        }
+
         $user = Auth::user();
         
+        if ($request->update_type == 'completion' && (!$request->has('password') || !Hash::check($request->password, $user->password))) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['password' => ['The provided password is incorrect. Please try again.']],
+                'message' => 'Password verification failed'
+            ], 422);
+        }
+
         try {
             // Get the service request
             $serviceRequest = ServiceRequest::findOrFail($request->service_request_id);

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Emergency & Request</title>
+    <title>Emergency Notices & Service Requests</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -648,7 +648,13 @@
                 <option value="note">Add Note Only</option>
                 </select>
                 <small id="completionWarning" class="text-danger d-none mt-1">
-                <i class="bi bi-exclamation-circle"></i> Completing will archive this service request and move it to history
+                    <i class="bi bi-exclamation-circle"></i> Completing will archive this service request and move it to history
+                </small>
+                <small id="rejectionWarning" class="text-danger d-none mt-1">
+                    <i class="bi bi-exclamation-circle"></i> Rejecting will archive this service request and move it to history
+                </small>
+                <small id="approvalWarning" class="text-danger d-none mt-1">
+                    <i class="bi bi-exclamation-circle"></i> Cannot re-approve an already approved request
                 </small>
             </div>
             
@@ -1018,6 +1024,146 @@
                 // Clear the message so it doesn't show again on next refresh
                 sessionStorage.removeItem('emergencySuccessMessage');
             }
+
+             // Check if we need to switch to the service tab
+            const activeTab = sessionStorage.getItem('activeTab');
+            if (activeTab === 'service') {
+                // Activate the service tab
+                $('#service-tab').tab('show');
+                
+                // Update the pending column view
+                $('#emergency-pending-content').hide();
+                $('#service-pending-content').show();
+                
+                // Clear the stored tab
+                sessionStorage.removeItem('activeTab');
+            }
+
+            // Service request action success message
+            const serviceActionType = sessionStorage.getItem('serviceActionType');
+            if (serviceActionType) {
+                // Show success message if not already shown
+                if (!storedMessage) {
+                    const message = `Service request has been ${serviceActionType} successfully.`;
+                    showSuccessAlert(message);
+                }
+                // Clear the stored action type
+                sessionStorage.removeItem('serviceActionType');
+            }
+
+            // Handle service request update submission
+            $('#submitServiceResponse').on('click', function() {
+                // Get form data from the correct service form fields
+                const requestId = $('#serviceRequestId').val();
+                const message = $('#serviceResponseMessage').val();  // CORRECT ID
+                const updateType = $('#serviceUpdateType').val() || 'note'; // CORRECT ID
+                const careWorkerId = $('#serviceCareWorkerId').val();
+                
+                // Basic validation
+                if (!message) {
+                    toastr.error('Please enter a response message');
+                    return;
+                }
+                
+                // Show loading state
+                $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+                $(this).prop('disabled', true);
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                formData.append('service_request_id', requestId);
+                formData.append('message', message);
+                formData.append('update_type', updateType);
+                
+                // Only add care worker ID if provided and relevant
+                if (careWorkerId && (updateType === 'approval' || updateType === 'assignment')) {
+                    formData.append('care_worker_id', careWorkerId);
+                }
+                
+                // Add password if completion type
+                if (updateType === 'completion') {
+                    const password = $('#serviceConfirmPassword').val();
+                    if (password) {
+                        formData.append('password', password);
+                    }
+                }
+                
+                // Submit request
+                $.ajax({
+                    url: "{{ route('admin.emergency.request.handle.service') }}",
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            // Toast notification (existing)
+                            toastr.success('Service request updated successfully');
+                            
+                            // Close modal
+                            $('#handleServiceRequestModal').modal('hide');
+                            
+                            // Save the current tab for reload
+                            sessionStorage.setItem('activeTab', 'service');
+                            
+                            // Show prominent success message for completion or rejection
+                            if (updateType === 'completion' || updateType === 'rejection') {
+                                const beneficiaryName = $('#requestBeneficiaryName').text();
+                                const actionType = updateType === 'completion' ? 'completed' : 'rejected';
+                                const message = `Service request for ${beneficiaryName} has been ${actionType} successfully.`;
+                                showSuccessAlert(message);
+                                
+                                // Store the action type for checking after reload
+                                sessionStorage.setItem('serviceActionType', actionType);
+                            }
+                            
+                            // Reload page after a brief delay
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error(response.message || 'Failed to update service request');
+                            $('#submitServiceResponse').html('Submit');
+                            $('#submitServiceResponse').prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Failed to update service request';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
+                            
+                            // Check specifically for password errors and show a clearer message
+                            if (errors.password) {
+                                $('#serviceConfirmPassword').addClass('is-invalid');
+                                $('.service-password-confirmation .invalid-feedback').text(errors.password[0]).show();
+                                errorMessage = 'Password is incorrect. Please try again.';
+                            } else {
+                                // Handle other validation errors
+                                const firstError = Object.values(errors)[0];
+                                if (firstError && firstError[0]) {
+                                    errorMessage = firstError[0];
+                                }
+                            }
+                        }
+                        
+                        toastr.error(errorMessage);
+                        $('#submitServiceResponse').html('Submit');
+                        $('#submitServiceResponse').prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Also make sure CSRF token is set up
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            
+            // For debugging
+            console.log('Service request handlers initialized');
         });
 
         // ===== SERVICE REQUEST HANDLERS =====
@@ -1305,12 +1451,20 @@
             
             // Hide all conditional sections and warnings first
             $('.service-password-confirmation, .care-worker-options').addClass('d-none');
-            $('#completionWarning, #statusValidationWarning').addClass('d-none');
+            $('#completionWarning, #rejectionWarning, #statusValidationWarning, #approvalWarning').addClass('d-none');
             
             // Show/hide care worker dropdown
             if (updateType === 'approval' || updateType === 'assignment') {
                 $('.care-worker-options').removeClass('d-none');
                 loadCareWorkers(); // Ensure care workers are loaded
+                
+                // Check if request is already approved
+                if (updateType === 'approval' && currentServiceRequest && currentServiceRequest.status === 'approved') {
+                    $('#approvalWarning').removeClass('d-none').text('This service request is already approved. Please choose a different action.');
+                    $('#submitServiceResponse').prop('disabled', true);
+                } else {
+                    $('#submitServiceResponse').prop('disabled', false);
+                }
             }
             
             // Show warning for completion
@@ -1320,12 +1474,16 @@
                 
                 // Check if the service request is in an approvable state
                 if (currentServiceRequest && currentServiceRequest.status !== 'approved') {
-                    $('#statusValidationWarning').removeClass('d-none');
+                    $('#statusValidationWarning').removeClass('d-none').text('Only approved service requests can be marked as completed.');
                     $('#submitServiceResponse').prop('disabled', true);
                 } else {
                     $('#submitServiceResponse').prop('disabled', false);
                 }
-            } else {
+            }
+            
+            // Show warning for rejection
+            if (updateType === 'rejection') {
+                $('#rejectionWarning').removeClass('d-none');
                 $('#submitServiceResponse').prop('disabled', false);
             }
         }
@@ -1564,8 +1722,16 @@
         function showSuccessAlert(message) {
             $('#successAlertMessage').text(message);
             $('#successAlert').removeClass('d-none');
+            
             // Save to session storage so it persists after page reload
-            sessionStorage.setItem('emergencySuccessMessage', message);
+            // Check if this is an emergency message or service message
+            if (message.includes('Emergency')) {
+                sessionStorage.setItem('emergencySuccessMessage', message);
+            } else if (message.includes('Service')) {
+                sessionStorage.setItem('serviceSuccessMessage', message);
+            } else {
+                sessionStorage.setItem('generalSuccessMessage', message);
+            }
         }
         
 
