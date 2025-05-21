@@ -704,13 +704,14 @@ class EmergencyAndRequestController extends Controller
         $validator = Validator::make($request->all(), [
             'record_id' => 'required|integer',
             'record_type' => 'required|in:emergency,service',
-            'message' => 'nullable|string|max:500'
+            'message' => 'required|string|max:500'  // Changed from 'nullable' to 'required'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
+                'message' => 'Please provide a reminder message' // More specific message
             ], 422);
         }
 
@@ -768,7 +769,6 @@ class EmergencyAndRequestController extends Controller
                 'success' => true,
                 'message' => 'Reminder sent successfully to your care manager'
             ]);
-            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
