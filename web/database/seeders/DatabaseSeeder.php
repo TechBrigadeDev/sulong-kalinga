@@ -35,6 +35,12 @@ use App\Models\RecurringPattern;
 use App\Models\AppointmentParticipant;
 use App\Models\Visitation;
 use App\Models\VisitationOccurrence;
+use App\Models\EmergencyType;
+use App\Models\ServiceRequestType;
+use App\Models\EmergencyNotice;
+use App\Models\ServiceRequest;
+use App\Models\EmergencyUpdate;
+use App\Models\ServiceRequestUpdate;
 
 class DatabaseSeeder extends Seeder
 {
@@ -1929,17 +1935,20 @@ class DatabaseSeeder extends Seeder
         
         // Create 5 in progress emergency notices 
         EmergencyNotice::factory()->count(5)->inProgress()->create();
+
+        // Store a reference to faker that can be used in closures
+        $faker = $this->faker;
         
         // Create 5 resolved emergency notices (for history)
-        EmergencyNotice::factory()->count(5)->state(function () {
+        EmergencyNotice::factory()->count(5)->state(function () use ($faker) {
             return [
                 'status' => 'resolved',
                 'read_status' => true,
-                'read_at' => $this->faker->dateTimeBetween('-1 month', '-1 day'),
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
                 'assigned_to' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
                 'action_type' => 'resolved',
                 'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
-                'action_taken_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', 'now'),
             ];
         })->create();
         
@@ -1950,28 +1959,28 @@ class DatabaseSeeder extends Seeder
         ServiceRequest::factory()->count(5)->asNew()->create();
         
         // Create 5 approved service requests
-        ServiceRequest::factory()->count(5)->state(function () {
+        ServiceRequest::factory()->count(5)->state(function () use ($faker) {
             return [
                 'status' => 'approved',
                 'read_status' => true,
-                'read_at' => $this->faker->dateTimeBetween('-1 month', '-1 day'),
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
                 'action_type' => 'approved',
                 'action_taken_by' => User::where('role_id', '<=', 2)->inRandomOrder()->first()->id,
-                'action_taken_at' => $this->faker->dateTimeBetween('-1 month', '-2 days'),
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', '-2 days'),
                 'care_worker_id' => User::where('role_id', 3)->inRandomOrder()->first()->id,
             ];
         })->create();
         
         // Create 5 completed/rejected service requests (for history)
-        ServiceRequest::factory()->count(5)->state(function () {
-            $status = $this->faker->randomElement(['completed', 'rejected']);
+        ServiceRequest::factory()->count(5)->state(function () use ($faker) {
+            $status = $faker->randomElement(['completed', 'rejected']);
             return [
                 'status' => $status,
                 'read_status' => true,
-                'read_at' => $this->faker->dateTimeBetween('-1 month', '-1 day'),
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
                 'action_type' => $status,
                 'action_taken_by' => User::where('role_id', '<=', 2)->inRandomOrder()->first()->id,
-                'action_taken_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', 'now'),
                 'care_worker_id' => $status === 'completed' ? User::where('role_id', 3)->inRandomOrder()->first()->id : null,
             ];
         })->create();
@@ -1991,11 +2000,25 @@ class DatabaseSeeder extends Seeder
         \Log::info('Creating service request updates...');
         $serviceRequests = ServiceRequest::where('status', '!=', 'new')->get();
         foreach ($serviceRequests as $request) {
-            // Generate 1-2 updates per request
+            // Generate 1-2 updates per request, but don't change action_type for completed/rejected
             $updateCount = rand(1, 2);
-            ServiceRequestUpdate::factory()->count($updateCount)->create([
-                'service_request_id' => $request->service_request_id
-            ]);
+            
+            if (in_array($request->status, ['completed', 'rejected'])) {
+                // For completed/rejected, just add notes without changing status or action_type
+                ServiceRequestUpdate::factory()->count($updateCount)->state(function () use ($request) {
+                    return [
+                        'service_request_id' => $request->service_request_id,
+                        'update_type' => 'note',
+                        'status_change_to' => null,
+                        'message' => 'Additional information about this ' . $request->status . ' request.'
+                    ];
+                })->create();
+            } else {
+                // For other statuses, normal updates are fine
+                ServiceRequestUpdate::factory()->count($updateCount)->create([
+                    'service_request_id' => $request->service_request_id
+                ]);
+            }
         }
         
         \Log::info('Emergency notices and service requests generated successfully');

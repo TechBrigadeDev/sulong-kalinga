@@ -122,33 +122,42 @@ class EmergencyAndRequestController extends Controller
         $endDate = Carbon::now()->endOfDay();
         
         // Get resolved emergency notices with filter
-        $resolvedEmergencies = EmergencyNotice::with(['beneficiary', 'emergencyType', 'sender', 'actionTakenBy', 'updates'])
-            ->where('status', 'resolved')  // Changed from 'archived' to 'resolved'
+        $resolvedEmergencies = EmergencyNotice::with(['beneficiary.barangay', 'beneficiary.municipality', 'emergencyType', 'sender', 'actionTakenBy', 'updates'])
+            ->where('status', 'resolved')
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->orderBy('updated_at', 'desc')
             ->get();
         
-        // Get completed/rejected service requests with filter
-        $completedServiceRequests = ServiceRequest::with(['beneficiary', 'serviceType', 'sender', 'actionTakenBy', 'updates'])
-            ->whereIn('status', ['completed', 'rejected'])  // Removed 'archived'
+        // Get both completed AND rejected service requests
+        $completedServiceRequests = ServiceRequest::with(['beneficiary.barangay', 'beneficiary.municipality', 'serviceType', 'sender', 'actionTakenBy', 'careWorker', 'updates'])
+            ->whereIn('status', ['completed', 'rejected'])
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->orderBy('updated_at', 'desc')
             ->get();
+        
+        // Debug logging
+        \Log::info('History: Total completed/rejected service requests: ' . $completedServiceRequests->count());
+        \Log::info('History: Completed requests: ' . $completedServiceRequests->where('status', 'completed')->count());
+        \Log::info('History: Rejected requests: ' . $completedServiceRequests->where('status', 'rejected')->count());
+        
+        // Get current emergencies/requests for statistics
+        $emergencyNotices = EmergencyNotice::whereIn('status', ['new', 'in_progress'])->get();
+        $serviceRequests = ServiceRequest::whereIn('status', ['new', 'approved'])->get();
         
         // Get statistics
-        $emergencyTypeStats = EmergencyNotice::where('status', 'archived')
-            ->whereBetween('updated_at', [$startDate, $endDate])
-            ->selectRaw('emergency_type_id, COUNT(*) as count')
-            ->groupBy('emergency_type_id')
-            ->get()
-            ->map(function ($item) {
-                $type = EmergencyType::find($item->emergency_type_id);
-                return [
-                    'name' => $type ? $type->name : 'Unknown',
-                    'count' => $item->count,
-                    'color' => $type ? $type->color_code : '#6c757d'
-                ];
-            });
+        $emergencyTypeStats = EmergencyNotice::whereIn('status', ['archived', 'resolved'])
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->selectRaw('emergency_type_id, COUNT(*) as count')
+        ->groupBy('emergency_type_id')
+        ->get()
+        ->map(function ($item) {
+            $type = EmergencyType::find($item->emergency_type_id);
+            return [
+                'name' => $type ? $type->name : 'Unknown',
+                'count' => $item->count,
+                'color' => $type ? $type->color_code : '#6c757d'
+            ];
+        });
         
         $serviceTypeStats = ServiceRequest::whereIn('status', ['archived', 'completed', 'rejected'])
             ->whereBetween('updated_at', [$startDate, $endDate])
@@ -176,10 +185,12 @@ class EmergencyAndRequestController extends Controller
         );
         
         // Return view based on user role
-        if ($role === 1) {
+       if ($role === 1) {
             return view('admin.adminEmergencyRequestHistory', compact(
-                'archivedEmergencies',
-                'archivedServiceRequests',
+                'resolvedEmergencies',
+                'completedServiceRequests',
+                'emergencyNotices',        // Added these
+                'serviceRequests',         // Added these
                 'emergencyTypeStats',
                 'serviceTypeStats',
                 'dateRangeLabel',
@@ -188,8 +199,10 @@ class EmergencyAndRequestController extends Controller
             ));
         } elseif ($role === 2) {
             return view('careManager.careManagerEmergencyRequestHistory', compact(
-                'archivedEmergencies',
-                'archivedServiceRequests',
+                'resolvedEmergencies',
+                'completedServiceRequests',
+                'emergencyNotices',        // Added these
+                'serviceRequests',         // Added these
                 'emergencyTypeStats',
                 'serviceTypeStats',
                 'dateRangeLabel',
@@ -198,8 +211,10 @@ class EmergencyAndRequestController extends Controller
             ));
         } else {
             return view('careWorker.careWorkerEmergencyRequestHistory', compact(
-                'archivedEmergencies',
-                'archivedServiceRequests',
+                'resolvedEmergencies',
+                'completedServiceRequests',
+                'emergencyNotices',        // Added these
+                'serviceRequests',         // Added these
                 'emergencyTypeStats',
                 'serviceTypeStats',
                 'dateRangeLabel',
@@ -242,21 +257,31 @@ class EmergencyAndRequestController extends Controller
             $dateRangeLabel = "Last {$days} days";
         }
         
-        // Get filtered data
-        $archivedEmergencies = EmergencyNotice::with(['beneficiary', 'emergencyType', 'sender', 'actionTakenBy', 'updates'])
-            ->where('status', 'archived')
+        // Get filtered data - UPDATED: Changed to 'resolved' to match viewHistory()
+        $resolvedEmergencies = EmergencyNotice::with(['beneficiary', 'emergencyType', 'sender', 'actionTakenBy', 'updates'])
+            ->where('status', 'resolved') // Changed from 'archived' to 'resolved'
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->orderBy('updated_at', 'desc')
             ->get();
         
-        $archivedServiceRequests = ServiceRequest::with(['beneficiary', 'serviceType', 'sender', 'actionTakenBy', 'updates'])
-            ->whereIn('status', ['archived', 'completed', 'rejected'])
+        // Similar changes to this method...
+        $completedServiceRequests = ServiceRequest::with(['beneficiary.barangay', 'beneficiary.municipality', 'serviceType', 'sender', 'actionTakenBy', 'careWorker', 'updates'])
+            ->whereIn('status', ['completed', 'rejected'])
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->orderBy('updated_at', 'desc')
             ->get();
+            
+        // Debug logging
+        \Log::info('Filter: Total completed/rejected service requests: ' . $completedServiceRequests->count());
+        \Log::info('Filter: Completed requests: ' . $completedServiceRequests->where('status', 'completed')->count());
+        \Log::info('Filter: Rejected requests: ' . $completedServiceRequests->where('status', 'rejected')->count());
         
-        // Get statistics
-        $emergencyTypeStats = EmergencyNotice::where('status', 'archived')
+        // Get stats for current period
+        $pendingEmergencyCount = EmergencyNotice::whereIn('status', ['new', 'in_progress'])->count();
+        $pendingServiceCount = ServiceRequest::whereIn('status', ['new', 'approved'])->count();
+        
+        // Get emergency statistics - UPDATED to match viewHistory()
+        $emergencyTypeStats = EmergencyNotice::whereIn('status', ['completed'])
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->selectRaw('emergency_type_id, COUNT(*) as count')
             ->groupBy('emergency_type_id')
@@ -270,7 +295,7 @@ class EmergencyAndRequestController extends Controller
                 ];
             });
         
-        $serviceTypeStats = ServiceRequest::whereIn('status', ['archived', 'completed', 'rejected'])
+        $serviceTypeStats = ServiceRequest::whereIn('status', ['completed', 'rejected'])
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->selectRaw('service_type_id, COUNT(*) as count')
             ->groupBy('service_type_id')
@@ -284,10 +309,28 @@ class EmergencyAndRequestController extends Controller
                 ];
             });
 
+        // Calculate statistics
+        $emergencyStats = [
+            'total' => $resolvedEmergencies->count() + $pendingEmergencyCount,
+            'resolved' => $resolvedEmergencies->count(),
+            'pending' => $pendingEmergencyCount,
+            'byType' => $emergencyTypeStats
+        ];
+
+        $serviceStats = [
+            'total' => $completedServiceRequests->count() + $pendingServiceCount,
+            'completed' => $completedServiceRequests->where('status', 'completed')->count(),
+            'rejected' => $completedServiceRequests->where('status', 'rejected')->count(),
+            'pending' => $pendingServiceCount,
+            'byType' => $serviceTypeStats
+        ];
+
         return response()->json([
             'success' => true,
-            'archivedEmergencies' => $archivedEmergencies,
-            'archivedServiceRequests' => $archivedServiceRequests,
+            'resolvedEmergencies' => $resolvedEmergencies, // Changed from archivedEmergencies to match viewHistory()
+            'completedServiceRequests' => $completedServiceRequests, // Changed from archivedServiceRequests to match viewHistory()
+            'emergencyStats' => $emergencyStats,
+            'serviceStats' => $serviceStats,
             'emergencyTypeStats' => $emergencyTypeStats,
             'serviceTypeStats' => $serviceTypeStats,
             'dateRangeLabel' => $dateRangeLabel
@@ -950,6 +993,8 @@ class EmergencyAndRequestController extends Controller
         try {
             $serviceRequest = ServiceRequest::with([
                 'beneficiary',
+                'beneficiary.barangay',      // Add these relationships explicitly
+                'beneficiary.municipality',  // Add these relationships explicitly 
                 'serviceType', 
                 'sender', 
                 'actionTakenBy',
@@ -965,12 +1010,18 @@ class EmergencyAndRequestController extends Controller
                 $user = $update->updatedByUser;
                 $update->updated_by_name = $user ? $user->first_name . ' ' . $user->last_name : 'Unknown';
             }
+
+            // Add action_taken_by_name
+            if ($serviceRequest->actionTakenBy) {
+                $serviceRequest->action_taken_by_name = $serviceRequest->actionTakenBy->first_name . ' ' . $serviceRequest->actionTakenBy->last_name;
+            }
             
             return response()->json([
                 'success' => true,
                 'service_request' => $serviceRequest
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error in getServiceRequest: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Service request not found',
