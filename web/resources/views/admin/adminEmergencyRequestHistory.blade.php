@@ -1098,18 +1098,29 @@
             $('#resolvedEmergencies').text(stats.resolved);
             $('#pendingEmergencies').text(stats.pending);
             
-            // Update breakdown
+            // Add this block to update the emergency type breakdown
             let breakdownHtml = '';
-            stats.byType.forEach(type => {
-                breakdownHtml += `
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        ${type.name}
-                        <span class="badge bg-danger rounded-pill">${type.count}</span>
-                    </div>
-                `;
-            });
+            if (stats.byType && stats.byType.length > 0) {
+                stats.byType.forEach(type => {
+                    // Handle both color and color_code property names for compatibility
+                    const backgroundColor = type.color || type.color_code || '#6c757d';
+                    breakdownHtml += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="me-2">${type.name}</span>
+                            </div>
+                            <span class="badge bg-danger rounded-pill">${type.count}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                breakdownHtml = '<div class="list-group-item text-muted">No data available</div>';
+            }
             $('#emergencyTypeBreakdown').html(breakdownHtml);
             
+            // Log information for debugging
+            console.log('Emergency stats:', stats);
+            if (stats.byType) console.log('Emergency byType count:', stats.byType.length);
         }
         
         // Update service request statistics

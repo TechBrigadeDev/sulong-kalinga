@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Emergency & Request</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
@@ -229,6 +231,53 @@
                 padding: 0.5rem 0.75rem;
             }
         }
+
+        .card-footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 0.75rem;
+        }
+        
+        .card-footer-actions .btn-group {
+            white-space: nowrap;
+        }
+        
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-content {
+            flex-grow: 1;
+        }
+
+        .clickable-card {
+            cursor: pointer;
+        }
+
+        /* Prevent text selection when clicking */
+        .clickable-card:not(.btn) {
+            user-select: none;
+        }
+
+        /* Hover effect */
+        .clickable-card:hover {
+            background-color: rgba(0, 0, 0, 0.01);
+        }
+
+        #successAlert {
+            margin: 0 15px 15px 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        #successAlert .btn-close:focus {
+            box-shadow: none;
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -242,6 +291,13 @@
             <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('admin.emergency.request.viewHistory') }}'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
+        </div>
+
+        <!-- Add this success alert container -->
+        <div id="successAlert" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span id="successAlertMessage">Action completed successfully!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         
         <div class="container-fluid">
@@ -390,30 +446,32 @@
                                 <div id="emergency-pending-content" class="pending-tab-content active">
                                     <!-- In Progress Emergency Notices -->
                                     @forelse($emergencyNotices->where('status', 'in_progress') as $notice)
-                                        <div class="card notification-card pending-card mb-3">
+                                        <div class="card notification-card pending-card mb-3 clickable-card" onclick="viewEmergencyDetails({{ $notice->notice_id }})">
                                             <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h6 class="fw-bold mb-0 text-dark">{{ $notice->beneficiary->first_name }} {{ $notice->beneficiary->last_name }}</h6>
-                                                    <span class="badge bg-info bg-opacity-10 text-info">In Progress</span>
+                                                <div class="card-content">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h6 class="fw-bold mb-0 text-dark">{{ $notice->beneficiary->first_name }} {{ $notice->beneficiary->last_name }}</h6>
+                                                        <span class="badge bg-info bg-opacity-10 text-info">In Progress</span>
+                                                    </div>
+                                                    
+                                                    @if($notice->action_taken_by)
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Responded:</span>
+                                                        <span>{{ $notice->actionTakenBy ? $notice->actionTakenBy->first_name . ' ' . $notice->actionTakenBy->last_name : 'Unknown' }}</span>
+                                                    </div>
+                                                    @endif
+                                                    
+                                                    <div class="d-flex flex-wrap mb-3">
+                                                        <span class="info-label">Type:</span>
+                                                        <span><span class="badge" style="background-color: {{ $notice->emergencyType->color_code }}">{{ $notice->emergencyType->name }}</span></span>
+                                                    </div>
                                                 </div>
                                                 
-                                                @if($notice->action_taken_by)
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Responded:</span>
-                                                    <span>{{ $notice->actionTakenBy ? $notice->actionTakenBy->first_name . ' ' . $notice->actionTakenBy->last_name : 'Unknown' }}</span>
-                                                </div>
-                                                @endif
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Type:</span>
-                                                    <span><span class="badge" style="background-color: {{ $notice->emergencyType->color_code }}">{{ $notice->emergencyType->name }}</span></span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center">
+                                                <div class="card-footer-actions">
                                                     <small class="text-muted">
                                                         <i class="bi bi-clock me-1"></i> Started {{ \Carbon\Carbon::parse($notice->action_taken_at)->diffForHumans() }}
                                                     </small>
-                                                    <div class="btn-group">
+                                                    <div class="btn-group" onclick="event.stopPropagation()">
                                                         <button class="btn btn-sm btn-outline-primary" onclick="openRespondEmergencyModal({{ $notice->notice_id }})">
                                                             <i class="bi bi-pencil-square me-1"></i> Update
                                                         </button>
@@ -436,32 +494,37 @@
                                 <div id="service-pending-content" class="pending-tab-content" style="display: none;">
                                     <!-- Approved Service Requests -->
                                     @forelse($serviceRequests->where('status', 'approved') as $request)
-                                        <div class="card notification-card pending-card mb-3">
+                                        <div class="card notification-card pending-card mb-3 clickable-card" onclick="viewServiceRequestDetails({{ $request->service_request_id }})">
                                             <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h6 class="fw-bold mb-0 text-dark">{{ $request->beneficiary->first_name }} {{ $request->beneficiary->last_name }} - {{ $request->serviceType->name }}</h6>
-                                                    <span class="badge bg-success bg-opacity-10 text-success">Approved</span>
+                                                <div class="card-content">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h6 class="fw-bold mb-0 text-dark">{{ $request->beneficiary->first_name }} {{ $request->beneficiary->last_name }}</h6>
+                                                        <span class="badge bg-success bg-opacity-10 text-success">Approved</span>
+                                                    </div>
+
+                                                    <div class="d-flex flex-wrap mb-2">
+                                                        <h6 class="fw mb-0 text-primary">{{ $request->serviceType->name }}</h6>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-1">
+                                                        <span class="info-label">Approved:</span>
+                                                        <span>{{ $request->actionTakenBy ? $request->actionTakenBy->first_name . ' ' . $request->actionTakenBy->last_name : 'Unknown' }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex flex-wrap mb-3">
+                                                        <span class="info-label">Assigned To:</span>
+                                                        <span>{{ $request->careWorker ? $request->careWorker->first_name . ' ' . $request->careWorker->last_name : 'Not assigned' }}</span>
+                                                    </div>
                                                 </div>
                                                 
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Approved:</span>
-                                                    <span>{{ $request->actionTakenBy ? $request->actionTakenBy->first_name . ' ' . $request->actionTakenBy->last_name : 'Unknown' }}</span>
-                                                </div>
-                                                
-                                                <div class="d-flex flex-wrap mb-1">
-                                                    <span class="info-label">Assigned To:</span>
-                                                    <span>{{ $request->careWorker ? $request->careWorker->first_name . ' ' . $request->careWorker->last_name : 'Not assigned' }}</span>
-                                                </div>
-                                                
-                                                <div class="d-flex justify-content-between align-items-center">
+                                                <div class="card-footer-actions">
                                                     <small class="text-muted">
                                                         <i class="bi bi-calendar-event me-1"></i> {{ \Carbon\Carbon::parse($request->service_date)->format('M d') }}
                                                     </small>
-                                                    <div class="btn-group">
+                                                    <div class="btn-group" onclick="event.stopPropagation()">
                                                         <button class="btn btn-sm btn-outline-primary" onclick="openHandleServiceRequestModal({{ $request->service_request_id }})">
                                                             <i class="bi bi-pencil-square me-1"></i> Update
                                                         </button>
-                                                        <!-- Add Mark as Complete button -->
                                                         <button class="btn btn-sm btn-outline-success" onclick="openCompleteServiceRequestModal({{ $request->service_request_id }})">
                                                             <i class="bi bi-check-circle me-1"></i> Complete
                                                         </button>
@@ -597,7 +660,7 @@
                 </select>
             </div>
             
-            
+
             <div class="mb-3">
                 <label for="serviceResponseMessage" class="form-label">Message</label>
                 <textarea class="form-control" id="serviceResponseMessage" name="message" rows="4" placeholder="Enter your response message" required></textarea>
@@ -683,8 +746,9 @@
         </div>
     </div>
     </div>
-
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
@@ -699,6 +763,22 @@
         // Global variables to track current records
         let currentEmergency = null;
         let currentServiceRequest = null;
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        // Fallback for toastr if it's not defined
+        if (typeof toastr === 'undefined') {
+            window.toastr = {
+                success: function(message) { alert('Success: ' + message); },
+                error: function(message) { alert('Error: ' + message); },
+                warning: function(message) { alert('Warning: ' + message); },
+                info: function(message) { alert('Info: ' + message); }
+            };
+        }
 
         // ===== EMERGENCY NOTICE HANDLERS =====
         function viewEmergencyDetails(noticeId) {
@@ -885,6 +965,13 @@
                         
                         // Close modal
                         $('#respondEmergencyModal').modal('hide');
+
+                        // Show prominent success message if it was a resolution
+                        if ($('#updateType').val() === 'resolution') {
+                            const beneficiaryName = $('#emergencyBeneficiaryName').text();
+                            const message = `Emergency for ${beneficiaryName} has been successfully resolved.`;
+                            showSuccessAlert(message);
+                        }
                         
                         // Reload page after a brief delay
                         setTimeout(() => {
@@ -922,6 +1009,16 @@
                     $('#submitEmergencyResponse').prop('disabled', false).html('Submit Response');
                 }
             });
+        });
+
+        // Add code to check for stored messages on page load
+        $(document).ready(function() {
+            const storedMessage = sessionStorage.getItem('emergencySuccessMessage');
+            if (storedMessage) {
+                showSuccessAlert(storedMessage);
+                // Clear the message so it doesn't show again on next refresh
+                sessionStorage.removeItem('emergencySuccessMessage');
+            }
         });
 
         // ===== SERVICE REQUEST HANDLERS =====
@@ -1464,6 +1561,14 @@
                 }
             });
         }
+
+        function showSuccessAlert(message) {
+            $('#successAlertMessage').text(message);
+            $('#successAlert').removeClass('d-none');
+            // Save to session storage so it persists after page reload
+            sessionStorage.setItem('emergencySuccessMessage', message);
+        }
+        
 
     </script>
 </body>

@@ -281,7 +281,7 @@ class EmergencyAndRequestController extends Controller
         $pendingServiceCount = ServiceRequest::whereIn('status', ['new', 'approved'])->count();
         
         // Get emergency statistics - UPDATED to match viewHistory()
-        $emergencyTypeStats = EmergencyNotice::whereIn('status', ['completed'])
+        $emergencyTypeStats = EmergencyNotice::whereIn('status', ['resolved'])
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->selectRaw('emergency_type_id, COUNT(*) as count')
             ->groupBy('emergency_type_id')
@@ -291,7 +291,7 @@ class EmergencyAndRequestController extends Controller
                 return [
                     'name' => $type ? $type->name : 'Unknown',
                     'count' => $item->count,
-                    'color' => $type ? $type->color_code : '#6c757d'
+                    'color_code' => $type ? $type->color_code : '#6c757d'  // Make sure this matches what the view expects
                 ];
             });
         
@@ -314,7 +314,7 @@ class EmergencyAndRequestController extends Controller
             'total' => $resolvedEmergencies->count() + $pendingEmergencyCount,
             'resolved' => $resolvedEmergencies->count(),
             'pending' => $pendingEmergencyCount,
-            'byType' => $emergencyTypeStats
+            'byType' => $emergencyTypeStats  // This needs to be included in the response
         ];
 
         $serviceStats = [
@@ -343,84 +343,92 @@ class EmergencyAndRequestController extends Controller
     public function respondToEmergency(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'notice_id' => 'required|exists:emergency_notices,notice_id',
-            'update_type' => 'required|in:response,status_change,assignment,resolution,note',
-            'message' => 'required|string|max:500',
-            'status_change_to' => 'nullable|required_if:update_type,status_change|in:in_progress',
-            'assigned_to' => 'nullable|required_if:update_type,assignment|exists:users,id',
+            'notice_id' => 'required|integer|exists:emergency_notices,notice_id',
+            'update_type' => 'required|string|in:response,status_change,assignment,resolution,note',
+            'message' => 'required|string|max:1000',
+            'status_change_to' => 'nullable|string|in:new,in_progress,resolved,archived',
             'password' => 'required_if:update_type,resolution|nullable'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors(),
-                'message' => 'Validation failed'
+                'errors' => $validator->errors()
             ], 422);
         }
 
         $user = Auth::user();
         
         // Verify password if provided (for sensitive actions like resolution)
-        if ($request->update_type == 'resolution' && (!$request->has('password') || !Hash::check($request->password, $user->password))) {
+        if ($request->update_type == 'resolution' && (!$request->has('password') || !\Hash::check($request->password, $user->password))) {
             return response()->json([
                 'success' => false,
-                'errors' => ['password' => ['Incorrect password']],
-                'message' => 'Password verification failed'
+                'errors' => ['password' => ['Incorrect password. Please try again.']]
             ], 422);
         }
 
         try {
-            // Get the emergency notice
+            // Find the emergency notice
             $notice = EmergencyNotice::findOrFail($request->notice_id);
             
-            // Create update record
-            $update = new EmergencyUpdate();
-            $update->notice_id = $notice->notice_id;
-            $update->message = $request->message;
-            $update->update_type = $request->update_type;
-            $update->updated_by = $user->id;
+            // If this is the first response to a new emergency, automatically set to in_progress
+            $isFirstResponse = $notice->status === 'new';
             
-            // Handle different update types
-            switch ($request->update_type) {
-                case 'response':
-                    // Just record the response, no status change
-                    break;
-                    
-                case 'status_change':
-                    $update->status_change_to = $request->status_change_to;
-                    $notice->status = $request->status_change_to;
-                    // If changing to in_progress, update action info
-                    if ($request->status_change_to == 'in_progress') {
-                        $notice->action_type = 'in_progress';
-                        $notice->action_taken_by = $user->id;
-                        $notice->action_taken_at = now();
-                    }
-                    break;
-                    
-                case 'assignment':
-                    $notice->assigned_to = $request->assigned_to;
-                    break;
-                    
-                case 'resolution':
-                    // For resolution, directly set status to resolved (which moves to history)
-                    $update->status_change_to = 'resolved';
-                    $notice->status = 'resolved';
-                    $notice->action_type = 'resolved';
-                    $notice->action_taken_by = $user->id;
-                    $notice->action_taken_at = now();
-                    break;
+            // Create update record
+            $update = new EmergencyUpdate([
+                'notice_id' => $request->notice_id,
+                'message' => $request->message,
+                'update_type' => $request->update_type,
+                'updated_by' => $user->id
+            ]);
+            
+            // Handle status change if requested
+            if ($request->update_type === 'status_change' && $request->status_change_to) {
+                $update->status_change_to = $request->status_change_to;
+                $notice->status = $request->status_change_to;
+                $notice->read_status = true;
+                $notice->read_at = now();
+                $notice->action_type = $request->status_change_to;
+                $notice->action_taken_by = $user->id;
+                $notice->action_taken_at = now();
+            }
+            // Handle resolution
+            else if ($request->update_type === 'resolution') {
+                $update->status_change_to = 'resolved';
+                $notice->status = 'resolved';
+                $notice->action_type = 'resolved';
+                $notice->action_taken_by = $user->id;
+                $notice->action_taken_at = now();
+            }
+            // Handle assignment
+            else if ($request->update_type === 'assignment') {
+                $notice->assigned_to = $request->assigned_to ?? $user->id;
+            }
+            // Automatic status change to in_progress for first response of any kind
+            else if ($isFirstResponse) {
+                $update->status_change_to = 'in_progress';
+                $notice->status = 'in_progress';
+                $notice->action_type = 'in_progress';
+                $notice->action_taken_by = $user->id;
+                $notice->action_taken_at = now();
             }
             
-            // Always mark as read
-            $notice->read_status = true;
-            $notice->read_at = $notice->read_at ?? now();
+            // If this was a new notice, mark it as read
+            if ($notice->status === 'new') {
+                $notice->read_status = true;
+                $notice->read_at = now();
+            }
+            
+            // Always update the assigned_to field if it's the first response and not set yet
+            if ($isFirstResponse && !$notice->assigned_to) {
+                $notice->assigned_to = $user->id;
+            }
             
             // Save changes
-            $notice->save();
             $update->save();
+            $notice->save();
             
-            // Send notifications
+            // Send notifications to relevant parties
             $this->sendEmergencyNotifications($notice, $update, $user);
             
             // Log this action
@@ -428,20 +436,20 @@ class EmergencyAndRequestController extends Controller
                 'emergency_notice',
                 $notice->notice_id,
                 LogType::UPDATE,
-                $user->first_name . ' ' . $user->last_name . ' updated emergency notice #' . $notice->notice_id . ' with ' . $update->update_type,
+                $user->first_name . ' ' . $user->last_name . ' responded to emergency notice #' . $notice->notice_id . '.',
                 $user->id
             );
             
             return response()->json([
                 'success' => true,
-                'message' => 'Emergency response submitted successfully',
-                'is_resolved' => $notice->status === 'resolved'
+                'message' => 'Response added successfully',
+                'notice' => $notice->fresh(['beneficiary', 'emergencyType', 'sender', 'updates', 'assignedUser', 'actionTakenBy'])
             ]);
-            
         } catch (Exception $e) {
+            \Log::error('Error responding to emergency: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to submit response: ' . $e->getMessage()
+                'message' => 'Failed to add response: ' . $e->getMessage()
             ], 500);
         }
     }
