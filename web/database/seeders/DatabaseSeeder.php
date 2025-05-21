@@ -217,6 +217,9 @@ class DatabaseSeeder extends Seeder
 
         // 9. Generate scheduling data (appointments, visitations, medication schedules)
         $this->generateSchedulingData($careWorkers, $allBeneficiaries);
+
+        // 10. Generate emergency notices and service requests
+        $this->generateEmergencyAndServiceRequests();
     }
 
     /**
@@ -1885,6 +1888,66 @@ class DatabaseSeeder extends Seeder
             
             return $randomBarangay ? $randomBarangay->barangay_id : 1; // Default to 1 if nothing is found
         }
+    }
+
+    // Generate emergency notices and service requests
+    private function generateEmergencyAndServiceRequests()
+    {
+        \Log::info("Generating emergency notices and service requests...");
+        
+        // Create emergency notices - mix of current and historical
+        // First create some "new" emergency notices (most recent)
+        $newEmergencies = \App\Models\EmergencyNotice::factory()->new()->count(8)->create();
+        \Log::info("Created " . $newEmergencies->count() . " new emergency notices");
+        
+        // Create some in-progress emergencies
+        $inProgressEmergencies = \App\Models\EmergencyNotice::factory()->inProgress()->count(5)->create();
+        \Log::info("Created " . $inProgressEmergencies->count() . " in-progress emergency notices");
+        
+        // Create more general emergencies (mix of statuses)
+        $generalEmergencies = \App\Models\EmergencyNotice::factory()->count(25)->create();
+        \Log::info("Created " . $generalEmergencies->count() . " general emergency notices");
+        
+        // Create emergency updates for all non-new emergencies
+        $updatableEmergencies = $inProgressEmergencies->concat($generalEmergencies->where('status', '!=', 'new'));
+        
+        $updateCount = 0;
+        foreach ($updatableEmergencies as $emergency) {
+            // Create 1-4 updates for each emergency
+            $updateCount += \App\Models\EmergencyUpdate::factory()
+                ->count(rand(1, 4))
+                ->create([
+                    'notice_id' => $emergency->notice_id,
+                    'created_at' => $emergency->created_at->addHours(rand(1, 36))
+                ])
+                ->count();
+        }
+        \Log::info("Created {$updateCount} emergency updates");
+        
+        // Create service requests - mix of current and historical
+        // First create some "new" service requests (most recent)
+        $newRequests = \App\Models\ServiceRequest::factory()->new()->count(10)->create();
+        \Log::info("Created " . $newRequests->count() . " new service requests");
+        
+        // Create more general service requests (mix of statuses)
+        $generalRequests = \App\Models\ServiceRequest::factory()->count(35)->create();
+        \Log::info("Created " . $generalRequests->count() . " general service requests");
+        
+        // Create service request updates for all non-new requests
+        $updatableRequests = $generalRequests->where('status', '!=', 'new');
+        
+        $updateCount = 0;
+        foreach ($updatableRequests as $request) {
+            // Create 1-3 updates for each request
+            $updateCount += \App\Models\ServiceRequestUpdate::factory()
+                ->count(rand(1, 3))
+                ->create([
+                    'service_request_id' => $request->service_request_id,
+                    'created_at' => $request->created_at->addHours(rand(1, 24))
+                ])
+                ->count();
+        }
+        \Log::info("Created {$updateCount} service request updates");
     }
 }
 
