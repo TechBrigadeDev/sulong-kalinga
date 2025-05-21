@@ -354,8 +354,8 @@
                                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewEmergencyDetails({{ $notice->notice_id }})">
                                                                 <i class="bi bi-eye me-1"></i> View
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
-                                                                <i class="bi bi-bell me-1"></i> Send Reminder
+                                                           <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $notice->notice_id }}, 'emergency')">
+                                                                <i class="bi bi-bell me-1"></i> Follow Up
                                                             </button>
                                                         </div>
                                                     </div>
@@ -407,7 +407,7 @@
                                                                 <i class="bi bi-eye me-1"></i> View
                                                             </button>
                                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $request->service_request_id }}, 'service')">
-                                                                <i class="bi bi-bell me-1"></i> Send Reminder
+                                                                <i class="bi bi-bell me-1"></i> Follow Up
                                                             </button>
                                                         </div>
                                                     </div>
@@ -464,8 +464,8 @@
                                                     <small class="text-muted">
                                                         <i class="bi bi-clock me-1"></i> Started {{ \Carbon\Carbon::parse($notice->action_taken_at)->diffForHumans() }}
                                                     </small>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
-                                                        <i class="bi bi-bell me-1"></i> Send Reminder
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); openSendReminderModal({{ $notice->notice_id }}, 'emergency')">
+                                                        <i class="bi bi-bell me-1"></i> Follow Up
                                                     </button>
                                                 </div>
                                             </div>
@@ -509,8 +509,8 @@
                                                     <small class="text-muted">
                                                         <i class="bi bi-calendar-event me-1"></i> {{ \Carbon\Carbon::parse($request->service_date)->format('M d') }}
                                                     </small>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $request->service_request_id }}, 'service')">
-                                                        <i class="bi bi-bell me-1"></i> Send Reminder
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); openSendReminderModal({{ $request->service_request_id }}, 'service')">
+                                                        <i class="bi bi-bell me-1"></i> Follow Up
                                                     </button>
                                                 </div>
                                             </div>
@@ -554,7 +554,7 @@
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" class="btn btn-info" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
-                <i class="bi bi-bell me-1"></i> Send Reminder
+                <i class="bi bi-bell me-1"></i> Follow Up
             </button>
         </div>
         </div>
@@ -584,11 +584,43 @@
        <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" class="btn btn-info" onclick="openSendReminderModal(currentServiceRequest.service_request_id, 'service')">
-                <i class="bi bi-bell me-1"></i> Send Reminder
+                <i class="bi bi-bell me-1"></i> Follow Up
             </button>
         </div>
         </div>
     </div>
+    </div>
+
+    <!-- Send Reminder Modal -->
+    <div class="modal fade" id="sendReminderModal" tabindex="-1" aria-labelledby="reminderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="reminderModalLabel"><i class="bi bi-bell"></i> Send Reminder</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="sendReminderForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="reminderRecordId" name="record_id">
+                        <input type="hidden" id="reminderRecordType" name="record_type">
+                        
+                        <div class="mb-3">
+                            <p>Send a reminder to your care manager about this <span id="reminderTypeLabel">request</span>.</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reminderMessage" class="form-label">Message</label>
+                            <textarea class="form-control" id="reminderMessage" name="message" rows="4" placeholder="Enter your reminder message" required></textarea>
+                            <small class="text-muted">Explain why this needs attention from your care manager as soon as possible.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitReminder">Send Follow Up Reminder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
