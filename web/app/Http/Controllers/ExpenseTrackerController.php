@@ -44,11 +44,11 @@ class ExpenseTrackerController extends Controller
         $endDate = Carbon::now()->endOfMonth();
         
         // Get filter parameters
-        $categoryFilter = $request->input('category', '');
-        $dateFilter = $request->input('date', $currentMonth);
+        $categoryId = $request->input('category_id', '');
+        $month = $request->input('month', $currentMonth);
         
-        if ($dateFilter) {
-            $dateParts = explode('-', $dateFilter);
+        if ($month) {
+            $dateParts = explode('-', $month);
             if (count($dateParts) == 2) {
                 $startDate = Carbon::createFromDate($dateParts[0], $dateParts[1], 1)->startOfMonth();
                 $endDate = Carbon::createFromDate($dateParts[0], $dateParts[1], 1)->endOfMonth();
@@ -58,8 +58,8 @@ class ExpenseTrackerController extends Controller
         // Get expenses for the selected period
         $expenses = Expense::with(['category', 'creator'])
             ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
-            ->when($categoryFilter, function($query) use ($categoryFilter) {
-                return $query->where('category_id', $categoryFilter);
+            ->when($categoryId, function($query) use ($categoryId) {
+                return $query->where('category_id', $categoryId);
             })
             ->orderBy('date', 'desc')
             ->get();
@@ -115,8 +115,8 @@ class ExpenseTrackerController extends Controller
             'recentBudgets',
             'currentBudget',
             'stats',
-            'categoryFilter',
-            'dateFilter',
+            'categoryId',
+            'month', // Changed from dateFilter to month for consistency
             'chartData'
         ));
     }
@@ -607,71 +607,87 @@ class ExpenseTrackerController extends Controller
     }
     
     /**
-     * Get a filtered list of expenses
+     * Get a filtered list of expenses with pagination
      */
     public function getFilteredExpenses(Request $request)
     {
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $categoryId = $request->input('category_id');
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 10);
         
         try {
-            $expenses = Expense::with(['category', 'creator'])
-                ->when($startDate, function ($query) use ($startDate) {
+            $query = Expense::with(['category', 'creator'])
+                ->when($startDate, function($query) use ($startDate) {
                     return $query->whereDate('date', '>=', $startDate);
                 })
-                ->when($endDate, function ($query) use ($endDate) {
+                ->when($endDate, function($query) use ($endDate) {
                     return $query->whereDate('date', '<=', $endDate);
                 })
-                ->when($categoryId, function ($query) use ($categoryId) {
+                ->when($categoryId, function($query) use ($categoryId) {
                     return $query->where('category_id', $categoryId);
                 })
-                ->orderBy('date', 'desc')
-                ->get();
+                ->orderBy('date', 'desc');
+            
+            // Paginate the results
+            $expenses = $query->paginate($perPage, ['*'], 'page', $page);
             
             return response()->json([
-                'success' => true,
-                'expenses' => $expenses
+                'expenses' => $expenses->items(),
+                'pagination' => [
+                    'total' => $expenses->total(),
+                    'per_page' => $expenses->perPage(),
+                    'current_page' => $expenses->currentPage(),
+                    'last_page' => $expenses->lastPage()
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch filtered expenses: ' . $e->getMessage()
+                'message' => 'Failed to filter expenses: ' . $e->getMessage()
             ], 500);
         }
     }
     
     /**
-     * Get filtered budget history
+     * Get filtered budget history with pagination
      */
     public function getFilteredBudgets(Request $request)
     {
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $budgetTypeId = $request->input('budget_type_id');
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 10);
         
         try {
-            $budgets = BudgetAllocation::with(['budgetType', 'creator'])
-                ->when($startDate, function ($query) use ($startDate) {
+            $query = BudgetAllocation::with(['budgetType', 'creator'])
+                ->when($startDate, function($query) use ($startDate) {
                     return $query->whereDate('start_date', '>=', $startDate);
                 })
-                ->when($endDate, function ($query) use ($endDate) {
+                ->when($endDate, function($query) use ($endDate) {
                     return $query->whereDate('end_date', '<=', $endDate);
                 })
-                ->when($budgetTypeId, function ($query) use ($budgetTypeId) {
+                ->when($budgetTypeId, function($query) use ($budgetTypeId) {
                     return $query->where('budget_type_id', $budgetTypeId);
                 })
-                ->orderBy('start_date', 'desc')
-                ->get();
+                ->orderBy('created_at', 'desc');
+            
+            // Paginate the results
+            $budgets = $query->paginate($perPage, ['*'], 'page', $page);
             
             return response()->json([
-                'success' => true,
-                'budgets' => $budgets
+                'budgets' => $budgets->items(),
+                'pagination' => [
+                    'total' => $budgets->total(),
+                    'per_page' => $budgets->perPage(),
+                    'current_page' => $budgets->currentPage(),
+                    'last_page' => $budgets->lastPage()
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch filtered budgets: ' . $e->getMessage()
+                'message' => 'Failed to filter budget history: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -719,77 +735,74 @@ class ExpenseTrackerController extends Controller
      */
     private function calculateStatistics($expenses, $currentBudget)
     {
+        // Initialize stats array
         $stats = [
-            'totalMonthly' => 0,
-            'budgetRemaining' => 0,
-            'mostSpentCategory' => [
-                'name' => 'None',
-                'amount' => 0,
-                'percentage' => 0
-            ],
-            'currentBudget' => 0,
-            'lastUpdated' => null,
-            'percentUsed' => 0,
-            'trend' => 0
+            'totalExpenses' => 0,
+            'previousPeriodTotal' => null,
+            'percentChange' => null,
+            'topCategory' => null,
+            'grandTotalExpenses' => 0,  // All-time total expenses
+            'grandTotalBudget' => 0     // All-time total budget
         ];
         
-        // Calculate total expenses
+        // Calculate total expenses for current period
+        $totalExpenses = $expenses->sum('amount');
+        $stats['totalExpenses'] = $totalExpenses;
+        
+        // Calculate expenses from previous period for comparison
         if ($expenses->count() > 0) {
-            $stats['totalMonthly'] = $expenses->sum('amount');
+            $currentPeriodStart = $expenses->min('date');
+            $currentPeriodEnd = $expenses->max('date');
             
-            // Find most spent category
-            $categoryTotals = [];
-            foreach ($expenses as $expense) {
-                $categoryId = $expense->category_id;
+            if ($currentPeriodStart && $currentPeriodEnd) {
+                $periodLength = $currentPeriodStart->diffInDays($currentPeriodEnd) + 1;
+                $previousPeriodEnd = $currentPeriodStart->copy()->subDay();
+                $previousPeriodStart = $previousPeriodEnd->copy()->subDays($periodLength - 1);
                 
-                if (!isset($categoryTotals[$categoryId])) {
-                    $categoryTotals[$categoryId] = [
-                        'name' => $expense->category->name,
-                        'amount' => 0
-                    ];
-                }
-                
-                $categoryTotals[$categoryId]['amount'] += $expense->amount;
-            }
-            
-            // Sort by amount (highest first)
-            usort($categoryTotals, function($a, $b) {
-                return $b['amount'] <=> $a['amount'];
-            });
-            
-            // Get top category if exists
-            if (!empty($categoryTotals)) {
-                $stats['mostSpentCategory'] = [
-                    'name' => $categoryTotals[0]['name'],
-                    'amount' => $categoryTotals[0]['amount'],
-                    'percentage' => $stats['totalMonthly'] > 0 ? 
-                                    round(($categoryTotals[0]['amount'] / $stats['totalMonthly']) * 100) : 0
-                ];
-            }
-            
-            // Calculate trend (compared to previous month)
-            $lastMonth = Carbon::now()->subMonth();
-            $lastMonthStart = Carbon::now()->subMonth()->startOfMonth();
-            $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
-            
-            $lastMonthExpenses = Expense::whereBetween('date', [
-                    $lastMonthStart->toDateString(), 
-                    $lastMonthEnd->toDateString()
+                $previousExpenses = Expense::whereBetween('date', [
+                    $previousPeriodStart->toDateString(), 
+                    $previousPeriodEnd->toDateString()
                 ])->sum('amount');
                 
-            if ($lastMonthExpenses > 0) {
-                $stats['trend'] = (($stats['totalMonthly'] - $lastMonthExpenses) / $lastMonthExpenses) * 100;
+                $stats['previousPeriodTotal'] = $previousExpenses;
+                
+                // Calculate percent change if previous period had expenses
+                if ($previousExpenses > 0) {
+                    $percentChange = (($totalExpenses - $previousExpenses) / $previousExpenses) * 100;
+                    $stats['percentChange'] = round($percentChange, 1);
+                }
             }
         }
         
-        // Current budget data
-        if ($currentBudget) {
-            $stats['currentBudget'] = $currentBudget->amount;
-            $stats['budgetRemaining'] = $currentBudget->amount - $stats['totalMonthly'];
-            $stats['lastUpdated'] = $currentBudget->updated_at;
-            $stats['percentUsed'] = $currentBudget->amount > 0 ? 
-                                   round(($stats['totalMonthly'] / $currentBudget->amount) * 100) : 0;
+        // Find top expense category
+        if ($expenses->count() > 0) {
+            // Group expenses by category and sum amounts
+            $expensesByCategory = $expenses->groupBy('category_id')
+                ->map(function ($items) {
+                    return [
+                        'amount' => $items->sum('amount'),
+                        'category' => $items->first()->category
+                    ];
+                })
+                ->sortByDesc('amount')
+                ->values();
+            
+            if ($expensesByCategory->count() > 0) {
+                $topCategory = $expensesByCategory->first();
+                $stats['topCategory'] = [
+                    'name' => $topCategory['category']->name,
+                    'amount' => $topCategory['amount'],
+                    'percentage' => $totalExpenses > 0 ? round(($topCategory['amount'] / $totalExpenses) * 100) : 0,
+                    'color' => $topCategory['category']->color_code
+                ];
+            }
         }
+        
+        // Calculate grand total for all expenses (all time)
+        $stats['grandTotalExpenses'] = Expense::sum('amount');
+        
+        // Calculate grand total for all budgets (all time)
+        $stats['grandTotalBudget'] = BudgetAllocation::sum('amount');
         
         return $stats;
     }

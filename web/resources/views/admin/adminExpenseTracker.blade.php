@@ -238,23 +238,23 @@
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-warning bg-opacity-10 border-warning border-opacity-25">
-                                <h6 class="text-muted">Budget Remaining</h6>
-                                <h3 class="text-warning" id="budgetRemaining">₱0.00</h3>
-                                <small id="budgetUsedPercent">No active budget</small>
+                                <h6 class="text-muted">Total Expenses (Grand Total)</h6>
+                                <h3 class="text-warning" id="grandTotalExpenses">₱0.00</h3>
+                                <small id="grandTotalExpensesLabel">All-time expenses</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-success bg-opacity-10 border-success border-opacity-25">
-                                <h6 class="text-muted">Most Spent Category</h6>
+                                <h6 class="text-muted">Most Spent Category (Monthly)</h6>
                                 <h3 class="text-success" id="topCategory">None</h3>
                                 <small id="topCategoryAmount">₱0.00 (0% of total)</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-info bg-opacity-10 border-info border-opacity-25">
-                                <h6 class="text-muted">Current Budget</h6>
-                                <h3 class="text-info" id="currentBudget">₱0.00</h3>
-                                <small id="budgetPeriod">No active budget</small>
+                                <h6 class="text-muted">Overall Budget (Grand Total)</h6>
+                                <h3 class="text-info" id="grandTotalBudget">₱0.00</h3>
+                                <small id="grandTotalBudgetLabel">All-time budget allocations</small>
                             </div>
                         </div>
                     </div>
@@ -286,7 +286,7 @@
                                     <select class="form-select form-select-sm" id="categoryFilter">
                                         <option value="">All Categories</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->category_id }}" {{ $categoryFilter == $category->category_id ? 'selected' : '' }}>
+                                            <option value="{{ $category->category_id }}" {{ $categoryId == $category->category_id ? 'selected' : '' }}>
                                                 {{ $category->name }}
                                             </option>
                                         @endforeach
@@ -423,16 +423,21 @@
                         <!-- Right Column - Charts and Budget Progress -->
                         <div class="col-lg-4">
                             <div class="card expense-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Expense Breakdown</h5>
-                                    <div class="chart-container">
-                                        <canvas id="expenseChart"></canvas>
-                                    </div>
-                                    <div class="mt-3" id="chartLegend">
-                                        <!-- Legend will be dynamically generated -->
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">Expense Breakdown</h5>
+                                    <div id="chartSpinner" class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </div>
+                                <div class="chart-container position-relative">
+                                    <canvas id="expenseChart"></canvas>
+                                </div>
+                                <div class="mt-3" id="chartLegend">
+                                    <!-- Legend will be dynamically generated -->
+                                </div>
                             </div>
+                        </div>
                             
                             <!-- Replace the budget progress card with this -->
                             <div class="card expense-card mb-3">
@@ -611,21 +616,20 @@
         </div>
     </div>
 
-    <!-- View All Expenses Modal -->
+    <!-- View All Expenses Modal - Updated with pagination container -->
     <div class="modal fade" id="allExpensesModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header bg-light">
+                <div class="modal-header">
                     <h5 class="modal-title">All Expenses</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Filter Controls -->
                     <div class="filter-controls mb-3">
-                        <div class="row g-2">
+                        <div class="row">
                             <div class="col-md-3">
-                                <label class="form-label">Category</label>
-                                <select class="form-select" id="expensesFilterCategory">
+                                <label for="expensesFilterCategory" class="form-label">Category</label>
+                                <select id="expensesFilterCategory" class="form-select">
                                     <option value="">All Categories</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->category_id }}">{{ $category->name }}</option>
@@ -633,15 +637,16 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="expensesFilterStartDate">
+                                <label for="expensesFilterStartDate" class="form-label">Start Date</label>
+                                <input type="date" id="expensesFilterStartDate" class="form-control">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="expensesFilterEndDate">
+                                <label for="expensesFilterEndDate" class="form-label">End Date</label>
+                                <input type="date" id="expensesFilterEndDate" class="form-control">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
-                                <button class="btn btn-primary w-100" id="applyExpensesFilter">Apply Filter</button>
+                                <button id="applyExpensesFilter" class="btn btn-primary me-2">Apply Filter</button>
+                                <button id="exportFilteredExpenses" class="btn btn-outline-success"> <i class="bi bi-download"></i> Export</button>
                             </div>
                         </div>
                     </div>
@@ -653,50 +658,49 @@
                             </div>
                         </div>
                         
-                        <table class="table table-striped table-hover">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Date</th>
                                     <th>Title</th>
                                     <th>Category</th>
                                     <th>Amount</th>
-                                    <th>Payment Method</th>
+                                    <th>Payment</th>
                                     <th>Receipt #</th>
                                     <th>Created By</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="allExpensesBody">
-                                <!-- Will be populated via AJAX -->
+                                <!-- Will be populated dynamically -->
                             </tbody>
                         </table>
+                        
+                        <!-- Add pagination container -->
+                        <div id="expensesPagination" class="mt-3"></div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="exportFilteredExpensesBtn">
-                        <i class="bi bi-download"></i> Export Filtered Data
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Full History Modal -->
+    <!-- Full History Modal - Updated with pagination container -->
     <div class="modal fade" id="fullHistoryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header bg-light">
+                <div class="modal-header">
                     <h5 class="modal-title">Budget History</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Filter Controls -->
                     <div class="filter-controls mb-3">
-                        <div class="row g-2">
+                        <div class="row">
                             <div class="col-md-3">
-                                <label class="form-label">Budget Type</label>
-                                <select class="form-select" id="budgetFilterType">
+                                <label for="budgetFilterType" class="form-label">Budget Type</label>
+                                <select id="budgetFilterType" class="form-select">
                                     <option value="">All Types</option>
                                     @foreach($budgetTypes as $type)
                                         <option value="{{ $type->budget_type_id }}">{{ $type->name }}</option>
@@ -704,15 +708,16 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="budgetFilterStartDate">
+                                <label for="budgetFilterStartDate" class="form-label">Start Date</label>
+                                <input type="date" id="budgetFilterStartDate" class="form-control">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="budgetFilterEndDate">
+                                <label for="budgetFilterEndDate" class="form-label">End Date</label>
+                                <input type="date" id="budgetFilterEndDate" class="form-control">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
-                                <button class="btn btn-primary w-100" id="applyBudgetFilter">Apply Filter</button>
+                                <button id="applyBudgetFilter" class="btn btn-primary me-2">Apply Filter</button>
+                                <button id="exportFilteredBudgets" class="btn btn-outline-success"> <i class="bi bi-download"></i> Export</button>
                             </div>
                         </div>
                     </div>
@@ -724,29 +729,29 @@
                             </div>
                         </div>
                         
-                        <table class="table table-striped table-hover">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Period</th>
                                     <th>Amount</th>
                                     <th>Type</th>
+                                    <th>Period</th>
                                     <th>Description</th>
                                     <th>Created By</th>
-                                    <th>Creation Date</th>
+                                    <th>Created At</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="fullHistoryBody">
-                                <!-- Will be populated via AJAX -->
+                                <!-- Will be populated dynamically -->
                             </tbody>
                         </table>
+                        
+                        <!-- Add pagination container -->
+                        <div id="budgetPagination" class="mt-3"></div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="exportFilteredBudgetsBtn">
-                        <i class="bi bi-download"></i> Export Filtered Data
-                    </button>
                 </div>
             </div>
         </div>
@@ -817,6 +822,7 @@
             
             // Initialize chart
             initializeChart();
+            $('#chartSpinner').hide();
             
             // Load and display initial statistics
             updateDashboardStats();
@@ -845,12 +851,12 @@
             });
             
             $('#viewAllExpensesBtn').on('click', function() {
-                loadAllExpenses();
+                loadAllExpenses(1); // Load first page
                 allExpensesModal.show();
             });
             
             $('#viewFullHistoryBtn').on('click', function() {
-                loadFullBudgetHistory();
+                loadFullBudgetHistory(1); // Load first page
                 fullHistoryModal.show();
             });
             
@@ -861,12 +867,12 @@
             
             // Apply expense filter
             $('#applyExpensesFilter').on('click', function() {
-                loadFilteredExpenses();
+                loadFilteredExpenses(1); // Load first page of filtered results
             });
             
             // Apply budget filter
             $('#applyBudgetFilter').on('click', function() {
-                loadFilteredBudgetHistory();
+                loadFilteredBudgetHistory(1); // Load first page of filtered results
             });
             
             // Save expense
@@ -880,14 +886,12 @@
             });
             
             // Export buttons
-            $('#exportExpensesExcel').on('click', function(e) {
-                e.preventDefault();
-                exportExpensesToExcel();
+            $('#exportFilteredExpenses').on('click', function() {
+                exportFilteredExpensesToExcel();
             });
             
-            $('#exportBudgetsExcel').on('click', function(e) {
-                e.preventDefault();
-                exportBudgetsToExcel();
+            $('#exportFilteredBudgets').on('click', function() {
+                exportFilteredBudgetsToExcel();
             });
             
             $('#exportFilteredExpensesBtn').on('click', function() {
@@ -1295,7 +1299,9 @@
             
             // Show loading spinners
             $('#expensesSpinner').removeClass('d-none');
-            $('#activitiesSpinner').removeClass('d-none'); // Changed from budgetSpinner
+            $('#chartSpinner').show();
+            $('#statsSpinner').removeClass('d-none');
+            $('#activitiesSpinner').removeClass('d-none');
             
             // Update expenses period badge
             $('#expensesPeriodBadge').text(month ? new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'All Time');
@@ -1310,11 +1316,17 @@
                     format: 'json' // Request JSON response instead of HTML
                 },
                 success: function(response) {
+                    console.log("Received response:", response); // Debug the response
+                    
                     // Update statistics
-                    updateStatistics(response.stats);
+                    if (response.stats) {
+                        updateStatistics(response.stats);
+                    }
                     
                     // Update recent expenses list
-                    updateRecentExpenses(response.recentExpenses);
+                    if (response.recentExpenses) {
+                        updateRecentExpenses(response.recentExpenses);
+                    }
                     
                     // Update chart
                     if (response.chartData) {
@@ -1326,25 +1338,32 @@
                     }
                     
                     // Update budget history
-                    updateBudgetHistory(response.recentBudgets);
+                    if (response.recentBudgets) {
+                        updateBudgetHistory(response.recentBudgets);
+                    }
                     
-                    // Update recent activities (new function)
-                    updateRecentActivities(response.recentExpenses, response.recentBudgets);
+                    // Update recent activities
+                    if (response.recentExpenses && response.recentBudgets) {
+                        updateRecentActivities(response.recentExpenses, response.recentBudgets);
+                    }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error("Error updating dashboard:", error);
                     toastr.error('Failed to update dashboard data. Please try again later.');
                 },
                 complete: function() {
                     // Hide loading spinners
                     $('#expensesSpinner').addClass('d-none');
-                    $('#activitiesSpinner').addClass('d-none'); // Changed from budgetSpinner
+                    $('#chartSpinner').hide();
+                    $('#statsSpinner').addClass('d-none');
+                    $('#activitiesSpinner').addClass('d-none');
                 }
             });
         }
 
         // Update statistics
         function updateStatistics(stats) {
-            // Total expenses
+            // Total expenses (Monthly)
             $('#totalExpenses').text('₱' + formatNumber(stats.totalExpenses || 0));
             
             // Expense trend
@@ -1360,11 +1379,24 @@
                 $('#expensesTrend').removeClass('text-danger text-success');
             }
             
+            // Total Expenses (Grand Total) - replacing Budget Remaining
+            $('#grandTotalExpenses').text('₱' + formatNumber(stats.grandTotalExpenses || 0));
+            $('#grandTotalExpensesLabel').text('All-time expenses');
+            
+            // Overall Budget (Grand Total) - replacing Current Budget
+            $('#grandTotalBudget').text('₱' + formatNumber(stats.grandTotalBudget || 0));
+            $('#grandTotalBudgetLabel').text('All-time budget allocations');
+            
             // Top category
             if (stats.topCategory) {
                 $('#topCategory').text(stats.topCategory.name || 'None');
                 const percentage = stats.totalExpenses > 0 ? ((stats.topCategory.amount / stats.totalExpenses) * 100).toFixed(1) : 0;
                 $('#topCategoryAmount').text(`₱${formatNumber(stats.topCategory.amount || 0)} (${percentage}% of total)`);
+                
+                // Update the color indicator if there is one
+                if ($('#topCategoryIndicator').length > 0) {
+                    $('#topCategoryIndicator').css('background-color', stats.topCategory.color);
+                }
             } else {
                 $('#topCategory').text('None');
                 $('#topCategoryAmount').text('₱0.00 (0% of total)');
@@ -1380,28 +1412,23 @@
             
             if (expenses && expenses.length > 0) {
                 expenses.forEach(expense => {
-                    // Create expense item
                     const expenseItem = `
                         <div class="expense-item" style="border-left-color: ${expense.category.color_code};">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="expense-title">
-                                        <i class="bi ${expense.category.icon || 'bi-tag'} me-2 text-muted"></i>
-                                        ${expense.title}
-                                    </div>
+                                    <div class="expense-title">${expense.title}</div>
                                     <div class="expense-detail">
-                                        <span>${expense.category.name}</span> • 
-                                        <span>${formatDate(expense.date)}</span> •
-                                        <span>${formatPaymentMethod(expense.payment_method)}</span>
+                                        <span class="badge" style="background-color: ${expense.category.color_code}">${expense.category.name}</span>
+                                        <span class="ms-2">${formatDate(expense.date)}</span>
                                     </div>
                                 </div>
                                 <div class="text-end">
                                     <div class="expense-amount">₱${formatNumber(expense.amount)}</div>
                                     <div class="expense-actions">
-                                        <button class="btn-action-icon edit" onclick="editExpense(${expense.expense_id})" title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
+                                        <button class="btn-action-icon edit" onclick="editExpense(${expense.expense_id})">
+                                            <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn-action-icon delete" onclick="deleteExpense(${expense.expense_id})" title="Delete">
+                                        <button class="btn-action-icon delete" onclick="deleteExpense(${expense.expense_id})">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -1409,7 +1436,6 @@
                             </div>
                         </div>
                     `;
-                    
                     container.append(expenseItem);
                 });
             } else {
@@ -1571,6 +1597,7 @@
             // Show the spinners for both areas being updated
             $('#expensesSpinner').removeClass('d-none');
             $('#activitiesSpinner').removeClass('d-none');
+            $('#chartSpinner').show();
             
             $.ajax({
                 url: '{{ route("admin.expense.index") }}',
@@ -1612,12 +1639,13 @@
                     // Hide all spinners
                     $('#expensesSpinner').addClass('d-none');
                     $('#activitiesSpinner').addClass('d-none');
+                    $('#chartSpinner').hide();
                 }
             });
         }
 
-        // Load all expenses for modal
-        function loadAllExpenses() {
+        // Load all expenses for modal with pagination
+        function loadAllExpenses(page = 1) {
             $('#allExpensesSpinner').removeClass('d-none');
             
             $.ajax({
@@ -1627,10 +1655,12 @@
                 data: {
                     category_id: '',
                     start_date: '',
-                    end_date: ''
+                    end_date: '',
+                    page: page,
+                    per_page: 10
                 },
                 success: function(response) {
-                    renderAllExpenses(response.expenses);
+                    renderAllExpenses(response.expenses, response.pagination);
                 },
                 error: function() {
                     toastr.error('Failed to load expenses');
@@ -1641,8 +1671,8 @@
             });
         }
 
-        // Render all expenses in the modal
-        function renderAllExpenses(expenses) {
+        // Render all expenses in the modal with pagination controls
+        function renderAllExpenses(expenses, pagination) {
             const tableBody = $('#allExpensesBody');
             tableBody.html('');
             
@@ -1671,13 +1701,55 @@
                     `;
                     tableBody.append(row);
                 });
+                
+                // Add pagination controls
+                const paginationEl = $('#expensesPagination');
+                paginationEl.html('');
+                
+                if (pagination.last_page > 1) {
+                    let paginationControls = `
+                        <nav aria-label="Expenses pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadAllExpenses(1); return false;">First</a>
+                                </li>
+                                <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadAllExpenses(${pagination.current_page - 1}); return false;">Previous</a>
+                                </li>
+                    `;
+                    
+                    // Add page numbers
+                    const startPage = Math.max(1, pagination.current_page - 2);
+                    const endPage = Math.min(pagination.last_page, pagination.current_page + 2);
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                        paginationControls += `
+                            <li class="page-item ${pagination.current_page === i ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="loadAllExpenses(${i}); return false;">${i}</a>
+                            </li>
+                        `;
+                    }
+                    
+                    paginationControls += `
+                                <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadAllExpenses(${pagination.current_page + 1}); return false;">Next</a>
+                                </li>
+                                <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadAllExpenses(${pagination.last_page}); return false;">Last</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    `;
+                    
+                    paginationEl.html(paginationControls);
+                }
             } else {
                 tableBody.html('<tr><td colspan="8" class="text-center">No expenses found</td></tr>');
             }
         }
 
-        // Load filtered expenses
-        function loadFilteredExpenses() {
+        // Load filtered expenses with pagination
+        function loadFilteredExpenses(page = 1) {
             const category = $('#expensesFilterCategory').val();
             const startDate = $('#expensesFilterStartDate').val();
             const endDate = $('#expensesFilterEndDate').val();
@@ -1691,15 +1763,17 @@
             $('#allExpensesSpinner').removeClass('d-none');
             
             $.ajax({
-                url: '{{ route("admin.expense.filtered") }}', // Changed from 'filter' to 'filtered'
+                url: '{{ route("admin.expense.filtered") }}',
                 method: 'GET',
                 data: {
                     category_id: category,
                     start_date: startDate,
-                    end_date: endDate
+                    end_date: endDate,
+                    page: page,
+                    per_page: 10
                 },
                 success: function(response) {
-                    renderAllExpenses(response.expenses);
+                    renderAllExpenses(response.expenses, response.pagination);
                 },
                 error: function() {
                     toastr.error('Failed to filter expenses');
@@ -1710,21 +1784,23 @@
             });
         }
 
-        // Load full budget history
-        function loadFullBudgetHistory() {
+        // Load full budget history with pagination
+        function loadFullBudgetHistory(page = 1) {
             $('#fullHistorySpinner').removeClass('d-none');
             
             $.ajax({
-                url: '{{ route("admin.expense.budget.filtered") }}', // Use the existing filtered route instead
+                url: '{{ route("admin.expense.budget.filtered") }}',
                 method: 'GET',
                 // No filters means get all budgets
                 data: {
                     budget_type_id: '',
                     start_date: '',
-                    end_date: ''
+                    end_date: '',
+                    page: page,
+                    per_page: 10
                 },
                 success: function(response) {
-                    renderFullBudgetHistory(response.budgets);
+                    renderFullBudgetHistory(response.budgets, response.pagination);
                 },
                 error: function() {
                     toastr.error('Failed to load budget history');
@@ -1735,42 +1811,87 @@
             });
         }
 
-        // Render full budget history
-        function renderFullBudgetHistory(budgets) {
+        // Render full budget history with pagination controls
+        function renderFullBudgetHistory(budgets, pagination) {
             const tableBody = $('#fullHistoryBody');
             tableBody.html('');
             
             if (budgets && budgets.length > 0) {
                 budgets.forEach(budget => {
-                    const row = `
+                    const budgetRow = `
                         <tr>
+                            <td class="${budget.amount >= 0 ? 'budget-amount-positive' : 'budget-amount-negative'}">
+                                ₱${formatNumber(budget.amount)}
+                            </td>
+                            <td>${budget.budget_type ? budget.budget_type.name : 'Unknown'}</td>
                             <td>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</td>
-                            <td class="${budget.amount >= 0 ? 'budget-amount-positive' : 'budget-amount-negative'}">₱${formatNumber(budget.amount)}</td>
-                            <td>${budget.budget_type.name}</td>
                             <td>${budget.description || 'No description'}</td>
                             <td>${budget.creator ? budget.creator.first_name + ' ' + budget.creator.last_name : 'Unknown'}</td>
                             <td>${formatDateTime(budget.created_at)}</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary" onclick="editBudget(${budget.budget_allocation_id})">
+                                    <button class="btn btn-outline-primary" onclick="editBudget(${budget.budget_allocation_id})" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger" onclick="deleteBudget(${budget.budget_allocation_id})">
+                                    <button class="btn btn-outline-danger" onclick="deleteBudget(${budget.budget_allocation_id})" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                     `;
-                    tableBody.append(row);
+                    
+                    tableBody.append(budgetRow);
                 });
+                
+                // Add pagination controls
+                const paginationEl = $('#budgetPagination');
+                paginationEl.html('');
+                
+                if (pagination.last_page > 1) {
+                    let paginationControls = `
+                        <nav aria-label="Budget pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadFullBudgetHistory(1); return false;">First</a>
+                                </li>
+                                <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadFullBudgetHistory(${pagination.current_page - 1}); return false;">Previous</a>
+                                </li>
+                    `;
+                    
+                    // Add page numbers
+                    const startPage = Math.max(1, pagination.current_page - 2);
+                    const endPage = Math.min(pagination.last_page, pagination.current_page + 2);
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                        paginationControls += `
+                            <li class="page-item ${pagination.current_page === i ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="loadFullBudgetHistory(${i}); return false;">${i}</a>
+                            </li>
+                        `;
+                    }
+                    
+                    paginationControls += `
+                                <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadFullBudgetHistory(${pagination.current_page + 1}); return false;">Next</a>
+                                </li>
+                                <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadFullBudgetHistory(${pagination.last_page}); return false;">Last</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    `;
+                    
+                    paginationEl.html(paginationControls);
+                }
             } else {
                 tableBody.html('<tr><td colspan="7" class="text-center">No budget history found</td></tr>');
             }
         }
 
-        // Load filtered budget history
-        function loadFilteredBudgetHistory() {
+        // Load filtered budget history with pagination
+        function loadFilteredBudgetHistory(page = 1) {
             const budgetType = $('#budgetFilterType').val();
             const startDate = $('#budgetFilterStartDate').val();
             const endDate = $('#budgetFilterEndDate').val();
@@ -1789,10 +1910,12 @@
                 data: {
                     budget_type_id: budgetType,
                     start_date: startDate,
-                    end_date: endDate
+                    end_date: endDate,
+                    page: page,
+                    per_page: 10
                 },
                 success: function(response) {
-                    renderFullBudgetHistory(response.budgets);
+                    renderFullBudgetHistory(response.budgets, response.pagination);
                 },
                 error: function() {
                     toastr.error('Failed to filter budget history');
