@@ -3,11 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>COSE - Expense Tracker</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/expensetracker.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        /* Custom styles for Expense Tracker */
+        .summary-card {
+            padding: 20px;
+            border-radius: 0.5rem;
+            border: 1px solid;
+            height: 100%;
+        }
+        
+        .expense-card {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .expense-item {
+            padding: 12px;
+            border-radius: 0.5rem;
+            margin-bottom: 12px;
+            border-left: 4px solid transparent;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
+        }
+        
+        .expense-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .expense-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .expense-detail {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .expense-amount {
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .chart-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        /* Action buttons styling */
+        .expense-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+        
+        .expense-item:hover .expense-actions {
+            opacity: 1;
+        }
+        
+        .btn-action-icon {
+            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: #fff;
+            background-color: #6c757d;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-action-icon.edit {
+            background-color: #0d6efd;
+        }
+        
+        .btn-action-icon.delete {
+            background-color: #dc3545;
+        }
+        
+        .btn-action-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Required field indicator */
+        .required-field::after {
+            content: "*";
+            color: #dc3545;
+            margin-left: 4px;
+        }
+        
+        /* Budget styles */
+        .budget-item {
+            border-left: 4px solid;
+        }
+        
+        .budget-amount-positive {
+            color: #198754;
+            font-weight: 600;
+        }
+        
+        .budget-amount-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        /* Filter controls */
+        .filter-controls {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 0.5rem;
+            margin-bottom: 16px;
+        }
+        
+        /* Loading spinner */
+        .spinner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            border-radius: 0.5rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,6 +169,14 @@
 
     <div class="home-section">
         <div class="text-left">EXPENSE TRACKER</div>
+        
+        <!-- Success Alert -->
+        <div id="successAlert" class="alert alert-success alert-dismissible fade show d-none mx-3 mb-3" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span id="successAlertMessage">Action completed successfully!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
         <div class="container-fluid">
             <div class="row" id="home-content">
                 <div class="col-12">
@@ -24,29 +185,29 @@
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-primary bg-opacity-10 border-primary border-opacity-25">
                                 <h6 class="text-muted">Total Expenses (Monthly)</h6>
-                                <h3 class="text-primary">₱24,750</h3>
-                                <small class="text-success"><i class="bi bi-arrow-up"></i> 12% from last month</small>
+                                <h3 class="text-primary" id="totalExpenses">₱0.00</h3>
+                                <small id="expensesTrend">No previous data available</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-warning bg-opacity-10 border-warning border-opacity-25">
                                 <h6 class="text-muted">Budget Remaining</h6>
-                                <h3 class="text-warning">₱5,250</h3>
-                                <small class="text-danger"><i class="bi bi-arrow-down"></i> 17% of budget used</small>
+                                <h3 class="text-warning" id="budgetRemaining">₱0.00</h3>
+                                <small id="budgetUsedPercent">No active budget</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-success bg-opacity-10 border-success border-opacity-25">
                                 <h6 class="text-muted">Most Spent Category</h6>
-                                <h3 class="text-success">Medical Supplies</h3>
-                                <small>₱8,900 (36% of total)</small>
+                                <h3 class="text-success" id="topCategory">None</h3>
+                                <small id="topCategoryAmount">₱0.00 (0% of total)</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-info bg-opacity-10 border-info border-opacity-25">
                                 <h6 class="text-muted">Current Budget</h6>
-                                <h3 class="text-info">₱30,000</h3>
-                                <small>Last updated: Oct 1, 2023</small>
+                                <h3 class="text-info" id="currentBudget">₱0.00</h3>
+                                <small id="budgetPeriod">No active budget</small>
                             </div>
                         </div>
                     </div>
@@ -61,9 +222,15 @@
                                 <button class="btn btn-outline-primary btn-action" id="addBudgetBtn">
                                     <i class="bi bi-wallet2"></i> Add Budget
                                 </button>
-                                <button class="btn btn-outline-secondary btn-action" id="exportBtn">
-                                    <i class="bi bi-download"></i> Export
-                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-action dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                        <li><a class="dropdown-item" href="#" id="exportExpensesExcel">Export Expenses (Excel)</a></li>
+                                        <li><a class="dropdown-item" href="#" id="exportBudgetsExcel">Export Budgets (Excel)</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-5 col-lg-4">
@@ -71,16 +238,15 @@
                                 <div class="col-6">
                                     <select class="form-select form-select-sm" id="categoryFilter">
                                         <option value="">All Categories</option>
-                                        <option value="medical_supplies">Medical Supplies</option>
-                                        <option value="food_nutrition">Food & Nutrition</option>
-                                        <option value="transportation">Transportation</option>
-                                        <option value="facility_maintenance">Facility Maintenance</option>
-                                        <option value="staff_training">Staff Training</option>
-                                        <option value="other">Other</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->category_id }}" {{ $categoryFilter == $category->category_id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <input type="month" class="form-control form-control-sm" id="monthFilter" value="2023-10">
+                                    <input type="month" class="form-control form-control-sm" id="monthFilter" value="{{ $dateFilter ?? date('Y-m') }}">
                                 </div>
                             </div>
                         </div>
@@ -94,11 +260,48 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h5 class="card-title mb-0">Recent Expenses</h5>
-                                        <span class="badge bg-primary">This Month</span>
+                                        <span class="badge bg-primary" id="expensesPeriodBadge">This Month</span>
                                     </div>
                                     
-                                    <div id="recentExpensesContainer">
-                                        <!-- Expense items will be dynamically inserted here -->
+                                    <div id="recentExpensesContainer" class="position-relative">
+                                        <div class="spinner-overlay d-none" id="expensesSpinner">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                        
+                                        @if($recentExpenses->count() > 0)
+                                            @foreach($recentExpenses as $expense)
+                                                <div class="expense-item" style="border-left-color: {{ $expense->category->color_code }};">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <div class="expense-title">
+                                                                <i class="bi {{ $expense->category->icon ?? 'bi-tag' }} me-2 text-muted"></i>
+                                                                {{ $expense->title }}
+                                                            </div>
+                                                            <div class="expense-detail">
+                                                                <span>{{ $expense->category->name }}</span> • 
+                                                                <span>{{ $expense->date->format('M d, Y') }}</span> •
+                                                                <span>{{ ucfirst(str_replace('_', ' ', $expense->payment_method)) }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="expense-amount">₱{{ number_format($expense->amount, 2) }}</div>
+                                                            <div class="expense-actions">
+                                                                <button class="btn-action-icon edit" onclick="editExpense({{ $expense->expense_id }})" title="Edit">
+                                                                    <i class="bi bi-pencil-square"></i>
+                                                                </button>
+                                                                <button class="btn-action-icon delete" onclick="deleteExpense({{ $expense->expense_id }})" title="Delete">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @else
+                                            <div class="alert alert-info">No expenses found for the selected period.</div>
+                                        @endif
                                     </div>
                                     
                                     <div class="mt-3 text-center">
@@ -119,17 +322,50 @@
                                         </button>
                                     </div>
                                     
-                                    <div class="table-responsive">
+                                    <div class="table-responsive position-relative">
+                                        <div class="spinner-overlay d-none" id="budgetSpinner">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                        
                                         <table class="table table-hover align-middle">
-                                            <thead class="table-light">
+                                            <thead>
                                                 <tr>
-                                                    <th style="width: 25%;">Date</th>
-                                                    <th style="width: 50%;">Description</th>
-                                                    <th style="width: 25%;" class="text-end">Amount</th>
+                                                    <th>Amount</th>
+                                                    <th>Type</th>
+                                                    <th>Period</th>
+                                                    <th>Description</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="budgetHistoryContainer">
-                                                <!-- Budget history items will be dynamically inserted here -->
+                                            <tbody id="budgetHistoryBody">
+                                                @if($recentBudgets->count() > 0)
+                                                    @foreach($recentBudgets as $budget)
+                                                        <tr>
+                                                            <td class="{{ $budget->amount > 0 ? 'budget-amount-positive' : 'budget-amount-negative' }}">
+                                                                ₱{{ number_format($budget->amount, 2) }}
+                                                            </td>
+                                                            <td>{{ $budget->budgetType->name }}</td>
+                                                            <td>{{ $budget->start_date->format('M d, Y') }} to {{ $budget->end_date->format('M d, Y') }}</td>
+                                                            <td>{{ $budget->description ?? 'No description' }}</td>
+                                                            <td>
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <button class="btn btn-outline-primary" onclick="editBudget({{ $budget->budget_allocation_id }})" title="Edit">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-outline-danger" onclick="deleteBudget({{ $budget->budget_allocation_id }})" title="Delete">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                @else
+                                                    <tr>
+                                                        <td colspan="5" class="text-center">No budget history found.</td>
+                                                    </tr>
+                                                @endif
                                             </tbody>
                                         </table>
                                     </div>
@@ -142,11 +378,11 @@
                             <div class="card expense-card">
                                 <div class="card-body">
                                     <h5 class="card-title">Expense Breakdown</h5>
-                                    <div class="chart-container" style="position: relative; height: 200px;">
+                                    <div class="chart-container">
                                         <canvas id="expenseChart"></canvas>
                                     </div>
                                     <div class="mt-3" id="chartLegend">
-                                        <!-- Legend will be dynamically inserted here -->
+                                        <!-- Legend will be dynamically generated -->
                                     </div>
                                 </div>
                             </div>
@@ -155,16 +391,16 @@
                             <div class="card expense-card mt-3">
                                 <div class="card-body">
                                     <h5 class="card-title">Budget Progress</h5>
-                                    <div class="progress mb-2">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: 83%" aria-valuenow="83" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" id="budgetProgressBar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                                     </div>
                                     <div class="d-flex justify-content-between mb-1">
-                                        <small>₱5,250 remaining</small>
-                                        <small>₱30,000 total</small>
+                                        <small id="budgetStartDate">Start: -</small>
+                                        <small id="budgetEndDate">End: -</small>
                                     </div>
                                     <div class="d-flex justify-content-between">
-                                        <small class="text-success"><i class="bi bi-arrow-down"></i> 17% remaining</small>
-                                        <small class="text-danger"><i class="bi bi-arrow-up"></i> 83% spent</small>
+                                        <span class="text-success" id="budgetLeft">₱0 remaining</span>
+                                        <span class="text-muted" id="budgetTotal">of ₱0 total</span>
                                     </div>
                                 </div>
                             </div>
@@ -180,72 +416,76 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">Add New Expense</h5>
+                    <h5 class="modal-title" id="expenseModalTitle">Add New Expense</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="expenseForm">
+                        <input type="hidden" id="expenseId">
+                        
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Expense Title*</label>
-                                    <input type="text" class="form-control" name="title" required placeholder="E.g., Medical supplies for MHCS">
+                                    <label for="expenseTitle" class="form-label required-field">Expense Title</label>
+                                    <input type="text" class="form-control" id="expenseTitle" name="title" required>
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Amount (₱)*</label>
+                                    <label for="expenseCategory" class="form-label required-field">Category</label>
+                                    <select class="form-select" id="expenseCategory" name="category_id" required>
+                                        <option value="" selected disabled>Select Category</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->category_id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="expenseAmount" class="form-label required-field">Amount (₱)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">₱</span>
-                                        <input type="number" class="form-control" name="amount" step="0.01" min="0" required>
+                                        <input type="number" class="form-control" id="expenseAmount" name="amount" step="0.01" min="0.01" required>
                                     </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Date*</label>
-                                    <input type="date" class="form-control" name="date" required>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Category*</label>
-                                    <select class="form-select" name="category" required>
-                                        <option value="">Select Category</option>
-                                        <option value="medical_supplies">Medical Supplies</option>
-                                        <option value="medications">Medications</option>
-                                        <option value="food_nutrition">Food & Nutrition</option>
-                                        <option value="transportation">Transportation/Fuel</option>
-                                        <option value="facility_maintenance">Facility Maintenance</option>
-                                        <option value="staff_training">Staff Training</option>
+                                    <label for="expensePaymentMethod" class="form-label required-field">Payment Method</label>
+                                    <select class="form-select" id="expensePaymentMethod" name="payment_method" required>
+                                        <option value="" selected disabled>Select Payment Method</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="check">Check</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="gcash">GCash</option>
+                                        <option value="paymaya">PayMaya</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="debit_card">Debit Card</option>
                                         <option value="other">Other</option>
                                     </select>
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Payment Method*</label>
-                                    <select class="form-select" name="payment_method" required>
-                                        <option value="cash">Cash</option>
-                                        <option value="check">Check</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="gcash">GCash</option>
-                                    </select>
+                                    <label for="expenseDate" class="form-label required-field">Date</label>
+                                    <input type="date" class="form-control" id="expenseDate" name="date" max="{{ date('Y-m-d') }}" required>
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Receipt/Reference No.</label>
-                                    <input type="text" class="form-control" name="receipt_no" placeholder="OR/Invoice number">
+                                    <label for="expenseReceiptNumber" class="form-label required-field">Receipt/Reference Number</label>
+                                    <input type="text" class="form-control" id="expenseReceiptNumber" name="receipt_number" required>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" name="description" rows="3" placeholder="Details about the expense"></textarea>
+                            <label for="expenseDescription" class="form-label required-field">Description</label>
+                            <textarea class="form-control" id="expenseDescription" name="description" rows="3" required></textarea>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Attach Receipt (Optional)</label>
-                            <input type="file" class="form-control" name="receipt" accept="image/*,.pdf">
+                            <label for="expenseReceipt" class="form-label">Attach Receipt (Optional)</label>
+                            <input type="file" class="form-control" id="expenseReceipt" name="receipt" accept="image/jpeg,image/png,application/pdf">
+                            <div class="form-text">Accepted formats: JPG, PNG, PDF (max 2MB)</div>
                         </div>
                     </form>
                 </div>
@@ -262,41 +502,53 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">Add Budget Allocation</h5>
+                    <h5 class="modal-title" id="budgetModalTitle">Add Budget Allocation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="budgetForm">
+                        <input type="hidden" id="budgetId">
+                        
                         <div class="mb-3">
-                            <label class="form-label">Amount (₱)*</label>
+                            <label for="budgetAmount" class="form-label required-field">Amount (₱)</label>
                             <div class="input-group">
                                 <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" name="amount" step="0.01" min="0" required>
+                                <input type="number" class="form-control" id="budgetAmount" name="amount" step="0.01" required>
+                            </div>
+                            <div class="form-text">Use positive values for allocations, negative for deductions</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label required-field">Budget Period</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Start</span>
+                                        <input type="date" class="form-control" id="budgetStartDate" name="start_date" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text">End</span>
+                                        <input type="date" class="form-control" id="budgetEndDate" name="end_date" required>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Budget Period*</label>
-                            <div class="budget-date-picker">
-                                <input type="date" class="form-control" name="start_date" required placeholder="Start date">
-                                <span class="input-group-text">to</span>
-                                <input type="date" class="form-control" name="end_date" required placeholder="End date">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Budget Type*</label>
-                            <select class="form-select" name="type" required>
-                                <option value="">Select Type</option>
-                                <option value="regular">Regular Allocation</option>
-                                <option value="supplemental">Supplemental Budget</option>
-                                <option value="grant">Grant Funding</option>
+                            <label for="budgetType" class="form-label required-field">Budget Type</label>
+                            <select class="form-select" id="budgetType" name="budget_type_id" required>
+                                <option value="" selected disabled>Select Budget Type</option>
+                                @foreach($budgetTypes as $type)
+                                    <option value="{{ $type->budget_type_id }}">{{ $type->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" name="description" rows="3" placeholder="Purpose of this budget allocation"></textarea>
+                            <label for="budgetDescription" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="budgetDescription" name="description" rows="3"></textarea>
                         </div>
                     </form>
                 </div>
@@ -317,25 +569,63 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
+                    <!-- Filter Controls -->
+                    <div class="filter-controls mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="expensesFilterCategory">
+                                    <option value="">All Categories</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->category_id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="expensesFilterStartDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="expensesFilterEndDate">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyExpensesFilter">Apply Filter</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive position-relative">
+                        <div class="spinner-overlay d-none" id="allExpensesSpinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <table class="table table-striped table-hover">
+                            <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Title</th>
                                     <th>Category</th>
-                                    <th>Description</th>
                                     <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Receipt #</th>
+                                    <th>Created By</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="allExpensesContainer">
-                                <!-- All expenses will be dynamically inserted here -->
+                            <tbody id="allExpensesBody">
+                                <!-- Will be populated via AJAX -->
                             </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="exportFilteredExpensesBtn">
+                        <i class="bi bi-download"></i> Export Filtered Data
+                    </button>
                 </div>
             </div>
         </div>
@@ -346,29 +636,95 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">Full Budget History</h5>
+                    <h5 class="modal-title">Budget History</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
+                    <!-- Filter Controls -->
+                    <div class="filter-controls mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Budget Type</label>
+                                <select class="form-select" id="budgetFilterType">
+                                    <option value="">All Types</option>
+                                    @foreach($budgetTypes as $type)
+                                        <option value="{{ $type->budget_type_id }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="budgetFilterStartDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="budgetFilterEndDate">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyBudgetFilter">Apply Filter</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive position-relative">
+                        <div class="spinner-overlay d-none" id="fullHistorySpinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <table class="table table-striped table-hover">
+                            <thead>
                                 <tr>
-                                    <th>Date</th>
                                     <th>Period</th>
+                                    <th>Amount</th>
                                     <th>Type</th>
                                     <th>Description</th>
-                                    <th>Amount</th>
+                                    <th>Created By</th>
+                                    <th>Creation Date</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="fullHistoryContainer">
-                                <!-- Full history will be dynamically inserted here -->
+                            <tbody id="fullHistoryBody">
+                                <!-- Will be populated via AJAX -->
                             </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="exportFilteredBudgetsBtn">
+                        <i class="bi bi-download"></i> Export Filtered Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalTitle">Confirm Delete</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteConfirmMessage">Are you sure you want to delete this item? This action cannot be undone.</p>
+                    
+                    <form id="deleteConfirmationForm" class="mt-3">
+                        <input type="hidden" id="deleteItemId">
+                        <input type="hidden" id="deleteItemType">
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label required-field">Please enter your password to confirm</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
                 </div>
             </div>
         </div>
@@ -376,584 +732,1023 @@
    
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Dummy data for expenses
-        const expensesData = [
-            {
-                id: 1,
-                title: "Medical Supplies Purchase",
-                category: "medical_supplies",
-                description: "For Mobile Health Care Service",
-                amount: 3250,
-                date: "2023-10-15",
-                payment_method: "bank_transfer",
-                receipt_no: "INV-2023-001"
-            },
-            {
-                id: 2,
-                title: "Weekly Groceries",
-                category: "food_nutrition",
-                description: "For Group Home in Bulacan",
-                amount: 2800,
-                date: "2023-10-14",
-                payment_method: "cash",
-                receipt_no: "OR-2023-045"
-            },
-            {
-                id: 3,
-                title: "Fuel for Mobile Health Van",
-                category: "transportation",
-                description: "Northern Samar route",
-                amount: 1750,
-                date: "2023-10-12",
-                payment_method: "gcash",
-                receipt_no: "GC-2023-112"
-            },
-            {
-                id: 4,
-                title: "Facility Repairs",
-                category: "facility_maintenance",
-                description: "Wellness Center maintenance",
-                amount: 4500,
-                date: "2023-10-10",
-                payment_method: "check",
-                receipt_no: "CHK-2023-078"
-            },
-            {
-                id: 5,
-                title: "Caregiver Training",
-                category: "staff_training",
-                description: "Home care techniques workshop",
-                amount: 6800,
-                date: "2023-10-08",
-                payment_method: "bank_transfer",
-                receipt_no: "INV-2023-002"
-            },
-            {
-                id: 6,
-                title: "Office Supplies",
-                category: "other",
-                description: "Monthly office supplies",
-                amount: 1250,
-                date: "2023-10-05",
-                payment_method: "cash",
-                receipt_no: "OR-2023-046"
-            }
-        ];
-
-        // Dummy data for budget history
-        const budgetHistoryData = [
-            {
-                id: 1,
-                amount: 30000,
-                start_date: "2023-10-01",
-                end_date: "2023-10-31",
-                type: "regular",
-                description: "Monthly budget allocation"
-            },
-            {
-                id: 2,
-                amount: 2500,
-                start_date: "2023-09-15",
-                end_date: "2023-09-30",
-                type: "supplemental",
-                description: "Additional funds for MHCS"
-            },
-            {
-                id: 3,
-                amount: 28000,
-                start_date: "2023-09-01",
-                end_date: "2023-09-30",
-                type: "regular",
-                description: "Monthly budget allocation"
-            },
-            {
-                id: 4,
-                amount: -3000,
-                start_date: "2023-08-20",
-                end_date: "2023-08-31",
-                type: "adjustment",
-                description: "Budget adjustment"
-            },
-            {
-                id: 5,
-                amount: 25000,
-                start_date: "2023-08-01",
-                end_date: "2023-08-31",
-                type: "regular",
-                description: "Monthly budget allocation"
-            },
-            {
-                id: 6,
-                amount: 5000,
-                start_date: "2023-07-15",
-                end_date: "2023-07-31",
-                type: "grant",
-                description: "USAID Grant additional funds"
-            }
-        ];
-
-        // Category icons mapping
-        const categoryIcons = {
-            medical_supplies: "bi-capsule-pill",
-            food_nutrition: "bi-basket",
-            transportation: "bi-truck",
-            facility_maintenance: "bi-house-gear",
-            staff_training: "bi-people",
-            other: "bi-question-circle"
+        // Configure toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "5000"
         };
-
-        // Category colors mapping
-        const categoryColors = {
-            medical_supplies: "primary",
-            food_nutrition: "success",
-            transportation: "info",
-            facility_maintenance: "warning",
-            staff_training: "danger",
-            other: "secondary"
-        };
-
-        // Chart colors mapping
-        const chartColors = {
-            medical_supplies: '#0d6efd', // primary
-            food_nutrition: '#198754', // success
-            transportation: '#0dcaf0', // info
-            facility_maintenance: '#ffc107', // warning
-            staff_training: '#dc3545', // danger
-            other: '#6c757d' // secondary
-        };
-
-        // Chart instance variable
+        
+        // Global variables
         let expenseChart;
+        let currentExpenseId = null;
+        let currentBudgetId = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
+            // Set CSRF token for all AJAX requests
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            
             // Initialize modals
             const addExpenseModal = new bootstrap.Modal(document.getElementById('addExpenseModal'));
             const addBudgetModal = new bootstrap.Modal(document.getElementById('addBudgetModal'));
             const allExpensesModal = new bootstrap.Modal(document.getElementById('allExpensesModal'));
             const fullHistoryModal = new bootstrap.Modal(document.getElementById('fullHistoryModal'));
+            const deleteConfirmationModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
             
             // Initialize chart
             initializeChart();
             
-            // Render initial data
-            renderRecentExpenses();
-            renderBudgetHistory();
-            renderAllExpenses();
-            renderFullHistory();
-
+            // Load and display initial statistics
+            updateDashboardStats();
+            
             // Button event listeners
-            document.getElementById('addExpenseBtn').addEventListener('click', function() {
+            $('#addExpenseBtn').on('click', function() {
+                clearExpenseForm();
+                $('#expenseModalTitle').text('Add New Expense');
+                $('#expenseDate').val(new Date().toISOString().substr(0, 10));
                 addExpenseModal.show();
             });
             
-            document.getElementById('addBudgetBtn').addEventListener('click', function() {
+            $('#addBudgetBtn').on('click', function() {
+                clearBudgetForm();
+                $('#budgetModalTitle').text('Add Budget Allocation');
+                
+                // Set default dates - start from today, end 1 month later
+                const today = new Date();
+                const oneMonthLater = new Date();
+                oneMonthLater.setMonth(today.getMonth() + 1);
+                
+                $('#budgetStartDate').val(today.toISOString().substr(0, 10));
+                $('#budgetEndDate').val(oneMonthLater.toISOString().substr(0, 10));
+                
                 addBudgetModal.show();
             });
             
-            document.getElementById('viewAllExpensesBtn').addEventListener('click', function() {
+            $('#viewAllExpensesBtn').on('click', function() {
+                loadAllExpenses();
                 allExpensesModal.show();
             });
             
-            document.getElementById('viewFullHistoryBtn').addEventListener('click', function() {
+            $('#viewFullHistoryBtn').on('click', function() {
+                loadFullBudgetHistory();
                 fullHistoryModal.show();
             });
             
-            // Save Expense functionality
-            document.getElementById('saveExpenseBtn').addEventListener('click', function() {
-                const form = document.getElementById('expenseForm');
-                if (form.checkValidity()) {
-                    // In a real app, this would be an AJAX call to the server
-                    alert('Expense added successfully!');
-                    addExpenseModal.hide();
-                    form.reset();
-                    
-                    // For demo purposes, we'll add the expense to our dummy data
-                    const newExpense = {
-                        id: expensesData.length + 1,
-                        title: form.title.value,
-                        category: form.category.value,
-                        description: form.description.value,
-                        amount: parseFloat(form.amount.value),
-                        date: form.date.value,
-                        payment_method: form.payment_method.value,
-                        receipt_no: form.receipt_no.value
-                    };
-                    expensesData.unshift(newExpense);
-                    renderRecentExpenses();
-                    renderAllExpenses();
-                    updateChart();
-                } else {
-                    form.reportValidity();
-                }
+            // Filter changes
+            $('#categoryFilter, #monthFilter').on('change', function() {
+                updateDashboardWithFilters();
             });
             
-            // Save Budget functionality
-            document.getElementById('saveBudgetBtn').addEventListener('click', function() {
-                const form = document.getElementById('budgetForm');
-                if (form.checkValidity()) {
-                    // In a real app, this would be an AJAX call to the server
-                    alert('Budget allocation added successfully!');
-                    addBudgetModal.hide();
-                    form.reset();
-                    
-                    // For demo purposes, we'll add the budget to our dummy data
-                    const newBudget = {
-                        id: budgetHistoryData.length + 1,
-                        amount: parseFloat(form.amount.value),
-                        start_date: form.start_date.value,
-                        end_date: form.end_date.value,
-                        type: form.type.value,
-                        description: form.description.value
-                    };
-                    budgetHistoryData.unshift(newBudget);
-                    renderBudgetHistory();
-                    renderFullHistory();
-                } else {
-                    form.reportValidity();
-                }
+            // Apply expense filter
+            $('#applyExpensesFilter').on('click', function() {
+                loadFilteredExpenses();
             });
             
-            // Export button functionality
-            document.getElementById('exportBtn').addEventListener('click', function() {
-                alert('Export functionality would be implemented here');
+            // Apply budget filter
+            $('#applyBudgetFilter').on('click', function() {
+                loadFilteredBudgetHistory();
             });
             
-            // Filter functionality
-            document.getElementById('categoryFilter').addEventListener('change', function() {
-                renderRecentExpenses();
-                updateChart();
+            // Save expense
+            $('#saveExpenseBtn').on('click', function() {
+                saveExpense();
             });
             
-            document.getElementById('monthFilter').addEventListener('change', function() {
-                renderRecentExpenses();
-                updateChart();
+            // Save budget
+            $('#saveBudgetBtn').on('click', function() {
+                saveBudget();
             });
             
-            // Initialize the chart
-            function initializeChart() {
-                const ctx = document.getElementById('expenseChart').getContext('2d');
-                expenseChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            data: [],
-                            backgroundColor: [],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = Math.round((value / total) * 100);
-                                        return `${label}: ₱${value.toLocaleString()} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '70%'
-                    }
-                });
-                
-                // Initial chart update
-                updateChart();
-            }
+            // Export buttons
+            $('#exportExpensesExcel').on('click', function(e) {
+                e.preventDefault();
+                exportExpensesToExcel();
+            });
             
-            // Update chart based on filters
-            function updateChart() {
-                const categoryFilter = document.getElementById('categoryFilter').value;
-                const monthFilter = document.getElementById('monthFilter').value;
-                
-                // Filter expenses
-                let filteredExpenses = [...expensesData];
-                
-                if (categoryFilter) {
-                    filteredExpenses = filteredExpenses.filter(expense => expense.category === categoryFilter);
-                }
-                
-                if (monthFilter) {
-                    const [year, month] = monthFilter.split('-');
-                    filteredExpenses = filteredExpenses.filter(expense => {
-                        const expenseDate = new Date(expense.date);
-                        return expenseDate.getFullYear() == year && (expenseDate.getMonth() + 1) == month;
-                    });
-                }
-                
-                // Group by category and sum amounts
-                const categoryTotals = {};
-                filteredExpenses.forEach(expense => {
-                    if (!categoryTotals[expense.category]) {
-                        categoryTotals[expense.category] = 0;
-                    }
-                    categoryTotals[expense.category] += expense.amount;
-                });
-                
-                // Prepare chart data
-                const labels = [];
-                const data = [];
-                const backgroundColors = [];
-                
-                Object.keys(categoryTotals).forEach(category => {
-                    labels.push(formatCategory(category));
-                    data.push(categoryTotals[category]);
-                    backgroundColors.push(chartColors[category]);
-                });
-                
-                // Update chart
-                expenseChart.data.labels = labels;
-                expenseChart.data.datasets[0].data = data;
-                expenseChart.data.datasets[0].backgroundColor = backgroundColors;
-                expenseChart.update();
-                
-                // Update legend
-                updateChartLegend(labels, data, backgroundColors);
-            }
+            $('#exportBudgetsExcel').on('click', function(e) {
+                e.preventDefault();
+                exportBudgetsToExcel();
+            });
             
-            // Update chart legend
-            function updateChartLegend(labels, data, colors) {
-                const legendContainer = document.getElementById('chartLegend');
-                legendContainer.innerHTML = '';
-                
-                if (data.length === 0) {
-                    legendContainer.innerHTML = '<div class="text-center text-muted">No data available</div>';
-                    return;
-                }
-                
-                const total = data.reduce((a, b) => a + b, 0);
-                
-                labels.forEach((label, index) => {
-                    const percentage = Math.round((data[index] / total) * 100);
-                    
-                    const legendItem = document.createElement('div');
-                    legendItem.className = 'd-flex align-items-center mb-2';
-                    legendItem.innerHTML = `
-                        <span class="badge me-2" style="background-color: ${colors[index]}; width: 12px; height: 12px;"></span>
-                        <small>${label} (${percentage}%)</small>
-                        <span class="ms-auto fw-bold">₱${data[index].toLocaleString()}</span>
-                    `;
-                    legendContainer.appendChild(legendItem);
-                });
-            }
+            $('#exportFilteredExpensesBtn').on('click', function() {
+                exportFilteredExpensesToExcel();
+            });
             
-            // Function to render recent expenses
-            function renderRecentExpenses() {
-                const container = document.getElementById('recentExpensesContainer');
-                const categoryFilter = document.getElementById('categoryFilter').value;
-                const monthFilter = document.getElementById('monthFilter').value;
-                
-                // Filter expenses
-                let filteredExpenses = [...expensesData];
-                
-                if (categoryFilter) {
-                    filteredExpenses = filteredExpenses.filter(expense => expense.category === categoryFilter);
-                }
-                
-                if (monthFilter) {
-                    const [year, month] = monthFilter.split('-');
-                    filteredExpenses = filteredExpenses.filter(expense => {
-                        const expenseDate = new Date(expense.date);
-                        return expenseDate.getFullYear() == year && (expenseDate.getMonth() + 1) == month;
-                    });
-                }
-                
-                // Get only the first 3 expenses for the recent view
-                const recentExpenses = filteredExpenses.slice(0, 3);
-                
-                // Clear container
-                container.innerHTML = '';
-                
-                // Add expenses to container
-                recentExpenses.forEach(expense => {
-                    const iconClass = categoryIcons[expense.category] || 'bi-question-circle';
-                    const colorClass = categoryColors[expense.category] || 'secondary';
-                    
-                    const expenseEl = document.createElement('div');
-                    expenseEl.className = 'd-flex align-items-center mb-3 p-2 bg-light rounded';
-                    expenseEl.innerHTML = `
-                        <div class="expense-category-icon bg-${colorClass}-bg-opacity-10 text-${colorClass}">
-                            <i class="bi ${iconClass}"></i>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0" style="font-size: clamp(0.85rem, 1.5vw, 1rem);">${expense.title}</h6>
-                            <small class="text-muted">${expense.description}</small>
-                        </div>
-                        <div class="text-end ms-3">
-                            <span class="expense-amount text-danger">₱${expense.amount.toLocaleString()}</span>
-                            <div class="expense-date">${formatDate(expense.date)}</div>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-link text-secondary ms-2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-three-dots-vertical"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#" onclick="editExpense(${expense.id})"><i class="bi bi-pencil me-2"></i>Edit</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="deleteExpense(${expense.id})"><i class="bi bi-trash me-2"></i>Delete</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    container.appendChild(expenseEl);
-                });
-                
-                // If no expenses match the filter
-                if (recentExpenses.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-receipt" style="font-size: 2rem;"></i>
-                            <p>No expenses found matching your criteria</p>
-                        </div>
-                    `;
-                }
-            }
+            $('#exportFilteredBudgetsBtn').on('click', function() {
+                exportFilteredBudgetsToExcel();
+            });
             
-            // Function to render budget history
-            function renderBudgetHistory() {
-                const container = document.getElementById('budgetHistoryContainer');
-                
-                // Clear container
-                container.innerHTML = '';
-                
-                // Get only the first 4 budget items for the recent view
-                const recentBudgets = budgetHistoryData.slice(0, 4);
-                
-                // Add budget items to container
-                recentBudgets.forEach(budget => {
-                    const isNegative = budget.amount < 0;
-                    const amountClass = isNegative ? 'text-danger' : 'text-success';
-                    const amountSign = isNegative ? '' : '+';
-                    
-                    const budgetEl = document.createElement('tr');
-                    budgetEl.innerHTML = `
-                        <td>${formatDate(budget.start_date)}</td>
-                        <td>${budget.description}</td>
-                        <td class="${amountClass} text-end">${amountSign}₱${Math.abs(budget.amount).toLocaleString()}</td>
-                    `;
-                    container.appendChild(budgetEl);
-                });
-            }
-            
-            // Function to render all expenses
-            function renderAllExpenses() {
-                const container = document.getElementById('allExpensesContainer');
-                
-                // Clear container
-                container.innerHTML = '';
-                
-                // Add all expenses to container
-                expensesData.forEach(expense => {
-                    const iconClass = categoryIcons[expense.category] || 'bi-question-circle';
-                    const colorClass = categoryColors[expense.category] || 'secondary';
-                    
-                    const expenseEl = document.createElement('tr');
-                    expenseEl.innerHTML = `
-                        <td>${formatDate(expense.date)}</td>
-                        <td>
-                            <span class="badge bg-${colorClass}-bg-opacity-10 text-${colorClass}">
-                                <i class="bi ${iconClass} me-1"></i>
-                                ${formatCategory(expense.category)}
-                            </span>
-                        </td>
-                        <td>${expense.title}</td>
-                        <td class="text-danger">₱${expense.amount.toLocaleString()}</td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-link text-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="#" onclick="editExpense(${expense.id})"><i class="bi bi-pencil me-2"></i>Edit</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="deleteExpense(${expense.id})"><i class="bi bi-trash me-2"></i>Delete</a></li>
-                                </ul>
-                            </div>
-                        </td>
-                    `;
-                    container.appendChild(expenseEl);
-                });
-            }
-            
-            // Function to render full history
-            function renderFullHistory() {
-                const container = document.getElementById('fullHistoryContainer');
-                
-                // Clear container
-                container.innerHTML = '';
-                
-                // Add all budget items to container
-                budgetHistoryData.forEach(budget => {
-                    const isNegative = budget.amount < 0;
-                    const amountClass = isNegative ? 'text-danger' : 'text-success';
-                    const amountSign = isNegative ? '' : '+';
-                    
-                    const budgetEl = document.createElement('tr');
-                    budgetEl.innerHTML = `
-                        <td>${formatDate(budget.start_date)}</td>
-                        <td>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</td>
-                        <td>${formatBudgetType(budget.type)}</td>
-                        <td>${budget.description}</td>
-                        <td class="${amountClass}">${amountSign}₱${Math.abs(budget.amount).toLocaleString()}</td>
-                    `;
-                    container.appendChild(budgetEl);
-                });
-            }
-            
-            // Helper function to format date
-            function formatDate(dateString) {
-                const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                return new Date(dateString).toLocaleDateString(undefined, options);
-            }
-            
-            // Helper function to format category
-            function formatCategory(category) {
-                const categoryNames = {
-                    medical_supplies: "Medical Supplies",
-                    food_nutrition: "Food & Nutrition",
-                    transportation: "Transportation",
-                    facility_maintenance: "Facility",
-                    staff_training: "Training",
-                    other: "Other"
-                };
-                return categoryNames[category] || category;
-            }
-            
-            // Helper function to format budget type
-            function formatBudgetType(type) {
-                const typeNames = {
-                    regular: "Regular",
-                    supplemental: "Supplemental",
-                    grant: "Grant",
-                    adjustment: "Adjustment"
-                };
-                return typeNames[type] || type;
-            }
+            // Confirm delete button
+            $('#confirmDeleteBtn').on('click', function() {
+                confirmDelete();
+            });
         });
-        
-        // Global functions for action buttons
-        function editExpense(id) {
-            alert(`Would edit expense with ID: ${id}`);
-            // In a real implementation, this would:
-            // 1. Fetch the expense data
-            // 2. Populate the edit form
-            // 3. Show the edit modal
+
+        // Initialize expense breakdown chart
+        function initializeChart() {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            expenseChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
         }
-        
-        function deleteExpense(id) {
-            if (confirm('Are you sure you want to delete this expense?')) {
-                alert(`Would delete expense with ID: ${id}`);
-                // In a real implementation, this would:
-                // 1. Send delete request to server
-                // 2. Remove from local data
-                // 3. Refresh the views
+
+        // Update the chart with new data
+        function updateChart(categories, data, colors) {
+            expenseChart.data.labels = categories;
+            expenseChart.data.datasets[0].data = data;
+            expenseChart.data.datasets[0].backgroundColor = colors;
+            expenseChart.update();
+            
+            // Update the chart legend
+            updateChartLegend(categories, data, colors);
+        }
+
+        // Update chart legend
+        function updateChartLegend(labels, data, colors) {
+            const legendContainer = document.getElementById('chartLegend');
+            let legendHTML = '';
+            
+            // Calculate the total
+            const total = data.reduce((a, b) => a + b, 0);
+            
+            // Build legend items
+            for (let i = 0; i < labels.length; i++) {
+                const percentage = total > 0 ? Math.round((data[i] / total) * 100) : 0;
+                legendHTML += `
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background-color: ${colors[i]};"></div>
+                        <div class="d-flex justify-content-between w-100">
+                            <span>${labels[i]}</span>
+                            <span>${percentage}%</span>
+                        </div>
+                    </div>
+                `;
             }
+            
+            legendContainer.innerHTML = legendHTML;
+        }
+
+        // Clear expense form
+        function clearExpenseForm() {
+            currentExpenseId = null;
+            $('#expenseId').val('');
+            $('#expenseForm')[0].reset();
+            $('#expenseTitle').removeClass('is-invalid');
+            $('#expenseCategory').removeClass('is-invalid');
+            $('#expenseAmount').removeClass('is-invalid');
+            $('#expensePaymentMethod').removeClass('is-invalid');
+            $('#expenseDate').removeClass('is-invalid');
+            $('#expenseReceiptNumber').removeClass('is-invalid');
+            $('#expenseDescription').removeClass('is-invalid');
+            $('#expenseReceipt').removeClass('is-invalid');
+        }
+
+        // Clear budget form
+        function clearBudgetForm() {
+            currentBudgetId = null;
+            $('#budgetId').val('');
+            $('#budgetForm')[0].reset();
+            $('#budgetAmount').removeClass('is-invalid');
+            $('#budgetStartDate').removeClass('is-invalid');
+            $('#budgetEndDate').removeClass('is-invalid');
+            $('#budgetType').removeClass('is-invalid');
+        }
+
+        // Save expense
+        function saveExpense() {
+            // Get form data
+            const form = document.getElementById('expenseForm');
+            const formData = new FormData(form);
+            
+            // Show loading state
+            $('#saveExpenseBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            
+            // Determine if this is a create or update operation
+            const isUpdate = currentExpenseId !== null;
+            
+            // Set the correct URL based on operation type
+            const url = isUpdate 
+                ? "{{ route('admin.expense.update', ['id' => '_id_']) }}".replace('_id_', currentExpenseId)
+                : "{{ route('admin.expense.store') }}";
+            
+            // Make AJAX request
+            $.ajax({
+                url: url,
+                type: isUpdate ? 'POST' : 'POST', // Or PUT for update if your routes support it
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    // Show success message
+                    toastr.success(isUpdate ? 'Expense updated successfully' : 'Expense added successfully');
+                    
+                    // Close modal and refresh data
+                    $('#addExpenseModal').modal('hide');
+                    updateDashboardWithFilters();
+                    
+                    // Clear form and reset currentExpenseId
+                    clearExpenseForm();
+                    currentExpenseId = null;
+                    
+                    // Show success alert
+                    showSuccessAlert(isUpdate ? 'Expense updated successfully' : 'Expense added successfully');
+                },
+                error: function(xhr) {
+                    // Handle errors
+                    let errorMessage = 'Failed to save expense';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        const firstError = Object.values(xhr.responseJSON.errors)[0][0];
+                        errorMessage = firstError;
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                },
+                complete: function() {
+                    // Reset button state
+                    $('#saveExpenseBtn').prop('disabled', false).html('Save Expense');
+                }
+            });
+        }
+
+        // Save budget
+        function saveBudget() {
+            // Form validation
+            const form = document.getElementById('budgetForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Check that end date is after start date
+            const startDate = new Date($('#budgetStartDate').val());
+            const endDate = new Date($('#budgetEndDate').val());
+            
+            if (endDate < startDate) {
+                toastr.error('End date must be after start date');
+                $('#budgetEndDate').addClass('is-invalid');
+                return;
+            }
+
+            // Prepare form data
+            const formData = new FormData(form);
+            
+            // Add the hidden ID field for updates
+            if (currentBudgetId) {
+                formData.append('budget_allocation_id', currentBudgetId);
+            }
+
+            // Disable submit button and show spinner
+            $('#saveBudgetBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+            // FIXED URL: Properly include the ID parameter in the route
+            const url = currentBudgetId ? 
+                "{{ route('admin.expense.budget.update', ['id' => '_id_']) }}".replace('_id_', currentBudgetId) : 
+                "{{ route('admin.expense.budget.store') }}";
+
+            // Submit the form
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    toastr.success(currentBudgetId ? 'Budget updated successfully' : 'Budget added successfully');
+                    
+                    // Close the modal
+                    bootstrap.Modal.getInstance(document.getElementById('addBudgetModal')).hide();
+                    
+                    // Show success alert
+                    showSuccessAlert(currentBudgetId ? 'Budget updated successfully' : 'New budget allocation added successfully');
+                    
+                    // Update dashboard data
+                    updateDashboardWithFilters();
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+                        for (const field in errors) {
+                            const inputField = document.getElementById(field);
+                            if (inputField) {
+                                inputField.classList.add('is-invalid');
+                                
+                                // Show error message
+                                const errorMsg = document.createElement('div');
+                                errorMsg.classList.add('invalid-feedback');
+                                errorMsg.textContent = errors[field][0];
+                                inputField.parentNode.appendChild(errorMsg);
+                            }
+                            toastr.error(errors[field][0]);
+                        }
+                    } else {
+                        toastr.error('Failed to save budget. Please try again later.');
+                    }
+                },
+                complete: function() {
+                    // Re-enable submit button
+                    $('#saveBudgetBtn').prop('disabled', false).text('Save Budget');
+                }
+            });
+        }
+
+        // Edit expense
+        function editExpense(id) {
+            // Store the expense ID for use in the save function
+            currentExpenseId = id;
+            
+            // Show loading state
+            $('#expenseModalContent').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading expense details...</p></div>');
+            
+            // Fetch expense details
+            $.ajax({
+                url: "{{ route('admin.expense.get', '') }}/" + id,
+                type: 'GET',
+                success: function(response) {
+                    const expense = response.expense;
+                    
+                    // Fill the form with expense data
+                    $('#expenseTitle').val(expense.title);
+                    $('#expenseCategory').val(expense.category_id);
+                    $('#expenseAmount').val(expense.amount);
+                    $('#expensePaymentMethod').val(expense.payment_method);
+                    $('#expenseDate').val(expense.date.substring(0, 10)); // YYYY-MM-DD format
+                    $('#expenseReceiptNumber').val(expense.receipt_number);
+                    $('#expenseDescription').val(expense.description);
+                    
+                    // Update modal title
+                    $('#expenseModalLabel').text('Edit Expense');
+                    
+                    // Show the modal if not already visible
+                    $('#addExpenseModal').modal('show');
+                },
+                error: function() {
+                    toastr.error('Failed to load expense details');
+                }
+            });
+        }
+
+        // Edit budget
+        function editBudget(id) {
+            // Clear the form first
+            clearBudgetForm();
+            
+            // Set current ID for update operation
+            currentBudgetId = id;
+            
+            // Show loading spinner
+            $('#budgetModalTitle').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+            
+            // FIXED: Correctly include the ID parameter in the route
+            $.ajax({
+                url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
+                method: 'GET',
+                success: function(response) {
+                    const budget = response.budget;
+                    
+                    // Populate form fields
+                    $('#budgetAmount').val(budget.amount);
+                    $('#budgetStartDate').val(budget.start_date);
+                    $('#budgetEndDate').val(budget.end_date);
+                    $('#budgetType').val(budget.budget_type_id);
+                    $('#budgetDescription').val(budget.description);
+                    
+                    // Update modal title
+                    $('#budgetModalTitle').text('Edit Budget Allocation');
+                    
+                    // Show the modal
+                    new bootstrap.Modal(document.getElementById('addBudgetModal')).show();
+                },
+                error: function() {
+                    toastr.error('Failed to load budget details. Please try again later.');
+                }
+            });
+        }
+
+        // Delete expense
+        function deleteExpense(id) {
+            // Set up delete confirmation modal for an expense
+            $('#deleteModalTitle').text('Delete Expense');
+            $('#deleteConfirmMessage').text('Are you sure you want to delete this expense? This action cannot be undone.');
+            $('#deleteItemId').val(id);
+            $('#deleteItemType').val('expense');
+            $('#confirmPassword').val('');
+            
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+        }
+
+        // Delete budget
+        function deleteBudget(id) {
+            // Set up delete confirmation modal for a budget
+            $('#deleteModalTitle').text('Delete Budget Allocation');
+            $('#deleteConfirmMessage').text('Are you sure you want to delete this budget allocation? This action cannot be undone.');
+            $('#deleteItemId').val(id);
+            $('#deleteItemType').val('budget');
+            $('#confirmPassword').val('');
+            
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+        }
+
+        // Confirm delete action
+        function confirmDelete() {
+            const itemId = $('#deleteItemId').val();
+            const itemType = $('#deleteItemType').val();
+            const password = $('#confirmPassword').val();
+            
+            if (!password) {
+                toastr.error('Please enter your password to confirm');
+                $('#confirmPassword').addClass('is-invalid');
+                return;
+            }
+            
+            // Disable button and show spinner
+            $('#confirmDeleteBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
+            
+            // Call appropriate delete endpoint
+            const url = itemType === 'expense' ? 
+                '{{ route("admin.expense.delete") }}' : 
+                '{{ route("admin.expense.budget.delete") }}';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+            formData.append(itemType === 'expense' ? 'expense_id' : 'budget_allocation_id', itemId);
+            formData.append('password', password);
+            
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    toastr.success(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget deleted successfully');
+                    
+                    // Close the modal
+                    bootstrap.Modal.getInstance(document.getElementById('deleteConfirmationModal')).hide();
+                    
+                    // Show success alert
+                    showSuccessAlert(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget allocation deleted successfully');
+                    
+                    // Update dashboard data
+                    updateDashboardWithFilters();
+                },
+                error: function(xhr) {
+                    if (xhr.status === 403) {
+                        toastr.error('Incorrect password. Please try again.');
+                        $('#confirmPassword').addClass('is-invalid');
+                    } else {
+                        toastr.error('Failed to delete ' + itemType + '. Please try again later.');
+                    }
+                },
+                complete: function() {
+                    // Re-enable button
+                    $('#confirmDeleteBtn').prop('disabled', false).text('Delete');
+                }
+            });
+        }
+
+        // Update dashboard with current filters
+        function updateDashboardWithFilters() {
+            const category = $('#categoryFilter').val();
+            const month = $('#monthFilter').val();
+            
+            // Show loading spinners
+            $('#expensesSpinner').removeClass('d-none');
+            $('#budgetSpinner').removeClass('d-none');
+            
+            // Update expenses period badge
+            $('#expensesPeriodBadge').text(month ? new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'All Time');
+            
+            // Make AJAX call to get filtered data - UPDATED to use the main route with a format parameter
+            $.ajax({
+                url: '{{ route("admin.expense.index") }}',
+                method: 'GET',
+                data: {
+                    category_id: category,
+                    month: month,
+                    format: 'json' // Request JSON response instead of HTML
+                },
+                success: function(response) {
+                    // Update statistics
+                    updateStatistics(response.stats);
+                    
+                    // Update recent expenses list
+                    updateRecentExpenses(response.recentExpenses);
+                    
+                    // Update chart
+                    if (response.chartData) {
+                        updateChart(
+                            response.chartData.labels,
+                            response.chartData.data,
+                            response.chartData.colors
+                        );
+                    }
+                    
+                    // Update budget history
+                    updateBudgetHistory(response.recentBudgets);
+                    
+                    // Update budget progress
+                    updateBudgetProgress(response.currentBudget, response.stats);
+                },
+                error: function() {
+                    toastr.error('Failed to update dashboard data. Please try again later.');
+                },
+                complete: function() {
+                    // Hide loading spinners
+                    $('#expensesSpinner').addClass('d-none');
+                    $('#budgetSpinner').addClass('d-none');
+                }
+            });
+        }
+
+        // Update statistics
+        function updateStatistics(stats) {
+            // Total expenses
+            $('#totalExpenses').text('₱' + formatNumber(stats.totalExpenses || 0));
+            
+            // Expense trend
+            if (stats.previousPeriodTotal !== undefined && stats.previousPeriodTotal > 0) {
+                const percentChange = ((stats.totalExpenses - stats.previousPeriodTotal) / stats.previousPeriodTotal) * 100;
+                const trendIcon = percentChange >= 0 ? 'bi-arrow-up' : 'bi-arrow-down';
+                const trendClass = percentChange >= 0 ? 'text-danger' : 'text-success';
+                
+                $('#expensesTrend').html(`<i class="bi ${trendIcon}"></i> ${Math.abs(percentChange).toFixed(1)}% from last period`);
+                $('#expensesTrend').removeClass('text-danger text-success').addClass(trendClass);
+            } else {
+                $('#expensesTrend').text('No previous data available');
+                $('#expensesTrend').removeClass('text-danger text-success');
+            }
+            
+            // Top category
+            if (stats.topCategory) {
+                $('#topCategory').text(stats.topCategory.name || 'None');
+                const percentage = stats.totalExpenses > 0 ? ((stats.topCategory.amount / stats.totalExpenses) * 100).toFixed(1) : 0;
+                $('#topCategoryAmount').text(`₱${formatNumber(stats.topCategory.amount || 0)} (${percentage}% of total)`);
+            } else {
+                $('#topCategory').text('None');
+                $('#topCategoryAmount').text('₱0.00 (0% of total)');
+            }
+        }
+
+        // Update recent expenses list
+        function updateRecentExpenses(expenses) {
+            const container = $('#recentExpensesContainer');
+            
+            // Clear current content
+            container.html('');
+            
+            if (expenses && expenses.length > 0) {
+                expenses.forEach(expense => {
+                    // Create expense item
+                    const expenseItem = `
+                        <div class="expense-item" style="border-left-color: ${expense.category.color_code};">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="expense-title">
+                                        <i class="bi ${expense.category.icon || 'bi-tag'} me-2 text-muted"></i>
+                                        ${expense.title}
+                                    </div>
+                                    <div class="expense-detail">
+                                        <span>${expense.category.name}</span> • 
+                                        <span>${formatDate(expense.date)}</span> •
+                                        <span>${formatPaymentMethod(expense.payment_method)}</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="expense-amount">₱${formatNumber(expense.amount)}</div>
+                                    <div class="expense-actions">
+                                        <button class="btn-action-icon edit" onclick="editExpense(${expense.expense_id})" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button class="btn-action-icon delete" onclick="deleteExpense(${expense.expense_id})" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.append(expenseItem);
+                });
+            } else {
+                container.html('<div class="alert alert-info">No expenses found for the selected period.</div>');
+            }
+        }
+
+        // Update budget history table
+        function updateBudgetHistory(budgets) {
+            const tableBody = $('#budgetHistoryBody');
+            
+            // Clear current content
+            tableBody.html('');
+            
+            if (budgets && budgets.length > 0) {
+                budgets.forEach(budget => {
+                    // Create budget row
+                    const budgetRow = `
+                        <tr>
+                            <td class="${budget.amount >= 0 ? 'budget-amount-positive' : 'budget-amount-negative'}">
+                                ₱${formatNumber(budget.amount)}
+                            </td>
+                            <td>${budget.budget_type.name}</td>
+                            <td>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</td>
+                            <td>${budget.description || 'No description'}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editBudget(${budget.budget_allocation_id})" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteBudget(${budget.budget_allocation_id})" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    tableBody.append(budgetRow);
+                });
+            } else {
+                tableBody.html('<tr><td colspan="5" class="text-center">No budget history found.</td></tr>');
+            }
+        }
+
+        // Update budget progress
+        function updateBudgetProgress(budget, stats) {
+            if (budget) {
+                // Update current budget display
+                $('#currentBudget').text(`₱${formatNumber(budget.amount)}`);
+                $('#budgetPeriod').text(`${formatDate(budget.start_date)} - ${formatDate(budget.end_date)}`);
+                
+                // Update budget remaining
+                const remaining = budget.amount - (stats.totalExpenses || 0);
+                $('#budgetRemaining').text(`₱${formatNumber(remaining)}`);
+                
+                // Update budget used percent
+                const usedPercentage = budget.amount > 0 ? Math.min(100, ((stats.totalExpenses || 0) / budget.amount) * 100).toFixed(1) : 0;
+                $('#budgetUsedPercent').text(`${usedPercentage}% of budget used`);
+                
+                // Update progress bar
+                $('#budgetProgressBar').css('width', `${usedPercentage}%`).text(`${usedPercentage}%`);
+                                // Set progress bar color based on usage
+                if (usedPercentage > 90) {
+                    $('#budgetProgressBar').removeClass('bg-success bg-warning').addClass('bg-danger');
+                } else if (usedPercentage > 70) {
+                    $('#budgetProgressBar').removeClass('bg-success bg-danger').addClass('bg-warning');
+                } else {
+                    $('#budgetProgressBar').removeClass('bg-warning bg-danger').addClass('bg-success');
+                }
+                
+                // Update start and end dates
+                $('#budgetStartDate').text(`Start: ${formatDate(budget.start_date)}`);
+                $('#budgetEndDate').text(`End: ${formatDate(budget.end_date)}`);
+                
+                // Update remaining amount
+                $('#budgetLeft').text(`₱${formatNumber(remaining)} remaining`);
+                $('#budgetTotal').text(`of ₱${formatNumber(budget.amount)} total`);
+            } else {
+                // No active budget
+                $('#currentBudget').text('₱0.00');
+                $('#budgetPeriod').text('No active budget');
+                $('#budgetRemaining').text('₱0.00');
+                $('#budgetUsedPercent').text('No active budget');
+                $('#budgetProgressBar').css('width', '0%').text('0%');
+                $('#budgetProgressBar').removeClass('bg-success bg-warning bg-danger');
+                $('#budgetStartDate').text('Start: -');
+                $('#budgetEndDate').text('End: -');
+                $('#budgetLeft').text('₱0 remaining');
+                $('#budgetTotal').text('of ₱0 total');
+            }
+        }
+
+        // Initial dashboard stats - UPDATED to use the same approach
+        function updateDashboardStats() {
+            const category = $('#categoryFilter').val();
+            const month = $('#monthFilter').val();
+            
+            $.ajax({
+                url: '{{ route("admin.expense.index") }}',
+                method: 'GET',
+                data: {
+                    category_id: category,
+                    month: month,
+                    format: 'json' // Request JSON response instead of HTML
+                },
+                success: function(response) {
+                    // Update statistics
+                    updateStatistics(response.stats);
+                    
+                    // Update chart
+                    if (response.chartData) {
+                        updateChart(
+                            response.chartData.labels,
+                            response.chartData.data,
+                            response.chartData.colors
+                        );
+                    }
+                    
+                    // Update budget progress
+                    updateBudgetProgress(response.currentBudget, response.stats);
+                },
+                error: function() {
+                    toastr.error('Failed to load dashboard data');
+                }
+            });
+        }
+
+        // Load all expenses for modal
+        function loadAllExpenses() {
+            $('#allExpensesSpinner').removeClass('d-none');
+            
+            $.ajax({
+                url: '{{ route("admin.expense.filtered") }}', // Use the existing filtered route instead
+                method: 'GET',
+                // No filters means get all expenses
+                data: {
+                    category_id: '',
+                    start_date: '',
+                    end_date: ''
+                },
+                success: function(response) {
+                    renderAllExpenses(response.expenses);
+                },
+                error: function() {
+                    toastr.error('Failed to load expenses');
+                },
+                complete: function() {
+                    $('#allExpensesSpinner').addClass('d-none');
+                }
+            });
+        }
+
+        // Render all expenses in the modal
+        function renderAllExpenses(expenses) {
+            const tableBody = $('#allExpensesBody');
+            tableBody.html('');
+            
+            if (expenses && expenses.length > 0) {
+                expenses.forEach(expense => {
+                    const row = `
+                        <tr>
+                            <td>${formatDate(expense.date)}</td>
+                            <td>${expense.title}</td>
+                            <td><span class="badge" style="background-color: ${expense.category.color_code}">${expense.category.name}</span></td>
+                            <td>₱${formatNumber(expense.amount)}</td>
+                            <td>${formatPaymentMethod(expense.payment_method)}</td>
+                            <td>${expense.receipt_number}</td>
+                            <td>${expense.creator ? expense.creator.first_name + ' ' + expense.creator.last_name : 'Unknown'}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editExpense(${expense.expense_id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteExpense(${expense.expense_id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+            } else {
+                tableBody.html('<tr><td colspan="8" class="text-center">No expenses found</td></tr>');
+            }
+        }
+
+        // Load filtered expenses
+        function loadFilteredExpenses() {
+            const category = $('#expensesFilterCategory').val();
+            const startDate = $('#expensesFilterStartDate').val();
+            const endDate = $('#expensesFilterEndDate').val();
+            
+            // Validation
+            if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                toastr.error('Start date cannot be after end date');
+                return;
+            }
+            
+            $('#allExpensesSpinner').removeClass('d-none');
+            
+            $.ajax({
+                url: '{{ route("admin.expense.filtered") }}', // Changed from 'filter' to 'filtered'
+                method: 'GET',
+                data: {
+                    category_id: category,
+                    start_date: startDate,
+                    end_date: endDate
+                },
+                success: function(response) {
+                    renderAllExpenses(response.expenses);
+                },
+                error: function() {
+                    toastr.error('Failed to filter expenses');
+                },
+                complete: function() {
+                    $('#allExpensesSpinner').addClass('d-none');
+                }
+            });
+        }
+
+        // Load full budget history
+        function loadFullBudgetHistory() {
+            $('#fullHistorySpinner').removeClass('d-none');
+            
+            $.ajax({
+                url: '{{ route("admin.expense.budget.filtered") }}', // Use the existing filtered route instead
+                method: 'GET',
+                // No filters means get all budgets
+                data: {
+                    budget_type_id: '',
+                    start_date: '',
+                    end_date: ''
+                },
+                success: function(response) {
+                    renderFullBudgetHistory(response.budgets);
+                },
+                error: function() {
+                    toastr.error('Failed to load budget history');
+                },
+                complete: function() {
+                    $('#fullHistorySpinner').addClass('d-none');
+                }
+            });
+        }
+
+        // Render full budget history
+        function renderFullBudgetHistory(budgets) {
+            const tableBody = $('#fullHistoryBody');
+            tableBody.html('');
+            
+            if (budgets && budgets.length > 0) {
+                budgets.forEach(budget => {
+                    const row = `
+                        <tr>
+                            <td>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</td>
+                            <td class="${budget.amount >= 0 ? 'budget-amount-positive' : 'budget-amount-negative'}">₱${formatNumber(budget.amount)}</td>
+                            <td>${budget.budget_type.name}</td>
+                            <td>${budget.description || 'No description'}</td>
+                            <td>${budget.creator ? budget.creator.first_name + ' ' + budget.creator.last_name : 'Unknown'}</td>
+                            <td>${formatDateTime(budget.created_at)}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editBudget(${budget.budget_allocation_id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteBudget(${budget.budget_allocation_id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+            } else {
+                tableBody.html('<tr><td colspan="7" class="text-center">No budget history found</td></tr>');
+            }
+        }
+
+        // Load filtered budget history
+        function loadFilteredBudgetHistory() {
+            const budgetType = $('#budgetFilterType').val();
+            const startDate = $('#budgetFilterStartDate').val();
+            const endDate = $('#budgetFilterEndDate').val();
+            
+            // Validation
+            if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                toastr.error('Start date cannot be after end date');
+                return;
+            }
+            
+            $('#fullHistorySpinner').removeClass('d-none');
+            
+            $.ajax({
+                url: '{{ route("admin.expense.budget.filtered") }}',
+                method: 'GET',
+                data: {
+                    budget_type_id: budgetType,
+                    start_date: startDate,
+                    end_date: endDate
+                },
+                success: function(response) {
+                    renderFullBudgetHistory(response.budgets);
+                },
+                error: function() {
+                    toastr.error('Failed to filter budget history');
+                },
+                complete: function() {
+                    $('#fullHistorySpinner').addClass('d-none');
+                }
+            });
+        }
+
+        // Export expenses to Excel
+        function exportExpensesToExcel() {
+            window.location.href = '{{ route("admin.expense.export.excel") }}';
+            toastr.success('Export started. The file will download shortly.');
+        }
+
+        // Export budgets to Excel
+        function exportBudgetsToExcel() {
+            window.location.href = '{{ route("admin.expense.budget.export.excel") }}';
+            toastr.success('Export started. The file will download shortly.');
+        }
+
+        // Export filtered expenses to Excel
+        function exportFilteredExpensesToExcel() {
+            const category = $('#expensesFilterCategory').val();
+            const startDate = $('#expensesFilterStartDate').val();
+            const endDate = $('#expensesFilterEndDate').val();
+            
+            window.location.href = `{{ route("admin.expense.export.excel") }}?category_id=${category || ''}&start_date=${startDate || ''}&end_date=${endDate || ''}`;
+            toastr.success('Export started. The file will download shortly.');
+        }
+
+        // Export filtered budgets to Excel
+        function exportFilteredBudgetsToExcel() {
+            const budgetType = $('#budgetFilterType').val();
+            const startDate = $('#budgetFilterStartDate').val();
+            const endDate = $('#budgetFilterEndDate').val();
+            
+            window.location.href = `{{ route("admin.expense.budget.export.excel") }}?budget_type_id=${budgetType || ''}&start_date=${startDate || ''}&end_date=${endDate || ''}`;
+            toastr.success('Export started. The file will download shortly.');
+        }
+
+        // Format number with comma separators
+        function formatNumber(number) {
+            return parseFloat(number).toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Format date and time
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Format payment method
+        function formatPaymentMethod(method) {
+            if (!method) return '-';
+            return method.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        // Show success alert
+        function showSuccessAlert(message) {
+            $('#successAlertMessage').text(message);
+            $('#successAlert').removeClass('d-none');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                $('#successAlert').addClass('d-none');
+            }, 5000);
         }
     </script>
 </body>

@@ -222,6 +222,26 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     // Expense Tracker
     Route::prefix('expense-tracker')->name('expense.')->group(function () {
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
+                
+        // Expense CRUD routes
+        Route::post('/store-expense', [ExpenseTrackerController::class, 'storeExpense'])->name('store');
+        Route::get('/get-expense/{id}', [ExpenseTrackerController::class, 'getExpense'])->name('get');
+        Route::post('/update-expense/{id}', [ExpenseTrackerController::class, 'updateExpense'])->name('update');
+        Route::post('/delete-expense', [ExpenseTrackerController::class, 'deleteExpense'])->name('delete');
+        
+        // Budget CRUD routes
+        Route::post('/store-budget', [ExpenseTrackerController::class, 'storeBudget'])->name('budget.store');
+        Route::get('/get-budget/{id}', [ExpenseTrackerController::class, 'getBudgetAllocation'])->name('budget.get');
+        Route::post('/update-budget/{id}', [ExpenseTrackerController::class, 'updateBudget'])->name('budget.update');
+        Route::post('/delete-budget', [ExpenseTrackerController::class, 'deleteBudget'])->name('budget.delete');
+        
+        // Filter routes
+        Route::get('/filtered-expenses', [ExpenseTrackerController::class, 'getFilteredExpenses'])->name('filtered');
+        Route::get('/filtered-budgets', [ExpenseTrackerController::class, 'getFilteredBudgets'])->name('budget.filtered');
+        
+        // Export routes
+        Route::post('/export-expenses-excel', [ExpenseTrackerController::class, 'exportExpensesToExcel'])->name('export.excel');
+        Route::post('/export-budgets-excel', [ExpenseTrackerController::class, 'exportBudgetsToExcel'])->name('budget.export.excel');
     });
 
     // Careworker Tracking
