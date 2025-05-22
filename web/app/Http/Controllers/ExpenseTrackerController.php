@@ -153,14 +153,29 @@ class ExpenseTrackerController extends Controller
     public function storeExpense(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+            ],
             'category_id' => 'required|exists:expense_categories,category_id',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:1000000',
             'payment_method' => 'required|in:cash,check,bank_transfer,gcash,paymaya,credit_card,debit_card,other',
             'date' => 'required|date|before_or_equal:today',
             'receipt_number' => 'required|string|max:50',
-            'description' => 'required|string|max:1000',
+            'description' => [
+                'required',
+                'string',
+                'max:1000',
+                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+            ],
             'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+        ], [
+            'title.regex' => 'The title contains invalid characters.',
+            'description.regex' => 'The description contains invalid characters.',
+            'amount.min' => 'The amount must be greater than zero.',
+            'amount.max' => 'The amount cannot exceed ₱1,000,000.',
         ]);
 
         if ($validator->fails()) {
@@ -253,14 +268,29 @@ class ExpenseTrackerController extends Controller
     public function updateExpense(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+            ],
             'category_id' => 'required|exists:expense_categories,category_id',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:1000000',
             'payment_method' => 'required|in:cash,check,bank_transfer,gcash,paymaya,credit_card,debit_card,other',
             'date' => 'required|date|before_or_equal:today',
             'receipt_number' => 'required|string|max:50',
-            'description' => 'required|string|max:1000',
+            'description' => [
+                'required',
+                'string',
+                'max:1000',
+                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+            ],
             'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+        ], [
+            'title.regex' => 'The title contains invalid characters.',
+            'description.regex' => 'The description contains invalid characters.',
+            'amount.min' => 'The amount must be greater than zero.',
+            'amount.max' => 'The amount cannot exceed ₱1,000,000.',
         ]);
 
         if ($validator->fails()) {
@@ -400,11 +430,20 @@ class ExpenseTrackerController extends Controller
     public function storeBudget(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:1000000',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'budget_type_id' => 'required|exists:budget_types,budget_type_id',
-            'description' => 'nullable|string|max:1000',
+            'description' => [
+                'nullable',
+                'string',
+                'max:1000',
+                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+            ],
+        ], [
+            'amount.min' => 'The amount must be greater than zero.',
+            'amount.max' => 'The amount cannot exceed ₱1,000,000.',
+            'description.regex' => 'The description contains invalid characters.',
         ]);
 
         if ($validator->fails()) {
@@ -485,11 +524,20 @@ class ExpenseTrackerController extends Controller
     public function updateBudget(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:1000000',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'budget_type_id' => 'required|exists:budget_types,budget_type_id',
-            'description' => 'nullable|string|max:1000',
+            'description' => [
+                'nullable',
+                'string',
+                'max:1000',
+                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+            ],
+        ], [
+            'amount.min' => 'The amount must be greater than zero.',
+            'amount.max' => 'The amount cannot exceed ₱1,000,000.',
+            'description.regex' => 'The description contains invalid characters.',
         ]);
 
         if ($validator->fails()) {
@@ -633,8 +681,14 @@ class ExpenseTrackerController extends Controller
             // Paginate the results
             $expenses = $query->paginate($perPage, ['*'], 'page', $page);
             
+            // Transform expenses to include receipt_path
+            $transformedExpenses = $expenses->map(function ($expense) {
+                $expense->receipt_path = $expense->receipt ? asset('storage/' . $expense->receipt) : null;
+                return $expense;
+            });
+            
             return response()->json([
-                'expenses' => $expenses->items(),
+                'expenses' => $transformedExpenses,
                 'pagination' => [
                     'total' => $expenses->total(),
                     'per_page' => $expenses->perPage(),
