@@ -23,6 +23,7 @@ use App\Http\Controllers\HealthMonitoringController;
 use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\InternalAppointmentsController;
 use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\EmergencyAndRequestController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -178,6 +179,23 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::get('/{id}/edit', [MedicationScheduleController::class, 'edit'])->name('edit');
         Route::put('/{id}', [MedicationScheduleController::class, 'update'])->name('update');
         Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
+    });
+
+    // Emergency and Service Request
+        Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
+        Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
+        Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
+        Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
+        
+        // Data retrieval routes for modals
+        Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');
+        Route::get('/service-request/{id}', [EmergencyAndRequestController::class, 'getServiceRequest'])->name('get.service');
+        Route::get('/care-workers', [EmergencyAndRequestController::class, 'getAllCareWorkers'])->name('get.careworkers');
+        
+        // Action routes
+        Route::post('/respond-emergency', [EmergencyAndRequestController::class, 'respondToEmergency'])->name('respond.emergency');
+        Route::post('/handle-service', [EmergencyAndRequestController::class, 'handleServiceRequest'])->name('handle.service');
+        Route::post('/archive', [EmergencyAndRequestController::class, 'archiveRecord'])->name('archive');
     });
     
 });

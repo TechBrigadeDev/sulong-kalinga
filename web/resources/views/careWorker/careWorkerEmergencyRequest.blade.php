@@ -278,26 +278,36 @@
             box-shadow: none;
             outline: none;
         }
+
+        .is-invalid {
+            border-color: #dc3545;
+            padding-right: calc(1.5em + 0.75rem);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        .invalid-feedback {
+            display: block;
+            width: 100%;
+            margin-top: 0.25rem;
+            font-size: 0.875em;
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careWorkerNavbar')
+    @include('components.careWorkerSidebar')
 
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('admin.emergency.request.viewHistory') }}'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('care-worker.emergency.request.viewHistory') }}'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
-        </div>
-
-        <!-- Add this success alert container -->
-        <div id="successAlert" class="alert alert-success alert-dismissible fade show d-none" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span id="successAlertMessage">Action completed successfully!</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         
         <div class="container-fluid">
@@ -361,8 +371,8 @@
                                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewEmergencyDetails({{ $notice->notice_id }})">
                                                                 <i class="bi bi-eye me-1"></i> View
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="openRespondEmergencyModal({{ $notice->notice_id }})">
-                                                                <i class="bi bi-reply me-1"></i> Respond
+                                                           <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $notice->notice_id }}, 'emergency')">
+                                                                <i class="bi bi-bell me-1"></i> Follow Up
                                                             </button>
                                                         </div>
                                                     </div>
@@ -413,8 +423,8 @@
                                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewServiceRequestDetails({{ $request->service_request_id }})">
                                                                 <i class="bi bi-eye me-1"></i> View
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openHandleServiceRequestModal({{ $request->service_request_id }})">
-                                                                <i class="bi bi-reply me-1"></i> Handle
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSendReminderModal({{ $request->service_request_id }}, 'service')">
+                                                                <i class="bi bi-bell me-1"></i> Follow Up
                                                             </button>
                                                         </div>
                                                     </div>
@@ -471,14 +481,9 @@
                                                     <small class="text-muted">
                                                         <i class="bi bi-clock me-1"></i> Started {{ \Carbon\Carbon::parse($notice->action_taken_at)->diffForHumans() }}
                                                     </small>
-                                                    <div class="btn-group" onclick="event.stopPropagation()">
-                                                        <button class="btn btn-sm btn-outline-primary" onclick="openRespondEmergencyModal({{ $notice->notice_id }})">
-                                                            <i class="bi bi-pencil-square me-1"></i> Update
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-success" onclick="openResolveEmergencyModal({{ $notice->notice_id }})">
-                                                            <i class="bi bi-check-circle me-1"></i> Resolve
-                                                        </button>
-                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); openSendReminderModal({{ $notice->notice_id }}, 'emergency')">
+                                                        <i class="bi bi-bell me-1"></i> Follow Up
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -521,14 +526,9 @@
                                                     <small class="text-muted">
                                                         <i class="bi bi-calendar-event me-1"></i> {{ \Carbon\Carbon::parse($request->service_date)->format('M d') }}
                                                     </small>
-                                                    <div class="btn-group" onclick="event.stopPropagation()">
-                                                        <button class="btn btn-sm btn-outline-primary" onclick="openHandleServiceRequestModal({{ $request->service_request_id }})">
-                                                            <i class="bi bi-pencil-square me-1"></i> Update
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-success" onclick="openCompleteServiceRequestModal({{ $request->service_request_id }})">
-                                                            <i class="bi bi-check-circle me-1"></i> Complete
-                                                        </button>
-                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); openSendReminderModal({{ $request->service_request_id }}, 'service')">
+                                                        <i class="bi bi-bell me-1"></i> Follow Up
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -546,154 +546,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Emergency Response Modal -->
-    <div class="modal fade" id="respondEmergencyModal" tabindex="-1" aria-labelledby="respondEmergencyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="respondEmergencyModalLabel"><i class="bi bi-exclamation-triangle-fill"></i> Respond to Emergency</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form id="respondEmergencyForm">
-            <input type="hidden" id="emergencyNoticeId" name="notice_id">
-            
-            <div class="emergency-details mb-4">
-                <div class="alert alert-light border">
-                <div class="d-flex justify-content-between">
-                    <h6 class="text-dark" id="emergencyBeneficiaryName">Loading...</h6>
-                    <span class="badge bg-danger" id="emergencyTypeBadge">Loading...</span>
-                </div>
-                <div class="text-muted mb-2" id="emergencyDateTime">Loading...</div>
-                <div class="border-top pt-2 mt-2" id="emergencyMessage">Loading...</div>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="updateType" class="form-label">Response Type</label>
-                <select class="form-select" id="updateType" name="update_type" required>
-                <option value="response">Emergency Response</option>
-                <option value="resolution">Resolve Emergency</option>
-                <option value="note">Add Note Only</option>
-                </select>
-                 <small id="resolutionWarning" class="text-danger d-none mt-1">
-                <i class="bi bi-exclamation-circle"></i> Resolving will archive this emergency and move it to history.
-                </small>
-            </div>
-            
-            <div class="mb-3">
-                <label for="responseMessage" class="form-label">Response Message</label>
-                <textarea class="form-control" id="responseMessage" name="message" rows="4" placeholder="Enter your response message" required></textarea>
-            </div>
-            
-            <div class="password-confirmation d-none mb-3">
-                <div class="alert alert-warning">
-                <i class="bi bi-shield-lock"></i> This action requires password confirmation
-                </div>
-                <label for="confirmPassword" class="form-label">Your Password</label>
-                <input type="password" class="form-control" id="confirmPassword" name="password" placeholder="Enter your password">
-                <div class="invalid-feedback">Incorrect password</div>
-            </div>
-            
-            <div class="previous-updates d-none mb-4">
-                <h6 class="border-bottom pb-2">Previous Updates</h6>
-                <div id="updateHistoryContainer">
-                <!-- Previous updates will be loaded here -->
-                </div>
-            </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" id="submitEmergencyResponse">Submit Response</button>
-        </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Service Request Response Modal -->
-    <div class="modal fade" id="handleServiceRequestModal" tabindex="-1" aria-labelledby="handleServiceRequestModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="handleServiceRequestModalLabel"><i class="bi bi-hand-thumbs-up"></i> Handle Service Request</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form id="handleServiceRequestForm">
-            <input type="hidden" id="serviceRequestId" name="service_request_id">
-            
-            <div class="service-request-details mb-4">
-                <div class="alert alert-light border">
-                <div class="d-flex justify-content-between">
-                    <h6 class="text-dark" id="requestBeneficiaryName">Loading...</h6>
-                    <span class="badge bg-primary" id="requestTypeBadge">Loading...</span>
-                </div>
-                <div class="text-muted mb-2" id="requestDateTime">Loading...</div>
-                <div class="border-top pt-2 mt-2" id="requestMessage">Loading...</div>
-                <div class="mt-2">
-                    <strong>Requested Date:</strong> <span id="requestedServiceDate">Loading...</span>
-                </div>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="serviceUpdateType" class="form-label">Action</label>
-                <select class="form-select" id="serviceUpdateType" name="update_type" required>
-                <option value="approval">Approve Request</option>
-                <option value="rejection">Reject Request</option>
-                <option value="completion">Mark as Completed</option>
-                <option value="note">Add Note Only</option>
-                </select>
-                <small id="completionWarning" class="text-danger d-none mt-1">
-                    <i class="bi bi-exclamation-circle"></i> Completing will archive this service request and move it to history. Approve and process a request first before marking it complete, or reject it.
-                </small>
-                <small id="rejectionWarning" class="text-danger d-none mt-1">
-                    <i class="bi bi-exclamation-circle"></i> Rejecting will archive this service request and move it to history.
-                </small>
-                <small id="approvalWarning" class="text-danger d-none mt-1">
-                    <i class="bi bi-exclamation-circle"></i> Cannot re-approve an already approved request.
-                </small>
-            </div>
-            
-            <div class="mb-3 care-worker-options">
-                <label for="serviceCareWorkerId" class="form-label">Assign Care Worker</label>
-                <select class="form-select" id="serviceCareWorkerId" name="care_worker_id">
-                <option value="">-- Select Care Worker --</option>
-                <!-- Will be populated with care workers -->
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label for="serviceResponseMessage" class="form-label">Message</label>
-                <textarea class="form-control" id="serviceResponseMessage" name="message" rows="4" placeholder="Enter your response message" required></textarea>
-            </div>
-            
-            <div class="service-password-confirmation d-none mb-3">
-                <div class="alert alert-warning">
-                <i class="bi bi-shield-lock"></i> This action requires password confirmation
-                </div>
-                <label for="serviceConfirmPassword" class="form-label">Your Password</label>
-                <input type="password" class="form-control" id="serviceConfirmPassword" name="password" placeholder="Enter your password">
-                <div class="invalid-feedback">Incorrect password</div>
-            </div>
-            
-            <div class="service-previous-updates d-none mb-4">
-                <h6 class="border-bottom pb-2">Previous Updates</h6>
-                <div id="serviceUpdateHistoryContainer">
-                <!-- Previous updates will be loaded here -->
-                </div>
-            </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="submitServiceResponse">Submit</button>
-        </div>
-        </div>
-    </div>
     </div>
 
     <!-- Emergency Details Modal (Read-only) -->
@@ -718,7 +570,9 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="respondToEmergencyBtn">Respond</button>
+            <button type="button" class="btn btn-info" onclick="openSendReminderModal(currentEmergency.notice_id, 'emergency')">
+                <i class="bi bi-bell me-1"></i> Follow Up
+            </button>
         </div>
         </div>
     </div>
@@ -744,12 +598,46 @@
             </div>
             </div>
         </div>
-        <div class="modal-footer">
+       <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="handleServiceRequestBtn">Respond</button>
+            <button type="button" class="btn btn-info" onclick="openSendReminderModal(currentServiceRequest.service_request_id, 'service')">
+                <i class="bi bi-bell me-1"></i> Follow Up
+            </button>
         </div>
         </div>
     </div>
+    </div>
+
+    <!-- Send Reminder Modal -->
+    <div class="modal fade" id="sendReminderModal" tabindex="-1" aria-labelledby="reminderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="reminderModalLabel"><i class="bi bi-bell"></i> Send Reminder</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="sendReminderForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="reminderRecordId" name="record_id">
+                        <input type="hidden" id="reminderRecordType" name="record_type">
+                        
+                        <div class="mb-3">
+                            <p>Send a reminder to your care manager about this <span id="reminderTypeLabel">request</span>.</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reminderMessage" class="form-label">Message</label>
+                            <textarea class="form-control" id="reminderMessage" name="message" rows="4" placeholder="Enter your reminder message" required></textarea>
+                            <small class="text-muted">Explain why this needs attention from your care manager as soon as possible.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitReminder">Send Follow Up Reminder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -795,7 +683,7 @@
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "{{ route('care-worker.emergency.request.get.emergency', '') }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -823,101 +711,6 @@
             });
         }
 
-        function openRespondEmergencyModal(noticeId = null) {
-            // If noticeId is provided, fetch fresh data, otherwise use current emergency
-            if (noticeId) {
-                $.ajax({
-                    url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
-                    method: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            currentEmergency = response.emergency_notice;
-                            populateEmergencyResponseModal(currentEmergency);
-                            $('#respondEmergencyModal').modal('show');
-                        }
-                    },
-                    error: function() {
-                        alert('Failed to load emergency details. Please try again.');
-                    }
-                });
-            } else if (currentEmergency) {
-                populateEmergencyResponseModal(currentEmergency);
-                $('#respondEmergencyModal').modal('show');
-            }
-        }
-
-        function populateEmergencyResponseModal(emergency) {
-            // Set basic details
-            $('#emergencyNoticeId').val(emergency.notice_id);
-            $('#emergencyBeneficiaryName').text(`${emergency.beneficiary.first_name} ${emergency.beneficiary.last_name}`);
-            $('#emergencyTypeBadge').text(emergency.emergency_type.name);
-            
-            // Format date
-            const createdDate = new Date(emergency.created_at);
-            $('#emergencyDateTime').text(`Reported on: ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()}`);
-            
-            // Message
-            $('#emergencyMessage').text(emergency.message);
-            
-            // Load previous updates if any
-            if (emergency.updates && emergency.updates.length > 0) {
-                $('.previous-updates').removeClass('d-none');
-                let updatesHtml = '';
-                
-                emergency.updates.forEach(update => {
-                    const updateDate = new Date(update.created_at);
-                    const formattedDate = `${updateDate.toLocaleDateString()} ${updateDate.toLocaleTimeString()}`;
-                    
-                    updatesHtml += `
-                        <div class="update-item mb-3">
-                            <div class="d-flex justify-content-between">
-                                <span class="badge ${getUpdateTypeBadgeClass(update.update_type)}">${formatUpdateType(update.update_type)}</span>
-                                <small class="text-muted">${formattedDate}</small>
-                            </div>
-                            <div class="update-message mt-1 border-bottom pb-2">${update.message}</div>
-                        </div>
-                    `;
-                });
-                
-                $('#updateHistoryContainer').html(updatesHtml);
-            } else {
-                $('.previous-updates').addClass('d-none');
-            }
-            
-            // Reset form fields
-            $('#updateType').val('response');
-            $('#responseMessage').val('');
-            $('#statusChangeTo').val('in_progress');
-            $('#confirmPassword').val('');
-            
-            // Handle form fields visibility based on selected update type
-            handleUpdateTypeChange();
-            
-            // Load care workers for assignment option
-            loadCareWorkers();
-        }
-
-        // Event handler for update type change
-        $('#updateType').on('change', handleUpdateTypeChange);
-
-        function handleUpdateTypeChange() {
-            const updateType = $('#updateType').val();
-            
-            // Hide all conditional sections and warnings first
-            // Remove assignment-options from this line
-            $('.password-confirmation').addClass('d-none');
-            $('#resolutionWarning').addClass('d-none');
-            
-            // Show relevant sections based on update type
-            switch(updateType) {
-                // Remove the assignment case entirely
-                case 'resolution':
-                    $('.password-confirmation').removeClass('d-none');
-                    $('#resolutionWarning').removeClass('d-none'); // Show warning for resolution
-                    break;
-            }
-        }
-
         // Helper function to get badge class based on update type
         function getUpdateTypeBadgeClass(updateType) {
             switch(updateType) {
@@ -941,80 +734,6 @@
                 default: return updateType;
             }
         }
-
-        // Submit emergency response
-        $('#submitEmergencyResponse').on('click', function() {
-            const form = $('#respondEmergencyForm');
-            const formData = new FormData(form[0]);
-            
-            // Validate form
-            if (!form[0].checkValidity()) {
-                form[0].reportValidity();
-                return;
-            }
-            
-            // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...');
-            
-            // Submit form
-            $.ajax({
-                url: "{{ route('admin.emergency.request.respond.emergency') }}",
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        toastr.success('Emergency response submitted successfully');
-                        
-                        // Close modal
-                        $('#respondEmergencyModal').modal('hide');
-
-                        // Show prominent success message if it was a resolution
-                        if ($('#updateType').val() === 'resolution') {
-                            const beneficiaryName = $('#emergencyBeneficiaryName').text();
-                            const message = `Emergency for ${beneficiaryName} has been successfully resolved.`;
-                            showSuccessAlert(message);
-                        }
-                        
-                        // Reload page after a brief delay
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        // Show error message
-                        toastr.error(response.message || 'Failed to submit response');
-                        
-                        // If password error
-                        if (response.errors && response.errors.password) {
-                            $('#confirmPassword').addClass('is-invalid');
-                            $('.invalid-feedback').text(response.errors.password[0]).show();
-                        }
-                    }
-                },
-                error: function(xhr) {
-                    // Parse error response
-                    let errorMessage = 'Failed to submit response';
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.errors && response.errors.password) {
-                            $('#confirmPassword').addClass('is-invalid');
-                            $('.invalid-feedback').text(response.errors.password[0]).show();
-                            errorMessage = response.errors.password[0];
-                        } else if (response.message) {
-                            errorMessage = response.message;
-                        }
-                    } catch (e) {}
-                    
-                    toastr.error(errorMessage);
-                },
-                complete: function() {
-                    // Reset button state
-                    $('#submitEmergencyResponse').prop('disabled', false).html('Submit Response');
-                }
-            });
-        });
 
         // Add code to check for stored messages on page load
         $(document).ready(function() {
@@ -1050,128 +769,6 @@
                 // Clear the stored action type
                 sessionStorage.removeItem('serviceActionType');
             }
-
-            // Handle service request update submission
-            $('#submitServiceResponse').on('click', function() {
-                // Get form data from the correct service form fields
-                const requestId = $('#serviceRequestId').val();
-                const message = $('#serviceResponseMessage').val();  // CORRECT ID
-                const updateType = $('#serviceUpdateType').val() || 'note'; // CORRECT ID
-                const careWorkerId = $('#serviceCareWorkerId').val();
-                
-                // Basic validation
-                if (!message) {
-                    toastr.error('Please enter a response message');
-                    return;
-                }
-
-                 // Add care worker validation for approval
-                if (updateType === 'approval' && !careWorkerId) {
-                    toastr.error('Please assign a care worker when approving a service request');
-                    // Highlight the select box to indicate it needs attention
-                    $('#serviceCareWorkerId').addClass('is-invalid');
-                    return;
-                }
-                
-                // Clear any previous validation error styling
-                $('#serviceCareWorkerId').removeClass('is-invalid');
-                
-                // Show loading state
-                $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
-                $(this).prop('disabled', true);
-                
-                // Create form data
-                const formData = new FormData();
-                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-                formData.append('service_request_id', requestId);
-                formData.append('message', message);
-                formData.append('update_type', updateType);
-                
-                // Only add care worker ID if provided and relevant
-                if (careWorkerId && (updateType === 'approval' || updateType === 'assignment')) {
-                    formData.append('care_worker_id', careWorkerId);
-                }
-                
-                // Add password if completion type
-                if (updateType === 'completion') {
-                    const password = $('#serviceConfirmPassword').val();
-                    if (password) {
-                        formData.append('password', password);
-                    }
-                }
-                
-                // Submit request
-                $.ajax({
-                    url: "{{ route('admin.emergency.request.handle.service') }}",
-                    method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            // Toast notification (existing)
-                            toastr.success('Service request updated successfully');
-                            
-                            // Close modal
-                            $('#handleServiceRequestModal').modal('hide');
-                            
-                            // Save the current tab for reload
-                            sessionStorage.setItem('activeTab', 'service');
-                            
-                            // Show prominent success message for completion or rejection
-                            if (updateType === 'completion' || updateType === 'rejection') {
-                                const beneficiaryName = $('#requestBeneficiaryName').text();
-                                const actionType = updateType === 'completion' ? 'completed' : 'rejected';
-                                const message = `Service request for ${beneficiaryName} has been ${actionType} successfully.`;
-                                showSuccessAlert(message);
-                                
-                                // Store the action type for checking after reload
-                                sessionStorage.setItem('serviceActionType', actionType);
-                            }
-                            
-                            // Reload page after a brief delay
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            toastr.error(response.message || 'Failed to update service request');
-                            $('#submitServiceResponse').html('Submit');
-                            $('#submitServiceResponse').prop('disabled', false);
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'Failed to update service request';
-                        
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
-                            
-                            // Check specifically for password errors and show a clearer message
-                            if (errors.password) {
-                                $('#serviceConfirmPassword').addClass('is-invalid');
-                                $('.service-password-confirmation .invalid-feedback').text(errors.password[0]).show();
-                                errorMessage = 'Password is incorrect. Please try again.';
-                            } else {
-                                // Handle other validation errors
-                                const firstError = Object.values(errors)[0];
-                                if (firstError && firstError[0]) {
-                                    errorMessage = firstError[0];
-                                }
-                            }
-                        }
-                        
-                        toastr.error(errorMessage);
-                        $('#submitServiceResponse').html('Submit');
-                        $('#submitServiceResponse').prop('disabled', false);
-                    }
-                });
-            });
-            
-            // Also make sure CSRF token is set up
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
             
             // For debugging
             console.log('Service request handlers initialized');
@@ -1187,7 +784,7 @@
             
             // Fetch service request details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "{{ route('care-worker.emergency.request.get.service', '') }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1218,29 +815,6 @@
         // Similar functions for service requests...
 
         // ===== COMMON FUNCTIONS =====
-        function loadCareWorkers() {
-            $.ajax({
-                url: "{{ route('admin.emergency.request.get.careworkers') }}",
-                method: 'GET',
-                success: function(response) {
-                    console.log("Care workers loaded:", response); // Debug line
-                    if (response.success && response.care_workers) {
-                        let options = '<option value="">-- Select Care Worker --</option>';
-                        response.care_workers.forEach(worker => {
-                            options += `<option value="${worker.id}">${worker.first_name} ${worker.last_name}</option>`;
-                        });
-                        $('#serviceCareWorkerId').html(options);
-                    } else {
-                        console.error("Failed to load care workers:", response.message);
-                        $('#serviceCareWorkerId').html('<option value="">No care workers available</option>');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error loading care workers:", error);
-                    $('#serviceCareWorkerId').html('<option value="">Error loading care workers</option>');
-                }
-            });
-        }
 
         // Archive record function
         function openArchiveModal(recordId, recordType) {
@@ -1251,82 +825,56 @@
             $('#archiveRecordModal').modal('show');
         }
 
-        // Submit archive request
-        $('#submitArchiveRecord').on('click', function() {
-            const form = $('#archiveRecordForm');
-            const formData = new FormData(form[0]);
-            
-            // Validate password
-            if (!$('#archivePassword').val()) {
-                $('#archivePassword').addClass('is-invalid');
-                return;
-            }
-            
-            // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Archiving...');
-            
-            // Submit form
-            $.ajax({
-                url: "{{ route('admin.emergency.request.archive') }}",
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        toastr.success('Record archived successfully');
-                        
-                        // Close modal
-                        $('#archiveRecordModal').modal('hide');
-                        
-                        // Reload page after a brief delay
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        // Show error message
-                        toastr.error(response.message || 'Failed to archive record');
-                        
-                        // If password error
-                        if (response.errors && response.errors.password) {
-                            $('#archivePassword').addClass('is-invalid');
-                        }
-                    }
-                },
-                error: function(xhr) {
-                    // Parse error response
-                    let errorMessage = 'Failed to archive record';
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.errors && response.errors.password) {
-                            $('#archivePassword').addClass('is-invalid');
-                            errorMessage = response.errors.password[0];
-                        } else if (response.message) {
-                            errorMessage = response.message;
-                        }
-                    } catch (e) {}
-                    
-                    toastr.error(errorMessage);
-                },
-                complete: function() {
-                    // Reset button state
-                    $('#submitArchiveRecord').prop('disabled', false).html('Archive');
-                }
-            });
-        });
-
         // Care Worker Send Reminder Function
         function openSendReminderModal(recordId, recordType) {
+            // Set form values
             $('#reminderRecordId').val(recordId);
             $('#reminderRecordType').val(recordType);
             $('#reminderMessage').val('');
+            
+            // Reset the submit button state
+            $('#submitReminder').prop('disabled', false).html('Send Follow Up Reminder');
+            
+            // Remove any validation styling
+            $('#reminderMessage').removeClass('is-invalid');
+            $('#message-error').remove();
+            
+            // Update modal title based on record type
+            if (recordType === 'service') {
+                $('#reminderModalLabel').text('Send Service Request Reminder');
+                $('#reminderTypeLabel').text('Service Request');
+            } else {
+                $('#reminderModalLabel').text('Send Emergency Reminder');
+                $('#reminderTypeLabel').text('Emergency');
+            }
+            
+            // Show modal
             $('#sendReminderModal').modal('show');
         }
 
         // Submit reminder
         $('#submitReminder').on('click', function() {
             const form = $('#sendReminderForm');
+            const message = $('#reminderMessage').val().trim();
+            
+            // Explicit message validation
+            if (!message) {
+                // Remove any existing validation styles
+                $('#reminderMessage').addClass('is-invalid');
+                
+                // Show error message
+                if (!$('#message-error').length) {
+                    $('#reminderMessage').after('<div id="message-error" class="invalid-feedback">Please enter a reminder message</div>');
+                }
+                
+                toastr.error('Please enter a reminder message');
+                return;
+            }
+            
+            // Remove validation error if it was previously shown
+            $('#reminderMessage').removeClass('is-invalid');
+            $('#message-error').remove();
+            
             const formData = new FormData(form[0]);
             
             // Show loading state
@@ -1344,19 +892,33 @@
                         // Show success message
                         toastr.success('Reminder sent successfully to your care manager');
                         
+                        // Clear the form
+                        $('#reminderMessage').val('');
+                        
                         // Close modal
                         $('#sendReminderModal').modal('hide');
                     } else {
                         // Show error message
                         toastr.error(response.message || 'Failed to send reminder');
+                        $('#submitReminder').prop('disabled', false).html('Send Follow Up Reminder');
                     }
                 },
-                error: function() {
-                    toastr.error('Failed to send reminder. Please try again.');
+                error: function(xhr) {
+                    // Improved error handling with response details
+                    let errorMsg = 'Failed to send reminder. Please try again.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    
+                    toastr.error(errorMsg);
+                    $('#submitReminder').prop('disabled', false).html('Send Follow Up Reminder');
                 },
                 complete: function() {
-                    // Reset button state
-                    $('#submitReminder').prop('disabled', false).html('Send Reminder');
+                    // Reset button state on success (error case is handled separately)
+                    if ($('#sendReminderModal').hasClass('show')) {
+                        $('#submitReminder').prop('disabled', false).html('Send Follow Up Reminder');
+                    }
                 }
             });
         });
@@ -1376,128 +938,6 @@
             $('#serviceRequestDetailsModal').modal('hide');
             openHandleServiceRequestModal();
         });
-
-        // Service Request modal handler
-        function openHandleServiceRequestModal(requestId = null) {
-            // If requestId is provided, fetch fresh data, otherwise use current service request
-            if (requestId) {
-                $.ajax({
-                    url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
-                    method: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            currentServiceRequest = response.service_request;
-                            populateServiceRequestModal(currentServiceRequest);
-                            $('#handleServiceRequestModal').modal('show');
-                        }
-                    },
-                    error: function() {
-                        alert('Failed to load service request details. Please try again.');
-                    }
-                });
-            } else if (currentServiceRequest) {
-                populateServiceRequestModal(currentServiceRequest);
-                $('#handleServiceRequestModal').modal('show');
-            }
-        }
-
-        function populateServiceRequestModal(request) {
-            // Set basic details
-            $('#serviceRequestId').val(request.service_request_id);
-            $('#requestBeneficiaryName').text(`${request.beneficiary.first_name} ${request.beneficiary.last_name}`);
-            $('#requestTypeBadge').text(request.service_type.name);
-            
-            // Format date
-            const createdDate = new Date(request.created_at);
-            $('#requestDateTime').text(`Requested on: ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()}`);
-            
-            // Service date
-            const serviceDate = new Date(request.service_date);
-            $('#requestedServiceDate').text(serviceDate.toLocaleDateString());
-            
-            // Message
-            $('#requestMessage').text(request.message);
-            
-            // Load previous updates if any
-            if (request.updates && request.updates.length > 0) {
-                $('.service-previous-updates').removeClass('d-none');
-                let updatesHtml = '';
-                
-                request.updates.forEach(update => {
-                    const updateDate = new Date(update.created_at);
-                    const formattedDate = `${updateDate.toLocaleDateString()} ${updateDate.toLocaleTimeString()}`;
-                    
-                    updatesHtml += `
-                        <div class="update-item mb-3">
-                            <div class="d-flex justify-content-between">
-                                <span class="badge ${getUpdateTypeBadgeClass(update.update_type)}">${formatUpdateType(update.update_type)}</span>
-                                <small class="text-muted">${formattedDate}</small>
-                            </div>
-                            <div class="update-message mt-1 border-bottom pb-2">${update.message}</div>
-                        </div>
-                    `;
-                });
-                
-                $('#serviceUpdateHistoryContainer').html(updatesHtml);
-            } else {
-                $('.service-previous-updates').addClass('d-none');
-            }
-            
-            // Reset form fields
-            $('#serviceUpdateType').val('approval');
-            $('#serviceResponseMessage').val('');
-            $('#serviceStatusChangeTo').val('approved');
-            $('#serviceConfirmPassword').val('');
-            
-            // Handle form fields visibility based on selected update type
-            handleServiceUpdateTypeChange();
-            
-            // Load care workers for assignment option
-            loadCareWorkers();
-        }
-
-        // Add function for handling service request form
-        function handleServiceUpdateTypeChange() {
-            const updateType = $('#serviceUpdateType').val();
-            
-            // Hide all conditional sections and warnings first
-            $('.service-password-confirmation, .care-worker-options').addClass('d-none');
-            $('#completionWarning, #rejectionWarning, #statusValidationWarning, #approvalWarning').addClass('d-none');
-            
-            // Show/hide care worker dropdown
-            if (updateType === 'approval' || updateType === 'assignment') {
-                $('.care-worker-options').removeClass('d-none');
-                loadCareWorkers(); // Ensure care workers are loaded
-                
-                // Check if request is already approved
-                if (updateType === 'approval' && currentServiceRequest && currentServiceRequest.status === 'approved') {
-                    $('#approvalWarning').removeClass('d-none').text('This service request is already approved. Please choose a different action.');
-                    $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
-                }
-            }
-            
-            // Show warning for completion
-            if (updateType === 'completion') {
-                $('.service-password-confirmation').removeClass('d-none');
-                $('#completionWarning').removeClass('d-none');
-                
-                // Check if the service request is in an approvable state
-                if (currentServiceRequest && currentServiceRequest.status !== 'approved') {
-                    $('#statusValidationWarning').removeClass('d-none').text('Only approved service requests can be marked as completed.');
-                    $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
-                }
-            }
-            
-            // Show warning for rejection
-            if (updateType === 'rejection') {
-                $('#rejectionWarning').removeClass('d-none');
-                $('#submitServiceResponse').prop('disabled', false);
-            }
-        }
 
         // Tab switcher for main tabs and pending column
         $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
@@ -1679,7 +1119,7 @@
         function openResolveEmergencyModal(noticeId) {
             // Fetch emergency details and then open modal with resolution pre-selected
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "{{ route('care-worker.emergency.request.get.emergency', '') }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1702,7 +1142,7 @@
 
         function openCompleteServiceRequestModal(requestId) {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "{{ route('care-worker.emergency.request.get.service', '') }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

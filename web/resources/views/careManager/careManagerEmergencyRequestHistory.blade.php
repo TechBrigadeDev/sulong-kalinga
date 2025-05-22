@@ -323,13 +323,13 @@
 </head>
 <body>
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST HISTORY</div>
-            <button class="history-btn active" onclick="window.location.href='{{ route('admin.emergency.request.index') }}'">
+            <button class="history-btn active" onclick="window.location.href='{{ route('care-manager.emergency.request.index') }}'">
                 <i class="bi bi-arrow-left me-1"></i> Back to Current
             </button>
         </div>
@@ -690,7 +690,7 @@
             
             // Send filter request
             $.ajax({
-                url: "{{ route('admin.emergency.request.filter.history') }}",
+                url: "{{ route('care-manager.emergency.request.filter.history') }}",
                 method: 'POST',
                 data: {
                     _token: "{{ csrf_token() }}",
@@ -807,7 +807,7 @@
             $('#emergencyHistoryDetailModal').modal('show');
             
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "{{ route('care-manager.emergency.request.get.emergency', '') }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -828,7 +828,7 @@
             $('#serviceHistoryDetailModal').modal('show');
             
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "{{ route('care-manager.emergency.request.get.service', '') }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

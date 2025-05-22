@@ -35,6 +35,12 @@ use App\Models\RecurringPattern;
 use App\Models\AppointmentParticipant;
 use App\Models\Visitation;
 use App\Models\VisitationOccurrence;
+use App\Models\EmergencyType;
+use App\Models\ServiceRequestType;
+use App\Models\EmergencyNotice;
+use App\Models\ServiceRequest;
+use App\Models\EmergencyUpdate;
+use App\Models\ServiceRequestUpdate;
 
 class DatabaseSeeder extends Seeder
 {
@@ -217,6 +223,9 @@ class DatabaseSeeder extends Seeder
 
         // 9. Generate scheduling data (appointments, visitations, medication schedules)
         $this->generateSchedulingData($careWorkers, $allBeneficiaries);
+
+        // 10. Generate emergency notices and service requests
+        $this->generateEmergencyAndServiceRequests();
     }
 
     /**
@@ -1885,6 +1894,134 @@ class DatabaseSeeder extends Seeder
             
             return $randomBarangay ? $randomBarangay->barangay_id : 1; // Default to 1 if nothing is found
         }
+    }
+
+    // Generate emergency notices and service requests
+    private function generateEmergencyAndServiceRequests()
+    {
+        // Get beneficiaries for emergency notices and service requests
+        $beneficiaries = Beneficiary::inRandomOrder()->take(20)->get();
+        $familyMembers = FamilyMember::inRandomOrder()->take(15)->get();
+        
+        // Create emergency types if they don't exist yet
+        if (EmergencyType::count() == 0) {
+            \Log::info('Creating emergency types...');
+            DB::table('emergency_types')->insert([
+                ['name' => 'Medical Emergency', 'color_code' => '#dc3545', 'description' => 'Urgent medical situations requiring immediate attention', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Fall Incident', 'color_code' => '#fd7e14', 'description' => 'Falls resulting in injury or requiring assistance', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Medication Issue', 'color_code' => '#6f42c1', 'description' => 'Problems with medication administration or adverse reactions', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Mental Health Crisis', 'color_code' => '#20c997', 'description' => 'Acute mental health episodes requiring intervention', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Other Emergency', 'color_code' => '#6c757d', 'description' => 'Other emergency situations not categorized above', 'created_at' => now(), 'updated_at' => now()],
+            ]);
+        }
+        
+        // Create service request types if they don't exist yet
+        if (ServiceRequestType::count() == 0) {
+            \Log::info('Creating service request types...');
+            DB::table('service_request_types')->insert([
+                ['name' => 'Home Care Visit', 'color_code' => '#0d6efd', 'description' => 'Additional home care services', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Transportation', 'color_code' => '#198754', 'description' => 'Transportation assistance', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Medical Appointments', 'color_code' => '#6610f2', 'description' => 'Assistance with medical appointment visits', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Meal Delivery', 'color_code' => '#fd7e14', 'description' => 'Delivery of prepared meals', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Other Service', 'color_code' => '#6c757d', 'description' => 'Other service requests not categorized above', 'created_at' => now(), 'updated_at' => now()],
+            ]);
+        }
+        
+        // Create some emergency notices (15 total)
+        \Log::info('Creating emergency notices...');
+        
+        // Create 5 new emergency notices
+        EmergencyNotice::factory()->count(5)->asNew()->create();
+        
+        // Create 5 in progress emergency notices 
+        EmergencyNotice::factory()->count(5)->inProgress()->create();
+
+        // Store a reference to faker that can be used in closures
+        $faker = $this->faker;
+        
+        // Create 5 resolved emergency notices (for history)
+        EmergencyNotice::factory()->count(5)->state(function () use ($faker) {
+            return [
+                'status' => 'resolved',
+                'read_status' => true,
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
+                'assigned_to' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_type' => 'resolved',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', 'now'),
+            ];
+        })->create();
+        
+        // Create service requests (15 total)
+        \Log::info('Creating service requests...');
+        
+        // Create 5 new service requests
+        ServiceRequest::factory()->count(5)->asNew()->create();
+        
+        // Create 5 approved service requests
+        ServiceRequest::factory()->count(5)->state(function () use ($faker) {
+            return [
+                'status' => 'approved',
+                'read_status' => true,
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
+                'action_type' => 'approved',
+                'action_taken_by' => User::where('role_id', '<=', 2)->inRandomOrder()->first()->id,
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', '-2 days'),
+                'care_worker_id' => User::where('role_id', 3)->inRandomOrder()->first()->id,
+            ];
+        })->create();
+        
+        // Create 5 completed/rejected service requests (for history)
+        ServiceRequest::factory()->count(5)->state(function () use ($faker) {
+            $status = $faker->randomElement(['completed', 'rejected']);
+            return [
+                'status' => $status,
+                'read_status' => true,
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
+                'action_type' => $status,
+                'action_taken_by' => User::where('role_id', '<=', 2)->inRandomOrder()->first()->id,
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', 'now'),
+                'care_worker_id' => $status === 'completed' ? User::where('role_id', 3)->inRandomOrder()->first()->id : null,
+            ];
+        })->create();
+        
+        // Create some emergency updates for existing notices
+        \Log::info('Creating emergency updates...');
+        $emergencies = EmergencyNotice::where('status', '!=', 'new')->get();
+        foreach ($emergencies as $emergency) {
+            // Generate 1-3 updates per emergency
+            $updateCount = rand(1, 3);
+            EmergencyUpdate::factory()->count($updateCount)->create([
+                'notice_id' => $emergency->notice_id
+            ]);
+        }
+        
+        // Create some service request updates
+        \Log::info('Creating service request updates...');
+        $serviceRequests = ServiceRequest::where('status', '!=', 'new')->get();
+        foreach ($serviceRequests as $request) {
+            // Generate 1-2 updates per request, but don't change action_type for completed/rejected
+            $updateCount = rand(1, 2);
+            
+            if (in_array($request->status, ['completed', 'rejected'])) {
+                // For completed/rejected, just add notes without changing status or action_type
+                ServiceRequestUpdate::factory()->count($updateCount)->state(function () use ($request) {
+                    return [
+                        'service_request_id' => $request->service_request_id,
+                        'update_type' => 'note',
+                        'status_change_to' => null,
+                        'message' => 'Additional information about this ' . $request->status . ' request.'
+                    ];
+                })->create();
+            } else {
+                // For other statuses, normal updates are fine
+                ServiceRequestUpdate::factory()->count($updateCount)->create([
+                    'service_request_id' => $request->service_request_id
+                ]);
+            }
+        }
+        
+        \Log::info('Emergency notices and service requests generated successfully');
     }
 }
 
