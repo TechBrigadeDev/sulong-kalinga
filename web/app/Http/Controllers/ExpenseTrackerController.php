@@ -157,7 +157,7 @@ class ExpenseTrackerController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
             'category_id' => 'required|exists:expense_categories,category_id',
             'amount' => 'required|numeric|min:0.01|max:1000000',
@@ -168,12 +168,12 @@ class ExpenseTrackerController extends Controller
                 'required',
                 'string',
                 'max:1000',
-                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
             'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ], [
-            'title.regex' => 'The title contains invalid characters.',
-            'description.regex' => 'The description contains invalid characters.',
+            'title.regex' => 'The title must contain at least one letter and only common characters.',
+            'description.regex' => 'The description must contain at least one letter and only common characters.',
             'amount.min' => 'The amount must be greater than zero.',
             'amount.max' => 'The amount cannot exceed ₱1,000,000.',
         ]);
@@ -221,7 +221,7 @@ class ExpenseTrackerController extends Controller
             // Create notification for admins
             $this->createNotificationForAdmins(
                 'New Expense Added',
-                'A new expense of ₱' . number_format($expense->amount, 2) . ' for ' . $expense->title . ' has been recorded.'
+                'A new expense of ₱' . number_format($expense->amount, 2) . ' for ' . $expense->title . ' has been recorded by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
             );
             
             return response()->json([
@@ -272,7 +272,7 @@ class ExpenseTrackerController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
             'category_id' => 'required|exists:expense_categories,category_id',
             'amount' => 'required|numeric|min:0.01|max:1000000',
@@ -283,12 +283,12 @@ class ExpenseTrackerController extends Controller
                 'required',
                 'string',
                 'max:1000',
-                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
             'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ], [
-            'title.regex' => 'The title contains invalid characters.',
-            'description.regex' => 'The description contains invalid characters.',
+            'title.regex' => 'The title must contain at least one letter and only common characters.',
+            'description.regex' => 'The description must contain at least one letter and only common characters.',
             'amount.min' => 'The amount must be greater than zero.',
             'amount.max' => 'The amount cannot exceed ₱1,000,000.',
         ]);
@@ -337,14 +337,11 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification if amount changed significantly
-            if (abs($expense->amount - $oldAmount) > 100) {
+            // Create notification for all admins
                 $this->createNotificationForAdmins(
-                    'Expense Amount Modified',
-                    'The expense for "' . $expense->title . '" has been updated from ₱' . 
-                    number_format($oldAmount, 2) . ' to ₱' . number_format($expense->amount, 2) . '.'
+                    'Expense Updated',
+                    'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
                 );
-            }
             
             return response()->json([
                 'success' => true,
@@ -406,10 +403,10 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification
+            // Create notification for all admins
             $this->createNotificationForAdmins(
-                'Expense Record Deleted',
-                'An expense record "' . $expenseTitle . '" (₱' . number_format($expenseAmount, 2) . ') has been deleted.'
+                'Expense Deleted',
+                'An expense record for ₱' . number_format($expenseAmount, 2) . ' (' . $expenseTitle . ') has been deleted by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
             );
             
             return response()->json([
@@ -438,12 +435,12 @@ class ExpenseTrackerController extends Controller
                 'nullable',
                 'string',
                 'max:1000',
-                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
         ], [
             'amount.min' => 'The amount must be greater than zero.',
             'amount.max' => 'The amount cannot exceed ₱1,000,000.',
-            'description.regex' => 'The description contains invalid characters.',
+            'description.regex' => 'The description must contain at least one letter and only common characters.',
         ]);
 
         if ($validator->fails()) {
@@ -477,12 +474,10 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for admins
+            // Create notification for all admins
             $this->createNotificationForAdmins(
                 'New Budget Allocation Added',
-                'A new ' . $budgetType->name . ' budget of ₱' . number_format($budget->amount, 2) . 
-                ' has been allocated for the period ' . Carbon::parse($budget->start_date)->format('M d, Y') . 
-                ' to ' . Carbon::parse($budget->end_date)->format('M d, Y') . '.'
+                'A new budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been added by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
             );
             
             return response()->json([
@@ -532,12 +527,12 @@ class ExpenseTrackerController extends Controller
                 'nullable',
                 'string',
                 'max:1000',
-                'regex:/^[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
+                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
         ], [
             'amount.min' => 'The amount must be greater than zero.',
             'amount.max' => 'The amount cannot exceed ₱1,000,000.',
-            'description.regex' => 'The description contains invalid characters.',
+            'description.regex' => 'The description must contain at least one letter and only common characters.',
         ]);
 
         if ($validator->fails()) {
@@ -569,14 +564,11 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification if amount changed significantly
-            if (abs($budget->amount - $oldAmount) > 1000) {
-                $this->createNotificationForAdmins(
-                    'Budget Amount Modified',
-                    'A budget allocation has been updated from ₱' . 
-                    number_format($oldAmount, 2) . ' to ₱' . number_format($budget->amount, 2) . '.'
-                );
-            }
+            // Create notification for all admins
+            $this->createNotificationForAdmins(
+                'Budget Allocation Updated',
+                'A budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been updated by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+            );
             
             return response()->json([
                 'success' => true,
@@ -635,11 +627,10 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification
+            // Create notification for all admins
             $this->createNotificationForAdmins(
                 'Budget Allocation Deleted',
-                'A ' . $budgetType . ' budget of ₱' . number_format($budgetAmount, 2) . 
-                ' for the period ' . $budgetPeriod . ' has been deleted.'
+                'A budget allocation of ₱' . number_format($budgetAmount, 2) . ' (' . $budgetTypeName . ') has been deleted by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
             );
             
             return response()->json([
@@ -683,7 +674,10 @@ class ExpenseTrackerController extends Controller
             
             // Transform expenses to include receipt_path
             $transformedExpenses = $expenses->map(function ($expense) {
-                $expense->receipt_path = $expense->receipt ? asset('storage/' . $expense->receipt) : null;
+                // If receipt_path starts with "receipts/", ensure we prepend the storage path
+                if ($expense->receipt_path && !str_starts_with($expense->receipt_path, 'http')) {
+                    $expense->receipt_path = asset('storage/' . $expense->receipt_path);
+                }
                 return $expense;
             });
             
@@ -867,21 +861,25 @@ class ExpenseTrackerController extends Controller
     private function createNotificationForAdmins($title, $message)
     {
         try {
-            // Get all admin users
+            // Get all admin users (role_id = 1)
             $adminUsers = \App\Models\User::where('role_id', 1)->get();
             
+            // Create notification for each admin
             foreach ($adminUsers as $admin) {
                 Notification::create([
                     'user_id' => $admin->id,
-                    'user_type' => 'cose_staff',
+                    'user_type' => 'cose_staff', // Admin users are staff type
                     'message_title' => $title,
                     'message' => $message,
-                    'date_created' => now(),
+                    'date_created' => Carbon::now(),
                     'is_read' => false
                 ]);
             }
+            
+            \Log::info('Notifications created for all admins: ' . $title);
         } catch (\Exception $e) {
             \Log::error('Failed to create admin notifications: ' . $e->getMessage());
         }
     }
+   
 }

@@ -207,6 +207,22 @@
             margin-top: 6px;
             font-size: 0.8rem;
         }
+
+        .expense-amount {
+            font-weight: 700;
+            color: #212529;
+            width: 120px; /* Fixed width for amount */
+            text-align: right;
+            margin-bottom: 6px; /* Add space between amount and buttons */
+        }
+
+        .expense-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+            justify-content: flex-end; /* Align buttons to the right */
+        }
     </style>
 </head>
 <body>
@@ -337,7 +353,7 @@
                                                                 <span>{{ ucfirst(str_replace('_', ' ', $expense->payment_method)) }}</span>
                                                             </div>
                                                         </div>
-                                                        <div class="text-end">
+                                                        <div class="text-end d-flex flex-column">
                                                             <div class="expense-amount">₱{{ number_format($expense->amount, 2) }}</div>
                                                             <div class="expense-actions">
                                                                 <button class="btn-action-icon edit" onclick="editExpense({{ $expense->expense_id }})" title="Edit">
@@ -580,12 +596,12 @@
                     
                     <form id="budgetForm">
                         <div class="mb-3">
-                            <label for="budgetAmount" class="form-label">Amount (₱)</label>
+                            <label for="budgetAmount" class="form-label required-field">Amount (₱)</label>
                             <input type="number" class="form-control" id="budgetAmount" name="amount" step="0.01" min="0.01" max="1000000" required>
                             <div id="amountError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                         </div>
                         <div class="mb-3">
-                            <label for="budgetType" class="form-label">Budget Type</label>
+                            <label for="budgetType" class="form-label required-field">Budget Type</label>
                             <select class="form-select" id="budgetType" name="budget_type_id" required>
                                 <option value="">Select Budget Type</option>
                                 @foreach($budgetTypes as $type)
@@ -596,12 +612,12 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="budgetStartDate" class="form-label">Start Date</label>
+                                <label for="budgetStartDate" class="form-label required-field">Start Date</label>
                                 <input type="date" class="form-control" id="budgetStartDate" name="start_date" required>
                                 <div id="start_dateError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="budgetEndDate" class="form-label">End Date</label>
+                                <label for="budgetEndDate" class="form-label required-field">End Date</label>
                                 <input type="date" class="form-control" id="budgetEndDate" name="end_date" required>
                                 <div id="end_dateError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                             </div>
@@ -1154,32 +1170,42 @@
                     updateDashboardStats();
                 },
                 error: function(xhr) {
-                    if (xhr.status === 422) {
-                        // Validation errors
+                    console.log("Error response:", xhr.responseJSON);
+                    
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                         const errors = xhr.responseJSON.errors;
                         let hasGeneralErrors = false;
                         
-                        // Display errors next to form fields
-                        for (const field in errors) {
+                        // Display specific field errors
+                        Object.keys(errors).forEach(field => {
                             const errorMsg = errors[field][0];
-                            const errorElement = $('#' + field + 'Error');
                             
-                            if (errorElement.length > 0) {
-                                errorElement.text(errorMsg).show();
-                            } else {
-                                // If no specific error element, show in general error area
-                                $('#generalBudgetError').append('<div>' + errorMsg + '</div>');
+                            // Direct mapping for field IDs (these match exactly)
+                            if ($('#' + field + 'Error').length) {
+                                $('#' + field + 'Error').text(errorMsg).show();
+                            } 
+                            // Special case for budget_type_id
+                            else if (field === 'budget_type_id') {
+                                $('#budget_type_idError').text(errorMsg).show();
+                            }
+                            // For any other fields without direct matches
+                            else {
+                                $('#generalBudgetError').append('<div>' + field + ': ' + errorMsg + '</div>');
                                 hasGeneralErrors = true;
                             }
-                        }
+                        });
                         
-                        // Only show general error container if it has content
+                        // Show the general error container if needed
                         if (hasGeneralErrors) {
                             $('#generalBudgetError').show();
                         }
+                        
+                        // Show a toast notification for form validation errors
+                        toastr.error('Please correct the errors in the form');
                     } else {
-                        // Show general error message for other errors
-                        toastr.error('An error occurred while saving the budget allocation. Please try again.');
+                        // Show general error for non-validation errors
+                        $('#generalBudgetError').html('<div>An error occurred while saving the budget. Please try again.</div>').show();
+                        toastr.error('An error occurred while saving the budget. Please try again.');
                     }
                 },
                 complete: function() {
@@ -1455,7 +1481,7 @@
         }
 
         // Update recent expenses list
-        function updateRecentExpenses(expenses) {
+       function updateRecentExpenses(expenses) {
             const container = $('#recentExpensesContainer');
             
             // Clear current content
@@ -1473,7 +1499,7 @@
                                         <span class="ms-2">${formatDate(expense.date)}</span>
                                     </div>
                                 </div>
-                                <div class="text-end">
+                                <div class="text-end d-flex flex-column">
                                     <div class="expense-amount">₱${formatNumber(expense.amount)}</div>
                                     <div class="expense-actions">
                                         <button class="btn-action-icon edit" onclick="editExpense(${expense.expense_id})">
@@ -1741,10 +1767,15 @@
             
             if (expenses && expenses.length > 0) {
                 expenses.forEach(expense => {
-                    // Create receipt file link column
+                    // Improved receipt file link handling
                     let receiptFileHtml = '<span class="text-muted">No file</span>';
                     if (expense.receipt_path) {
-                        receiptFileHtml = `<a href="${expense.receipt_path}" target="_blank" class="btn btn-sm btn-outline-info">
+                        // Ensure the receipt path has the proper URL
+                        const receiptUrl = expense.receipt_path.startsWith('http') 
+                            ? expense.receipt_path 
+                            : "{{ asset('storage') }}/" + expense.receipt_path;
+                        
+                        receiptFileHtml = `<a href="${receiptUrl}" target="_blank" class="btn btn-sm btn-outline-info">
                             <i class="bi bi-file-earmark"></i> View
                         </a>`;
                     }
