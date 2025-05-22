@@ -40,29 +40,29 @@ class ExpenseTrackerController extends Controller
         
         // Calculate date ranges for filtering
         $currentMonth = Carbon::now()->format('Y-m');
-        $startDate = Carbon::now()->startOfMonth();
-        $endDate = Carbon::now()->endOfMonth();
-        
-        // Get filter parameters
         $categoryId = $request->input('category_id', '');
         $month = $request->input('month', $currentMonth);
         
+        // Create query for expenses
+        $expensesQuery = Expense::with(['category', 'creator']);
+        
+        // Apply category filter if provided
+        if ($categoryId) {
+            $expensesQuery->where('category_id', $categoryId);
+        }
+        
+        // Apply date filter only if month is provided, otherwise get all data
         if ($month) {
             $dateParts = explode('-', $month);
             if (count($dateParts) == 2) {
                 $startDate = Carbon::createFromDate($dateParts[0], $dateParts[1], 1)->startOfMonth();
                 $endDate = Carbon::createFromDate($dateParts[0], $dateParts[1], 1)->endOfMonth();
+                $expensesQuery->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
             }
         }
         
-        // Get expenses for the selected period
-        $expenses = Expense::with(['category', 'creator'])
-            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
-            ->when($categoryId, function($query) use ($categoryId) {
-                return $query->where('category_id', $categoryId);
-            })
-            ->orderBy('date', 'desc')
-            ->get();
+        // Execute query and order by date
+        $expenses = $expensesQuery->orderBy('date', 'desc')->get();
         
         // Get latest budget allocation
         $currentBudget = BudgetAllocation::with('budgetType')
@@ -116,7 +116,7 @@ class ExpenseTrackerController extends Controller
             'currentBudget',
             'stats',
             'categoryId',
-            'month', // Changed from dateFilter to month for consistency
+            'month',
             'chartData'
         ));
     }

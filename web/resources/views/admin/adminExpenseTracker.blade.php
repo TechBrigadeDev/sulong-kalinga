@@ -293,7 +293,12 @@
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <input type="month" class="form-control form-control-sm" id="monthFilter" value="{{ $dateFilter ?? date('Y-m') }}">
+                                    <div class="input-group">
+                                        <input type="month" class="form-control form-control-sm" id="monthFilter" value="{{ $month ?? date('Y-m') }}">
+                                        <button class="btn btn-sm btn-outline-info" type="button" id="clearMonthFilter">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -826,6 +831,19 @@
             
             // Load and display initial statistics
             updateDashboardStats();
+
+            // Handle month input clearing
+            $('#monthFilter').on('input', function() {
+                if ($(this).val() === '') {
+                    // Trigger dashboard update when month filter is cleared
+                    updateDashboardWithFilters();
+                }
+            });
+
+             $('#clearMonthFilter').on('click', function() {
+                $('#monthFilter').val('');
+                updateDashboardWithFilters();
+            });
             
             // Button event listeners
             $('#addExpenseBtn').on('click', function() {
@@ -1300,7 +1318,6 @@
             // Show loading spinners
             $('#expensesSpinner').removeClass('d-none');
             $('#chartSpinner').show();
-            $('#statsSpinner').removeClass('d-none');
             $('#activitiesSpinner').removeClass('d-none');
             
             // Update expenses period badge
@@ -1312,12 +1329,10 @@
                 method: 'GET',
                 data: {
                     category_id: category,
-                    month: month,
-                    format: 'json' // Request JSON response instead of HTML
+                    month: month, // If empty, controller will return all-time data
+                    format: 'json'
                 },
                 success: function(response) {
-                    console.log("Received response:", response); // Debug the response
-                    
                     // Update statistics
                     if (response.stats) {
                         updateStatistics(response.stats);
@@ -1355,7 +1370,6 @@
                     // Hide loading spinners
                     $('#expensesSpinner').addClass('d-none');
                     $('#chartSpinner').hide();
-                    $('#statsSpinner').addClass('d-none');
                     $('#activitiesSpinner').addClass('d-none');
                 }
             });
@@ -1589,10 +1603,13 @@
             }
         }
 
-        // Initial dashboard stats - UPDATED to use the same approach
+        // Also update the initial stats function
         function updateDashboardStats() {
             const category = $('#categoryFilter').val();
             const month = $('#monthFilter').val();
+            
+            // Update the period badge immediately
+            $('#expensesPeriodBadge').text(month ? new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'All Time');
             
             // Show the spinners for both areas being updated
             $('#expensesSpinner').removeClass('d-none');
