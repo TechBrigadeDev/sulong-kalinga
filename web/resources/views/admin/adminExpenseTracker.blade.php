@@ -1174,37 +1174,52 @@
                     
                     if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                         const errors = xhr.responseJSON.errors;
-                        let hasGeneralErrors = false;
                         
-                        // Display specific field errors
-                        Object.keys(errors).forEach(field => {
-                            const errorMsg = errors[field][0];
-                            
-                            // Direct mapping for field IDs (these match exactly)
-                            if ($('#' + field + 'Error').length) {
-                                $('#' + field + 'Error').text(errorMsg).show();
-                            } 
-                            // Special case for budget_type_id
-                            else if (field === 'budget_type_id') {
-                                $('#budget_type_idError').text(errorMsg).show();
-                            }
-                            // For any other fields without direct matches
-                            else {
-                                $('#generalBudgetError').append('<div>' + field + ': ' + errorMsg + '</div>');
-                                hasGeneralErrors = true;
-                            }
-                        });
+                        // Clear and hide all error containers first
+                        $('.budget-error').text('').hide();
+                        $('#generalBudgetError').empty().hide();
                         
-                        // Show the general error container if needed
-                        if (hasGeneralErrors) {
-                            $('#generalBudgetError').show();
+                        let errorMessages = [];
+                        
+                        // Process each error type and display in both specific and general containers
+                        if (errors.description) {
+                            $('#descriptionError').text(errors.description[0]).css('display', 'block');
+                            errorMessages.push(`Description: ${errors.description[0]}`);
                         }
                         
-                        // Show a toast notification for form validation errors
+                        if (errors.amount) {
+                            $('#amountError').text(errors.amount[0]).css('display', 'block');
+                            errorMessages.push(`Amount: ${errors.amount[0]}`);
+                        }
+                        
+                        if (errors.budget_type_id) {
+                            $('#budget_type_idError').text(errors.budget_type_id[0]).css('display', 'block');
+                            errorMessages.push(`Budget Type: ${errors.budget_type_id[0]}`);
+                        }
+                        
+                        if (errors.start_date) {
+                            $('#start_dateError').text(errors.start_date[0]).css('display', 'block');
+                            errorMessages.push(`Start Date: ${errors.start_date[0]}`);
+                        }
+                        
+                        if (errors.end_date) {
+                            $('#end_dateError').text(errors.end_date[0]).css('display', 'block');
+                            errorMessages.push(`End Date: ${errors.end_date[0]}`);
+                        }
+                        
+                        // Always display errors in general container for visibility
+                        if (errorMessages.length > 0) {
+                            errorMessages.forEach(msg => {
+                                $('#generalBudgetError').append(`<div>${msg}</div>`);
+                            });
+                            $('#generalBudgetError').css('display', 'block');
+                        }
+                        
+                        // Show toast notification
                         toastr.error('Please correct the errors in the form');
                     } else {
                         // Show general error for non-validation errors
-                        $('#generalBudgetError').html('<div>An error occurred while saving the budget. Please try again.</div>').show();
+                        $('#generalBudgetError').html('<div>An error occurred while saving the budget. Please try again.</div>').css('display', 'block');
                         toastr.error('An error occurred while saving the budget. Please try again.');
                     }
                 },
