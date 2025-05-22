@@ -1057,6 +1057,7 @@
         function saveExpense() {
             // Clear previous error messages
             $('.expense-error').text('').hide();
+            $('#generalExpenseError').empty().hide();
             
             // Create FormData object to handle file uploads
             let formData = new FormData($('#expenseForm')[0]);
@@ -1078,22 +1079,18 @@
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    if (response.success) {
-                        // Close modal and show success message
-                        $('#addExpenseModal').modal('hide');
-                        toastr.success(response.message);
-                        
-                        // Update dashboard data
-                        updateDashboardStats();
-                    } else {
-                        // Show error message
-                        toastr.error(response.message || 'An error occurred while saving the expense.');
-                    }
+                    // Close modal and show success message
+                    $('#addExpenseModal').modal('hide');
+                    toastr.success(response.message || 'Expense saved successfully');
+                    
+                    // Update dashboard data
+                    updateDashboardStats();
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
                         // Validation errors
                         const errors = xhr.responseJSON.errors;
+                        let hasGeneralErrors = false;
                         
                         // Display errors next to form fields
                         for (const field in errors) {
@@ -1104,12 +1101,15 @@
                                 errorElement.text(errorMsg).show();
                             } else {
                                 // If no specific error element, show in general error area
-                                $('#generalExpenseError').append('<div>' + errorMsg + '</div>').show();
+                                $('#generalExpenseError').append('<div>' + errorMsg + '</div>');
+                                hasGeneralErrors = true;
                             }
                         }
                         
-                        // Show general error message
-                        $('#generalExpenseError').show();
+                        // Only show general error container if it has content
+                        if (hasGeneralErrors) {
+                            $('#generalExpenseError').show();
+                        }
                     } else {
                         // Show general error message for other errors
                         toastr.error('An error occurred while saving the expense. Please try again.');
@@ -1126,6 +1126,7 @@
         function saveBudget() {
             // Clear previous error messages
             $('.budget-error').text('').hide();
+            $('#generalBudgetError').empty().hide();
             
             const formData = {
                 amount: $('#budgetAmount').val(),
@@ -1145,22 +1146,18 @@
                 method: currentBudgetId ? 'PUT' : 'POST',
                 data: formData,
                 success: function(response) {
-                    if (response.success) {
-                        // Close modal and show success message
-                        $('#addBudgetModal').modal('hide');
-                        toastr.success(response.message);
-                        
-                        // Update dashboard data
-                        updateDashboardStats();
-                    } else {
-                        // Show error message
-                        toastr.error(response.message || 'An error occurred while saving the budget allocation.');
-                    }
+                    // Close modal and show success message
+                    $('#addBudgetModal').modal('hide');
+                    toastr.success(response.message || 'Budget allocation saved successfully');
+                    
+                    // Update dashboard data
+                    updateDashboardStats();
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
                         // Validation errors
                         const errors = xhr.responseJSON.errors;
+                        let hasGeneralErrors = false;
                         
                         // Display errors next to form fields
                         for (const field in errors) {
@@ -1171,12 +1168,15 @@
                                 errorElement.text(errorMsg).show();
                             } else {
                                 // If no specific error element, show in general error area
-                                $('#generalBudgetError').append('<div>' + errorMsg + '</div>').show();
+                                $('#generalBudgetError').append('<div>' + errorMsg + '</div>');
+                                hasGeneralErrors = true;
                             }
                         }
                         
-                        // Show general error message
-                        $('#generalBudgetError').show();
+                        // Only show general error container if it has content
+                        if (hasGeneralErrors) {
+                            $('#generalBudgetError').show();
+                        }
                     } else {
                         // Show general error message for other errors
                         toastr.error('An error occurred while saving the budget allocation. Please try again.');
