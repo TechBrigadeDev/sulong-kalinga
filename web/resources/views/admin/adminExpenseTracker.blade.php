@@ -867,6 +867,14 @@
             $('#resetBudgetFilter').on('click', function() {
                 resetBudgetFilter();
             });
+
+            $('#addExpenseModal').on('hidden.bs.modal', function() {
+                clearExpenseForm();
+            });
+            
+            $('#addBudgetModal').on('hidden.bs.modal', function() {
+                clearBudgetForm();
+            });
             
             // Load and display initial statistics
             updateDashboardStats();
@@ -1043,6 +1051,8 @@
             currentExpenseId = null;
             $('#expenseId').val('');
             $('#expenseForm')[0].reset();
+            
+            // Reset form validations
             $('#expenseTitle').removeClass('is-invalid');
             $('#expenseCategory').removeClass('is-invalid');
             $('#expenseAmount').removeClass('is-invalid');
@@ -1051,9 +1061,13 @@
             $('#expenseReceiptNumber').removeClass('is-invalid');
             $('#expenseDescription').removeClass('is-invalid');
             $('#expenseReceipt').removeClass('is-invalid');
-            $('#receiptPreview').hide();
+            
+            // Clear all error messages (enhanced)
             $('.expense-error').text('').hide();
             $('#generalExpenseError').empty().hide();
+            
+            // Hide receipt preview
+            $('#receiptPreview').hide();
         }
 
         // Clear budget form
@@ -1061,10 +1075,14 @@
             currentBudgetId = null;
             $('#budgetId').val('');
             $('#budgetForm')[0].reset();
+            
+            // Reset form validations
             $('#budgetAmount').removeClass('is-invalid');
             $('#budgetStartDate').removeClass('is-invalid');
             $('#budgetEndDate').removeClass('is-invalid');
             $('#budgetType').removeClass('is-invalid');
+            
+            // Clear all error messages (enhanced)
             $('.budget-error').text('').hide();
             $('#generalBudgetError').empty().hide();
         }
@@ -1232,11 +1250,17 @@
 
         // Edit expense
         function editExpense(id) {
+            // Clear any existing form data and errors first
+            clearExpenseForm();
+            
             // Store the expense ID for use in the save function
             currentExpenseId = id;
             
-            // Show loading state
-            $('#expenseModalContent').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading expense details...</p></div>');
+            // Update modal title
+            $('#expenseModalLabel').text('Edit Expense');
+            
+            // Show loading state on the modal
+            $('#saveExpenseBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
             // Fetch expense details
             $.ajax({
@@ -1254,21 +1278,33 @@
                     $('#expenseReceiptNumber').val(expense.receipt_number);
                     $('#expenseDescription').val(expense.description);
                     
-                    // Update modal title
-                    $('#expenseModalLabel').text('Edit Expense');
+                    // Handle receipt preview if available
+                    if (expense.receipt_path) {
+                        const receiptUrl = expense.receipt_path.startsWith('http') 
+                            ? expense.receipt_path 
+                            : "{{ asset('storage') }}/" + expense.receipt_path;
+                        $('#receiptLink').attr('href', receiptUrl);
+                        $('#receiptPreview').show();
+                    } else {
+                        $('#receiptPreview').hide();
+                    }
+                    
+                    // Reset button state
+                    $('#saveExpenseBtn').text('Update Expense').prop('disabled', false);
                     
                     // Show the modal if not already visible
                     $('#addExpenseModal').modal('show');
                 },
                 error: function() {
                     toastr.error('Failed to load expense details');
+                    $('#saveExpenseBtn').text('Save').prop('disabled', false);
                 }
             });
         }
 
         // Edit budget
         function editBudget(id) {
-            // Clear the form first
+            // Clear the form first - ensures any previous errors are gone
             clearBudgetForm();
             
             // Set current ID for update operation
@@ -1276,8 +1312,8 @@
             
             // Show loading spinner
             $('#budgetModalTitle').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+            $('#saveBudgetBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
-            // FIXED: Correctly include the ID parameter in the route
             $.ajax({
                 url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
                 method: 'GET',
@@ -1294,11 +1330,15 @@
                     // Update modal title
                     $('#budgetModalTitle').text('Edit Budget Allocation');
                     
+                    // Reset button state
+                    $('#saveBudgetBtn').text('Update Budget').prop('disabled', false);
+                    
                     // Show the modal
-                    new bootstrap.Modal(document.getElementById('addBudgetModal')).show();
+                    $('#addBudgetModal').modal('show');
                 },
                 error: function() {
                     toastr.error('Failed to load budget details. Please try again later.');
+                    $('#saveBudgetBtn').text('Save').prop('disabled', false);
                 }
             });
         }
