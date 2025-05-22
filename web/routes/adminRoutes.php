@@ -228,12 +228,14 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/get-expense/{id}', [ExpenseTrackerController::class, 'getExpense'])->name('get');
         Route::post('/update-expense/{id}', [ExpenseTrackerController::class, 'updateExpense'])->name('update');
         Route::post('/delete-expense', [ExpenseTrackerController::class, 'deleteExpense'])->name('delete');
+        Route::put('/expense/{id}', [ExpenseTrackerController::class, 'updateExpense'])->name('update');
         
         // Budget CRUD routes
         Route::post('/store-budget', [ExpenseTrackerController::class, 'storeBudget'])->name('budget.store');
         Route::get('/get-budget/{id}', [ExpenseTrackerController::class, 'getBudgetAllocation'])->name('budget.get');
         Route::post('/update-budget/{id}', [ExpenseTrackerController::class, 'updateBudget'])->name('budget.update');
         Route::post('/delete-budget', [ExpenseTrackerController::class, 'deleteBudget'])->name('budget.delete');
+        Route::put('/budget/{id}', [ExpenseTrackerController::class, 'updateBudget'])->name('budget.update'); // Add this line
         
         // Filter routes
         Route::get('/filtered-expenses', [ExpenseTrackerController::class, 'getFilteredExpenses'])->name('filtered');

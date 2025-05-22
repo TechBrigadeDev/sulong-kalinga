@@ -1104,11 +1104,12 @@
             // Show loading indicator
             $('#saveExpenseBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...').prop('disabled', true);
             
+            // Use named route for both create and update to ensure consistency
             $.ajax({
                 url: currentExpenseId 
-                    ? '{{ url("admin/expense-tracker/expense") }}/' + currentExpenseId 
+                    ? '{{ route("admin.expense.update", ["id" => "_id_"]) }}'.replace('_id_', currentExpenseId) 
                     : '{{ route("admin.expense.store") }}',
-                method: 'POST',
+                method: 'POST', // Always use POST with _method for PUT
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -1122,7 +1123,7 @@
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
-                        // Validation errors
+                        // Validation errors handling
                         const errors = xhr.responseJSON.errors;
                         let hasGeneralErrors = false;
                         
@@ -1145,7 +1146,8 @@
                             $('#generalExpenseError').show();
                         }
                     } else {
-                        // Show general error message for other errors
+                        // Show error details for debugging
+                        console.error('Error saving expense:', xhr);
                         toastr.error('An error occurred while saving the expense. Please try again.');
                     }
                 },
@@ -1175,7 +1177,7 @@
             
             $.ajax({
                 url: currentBudgetId 
-                    ? '{{ url("admin/expense-tracker/budget") }}/' + currentBudgetId 
+                    ? '{{ route("admin.expense.budget.update", ["id" => "_id_"]) }}'.replace('_id_', currentBudgetId) 
                     : '{{ route("admin.expense.budget.store") }}',
                 method: currentBudgetId ? 'PUT' : 'POST',
                 data: formData,
@@ -1257,14 +1259,14 @@
             currentExpenseId = id;
             
             // Update modal title
-            $('#expenseModalLabel').text('Edit Expense');
+            $('#expenseModalTitle').text('Edit Expense');
             
             // Show loading state on the modal
             $('#saveExpenseBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
-            // Fetch expense details
+            // Fetch expense details - Fix the URL format
             $.ajax({
-                url: "{{ route('admin.expense.get', '') }}/" + id,
+                url: '{{ route("admin.expense.get", "") }}/' + id,
                 type: 'GET',
                 success: function(response) {
                     const expense = response.expense;
@@ -1295,7 +1297,8 @@
                     // Show the modal if not already visible
                     $('#addExpenseModal').modal('show');
                 },
-                error: function() {
+                error: function(xhr) {
+                    console.error('Error loading expense:', xhr);
                     toastr.error('Failed to load expense details');
                     $('#saveExpenseBtn').text('Save').prop('disabled', false);
                 }
@@ -1322,8 +1325,22 @@
                     
                     // Populate form fields
                     $('#budgetAmount').val(budget.amount);
-                    $('#budgetStartDate').val(budget.start_date);
-                    $('#budgetEndDate').val(budget.end_date);
+                    
+                    // Properly format dates to YYYY-MM-DD format for date inputs
+                    if (budget.start_date) {
+                        // Handle different possible date formats
+                        const startDate = new Date(budget.start_date);
+                        const formattedStartDate = startDate.toISOString().split('T')[0]; // Get YYYY-MM-DD part
+                        $('#budgetStartDate').val(formattedStartDate);
+                    }
+                    
+                    if (budget.end_date) {
+                        // Handle different possible date formats
+                        const endDate = new Date(budget.end_date);
+                        const formattedEndDate = endDate.toISOString().split('T')[0]; // Get YYYY-MM-DD part
+                        $('#budgetEndDate').val(formattedEndDate);
+                    }
+                    
                     $('#budgetType').val(budget.budget_type_id);
                     $('#budgetDescription').val(budget.description);
                     
@@ -1336,7 +1353,8 @@
                     // Show the modal
                     $('#addBudgetModal').modal('show');
                 },
-                error: function() {
+                error: function(xhr) {
+                    console.error('Failed to load budget:', xhr);
                     toastr.error('Failed to load budget details. Please try again later.');
                     $('#saveBudgetBtn').text('Save').prop('disabled', false);
                 }

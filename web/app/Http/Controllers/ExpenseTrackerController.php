@@ -295,7 +295,6 @@ class ExpenseTrackerController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -304,18 +303,18 @@ class ExpenseTrackerController extends Controller
             $expense = Expense::findOrFail($id);
             $oldAmount = $expense->amount;
             
-            // Handle receipt file upload
+            // Only handle receipt file upload if a new file is provided
             if ($request->hasFile('receipt')) {
-                // Delete old receipt if exists
+                // Delete old file if it exists
                 if ($expense->receipt_path && Storage::disk('public')->exists($expense->receipt_path)) {
                     Storage::disk('public')->delete($expense->receipt_path);
                 }
                 
-                $file = $request->file('receipt');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $receiptPath = $file->storeAs('receipts', $fileName, 'public');
+                // Store new file
+                $receiptPath = $request->file('receipt')->store('receipts', 'public');
                 $expense->receipt_path = $receiptPath;
             }
+            // Important: Don't modify receipt_path if no new file is uploaded
             
             // Update expense fields
             $expense->title = $request->title;
@@ -338,10 +337,10 @@ class ExpenseTrackerController extends Controller
             );
             
             // Create notification for all admins
-                $this->createNotificationForAdmins(
-                    'Expense Updated',
-                    'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
-                );
+            $this->createNotificationForAdmins(
+                'Expense Updated',
+                'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+            );
             
             return response()->json([
                 'success' => true,
