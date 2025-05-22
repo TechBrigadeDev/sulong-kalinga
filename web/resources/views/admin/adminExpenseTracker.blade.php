@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>COSE - Expense Tracker</title>
+    <title>Expense Tracker</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -159,6 +159,53 @@
             align-items: center;
             z-index: 1000;
             border-radius: 0.5rem;
+        }
+
+        .recent-activity-item {
+            padding: 12px;
+            border-radius: 0.5rem;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            transition: all 0.2s ease;
+        }
+
+        .recent-activity-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .activity-icon.expense {
+            background-color: #0d6efd;
+        }
+
+        .activity-icon.budget {
+            background-color: #198754;
+        }
+
+        .activity-title {
+            font-weight: 600;
+        }
+
+        .activity-description {
+            font-size: 0.85rem;
+            margin-top: 4px;
+            color: #6c757d;
+        }
+
+        .activity-creator {
+            margin-top: 6px;
+            font-size: 0.8rem;
         }
     </style>
 </head>
@@ -387,20 +434,24 @@
                                 </div>
                             </div>
                             
-                            <!-- Budget Progress -->
-                            <div class="card expense-card mt-3">
+                            <!-- Replace the budget progress card with this -->
+                            <div class="card expense-card mb-3">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                    <h6 class="card-title mb-0">Recent Activities</h6>
+                                    <div class="position-relative">
+                                        <div id="activitiesSpinner" class="spinner-border spinner-border-sm text-primary d-none" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title">Budget Progress</h5>
-                                    <div class="progress mb-2" style="height: 20px;">
-                                        <div class="progress-bar" role="progressbar" id="budgetProgressBar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <small id="budgetStartDate">Start: -</small>
-                                        <small id="budgetEndDate">End: -</small>
-                                    </div>
-                                    <div class="d-flex justify-content-between">
-                                        <span class="text-success" id="budgetLeft">₱0 remaining</span>
-                                        <span class="text-muted" id="budgetTotal">of ₱0 total</span>
+                                    <div id="recentActivitiesContainer">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2">Loading activities...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1244,12 +1295,12 @@
             
             // Show loading spinners
             $('#expensesSpinner').removeClass('d-none');
-            $('#budgetSpinner').removeClass('d-none');
+            $('#activitiesSpinner').removeClass('d-none'); // Changed from budgetSpinner
             
             // Update expenses period badge
             $('#expensesPeriodBadge').text(month ? new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'All Time');
             
-            // Make AJAX call to get filtered data - UPDATED to use the main route with a format parameter
+            // Make AJAX call to get filtered data
             $.ajax({
                 url: '{{ route("admin.expense.index") }}',
                 method: 'GET',
@@ -1277,8 +1328,8 @@
                     // Update budget history
                     updateBudgetHistory(response.recentBudgets);
                     
-                    // Update budget progress
-                    updateBudgetProgress(response.currentBudget, response.stats);
+                    // Update recent activities (new function)
+                    updateRecentActivities(response.recentExpenses, response.recentBudgets);
                 },
                 error: function() {
                     toastr.error('Failed to update dashboard data. Please try again later.');
@@ -1286,7 +1337,7 @@
                 complete: function() {
                     // Hide loading spinners
                     $('#expensesSpinner').addClass('d-none');
-                    $('#budgetSpinner').addClass('d-none');
+                    $('#activitiesSpinner').addClass('d-none'); // Changed from budgetSpinner
                 }
             });
         }
@@ -1404,51 +1455,111 @@
             }
         }
 
-        // Update budget progress
-        function updateBudgetProgress(budget, stats) {
-            if (budget) {
-                // Update current budget display
-                $('#currentBudget').text(`₱${formatNumber(budget.amount)}`);
-                $('#budgetPeriod').text(`${formatDate(budget.start_date)} - ${formatDate(budget.end_date)}`);
-                
-                // Update budget remaining
-                const remaining = budget.amount - (stats.totalExpenses || 0);
-                $('#budgetRemaining').text(`₱${formatNumber(remaining)}`);
-                
-                // Update budget used percent
-                const usedPercentage = budget.amount > 0 ? Math.min(100, ((stats.totalExpenses || 0) / budget.amount) * 100).toFixed(1) : 0;
-                $('#budgetUsedPercent').text(`${usedPercentage}% of budget used`);
-                
-                // Update progress bar
-                $('#budgetProgressBar').css('width', `${usedPercentage}%`).text(`${usedPercentage}%`);
-                                // Set progress bar color based on usage
-                if (usedPercentage > 90) {
-                    $('#budgetProgressBar').removeClass('bg-success bg-warning').addClass('bg-danger');
-                } else if (usedPercentage > 70) {
-                    $('#budgetProgressBar').removeClass('bg-success bg-danger').addClass('bg-warning');
-                } else {
-                    $('#budgetProgressBar').removeClass('bg-warning bg-danger').addClass('bg-success');
-                }
-                
-                // Update start and end dates
-                $('#budgetStartDate').text(`Start: ${formatDate(budget.start_date)}`);
-                $('#budgetEndDate').text(`End: ${formatDate(budget.end_date)}`);
-                
-                // Update remaining amount
-                $('#budgetLeft').text(`₱${formatNumber(remaining)} remaining`);
-                $('#budgetTotal').text(`of ₱${formatNumber(budget.amount)} total`);
+        function updateRecentActivities(recentExpenses, recentBudgets) {
+            const container = $('#recentActivitiesContainer');
+            container.html(''); // Clear existing content
+            
+            // Combine both expenses and budgets, then sort by date
+            const allActivities = [];
+            
+            // Add expenses to activities array
+            if (recentExpenses && recentExpenses.length > 0) {
+                recentExpenses.forEach(expense => {
+                    allActivities.push({
+                        type: 'expense',
+                        title: expense.title,
+                        amount: expense.amount,
+                        date: new Date(expense.date),
+                        category: expense.category ? expense.category.name : 'Uncategorized',
+                        color: expense.category ? expense.category.color_code : '#6c757d',
+                        created_by: expense.creator ? `${expense.creator.first_name} ${expense.creator.last_name}` : 'System'
+                    });
+                });
+            }
+            
+            // Add budgets to activities array
+            if (recentBudgets && recentBudgets.length > 0) {
+                recentBudgets.forEach(budget => {
+                    allActivities.push({
+                        type: 'budget',
+                        title: budget.budget_type ? budget.budget_type.name : 'Budget Allocation',
+                        amount: budget.amount,
+                        date: new Date(budget.created_at),
+                        description: budget.description || 'No description provided',
+                        created_by: budget.creator ? `${budget.creator.first_name} ${budget.creator.last_name}` : 'System'
+                    });
+                });
+            }
+            
+            // Sort by date (newest first)
+            allActivities.sort((a, b) => b.date - a.date);
+            
+            // Display up to 5 most recent activities
+            const activitiesToShow = allActivities.slice(0, 5);
+            
+            if (activitiesToShow.length > 0) {
+                activitiesToShow.forEach(activity => {
+                    let activityHtml;
+                    
+                    if (activity.type === 'expense') {
+                        activityHtml = `
+                            <div class="recent-activity-item">
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="activity-icon expense me-2">
+                                        <i class="bi bi-receipt"></i>
+                                    </div>
+                                    <div class="activity-title">
+                                        New expense: ${activity.title}
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <div class="activity-details">
+                                        <span class="badge" style="background-color: ${activity.color}">${activity.category}</span>
+                                        <small class="text-muted ms-2">${formatDate(activity.date)}</small>
+                                    </div>
+                                    <div class="activity-amount">
+                                        ₱${formatNumber(activity.amount)}
+                                    </div>
+                                </div>
+                                <div class="activity-creator">
+                                    <small class="text-muted">Created by: ${activity.created_by}</small>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Budget activity
+                        activityHtml = `
+                            <div class="recent-activity-item">
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="activity-icon budget me-2">
+                                        <i class="bi bi-wallet2"></i>
+                                    </div>
+                                    <div class="activity-title">
+                                        New budget: ${activity.title}
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <div class="activity-details">
+                                        <small class="text-muted">${formatDate(activity.date)}</small>
+                                    </div>
+                                    <div class="activity-amount ${activity.amount >= 0 ? 'budget-amount-positive' : 'budget-amount-negative'}">
+                                        ₱${formatNumber(activity.amount)}
+                                    </div>
+                                </div>
+                                <div class="activity-description">
+                                    <small>${activity.description}</small>
+                                </div>
+                                <div class="activity-creator">
+                                    <small class="text-muted">Created by: ${activity.created_by}</small>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    container.append(activityHtml);
+                });
             } else {
-                // No active budget
-                $('#currentBudget').text('₱0.00');
-                $('#budgetPeriod').text('No active budget');
-                $('#budgetRemaining').text('₱0.00');
-                $('#budgetUsedPercent').text('No active budget');
-                $('#budgetProgressBar').css('width', '0%').text('0%');
-                $('#budgetProgressBar').removeClass('bg-success bg-warning bg-danger');
-                $('#budgetStartDate').text('Start: -');
-                $('#budgetEndDate').text('End: -');
-                $('#budgetLeft').text('₱0 remaining');
-                $('#budgetTotal').text('of ₱0 total');
+                container.html('<div class="alert alert-info">No recent activities found.</div>');
             }
         }
 
@@ -1456,6 +1567,10 @@
         function updateDashboardStats() {
             const category = $('#categoryFilter').val();
             const month = $('#monthFilter').val();
+            
+            // Show the spinners for both areas being updated
+            $('#expensesSpinner').removeClass('d-none');
+            $('#activitiesSpinner').removeClass('d-none');
             
             $.ajax({
                 url: '{{ route("admin.expense.index") }}',
@@ -1478,11 +1593,25 @@
                         );
                     }
                     
-                    // Update budget progress
-                    updateBudgetProgress(response.currentBudget, response.stats);
+                    // Update recent expenses list 
+                    updateRecentExpenses(response.recentExpenses);
+                    
+                    // Update budget history
+                    updateBudgetHistory(response.recentBudgets);
+                    
+                    // Update recent activities - THIS WAS MISSING
+                    updateRecentActivities(response.recentExpenses, response.recentBudgets);
                 },
                 error: function() {
                     toastr.error('Failed to load dashboard data');
+                    
+                    // Clear loading indicators on error
+                    $('#recentActivitiesContainer').html('<div class="alert alert-danger">Failed to load activities</div>');
+                },
+                complete: function() {
+                    // Hide all spinners
+                    $('#expensesSpinner').addClass('d-none');
+                    $('#activitiesSpinner').addClass('d-none');
                 }
             });
         }
