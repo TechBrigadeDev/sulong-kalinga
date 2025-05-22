@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ViewAccountProfileApiController;
 use App\Http\Controllers\Api\WeeklyCarePlanApiController;
 use App\Http\Controllers\Api\MedicationScheduleApiController;
 use App\Http\Controllers\Api\InternalAppointmentsApiController;
+use App\Http\Controllers\Api\VisitationApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -110,4 +111,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
     // POST /internal-appointments/{id}/cancel - Cancel (archive) an internal appointment
     Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
+
+    // Visitation API (Read-Only for Mobile)
+    Route::get('/visitations', [VisitationApiController::class, 'index']);
+    Route::get('/visitations/{id}', [VisitationApiController::class, 'show']);
+    Route::get('/visitations/calendar-events', [VisitationApiController::class, 'calendarEvents']);
+    Route::get('/visitations/beneficiary/{id}', [VisitationApiController::class, 'showBeneficiary']);
+    Route::get('/visitations/beneficiaries', [VisitationApiController::class, 'listBeneficiaries']);
 });
