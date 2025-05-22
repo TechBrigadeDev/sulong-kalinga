@@ -243,11 +243,14 @@ class ExpenseTrackerController extends Controller
     public function getExpense($id)
     {
         try {
-            $expense = Expense::with(['category', 'creator', 'updater'])->findOrFail($id);
+            $expense = Expense::with('category')->findOrFail($id);
             
-            // Add receipt URL if exists
-            if ($expense->receipt_path) {
-                $expense->receipt_url = asset('storage/' . $expense->receipt_path);
+            // FIX: Get the raw database date value without any timezone conversion
+            $rawDate = $expense->getRawOriginal('date'); // Get the raw date from database
+            if ($rawDate) {
+                $expense->date = substr($rawDate, 0, 10); // Extract YYYY-MM-DD portion
+            } else {
+                $expense->date = $expense->date->format('Y-m-d');
             }
             
             return response()->json([
@@ -261,6 +264,7 @@ class ExpenseTrackerController extends Controller
             ], 500);
         }
     }
+
     
     /**
      * Update an expense
@@ -300,10 +304,106 @@ class ExpenseTrackerController extends Controller
         }
 
         try {
-            $expense = Expense::findOrFail($id);
-            $oldAmount = $expense->amount;
+        $expense = Expense::findOrFail($id);
+        
+        // Convert request values to appropriate types
+        $requestAmount = (float)$request->amount;
+        $requestCategoryId = (int)$request->category_id;
+        $requestDate = date('Y-m-d', strtotime($request->date));
+        $requestTitle = trim($request->title ?? '');
+        $requestPaymentMethod = trim($request->payment_method ?? '');
+        $requestReceiptNumber = trim($request->receipt_number ?? '');
+        $requestDescription = trim($request->description ?? '');
+        
+        // Convert database values to appropriate types
+        $dbAmount = (float)$expense->amount;
+        $dbCategoryId = (int)$expense->category_id;
+        $dbDate = $expense->date->format('Y-m-d');
+        $dbTitle = trim($expense->title ?? '');
+        $dbPaymentMethod = trim($expense->payment_method ?? '');
+        $dbReceiptNumber = trim($expense->receipt_number ?? '');
+        $dbDescription = trim($expense->description ?? '');
+        
+        // Initialize hasChanges to false
+        $hasChanges = false;
+        $changeDetails = [];
+        
+        // Log comparison details for debugging
+        \Log::debug('Expense update comparison', [
+            'title' => ['db' => $dbTitle, 'request' => $requestTitle, 'equal' => $dbTitle === $requestTitle],
+            'amount' => ['db' => $dbAmount, 'request' => $requestAmount, 'equal' => $dbAmount === $requestAmount],
+            'category_id' => ['db' => $dbCategoryId, 'request' => $requestCategoryId, 'equal' => $dbCategoryId === $requestCategoryId],
+            'payment_method' => ['db' => $dbPaymentMethod, 'request' => $requestPaymentMethod, 'equal' => $dbPaymentMethod === $requestPaymentMethod],
+            'date' => ['db' => $dbDate, 'request' => $requestDate, 'equal' => $dbDate === $requestDate],
+            'receipt_number' => ['db' => $dbReceiptNumber, 'request' => $requestReceiptNumber, 'equal' => $dbReceiptNumber === $requestReceiptNumber],
+            'description' => ['db' => $dbDescription, 'request' => $requestDescription, 'equal' => $dbDescription === $requestDescription],
+            'hasFile' => $request->hasFile('receipt')
+        ]);
+        
+        // Compare title with case-insensitive comparison
+        if (strcasecmp($dbTitle, $requestTitle) !== 0) {
+            $hasChanges = true;
+            $changeDetails[] = "Title changed from '{$dbTitle}' to '{$requestTitle}'";
+        }
+        
+        // Compare category ID
+        if ($dbCategoryId !== $requestCategoryId) {
+            $hasChanges = true;
+            $newCategory = ExpenseCategory::find($requestCategoryId)->name;
+            $oldCategory = ExpenseCategory::find($dbCategoryId)->name;
+            $changeDetails[] = "Category changed from '{$oldCategory}' to '{$newCategory}'";
+        }
+        
+        // Compare amount with fixed precision
+        if (number_format($dbAmount, 2) !== number_format($requestAmount, 2)) {
+            $hasChanges = true;
+            $changeDetails[] = "Amount changed from '₱" . number_format($dbAmount, 2) . "' to '₱" . number_format($requestAmount, 2) . "'";
+        }
+        
+        // Compare payment method
+        if ($dbPaymentMethod !== $requestPaymentMethod) {
+            $hasChanges = true;
+            $oldMethod = ucfirst(str_replace('_', ' ', $dbPaymentMethod));
+            $newMethod = ucfirst(str_replace('_', ' ', $requestPaymentMethod));
+            $changeDetails[] = "Payment method changed from '{$oldMethod}' to '{$newMethod}'";
+        }
+        
+        // Compare date
+        if ($dbDate !== $requestDate) {
+            $hasChanges = true;
+            $oldDate = Carbon::parse($dbDate)->format('M d, Y');
+            $newDate = Carbon::parse($requestDate)->format('M d, Y');
+            $changeDetails[] = "Date changed from '{$oldDate}' to '{$newDate}'";
+        }
+        
+        // Compare receipt number
+        if ($dbReceiptNumber !== $requestReceiptNumber) {
+            $hasChanges = true;
+            $changeDetails[] = "Receipt number changed from '{$dbReceiptNumber}' to '{$requestReceiptNumber}'";
+        }
+        
+        // Compare description
+        if ($dbDescription !== $requestDescription) {
+            $hasChanges = true;
+            $changeDetails[] = "Description was updated";
+        }
+        
+        // Check for new receipt file
+        if ($request->hasFile('receipt')) {
+            $hasChanges = true;
+            $changeDetails[] = "Receipt file was updated";
+        }
+        
+        // If nothing changed, return an error
+        if (!$hasChanges) {
+            \Log::info('No changes detected in expense update');
+            return response()->json([
+                'success' => false,
+                'message' => 'No changes were made to the expense.'
+            ], 422);
+        }
             
-            // Only handle receipt file upload if a new file is provided
+            // Handle receipt file upload if provided
             if ($request->hasFile('receipt')) {
                 // Delete old file if it exists
                 if ($expense->receipt_path && Storage::disk('public')->exists($expense->receipt_path)) {
@@ -314,7 +414,6 @@ class ExpenseTrackerController extends Controller
                 $receiptPath = $request->file('receipt')->store('receipts', 'public');
                 $expense->receipt_path = $receiptPath;
             }
-            // Important: Don't modify receipt_path if no new file is uploaded
             
             // Update expense fields
             $expense->title = $request->title;
@@ -327,19 +426,20 @@ class ExpenseTrackerController extends Controller
             $expense->updated_by = Auth::id();
             $expense->save();
             
-            // Create log entry
+            // Create log entry with detailed changes
             $this->logService->createLog(
                 'expense',
                 $expense->expense_id,
                 LogType::UPDATE,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated expense record',
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated expense record. ' . implode('. ', $changeDetails),
                 Auth::id()
             );
             
-            // Create notification for all admins
+            // Create notification for all admins with change details
             $this->createNotificationForAdmins(
                 'Expense Updated',
-                'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+                'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . 
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . '. ' . implode('. ', $changeDetails)
             );
             
             return response()->json([
@@ -498,7 +598,23 @@ class ExpenseTrackerController extends Controller
     public function getBudgetAllocation($id)
     {
         try {
-            $budget = BudgetAllocation::with(['budgetType', 'creator', 'updater'])->findOrFail($id);
+            $budget = BudgetAllocation::with('budgetType')->findOrFail($id);
+            
+            // FIX: Get the raw database date values without any timezone conversion
+            $rawStartDate = $budget->getRawOriginal('start_date');
+            $rawEndDate = $budget->getRawOriginal('end_date');
+            
+            if ($rawStartDate) {
+                $budget->start_date = substr($rawStartDate, 0, 10); // Extract YYYY-MM-DD portion
+            } else {
+                $budget->start_date = $budget->start_date->format('Y-m-d');
+            }
+            
+            if ($rawEndDate) {
+                $budget->end_date = substr($rawEndDate, 0, 10); // Extract YYYY-MM-DD portion
+            } else {
+                $budget->end_date = $budget->end_date->format('Y-m-d');
+            }
             
             return response()->json([
                 'success' => true,
@@ -542,37 +658,105 @@ class ExpenseTrackerController extends Controller
         }
 
         try {
-            $budget = BudgetAllocation::findOrFail($id);
-            $oldAmount = $budget->amount;
+            $budget = BudgetAllocation::with('budgetType')->findOrFail($id);
+            
+            // Format original values for precise comparison
+            $originalBudget = [
+                'amount' => (float)$budget->amount,
+                'budget_type_id' => (int)$budget->budget_type_id,
+                'budget_type_name' => $budget->budgetType->name,
+                'start_date' => $budget->start_date->format('Y-m-d'),
+                'end_date' => $budget->end_date->format('Y-m-d'),
+                'description' => trim($budget->description ?? '')
+            ];
+
+            // Format new values for precise comparison
+            $newBudget = [
+                'amount' => (float)$request->amount,
+                'budget_type_id' => (int)$request->budget_type_id,
+                'start_date' => date('Y-m-d', strtotime($request->start_date)),
+                'end_date' => date('Y-m-d', strtotime($request->end_date)),
+                'description' => trim($request->description ?? '')
+            ];
+            
+            // Initialize hasChanges to false and track changes
+            $hasChanges = false;
+            $changeDetails = [];
+            
+            // Compare amount (round to 2 decimals to avoid floating point issues)
+            if (round($originalBudget['amount'], 2) != round($newBudget['amount'], 2)) {
+                $hasChanges = true;
+                $changeDetails[] = "Amount changed from '₱" . number_format($originalBudget['amount'], 2) . "' to '₱" . number_format($newBudget['amount'], 2) . "'";
+            }
+            
+            // Compare budget type ID
+            if ($originalBudget['budget_type_id'] !== $newBudget['budget_type_id']) {
+                $hasChanges = true;
+                $newType = BudgetType::find($newBudget['budget_type_id'])->name;
+                $changeDetails[] = "Budget type changed from '{$originalBudget['budget_type_name']}' to '{$newType}'";
+            }
+            
+            // Compare dates
+            if ($originalBudget['start_date'] !== $newBudget['start_date']) {
+                $hasChanges = true;
+                $oldDate = Carbon::parse($originalBudget['start_date'])->format('M d, Y');
+                $newDate = Carbon::parse($newBudget['start_date'])->format('M d, Y');
+                $changeDetails[] = "Start date changed from '{$oldDate}' to '{$newDate}'";
+            }
+            
+            if ($originalBudget['end_date'] !== $newBudget['end_date']) {
+                $hasChanges = true;
+                $oldDate = Carbon::parse($originalBudget['end_date'])->format('M d, Y');
+                $newDate = Carbon::parse($newBudget['end_date'])->format('M d, Y');
+                $changeDetails[] = "End date changed from '{$oldDate}' to '{$newDate}'";
+            }
+            
+            // Compare descriptions (after trimming)
+            if ($originalBudget['description'] !== $newBudget['description']) {
+                $hasChanges = true;
+                $changeDetails[] = "Description was updated";
+            }
+            
+            // If nothing changed, return an error
+            if (!$hasChanges) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No changes were made to the budget allocation.'
+                ], 422);
+            }
             
             // Update budget fields
             $budget->amount = $request->amount;
+            $budget->budget_type_id = $request->budget_type_id;
             $budget->start_date = $request->start_date;
             $budget->end_date = $request->end_date;
-            $budget->budget_type_id = $request->budget_type_id;
             $budget->description = $request->description;
             $budget->updated_by = Auth::id();
             $budget->save();
             
-            // Create log entry
+            // Load budget type for notification
+            $budget->load('budgetType');
+            
+            // Create log entry with detailed changes
             $this->logService->createLog(
                 'budget_allocation',
                 $budget->budget_allocation_id,
                 LogType::UPDATE,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated budget allocation',
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated budget allocation. ' . implode('. ', $changeDetails),
                 Auth::id()
             );
             
-            // Create notification for all admins
+            // Create notification for all admins with change details
             $this->createNotificationForAdmins(
                 'Budget Allocation Updated',
-                'A budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been updated by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+                'A budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been updated by ' . 
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . '. ' . implode('. ', $changeDetails)
             );
             
             return response()->json([
                 'success' => true,
                 'message' => 'Budget allocation updated successfully',
-                'budget' => $budget->load('budgetType')
+                'budget' => $budget
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -581,7 +765,7 @@ class ExpenseTrackerController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Delete a budget allocation
      */

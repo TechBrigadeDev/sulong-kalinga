@@ -1123,6 +1123,12 @@
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
+                        // Check for no changes message
+                        if (xhr.responseJSON && xhr.responseJSON.message === 'No changes were made to the expense.') {
+                            toastr.info(xhr.responseJSON.message);
+                            return;
+                        }
+                        
                         // Validation errors handling
                         const errors = xhr.responseJSON.errors;
                         let hasGeneralErrors = false;
@@ -1190,15 +1196,14 @@
                     updateDashboardStats();
                 },
                 error: function(xhr) {
-                    console.log("Error response:", xhr.responseJSON);
-                    
-                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    if (xhr.status === 422) {
+                        // Check for no changes message
+                        if (xhr.responseJSON && xhr.responseJSON.message === 'No changes were made to the budget allocation.') {
+                            toastr.info(xhr.responseJSON.message);
+                            return;
+                        }
+                        
                         const errors = xhr.responseJSON.errors;
-                        
-                        // Clear and hide all error containers first
-                        $('.budget-error').text('').hide();
-                        $('#generalBudgetError').empty().hide();
-                        
                         let errorMessages = [];
                         
                         // Process each error type and display in both specific and general containers
@@ -1252,7 +1257,11 @@
 
         // Edit expense
         function editExpense(id) {
-            // Clear any existing form data and errors first
+            // Close any open modals first
+            $('#allExpensesModal').modal('hide');
+            $('#fullHistoryModal').modal('hide');
+            
+            // Clear any existing form data and errors
             clearExpenseForm();
             
             // Store the expense ID for use in the save function
@@ -1264,7 +1273,7 @@
             // Show loading state on the modal
             $('#saveExpenseBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
-            // Fetch expense details - Fix the URL format
+            // Fetch expense details
             $.ajax({
                 url: '{{ route("admin.expense.get", "") }}/' + id,
                 type: 'GET',
@@ -1276,7 +1285,47 @@
                     $('#expenseCategory').val(expense.category_id);
                     $('#expenseAmount').val(expense.amount);
                     $('#expensePaymentMethod').val(expense.payment_method);
-                    $('#expenseDate').val(expense.date.substring(0, 10)); // YYYY-MM-DD format
+                    
+                    // SAFER DATE HANDLING: Handle date without risking invalid Date objects
+                    if (expense.date) {
+                        try {
+                            console.log('Original date from server:', expense.date);
+                            
+                            // Use a reliable parsing method
+                            let parts = expense.date.split('-');
+                            if (parts.length === 3) {
+                                // Create date using year, month (0-based), day
+                                let year = parseInt(parts[0], 10);
+                                let month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+                                let day = parseInt(parts[2], 10) + 1; // Add one day to compensate for timezone
+                                
+                                // Create a new date and format it
+                                let dateObj = new Date(year, month, day);
+                                if (!isNaN(dateObj.getTime())) {
+                                    // Format as YYYY-MM-DD
+                                    let adjustedDate = dateObj.getFullYear() + '-' + 
+                                        String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(dateObj.getDate()).padStart(2, '0');
+                                        
+                                    $('#expenseDate').val(adjustedDate);
+                                    console.log('Adjusted date for form:', adjustedDate);
+                                } else {
+                                    // If still invalid, just use the original string
+                                    $('#expenseDate').val(expense.date);
+                                    console.log('Using original date - created date was invalid');
+                                }
+                            } else {
+                                // If format isn't as expected, use as is
+                                $('#expenseDate').val(expense.date);
+                                console.log('Using original date - unexpected format');
+                            }
+                        } catch (e) {
+                            // If any error occurs, fallback to original value
+                            console.error('Date parsing error:', e);
+                            $('#expenseDate').val(expense.date);
+                        }
+                    }
+                    
                     $('#expenseReceiptNumber').val(expense.receipt_number);
                     $('#expenseDescription').val(expense.description);
                     
@@ -1294,7 +1343,7 @@
                     // Reset button state
                     $('#saveExpenseBtn').text('Update Expense').prop('disabled', false);
                     
-                    // Show the modal if not already visible
+                    // Show the modal
                     $('#addExpenseModal').modal('show');
                 },
                 error: function(xhr) {
@@ -1307,6 +1356,10 @@
 
         // Edit budget
         function editBudget(id) {
+            // Close any open modals first
+            $('#allExpensesModal').modal('hide');
+            $('#fullHistoryModal').modal('hide');
+            
             // Clear the form first - ensures any previous errors are gone
             clearBudgetForm();
             
@@ -1326,19 +1379,80 @@
                     // Populate form fields
                     $('#budgetAmount').val(budget.amount);
                     
-                    // Properly format dates to YYYY-MM-DD format for date inputs
+                    // SAFER DATE HANDLING for start_date
                     if (budget.start_date) {
-                        // Handle different possible date formats
-                        const startDate = new Date(budget.start_date);
-                        const formattedStartDate = startDate.toISOString().split('T')[0]; // Get YYYY-MM-DD part
-                        $('#budgetStartDate').val(formattedStartDate);
+                        try {
+                            console.log('Original start date from server:', budget.start_date);
+                            
+                            // Use a reliable parsing method
+                            let parts = budget.start_date.split('-');
+                            if (parts.length === 3) {
+                                // Create date using year, month (0-based), day
+                                let year = parseInt(parts[0], 10);
+                                let month = parseInt(parts[1], 10) - 1;
+                                let day = parseInt(parts[2], 10) + 1; // Add one day
+                                
+                                // Create a new date and format it
+                                let dateObj = new Date(year, month, day);
+                                if (!isNaN(dateObj.getTime())) {
+                                    // Format as YYYY-MM-DD
+                                    let adjustedDate = dateObj.getFullYear() + '-' + 
+                                        String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(dateObj.getDate()).padStart(2, '0');
+                                        
+                                    $('#budgetStartDate').val(adjustedDate);
+                                    console.log('Adjusted start date for form:', adjustedDate);
+                                } else {
+                                    // If still invalid, just use the original string
+                                    $('#budgetStartDate').val(budget.start_date);
+                                }
+                            } else {
+                                // If format isn't as expected, use as is
+                                $('#budgetStartDate').val(budget.start_date);
+                            }
+                        } catch (e) {
+                            // If any error occurs, fallback to original value
+                            console.error('Start date parsing error:', e);
+                            $('#budgetStartDate').val(budget.start_date);
+                        }
                     }
                     
+                    // SAFER DATE HANDLING for end_date
                     if (budget.end_date) {
-                        // Handle different possible date formats
-                        const endDate = new Date(budget.end_date);
-                        const formattedEndDate = endDate.toISOString().split('T')[0]; // Get YYYY-MM-DD part
-                        $('#budgetEndDate').val(formattedEndDate);
+                        try {
+                            console.log('Original end date from server:', budget.end_date);
+                            
+                            // Use a reliable parsing method
+                            let parts = budget.end_date.split('-');
+                            if (parts.length === 3) {
+                                // Create date using year, month (0-based), day
+                                let year = parseInt(parts[0], 10);
+                                let month = parseInt(parts[1], 10) - 1;
+                                let day = parseInt(parts[2], 10) + 1; // Add one day
+                                
+                                // Create a new date and format it
+                                let dateObj = new Date(year, month, day);
+                                if (!isNaN(dateObj.getTime())) {
+                                    // Format as YYYY-MM-DD
+                                    let adjustedDate = dateObj.getFullYear() + '-' + 
+                                        String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(dateObj.getDate()).padStart(2, '0');
+                                        
+                                    $('#budgetEndDate').val(adjustedDate);
+                                    console.log('Adjusted end date for form:', adjustedDate);
+                                } else {
+                                    // If still invalid, just use the original string
+                                    $('#budgetEndDate').val(budget.end_date);
+                                }
+                            } else {
+                                // If format isn't as expected, use as is
+                                $('#budgetEndDate').val(budget.end_date);
+                            }
+                        } catch (e) {
+                            // If any error occurs, fallback to original value
+                            console.error('End date parsing error:', e);
+                            $('#budgetEndDate').val(budget.end_date);
+                        }
                     }
                     
                     $('#budgetType').val(budget.budget_type_id);
@@ -1960,6 +2074,12 @@
                 },
                 success: function(response) {
                     renderAllExpenses(response.expenses, response.pagination);
+
+                    // When attaching edit button event handlers
+                    $('.edit-expense-btn').on('click', function() {
+                        const expenseId = $(this).data('id');
+                        editExpense(expenseId); // This will now handle modal closing
+                    });
                 },
                 error: function(xhr) {
                     console.error('Filter request failed:', xhr);
@@ -2113,6 +2233,12 @@
                 },
                 success: function(response) {
                     renderFullBudgetHistory(response.budgets, response.pagination);
+
+                    // When attaching edit button event handlers
+                    $('.edit-budget-btn').on('click', function() {
+                        const budgetId = $(this).data('id');
+                        editBudget(budgetId); // This will now handle modal closing
+                    });
                 },
                 error: function(xhr) {
                     console.error('Filter request failed:', xhr);
