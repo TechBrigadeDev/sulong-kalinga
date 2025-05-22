@@ -919,6 +919,17 @@
             $('#exportFilteredBudgetsBtn').on('click', function() {
                 exportFilteredBudgetsToExcel();
             });
+
+            // Export buttons in main dropdown menu
+            $('#exportExpensesExcel').on('click', function(e) {
+                e.preventDefault();
+                exportExpensesToExcel();
+            });
+            
+            $('#exportBudgetsExcel').on('click', function(e) {
+                e.preventDefault();
+                exportBudgetsToExcel();
+            });
             
             // Confirm delete button
             $('#confirmDeleteBtn').on('click', function() {
@@ -1945,14 +1956,12 @@
 
         // Export expenses to Excel
         function exportExpensesToExcel() {
-            window.location.href = '{{ route("admin.expense.export.excel") }}';
-            toastr.success('Export started. The file will download shortly.');
+            submitExportForm('{{ route("admin.expense.export.excel") }}');
         }
 
         // Export budgets to Excel
         function exportBudgetsToExcel() {
-            window.location.href = '{{ route("admin.expense.budget.export.excel") }}';
-            toastr.success('Export started. The file will download shortly.');
+            submitExportForm('{{ route("admin.expense.budget.export.excel") }}');
         }
 
         // Export filtered expenses to Excel
@@ -1961,8 +1970,11 @@
             const startDate = $('#expensesFilterStartDate').val();
             const endDate = $('#expensesFilterEndDate').val();
             
-            window.location.href = `{{ route("admin.expense.export.excel") }}?category_id=${category || ''}&start_date=${startDate || ''}&end_date=${endDate || ''}`;
-            toastr.success('Export started. The file will download shortly.');
+            submitExportForm('{{ route("admin.expense.export.excel") }}', {
+                category_id: category || '',
+                start_date: startDate || '',
+                end_date: endDate || ''
+            });
         }
 
         // Export filtered budgets to Excel
@@ -1971,8 +1983,11 @@
             const startDate = $('#budgetFilterStartDate').val();
             const endDate = $('#budgetFilterEndDate').val();
             
-            window.location.href = `{{ route("admin.expense.budget.export.excel") }}?budget_type_id=${budgetType || ''}&start_date=${startDate || ''}&end_date=${endDate || ''}`;
-            toastr.success('Export started. The file will download shortly.');
+            submitExportForm('{{ route("admin.expense.budget.export.excel") }}', {
+                budget_type_id: budgetType || '',
+                start_date: startDate || '',
+                end_date: endDate || ''
+            });
         }
 
         // Format number with comma separators
@@ -2018,6 +2033,40 @@
             setTimeout(() => {
                 $('#successAlert').addClass('d-none');
             }, 5000);
+        }
+
+        // Helper function to submit POST requests for exports
+        function submitExportForm(route, params = {}) {
+            // Create a form element
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = route;
+            form.style.display = 'none';
+            
+            // Add CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = $('meta[name="csrf-token"]').attr('content');
+            form.appendChild(csrfToken);
+            
+            // Add any additional parameters
+            for (const key in params) {
+                if (params[key] !== null && params[key] !== undefined) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = params[key];
+                    form.appendChild(input);
+                }
+            }
+            
+            // Add form to body, submit it, and remove it
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            toastr.success('Export started. The file will download shortly.');
         }
     </script>
 </body>
