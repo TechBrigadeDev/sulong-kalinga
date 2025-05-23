@@ -797,25 +797,48 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="deleteModalTitle">Confirm Delete</h5>
+                    <h5 class="modal-title" id="deleteModalTitle">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Confirmation
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="deleteConfirmMessage">Are you sure you want to delete this item? This action cannot be undone.</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone!
+                    </div>
+                    
+                    <div id="deleteItemDetails" class="mb-3 border-bottom pb-3">
+                        <!-- Dynamically populated with item details -->
+                    </div>
+                    
+                    <p id="deleteConfirmMessage">You're about to permanently delete this item. Consider editing instead if you only need to make changes.</p>
                     
                     <form id="deleteConfirmationForm" class="mt-3">
                         <input type="hidden" id="deleteItemId">
                         <input type="hidden" id="deleteItemType">
                         
                         <div class="mb-3">
-                            <label for="confirmPassword" class="form-label required-field">Please enter your password to confirm</label>
-                            <input type="password" class="form-control" id="confirmPassword" name="password" required>
+                            <label for="confirmPassword" class="form-label required-field">For security, please enter your password to confirm deletion</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-danger text-white">
+                                    <i class="bi bi-key-fill"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirmPassword" name="password" required placeholder="Enter your password">
+                            </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="editInsteadOfDelete()">
+                        <i class="bi bi-pencil-square me-1"></i> Edit Instead
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="bi bi-trash me-1"></i> Yes, Delete
+                    </button>
                 </div>
             </div>
         </div>
@@ -1476,29 +1499,129 @@
         }
 
         // Delete expense
-        function deleteExpense(id) {
-            // Set up delete confirmation modal for an expense
-            $('#deleteModalTitle').text('Delete Expense');
-            $('#deleteConfirmMessage').text('Are you sure you want to delete this expense? This action cannot be undone.');
-            $('#deleteItemId').val(id);
-            $('#deleteItemType').val('expense');
-            $('#confirmPassword').val('');
-            
-            // Show the modal
-            new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+       function deleteExpense(id) {
+            // Fetch the expense details first
+            $.ajax({
+                url: '{{ route("admin.expense.get", "") }}/' + id,
+                type: 'GET',
+                success: function(response) {
+                    const expense = response.expense;
+                    
+                    // Set up delete confirmation modal for an expense
+                    $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Expense');
+                    
+                    // Prepare detail information
+                    const detailsHtml = `
+                        <div class="d-flex justify-content-between">
+                            <strong>Title:</strong>
+                            <span>${expense.title}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Category:</strong>
+                            <span>${expense.category.name}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Amount:</strong>
+                            <span class="text-danger">₱${formatNumber(expense.amount)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Date:</strong>
+                            <span>${formatDate(expense.date)}</span>
+                        </div>
+                    `;
+                    
+                    $('#deleteItemDetails').html(detailsHtml);
+                    $('#deleteConfirmMessage').html(`
+                        You're about to <strong>permanently delete</strong> this expense record. 
+                        This action <strong>cannot be undone</strong>. Consider editing instead if you only need to make changes.
+                    `);
+                    
+                    $('#deleteItemId').val(id);
+                    $('#deleteItemType').val('expense');
+                    $('#confirmPassword').val('');
+                    
+                    // Store the current expense ID for "Edit Instead" button
+                    currentExpenseId = id;
+                    currentBudgetId = null;
+                    
+                    // Show the modal
+                    new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+                },
+                error: function(xhr) {
+                    console.error('Error loading expense details for deletion:', xhr);
+                    toastr.error('Failed to load expense details');
+                }
+            });
         }
 
-        // Delete budget
         function deleteBudget(id) {
-            // Set up delete confirmation modal for a budget
-            $('#deleteModalTitle').text('Delete Budget Allocation');
-            $('#deleteConfirmMessage').text('Are you sure you want to delete this budget allocation? This action cannot be undone.');
-            $('#deleteItemId').val(id);
-            $('#deleteItemType').val('budget');
-            $('#confirmPassword').val('');
+            // Fetch the budget details first
+            $.ajax({
+                url: '{{ route("admin.expense.budget.get", "") }}/' + id,
+                method: 'GET',
+                success: function(response) {
+                    const budget = response.budget;
+                    
+                    // Set up delete confirmation modal for a budget
+                    $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Budget Allocation');
+                    
+                    // Prepare detail information
+                    const detailsHtml = `
+                        <div class="d-flex justify-content-between">
+                            <strong>Type:</strong>
+                            <span>${budget.budget_type.name}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Amount:</strong>
+                            <span class="${budget.amount >= 0 ? 'text-success' : 'text-danger'}">
+                                ₱${formatNumber(budget.amount)}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Period:</strong>
+                            <span>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Description:</strong>
+                            <span>${budget.description || 'No description'}</span>
+                        </div>
+                    `;
+                    
+                    $('#deleteItemDetails').html(detailsHtml);
+                    $('#deleteConfirmMessage').html(`
+                        You're about to <strong>permanently delete</strong> this budget allocation. 
+                        This action <strong>cannot be undone</strong>. Consider editing instead if you only need to make changes.
+                    `);
+                    
+                    $('#deleteItemId').val(id);
+                    $('#deleteItemType').val('budget');
+                    $('#confirmPassword').val('');
+                    
+                    // Store the current budget ID for "Edit Instead" button
+                    currentBudgetId = id;
+                    currentExpenseId = null;
+                    
+                    // Show the modal
+                    new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+                },
+                error: function(xhr) {
+                    console.error('Error loading budget details for deletion:', xhr);
+                    toastr.error('Failed to load budget details');
+                }
+            });
+        }
+
+        // Function for the "Edit Instead" button
+        function editInsteadOfDelete() {
+            // Hide the delete modal
+            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmationModal')).hide();
             
-            // Show the modal
-            new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+            // Open the appropriate edit modal
+            if (currentExpenseId) {
+                editExpense(currentExpenseId);
+            } else if (currentBudgetId) {
+                editBudget(currentBudgetId);
+            }
         }
 
         // Confirm delete action
