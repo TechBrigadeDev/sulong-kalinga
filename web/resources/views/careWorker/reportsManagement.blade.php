@@ -42,11 +42,12 @@
         <div class="text-left">RECORDS MANAGEMENT</div>
         <div class="container-fluid text-center">
         <form action="{{ route('care-worker.reports') }}" method="GET" id="searchFilterForm">
-                <div class="row mb-3 align-items-center">
-                    <div class="col-12 col-md-6 col-lg-6 mb-2">
+                
+            <div class="row mb-3 align-items-center">
+                    <div class="col-12 col-md-6 col-lg-4 mb-2">
                         <div class="input-group">
                             <span class="input-group-text">
-                                <i class="bx bx-search-alt"></i>
+                                <i class="bi bi-search"></i>
                             </span>
                             <input type="text" class="form-control" placeholder="Search by author or beneficiary..." 
                                 id="searchBar" name="search" value="{{ $search ?? '' }}">
@@ -60,7 +61,7 @@
                     <div class="col-12 col-sm-6 col-md-6 col-lg-2 mb-2">
                         <div class="input-group">
                             <span class="input-group-text">
-                                <i class="bx bx-filter-alt"></i>
+                                <i class="bi bi-funnel"></i>
                             </span>
                             <select class="form-select" id="filterDropdown" name="filter" onchange="this.form.submit()">
                                 <option value="" {{ empty($filterType ?? '') ? 'selected' : '' }}>Filter by</option>
@@ -70,11 +71,26 @@
                         </div>
                     </div>
 
+                    <!-- Reports Per Page -->
+                     <div class="col-12 col-sm-6 col-md-6 col-lg-2 mb-2">
+                        <div class="input-group">
+                            <label class="input-group-text" for="perPageSelect">
+                                <i class="bi bi-list-ol"></i>
+                            </label>
+                            <select class="form-select" id="perPageSelect" onchange="changePerPage(this.value)">
+                                <option value="15" {{ request()->get('per_page', 15) == 15 ? 'selected' : '' }}>15 per page</option>
+                                <option value="25" {{ request()->get('per_page') == 25 ? 'selected' : '' }}>25 per page</option>
+                                <option value="50" {{ request()->get('per_page') == 50 ? 'selected' : '' }}>50 per page</option>
+                                <option value="100" {{ request()->get('per_page') == 100 ? 'selected' : '' }}>100 per page</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Sort Order Toggle - Update initial button text -->
                     <div class="col-6 col-md-3 col-lg-2 mb-2">
                         <button type="button" class="btn btn-outline-secondary w-100" id="sortToggle" 
                             onclick="toggleSortOrder()">
-                            <i class="bx {{ ($sortOrder ?? 'asc') == 'desc' ? 'bx-sort-z-a' : 'bx-sort-a-z' }}"></i> 
+                            <i class="bi {{ ($sortOrder ?? 'asc') == 'desc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up' }}"></i> 
                             {{ ($sortOrder ?? 'asc') == 'desc' ? 'Newest First' : 'Oldest First' }}
                         </button>
                         <input type="hidden" name="sort" id="sortOrder" value="{{ $sortOrder ?? 'asc' }}">
@@ -84,7 +100,7 @@
                     <div class="col-6 col-md-3 col-lg-2 mb-2">
                         <div class="dropdown-center">
                             <button class="btn btn-secondary dropdown-toggle w-100" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bx bx-export"></i> Export
+                                <i class="bi bi-box-arrow-up"></i> Export
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="exportDropdown">
                                 <li><a class="dropdown-item" href="#">Export as PDF</a></li>
@@ -167,6 +183,10 @@
                         </table>
                     </div>
                     
+                </div>
+            </div>
+            <div class="col-12 d-flex justify-content-center">
+                    {{ $reports->appends(request()->query())->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>

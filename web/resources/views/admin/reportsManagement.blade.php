@@ -27,8 +27,9 @@
         <div class="text-left">RECORDS MANAGEMENT</div>
         <div class="container-fluid text-center">
         <form action="{{ route('admin.reports') }}" method="GET" id="searchFilterForm">
+
                 <div class="row mb-3 align-items-center">
-                    <div class="col-12 col-md-6 col-lg-6 mb-2">
+                    <div class="col-12 col-md-6 col-lg-4 mb-2">
                         <div class="input-group">
                             <span class="input-group-text">
                                 <i class="bi bi-search"></i>
@@ -51,6 +52,21 @@
                                 <option value="" {{ empty($filterType ?? '') ? 'selected' : '' }}>Filter by</option>
                                 <option value="author" {{ ($filterType ?? '') == 'author' ? 'selected' : '' }}>Author</option>
                                 <option value="type" {{ ($filterType ?? '') == 'type' ? 'selected' : '' }}>Report Type</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Reports Per Page -->
+                     <div class="col-12 col-sm-6 col-md-6 col-lg-2 mb-2">
+                        <div class="input-group">
+                            <label class="input-group-text" for="perPageSelect">
+                                <i class="bi bi-list-ol"></i>
+                            </label>
+                            <select class="form-select" id="perPageSelect" onchange="changePerPage(this.value)">
+                                <option value="15" {{ request()->get('per_page', 15) == 15 ? 'selected' : '' }}>15 per page</option>
+                                <option value="25" {{ request()->get('per_page') == 25 ? 'selected' : '' }}>25 per page</option>
+                                <option value="50" {{ request()->get('per_page') == 50 ? 'selected' : '' }}>50 per page</option>
+                                <option value="100" {{ request()->get('per_page') == 100 ? 'selected' : '' }}>100 per page</option>
                             </select>
                         </div>
                     </div>
@@ -154,6 +170,11 @@
                     
                 </div>
             </div>
+            <div class="row mt-4">
+                <div class="col-12 d-flex justify-content-center">
+                    {{ $reports->appends(request()->query())->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -178,6 +199,20 @@
             `;
             
             document.getElementById('searchFilterForm').submit();
+        }
+
+        function changePerPage(value) {
+            // Get current URL
+            let url = new URL(window.location.href);
+            
+            // Update the per_page parameter
+            url.searchParams.set('per_page', value);
+            
+            // Reset to first page when changing items per page
+            url.searchParams.set('page', 1);
+            
+            // Navigate to the new URL
+            window.location.href = url.toString();
         }
     </script>
 </body>
