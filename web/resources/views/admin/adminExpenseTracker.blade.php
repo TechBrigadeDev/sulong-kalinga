@@ -1143,6 +1143,8 @@
                     
                     // Update dashboard data
                     updateDashboardStats();
+
+                    showSuccessAlert(currentExpenseId ? 'Expense updated successfully' : 'Expense added successfully');
                 },
                 error: function(xhr) {
                     if (xhr.status === 422) {
@@ -1189,91 +1191,78 @@
 
         // Save budget
         function saveBudget() {
-            // Clear previous error messages
-            $('.budget-error').text('').hide();
-            $('#generalBudgetError').empty().hide();
+            // Disable the save button and show loading spinner
+            $('#saveBudgetBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
             
+            // Clear any previous error messages
+            $('.invalid-feedback').hide();
+            $('.is-invalid').removeClass('is-invalid');
+            
+            // Prepare form data
             const formData = {
                 amount: $('#budgetAmount').val(),
+                budget_type_id: $('#budgetType').val(),
                 start_date: $('#budgetStartDate').val(),
                 end_date: $('#budgetEndDate').val(),
-                budget_type_id: $('#budgetType').val(),
-                description: $('#budgetDescription').val()
+                description: $('#budgetDescription').val(), // Include description even if empty
+                _token: $('meta[name="csrf-token"]').attr('content')
             };
             
-            // Show loading indicator
-            $('#saveBudgetBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...').prop('disabled', true);
+            // Log form data for debugging
+            console.log('Submitting budget form data:', formData);
             
+            // Determine if this is an edit or create operation
+            const isEdit = currentBudgetId !== null;
+            const url = isEdit 
+                ? "{{ route('admin.expense.budget.update', ['id' => '_id_']) }}".replace('_id_', currentBudgetId)
+                : "{{ route('admin.expense.budget.store') }}";
+            const method = isEdit ? 'PUT' : 'POST';
+            
+            // Send the request
             $.ajax({
-                url: currentBudgetId 
-                    ? '{{ route("admin.expense.budget.update", ["id" => "_id_"]) }}'.replace('_id_', currentBudgetId) 
-                    : '{{ route("admin.expense.budget.store") }}',
-                method: currentBudgetId ? 'PUT' : 'POST',
+                url: url,
+                method: method,
                 data: formData,
                 success: function(response) {
-                    // Close modal and show success message
+                    // Reset button state
+                    $('#saveBudgetBtn').text(isEdit ? 'Update Budget' : 'Save Budget').prop('disabled', false);
+                    
+                    // Show success message
+                    toastr.success(isEdit ? 'Budget allocation updated successfully' : 'Budget allocation added successfully');
+                    
+                    // Close the modal
                     $('#addBudgetModal').modal('hide');
-                    toastr.success(response.message || 'Budget allocation saved successfully');
                     
                     // Update dashboard data
-                    updateDashboardStats();
+                    updateDashboardWithFilters();
+                    
+                    // Reset form and current ID
+                    currentBudgetId = null;
+                    
+                    // Show success alert
+                    showSuccessAlert(isEdit ? 'Budget allocation updated successfully' : 'Budget allocation added successfully');
                 },
                 error: function(xhr) {
-                    if (xhr.status === 422) {
-                        // Check for no changes message
-                        if (xhr.responseJSON && xhr.responseJSON.message === 'No changes were made to the budget allocation.') {
-                            toastr.info(xhr.responseJSON.message);
-                            return;
-                        }
-                        
-                        const errors = xhr.responseJSON.errors;
-                        let errorMessages = [];
-                        
-                        // Process each error type and display in both specific and general containers
-                        if (errors.description) {
-                            $('#descriptionError').text(errors.description[0]).css('display', 'block');
-                            errorMessages.push(`Description: ${errors.description[0]}`);
-                        }
-                        
-                        if (errors.amount) {
-                            $('#amountError').text(errors.amount[0]).css('display', 'block');
-                            errorMessages.push(`Amount: ${errors.amount[0]}`);
-                        }
-                        
-                        if (errors.budget_type_id) {
-                            $('#budget_type_idError').text(errors.budget_type_id[0]).css('display', 'block');
-                            errorMessages.push(`Budget Type: ${errors.budget_type_id[0]}`);
-                        }
-                        
-                        if (errors.start_date) {
-                            $('#start_dateError').text(errors.start_date[0]).css('display', 'block');
-                            errorMessages.push(`Start Date: ${errors.start_date[0]}`);
-                        }
-                        
-                        if (errors.end_date) {
-                            $('#end_dateError').text(errors.end_date[0]).css('display', 'block');
-                            errorMessages.push(`End Date: ${errors.end_date[0]}`);
-                        }
-                        
-                        // Always display errors in general container for visibility
-                        if (errorMessages.length > 0) {
-                            errorMessages.forEach(msg => {
-                                $('#generalBudgetError').append(`<div>${msg}</div>`);
-                            });
-                            $('#generalBudgetError').css('display', 'block');
-                        }
-                        
-                        // Show toast notification
-                        toastr.error('Please correct the errors in the form');
-                    } else {
-                        // Show general error for non-validation errors
-                        $('#generalBudgetError').html('<div>An error occurred while saving the budget. Please try again.</div>').css('display', 'block');
-                        toastr.error('An error occurred while saving the budget. Please try again.');
-                    }
-                },
-                complete: function() {
                     // Reset button state
-                    $('#saveBudgetBtn').html('Save').prop('disabled', false);
+                    $('#saveBudgetBtn').text(isEdit ? 'Update Budget' : 'Save Budget').prop('disabled', false);
+                    
+                    // Handle validation errors
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+                        
+                        // Display each error on the form
+                        Object.keys(errors).forEach(field => {
+                            const errorMsg = errors[field][0];
+                            const inputField = $(`#budget${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                            inputField.addClass('is-invalid');
+                            inputField.next('.invalid-feedback').text(errorMsg).show();
+                        });
+                        
+                        toastr.error('Please fix the errors in the form');
+                    } else {
+                        // Handle other errors
+                        toastr.error(xhr.responseJSON?.message || 'An error occurred');
+                    }
                 }
             });
         }
@@ -1291,8 +1280,8 @@
             currentExpenseId = id;
             
             // Update modal title
-            $('#expenseModalTitle').text('Edit Expense');
-            
+            $('#expenseModalLabel').text('Edit Expense');   
+
             // Show loading state on the modal
             $('#saveExpenseBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
@@ -1402,84 +1391,38 @@
                     // Populate form fields
                     $('#budgetAmount').val(budget.amount);
                     
-                    // SAFER DATE HANDLING for start_date
+                    // CRITICAL FIX: Use exact dates from server with proper handling
                     if (budget.start_date) {
-                        try {
-                            console.log('Original start date from server:', budget.start_date);
-                            
-                            // Use a reliable parsing method
-                            let parts = budget.start_date.split('-');
-                            if (parts.length === 3) {
-                                // Create date using year, month (0-based), day
-                                let year = parseInt(parts[0], 10);
-                                let month = parseInt(parts[1], 10) - 1;
-                                let day = parseInt(parts[2], 10) + 1; // Add one day
-                                
-                                // Create a new date and format it
-                                let dateObj = new Date(year, month, day);
-                                if (!isNaN(dateObj.getTime())) {
-                                    // Format as YYYY-MM-DD
-                                    let adjustedDate = dateObj.getFullYear() + '-' + 
-                                        String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + 
-                                        String(dateObj.getDate()).padStart(2, '0');
-                                        
-                                    $('#budgetStartDate').val(adjustedDate);
-                                    console.log('Adjusted start date for form:', adjustedDate);
-                                } else {
-                                    // If still invalid, just use the original string
-                                    $('#budgetStartDate').val(budget.start_date);
-                                }
-                            } else {
-                                // If format isn't as expected, use as is
-                                $('#budgetStartDate').val(budget.start_date);
-                            }
-                        } catch (e) {
-                            // If any error occurs, fallback to original value
-                            console.error('Start date parsing error:', e);
-                            $('#budgetStartDate').val(budget.start_date);
-                        }
+                        // Make sure we get just the YYYY-MM-DD part
+                        const rawStartDate = typeof budget.start_date === 'string' 
+                            ? budget.start_date.split('T')[0] 
+                            : budget.start_date;
+                        
+                        $('#budgetStartDate').val(rawStartDate);
+                        console.log('Setting budget start date:', rawStartDate);
                     }
                     
-                    // SAFER DATE HANDLING for end_date
                     if (budget.end_date) {
-                        try {
-                            console.log('Original end date from server:', budget.end_date);
+                        // Make sure we get just the YYYY-MM-DD part
+                        const rawEndDate = typeof budget.end_date === 'string'
+                            ? budget.end_date.split('T')[0] 
+                            : budget.end_date;
                             
-                            // Use a reliable parsing method
-                            let parts = budget.end_date.split('-');
-                            if (parts.length === 3) {
-                                // Create date using year, month (0-based), day
-                                let year = parseInt(parts[0], 10);
-                                let month = parseInt(parts[1], 10) - 1;
-                                let day = parseInt(parts[2], 10) + 1; // Add one day
-                                
-                                // Create a new date and format it
-                                let dateObj = new Date(year, month, day);
-                                if (!isNaN(dateObj.getTime())) {
-                                    // Format as YYYY-MM-DD
-                                    let adjustedDate = dateObj.getFullYear() + '-' + 
-                                        String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + 
-                                        String(dateObj.getDate()).padStart(2, '0');
-                                        
-                                    $('#budgetEndDate').val(adjustedDate);
-                                    console.log('Adjusted end date for form:', adjustedDate);
-                                } else {
-                                    // If still invalid, just use the original string
-                                    $('#budgetEndDate').val(budget.end_date);
-                                }
-                            } else {
-                                // If format isn't as expected, use as is
-                                $('#budgetEndDate').val(budget.end_date);
-                            }
-                        } catch (e) {
-                            // If any error occurs, fallback to original value
-                            console.error('End date parsing error:', e);
-                            $('#budgetEndDate').val(budget.end_date);
-                        }
+                        $('#budgetEndDate').val(rawEndDate);
+                        console.log('Setting budget end date:', rawEndDate);
                     }
                     
                     $('#budgetType').val(budget.budget_type_id);
-                    $('#budgetDescription').val(budget.description);
+                    
+                    // CRITICAL FIX: Ensure description is properly handled
+                    // Use explicit check against null/undefined to preserve empty strings
+                    if (budget.description !== null && budget.description !== undefined) {
+                        $('#budgetDescription').val(budget.description);
+                        console.log('Setting description:', budget.description);
+                    } else {
+                        $('#budgetDescription').val('');
+                        console.log('Setting empty description');
+                    }
                     
                     // Update modal title
                     $('#budgetModalTitle').text('Edit Budget Allocation');
@@ -1676,6 +1619,8 @@
                     
                     // Show success message
                     toastr.success(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget allocation deleted successfully');
+                    
+                    showSuccessAlert(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget allocation deleted successfully');
                     
                     // Update dashboard data
                     updateDashboardWithFilters();

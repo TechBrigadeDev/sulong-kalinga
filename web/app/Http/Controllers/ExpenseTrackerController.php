@@ -73,8 +73,9 @@ class ExpenseTrackerController extends Controller
             
         // Get recent budgets for the history
         $recentBudgets = BudgetAllocation::with(['budgetType', 'creator'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
+            ->orderBy('updated_at', 'desc')  // Primary sort by last updated
+            ->orderBy('created_at', 'desc')  // Secondary sort by creation date
+            ->take(10)  // Or whatever limit you currently use
             ->get();
         
         // Calculate statistics
@@ -635,19 +636,15 @@ class ExpenseTrackerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:0.01|max:1000000',
+            'budget_type_id' => 'required|exists:budget_types,budget_type_id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'budget_type_id' => 'required|exists:budget_types,budget_type_id',
-            'description' => [
-                'nullable',
-                'string',
-                'max:1000',
-                'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
-            ],
+            'description' => 'nullable|regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/',
         ], [
+            'description.regex' => 'The description must contain at least one letter and only common characters.',
             'amount.min' => 'The amount must be greater than zero.',
             'amount.max' => 'The amount cannot exceed ₱1,000,000.',
-            'description.regex' => 'The description must contain at least one letter and only common characters.',
+            'end_date.after_or_equal' => 'The end date must be after or equal to the start date.',
         ]);
 
         if ($validator->fails()) {
@@ -660,13 +657,17 @@ class ExpenseTrackerController extends Controller
         try {
             $budget = BudgetAllocation::with('budgetType')->findOrFail($id);
             
+            // CRITICAL FIX: Use raw date values for reliable comparison
+            $rawStartDate = substr($budget->getRawOriginal('start_date'), 0, 10);
+            $rawEndDate = substr($budget->getRawOriginal('end_date'), 0, 10);
+            
             // Format original values for precise comparison
             $originalBudget = [
                 'amount' => (float)$budget->amount,
                 'budget_type_id' => (int)$budget->budget_type_id,
                 'budget_type_name' => $budget->budgetType->name,
-                'start_date' => $budget->start_date->format('Y-m-d'),
-                'end_date' => $budget->end_date->format('Y-m-d'),
+                'start_date' => $rawStartDate,
+                'end_date' => $rawEndDate,
                 'description' => trim($budget->description ?? '')
             ];
 
@@ -676,45 +677,70 @@ class ExpenseTrackerController extends Controller
                 'budget_type_id' => (int)$request->budget_type_id,
                 'start_date' => date('Y-m-d', strtotime($request->start_date)),
                 'end_date' => date('Y-m-d', strtotime($request->end_date)),
+                // CRITICAL FIX: Use null coalescing to prevent empty description from becoming null
                 'description' => trim($request->description ?? '')
             ];
             
-            // Initialize hasChanges to false and track changes
+            // Debug log to check values
+            \Log::debug('Budget update comparison', [
+                'original' => $originalBudget,
+                'new' => $newBudget,
+                'description_equal' => $originalBudget['description'] === $newBudget['description'],
+                'amount_equal' => $originalBudget['amount'] === $newBudget['amount'],
+                'original_amount_type' => gettype($originalBudget['amount']),
+                'new_amount_type' => gettype($newBudget['amount']),
+            ]);
+            
+            // Initialize tracking variables
             $hasChanges = false;
             $changeDetails = [];
             
-            // Compare amount (round to 2 decimals to avoid floating point issues)
-            if (round($originalBudget['amount'], 2) != round($newBudget['amount'], 2)) {
+            // Check for changes in amount with proper formatting
+            if (number_format($originalBudget['amount'], 2) !== number_format($newBudget['amount'], 2)) {
                 $hasChanges = true;
-                $changeDetails[] = "Amount changed from '₱" . number_format($originalBudget['amount'], 2) . "' to '₱" . number_format($newBudget['amount'], 2) . "'";
+                $changeDetails[] = "Amount changed from '₱" . number_format($originalBudget['amount'], 2) . 
+                                "' to '₱" . number_format($newBudget['amount'], 2) . "'";
+                $budget->amount = $newBudget['amount'];
             }
             
-            // Compare budget type ID
+            // Check for changes in budget type
             if ($originalBudget['budget_type_id'] !== $newBudget['budget_type_id']) {
                 $hasChanges = true;
-                $newType = BudgetType::find($newBudget['budget_type_id'])->name;
-                $changeDetails[] = "Budget type changed from '{$originalBudget['budget_type_name']}' to '{$newType}'";
+                $newBudgetType = BudgetType::find($newBudget['budget_type_id']);
+                $changeDetails[] = "Budget type changed from '{$originalBudget['budget_type_name']}' to '{$newBudgetType->name}'";
+                $budget->budget_type_id = $newBudget['budget_type_id'];
             }
             
-            // Compare dates
+            // Check for changes in start date
             if ($originalBudget['start_date'] !== $newBudget['start_date']) {
                 $hasChanges = true;
-                $oldDate = Carbon::parse($originalBudget['start_date'])->format('M d, Y');
-                $newDate = Carbon::parse($newBudget['start_date'])->format('M d, Y');
-                $changeDetails[] = "Start date changed from '{$oldDate}' to '{$newDate}'";
+                $changeDetails[] = "Start date changed from '" . 
+                                Carbon::parse($originalBudget['start_date'])->format('M d, Y') . 
+                                "' to '" . 
+                                Carbon::parse($newBudget['start_date'])->format('M d, Y') . "'";
+                $budget->start_date = $newBudget['start_date'];
             }
             
+            // Check for changes in end date
             if ($originalBudget['end_date'] !== $newBudget['end_date']) {
                 $hasChanges = true;
-                $oldDate = Carbon::parse($originalBudget['end_date'])->format('M d, Y');
-                $newDate = Carbon::parse($newBudget['end_date'])->format('M d, Y');
-                $changeDetails[] = "End date changed from '{$oldDate}' to '{$newDate}'";
+                $changeDetails[] = "End date changed from '" . 
+                                Carbon::parse($originalBudget['end_date'])->format('M d, Y') . 
+                                "' to '" . 
+                                Carbon::parse($newBudget['end_date'])->format('M d, Y') . "'";
+                $budget->end_date = $newBudget['end_date'];
             }
             
-            // Compare descriptions (after trimming)
+            // CRITICAL FIX: Check for changes in description with proper string comparison
+            // Use === to ensure exact comparison including empty strings vs null
             if ($originalBudget['description'] !== $newBudget['description']) {
                 $hasChanges = true;
-                $changeDetails[] = "Description was updated";
+                
+                $originalDesc = $originalBudget['description'] ?: 'No description';
+                $newDesc = $newBudget['description'] ?: 'No description';
+                
+                $changeDetails[] = "Description changed from '{$originalDesc}' to '{$newDesc}'";
+                $budget->description = $newBudget['description'];
             }
             
             // If nothing changed, return an error
@@ -725,38 +751,29 @@ class ExpenseTrackerController extends Controller
                 ], 422);
             }
             
-            // Update budget fields
-            $budget->amount = $request->amount;
-            $budget->budget_type_id = $request->budget_type_id;
-            $budget->start_date = $request->start_date;
-            $budget->end_date = $request->end_date;
-            $budget->description = $request->description;
+            // Update the modifier and timestamp
             $budget->updated_by = Auth::id();
             $budget->save();
             
-            // Load budget type for notification
-            $budget->load('budgetType');
-            
-            // Create log entry with detailed changes
+            // Log the update
             $this->logService->createLog(
                 'budget_allocation',
                 $budget->budget_allocation_id,
                 LogType::UPDATE,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated budget allocation. ' . implode('. ', $changeDetails),
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated budget allocation: ' . implode(', ', $changeDetails),
                 Auth::id()
             );
             
-            // Create notification for all admins with change details
+            // Create notification for admins
             $this->createNotificationForAdmins(
                 'Budget Allocation Updated',
-                'A budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been updated by ' . 
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . '. ' . implode('. ', $changeDetails)
+                Auth::user()->first_name . ' updated a budget allocation. Changes: ' . implode(', ', $changeDetails)
             );
             
             return response()->json([
                 'success' => true,
                 'message' => 'Budget allocation updated successfully',
-                'budget' => $budget
+                'changes' => $changeDetails
             ]);
         } catch (\Exception $e) {
             return response()->json([
