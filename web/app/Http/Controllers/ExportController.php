@@ -7,14 +7,19 @@ use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\User;
 use App\Models\GeneralCarePlan;
+use App\Models\WeeklyCarePlan;
+use App\Models\Municipality;
+use App\Models\WeeklyCarePlanInterventions;
+use App\Models\CareCategory;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BeneficiariesExport;
 use App\Exports\FamilyMembersExport;
 use App\Exports\CareManagersExport;
 use App\Exports\CareworkersExport;
 use App\Exports\AdministratorsExport;
+use Carbon\Carbon;
 
 class ExportController extends Controller
 {
@@ -746,6 +751,134 @@ private function generateLineChartHtml($labels, $data, $title, $unit, $color)
     {
         // Simply pass through to the original method with no filtering
         return $this->exportCareWorkerPerformanceToPdf($request);
+    }
+
+    /**
+     * Export selected reports to PDF
+     */
+    public function exportReportsToPdf(Request $request)
+    {
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'weekly_care_plans' => 'nullable|json',
+            'general_care_plans' => 'nullable|json',
+            'include_beneficiary_details' => 'required|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        // Decode JSON arrays
+        $weeklyCareplanIds = json_decode($request->weekly_care_plans, true) ?? [];
+        $generalCareplanIds = json_decode($request->general_care_plans, true) ?? [];
+        $includeBeneficiaryDetails = $request->include_beneficiary_details == '1';
+
+        // Ensure we don't exceed our limit
+        $totalCount = count($weeklyCareplanIds) + count($generalCareplanIds);
+        if ($totalCount > 100) {
+            // Adjust counts proportionally
+            $weeklyCount = min(count($weeklyCareplanIds), floor(100 * count($weeklyCareplanIds) / $totalCount));
+            $generalCount = min(100 - $weeklyCount, count($generalCareplanIds));
+            
+            $weeklyCareplanIds = array_slice($weeklyCareplanIds, 0, $weeklyCount);
+            $generalCareplanIds = array_slice($generalCareplanIds, 0, $generalCount);
+        }
+
+        // Fetch Weekly Care Plans with their related data
+        $weeklyCarePlans = [];
+        if (!empty($weeklyCareplanIds)) {
+            $weeklyCarePlans = WeeklyCarePlan::with([
+                    'beneficiary', 
+                    'careWorker', 
+                    'vitalSigns', 
+                    'interventions.intervention',
+                    'interventions.careCategory',
+                    'author'
+                ])
+                ->whereIn('weekly_care_plan_id', $weeklyCareplanIds)
+                ->get();
+        }
+
+        // Fetch General Care Plans with their related data
+        $generalCarePlans = [];
+        $beneficiaryData = [];
+        if (!empty($generalCareplanIds)) {
+            $generalCarePlans = GeneralCarePlan::whereIn('general_care_plan_id', $generalCareplanIds)
+                ->with('careWorkerResponsibility.careWorker')
+                ->get();
+                
+            // For each general care plan, get the associated beneficiary
+            foreach ($generalCarePlans as $gcp) {
+                $beneficiary = Beneficiary::where('general_care_plan_id', $gcp->general_care_plan_id)
+                    ->with([
+                        'category', 
+                        'barangay', 
+                        'municipality', 
+                        'status',
+                        'generalCarePlan.mobility', 
+                        'generalCarePlan.cognitiveFunction', 
+                        'generalCarePlan.emotionalWellbeing', 
+                        'generalCarePlan.medications',
+                        'generalCarePlan.healthHistory',
+                        'generalCarePlan.careNeeds'
+                    ])
+                    ->first();
+                    
+                if ($beneficiary) {
+                    // Group care needs by category
+                    $careNeeds1 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 1);
+                    $careNeeds2 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 2);
+                    $careNeeds3 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 3);
+                    $careNeeds4 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 4);
+                    $careNeeds5 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 5);
+                    $careNeeds6 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 6);
+                    $careNeeds7 = $beneficiary->generalCarePlan->careNeeds->where('care_category_id', 7);
+                    
+                    // Get care worker
+                    $careWorker = null;
+                    $careWorkerResponsibility = $beneficiary->generalCarePlan->careWorkerResponsibility->first();
+                    if ($careWorkerResponsibility) {
+                        $careWorker = $careWorkerResponsibility->careWorker;
+                    }
+                    
+                    $beneficiaryData[] = [
+                        'beneficiary' => $beneficiary,
+                        'careNeeds1' => $careNeeds1,
+                        'careNeeds2' => $careNeeds2,
+                        'careNeeds3' => $careNeeds3,
+                        'careNeeds4' => $careNeeds4,
+                        'careNeeds5' => $careNeeds5,
+                        'careNeeds6' => $careNeeds6,
+                        'careNeeds7' => $careNeeds7,
+                        'careWorker' => $careWorker,
+                    ];
+                }
+            }
+        }
+
+        // Get care categories for weekly care plans
+        $careCategories = CareCategory::all();
+
+        // Prepare data for the view
+        $data = [
+            'weeklyCarePlans' => $weeklyCarePlans,
+            'generalCarePlans' => $generalCarePlans,
+            'beneficiaryData' => $beneficiaryData,
+            'includeBeneficiaryDetails' => $includeBeneficiaryDetails,
+            'exportDate' => Carbon::now()->format('F j, Y \a\t g:i A'),
+            'careCategories' => $careCategories
+        ];
+
+        // Generate PDF
+        $pdf = PDF::loadView('exports.reports-pdf', $data);
+        $pdf->setPaper('a4');
+        
+        // Set filename based on contents
+        $filename = 'care-plans-report-' . Carbon::now()->format('Y-m-d') . '.pdf';
+        
+        // Return the PDF for download
+        return $pdf->download($filename);
     }
 
 }

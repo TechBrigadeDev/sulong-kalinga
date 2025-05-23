@@ -254,19 +254,51 @@
                     <tbody>
                         <tr>
                             <td width="30%"><strong>Medical Conditions:</strong></td>
-                            <td>{{ $beneficiary->generalCarePlan->healthHistory->medical_conditions ?? 'N/A' }}</td>
+                            <td>
+                                @php
+                                    $medicalConditions = is_string($beneficiary->generalCarePlan->healthHistory->medical_conditions) 
+                                        ? json_decode($beneficiary->generalCarePlan->healthHistory->medical_conditions, true) 
+                                        : $beneficiary->generalCarePlan->healthHistory->medical_conditions;
+                                        
+                                    echo is_array($medicalConditions) ? implode(', ', $medicalConditions) : ($medicalConditions ?? 'N/A');
+                                @endphp
+                            </td>
                         </tr>
                         <tr>
                             <td><strong>Medications:</strong></td>
-                            <td>{{ $beneficiary->generalCarePlan->healthHistory->medications ?? 'N/A' }}</td>
+                            <td>
+                                @php
+                                    $medications = is_string($beneficiary->generalCarePlan->healthHistory->medications) 
+                                        ? json_decode($beneficiary->generalCarePlan->healthHistory->medications, true) 
+                                        : $beneficiary->generalCarePlan->healthHistory->medications;
+                                        
+                                    echo is_array($medications) ? implode(', ', $medications) : ($medications ?? 'N/A');
+                                @endphp
+                            </td>
                         </tr>
                         <tr>
                             <td><strong>Allergies:</strong></td>
-                            <td>{{ $beneficiary->generalCarePlan->healthHistory->allergies ?? 'N/A' }}</td>
+                            <td>
+                                @php
+                                    $allergies = is_string($beneficiary->generalCarePlan->healthHistory->allergies) 
+                                        ? json_decode($beneficiary->generalCarePlan->healthHistory->allergies, true) 
+                                        : $beneficiary->generalCarePlan->healthHistory->allergies;
+                                        
+                                    echo is_array($allergies) ? implode(', ', $allergies) : ($allergies ?? 'N/A');
+                                @endphp
+                            </td>
                         </tr>
                         <tr>
                             <td><strong>Immunizations:</strong></td>
-                            <td>{{ $beneficiary->generalCarePlan->healthHistory->immunizations ?? 'N/A' }}</td>
+                            <td>
+                                @php
+                                    $immunizations = is_string($beneficiary->generalCarePlan->healthHistory->immunizations) 
+                                        ? json_decode($beneficiary->generalCarePlan->healthHistory->immunizations, true) 
+                                        : $beneficiary->generalCarePlan->healthHistory->immunizations;
+                                        
+                                    echo is_array($immunizations) ? implode(', ', $immunizations) : ($immunizations ?? 'N/A');
+                                @endphp
+                            </td>
                         </tr>
                         <tr>
                             <td><strong>Category:</strong></td>
