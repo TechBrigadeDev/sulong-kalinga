@@ -25,7 +25,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          REGISTRY=${{ secrets.DOCR_REGISTRY }}       # e.g. registry.digitalocean.com/your-namespace
+          REGISTRY=${{ vars.DOCR_REGISTRY }}
           IMAGE="$REGISTRY/sulong-kalinga-web:${{ github.sha }}"
           docker build -f web/Dockerfile -t "$IMAGE" web
           docker push "$IMAGE"
@@ -40,8 +40,8 @@ jobs:
 
       - name: Deploy to Droplet via password
         run: |
-          IMAGE=${{ secrets.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<EOF
+          IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
             docker pull $IMAGE
             docker stop sulong-kalinga || true
             docker rm sulong-kalinga || true
