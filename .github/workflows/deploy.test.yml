@@ -57,3 +57,18 @@ jobs:
             # Remove all unused images (old web tags, layers, etc.)
             docker image prune -a -f
           EOF
+
+      - name: Install doctl CLI
+        run: |
+          curl -sL https://github.com/digitalocean/doctl/releases/download/v1.101.0/doctl-1.101.0-linux-amd64.tar.gz \
+            | tar -xzv doctl && sudo mv doctl /usr/local/bin/
+
+      - name: Authenticate doctl
+        run: doctl auth init -t ${{ secrets.DOCR_TOKEN }}
+
+      - name: Prune old registry tags
+        run: |
+          CURRENT=${{ github.sha }}
+          doctl registry repository list-tags sulong-kalinga-web --format Tag --no-header \
+            | grep -v "$CURRENT" \
+            | xargs -r -n1 -I{} doctl registry repository delete-tag sulong-kalinga-web --tag {}
