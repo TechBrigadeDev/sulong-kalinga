@@ -117,9 +117,7 @@
                                     @foreach($reports as $report)
                                         <tr>
                                             <td>
-                                                <input type="checkbox" class="rowCheckbox" 
-                                                    data-id="{{ $report->report_id }}" 
-                                                    data-type="{{ $report->report_type }}" />
+                                                <input type="checkbox" class="rowCheckbox" data-id="{{ $report->report_id }}" data-type="{{ $report->report_type }}" />
                                             </td>
                                             <td>{{ $report->author_first_name ?? 'Unknown' }} {{ $report->author_last_name ?? '' }}</td>
                                             <td>{{ $report->report_type ?? 'Unknown' }}</td>
@@ -437,34 +435,64 @@
             sessionStorage.setItem('generalSelections', JSON.stringify(selectedReports.general));
         }
 
-        // Restore selections on page load
         $(document).ready(function() {
-            // Restore selections from session storage
-            const savedWeekly = sessionStorage.getItem('weeklySelections');
-            const savedGeneral = sessionStorage.getItem('generalSelections');
+            // Check if we're coming from pagination or a fresh page load
+            const fromPagination = sessionStorage.getItem('navigatingPagination') === 'true';
+            sessionStorage.removeItem('navigatingPagination');
             
-            if (savedWeekly) selectedReports.weekly = JSON.parse(savedWeekly);
-            if (savedGeneral) selectedReports.general = JSON.parse(savedGeneral);
-            
-            // Update checkboxes based on stored selections
-            $('.rowCheckbox').each(function() {
-                const id = $(this).data('id');
-                const type = $(this).data('type');
+            if (fromPagination) {
+                // Restore selections from session storage
+                const savedWeekly = sessionStorage.getItem('weeklySelections');
+                const savedGeneral = sessionStorage.getItem('generalSelections');
                 
-                if (type === 'Weekly Care Plan' && selectedReports.weekly.includes(id)) {
-                    $(this).prop('checked', true);
-                } else if (type === 'General Care Plan' && selectedReports.general.includes(id)) {
-                    $(this).prop('checked', true);
-                }
-            });
+                if (savedWeekly) selectedReports.weekly = JSON.parse(savedWeekly);
+                if (savedGeneral) selectedReports.general = JSON.parse(savedGeneral);
+                
+                // Update checkboxes based on stored selections
+                $('.rowCheckbox').each(function() {
+                    const id = $(this).data('id');
+                    const type = $(this).data('type');
+                    
+                    if ((type === 'Weekly Care Plan' && selectedReports.weekly.includes(id)) ||
+                        (type === 'General Care Plan' && selectedReports.general.includes(id))) {
+                        $(this).prop('checked', true);
+                    }
+                });
+            } else {
+                // Clear selections on fresh page load
+                clearSelections();
+            }
             
-            // Update the selectAll checkbox state
+            // Update the UI
             updateSelectAllCheckbox();
             updateSelectedCount();
             
-            // Add event handlers to store selections when navigating
-            $('a.page-link, button[type="submit"]').on('click', storeSelections);
+            // Add event handlers to mark when navigating pagination
+            $('a.page-link, button[type="submit"]').on('click', function(e) {
+                // Only store selections when navigating through pagination
+                if (!$(this).hasClass('btn-close') && !$(this).hasClass('btn-primary') && this.type !== 'button') {
+                    sessionStorage.setItem('navigatingPagination', 'true');
+                    storeSelections();
+                }
+            });
         });
+
+        // Add this new function to clear selections
+        function clearSelections() {
+            // Reset the selection arrays
+            selectedReports = {
+                weekly: [],
+                general: []
+            };
+            
+            // Uncheck all checkboxes
+            $('.rowCheckbox').prop('checked', false);
+            $('#selectAll').prop('checked', false);
+            
+            // Clear the stored selections from session storage
+            sessionStorage.removeItem('weeklySelections');
+            sessionStorage.removeItem('generalSelections');
+        }
 
         // Function to update the "select all" checkbox based on current state
         function updateSelectAllCheckbox() {
