@@ -40,7 +40,7 @@ jobs:
 
       - name: Run server setup commands
         run: |
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -tt -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
             sudo apt-get update -y
             sudo apt-get upgrade -y
             sudo apt-get install -y docker.io
@@ -49,16 +49,17 @@ jobs:
       - name: Deploy to Droplet via password
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
-            docker pull $IMAGE
-            docker stop sulong-kalinga || true
-            docker rm sulong-kalinga || true
-            docker run -d --name sulong-kalinga -p 80:80 $IMAGE
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -tt -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
+            /usr/bin/docker pull $IMAGE
+            /usr/bin/docker stop sulong-kalinga || true
+            /usr/bin/docker rm sulong-kalinga || true
+            /usr/bin/docker pull $IMAGE
+            /usr/bin/docker run -d --name sulong-kalinga -p 80:80 $IMAGE
             # Cleanup dangling containers and images
-            docker container prune -f
-            docker image prune -f
+            /usr/bin/docker container prune -f
+            /usr/bin/docker image prune -f
             # Remove all unused images (old web tags, layers, etc.)
-            docker image prune -a -f
+            /usr/bin/docker image prune -a -f
           EOF
 
       - name: Install doctl CLI
