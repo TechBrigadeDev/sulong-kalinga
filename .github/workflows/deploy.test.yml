@@ -1,0 +1,59 @@
+name: Deploy Test Environment
+
+on:
+  push:
+    branches:
+      - test
+    paths:
+      - 'web/**'
+
+jobs:
+  build:
+    environment: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: web
+
+      - name: Log in to DOCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.DOCR_REGISTRY }}
+          username: ${{ secrets.DOCR_USERNAME }}
+          password: ${{ secrets.DOCR_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE=${{ secrets.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
+          docker build -f web/Dockerfile -t $IMAGE web
+          docker push $IMAGE
+
+  deploy:
+    environment: test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Install sshpass for password-based SSH
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy to Droplet via password
+        run: |
+          IMAGE=${{ secrets.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<EOF
+            docker pull $IMAGE
+            docker stop sulong-kalinga || true
+            docker rm sulong-kalinga || true
+            docker run -d --name sulong-kalinga -p 80:80 $IMAGE
+            # Cleanup dangling containers and images
+            docker container prune -f
+            docker image prune -f
+            # Remove all unused images (old web tags, layers, etc.)
+            docker image prune -a -f
+          EOF
