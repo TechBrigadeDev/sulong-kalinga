@@ -14,28 +14,22 @@ use Carbon\Carbon;
 
 class ReportsController extends Controller
 {
+    /**
+     * Display a listing of the reports with pagination
+     */
     public function index(Request $request)
     {
         // Get request parameters
         $search = $request->input('search', '');
         $filterType = $request->input('filter', '');
-        $sortOrder = $request->input('sort', 'asc'); 
+        $sortOrder = $request->input('sort', 'asc');
+        $perPage = $request->input('per_page', 15); // Number of items per page
 
         try {
             // Get current user info
             $user = Auth::user();
             $userRole = $user->role_id ?? 0;
             $userId = $user->id ?? 0;
-
-            // First collect diagnostic data
-            $counts = [
-                'weekly_plans' => WeeklyCarePlan::count(),
-                'general_plans' => GeneralCarePlan::count(),
-                'beneficiaries' => Beneficiary::count(),
-                'users' => User::count()
-            ];
-            
-            Log::info('Table counts', $counts);
             
             // Collection that will hold all our reports
             $combinedReports = new Collection();
@@ -53,7 +47,7 @@ class ReportsController extends Controller
                 $reportObj = (object)[
                     'id' => $plan->weekly_care_plan_id,
                     'report_id' => $plan->weekly_care_plan_id,
-                    'created_at' => $plan->date, // CHANGED FROM $plan->created_at
+                    'created_at' => $plan->date,
                     'author_id' => $plan->created_by,
                     'author_first_name' => optional($plan->author)->first_name ?? 'Unknown',
                     'author_last_name' => optional($plan->author)->last_name ?? '',
@@ -99,8 +93,7 @@ class ReportsController extends Controller
                 }
             }
             
-            // STEP 3: Apply search and filtering together in PHP
-            // Filter by search term if provided
+            // STEP 3: Apply search and filtering together
             if (!empty($search)) {
                 $combinedReports = $combinedReports->filter(function($report) use ($search) {
                     $authorName = ($report->author_first_name . ' ' . $report->author_last_name);
@@ -111,22 +104,17 @@ class ReportsController extends Controller
                 });
             }
             
-            // Modified STEP 4: Apply sorting logic
-            // First apply date sorting if sortOrder is set (meaning the toggle was used)
+            // STEP 4: Apply sorting
             if ($request->has('sort')) {
-                // Always apply date-based sorting first when toggle is used
                 $combinedReports = $combinedReports->sortBy('created_at', SORT_REGULAR, $sortOrder === 'desc');
                 
-                // Then apply any additional filtering criteria
                 if ($filterType) {
                     switch ($filterType) {
                         case 'type':
-                            // Secondary sort by report type
                             $combinedReports = $combinedReports->sortBy('report_type', SORT_REGULAR, $sortOrder === 'desc');
                             break;
                             
                         case 'author':
-                            // Secondary sort by author name
                             $combinedReports = $combinedReports->sortBy(function($report) {
                                 return $report->author_first_name . ' ' . $report->author_last_name;
                             }, SORT_REGULAR, $sortOrder === 'desc');
@@ -134,62 +122,40 @@ class ReportsController extends Controller
                     }
                 }
             } else {
-                // If toggle wasn't used, use the filter-based sorting
-                switch ($filterType) {
-                    case 'type':
-                        $combinedReports = $combinedReports->sortBy('report_type', SORT_REGULAR, $sortOrder === 'desc');
-                        break;
-                        
-                    case 'author':
-                        $combinedReports = $combinedReports->sortBy(function($report) {
-                            return $report->author_first_name . ' ' . $report->author_last_name;
-                        }, SORT_REGULAR, $sortOrder === 'desc');
-                        break;
-                        
-                    case 'date':
-                        $combinedReports = $combinedReports->sortBy('created_at', SORT_REGULAR, $sortOrder === 'desc');
-                        break;
-                        
-                    default:
-                        // Default: Sort alphabetically by author's first name
-                        $combinedReports = $combinedReports->sortBy('author_first_name', SORT_REGULAR, $sortOrder === 'desc');
-                        break;
-                }
+                // Default sorting
+                $combinedReports = $combinedReports->sortBy('created_at', SORT_REGULAR, $sortOrder === 'desc');
             }
             
-            // STEP 5: Reset array keys (important for proper display)
-            $reports = $combinedReports->values();
+            // STEP 5: Paginate the results
+            $currentPage = $request->input('page', 1);
+            $total = $combinedReports->count();
             
-            // Add complete diagnostic info
-            $diagnostic = [
-                'raw_counts' => $counts,
-                'weekly_plans_raw' => $weeklyPlans->count(), 
-                'general_plans_raw' => $generalPlans->count(),
-                'final_count' => $reports->count(),
-                'sort_method' => $filterType ?: 'Default (Alphabetical by Author\'s First Name)'
-            ];
+            // Slice the collection to get just the items for the current page
+            $reports = $combinedReports->slice(($currentPage - 1) * $perPage, $perPage)->values();
             
-            Log::info('Reports generated', [
-                'count' => $reports->count(),
-                'first_type' => $reports->isEmpty() ? 'none' : $reports->first()->report_type,
-                'sort_method' => $filterType ?: 'author_first_name'
-            ]);
-
+            // Create a paginator manually
+            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                $reports, 
+                $total, 
+                $perPage, 
+                $currentPage,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            
             // Determine which view to return based on the user's role
             $viewName = match ($userRole) {
-                1 => 'admin.reportsManagement',        // Administrator
-                2 => 'careManager.reportsManagement',  // Care Manager
-                3 => 'careWorker.reportsManagement',   // Care Worker
-                default => 'admin.reportsManagement',  // Default fallback
+                1 => 'admin.reportsManagement',
+                2 => 'careManager.reportsManagement',
+                3 => 'careWorker.reportsManagement',
+                default => 'admin.reportsManagement',
             };
 
             return view($viewName, [
-                'reports' => $reports,
+                'reports' => $paginator,
                 'search' => $search,
                 'filterType' => $filterType,
                 'sortOrder' => $sortOrder,
-                'userRole' => $userRole,
-                'diagnostic' => $diagnostic
+                'userRole' => $userRole
             ]);
             
         } catch (\Exception $e) {

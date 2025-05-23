@@ -44,20 +44,87 @@
             margin-bottom: 0;
         }
         
-        /* Calendar Enhancements */
         #calendar-container {
+            height: 650px; /* Fixed height - adjust as needed */
+            overflow-y: auto; /* Enable vertical scrolling */
+            overflow-x: auto; /* Keep horizontal scrolling */
             border-radius: 8px;
             background-color: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 1rem;
+            padding: 0;
             margin-bottom: 1.5rem;
-            overflow-x: auto; /* Enable horizontal scrolling */
+            position: relative;
+        }
+
+        /* Make table cells more stable during scroll */
+        .fc-scrollgrid-sync-table {
+            width: 100% !important;
+        }
+
+        /* Fix event rendering during scroll */
+        .fc-event {
+            position: relative !important;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* Fix for the day headers to stay consistent */
+        .fc .fc-col-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Improve row stability during scrolling */
+        .fc-daygrid-body {
+            width: 100% !important;
+        }
+
+        .fc-daygrid-day-frame {
+            min-height: 100px; /* Ensure consistent cell height */
+        }
+
+        /* Add subtle scroll shadow effect */
+        #calendar-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        /* Optional: Improve scrollbar appearance */
+        #calendar-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        #calendar-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #calendar-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        #calendar-container::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
         }
         
+        /* Make sure the calendar itself doesn't have a fixed height */
         #calendar {
             background-color: white;
-            min-height: 600px;
-            min-width: 800px; /* Set minimum width to ensure functionality */
+            min-width: 800px; /* Keep minimum width */
+            height: auto !important; /* Override any fixed height */
         }
         
         /* Event Styling */
@@ -608,6 +675,9 @@
                     document.getElementById('calendar-loading-indicator').style.display = 'block';
                 }
                 
+                // Cache-busting timestamp
+                const timestamp = new Date().getTime();
+                
                 // Set a timeout to prevent UI freezing if server is slow
                 const timeoutId = setTimeout(() => {
                     if (document.getElementById('calendar-loading-indicator')) {
@@ -624,6 +694,7 @@
                         start: start,
                         end: end,
                         search: searchTerm,
+                        cache_buster: timestamp,
                         care_worker_id: careWorkerId,
                         view_type: info.view ? info.view.type : 'dayGridMonth' // Safe access with fallback
                     },
@@ -633,7 +704,7 @@
                         
                         // FIX: Safe access to view title with fallback
                         const viewName = info.view && info.view.title ? info.view.title : 'current view';
-                        console.log(`Loaded ${response.length} events for ${viewName}`);
+                        console.log(`Loaded ${response.length} events for ${viewName}` + (searchTerm ? ` with search: "${searchTerm}"` : ''));
                     },
                     error: function(xhr) {
                         clearTimeout(timeoutId);
@@ -753,11 +824,32 @@
             resetButton.type = 'button';
             resetButton.className = 'btn btn-sm btn-outline-secondary';
             resetButton.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
+            // Update reset button code (should be around line 564 in your full file)
             resetButton.addEventListener('click', function() {
+                // Show loading indicator
+                document.getElementById('calendar-loading-indicator').style.display = 'block';
+                
+                // Clear search input and make sure the change is detected
+                if (document.getElementById('searchInput')) {
+                    document.getElementById('searchInput').value = '';
+                    
+                    // Force the calendar to recognize the search change
+                    const searchEvent = new Event('input', { bubbles: true });
+                    document.getElementById('searchInput').dispatchEvent(searchEvent);
+                }
+                
+                // Reset calendar
                 calendar.removeAllEvents();
                 calendar.today();
+                
+                // Use explicit parameter when refetching to ensure search term is included
                 calendar.refetchEvents();
-                showSuccessMessage('Calendar reset successfully');
+                
+                // Hide loading indicator after a short delay
+                setTimeout(function() {
+                    document.getElementById('calendar-loading-indicator').style.display = 'none';
+                    showToast('Success', 'Calendar reset successfully', 'success');
+                }, 1000);
             });
             
             calendarActions.insertBefore(resetButton, calendarActions.firstChild);
@@ -896,6 +988,33 @@
                         <div class="section-title"><i class="bi bi-geo-alt-fill"></i> Location</div>
                         <div class="detail-value">${event.extendedProps.address || 'Not Available'}</div>
                     </div>
+
+                    <!-- Add confirmation status section -->
+                    <div class="detail-section">
+                        <div class="section-title"><i class="bi bi-check-circle"></i> Confirmation Status</div>
+                        <div class="detail-item">
+                            <div class="detail-label">Beneficiary: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_beneficiary ? 'Confirmed' : 'Not Confirmed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Family: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_family ? 'Confirmed' : 'Not Confirmed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Confirmed On: </div>
+                            <div class="detail-value">
+                                ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : 'Not confirmed yet'}
+                            </div>
+                        </div>
+                    </div>
                     
                     ${event.extendedProps.notes ? `
                     <div class="detail-section">
@@ -926,102 +1045,6 @@
             return `<span class="badge ${badgeClass}">${status}</span>`;
         }
         
-        // Form submission handler
-        if (submitAppointment) {
-            submitAppointment.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Reset error messages
-                const modalErrors = document.getElementById('modalErrors');
-                if (modalErrors) {
-                    modalErrors.classList.add('d-none');
-                }
-                
-                document.querySelectorAll('.error-feedback').forEach(el => {
-                    el.innerHTML = '';
-                });
-                
-                document.querySelectorAll('.is-invalid').forEach(el => {
-                    el.classList.remove('is-invalid');
-                });
-                
-                // Get form data
-                const formData = new FormData(document.getElementById('addAppointmentForm'));
-                const visitationId = formData.get('visitation_id');
-                
-                // Ensure is_flexible_time is explicitly set
-                const isFlexibleTime = document.getElementById('openTimeCheck').checked;
-                formData.set('is_flexible_time', isFlexibleTime ? '1' : '0');
-                
-                // Show loading state
-                const originalBtnHtml = submitAppointment.innerHTML;
-                submitAppointment.disabled = true;
-                submitAppointment.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-                
-                $.ajax({
-                    url: url,
-                    method: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        if (response.success) {
-                            $('#addAppointmentModal').modal('hide');
-                            
-                            // Show success toast
-                            showToast('Success', 
-                                visitationId ? 'Appointment updated successfully!' : 'Appointment created successfully!', 
-                                'success');
-                            
-                            // Improved refresh sequence for create/edit operations
-                            setTimeout(function() {
-                                // First step: clear any display caching but don't remove sources
-                                calendar.getEvents().forEach(e => e.remove());
-                                
-                                // Add timestamp parameter to avoid browser/server caching
-                                const timestamp = new Date().getTime();
-                                const originalEvents = calendar.getEventSources()[0];
-                                if (originalEvents) {
-                                    originalEvents.remove();
-                                }
-                                
-                                // Add event source with cache-busting parameter
-                                calendar.addEventSource({
-                                    url: '{{ route("care-worker.careworker.appointments.get") }}',
-                                    extraParams: {
-                                        cache_buster: timestamp
-                                    }
-                                });
-                                
-                                console.log(`Calendar refreshed with cache busting after create/edit (${timestamp})`);
-                            }, 800); // Slightly longer delay for create/edit operations
-                        } else {
-                            // Show validation errors
-                            if (response.errors) {
-                                showValidationErrors(response.errors);
-                            } else {
-                                showErrorModal(response.message || 'An error occurred while saving the appointment.');
-                            }
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error submitting form:', xhr);
-                        
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            showValidationErrors(xhr.responseJSON.errors);
-                        } else {
-                            showErrorModal('An error occurred while saving the appointment. Please try again.');
-                        }
-                    },
-                    complete: function() {
-                        // Restore button state
-                        submitAppointment.disabled = false;
-                        submitAppointment.innerHTML = originalBtnHtml;
-                    }
-                });
-            });
-        }
-        
         // Helper function to format date for API
         function formatDateForAPI(date) {
             if (!date) return '';
@@ -1044,14 +1067,21 @@
             errorModal.show();
         }
         
-        // Search functionality
+        // Search functionality with immediate refresh
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', debounce(function() {
+                // Show loading indicator
+                document.getElementById('calendar-loading-indicator').style.display = 'block';
+                
+                // Simply refetch events - the events function will use the current search term
                 calendar.refetchEvents();
+                
+                // Log for debugging
+                console.log('Searching for:', searchInput.value);
             }, 500));
         }
-        
+                
         // Debounce helper function
         function debounce(func, wait) {
             let timeout;

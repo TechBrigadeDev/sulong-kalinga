@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 
-import { Text, View } from '@/components/Themed';
-import UserManagementMenu from '../../features/user/management/components/UserManagementMenu';
+import { Text, View } from '~/components/Themed';
+import UserManagementMenu from '~/features/user/management/components/UserManagementMenu';
 
 export default function TabTwoScreen() {
   return (

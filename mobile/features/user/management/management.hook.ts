@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { QK } from "../../../common/query"
-import { authStore } from "../../auth/auth.store"
+import { QK } from "~/common/query"
+import { authStore } from "~/features/auth/auth.store"
 import UserManagementController from "./management.api";
 
 

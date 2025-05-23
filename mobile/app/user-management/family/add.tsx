@@ -1,11 +1,10 @@
 import { Stack, useRouter } from "expo-router";
-import { IFamilyMember } from "../../../features/user/user.schema";
-import FamilyMemberForm from "../../../features/user/management/components/family/FamilyMemberForm";
+import FamilyMemberForm from "~/features/user/management/components/family/FamilyMemberForm";
 
 const FamilyMemberAdd = () => {
     const router = useRouter();
 
-    const handleSubmit = (data: Partial<IFamilyMember>) => {
+    const handleSubmit = (data: any) => {
         console.log("Submitting family member data:", data);
         // TODO: Add API call to create family member
         router.back();

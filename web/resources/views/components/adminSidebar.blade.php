@@ -75,12 +75,12 @@
       <ul class="sub-menu m-auto">
         <li><a class="link_name">Schedules & Appointments</a></li>
         <li><a href="{{ route('admin.careworker.appointments.index') }}" class="{{ Request::routeIs('admin.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
-        <li><a href="{{ route('admin.internal.appointments.index') }}" class="{{ Request::routeIs('admin.internal.appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
+        <li><a href="{{ route('admin.internal-appointments.index') }}" class="{{ Request::routeIs('admin.internal.appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
         <li><a href="{{ route('admin.medication.schedule.index') }}" class="{{ Request::routeIs('admin.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
       </ul>
     </li>
     
-    <li class="{{ Request::routeIs('admin.beneficiary.map.*') ? 'active' : '' }}">
+    <li class="{{ Request::routeIs('admin.beneficiary.map.*') || Request::routeIs('admin.careworker.tracking.*')  ? 'active' : '' }}">
       <div class="icon-link">
         <a>
           <i class="bi bi-geo-alt"></i>
@@ -91,7 +91,8 @@
       <ul class="sub-menu m-auto">
         <li><a class="link_name">Location Tracking</a></li>
         <li><a href="{{ route('admin.beneficiary.map.index') }}" class="{{ Request::routeIs('admin.beneficiary.map.*') ? 'active' : '' }}">Beneficiary Map</a></li>
-        <li><a href="#" class="">Care Worker Tracking</a></li>
+        <li><a href="{{ route('admin.careworker.tracking.index') }}" class="">Care Worker Tracking</a></li>
+        <li><a href="{{ route('admin.shift.histories.index') }}" class="{{ Request::routeIs('admin.shift.histories.*') ? 'active' : '' }}">Shift Histories</a></li>
       </ul>
     </li>
     
@@ -122,6 +123,16 @@
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('admin.emergency.request.index') }}">Emergency & Request</a></li>
+      </ul>
+    </li>
+
+    <li class="{{ Request::routeIs('admin.aiSummary.*') ? 'active' : '' }}">
+      <a href="{{ route('admin.aiSummary.index') }}">
+        <i class="bi bi-stars"></i>
+        <span class="link_name">AI Summary</span>
+      </a>
+      <ul class="sub-menu blank">
+        <li><a class="link_name" href="{{ route('admin.aiSummary.index') }}">AI Summary</a></li>
       </ul>
     </li>
     

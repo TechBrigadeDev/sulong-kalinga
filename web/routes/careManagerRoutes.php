@@ -21,6 +21,9 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HealthMonitoringController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\InternalAppointmentsController;
+use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\EmergencyAndRequestController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -80,8 +83,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::get('/beneficiary/{id}', [WeeklyCareController::class, 'getBeneficiaryDetails'])->name('beneficiaryDetails');
     });
 
-    // Reports Management
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    // Records Management
+    Route::get('/records', [ReportsController::class, 'index'])->name('reports');
     
     // Password validation route
     Route::post('/validate-password', [UserController::class, 'validatePassword'])->name('validate-password');
@@ -96,6 +99,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/careworkers-excel', [ExportController::class, 'exportCareworkersToExcel'])->name('careworkers-excel');
         Route::post('/export/health-monitoring-pdf', [ExportController::class, 'exportHealthMonitoringToPdfForCareManager'])->name('health.monitoring.pdf');
         Route::post('/export/careworker-performance-pdf', [ExportController::class, 'exportCareWorkerPerformanceToPdfForCareManager'])->name('careworker.performance.pdf');
+        Route::post('/export/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
     });
 
     //Municipalities (Read-Only)
@@ -158,6 +162,41 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/store', [VisitationController::class, 'storeAppointment'])->name('store');
         Route::post('/update', [VisitationController::class, 'updateAppointment'])->name('update');
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
+    });
+
+    // Internal Appointments
+    Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+        Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+        Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
+        Route::post('/update', [InternalAppointmentsController::class, 'update'])->name('update');  // Fixed path
+        Route::post('/cancel', [InternalAppointmentsController::class, 'cancel'])->name('cancel');
+    });
+
+    // Medication Schedule
+    Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
+        Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+        Route::post('/store', [MedicationScheduleController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [MedicationScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MedicationScheduleController::class, 'update'])->name('update');
+        Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
+    });
+
+    // Emergency and Service Request
+        Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
+        Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
+        Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
+        Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
+        
+        // Data retrieval routes for modals
+        Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');
+        Route::get('/service-request/{id}', [EmergencyAndRequestController::class, 'getServiceRequest'])->name('get.service');
+        Route::get('/care-workers', [EmergencyAndRequestController::class, 'getAllCareWorkers'])->name('get.careworkers');
+        
+        // Action routes
+        Route::post('/respond-emergency', [EmergencyAndRequestController::class, 'respondToEmergency'])->name('respond.emergency');
+        Route::post('/handle-service', [EmergencyAndRequestController::class, 'handleServiceRequest'])->name('handle.service');
+        Route::post('/archive', [EmergencyAndRequestController::class, 'archiveRecord'])->name('archive');
     });
     
 });

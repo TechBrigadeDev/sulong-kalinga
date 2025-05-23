@@ -77,6 +77,12 @@ class BeneficiaryApiController extends Controller
                 'required', 'string',
                 Rule::unique('beneficiaries', 'mobile'),
             ],
+            // File path fields
+            'photo' => 'nullable|string|max:255',
+            'care_service_agreement_doc' => 'nullable|string|max:255',
+            'general_care_plan_doc' => 'nullable|string|max:255',
+            'beneficiary_signature' => 'nullable|string|max:255',
+            'care_worker_signature' => 'nullable|string|max:255',
             // Add other required fields as needed
         ]);
 
@@ -84,7 +90,19 @@ class BeneficiaryApiController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $beneficiary = Beneficiary::create($request->all());
+        $beneficiary = Beneficiary::create([
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'email' => $request->input('email'),
+            'mobile' => $request->input('mobile'),
+            // File path fields
+            'photo' => $request->input('photo'),
+            'care_service_agreement_doc' => $request->input('care_service_agreement_doc'),
+            'general_care_plan_doc' => $request->input('general_care_plan_doc'),
+            'beneficiary_signature' => $request->input('beneficiary_signature'),
+            'care_worker_signature' => $request->input('care_worker_signature'),
+            // Add other fields as needed
+        ]);
 
         return response()->json([
             'success' => true,
@@ -114,6 +132,12 @@ class BeneficiaryApiController extends Controller
                 'sometimes', 'required', 'string',
                 Rule::unique('beneficiaries', 'mobile')->ignore($beneficiary->id),
             ],
+            // File path fields
+            'photo' => 'nullable|string|max:255',
+            'care_service_agreement_doc' => 'nullable|string|max:255',
+            'general_care_plan_doc' => 'nullable|string|max:255',
+            'beneficiary_signature' => 'nullable|string|max:255',
+            'care_worker_signature' => 'nullable|string|max:255',
             // Add other fields as needed
         ]);
 
@@ -121,7 +145,20 @@ class BeneficiaryApiController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $beneficiary->update($request->all());
+        $beneficiary->fill($request->only([
+            'first_name',
+            'last_name',
+            'email',
+            'mobile',
+            // File path fields
+            'photo',
+            'care_service_agreement_doc',
+            'general_care_plan_doc',
+            'beneficiary_signature',
+            'care_worker_signature',
+            // Add other fields as needed
+        ]));
+        $beneficiary->save();
 
         return response()->json([
             'success' => true,

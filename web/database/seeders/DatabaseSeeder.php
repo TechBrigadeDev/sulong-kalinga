@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use Faker\Factory;
 use App\Models\Beneficiary;
 use App\Models\User;
-use App\Models\MobileUser;
 use App\Models\FamilyMember;
 use App\Models\PortalAccount;
 use App\Models\GeneralCarePlan;
@@ -29,6 +28,19 @@ use App\Models\Message;
 use App\Models\MessageAttachment;
 use App\Models\MessageReadStatus;
 use Carbon\Carbon;
+use App\Models\AppointmentType;
+use App\Models\Appointment;
+use App\Models\AppointmentOccurrence; 
+use App\Models\RecurringPattern;
+use App\Models\AppointmentParticipant;
+use App\Models\Visitation;
+use App\Models\VisitationOccurrence;
+use App\Models\EmergencyType;
+use App\Models\ServiceRequestType;
+use App\Models\EmergencyNotice;
+use App\Models\ServiceRequest;
+use App\Models\EmergencyUpdate;
+use App\Models\ServiceRequestUpdate;
 
 class DatabaseSeeder extends Seeder
 {
@@ -46,7 +58,7 @@ class DatabaseSeeder extends Seeder
      */
     public function __construct()
     {
-        $this->faker = Factory::create();
+        $this->faker = Factory::create('en_PH'); // Use Philippines locale for more relevant data
     }
     
     /**
@@ -54,44 +66,55 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Generate portal accounts first (these will be linked to beneficiaries)
-        PortalAccount::factory()->count(20)->create();
+        // 1. Generate portal accounts for beneficiaries (100 accounts for 100 beneficiaries)
+        PortalAccount::factory()->count(100)->create();
 
-        // 2. Generate users with different roles
-        User::factory()->count(5)->create(['role_id' => 1]); // Admins
+        // 2. Generate users with different roles based on the requirements
+        // Create 3 admins
+        User::factory()->count(3)->create(['role_id' => 1]); 
         
-        // Generate care managers first so we can assign care workers to them
+        // Create 2 care managers
         $careManagers = [];
-        for ($i = 0; $i < 5; $i++) {
-            $careManagers[] = User::factory()->create(['role_id' => 2]);
+        for ($i = 0; $i < 2; $i++) {
+            $careManagers[] = User::factory()->create([
+                'role_id' => 2,
+            ]);
         }
         
-        // Create care workers with assigned care managers
+        // Create 10 care workers with assigned care managers - 5 per care manager
         $careWorkers = [];
-        for ($i = 0; $i < 5; $i++) {
-            // Assign each care worker to a random care manager
-            $randomCareManager = $careManagers[array_rand($careManagers)];
+        for ($i = 0; $i < 10; $i++) {
+            // Assign care worker to appropriate care manager based on location
+            $careManagerIndex = ($i < 5) ? 0 : 1; // First 5 to first manager, next 5 to second manager
+            $location = ($careManagerIndex === 0) ? 'San Roque' : 'Mondragon';
             
             $careWorkers[] = User::factory()->create([
                 'role_id' => 3,
-                'assigned_care_manager_id' => $randomCareManager->id
+                'assigned_care_manager_id' => $careManagers[$careManagerIndex]->id,
             ]);
         }
 
-        // 3. Create general care plans with all related data
+        // 3. Create general care plans for all beneficiaries
         $generalCarePlans = [];
-        for ($i = 1; $i <= 15; $i++) {  // Use condition +1 for testing. Reset back when done with testing with the portal account and beneficiary seeding way below
-            // Get a random care worker
-            $careWorkerId = $careWorkers[array_rand($careWorkers)]->id;
+        for ($i = 1; $i <= 100; $i++) {
+            // Determine which area this care plan belongs to (San Roque or Mondragon)
+            $location = ($i <= 50) ? 'San Roque' : 'Mondragon';
+            
+            // Assign care worker based on location (more realistic distribution)
+            $locationCareWorkers = ($location === 'San Roque') 
+                ? array_slice($careWorkers, 0, 5) 
+                : array_slice($careWorkers, 5, 5);
+                
+            $careWorkerId = $locationCareWorkers[array_rand($locationCareWorkers)]->id;
             
             // Create the general care plan with a specific ID
             $generalCarePlan = GeneralCarePlan::create([
                 'general_care_plan_id' => $i,
                 'review_date' => Carbon::now()->addMonths(6),
-                'emergency_plan' => 'Standard emergency procedures',
+                'emergency_plan' => 'Standard emergency procedures for ' . $location . ' residents',
                 'care_worker_id' => $careWorkerId,
-                'created_at' => now(),
-                'updated_at' => now()
+                'created_at' => now()->subDays(rand(30, 180)), // More varied creation dates
+                'updated_at' => now()->subDays(rand(1, 30))
             ]);
             
             // Create emotional wellbeing for this general care plan
@@ -114,8 +137,8 @@ class DatabaseSeeder extends Seeder
                 'general_care_plan_id' => $i,
             ]);
             
-            // Create medications for this general care plan
-            foreach (range(1, 3) as $medicationIndex) {
+            // Create medications for this general care plan (2-4 medications per beneficiary)
+            foreach (range(1, rand(2, 4)) as $medicationIndex) {
                 Medication::factory()->create([
                     'general_care_plan_id' => $i,
                 ]);
@@ -129,8 +152,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
             
-            // Create care worker responsibilities for this general care plan
-            foreach (range(1, 5) as $index) {
+            // Create 3-5 care worker responsibilities for this general care plan
+            foreach (range(1, rand(3, 5)) as $index) {
                 CareWorkerResponsibility::factory()->create([
                     'general_care_plan_id' => $i,
                     'care_worker_id' => $careWorkerId,
@@ -140,12 +163,18 @@ class DatabaseSeeder extends Seeder
             $generalCarePlans[] = $generalCarePlan;
         }
 
-        // Rest of your seeder remains the same...
-        // 4. Now create beneficiaries with references to existing general care plans
+        // 4. Create 50 beneficiaries from San Roque
         $beneficiaries = [];
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 50; $i++) {
+            // Get the barangay ID instead of the name
+            $barangayName = $this->getRandomBarangay('San Roque');
+            $barangayId = $this->getBarangayIdByName($barangayName, 2); // 2 is San Roque municipality ID
+            
             $beneficiary = Beneficiary::factory()->create([
-                'general_care_plan_id' => $i + 1  // Reference the existing GCP
+                'general_care_plan_id' => $i + 1,
+                'street_address' => $this->generateAddress('San Roque'),
+                'barangay_id' => $barangayId,
+                'municipality_id' => 2 // San Roque municipality ID
             ]);
             
             // Create family members for each beneficiary (1-3 members)
@@ -157,11 +186,18 @@ class DatabaseSeeder extends Seeder
             $beneficiaries[] = $beneficiary;
         }
         
-        // 5. Create additional beneficiaries with fully established care plans
-        $additionalBeneficiaries = [];
-        for ($i = 0; $i < 5; $i++) {
+        // 5. Create 50 beneficiaries from Mondragon
+        $mondragronBeneficiaries = [];
+        for ($i = 0; $i < 50; $i++) {
+            // Get the barangay ID instead of the name
+            $barangayName = $this->getRandomBarangay('Mondragon');
+            $barangayId = $this->getBarangayIdByName($barangayName, 1); // 1 is Mondragon municipality ID
+            
             $beneficiary = Beneficiary::factory()->create([
-                'general_care_plan_id' => $i + 11  // Start from 11 since we used 1-10 above
+                'general_care_plan_id' => $i + 51, // Starting from 51
+                'street_address' => $this->generateAddress('Mondragon'),
+                'barangay_id' => $barangayId,
+                'municipality_id' => 1 // Mondragon municipality ID
             ]);
             
             $familyMemberCount = rand(1, 3);
@@ -169,21 +205,89 @@ class DatabaseSeeder extends Seeder
                 ->forBeneficiary($beneficiary->beneficiary_id)
                 ->create();
                 
-            $additionalBeneficiaries[] = $beneficiary;
+            $mondragronBeneficiaries[] = $beneficiary;
         }
         
-         // 6. Generate weekly care plans with realistic intervention data
-         $this->generateRealisticWeeklyCarePlans($careWorkers, $beneficiaries);
+        // Combine all beneficiaries
+        $allBeneficiaries = array_merge($beneficiaries, $mondragronBeneficiaries);
+        
+        // 6. Generate weekly care plans with realistic intervention data
+        // Reduce frequency to keep DB size manageable but data still meaningful
+        $this->generateRealisticWeeklyCarePlans($careWorkers, $allBeneficiaries);
 
-        // 7. Generate notifications
+        // 7. Generate notifications - adjusted for new user counts
         $this->generateNotifications();
 
-        // 8. Generate conversations and messages
+        // 8. Generate conversations and messages - adjusted for new user structure
         $this->generateConversations();
 
-         // 9. Generate scheduling data (appointments, visitations, medication schedules)
-        $this->generateSchedulingData();
+        // 9. Generate scheduling data (appointments, visitations, medication schedules)
+        $this->generateSchedulingData($careWorkers, $allBeneficiaries);
 
+        // 10. Generate emergency notices and service requests
+        $this->generateEmergencyAndServiceRequests();
+
+        // 11. Generate expenses tracker data
+        $this->generateExpenseTrackerData();
+    }
+
+    /**
+     * Generate a realistic address in the specified municipality
+     */
+    private function generateAddress($municipality)
+    {
+        $streetPatterns = [
+            'Purok %d, %s',
+            'Sitio %s, %s',
+            'Phase %d, %s',
+            'Block %d Lot %d, %s',
+            'Zone %d, %s',
+            '%d %s Street, %s'
+        ];
+        
+        $streetNames = [
+            'Rizal', 'Mabini', 'Bonifacio', 'Kalayaan', 'Maharlika', 
+            'Sampaguita', 'Ilang-ilang', 'Magnofia', 'Orchid', 'Jasmine',
+            'Lapu-Lapu', 'Del Pilar', 'Bayanihan', 'Kamias', 'Rosal'
+        ];
+        
+        $sitioNames = [
+            'Malunggay', 'Santol', 'Kaimito', 'Sampaloc', 'Kamagong',
+            'Bayabas', 'Mangga', 'Niyog', 'Camachile', 'Balimbing'
+        ];
+        
+        $pattern = $streetPatterns[array_rand($streetPatterns)];
+        
+        if (strpos($pattern, 'Sitio') !== false) {
+            return sprintf($pattern, $sitioNames[array_rand($sitioNames)], $municipality);
+        } elseif (strpos($pattern, 'Street') !== false) {
+            return sprintf($pattern, rand(1, 99), $streetNames[array_rand($streetNames)], $municipality);
+        } elseif (strpos($pattern, 'Block') !== false) {
+            return sprintf($pattern, rand(1, 20), rand(1, 50), $municipality);
+        } else {
+            return sprintf($pattern, rand(1, 10), $municipality);
+        }
+    }
+    
+    /**
+     * Get a random barangay from the specified municipality
+     */
+    private function getRandomBarangay($municipality) 
+    {
+        $barangays = [
+            'San Roque' => [
+                'Gata', 'Jamoog', 'Lao', 'Magsaysay', 'Bantayan',
+                'Poblacion Norte', 'Poblacion Sur', 'San Antonio', 
+                'San Isidro', 'San Juan', 'San Miguel'
+            ],
+            'Mondragon' => [
+                'A. Bonifacio', 'Bagasbas', 'Bugko', 'Cahicsan', 'Chitongco',
+                'De Maria', 'E. Duran', 'Eco', 'Fadriqueña', 'Flamboyant',
+                'Hinabangan', 'Imelda', 'La Trinidad', 'Makiwalo', 'Maragat'
+            ]
+        ];
+        
+        return $barangays[$municipality][array_rand($barangays[$municipality])];
     }
 
     /**
@@ -222,23 +326,60 @@ class DatabaseSeeder extends Seeder
             }
         }
         
-        // Define the date range - from January 1, 2024 to May 7, 2025
-        $startDate = Carbon::createFromDate(2024, 1, 1);
-        $endDate = Carbon::createFromDate(2025, 5, 7);
+        // Define the date range - from beginning of 2024 to present (May 2025)
+        $startDate = Carbon::createFromDate(2024, 1, 1); // Start from January 1, 2024
+        $endDate = Carbon::now(); // Current date (May 19, 2025)
         
         \Log::info("Generating weekly care plans from {$startDate->toDateString()} to {$endDate->toDateString()}");
         
         $wcpCount = 0;
+        $careWorkerCollection = collect($careWorkers);
         
-        // Create a WCP for each beneficiary for each week in the date range
+        // Create a WCP for each beneficiary weekly in the date range
         foreach ($beneficiaries as $beneficiary) {
+            // Skip if no general care plan exists
+            if (!$beneficiary->generalCarePlan) {
+                \Log::warning("Beneficiary ID {$beneficiary->beneficiary_id} has no general care plan");
+                continue;
+            }
+            
             $currentDate = $startDate->copy();
             
-            // For each week in the range
-            while ($currentDate->lte($endDate)) {
-                // Get a random care worker for this WCP
-                $careWorker = $careWorkers[array_rand($careWorkers)];
+            // Get care_worker_id directly from the GeneralCarePlan model
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            
+            // Determine care worker for this beneficiary
+            $careWorker = null;
+            
+            // First, try to find the exact care worker by ID
+            if ($careWorkerId) {
+                $careWorker = $careWorkerCollection->firstWhere('id', $careWorkerId);
+            }
+            
+            // If no care worker found, assign one based on location
+            if (!$careWorker) {
+                // Determine which area the beneficiary is from based on municipality
+                $isSanRoque = ($beneficiary->municipality_id == 2); // Assuming municipality_id 2 is San Roque
                 
+                // Filter care workers for this location
+                $areaCareWorkers = $careWorkerCollection->filter(function($worker) use ($isSanRoque) {
+                    // For San Roque workers, use even IDs (0,2,4,6,8)
+                    // For Mondragon workers, use odd IDs (1,3,5,7,9)
+                    return $isSanRoque ? ($worker->id % 2 == 0) : ($worker->id % 2 == 1);
+                });
+                
+                if ($areaCareWorkers->count() > 0) {
+                    $careWorker = $areaCareWorkers->random();
+                    \Log::info("Assigned area-matched care worker ID {$careWorker->id} to beneficiary ID {$beneficiary->beneficiary_id}");
+                } else {
+                    // Last resort: just take any care worker
+                    $careWorker = $careWorkerCollection->random();
+                    \Log::warning("Assigned random care worker ID {$careWorker->id} to beneficiary ID {$beneficiary->beneficiary_id}");
+                }
+            }
+            
+            // For each WEEKLY interval in the date range (every 7 days)
+            while ($currentDate->lte($endDate)) {
                 // Create vital signs with realistic values
                 $systolic = $this->faker->numberBetween(110, 160);
                 $diastolic = $this->faker->numberBetween(70, 95);
@@ -258,8 +399,8 @@ class DatabaseSeeder extends Seeder
                     $this->faker->numberBetween(0, 2)
                 );
                 
-                // Pick a random day during the current week (0-6 days from the start of the week)
-                $randomDayOffset = rand(0, 6);
+                // Pick a random day during the current week (0-3 days from the start of the week)
+                $randomDayOffset = rand(0, 3);
                 $wcpDate = $currentDate->copy()->addDays($randomDayOffset);
                 
                 // Create weekly care plan with realistic assessment and illnesses
@@ -328,113 +469,19 @@ class DatabaseSeeder extends Seeder
                     }
                 }
                 
-                // Move to next week
+                // Move forward by 1 week for weekly plans
                 $currentDate->addWeek();
             }
             
-            \Log::info("Generated weekly care plans for beneficiary ID: {$beneficiary->beneficiary_id}");
+            // Only log every 10 beneficiaries to reduce log spam
+            if ($beneficiary->beneficiary_id % 10 == 0) {
+                \Log::info("Generated weekly care plans for beneficiaries through ID: {$beneficiary->beneficiary_id}");
+            }
         }
         
         \Log::info("Created a total of {$wcpCount} weekly care plans");
-        
-        // Add some overlapping plans for testing purposes (same date, different care workers)
-        $this->createOverlappingCarePlans($careWorkers, $beneficiaries);
     }
 
-    /**
-     * Create some overlapping care plans for testing purposes
-     */
-    private function createOverlappingCarePlans($careWorkers, $beneficiaries)
-    {
-        // Use specific dates for overlapping plans
-        $overlappingDates = [
-            '2024-03-15',
-            '2024-04-15',
-            '2024-05-15',
-            '2025-01-10',
-            '2025-02-20',
-        ];
-        
-        foreach ($overlappingDates as $date) {
-            // For each date, create 2 additional plans for the same beneficiary
-            if (count($careWorkers) >= 3 && count($beneficiaries) > 0) {
-                $beneficiary = $beneficiaries[array_rand($beneficiaries)];
-                
-                // Create 2 additional plans with different care workers
-                for ($i = 0; $i < 2; $i++) {
-                    $careWorker = $careWorkers[$i];
-                    
-                    // Create vital signs
-                    $vitalSigns = VitalSigns::factory()->create([
-                        'created_by' => $careWorker->id,
-                    ]);
-                    
-                    // Select 0-2 illnesses randomly
-                    $selectedIllnesses = $this->faker->randomElements(
-                        $commonIllnesses ?? ['Cold', 'Fever', 'UTI'],
-                        $this->faker->numberBetween(0, 2)
-                    );
-                    
-                    // Create the Weekly Care Plan WITH photo_path
-                    $weeklyCarePlan = WeeklyCarePlan::create([
-                        'beneficiary_id' => $beneficiary->beneficiary_id,
-                        'care_worker_id' => $careWorker->id,
-                        'vital_signs_id' => $vitalSigns->vital_signs_id,
-                        'date' => $date,
-                        'assessment' => $this->getRealisticAssessment(),
-                        'illnesses' => !empty($selectedIllnesses) ? json_encode($selectedIllnesses) : null,
-                        'photo_path' => 'weekly_care_plans/photos/seed_photo_' . rand(1, 10) . '.jpg',
-                        'evaluation_recommendations' => $this->getRealisticRecommendation(),
-                        'created_by' => $careWorker->id,
-                        'updated_by' => $careWorker->id,
-                        'created_at' => $date,
-                        'updated_at' => $date
-                    ]);
-                    
-                    \Log::info("Created overlapping care plan for date {$date}, beneficiary {$beneficiary->beneficiary_id}, care worker {$careWorker->id}");
-                }
-            }
-        }
-    }
-
-    private function getRealisticAssessment()
-    {
-        $assessments = [
-            "Beneficiary appears alert and oriented to time, place, and person. Vital signs are within normal limits. Reports mild joint pain in knees, rating 3/10 on pain scale. Medication compliance is good. No signs of illness or infection noted.",
-            
-            "Beneficiary is experiencing some shortness of breath upon minimal exertion. Blood pressure is slightly elevated at 145/90. Reports difficulty sleeping due to back discomfort. Needs assistance with bathing and dressing.",
-            
-            "Assessment shows mild cognitive decline, with some short-term memory issues. Beneficiary can still perform most ADLs independently. Mood appears stable. Appetite is good but reports occasional difficulty chewing harder foods.",
-            
-            "Beneficiary reports increased fatigue and dizziness when standing. Blood pressure drops by 15mmHg upon standing, indicating possible orthostatic hypotension. No falls reported, but increased risk noted.",
-            
-            "Beneficiary shows signs of depression with decreased appetite and social withdrawal. Reports feeling 'worthless' and having little energy. Sleep disturbances noted with early morning awakening.",
-            
-            "Physical assessment shows good mobility using walker. Skin is intact with no pressure areas. Edema noted in both ankles, +2. Breathing is unlabored with clear lung sounds."
-        ];
-        
-        return $assessments[array_rand($assessments)];
-    }
-
-    private function getRealisticRecommendation()
-    {
-        $recommendations = [
-            "Continue current medication regimen. Increase fluid intake to 1.5-2L daily. Schedule follow-up blood pressure check in 2 weeks. Encourage daily short walks to maintain mobility.",
-            
-            "Refer to physical therapy for strengthening exercises. Monitor blood glucose levels twice daily. Review medication schedule with beneficiary to ensure proper timing with meals. Provide education on signs of hypoglycemia.",
-            
-            "Recommend home safety evaluation to prevent falls. Contact primary physician regarding increased pain medication. Schedule vision assessment. Encourage family to assist with meal preparation twice weekly.",
-            
-            "Implement cognitive stimulation activities daily. Consider podiatry referral for foot care. Schedule nutrition consultation to address weight loss. Recommend joining community senior center activities once weekly.",
-            
-            "Monitor for signs of urinary tract infection due to recent symptoms. Encourage use of bedroom commode at night to reduce fall risk. Review proper transfer techniques with caregiver. Schedule memory assessment.",
-            
-            "Continue weekly blood pressure monitoring. Recommend compression stockings for lower extremity edema. Evaluate effectiveness of pain management strategies at next visit. Encourage socialization through day program participation."
-        ];
-        
-        return $recommendations[array_rand($recommendations)];
-    }
-    
     /**
      * Get a random custom intervention description based on category
      */
@@ -500,34 +547,108 @@ class DatabaseSeeder extends Seeder
         return $customInterventions[$categoryId][array_rand($customInterventions[$categoryId])];
     }
 
+    private function getRealisticAssessment()
+    {
+        $assessments = [
+            "Beneficiary appears alert and oriented to time, place, and person. Vital signs are within normal limits. Reports mild joint pain in knees, rating 3/10 on pain scale. Medication compliance is good. No signs of illness or infection noted.",
+            
+            "Beneficiary is experiencing some shortness of breath upon minimal exertion. Blood pressure is slightly elevated at 145/90. Reports difficulty sleeping due to back discomfort. Needs assistance with bathing and dressing.",
+            
+            "Assessment shows mild cognitive decline, with some short-term memory issues. Beneficiary can still perform most ADLs independently. Mood appears stable. Appetite is good but reports occasional difficulty chewing harder foods.",
+            
+            "Beneficiary reports increased fatigue and dizziness when standing. Blood pressure drops by 15mmHg upon standing, indicating possible orthostatic hypotension. No falls reported, but increased risk noted.",
+            
+            "Beneficiary shows signs of depression with decreased appetite and social withdrawal. Reports feeling 'worthless' and having little energy. Sleep disturbances noted with early morning awakening.",
+            
+            "Physical assessment shows good mobility using walker. Skin is intact with no pressure areas. Edema noted in both ankles, +2. Breathing is unlabored with clear lung sounds.",
+            
+            "Beneficiary maintains independent ADLs but requires supervision for medication management. Cognitive status remains stable with good short-term memory. Social engagement has improved with regular family visits.",
+            
+            "Assessment reveals moderate pain in lower back, self-rated as 5/10. Pain increases with prolonged standing. Using prescribed pain medication with good effect. Mobility remains good with appropriate assistive devices.",
+            
+            "Beneficiary showing excellent progress with physical therapy exercises. Range of motion in affected shoulder improved by approximately 15 degrees. Self-reports satisfaction with progress and decreased pain levels.",
+            
+            "Nutritional assessment shows adequate intake of fluids and nutrients. Weight stable at 68kg. No difficulty swallowing noted. Enjoys meals and maintains good appetite. No dietary restrictions required at this time."
+        ];
+        
+        return $assessments[array_rand($assessments)];
+    }
+
+    private function getRealisticRecommendation()
+    {
+        $recommendations = [
+            "Continue current medication regimen. Increase fluid intake to 1.5-2L daily. Schedule follow-up blood pressure check in 2 weeks. Encourage daily short walks to maintain mobility.",
+            
+            "Refer to physical therapy for strengthening exercises. Monitor blood glucose levels twice daily. Review medication schedule with beneficiary to ensure proper timing with meals. Provide education on signs of hypoglycemia.",
+            
+            "Recommend home safety evaluation to prevent falls. Contact primary physician regarding increased pain medication. Schedule vision assessment. Encourage family to assist with meal preparation twice weekly.",
+            
+            "Implement cognitive stimulation activities daily. Consider podiatry referral for foot care. Schedule nutrition consultation to address weight loss. Recommend joining community senior center activities once weekly.",
+            
+            "Monitor for signs of urinary tract infection due to recent symptoms. Encourage use of bedroom commode at night to reduce fall risk. Review proper transfer techniques with caregiver. Schedule memory assessment.",
+            
+            "Continue weekly blood pressure monitoring. Recommend compression stockings for lower extremity edema. Evaluate effectiveness of pain management strategies at next visit. Encourage socialization through day program participation.",
+            
+            "Increase protein intake to promote wound healing. Consult with dietitian for personalized meal planning. Continue daily wound care per protocol. Monitor for signs of infection during dressing changes.",
+            
+            "Maintain current exercise regimen focusing on balance and strength. Consider group exercise sessions for social interaction. Review medication efficacy at next appointment. Keep detailed log of any dizziness episodes.",
+            
+            "Continue monitoring oxygen saturation levels daily. Ensure proper inhaler technique is maintained. Schedule pulmonary function tests within 30 days. Report any increased shortness of breath immediately.",
+            
+            "Implement fall prevention strategies including removing throw rugs and improving lighting. Consider grab bar installation in bathroom. Encourage consistent use of prescribed assistive devices. Schedule follow-up in 2 weeks."
+        ];
+        
+        return $recommendations[array_rand($recommendations)];
+    }
 
     private function generateNotifications()
     {
-        // Generate notifications for beneficiaries - keeping this part
-        $beneficiaries = Beneficiary::take(5)->get();
+        // Generate notifications for all beneficiaries (but limit to 1-3 per beneficiary)
+        $beneficiaries = Beneficiary::all();
+        $notificationCount = 0;
+        
         foreach ($beneficiaries as $beneficiary) {
-            Notification::factory()
-                ->count(rand(2, 5))
-                ->forBeneficiary($beneficiary->beneficiary_id)
-                ->create();
+            if (rand(1, 4) > 1) { // 75% of beneficiaries get notifications
+                $count = rand(1, 3);
+                Notification::factory()
+                    ->count($count)
+                    ->forBeneficiary($beneficiary->beneficiary_id)
+                    ->create();
+                    
+                $notificationCount += $count;
+            }
         }
         
-        // Generate notifications for family members - keeping this part
-        $familyMembers = FamilyMember::take(5)->get();
+        \Log::info("Created {$notificationCount} notifications for beneficiaries");
+        
+        // Generate notifications for some family members
+        $familyMembers = FamilyMember::inRandomOrder()->take(50)->get(); // Half of all family members
+        $notificationCount = 0;
+        
         foreach ($familyMembers as $familyMember) {
+            $count = rand(1, 2);
             Notification::factory()
-                ->count(rand(2, 4))
+                ->count($count)
                 ->forFamilyMember($familyMember->family_member_id)
                 ->create();
+                
+            $notificationCount += $count;
         }
         
-        // UPDATED: Generate notifications for ALL COSE staff instead of just taking 5
-        $staffMembers = User::where('role_id', '<=', 3)->get(); // Get ALL COSE staff
+        \Log::info("Created {$notificationCount} notifications for family members");
+        
+        // Generate notifications for ALL COSE staff
+        $staffMembers = User::where('role_id', '<=', 3)->get();
+        $notificationCount = 0;
         
         $notificationTypes = [
             // Admin notifications (role_id = 1)
             1 => [
                 'System Update' => 'The system has been updated with new features.',
+                'Internal Appointment Created' => 'A new internal appointment has been created.',
+                'Internal Appointment Updated' => 'An internal appointment has been updated.',
+                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
+                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
                 'Security Alert' => 'A new security patch has been applied.',
                 'New User Registration' => 'A new user has registered in the system.',
                 'Data Backup Complete' => 'Automatic data backup has completed successfully.',
@@ -536,6 +657,10 @@ class DatabaseSeeder extends Seeder
             // Care Manager notifications (role_id = 2)
             2 => [
                 'New Case Assigned' => 'You have been assigned a new case to manage.',
+                'Internal Appointment Created' => 'A new internal appointment has been created.',
+                'Internal Appointment Updated' => 'An internal appointment has been updated.',
+                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
+                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
                 'Care Plan Review' => 'A care plan is due for review this week.',
                 'Staff Schedule Update' => 'There are changes to the staff schedule.',
                 'Patient Status Alert' => 'A patient status has been updated.',
@@ -547,6 +672,10 @@ class DatabaseSeeder extends Seeder
                 'Medication Update' => 'Medication schedule has been updated for a patient.',
                 'Training Available' => 'New training modules are available for you.',
                 'Shift Change Request' => 'A shift change has been requested.',
+                'Internal Appointment Created' => 'A new internal appointment has been created.',
+                'Internal Appointment Updated' => 'An internal appointment has been updated.',
+                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
+                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
                 'Documentation Reminder' => 'Please complete your visit documentation.'
             ]
         ];
@@ -571,8 +700,12 @@ class DatabaseSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+                
+                $notificationCount++;
             }
         }
+        
+        \Log::info("Created {$notificationCount} notifications for staff members");
     }
 
     /**
@@ -580,125 +713,128 @@ class DatabaseSeeder extends Seeder
      */
     private function generateConversations()
     {
-        // Get users by role
+        // Get users by role - with our new reduced counts
         $admins = User::where('role_id', 1)->get();
         $careManagers = User::where('role_id', 2)->get();
         $careWorkers = User::where('role_id', 3)->get();
         
-        // Get some beneficiaries and family members for conversations
-        $beneficiaries = Beneficiary::take(5)->get();
-        $familyMembers = FamilyMember::take(5)->get();
+        // Get a subset of beneficiaries and family members for conversations
+        // We don't need all 100 beneficiaries having conversations
+        $beneficiaries = Beneficiary::inRandomOrder()->take(20)->get();
+        $familyMembers = FamilyMember::inRandomOrder()->take(15)->get();
         
         // ================ PRIVATE CONVERSATIONS ================
+        $conversationCount = 0;
         
         // 1. Create conversations for Admins (can only talk to Care Managers)
         foreach ($admins as $admin) {
-            // Create 2 private conversations with random Care Managers
-            for ($i = 0; $i < 2; $i++) {
-                if ($careManagers->count() > 0) {
-                    $randomCareManager = $careManagers->random();
-                    $this->createPrivateConversation($admin, $randomCareManager);
-                }
+            // Create conversations with all Care Managers (since we only have 2)
+            foreach ($careManagers as $careManager) {
+                $this->createPrivateConversation($admin, $careManager);
+                $conversationCount++;
             }
         }
         
-        // 2. Create conversations for Care Managers (can talk to Admins, other Care Managers, and Care Workers)
+        // 2. Create conversations between Care Managers and Care Workers (distributed by area)
         foreach ($careManagers as $careManager) {
-            // Create 3 private conversations - with Admin, other Care Manager, and Care Worker
+            // Get care workers assigned to this care manager
+            $assignedWorkers = $careWorkers->where('assigned_care_manager_id', $careManager->id);
             
-            // With Admin
-            if ($admins->count() > 0) {
-                $randomAdmin = $admins->random();
-                // Skip if conversation already exists from admin's loop
-                if (!$this->conversationExistsBetween($careManager->id, 'cose_staff', $randomAdmin->id, 'cose_staff')) {
-                    $this->createPrivateConversation($careManager, $randomAdmin);
-                }
+            // Create conversation with each assigned worker
+            foreach ($assignedWorkers as $worker) {
+                $this->createPrivateConversation($careManager, $worker);
+                $conversationCount++;
             }
             
-            // With another Care Manager
-            $otherCareManagers = $careManagers->where('id', '!=', $careManager->id);
-            if ($otherCareManagers->count() > 0) {
-                $randomOtherCareManager = $otherCareManagers->random();
-                $this->createPrivateConversation($careManager, $randomOtherCareManager);
-            }
+            // Also create conversations with some beneficiaries in their area
+            $areaName = stripos($careManager->name, 'San Roque') !== false ? 'San Roque' : 'Mondragon';
+            $areaBeneficiaries = $beneficiaries->filter(function ($beneficiary) use ($areaName) {
+                return stripos($beneficiary->address, $areaName) !== false;
+            })->take(5);
             
-            // With Care Worker
-            if ($careWorkers->count() > 0) {
-                $randomCareWorker = $careWorkers->random();
-                $this->createPrivateConversation($careManager, $randomCareWorker);
+            foreach ($areaBeneficiaries as $beneficiary) {
+                $this->createPrivateConversation($careManager, $beneficiary, 'beneficiary');
+                $conversationCount++;
             }
         }
         
-        // 3. Create conversations for Care Workers (can only talk to Care Managers)
-        foreach ($careWorkers as $careWorker) {
-            // Create 1 conversation with a Care Manager if not already created
-            if ($careManagers->count() > 0) {
-                $randomCareManager = $careManagers->random();
-                // Skip if conversation already exists from care manager's loop
-                if (!$this->conversationExistsBetween($careWorker->id, 'cose_staff', $randomCareManager->id, 'cose_staff')) {
-                    $this->createPrivateConversation($careWorker, $randomCareManager);
+        // 3. Create conversations for Care Workers with their assigned beneficiaries
+        $careWorkersCount = count($careWorkers);
+        $beneficiariesPerWorker = ceil(count($beneficiaries) / $careWorkersCount);
+        
+        // Distribute beneficiaries among care workers for conversations
+        for ($i = 0; $i < $careWorkersCount; $i++) {
+            $start = $i * $beneficiariesPerWorker;
+            $end = min(($i + 1) * $beneficiariesPerWorker, count($beneficiaries));
+            
+            for ($j = $start; $j < $end; $j++) {
+                if (isset($beneficiaries[$j])) {
+                    $this->createPrivateConversation($careWorkers[$i], $beneficiaries[$j], 'beneficiary');
+                    $conversationCount++;
                 }
             }
             
-            // Create 1-2 conversations with beneficiaries and family members
-            if ($beneficiaries->count() > 0) {
-                $randomBeneficiary = $beneficiaries->random();
-                $this->createPrivateConversation($careWorker, $randomBeneficiary, 'beneficiary');
-            }
-            
-            if ($familyMembers->count() > 0) {
-                $randomFamilyMember = $familyMembers->random();
-                $this->createPrivateConversation($careWorker, $randomFamilyMember, 'family_member');
+            // Also create 1-2 conversations with family members
+            $workerFamilyMembers = $familyMembers->random(min(2, count($familyMembers)));
+            foreach ($workerFamilyMembers as $familyMember) {
+                $this->createPrivateConversation($careWorkers[$i], $familyMember, 'family_member');
+                $conversationCount++;
             }
         }
+        
+        \Log::info("Created {$conversationCount} private conversations");
         
         // ================ GROUP CONVERSATIONS ================
+        $groupCount = 0;
         
-        // 1. Create group chats for Admins (with only Care Managers)
-        foreach ($admins as $admin) {
-            if ($careManagers->count() >= 2) {
-                $this->createGroupChat($admin, $careManagers->random(rand(2, min(4, $careManagers->count())))->all());
-            }
-        }
+        // 1. Create group chats for entire admin team (with care managers)
+        $allAdmins = $admins->all();
+        $this->createGroupChat($allAdmins[0], array_merge(array_slice($allAdmins, 1), $careManagers->all()));
+        $groupCount++;
         
-        // 2. Create group chats for Care Managers:
-        // a) With Admins only
-        // b) With other Care Managers only
-        // c) With Care Workers only (to avoid mixing admins and care workers)
+        // 2. Create area-specific group chats for each care manager with their care workers
         foreach ($careManagers as $careManager) {
-            // Group with Admins (if enough admins exist)
-            if ($admins->count() >= 1) {
-                $groupParticipants = $admins->random(min(2, $admins->count()))->all();
-                $otherCareManagers = $careManagers->where('id', '!=', $careManager->id)->random(min(2, $careManagers->count() - 1))->all();
-                $this->createGroupChat($careManager, array_merge($groupParticipants, $otherCareManagers));
-            }
-            
-            // Group with Care Workers only
-            if ($careWorkers->count() >= 2) {
-                $this->createGroupChat($careManager, $careWorkers->random(rand(2, min(4, $careWorkers->count())))->all());
+            $assignedWorkers = $careWorkers->where('assigned_care_manager_id', $careManager->id)->all();
+            if (count($assignedWorkers) > 0) {
+                $this->createGroupChat($careManager, $assignedWorkers);
+                $groupCount++;
             }
         }
         
-        // 3. Create group chats for Care Workers (with Care Managers and clients)
-        foreach ($careWorkers as $careWorker) {
-            // One group with Care Manager, beneficiary and family member
-            if ($careManagers->count() > 0 && $beneficiaries->count() > 0 && $familyMembers->count() > 0) {
+        // 3. Create a few mixed groups with care workers, beneficiaries and family members
+        foreach ($careWorkers as $i => $careWorker) {
+            // Only create for some care workers (40%)
+            if (rand(1, 10) <= 4) {
+                // Get a beneficiary and family member
+                $beneficiary = $beneficiaries->random();
+                $familyMember = $familyMembers->random();
+                
                 $participants = [
-                    ['object' => $careManagers->random(), 'type' => 'cose_staff'],
-                    ['object' => $beneficiaries->random(), 'type' => 'beneficiary'],
-                    ['object' => $familyMembers->random(), 'type' => 'family_member']
+                    ['object' => $beneficiary, 'type' => 'beneficiary'],
+                    ['object' => $familyMember, 'type' => 'family_member']
                 ];
                 
+                // Optionally add care manager (50% chance)
+                if (rand(1, 2) == 1) {
+                    $careManager = User::find($careWorker->assigned_care_manager_id);
+                    if ($careManager) {
+                        $participants[] = ['object' => $careManager, 'type' => 'cose_staff'];
+                    }
+                }
+                
                 $this->createGroupChatWithMixedParticipants($careWorker, $participants);
+                $groupCount++;
             }
         }
         
-        // Log how many conversations were created
+        \Log::info("Created {$groupCount} group conversations");
+        
+        // Log overall messaging stats
         $totalConversations = Conversation::count();
         $totalMessages = Message::count();
         $totalAttachments = MessageAttachment::count();
         
-        \Log::info("Generated {$totalConversations} conversations with {$totalMessages} messages and {$totalAttachments} attachments.");
+        \Log::info("Total: {$totalConversations} conversations with {$totalMessages} messages and {$totalAttachments} attachments");
     }
 
     /**
@@ -723,6 +859,18 @@ class DatabaseSeeder extends Seeder
      */
     private function createPrivateConversation($user1, $user2, $user2Type = 'cose_staff')
     {
+        // Skip if conversation already exists
+        if ($user2Type === 'cose_staff') {
+            if ($this->conversationExistsBetween($user1->id, 'cose_staff', $user2->id, 'cose_staff')) {
+                return null;
+            }
+        } else {
+            $user2Id = $user2Type === 'beneficiary' ? $user2->beneficiary_id : $user2->family_member_id;
+            if ($this->conversationExistsBetween($user1->id, 'cose_staff', $user2Id, $user2Type)) {
+                return null;
+            }
+        }
+        
         // Create a private conversation
         $conversation = Conversation::factory()->privateChat()->create();
         
@@ -742,8 +890,8 @@ class DatabaseSeeder extends Seeder
             'joined_at' => now()->subDays(rand(1, 30)),
         ]);
         
-        // Create messages in this conversation from both participants
-        $messageCount = rand(3, 10);
+        // Create messages in this conversation from both participants (2-8 messages)
+        $messageCount = rand(2, 8);
         
         $lastMessage = null;
         for ($j = 0; $j < $messageCount; $j++) {
@@ -791,9 +939,25 @@ class DatabaseSeeder extends Seeder
      */
     private function createGroupChat($creator, $participants)
     {
+        $areaName = '';
+        if (is_object($creator) && property_exists($creator, 'name')) {
+            if (stripos($creator->name, 'San Roque') !== false) {
+                $areaName = 'San Roque';
+            } elseif (stripos($creator->name, 'Mondragon') !== false) {
+                $areaName = 'Mondragon';
+            }
+        }
+        
+        // Create a realistic group chat name
+        if (!empty($areaName)) {
+            $name = $areaName . ' ' . $this->getGroupChatName();
+        } else {
+            $name = 'COSE ' . $this->getGroupChatName();
+        }
+        
         // Create a group chat
         $groupChat = Conversation::factory()->groupChat()->create([
-            'name' => 'Team ' . \Faker\Factory::create()->word . ' Chat',
+            'name' => $name,
         ]);
         
         // Add the creator as a participant
@@ -827,15 +991,43 @@ class DatabaseSeeder extends Seeder
         
         return $groupChat;
     }
+    
+    /**
+     * Get a realistic group chat name
+     */
+    private function getGroupChatName()
+    {
+        $prefixes = ['Team', 'Staff', 'Care', 'Community', 'Support'];
+        $purposes = ['Coordination', 'Updates', 'Team', 'Planning', 'Discussion', 'Communication'];
+        
+        return $prefixes[array_rand($prefixes)] . ' ' . $purposes[array_rand($purposes)];
+    }
 
     /**
      * Create a group chat with mixed participant types
      */
     private function createGroupChatWithMixedParticipants($creator, $participants)
     {
+        // Get the beneficiary name if available
+        $beneficiaryName = '';
+        foreach ($participants as $participant) {
+            if ($participant['type'] === 'beneficiary' && property_exists($participant['object'], 'name')) {
+                $beneficiaryName = $participant['object']->name;
+                break;
+            }
+        }
+        
+        // Create a realistic group name
+        if (!empty($beneficiaryName)) {
+            $firstName = explode(' ', $beneficiaryName)[0];
+            $name = $firstName . "'s Care Team";
+        } else {
+            $name = "Beneficiary Support Group";
+        }
+        
         // Create a group chat
         $groupChat = Conversation::factory()->groupChat()->create([
-            'name' => 'Team ' . \Faker\Factory::create()->word . ' Support',
+            'name' => $name,
         ]);
         
         // Add the creator as a participant
@@ -883,8 +1075,8 @@ class DatabaseSeeder extends Seeder
         // Determine which participants array to use
         $useParticipants = !empty($mixedParticipants) ? $mixedParticipants : $staffParticipants;
         
-        // Generate 5-15 messages in the group chat from various participants
-        $messageCount = rand(5, 15);
+        // Generate 3-10 messages in the group chat from various participants
+        $messageCount = rand(3, 10);
         
         $lastMessage = null;
         for ($j = 0; $j < $messageCount; $j++) {
@@ -950,7 +1142,7 @@ class DatabaseSeeder extends Seeder
     private function addAttachmentAndReadStatuses($message, $participants)
     {
         // Randomly add attachments to some messages
-        if (rand(1, 5) == 1) { // 20% chance
+        if (rand(1, 10) == 1) { // 10% chance - reduced from original
             $isImage = rand(0, 1) == 1;
             
             if ($isImage) {
@@ -1000,338 +1192,537 @@ class DatabaseSeeder extends Seeder
         }
     }
 
-    private function getRandomAssessment()
-    {
-        $assessments = [
-            "Beneficiary shows improved mobility compared to last week. Maintains good spirits and is engaging well with care activities.",
-            "Cognitive function stable; some memory issues persist but responds well to memory exercises. Appetite has improved.",
-            "Sleep patterns remain disrupted. Requires additional assistance with ADLs. Pain levels manageable with current medication.",
-            "Mood fluctuations noted this week. Physical strength improving gradually with exercise regimen. Social engagement increased.",
-            "Beneficiary experienced mild respiratory difficulties but recovered well. Hydration and nutrition intake adequate.",
-            "Notable progress in self-care abilities. Beneficiary participated actively in all therapy sessions. Family reports satisfaction with care.",
-            "Some anxiety observed when discussing medical appointments. Mobility has improved with the new assistive device.",
-            "Beneficiary appears more energetic this week. Completed all recommended exercises. Medication compliance has improved.",
-            "Blood pressure readings slightly elevated. Will monitor closely. Otherwise, beneficiary is engaging well in daily activities.",
-            "Beneficiary expressed interest in community activities. Physical condition stable. Requires ongoing support with meal preparation."
-        ];
-        
-        return $assessments[array_rand($assessments)];
-    }
-
-    private function getRandomRecommendation()
-    {
-        $recommendations = [
-            "Continue current mobility exercises and gradually increase intensity. Follow up on referral to physical therapy.",
-            "Maintain memory exercises daily. Consider adding new cognitive activities to prevent boredom. Review medication schedule with doctor.",
-            "Implement suggested sleep hygiene practices. Consider adjusting evening routine to improve sleep quality. Follow up on pain management.",
-            "Encourage participation in social group activities twice weekly. Continue monitoring mood and report significant changes.",
-            "Monitor respiratory function closely. Ensure proper hydration and nutrition intake. Follow up with pulmonary specialist as scheduled.",
-            "Continue current self-care regimen. Celebrate progress with beneficiary. Schedule follow-up with family to discuss ongoing support.",
-            "Provide additional emotional support before medical appointments. Continue with current mobility assistance devices.",
-            "Maintain current exercise regimen. Provide positive reinforcement for medication compliance. Consider adding new activities.",
-            "Schedule follow-up to monitor blood pressure. Review dietary recommendations. Continue with current social activities.",
-            "Support interest in community activities by providing transportation options. Continue meal preparation support while encouraging participation."
-        ];
-        
-        return $recommendations[array_rand($recommendations)];
-    }
-
     /**
-     * Generate scheduling system data (appointments, visitations, medication schedules)
+     * Generate scheduling data for the system
      */
-    private function generateSchedulingData()
+    private function generateSchedulingData($careWorkers, $allBeneficiaries)
     {
-        \Log::info("Generating scheduling system data...");
+        \Log::info("Generating scheduling data...");
         
         // Create appointment types
         $this->createAppointmentTypes();
         
-        // Generate internal appointments with participants
+        // Generate internal appointments
         $this->generateInternalAppointments();
         
         // Generate care worker visitations
-        $this->generateCareWorkerVisitations();
+        $this->generateCareWorkerVisitations($careWorkers, $allBeneficiaries);
         
         // Generate medication schedules
         $this->generateMedicationSchedules();
-        
-        \Log::info("Finished generating scheduling system data");
     }
 
-    /**
-     * Create appointment types
-     */
     private function createAppointmentTypes()
     {
-        $appointmentTypes = [
-            ['type_name' => 'Skills Enhancement Training', 'color_code' => '#4e73df', 'description' => 'Training sessions to enhance caregiver skills'],
-            ['type_name' => 'Quarterly Feedback Sessions', 'color_code' => '#1cc88a', 'description' => 'Regular feedback sessions held quarterly'],
-            ['type_name' => 'Municipal Development Council (MDC) Participation', 'color_code' => '#36b9cc', 'description' => 'Participation in MDC meetings'],
-            ['type_name' => 'Municipal Local Health Board Meeting', 'color_code' => '#f6c23e', 'description' => 'Meetings with the Municipal Local Health Board'],
-            ['type_name' => 'LIGA Meeting', 'color_code' => '#e74a3b', 'description' => 'LIGA organization meetings'],
-            ['type_name' => 'Referrals to MHO', 'color_code' => '#6f42c1', 'description' => 'Referral appointments with Municipal Health Officer'],
-            ['type_name' => 'Assessment and Review of Care Needs', 'color_code' => '#fd7e14', 'description' => 'Assessment and review of beneficiary care needs'],
-            ['type_name' => 'General Care Plan Finalization', 'color_code' => '#20c997', 'description' => 'Meetings to finalize general care plans'],
-            ['type_name' => 'Project Team Meeting', 'color_code' => '#5a5c69', 'description' => 'Internal project team meetings'],
-            ['type_name' => 'Mentoring Session', 'color_code' => '#858796', 'description' => 'Mentoring sessions for care workers'],
-            ['type_name' => 'Other Appointment', 'color_code' => '#a435f0', 'description' => 'Other appointment types not covered above'],
-        ];
+        // Check if appointment types already exist (should exist after running migrations)
+        if (AppointmentType::count() > 0) {
+            \Log::info("Using " . AppointmentType::count() . " existing appointment types");
+            return;
+        }
+
+        \Log::info("No appointment types found. Creating default types...");
         
-        foreach ($appointmentTypes as $type) {
-            \App\Models\AppointmentType::create($type);
+        $types = [
+            ['type_name' => 'Skills Training', 'color_code' => '#4e73df', 'description' => 'Staff skills development and training sessions'],
+            ['type_name' => 'Feedback Session', 'color_code' => '#1cc88a', 'description' => 'Performance feedback and evaluation meetings'],
+            ['type_name' => 'Council Meeting', 'color_code' => '#36b9cc', 'description' => 'Regular council and committee meetings'],
+            ['type_name' => 'Health Protocols', 'color_code' => '#f6c23e', 'description' => 'Health and safety protocol discussions'],
+            ['type_name' => 'Liga Meetings', 'color_code' => '#e74a3b', 'description' => 'Liga ng mga Barangay meetings and coordination'],
+            ['type_name' => 'Referrals Discussion', 'color_code' => '#6f42c1', 'description' => 'Discussing beneficiary referrals and services'],
+            ['type_name' => 'Assessment Review', 'color_code' => '#fd7e14', 'description' => 'Reviewing beneficiary assessments and reports'],
+            ['type_name' => 'Care Plan Review', 'color_code' => '#20c997', 'description' => 'Reviewing and updating care plans'],
+            ['type_name' => 'Team Building', 'color_code' => '#5a5c69', 'description' => 'Staff team-building activities'],
+            ['type_name' => 'Mentoring Session', 'color_code' => '#858796', 'description' => 'One-on-one mentoring sessions'],
+            ['type_name' => 'Other', 'color_code' => '#a435f0', 'description' => 'Other meeting types not categorized above'],
+        ];
+
+        foreach ($types as $type) {
+            AppointmentType::firstOrCreate(
+                ['type_name' => $type['type_name']],
+                $type
+            );
         }
         
-        \Log::info("Created appointment types");
+        \Log::info("Created appointment types: " . AppointmentType::count());
     }
 
     /**
-     * Generate internal appointments and participants
+     * Generate internal appointments for staff
      */
     private function generateInternalAppointments()
     {
-        // Get staff users
-        $admins = \App\Models\User::where('role_id', 1)->get();
-        $careManagers = \App\Models\User::where('role_id', 2)->get();
-        $careWorkers = \App\Models\User::where('role_id', 3)->take(10)->get();
-        $beneficiaries = \App\Models\Beneficiary::take(10)->get();
+        \Log::info("Generating internal appointments...");
         
-        // Get appointment types
-        $appointmentTypes = \App\Models\AppointmentType::all();
+        $appointmentTypes = AppointmentType::all();
+        $staffUsers = User::where('role_id', '<=', 3)->get();
         
-        // Generate 30 appointments spread across past, present and future
-        $startDate = Carbon::now()->subMonths(1);
-        $endDate = Carbon::now()->addMonths(2);
-        
-        for ($i = 0; $i < 30; $i++) {
-            // Random date between start and end
-            $appointmentDate = $this->faker->dateTimeBetween($startDate, $endDate)->format('Y-m-d');
-            
-            // Random appointment type
-            $appointmentType = $appointmentTypes->random();
-            
-            // Determine if this is a flexible time appointment (20% chance)
-            $isFlexibleTime = $this->faker->boolean(20);
-            $startTime = $isFlexibleTime ? null : $this->faker->dateTimeBetween('08:00', '15:00')->format('H:i:s');
-            $endTime = $isFlexibleTime ? null : Carbon::createFromFormat('H:i:s', $startTime)->addHours($this->faker->numberBetween(1, 3))->format('H:i:s');
-            
-            // Create appointment title
-            $title = $appointmentType->type_name;
-            if ($appointmentType->type_name === 'Other Appointment') {
-                $otherTypes = ['Staff Training', 'Program Evaluation', 'Budget Meeting', 'Community Outreach', 'Stakeholder Meeting'];
-                $otherTypeDetails = $otherTypes[array_rand($otherTypes)];
-                $title .= ": " . $otherTypeDetails;
-            } else {
-                $otherTypeDetails = null;
-            }
-            
-            // Create the appointment
-            $appointment = \App\Models\Appointment::create([
-                'appointment_type_id' => $appointmentType->appointment_type_id,
-                'title' => $title,
-                'description' => $this->faker->paragraph(2),
-                'other_type_details' => $otherTypeDetails,
-                'date' => $appointmentDate,
-                'start_time' => $startTime,
-                'end_time' => $endTime,
-                'is_flexible_time' => $isFlexibleTime,
-                'meeting_location' => $this->faker->boolean(70) ? $this->faker->address : 'COSE Office',
-                'status' => $appointmentDate < Carbon::now()->format('Y-m-d') ? 
-                    $this->faker->randomElement(['completed', 'canceled']) : 
-                    'scheduled',
-                'notes' => $this->faker->boolean(60) ? $this->faker->paragraph : null,
-                'created_by' => $admins->merge($careManagers)->random()->id,
-                'updated_by' => $this->faker->boolean(30) ? $admins->merge($careManagers)->random()->id : null,
-                'created_at' => Carbon::parse($appointmentDate)->subDays($this->faker->numberBetween(1, 14)),
-                'updated_at' => Carbon::now(),
-            ]);
-            
-            // Add 3-8 participants to each appointment
-            $participantCount = $this->faker->numberBetween(3, 8);
-            $usedParticipantIds = [];
-            
-            // First participant is always the organizer (from staff)
-            $organizer = $admins->merge($careManagers)->random();
-            \App\Models\AppointmentParticipant::create([
-                'appointment_id' => $appointment->appointment_id,
-                'participant_type' => 'cose_user',
-                'participant_id' => $organizer->id,
-                'is_organizer' => true,
-                'created_at' => $appointment->created_at,
-                'updated_at' => $appointment->created_at,
-            ]);
-            $usedParticipantIds[] = 'cose_user_' . $organizer->id;
-            
-            // Add other participants
-            for ($p = 0; $p < $participantCount - 1; $p++) {
-                // Determine participant type - weighted distribution
-                $rand = $this->faker->numberBetween(1, 100);
-                
-                if ($rand <= 70) {
-                    // Staff participant
-                    $staffPool = $admins->merge($careManagers)->merge($careWorkers);
-                    $participant = $staffPool->random();
-                    $participantType = 'cose_user';
-                    $participantId = $participant->id;
-                    $participantKey = $participantType . '_' . $participantId;
-                    
-                    // Skip if this participant already added
-                    if (in_array($participantKey, $usedParticipantIds)) {
-                        continue;
-                    }
-                    
-                    $usedParticipantIds[] = $participantKey;
-                }
-                elseif ($rand <= 90) {
-                    // Beneficiary participant
-                    $participant = $beneficiaries->random();
-                    $participantType = 'beneficiary';
-                    $participantId = $participant->beneficiary_id;
-                    $participantKey = $participantType . '_' . $participantId;
-                    
-                    // Skip if this participant already added
-                    if (in_array($participantKey, $usedParticipantIds)) {
-                        continue;
-                    }
-                    
-                    $usedParticipantIds[] = $participantKey;
-                }
-                else {
-                    // Family member participant
-                    $beneficiary = $beneficiaries->random();
-                    $familyMember = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->first();
-                    
-                    if (!$familyMember) {
-                        continue;
-                    }
-                    
-                    $participantType = 'family_member';
-                    $participantId = $familyMember->family_member_id;
-                    $participantKey = $participantType . '_' . $participantId;
-                    
-                    // Skip if this participant already added
-                    if (in_array($participantKey, $usedParticipantIds)) {
-                        continue;
-                    }
-                    
-                    $usedParticipantIds[] = $participantKey;
-                }
-                
-                \App\Models\AppointmentParticipant::create([
-                    'appointment_id' => $appointment->appointment_id,
-                    'participant_type' => $participantType,
-                    'participant_id' => $participantId,
-                    'is_organizer' => false,
-                    'created_at' => $appointment->created_at,
-                    'updated_at' => $appointment->created_at,
-                ]);
-            }
-            
-            // Add recurring pattern to 40% of appointments
-            if ($this->faker->boolean(40)) {
-                \App\Models\RecurringPattern::create([
-                    'appointment_id' => $appointment->appointment_id,
-                    'pattern_type' => $this->faker->randomElement(['weekly', 'monthly']),
-                    'day_of_week' => $this->faker->randomElement(['weekly', 'monthly']) ? $this->faker->numberBetween(0, 6) : null,
-                    'recurrence_end' => Carbon::parse($appointmentDate)->addMonths($this->faker->numberBetween(1, 6)),
-                    'created_at' => $appointment->created_at,
-                    'updated_at' => $appointment->created_at,
-                ]);
-            }
-        }
-        
-        \Log::info("Created internal appointments with participants");
-    }
-
-    /**
-     * Generate care worker visitations
-     */
-    private function generateCareWorkerVisitations()
-    {
-        // Get care workers and beneficiaries
-        $careWorkers = \App\Models\User::where('role_id', 3)->get();
-        $beneficiaries = \App\Models\Beneficiary::all();
-        $admins = \App\Models\User::where('role_id', 1)->get();
-        $careManagers = \App\Models\User::where('role_id', 2)->get();
-        
-        if ($careWorkers->isEmpty() || $beneficiaries->isEmpty()) {
-            \Log::warning("No care workers or beneficiaries found for visitation schedules");
+        if ($appointmentTypes->isEmpty()) {
+            \Log::warning("No appointment types found. Cannot generate internal appointments.");
             return;
         }
         
-        // Generate 50 visitations
-        for ($i = 0; $i < 50; $i++) {
-            $careWorker = $careWorkers->random();
-            $beneficiary = $beneficiaries->random();
-            $assignedBy = $admins->merge($careManagers)->random();
+        // Reduced number of appointments compared to the original seeder
+        // Create past appointments
+        $this->createInternalAppointmentBatch(20, $appointmentTypes, $staffUsers, true);
+        
+        // Create future appointments
+        $this->createInternalAppointmentBatch(30, $appointmentTypes, $staffUsers, false);
+        
+        // Create recurring appointments - limit daily recurring patterns
+        $this->createRecurringInternalAppointments(8, $appointmentTypes, $staffUsers);
+        
+        \Log::info("Generated internal appointments: " . Appointment::count());
+    }
+    
+    /**
+     * Create a batch of internal appointments
+     * 
+     * @param int $count Number of appointments to create
+     * @param Collection $appointmentTypes Available appointment types
+     * @param Collection $staffUsers Available staff users
+     * @param bool $isPast Whether to create past appointments
+     */
+    private function createInternalAppointmentBatch($count, $appointmentTypes, $staffUsers, $isPast = false)
+    {
+        // Track used dates to avoid too many appointments on the same day
+        $usedDates = [];
+        
+        for ($i = 0; $i < $count; $i++) {
+            $appointmentType = $appointmentTypes->random();
+            $title = $this->getRealisticAppointmentTitle($appointmentType->type_name);
             
-            // Random date between -1 month and +2 months
-            $visitationDate = $this->faker->dateTimeBetween('-1 month', '+2 months')->format('Y-m-d');
-            $dateAssigned = Carbon::parse($visitationDate)->subDays($this->faker->numberBetween(1, 14))->format('Y-m-d');
-            
-            // Determine if this is a flexible time visitation (30% chance)
-            $isFlexibleTime = $this->faker->boolean(30);
-            
-            $startTime = $isFlexibleTime ? null : $this->faker->dateTimeBetween('08:00', '16:00')->format('H:i:s');
-            $endTime = $isFlexibleTime ? null : Carbon::createFromFormat('H:i:s', $startTime)->addHours($this->faker->numberBetween(1, 2))->format('H:i:s');
-            
-            // Status based on date
-            $status = Carbon::parse($visitationDate)->isPast() ?
-                $this->faker->randomElement(['completed', 'canceled']) : 'scheduled';
-            
-            // Confirmation details for completed visitations
-            $confirmedOn = ($status === 'completed') ? Carbon::parse($visitationDate)->addHours($this->faker->numberBetween(1, 8)) : null;
-            
-            $confirmedByBeneficiary = null;
-            $confirmedByFamily = null;
-            
-            if ($status === 'completed') {
-                // 50% chance of beneficiary confirmation, 30% chance of family confirmation, 20% chance of neither
-                $confirmationType = $this->faker->randomElement(['beneficiary', 'family', 'none', 'beneficiary', 'family', 'beneficiary']);
+            // For past appointments, set date in the past and status as completed
+            if ($isPast) {
+                // Create a date that's not already heavily used
+                do {
+                    $date = $this->faker->dateTimeBetween('-3 months', '-1 day')->format('Y-m-d');
+                } while (isset($usedDates[$date]) && $usedDates[$date] >= 2); // Max 2 appointments per day
                 
-                if ($confirmationType === 'beneficiary') {
-                    $confirmedByBeneficiary = $beneficiary->beneficiary_id;
-                } elseif ($confirmationType === 'family') {
-                    $familyMember = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->first();
-                    if ($familyMember) {
-                        $confirmedByFamily = $familyMember->family_member_id;
-                    }
-                }
+                // Track usage
+                $usedDates[$date] = isset($usedDates[$date]) ? $usedDates[$date] + 1 : 1;
+                
+                // 80% completed, 20% canceled
+                $status = (rand(1, 100) <= 80) ? 'completed' : 'canceled';
+            } else {
+                // Create a date that's not already heavily used
+                do {
+                    $date = $this->faker->dateTimeBetween('+1 day', '+2 months')->format('Y-m-d');
+                } while (isset($usedDates[$date]) && $usedDates[$date] >= 2); // Max 2 appointments per day
+                
+                // Track usage
+                $usedDates[$date] = isset($usedDates[$date]) ? $usedDates[$date] + 1 : 1;
+                
+                $status = 'scheduled';
             }
             
-            // Create the visitation
-            $visitation = \App\Models\Visitation::create([
-                'care_worker_id' => $careWorker->id,
-                'beneficiary_id' => $beneficiary->beneficiary_id,
-                'visit_type' => $this->faker->randomElement(['routine_care_visit', 'service_request', 'emergency_visit']),
-                'visitation_date' => $visitationDate,
+            // Realistic office hours (8:30 AM to 4:30 PM)
+            $startTime = $this->faker->dateTimeBetween('08:30', '16:00')->format('H:i:s');
+            $endTime = Carbon::parse($startTime)->addMinutes(rand(30, 120))->format('H:i:s');
+            $isFlexibleTime = $this->faker->boolean(10); // Only 10% chance of being flexible time
+            
+            // Choose organizer (admins and care managers organize appointments)
+            $organizer = $staffUsers->where('role_id', '<=', 2)->random();
+            
+            // Create the appointment
+            $appointment = Appointment::create([
+                'appointment_type_id' => $appointmentType->appointment_type_id,
+                'title' => $title,
+                'description' => $this->faker->paragraph(),
+                'date' => $date,
+                'start_time' => $isFlexibleTime ? null : $startTime,
+                'end_time' => $isFlexibleTime ? null : $endTime,
                 'is_flexible_time' => $isFlexibleTime,
-                'start_time' => $startTime,
-                'end_time' => $endTime,
-                'notes' => $this->faker->boolean(70) ? $this->faker->paragraph : null,
-                'date_assigned' => $dateAssigned,
-                'assigned_by' => $assignedBy->id,
+                'meeting_location' => $this->getRealisticMeetingLocation(),
                 'status' => $status,
-                'confirmed_by_beneficiary' => $confirmedByBeneficiary,
-                'confirmed_by_family' => $confirmedByFamily,
-                'confirmed_on' => $confirmedOn,
-                'created_at' => Carbon::parse($dateAssigned),
-                'updated_at' => $confirmedOn ?? Carbon::parse($dateAssigned),
+                'notes' => $this->faker->optional(70)->paragraph(),
+                'created_by' => $organizer->id,
+                'updated_by' => null
             ]);
             
-            // Add recurring pattern to 60% of visitations
-            if ($this->faker->boolean(60)) {
-                \App\Models\RecurringPattern::create([
-                    'visitation_id' => $visitation->visitation_id,
-                    'pattern_type' => $this->faker->randomElement(['weekly', 'monthly']),
-                    'day_of_week' => $this->faker->randomElement(['weekly', 'monthly']) ? $this->faker->numberBetween(0, 6) : null,
-                    'recurrence_end' => Carbon::parse($visitationDate)->addMonths($this->faker->numberBetween(1, 6)),
-                    'created_at' => $visitation->created_at,
-                    'updated_at' => $visitation->created_at,
+            // Create a single occurrence for non-recurring appointment
+            AppointmentOccurrence::create([
+                'appointment_id' => $appointment->appointment_id,
+                'occurrence_date' => $appointment->date,
+                'start_time' => $appointment->start_time,
+                'end_time' => $appointment->end_time,
+                'status' => $appointment->status
+            ]);
+            
+            // Determine the participant count based on appointment type
+            $participantCount = $this->getParticipantCountForAppointmentType($appointmentType->type_name);
+            
+            // Ensure we don't try to add more participants than available staff
+            $participantCount = min($participantCount, $staffUsers->count());
+            
+            // Add the organizer as the first participant
+            AppointmentParticipant::create([
+                'appointment_id' => $appointment->appointment_id,
+                'participant_id' => $organizer->id,
+                'participant_type' => 'cose_user',
+                'is_organizer' => true
+            ]);
+            
+            // Add other participants randomly
+            $availableParticipants = $staffUsers->reject(function($user) use ($organizer) {
+                return $user->id === $organizer->id;
+            })->shuffle();
+            
+            // Add participants based on the calculated count, limiting to available participants
+            for ($j = 0; $j < min($participantCount - 1, count($availableParticipants)); $j++) {
+                AppointmentParticipant::create([
+                    'appointment_id' => $appointment->appointment_id,
+                    'participant_id' => $availableParticipants[$j]->id,
+                    'participant_type' => 'cose_user',
+                    'is_organizer' => false
                 ]);
             }
         }
+    }
+    
+    /**
+     * Create recurring internal appointments
+     */
+    private function createRecurringInternalAppointments($count, $appointmentTypes, $staffUsers)
+    {
+        // Track used days to avoid too many recurring appointments on the same day
+        $usedDays = [];
         
-        \Log::info("Created care worker visitations");
+        for ($i = 0; $i < $count; $i++) {
+            // Select a random appointment type
+            $appointmentType = $appointmentTypes->random();
+            
+            // Generate a realistic title based on type
+            $title = $this->getRealisticAppointmentTitle($appointmentType->type_name);
+            
+            // Choose pattern type - mostly weekly, some monthly
+            $patternType = rand(1, 10) <= 8 ? 'weekly' : 'monthly';
+            
+            // Set start date in future
+            $startDate = Carbon::now()->addDays(rand(1, 14))->format('Y-m-d');
+            
+            // Set an end date 3-6 months in the future
+            $endDate = Carbon::parse($startDate)->addMonths(rand(3, 6))->format('Y-m-d');
+            
+            // For weekly patterns, select days of week as a string
+            $dayOfWeek = null;
+            if ($patternType === 'weekly') {
+                // Avoid creating too many recurring appointments on the same day
+                do {
+                    $dayOfWeek = (string)rand(1, 5); // Monday to Friday (1-5) as a string
+                } while (isset($usedDays[$dayOfWeek]) && $usedDays[$dayOfWeek] >= 2);
+                
+                // Track usage
+                $usedDays[$dayOfWeek] = isset($usedDays[$dayOfWeek]) ? $usedDays[$dayOfWeek] + 1 : 1;
+            } else {
+                // For monthly patterns, set day of month as a string in the day_of_week field
+                $dayOfWeek = (string)rand(1, 28); // Day of month (1-28) as a string
+            }
+            
+            // Realistic office hours (9 AM to 3 PM for recurring meetings)
+            $startTime = $this->faker->dateTimeBetween('09:00', '15:00')->format('H:i:s');
+            $endTime = Carbon::parse($startTime)->addMinutes(rand(30, 90))->format('H:i:s');
+            
+            // Staff meetings are rarely flexible time
+            $isFlexibleTime = $this->faker->boolean(5); // Only 5% chance of being flexible time
+            
+            // Choose organizer (admins and care managers organize appointments)
+            $organizer = $staffUsers->where('role_id', '<=', 2)->random();
+            
+            // Create the recurring appointment
+            $appointment = Appointment::create([
+                'appointment_type_id' => $appointmentType->appointment_type_id,
+                'title' => $title,
+                'description' => $this->faker->paragraph(),
+                'date' => $startDate,
+                'start_time' => $isFlexibleTime ? null : $startTime,
+                'end_time' => $isFlexibleTime ? null : $endTime,
+                'is_flexible_time' => $isFlexibleTime,
+                'meeting_location' => $this->getRealisticMeetingLocation(),
+                'status' => 'scheduled',
+                'notes' => $this->faker->optional(50)->paragraph(),
+                'created_by' => $organizer->id,
+                'updated_by' => null
+            ]);
+            
+            // Create the recurring pattern
+            $recurringPattern = RecurringPattern::create([
+                'appointment_id' => $appointment->appointment_id,
+                'pattern_type' => $patternType,
+                'day_of_week' => $dayOfWeek, // Use day_of_week for both weekly and monthly patterns
+                'recurrence_end' => $endDate
+            ]);
+            
+            // Generate occurrences based on the pattern
+            $currentDate = Carbon::parse($startDate);
+            $endDateTime = Carbon::parse($endDate);
+            
+            while ($currentDate->lte($endDateTime)) {
+                if ($patternType === 'weekly') {
+                    // Skip to the next occurrence if the day of week doesn't match
+                    if ($currentDate->dayOfWeek != intval($dayOfWeek)) {
+                        $currentDate->addDay();
+                        continue;
+                    }
+                    
+                    // Create occurrence for this date
+                    AppointmentOccurrence::create([
+                        'appointment_id' => $appointment->appointment_id,
+                        'occurrence_date' => $currentDate->format('Y-m-d'),
+                        'start_time' => $appointment->start_time,
+                        'end_time' => $appointment->end_time,
+                        'status' => $currentDate->isPast() ? (rand(1, 10) <= 8 ? 'completed' : (rand(1, 10) <= 5 ? 'canceled' : 'scheduled')) : 'scheduled'
+                    ]);
+                    
+                    // Move to the next week
+                    $currentDate->addWeek();
+                } else {
+                    // Monthly pattern - check if day of month matches
+                    if ($currentDate->day != intval($dayOfWeek)) {
+                        // Move to the next day
+                        $currentDate->addDay();
+                        continue;
+                    }
+                    
+                    // Create occurrence for this date
+                    AppointmentOccurrence::create([
+                        'appointment_id' => $appointment->appointment_id,
+                        'occurrence_date' => $currentDate->format('Y-m-d'),
+                        'start_time' => $appointment->start_time,
+                        'end_time' => $appointment->end_time,
+                        'status' => $currentDate->isPast() ? (rand(1, 10) <= 8 ? 'completed' : (rand(1, 10) <= 5 ? 'canceled' : 'scheduled')) : 'scheduled'
+                    ]);
+                    
+                    // Move to the next month
+                    $currentDate->addMonth();
+                }
+            }
+            
+            // Determine the participant count based on appointment type
+            $participantCount = $this->getParticipantCountForAppointmentType($appointmentType->type_name);
+            
+            // Add the organizer as the first participant
+            AppointmentParticipant::create([
+                'appointment_id' => $appointment->appointment_id,
+                'participant_id' => $organizer->id,
+                'participant_type' => 'cose_user',
+                'is_organizer' => true
+            ]);
+            
+            // Add other participants randomly
+            $availableParticipants = $staffUsers->reject(function($user) use ($organizer) {
+                return $user->id === $organizer->id;
+            })->shuffle();
+            
+            // Add participants based on the calculated count, limiting to available participants
+            for ($j = 0; $j < min($participantCount - 1, count($availableParticipants)); $j++) {
+                AppointmentParticipant::create([
+                    'appointment_id' => $appointment->appointment_id,
+                    'participant_id' => $availableParticipants[$j]->id,
+                    'participant_type' => 'cose_user',
+                    'is_organizer' => false
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Generate care worker visitations for beneficiaries
+     */
+    private function generateCareWorkerVisitations($careWorkers, $beneficiaries)
+    {
+        \Log::info("Generating care worker visitations...");
+        
+        // Convert the beneficiaries array to a collection
+        $beneficiariesCollection = collect($beneficiaries);
+        
+        // Keep track of how many visitations we create
+        $totalVisitations = 0;
+        $recurringCount = 0;
+        
+        // For each care worker, create visitations
+        foreach ($careWorkers as $careWorker) {
+            // Determine which beneficiaries this care worker can visit based on location
+            $isSanRoqueWorker = stripos($careWorker->name, 'San Roque') !== false;
+            $workerArea = $isSanRoqueWorker ? 'San Roque' : 'Mondragon';
+            
+            // Filter beneficiaries by the worker's area - NOW USING THE COLLECTION
+            $assignedBeneficiaries = $beneficiariesCollection->filter(function($beneficiary) use ($workerArea) {
+                return stripos($beneficiary->street_address, $workerArea) !== false;
+            });
+            
+            // Select a subset of beneficiaries for this care worker (5-10)
+            $selectedBeneficiaries = $assignedBeneficiaries->random(min(rand(5, 10), $assignedBeneficiaries->count()));
+            
+            // For each selected beneficiary, create a weekly recurring routine care visit
+            foreach ($selectedBeneficiaries as $beneficiary) {
+                // 1. Create a weekly recurring routine care visit
+                $this->createRecurringVisitation($careWorker, $beneficiary, 'routine_care');
+                $recurringCount++;
+                
+                // 2. Create 0-2 emergency visitations for this beneficiary (30% chance)
+                if (rand(1, 10) <= 3) {
+                    $emergencyCount = rand(1, 2);
+                    for ($i = 0; $i < $emergencyCount; $i++) {
+                        $this->createSingleVisitation($careWorker, $beneficiary, 'emergency');
+                        $totalVisitations++;
+                    }
+                }
+                
+                // 3. Create 0-3 service request visitations (50% chance)
+                if (rand(1, 10) <= 5) {
+                    $serviceCount = rand(1, 3);
+                    for ($i = 0; $i < $serviceCount; $i++) {
+                        $this->createSingleVisitation($careWorker, $beneficiary, 'service_request');
+                        $totalVisitations++;
+                    }
+                }
+            }
+        }
+        
+        \Log::info("Generated {$recurringCount} recurring routine care visitations and {$totalVisitations} individual visitations");
+    }
+    
+    /**
+     * Create a recurring visitation (for routine care)
+     */
+    private function createRecurringVisitation($careWorker, $beneficiary, $type)
+    {
+        // Fix the visit type to match the enum values in the database
+        $visitType = 'routine_care_visit'; // Changed from routine_care
+        
+        // Pick a start date in the past (1-3 months ago)
+        $startDate = Carbon::now()->subMonths(rand(1, 3))->format('Y-m-d');
+        
+        // Set an end date 4-8 months in the future
+        $endDate = Carbon::now()->addMonths(rand(4, 8))->format('Y-m-d');
+        
+        // Choose a random day of week (1-7)
+        $dayOfWeek = rand(1, 7);
+        
+        // Create the visitation with all required fields
+        $visitation = Visitation::create([
+            'care_worker_id' => $careWorker->id,
+            'beneficiary_id' => $beneficiary->beneficiary_id,
+            'visit_type' => $visitType,
+            'visitation_date' => $startDate,
+            'start_time' => null,
+            'end_time' => null,
+            'is_flexible_time' => true,
+            'status' => 'scheduled',
+            'notes' => $this->faker->optional(80)->sentence(5),
+            'date_assigned' => Carbon::now()->subDays(rand(5, 30))->format('Y-m-d'), // Add required field
+            'assigned_by' => $careWorker->assigned_care_manager_id ?? 2, // Care manager assigns (default to ID 2 if null)
+        ]);
+        
+        // Create recurring pattern
+        $recurringPattern = RecurringPattern::create([
+            'visitation_id' => $visitation->visitation_id,
+            'pattern_type' => 'weekly',
+            'day_of_week' => $dayOfWeek,
+            'recurrence_end' => $endDate
+        ]);
+        
+        // Generate occurrences based on the pattern
+        $currentDate = Carbon::parse($startDate);
+        $endDateTime = Carbon::parse($endDate);
+        
+        while ($currentDate->lte($endDateTime)) {
+            // Skip to the next occurrence if the day of week doesn't match
+            if ($currentDate->dayOfWeek !== $dayOfWeek) {
+                $currentDate->addDay();
+                continue;
+            }
+            
+            // For past occurrences, most are completed, some canceled
+            $status = 'scheduled';
+            if ($currentDate->isPast()) {
+                $status = (rand(1, 10) <= 8) ? 'completed' : (rand(1, 10) <= 5 ? 'canceled' : 'scheduled');
+            }
+            
+            // Create occurrence for this date
+            VisitationOccurrence::create([
+                'visitation_id' => $visitation->visitation_id,
+                'occurrence_date' => $currentDate->format('Y-m-d'),
+                'start_time' => null,
+                'end_time' => null,
+                'status' => $status,
+                'notes' => $status == 'completed' ? $this->faker->optional(70)->paragraph() : null,
+            ]);
+            
+            // Move to the next week
+            $currentDate->addWeek();
+        }
+    }
+    
+    /**
+     * Create a single non-recurring visitation
+     */
+    private function createSingleVisitation($careWorker, $beneficiary, $type)
+    {
+        // Fix visit types to match the enum in the database
+        if ($type === 'emergency') {
+            $visitType = 'emergency_visit';
+        } else if ($type === 'service_request') {
+            $visitType = 'service_request';
+        } else {
+            $visitType = 'routine_care_visit';
+        }
+        
+        // Determine if this is a past or future visitation
+        $isPast = (rand(1, 10) <= 7); // 70% chance of being in the past
+        
+        if ($isPast) {
+            // Create a past visitation
+            $date = Carbon::now()->subDays(rand(1, 60))->format('Y-m-d');
+            $status = (rand(1, 10) <= 8) ? 'completed' : 'canceled'; // 80% completed, 20% canceled
+        } else {
+            // Create a future visitation
+            $date = Carbon::now()->addDays(rand(1, 30))->format('Y-m-d');
+            $status = 'scheduled';
+        }
+        
+        // Set times based on type
+        $isFlexibleTime = false;
+        $startTime = null;
+        $endTime = null;
+        
+        if ($visitType === 'emergency_visit') {
+            // Emergency visits usually have specific times
+            $startTime = $this->faker->dateTimeBetween('08:00', '17:00')->format('H:i:s');
+            $endTime = Carbon::parse($startTime)->addMinutes(rand(30, 90))->format('H:i:s');
+        } else if ($visitType === 'service_request') {
+            // Service requests may have specific times or be flexible
+            $isFlexibleTime = (rand(1, 10) <= 4); // 40% chance of flexible time
+            if (!$isFlexibleTime) {
+                $startTime = $this->faker->dateTimeBetween('08:00', '17:00')->format('H:i:s');
+                $endTime = Carbon::parse($startTime)->addMinutes(rand(30, 120))->format('H:i:s');
+            }
+        }
+        
+        // Create the visitation with all required fields
+        $visitation = Visitation::create([
+            'care_worker_id' => $careWorker->id,
+            'beneficiary_id' => $beneficiary->beneficiary_id,
+            'visit_type' => $visitType,
+            'visitation_date' => $date,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'is_flexible_time' => $isFlexibleTime,
+            'status' => $status,
+            'notes' => $this->faker->optional(80)->sentence(5),
+            'date_assigned' => Carbon::now()->subDays(rand(10, 60))->format('Y-m-d'), // Add required field
+            'assigned_by' => $careWorker->assigned_care_manager_id ?? 2, // Care manager assigns (default to ID 2 if null)
+        ]);
+        
+        // Create a single occurrence for this visitation
+        VisitationOccurrence::create([
+            'visitation_id' => $visitation->visitation_id,
+            'occurrence_date' => $visitation->visitation_date,
+            'start_time' => $visitation->start_time,
+            'end_time' => $visitation->end_time,
+            'status' => $visitation->status,
+            'notes' => $status == 'completed' ? $this->faker->optional(70)->paragraph() : null,
+        ]);
     }
 
     /**
@@ -1438,4 +1829,310 @@ class DatabaseSeeder extends Seeder
         \Log::info("Created medication schedules for beneficiaries");
     }
 
+    /**
+     * Get participant count for an appointment type
+     */
+    private function getParticipantCountForAppointmentType($typeName)
+    {
+        $participantCounts = [
+            'Skills Training' => [5, 10], // [min, max]
+            'Feedback Session' => [2, 4],
+            'Council Meeting' => [4, 8],
+            'Health Protocols' => [3, 6],
+            'Liga Meetings' => [4, 7],
+            'Referrals Discussion' => [2, 4],
+            'Assessment Review' => [2, 4],
+            'Care Plan Review' => [2, 3],
+            'Team Building' => [5, 10],
+            'Mentoring Session' => [2, 2],
+            'Other' => [2, 5]
+        ];
+        
+        $range = $participantCounts[$typeName] ?? [2, 5]; // Default to 2-5 participants
+        return rand($range[0], $range[1]);
+    }
+
+    /**
+     * Get a realistic appointment title based on type
+     */
+    private function getRealisticAppointmentTitle($typeName)
+    {
+        $titles = [
+            'Skills Training' => [
+                'Documentation System Training',
+                'Effective Communication Workshop',
+                'Elder Care Best Practices',
+                'Specialized Care for Dementia Patients',
+                'Emergency Response Protocol Training',
+                'Nutritional Assessment Skills',
+                'Mobility Assistance Techniques'
+            ],
+            'Feedback Session' => [
+                'Quarterly Performance Review',
+                'Care Plan Implementation Feedback',
+                'Service Quality Assessment',
+                'Client Satisfaction Discussion',
+                'Field Work Evaluation',
+                'Improvement Strategies Meeting'
+            ],
+            'Council Meeting' => [
+                'Municipal Care Council Regular Meeting',
+                'Barangay Health Workers Council',
+                'Quarterly Planning Session',
+                'Budget Allocation Committee',
+                'Service Expansion Planning',
+                'Community Resource Coordination'
+            ],
+            'Health Protocols' => [
+                'COVID-19 Safety Measures Update',
+                'Heat Illness Prevention Protocol Review',
+                'Infectious Disease Control Procedures',
+                'Emergency Medical Response Standards',
+                'Fall Prevention Protocol Implementation'
+            ],
+            'Liga Meetings' => [
+                'Liga ng mga Barangay General Assembly',
+                'Municipal Health Coordination',
+                'Inter-barangay Resource Sharing',
+                'Community Health Program Alignment',
+                'Liga Leadership Planning Session'
+            ],
+            'Referrals Discussion' => [
+                'Medical Specialist Referral Process',
+                'Mental Health Services Coordination',
+                'Hospital Referral Protocol Review',
+                'Community Resource Access Planning',
+                'Service Network Expansion'
+            ],
+            'Assessment Review' => [
+                'Quarterly Assessment Standards Review',
+                'Evaluation Tools Enhancement',
+                'Care Needs Classification Update',
+                'Assessment Documentation Improvement',
+                'New Client Intake Process Review'
+            ],
+            'Care Plan Review' => [
+                'High-Need Clients Care Plan Review',
+                'Monthly Plan Implementation Check',
+                'Care Goals Achievement Assessment',
+                'Family Involvement Strategy Review',
+                'Service Delivery Optimization'
+            ],
+            'Team Building' => [
+                'Annual Team Building Retreat',
+                'Staff Cohesion Workshop',
+                'Collaborative Problem-Solving Exercise',
+                'Cross-Team Integration Activity',
+                'Leadership Development Session'
+            ],
+            'Mentoring Session' => [
+                'New Care Worker Orientation',
+                'Career Development Planning',
+                'Skills Enhancement Guidance',
+                'Professional Growth Discussion',
+                'Specialized Care Technique Coaching'
+            ],
+            'Other' => [
+                'Program Sustainability Planning',
+                'Community Outreach Coordination',
+                'Annual Budget Review',
+                'Municipal Partnership Discussion',
+                'Policy Implementation Briefing',
+                'Volunteer Program Development'
+            ]
+        ];
+        
+        $typeSpecificTitles = $titles[$typeName] ?? $titles['Other'];
+        return $typeSpecificTitles[array_rand($typeSpecificTitles)];
+    }
+
+    /**
+     * Get a realistic meeting location
+     */
+    private function getRealisticMeetingLocation()
+    {
+        $locations = [
+            'Municipal Social Welfare Office',
+            'Barangay Hall Conference Room',
+            'COSE Main Office',
+            'Health Center Meeting Room',
+            'Municipal Library Conference Room',
+            'Rural Health Unit',
+            'Community Center',
+            'San Roque Multi-Purpose Hall',
+            'Mondragon Training Center',
+            'Municipal Agriculture Office',
+            'Senior Citizens Center'
+        ];
+        
+        return $locations[array_rand($locations)];
+    }
+
+    /**
+     * Get the barangay ID by name and municipality ID
+     */
+    private function getBarangayIdByName($barangayName, $municipalityId)
+    {
+        // Try to find the barangay by name and municipality ID
+        $barangay = \DB::table('barangays')
+            ->where('barangay_name', $barangayName)
+            ->where('municipality_id', $municipalityId)
+            ->first();
+        
+        // If found, return the ID, otherwise return a random barangay ID for that municipality
+        if ($barangay) {
+            return $barangay->barangay_id;
+        } else {
+            // Get any barangay ID from that municipality as fallback
+            $randomBarangay = \DB::table('barangays')
+                ->where('municipality_id', $municipalityId)
+                ->inRandomOrder()
+                ->first();
+            
+            return $randomBarangay ? $randomBarangay->barangay_id : 1; // Default to 1 if nothing is found
+        }
+    }
+
+    // Generate emergency notices and service requests
+    private function generateEmergencyAndServiceRequests()
+    {
+        // Get beneficiaries for emergency notices and service requests
+        $beneficiaries = Beneficiary::inRandomOrder()->take(20)->get();
+        $familyMembers = FamilyMember::inRandomOrder()->take(15)->get();
+        
+        // Create emergency types if they don't exist yet
+        if (EmergencyType::count() == 0) {
+            \Log::info('Creating emergency types...');
+            DB::table('emergency_types')->insert([
+                ['name' => 'Medical Emergency', 'color_code' => '#dc3545', 'description' => 'Urgent medical situations requiring immediate attention', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Fall Incident', 'color_code' => '#fd7e14', 'description' => 'Falls resulting in injury or requiring assistance', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Medication Issue', 'color_code' => '#6f42c1', 'description' => 'Problems with medication administration or adverse reactions', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Mental Health Crisis', 'color_code' => '#20c997', 'description' => 'Acute mental health episodes requiring intervention', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Other Emergency', 'color_code' => '#6c757d', 'description' => 'Other emergency situations not categorized above', 'created_at' => now(), 'updated_at' => now()],
+            ]);
+        }
+        
+        // Create service request types if they don't exist yet
+        if (ServiceRequestType::count() == 0) {
+            \Log::info('Creating service request types...');
+            DB::table('service_request_types')->insert([
+                ['name' => 'Home Care Visit', 'color_code' => '#0d6efd', 'description' => 'Additional home care services', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Transportation', 'color_code' => '#198754', 'description' => 'Transportation assistance', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Medical Appointments', 'color_code' => '#6610f2', 'description' => 'Assistance with medical appointment visits', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Meal Delivery', 'color_code' => '#fd7e14', 'description' => 'Delivery of prepared meals', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'Other Service', 'color_code' => '#6c757d', 'description' => 'Other service requests not categorized above', 'created_at' => now(), 'updated_at' => now()],
+            ]);
+        }
+        
+        // Create some emergency notices (15 total)
+        \Log::info('Creating emergency notices...');
+        
+        // Create 5 new emergency notices
+        EmergencyNotice::factory()->count(5)->asNew()->create();
+        
+        // Create 5 in progress emergency notices 
+        EmergencyNotice::factory()->count(5)->inProgress()->create();
+
+        // Store a reference to faker that can be used in closures
+        $faker = $this->faker;
+        
+        // Create 5 resolved emergency notices (for history)
+        EmergencyNotice::factory()->count(5)->state(function () use ($faker) {
+            return [
+                'status' => 'resolved',
+                'read_status' => true,
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
+                'assigned_to' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_type' => 'resolved',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', 'now'),
+            ];
+        })->create();
+        
+        // Create service requests (15 total)
+        \Log::info('Creating service requests...');
+        
+        // Create 5 new service requests
+        ServiceRequest::factory()->count(5)->asNew()->create();
+        
+        // Create 5 approved service requests
+        ServiceRequest::factory()->count(5)->state(function () use ($faker) {
+            return [
+                'status' => 'approved',
+                'read_status' => true,
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
+                'action_type' => 'approved',
+                'action_taken_by' => User::where('role_id', '<=', 2)->inRandomOrder()->first()->id,
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', '-2 days'),
+                'care_worker_id' => User::where('role_id', 3)->inRandomOrder()->first()->id,
+            ];
+        })->create();
+        
+        // Create 5 completed/rejected service requests (for history)
+        ServiceRequest::factory()->count(5)->state(function () use ($faker) {
+            $status = $faker->randomElement(['completed', 'rejected']);
+            return [
+                'status' => $status,
+                'read_status' => true,
+                'read_at' => $faker->dateTimeBetween('-1 month', '-1 day'),
+                'action_type' => $status,
+                'action_taken_by' => User::where('role_id', '<=', 2)->inRandomOrder()->first()->id,
+                'action_taken_at' => $faker->dateTimeBetween('-1 month', 'now'),
+                'care_worker_id' => $status === 'completed' ? User::where('role_id', 3)->inRandomOrder()->first()->id : null,
+            ];
+        })->create();
+        
+        // Create some emergency updates for existing notices
+        \Log::info('Creating emergency updates...');
+        $emergencies = EmergencyNotice::where('status', '!=', 'new')->get();
+        foreach ($emergencies as $emergency) {
+            // Generate 1-3 updates per emergency
+            $updateCount = rand(1, 3);
+            EmergencyUpdate::factory()->count($updateCount)->create([
+                'notice_id' => $emergency->notice_id
+            ]);
+        }
+        
+        // Create some service request updates
+        \Log::info('Creating service request updates...');
+        $serviceRequests = ServiceRequest::where('status', '!=', 'new')->get();
+        foreach ($serviceRequests as $request) {
+            // Generate 1-2 updates per request, but don't change action_type for completed/rejected
+            $updateCount = rand(1, 2);
+            
+            if (in_array($request->status, ['completed', 'rejected'])) {
+                // For completed/rejected, just add notes without changing status or action_type
+                ServiceRequestUpdate::factory()->count($updateCount)->state(function () use ($request) {
+                    return [
+                        'service_request_id' => $request->service_request_id,
+                        'update_type' => 'note',
+                        'status_change_to' => null,
+                        'message' => 'Additional information about this ' . $request->status . ' request.'
+                    ];
+                })->create();
+            } else {
+                // For other statuses, normal updates are fine
+                ServiceRequestUpdate::factory()->count($updateCount)->create([
+                    'service_request_id' => $request->service_request_id
+                ]);
+            }
+        }
+        
+        \Log::info('Emergency notices and service requests generated successfully');
+    }
+
+    private function generateExpenseTrackerData()
+    {
+        \Log::info('Generating expense tracker data...');
+        
+        // Generate expenses - create a reasonable number for a small organization
+        \App\Models\Expense::factory()->count(40)->create();
+        
+        // Generate budget allocations - create 12 months of history plus a few future months
+        \App\Models\BudgetAllocation::factory()->count(15)->create();
+        
+        \Log::info('Expense tracker data generation complete');
+    }
+
 }
+

@@ -16,6 +16,67 @@
 
 
     <style>
+        #careWorkerFilter {
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid #4e73df;
+            background-color: #fff;
+            padding-left: 30px; /* Space for the icon */
+            background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234e73df' class='bi bi-person-badge' viewBox='0 0 16 16'><path d='M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/><path d='M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: 8px center;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-width: 220px;
+            position: relative;
+        }
+
+        #careWorkerFilter:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.15rem rgba(78, 115, 223, 0.25);
+            border-color: #3a5fc8;
+        }
+
+        #careWorkerFilter:hover {
+            border-color: #3a5fc8;
+            background-color: #f8f9fc;
+        }
+
+        /* Add custom arrow instead of browser default */
+        #careWorkerFilter {
+            background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234e73df' class='bi bi-person-badge' viewBox='0 0 16 16'><path d='M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/><path d='M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z'/></svg>"),
+            url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234e73df' class='bi bi-chevron-down' viewBox='0 0 16 16'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>");
+            background-position: 8px center, right 8px center;
+            background-repeat: no-repeat, no-repeat;
+            padding-right: 30px; /* Space for the arrow */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            #careWorkerFilter {
+                width: 100% !important;
+                min-width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+            
+            .calendar-actions {
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            
+            .calendar-actions > * {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Add a wrapper for better alignment if needed */
+        .filter-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
         /* Card Design */
         .modal-header-danger {
             background-color: #dc3545;
@@ -44,20 +105,87 @@
             margin-bottom: 0;
         }
         
-        /* Calendar Enhancements */
         #calendar-container {
+            height: 650px; /* Fixed height - adjust as needed */
+            overflow-y: auto; /* Enable vertical scrolling */
+            overflow-x: auto; /* Keep horizontal scrolling */
             border-radius: 8px;
             background-color: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 1rem;
+            padding: 0;
             margin-bottom: 1.5rem;
-            overflow-x: auto; /* Enable horizontal scrolling */
+            position: relative;
+        }
+
+        /* Make table cells more stable during scroll */
+        .fc-scrollgrid-sync-table {
+            width: 100% !important;
+        }
+
+        /* Fix event rendering during scroll */
+        .fc-event {
+            position: relative !important;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* Fix for the day headers to stay consistent */
+        .fc .fc-col-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Improve row stability during scrolling */
+        .fc-daygrid-body {
+            width: 100% !important;
+        }
+
+        .fc-daygrid-day-frame {
+            min-height: 100px; /* Ensure consistent cell height */
+        }
+
+        /* Add subtle scroll shadow effect */
+        #calendar-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        /* Optional: Improve scrollbar appearance */
+        #calendar-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        #calendar-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #calendar-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        #calendar-container::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
         }
         
+        /* Make sure the calendar itself doesn't have a fixed height */
         #calendar {
             background-color: white;
-            min-height: 600px;
-            min-width: 800px; /* Set minimum width to ensure functionality */
+            min-width: 800px; /* Keep minimum width */
+            height: auto !important; /* Override any fixed height */
         }
         
         /* Event Styling */
@@ -486,13 +614,28 @@
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="toggleWeekView">
                                             <i class="bi bi-calendar-week"></i> Week View
                                         </button>
+                                        <!-- Care worker filter with improved styling -->
+                                        <div class="filter-wrapper">
+                                            <select id="careWorkerFilter" class="form-select form-select-sm" aria-label="Filter by care worker">
+                                                <option value="">All Care Workers</option>
+                                                @foreach($careWorkers as $worker)
+                                                    <option value="{{ $worker->id }}">{{ $worker->first_name }} {{ $worker->last_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="card-body p-0">
                                     <div id="calendar-container">
-                                        <div id="calendar-loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
+                                        <!-- Loading spinner -->
+                                        <div id="calendar-spinner" class="position-absolute w-100 h-100" style="display: none; z-index: 10; background: rgba(255,255,255,0.8);">
+                                            <div class="d-flex justify-content-center align-items-center h-100">
+                                                <div class="text-center">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    <p class="mt-2 spinner-message">Loading appointments...</p>
+                                                </div>
                                             </div>
                                         </div>
                                         <div id="calendar" class="p-3"></div>
@@ -567,6 +710,8 @@
                     <form id="addAppointmentForm">
                         @csrf
                         <input type="hidden" id="visitationId" name="visitation_id">
+                        <input type="hidden" id="original_care_worker_id" name="original_care_worker_id" value="">
+                        <input type="hidden" id="edited_occurrence_date" name="edited_occurrence_date" value="">
                         
                         <!-- Care Worker Selection -->
                         <div class="form-group">
@@ -804,7 +949,23 @@
     <!-- Add this line to include the timegrid plugin -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/timegrid/main.min.js"></script>
     <script>
+
+        function showCalendarSpinner(message = 'Loading appointments...') {
+            const spinner = document.getElementById('calendar-spinner');
+            const spinnerMessage = spinner.querySelector('.spinner-message');
+            spinnerMessage.textContent = message;
+            spinner.style.display = 'block';
+        }
+
+        function hideCalendarSpinner() {
+            const spinner = document.getElementById('calendar-spinner');
+            spinner.style.display = 'none';
+        }
+
     document.addEventListener('DOMContentLoaded', function() {
+        // Show spinner initially
+        showCalendarSpinner('Loading appointments...');
+
         // Setup CSRF token for all AJAX requests
         $.ajaxSetup({
             headers: {
@@ -832,6 +993,26 @@
         let currentEvent = null;
         let currentView = 'dayGridMonth';
         let isEditing = false; // Add this variable to track editing state
+
+        // Global variable to track selected care worker
+        let currentCareWorkerId = '';
+
+        // Store reference to the care worker filter dropdown
+        const careWorkerFilter = document.getElementById('careWorkerFilter');
+
+        // Add event listener to care worker filter dropdown
+        if (careWorkerFilter) {
+            careWorkerFilter.addEventListener('change', function() {
+                // Store the selected care worker ID
+                currentCareWorkerId = this.value;
+                
+                // Show spinner during filtering
+                showCalendarSpinner('Filtering by care worker...');
+                
+                // Refresh calendar with new filter
+                calendar.refetchEvents();
+            });
+        }
 
         // Initialize tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -911,7 +1092,6 @@
                 const start = info.startStr;
                 const end = info.endStr;
                 const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
-                const careWorkerId = document.getElementById('careWorkerSelect') ? document.getElementById('careWorkerSelect').value : '';
                 
                 // Show loading indicator
                 if (document.getElementById('calendar-loading-indicator')) {
@@ -934,7 +1114,7 @@
                         start: start,
                         end: end,
                         search: searchTerm,
-                        care_worker_id: careWorkerId,
+                        care_worker_id: currentCareWorkerId, // Add care worker filter parameter
                         view_type: info.view ? info.view.type : 'dayGridMonth' // Safe access with fallback
                     },
                     success: function(response) {
@@ -952,10 +1132,7 @@
                         console.error('Error fetching events:', xhr.responseText);
                     },
                     complete: function() {
-                        // Always ensure loading indicator is hidden
-                        if (document.getElementById('calendar-loading-indicator')) {
-                            document.getElementById('calendar-loading-indicator').style.display = 'none';
-                        }
+                        hideCalendarSpinner();
                     }
                 });
             },
@@ -1073,10 +1250,56 @@
             resetButton.className = 'btn btn-sm btn-outline-secondary';
             resetButton.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
             resetButton.addEventListener('click', function() {
+                // Clear search input
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                    currentSearchTerm = '';
+                }
+                
+                // Clear care worker filter - ADD THIS
+                if (careWorkerFilter) {
+                    careWorkerFilter.selectedIndex = 0;
+                    currentCareWorkerId = '';
+                }
+                
+                // Show spinner during reset
+                showCalendarSpinner('Resetting calendar...');
+                
+                // Reset calendar view to month if not already
+                if (currentView !== 'dayGridMonth') {
+                    calendar.changeView('dayGridMonth');
+                    toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                    currentView = 'dayGridMonth';
+                }
+                
+                // First remove all events
                 calendar.removeAllEvents();
+                
+                // Go to current month/date
                 calendar.today();
+                
+                // Refresh events data
                 calendar.refetchEvents();
-                showSuccessMessage('Calendar reset successfully');
+                
+                // Clear current event selection
+                currentEvent = null;
+                editButton.disabled = true;
+                deleteButton.disabled = true;
+                
+                // Clear details panel
+                appointmentDetailsEl.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                        <p class="mt-3 mb-0">Select an appointment to view details</p>
+                    </div>
+                `;
+
+                // Hide spinner when done
+                setTimeout(() => {
+                    hideCalendarSpinner();
+                    showToast('Success', 'Calendar reset successfully', 'success');
+                }, 300);
             });
             
             calendarActions.insertBefore(resetButton, calendarActions.firstChild);
@@ -1220,6 +1443,33 @@
                     <div class="detail-section">
                         <div class="section-title"><i class="bi bi-geo-alt-fill"></i> Location</div>
                         <div class="detail-value">${event.extendedProps.address || 'Not Available'}</div>
+                    </div>
+                    
+                    <!-- Add confirmation status section -->
+                    <div class="detail-section">
+                        <div class="section-title"><i class="bi bi-check-circle"></i> Confirmation Status</div>
+                        <div class="detail-item">
+                            <div class="detail-label">Beneficiary: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_beneficiary ? 'Confirmed' : 'Not Confirmed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Family: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_family ? 'Confirmed' : 'Not Confirmed'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Confirmed On: </div>
+                            <div class="detail-value">
+                                ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : 'Not confirmed yet'}
+                            </div>
+                        </div>
                     </div>
                     
                     ${event.extendedProps.notes ? `
@@ -1372,6 +1622,49 @@
                     // Update modal title
                     if (addAppointmentModalLabel) {
                         addAppointmentModalLabel.innerHTML = '<i class="bi bi-pencil-square"></i> Edit Appointment';
+                    }
+
+                    // CRITICAL: Store the exact date being edited for proper cleanup
+                    if (currentEvent && currentEvent.start) {
+                        try {
+                            // Convert to a definite Date object to ensure we're working with a proper date
+                            let occDate = new Date(currentEvent.start);
+                            
+                            // Double-check that we have a valid date
+                            if (isNaN(occDate.getTime())) {
+                                console.error('Invalid date object:', currentEvent.start);
+                                // Fall back to current date as a last resort
+                                occDate = new Date();
+                            }
+                            
+                            // Format with direct string manipulation for maximum browser compatibility
+                            const year = occDate.getFullYear();
+                            const month = String(occDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(occDate.getDate()).padStart(2, '0');
+                            const formattedDate = `${year}-${month}-${day}`;
+                            
+                            console.log('Current event start date:', occDate);
+                            console.log('Formatted date (YYYY-MM-DD):', formattedDate);
+                            
+                            // Explicitly set the value of the hidden field
+                            const editedOccurrenceField = document.getElementById('edited_occurrence_date');
+                            if (editedOccurrenceField) {
+                                editedOccurrenceField.value = formattedDate;
+                                // Verify the value was set correctly
+                                console.log('Field value after setting:', editedOccurrenceField.value);
+                            } else {
+                                console.error('Could not find edited_occurrence_date field');
+                            }
+                        } catch (err) {
+                            console.error('Error formatting date:', err);
+                        }
+                    }
+
+                    // Store original care worker ID for comparing with the new selection
+                    const originalCareWorkerId = document.getElementById('original_care_worker_id');
+                    if (originalCareWorkerId) {
+                        originalCareWorkerId.value = currentEvent.extendedProps.care_worker_id;
+                        console.log('Setting original care worker ID:', currentEvent.extendedProps.care_worker_id);
                     }
                     
                     // Set form data from event
@@ -1679,13 +1972,6 @@
                 // Ensure is_flexible_time is explicitly set
                 const isFlexibleTime = document.getElementById('openTimeCheck').checked;
                 formData.set('is_flexible_time', isFlexibleTime ? '1' : '0');
-
-                // ADD THIS CODE: Make sure is_recurring is sent even when the checkbox is disabled
-                const recurringCheck = document.getElementById('recurringCheck');
-                if (recurringCheck && recurringCheck.disabled) {
-                    // If we're editing and the checkbox is disabled, use the original value
-                    formData.set('is_recurring', currentEvent.extendedProps.recurring ? '1' : '0');
-                }
                 
                 // Add debugging
                 console.log('Form submission - isEditing:', isEditing);

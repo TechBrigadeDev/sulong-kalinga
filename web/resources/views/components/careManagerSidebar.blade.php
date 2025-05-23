@@ -73,8 +73,8 @@
       <ul class="sub-menu m-auto">
         <li><a class="link_name">Schedules & Appointments</a></li>
         <li><a href="{{ route('care-manager.careworker.appointments.index') }}" class="{{ Request::routeIs('care-manager.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
-        <li><a href="#" class="">Internal Appointment</a></li>
-        <li><a href="#" class="">Medical Schedule</a></li>
+        <li><a href="{{ route('care-manager.internal-appointments.index') }}" class="{{ Request::routeIs('care-manager.internal.appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
+        <li><a href="{{ route('care-manager.medication.schedule.index') }}" class="{{ Request::routeIs('care-manager.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
       </ul>
     </li>
     
@@ -90,6 +90,16 @@
         <li><a class="link_name">Location Tracking</a></li>
         <li><a href="#" class="">Beneficiary Map</a></li>
         <li><a href="#" class="">Care Worker Tracking</a></li>
+      </ul>
+    </li>
+
+    <li class="{{ Request::routeIs('care-manager.emergency.request.*') ? 'active' : '' }}">
+      <a href="{{ route('care-manager.emergency.request.index') }}" class="">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span class="link_name">Emergency & Request</span>
+      </a>
+      <ul class="sub-menu blank">
+        <li><a class="link_name" href="{{ route('care-manager.emergency.request.index') }}">Emergency & Request</a></li>
       </ul>
     </li>
     

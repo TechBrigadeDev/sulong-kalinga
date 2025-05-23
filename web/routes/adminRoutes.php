@@ -26,6 +26,9 @@ use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\ExpenseTrackerController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\CareWorkerTrackingController;
+use App\Http\Controllers\AiSummaryController;
+use App\Http\Controllers\ShiftHistoryController;
 
 
 // All routes with administrator role check
@@ -118,8 +121,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
 
     });
 
-    // Reports Management
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    // Record Management
+    Route::get('/records', [ReportsController::class, 'index'])->name('reports');
 
     // Municipality and Barangay Management
     Route::prefix('locations')->name('locations.')->group(function () {
@@ -142,6 +145,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/administrators-pdf', [ExportController::class, 'exportAdministratorsToPdf'])->name('administrators.pdf');
         Route::post('/export/health-monitoring-pdf', [ExportController::class, 'exportHealthMonitoringToPdf'])->name('health.monitoring.pdf');
         Route::post('/export/careworker-performance-pdf', [ExportController::class, 'exportCareWorkerPerformanceToPdf'])->name('careworker.performance.pdf');
+        Route::post('/export/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
 
         // Excel Exports
         Route::post('/beneficiaries-excel', [ExportController::class, 'exportBeneficiariesToExcel'])->name('beneficiaries.excel');
@@ -189,27 +193,65 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     Route::prefix('health-monitoring')->name('health.monitoring.')->group(function () {
         Route::get('/', [HealthMonitoringController::class, 'index'])->name('index');
     });
-    
-    // Internal appointments
-    Route::prefix('internal-appointments')->name('internal.appointments.')->group(function () {
-        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
-    });
 
     // Medication Schedule
     Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
         Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+        Route::post('/store', [MedicationScheduleController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [MedicationScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MedicationScheduleController::class, 'update'])->name('update');
+        Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
     });
 
     // Emergency and Service Request
     Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
         Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
         Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
+        Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
+        
+        // Data retrieval routes for modals
+        Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');
+        Route::get('/service-request/{id}', [EmergencyAndRequestController::class, 'getServiceRequest'])->name('get.service');
+        Route::get('/care-workers', [EmergencyAndRequestController::class, 'getAllCareWorkers'])->name('get.careworkers');
+        
+        // Action routes
+        Route::post('/respond-emergency', [EmergencyAndRequestController::class, 'respondToEmergency'])->name('respond.emergency');
+        Route::post('/handle-service', [EmergencyAndRequestController::class, 'handleServiceRequest'])->name('handle.service');
+        Route::post('/archive', [EmergencyAndRequestController::class, 'archiveRecord'])->name('archive');
     });
 
     // Expense Tracker
     Route::prefix('expense-tracker')->name('expense.')->group(function () {
         Route::get('/', [ExpenseTrackerController::class, 'index'])->name('index');
+                
+        // Expense CRUD routes
+        Route::post('/store-expense', [ExpenseTrackerController::class, 'storeExpense'])->name('store');
+        Route::get('/get-expense/{id}', [ExpenseTrackerController::class, 'getExpense'])->name('get');
+        Route::post('/update-expense/{id}', [ExpenseTrackerController::class, 'updateExpense'])->name('update');
+        Route::post('/delete-expense', [ExpenseTrackerController::class, 'deleteExpense'])->name('delete');
+        Route::put('/expense/{id}', [ExpenseTrackerController::class, 'updateExpense'])->name('update');
+        
+        // Budget CRUD routes
+        Route::post('/store-budget', [ExpenseTrackerController::class, 'storeBudget'])->name('budget.store');
+        Route::get('/get-budget/{id}', [ExpenseTrackerController::class, 'getBudgetAllocation'])->name('budget.get');
+        Route::post('/update-budget/{id}', [ExpenseTrackerController::class, 'updateBudget'])->name('budget.update');
+        Route::post('/delete-budget', [ExpenseTrackerController::class, 'deleteBudget'])->name('budget.delete');
+        Route::put('/budget/{id}', [ExpenseTrackerController::class, 'updateBudget'])->name('budget.update'); // Add this line
+        
+        // Filter routes
+        Route::get('/filtered-expenses', [ExpenseTrackerController::class, 'getFilteredExpenses'])->name('filtered');
+        Route::get('/filtered-budgets', [ExpenseTrackerController::class, 'getFilteredBudgets'])->name('budget.filtered');
+        
+        // Export routes
+        Route::post('/export-expenses-excel', [ExpenseTrackerController::class, 'exportExpensesToExcel'])->name('export.excel');
+        Route::post('/export-budgets-excel', [ExpenseTrackerController::class, 'exportBudgetsToExcel'])->name('budget.export.excel');
     });
+
+    // Careworker Tracking
+    Route::prefix('careworker-tracking')->name('careworker.tracking.')->group(function () {
+        Route::get('/', [CareWorkerTrackingController::class, 'index'])->name('index');
+    });
+
 
     // Update email and password
     Route::post('/update-email', [AdminController::class, 'updateAdminEmail'])->name('update.email');
@@ -262,6 +304,26 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::post('/store', [VisitationController::class, 'storeAppointment'])->name('store');
         Route::post('/update', [VisitationController::class, 'updateAppointment'])->name('update');
         Route::post('/cancel', [VisitationController::class, 'cancelAppointment'])->name('cancel');
+    });
+
+    // Internal Appointments
+    Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+        Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+        Route::post('/store', [InternalAppointmentsController::class, 'store'])->name('store');
+        Route::post('/update', [InternalAppointmentsController::class, 'update'])->name('update');  // Fixed path
+        Route::post('/cancel', [InternalAppointmentsController::class, 'cancel'])->name('cancel');
+    });
+
+    // AI Summary
+    Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
+        Route::get('/', [AiSummaryController::class, 'index'])->name('index');
+    });
+
+    // Shift Histories
+    Route::prefix('shift-histories')->name('shift.histories.')->group(function () {
+        Route::get('/', [ShiftHistoryController::class, 'index'])->name('index');
+        Route::get('/archived', [ShiftHistoryController::class, 'archived'])->name('archived');
     });
 
 });

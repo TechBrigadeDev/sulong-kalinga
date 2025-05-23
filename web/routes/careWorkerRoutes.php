@@ -21,6 +21,10 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HealthMonitoringController;
 use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\InternalAppointmentsController;
+use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\EmergencyAndRequestController;
+
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -65,8 +69,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::get('/beneficiary/{id}', [WeeklyCareController::class, 'getBeneficiaryDetails'])->name('beneficiaryDetails');
     });
 
-    // Reports Management (only authored reports)
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    // Records Management (only authored reports)
+    Route::get('/records', [ReportsController::class, 'index'])->name('reports');
     
     // Password validation route
     Route::post('/validate-password', [UserController::class, 'validatePassword'])->name('validate-password');
@@ -81,6 +85,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::post('/family-pdf', [ExportController::class, 'exportFamilyToPdf'])->name('family-pdf');
         Route::post('/beneficiaries-excel', [ExportController::class, 'exportBeneficiariesToExcel'])->name('beneficiaries-excel');
         Route::post('/family-excel', [ExportController::class, 'exportFamilyMembersToExcel'])->name('family-excel');
+        Route::post('/export/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
     });
 
     // Notification routes
@@ -127,6 +132,35 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::get('/beneficiaries', [VisitationController::class, 'getBeneficiaries'])->name('beneficiaries');
         Route::get('/beneficiary/{id}', [VisitationController::class, 'getBeneficiaryDetails'])->name('beneficiary');
         Route::get('/beneficiary/{id}', [VisitationController::class, 'getBeneficiaryDetails'])->name('beneficiary.details');
+    });
+
+    // Internal Appointments
+    Route::prefix('internal-appointments')->name('internal-appointments.')->group(function () {
+        Route::get('/', [InternalAppointmentsController::class, 'index'])->name('index');
+        Route::get('/get-appointments', [InternalAppointmentsController::class, 'getAppointments'])->name('getAppointments');
+    });
+
+    // Medication Schedule
+    Route::prefix('medication-schedule')->name('medication.schedule.')->group(function () {
+        Route::get('/', [MedicationScheduleController::class, 'index'])->name('index');
+        Route::post('/store', [MedicationScheduleController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [MedicationScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MedicationScheduleController::class, 'update'])->name('update');
+        Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
+    });
+
+    // Emergency and Service Request (read-only + reminders)
+    Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
+        Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
+        Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
+        
+        // Care workers can only view, not modify
+        Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');
+        Route::get('/service-request/{id}', [EmergencyAndRequestController::class, 'getServiceRequest'])->name('get.service');
+        
+        // Care workers can only send reminders
+        Route::post('/send-reminder', [EmergencyAndRequestController::class, 'sendReminder'])->name('send.reminder');
+        Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
     });
 
 });

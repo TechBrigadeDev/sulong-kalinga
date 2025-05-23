@@ -26,4 +26,9 @@ class WeeklyCarePlanInterventions extends Model
     {
         return $this->belongsTo(Intervention::class, 'intervention_id', 'intervention_id');
     }
+
+     public function careCategory()
+    {
+        return $this->belongsTo(CareCategory::class, 'care_category_id', 'care_category_id');
+    }
 }

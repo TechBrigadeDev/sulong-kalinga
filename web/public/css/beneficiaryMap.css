@@ -1,0 +1,284 @@
+:root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6c8ebf;
+            --accent-color: #d4b483;
+            --success-color: #5a8f69;
+            --warning-color: #d17d45;
+            --danger-color: #b85450;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --text-color: #333;
+            --text-light: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        #map-container {
+            height: 75vh;
+            min-height: 500px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        #beneficiary-map {
+            height: 100%;
+            width: 100%;
+            border-radius: var(--border-radius);
+        }
+
+        /* Optimized Map Controls */
+        .map-controls-container {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem; /* Reduced vertical gap */
+            width: auto;
+        }
+
+        .map-control-group {
+            background: white;
+            padding: 0.25rem; /* Reduced padding */
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            gap: 0.25rem; /* Reduced horizontal gap */
+        }
+
+        .map-control-group .btn {
+            font-size: clamp(0.75rem, 1vw, 0.85rem); /* Smaller font size */
+            padding: 0.3rem 0.6rem; /* Smaller padding */
+            border-radius: var(--border-radius) !important;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            width: 100%;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .map-control-group .btn i {
+            font-size: clamp(0.8rem, 1vw, 0.9rem); /* Smaller icon size */
+        }
+
+        /* Rest of your CSS remains the same */
+        .beneficiary-list {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 0.75rem;
+        }
+
+        .beneficiary-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.75rem;
+            border-radius: var(--border-radius) !important;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .beneficiary-card:hover {
+            background-color: #f5f7fa;
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .beneficiary-card.active {
+            border-left: 4px solid var(--primary-color);
+            background-color: #f0f4f9;
+        }
+
+        .beneficiary-card-content {
+            min-width: 0;
+        }
+
+        .beneficiary-card h6 {
+            font-size: clamp(0.95rem, 1.1vw, 1.1rem);
+            font-weight: 600;
+            color: var(--primary-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.5rem;
+        }
+
+        .beneficiary-card p {
+            font-size: clamp(0.85rem, 1vw, 0.95rem);
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-category {
+            font-size: clamp(0.75rem, 0.9vw, 0.85rem);
+            padding: 0.25rem 0.5rem;
+            font-weight: 500;
+        }
+
+        .badge-category.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        .badge-category.bg-info {
+            background-color: var(--secondary-color) !important;
+        }
+
+        .contact-info {
+            font-size: clamp(0.8rem, 0.95vw, 0.9rem);
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .contact-info div {
+            margin-top: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contact-info i {
+            margin-right: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .search-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .search-container input {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            padding: 0.5rem 1rem;
+        }
+
+        .beneficiary-details {
+            display: none;
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 1000;
+            background: white;
+            padding: 1.25rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: min(300px, 90%);
+        }
+
+        .beneficiary-details h5 {
+            color: var(--primary-color);
+            font-size: clamp(1rem, 1.2vw, 1.25rem);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .beneficiary-details p {
+            font-size: clamp(0.85rem, 1vw, 0.9rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .beneficiary-details strong {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .map-instructions {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+            background: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: min(250px, 90%);
+            display: none;
+        }
+
+        .map-instructions h4 {
+            font-size: clamp(0.95rem, 1.1vw, 1.1rem);
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .map-instructions p {
+            font-size: clamp(0.85rem, 1vw, 0.9rem);
+            margin-bottom: 0;
+            color: var(--text-color);
+        }
+
+        /* Modal styles */
+        .modal-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1rem 1.5rem;
+        }
+
+        .modal-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: clamp(1.1rem, 1.3vw, 1.3rem);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-color);
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .input-group-text {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            background-color: #f5f7fa;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #e0e0e0;
+            padding: 1rem 1.5rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            #map-container, .beneficiary-list {
+                height: 50vh;
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .home-section {
+                padding: 1rem;
+            }
+
+            .beneficiary-card {
+                padding: 0.75rem;
+            }
+
+            .beneficiary-details, .map-instructions {
+                max-width: 85%;
+            }
+        }

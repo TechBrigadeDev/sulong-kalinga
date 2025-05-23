@@ -105,16 +105,20 @@
                                     readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                             </div>
                             <div class="col-md-6 col-sm-12">
-                                <label for="condition" class="form-label">Illness</label>
+                                <label for="illness" class="form-label">Illness</label>
                                 <input type="text" class="form-control" id="illness" 
                                     value="@php
                                         if ($weeklyCareplan->illnesses) {
-                                            $illnessesArray = json_decode($weeklyCareplan->illnesses, true);
-                                            if (is_array($illnessesArray)) {
-                                                echo implode(', ', $illnessesArray);
+                                            // Handle illnesses stored as JSON string or array
+                                            $illnesses = is_string($weeklyCareplan->illnesses) ? json_decode($weeklyCareplan->illnesses, true) : $weeklyCareplan->illnesses;
+                                            
+                                            if (is_array($illnesses)) {
+                                                echo implode(', ', $illnesses);
+                                            } else {
+                                                echo $weeklyCareplan->illnesses;
                                             }
                                         }
-                                    @endphp" 
+                                    @endphp"
                                     readonly data-bs-toggle="tooltip" title="Edit in Weekly Care Plan">
                             </div>
                         </div>

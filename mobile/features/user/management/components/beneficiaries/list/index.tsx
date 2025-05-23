@@ -1,5 +1,5 @@
 import { FlatList, ListRenderItem, RefreshControl, StyleSheet, TouchableNativeFeedback } from "react-native";
-import { IBeneficiary } from "../../../../user.schema";
+import { IBeneficiary } from "~/user.schema";
 import { useGetBeneficiaries } from "../../../management.hook";
 import { Button, Card, Text, View } from "tamagui";
 import { beneficiaryListStore } from "./store";
