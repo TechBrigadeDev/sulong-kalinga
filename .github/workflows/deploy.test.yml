@@ -1,6 +1,7 @@
 name: Deploy Test Environment
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - test
