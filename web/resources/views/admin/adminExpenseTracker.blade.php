@@ -1500,6 +1500,10 @@
 
         // Delete expense
        function deleteExpense(id) {
+            // Close any open parent modals first
+            $('#allExpensesModal').modal('hide');
+            $('#fullHistoryModal').modal('hide');
+            
             // Fetch the expense details first
             $.ajax({
                 url: '{{ route("admin.expense.get", "") }}/' + id,
@@ -1555,20 +1559,24 @@
         }
 
         function deleteBudget(id) {
+            // Close any open parent modals first
+            $('#allExpensesModal').modal('hide');
+            $('#fullHistoryModal').modal('hide');
+            
             // Fetch the budget details first
             $.ajax({
-                url: '{{ route("admin.expense.budget.get", "") }}/' + id,
+                url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
                 method: 'GET',
                 success: function(response) {
                     const budget = response.budget;
                     
-                    // Set up delete confirmation modal for a budget
+                    // Set up delete confirmation modal for a budget allocation
                     $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Budget Allocation');
                     
-                    // Prepare detail information
+                    // Prepare detail information - FIXED DESCRIPTION ALIGNMENT
                     const detailsHtml = `
                         <div class="d-flex justify-content-between">
-                            <strong>Type:</strong>
+                            <strong>Budget Type:</strong>
                             <span>${budget.budget_type.name}</span>
                         </div>
                         <div class="d-flex justify-content-between">
@@ -1581,9 +1589,9 @@
                             <strong>Period:</strong>
                             <span>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</span>
                         </div>
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between align-items-start">
                             <strong>Description:</strong>
-                            <span>${budget.description || 'No description'}</span>
+                            <span class="text-end" style="max-width: 65%;">${budget.description || 'No description'}</span>
                         </div>
                     `;
                     
@@ -1639,15 +1647,21 @@
             // Disable button and show spinner
             $('#confirmDeleteBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
             
-            // Call appropriate delete endpoint
-            const url = itemType === 'expense' ? 
-                '{{ route("admin.expense.delete") }}' : 
-                '{{ route("admin.expense.budget.delete") }}';
+            // Determine correct API endpoint and parameter name
+            let url, paramName;
+            
+            if (itemType === 'expense') {
+                url = '{{ route("admin.expense.delete") }}';
+                paramName = 'expense_id';
+            } else {
+                url = '{{ route("admin.expense.budget.delete") }}';
+                paramName = 'budget_id';
+            }
             
             // Prepare form data
             const formData = new FormData();
             formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-            formData.append(itemType === 'expense' ? 'expense_id' : 'budget_allocation_id', itemId);
+            formData.append(paramName, itemId);
             formData.append('password', password);
             
             $.ajax({
@@ -1657,28 +1671,34 @@
                 contentType: false,
                 processData: false,
                 success: function(response) {
-                    toastr.success(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget deleted successfully');
-                    
                     // Close the modal
                     bootstrap.Modal.getInstance(document.getElementById('deleteConfirmationModal')).hide();
                     
-                    // Show success alert
-                    showSuccessAlert(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget allocation deleted successfully');
+                    // Show success message
+                    toastr.success(itemType === 'expense' ? 'Expense deleted successfully' : 'Budget allocation deleted successfully');
                     
                     // Update dashboard data
                     updateDashboardWithFilters();
                 },
                 error: function(xhr) {
                     if (xhr.status === 403) {
-                        toastr.error('Incorrect password. Please try again.');
                         $('#confirmPassword').addClass('is-invalid');
+                        toastr.error('Incorrect password. Please try again.');
+                    } else if (xhr.status === 422) {
+                        // Validation errors
+                        const errors = xhr.responseJSON.errors || {};
+                        let errorMessage = 'Please fix the following errors:';
+                        Object.keys(errors).forEach(key => {
+                            errorMessage += '<br>• ' + errors[key][0];
+                        });
+                        toastr.error(errorMessage);
                     } else {
-                        toastr.error('Failed to delete ' + itemType + '. Please try again later.');
+                        toastr.error(xhr.responseJSON?.message || 'An error occurred during deletion');
                     }
                 },
                 complete: function() {
                     // Re-enable button
-                    $('#confirmDeleteBtn').prop('disabled', false).text('Delete');
+                    $('#confirmDeleteBtn').prop('disabled', false).html('<i class="bi bi-trash me-1"></i> Delete');
                 }
             });
         }
@@ -2443,14 +2463,30 @@
             return method.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
         }
 
+        // Format number with commas
+        function formatNumber(num) {
+            return parseFloat(num).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Format date in a readable way
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
         // Show success alert
         function showSuccessAlert(message) {
             $('#successAlertMessage').text(message);
-            $('#successAlert').removeClass('d-none');
-            
-            // Auto-hide after 5 seconds
+            $('#successAlert').removeClass('d-none').addClass('show');
             setTimeout(() => {
-                $('#successAlert').addClass('d-none');
+                $('#successAlert').removeClass('show').addClass('d-none');
             }, 5000);
         }
 

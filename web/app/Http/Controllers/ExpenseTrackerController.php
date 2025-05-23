@@ -772,7 +772,7 @@ class ExpenseTrackerController extends Controller
     public function deleteBudget(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'budget_id' => 'required|exists:budget_allocations,budget_allocation_id',
+            'budget_id' => 'required|integer|exists:budget_allocations,budget_allocation_id',
             'password' => 'required|string'
         ]);
 
@@ -787,33 +787,34 @@ class ExpenseTrackerController extends Controller
         if (!Hash::check($request->password, Auth::user()->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Password is incorrect'
+                'message' => 'Incorrect password'
             ], 403);
         }
 
         try {
+            // Find the budget allocation with its budget type
             $budget = BudgetAllocation::with('budgetType')->findOrFail($request->budget_id);
-            $budgetType = $budget->budgetType->name;
-            $budgetAmount = $budget->amount;
-            $budgetPeriod = Carbon::parse($budget->start_date)->format('M d, Y') . ' to ' . 
-                            Carbon::parse($budget->end_date)->format('M d, Y');
+            
+            // Get the budget type name safely (with fallback)
+            $budgetTypeName = $budget->budgetType ? $budget->budgetType->name : 'Unknown';
+            $amount = $budget->amount;
             
             // Delete the budget allocation
             $budget->delete();
             
-            // Create log entry
+            // Log the deletion
             $this->logService->createLog(
                 'budget_allocation',
                 $request->budget_id,
                 LogType::DELETE,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted budget allocation',
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' deleted budget allocation of type ' . $budgetTypeName . ' with amount ' . $amount,
                 Auth::id()
             );
             
-            // Create notification for all admins
+            // Create notification for admins
             $this->createNotificationForAdmins(
                 'Budget Allocation Deleted',
-                'A budget allocation of ₱' . number_format($budgetAmount, 2) . ' (' . $budgetTypeName . ') has been deleted by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+                Auth::user()->first_name . ' deleted a ' . $budgetTypeName . ' budget allocation of ₱' . number_format($amount, 2)
             );
             
             return response()->json([
