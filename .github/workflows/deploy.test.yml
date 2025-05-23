@@ -38,10 +38,13 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Run server setup script
+      - name: Run server setup commands
         run: |
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" \
-            ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} 'bash -s' < scripts/setup.sh
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<EOF
+            sudo apt-get update -y
+            sudo apt-get upgrade -y
+            sudo apt-get install -y docker.io
+          EOF
 
       - name: Deploy to Droplet via password
         run: |
