@@ -40,7 +40,7 @@ jobs:
 
       - name: Run server setup commands
         run: |
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<EOF
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
             sudo apt-get update -y
             sudo apt-get upgrade -y
             sudo apt-get install -y docker.io
