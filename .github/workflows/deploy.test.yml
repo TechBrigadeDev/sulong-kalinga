@@ -25,9 +25,10 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE=${{ secrets.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
-          docker build -f web/Dockerfile -t $IMAGE web
-          docker push $IMAGE
+          REGISTRY=${{ secrets.DOCR_REGISTRY }}       # e.g. registry.digitalocean.com/your-namespace
+          IMAGE="$REGISTRY/sulong-kalinga-web:${{ github.sha }}"
+          docker build -f web/Dockerfile -t "$IMAGE" web
+          docker push "$IMAGE"
 
   deploy:
     environment: test
