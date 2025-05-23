@@ -7,6 +7,7 @@
 /storage/pail
 /vendor
 .env
+.env.docker
 .env.backup
 .env.production
 .phpactor.json
@@ -23,3 +24,7 @@ yarn-error.log
 /.zed
 
 storage/logs/laravel.log
+
+**/caddy
+frankenphp
+frankenphp-worker.php
