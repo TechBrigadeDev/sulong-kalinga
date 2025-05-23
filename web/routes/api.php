@@ -128,7 +128,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // PUT /internal-appointments/{id} - Update an internal appointment
     // Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
     // POST /internal-appointments/{id}/cancel - Cancel (archive) an internal appointment
-    Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
+    // Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
 
     // Visitation API (Read-Only for Mobile)
     Route::get('/visitations', [VisitationApiController::class, 'index']);
