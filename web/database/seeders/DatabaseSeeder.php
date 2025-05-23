@@ -1726,13 +1726,107 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Generate medication schedules for beneficiaries
+     * Generate medication schedules
      */
     private function generateMedicationSchedules()
     {
-        \Log::info("Medication schedules would be generated here if implemented");
-        // Note: This would involve creating scheduled medication reminders
-        // based on the medications already created in the general care plans
+        // Get beneficiaries and care staff for created_by field
+        $beneficiaries = \App\Models\Beneficiary::all();
+        $careStaff = \App\Models\User::whereIn('role_id', [1, 2])->get();
+        
+        if ($beneficiaries->isEmpty()) {
+            \Log::warning("No beneficiaries found for medication schedules");
+            return;
+        }
+        
+        $medicationTypes = [
+            'tablet', 'capsule', 'liquid', 'injection', 'inhaler', 'topical', 'drops', 'other'
+        ];
+        
+        $medications = [
+            'Metformin' => ['dosages' => ['500mg', '850mg', '1000mg'], 'for' => 'Diabetes'],
+            'Lisinopril' => ['dosages' => ['5mg', '10mg', '20mg'], 'for' => 'Hypertension'],
+            'Atorvastatin' => ['dosages' => ['10mg', '20mg', '40mg'], 'for' => 'High Cholesterol'],
+            'Levothyroxine' => ['dosages' => ['25mcg', '50mcg', '75mcg', '100mcg'], 'for' => 'Hypothyroidism'],
+            'Albuterol' => ['dosages' => ['2 puffs', '1-2 puffs'], 'for' => 'Asthma/COPD'],
+            'Warfarin' => ['dosages' => ['2mg', '5mg', '7.5mg'], 'for' => 'Blood Thinning'],
+            'Furosemide' => ['dosages' => ['20mg', '40mg', '80mg'], 'for' => 'Edema/Heart Failure'],
+            'Omeprazole' => ['dosages' => ['10mg', '20mg', '40mg'], 'for' => 'Acid Reflux'],
+            'Amlodipine' => ['dosages' => ['2.5mg', '5mg', '10mg'], 'for' => 'Hypertension'],
+            'Metoprolol' => ['dosages' => ['25mg', '50mg', '100mg'], 'for' => 'Hypertension/Heart Failure'],
+            'Sertraline' => ['dosages' => ['25mg', '50mg', '100mg'], 'for' => 'Depression/Anxiety'],
+            'Hydrochlorothiazide' => ['dosages' => ['12.5mg', '25mg'], 'for' => 'Hypertension'],
+        ];
+        
+        // For each beneficiary, create 2-5 medications
+        foreach ($beneficiaries as $beneficiary) {
+            $medicationCount = $this->faker->numberBetween(2, 5);
+            
+            for ($i = 0; $i < $medicationCount; $i++) {
+                // Select a random medication
+                $medicationName = array_keys($medications)[$this->faker->numberBetween(0, count($medications) - 1)];
+                $medicationInfo = $medications[$medicationName];
+                $dosage = $medicationInfo['dosages'][$this->faker->numberBetween(0, count($medicationInfo['dosages']) - 1)];
+                
+                // Medication type
+                $medicationType = $medicationTypes[$this->faker->numberBetween(0, count($medicationTypes) - 1)];
+                
+                // As needed flag
+                $asNeeded = $this->faker->boolean(10); // 10% chance of being as-needed
+                
+                // Schedule times
+                $morningTime = (!$asNeeded && $this->faker->boolean(70)) ? $this->faker->dateTimeBetween('06:00', '09:00')->format('H:i:s') : null;
+                $noonTime = (!$asNeeded && $this->faker->boolean(40)) ? $this->faker->dateTimeBetween('11:00', '13:00')->format('H:i:s') : null;
+                $eveningTime = (!$asNeeded && $this->faker->boolean(60)) ? $this->faker->dateTimeBetween('16:00', '19:00')->format('H:i:s') : null;
+                $nightTime = (!$asNeeded && $this->faker->boolean(30)) ? $this->faker->dateTimeBetween('20:00', '23:00')->format('H:i:s') : null;
+                
+                // Make sure at least one time is set for non-as-needed medications
+                if (!$asNeeded && !$morningTime && !$noonTime && !$eveningTime && !$nightTime) {
+                    $morningTime = '08:00:00';
+                }
+                
+                // Food requirements
+                $withFoodMorning = $morningTime ? $this->faker->boolean(70) : false;
+                $withFoodNoon = $noonTime ? $this->faker->boolean(90) : false;
+                $withFoodEvening = $eveningTime ? $this->faker->boolean(80) : false;
+                $withFoodNight = $nightTime ? $this->faker->boolean(50) : false;
+                
+                // Start and end dates
+                $startDate = $this->faker->dateTimeBetween('-3 months', 'now')->format('Y-m-d');
+                $hasEndDate = $this->faker->boolean(70);
+                $endDate = $hasEndDate ? $this->faker->dateTimeBetween('+1 month', '+6 months')->format('Y-m-d') : null;
+                
+                // Status
+                $status = $hasEndDate && $endDate < now() ? 'completed' : 
+                        ($this->faker->boolean(90) ? 'active' : 'paused');
+                
+                // Create the medication schedule
+                \App\Models\MedicationSchedule::create([
+                    'beneficiary_id' => $beneficiary->beneficiary_id,
+                    'medication_name' => $medicationName,
+                    'dosage' => $dosage,
+                    'medication_type' => $medicationType,
+                    'morning_time' => $morningTime,
+                    'noon_time' => $noonTime,
+                    'evening_time' => $eveningTime,
+                    'night_time' => $nightTime,
+                    'as_needed' => $asNeeded,
+                    'with_food_morning' => $withFoodMorning,
+                    'with_food_noon' => $withFoodNoon,
+                    'with_food_evening' => $withFoodEvening,
+                    'with_food_night' => $withFoodNight,
+                    'special_instructions' => $this->faker->boolean(70) ? $this->faker->sentence : null,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'status' => $status,
+                    'created_by' => $careStaff->random()->id,
+                    'created_at' => Carbon::parse($startDate),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
+        }
+        
+        \Log::info("Created medication schedules for beneficiaries");
     }
 
     /**
