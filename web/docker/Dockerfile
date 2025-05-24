@@ -1,7 +1,13 @@
-# Use the official FrankenPHP image as the base
+# Stage 1: build PHP dependencies
+FROM composer:2 AS builder
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --prefer-dist
+
+# Stage 2: runtime image
 FROM dunglas/frankenphp
 
-# Install necessary system dependencies for PostgreSQL and PHP extensions
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/* \
@@ -10,14 +16,10 @@ RUN apt-get update && apt-get install -y \
     pdo_pgsql \
     pgsql
 
-# Copy your application files to the container
-COPY . /app
-
-# Set the working directory
+# Copy application code and built vendor
 WORKDIR /app
-
-# Install PHP dependencies for Laravel
-RUN composer install --no-dev --optimize-autoloader --prefer-dist
+COPY --from=builder /app/vendor ./vendor
+COPY . /app
 
 # Run the application using PHP Octane with FrankenPHP
 ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
