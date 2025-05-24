@@ -38,29 +38,31 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Run server setup commands
+      - name: Run server setup script
         run: |
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -tt -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh \
+           -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=5 \
+            root@${{ vars.DEPLOY_HOST }} <<'EOF'
             export DEBIAN_FRONTEND=noninteractive
-            sudo apt-get update -y -qq
-            sudo apt-get upgrade -y -qq
-            sudo apt-get install -y -qq docker.io
+            sudo apt-get update -y
+            sudo apt-get install --no-install-recommends -y docker.io
           EOF
 
       - name: Deploy to Droplet via password
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -tt -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
-            /usr/bin/docker pull $IMAGE
-            /usr/bin/docker stop sulong-kalinga || true
-            /usr/bin/docker rm sulong-kalinga || true
-            /usr/bin/docker pull $IMAGE
-            /usr/bin/docker run -d --name sulong-kalinga -p 80:80 $IMAGE
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
+            docker pull $IMAGE
+            docker stop sulong-kalinga || true
+            docker rm sulong-kalinga || true
+            docker run -d --name sulong-kalinga -p 80:80 $IMAGE
             # Cleanup dangling containers and images
-            /usr/bin/docker container prune -f
-            /usr/bin/docker image prune -f
+            docker container prune -f
+            docker image prune -f
             # Remove all unused images (old web tags, layers, etc.)
-            /usr/bin/docker image prune -a -f
+            docker image prune -a -f
           EOF
 
       - name: Install doctl CLI
@@ -72,7 +74,6 @@ jobs:
         run: doctl auth init -t ${{ secrets.DOCR_TOKEN }}
 
       - name: Prune old registry tags
-        if: always()
         run: |
           CURRENT=${{ github.sha }}
           doctl registry repository list-tags sulong-kalinga-web --format Tag --no-header \
