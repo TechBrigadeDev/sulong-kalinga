@@ -8,11 +8,26 @@ on:
     paths:
       - 'web/**'
 
+env:
+  DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+  API_URL: https://discord.com/api/v10/channels
+
 jobs:
   build:
     environment: test
     runs-on: ubuntu-latest
+    env:
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
     steps:
+      - name: Notify Discord – Run Started
+        if: always()
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🚀 Workflow started for **${{ github.repository }}** (#${{ github.run_number }})\n<$RUN_URL>\"}"
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -30,18 +45,47 @@ jobs:
           docker build -f web/docker/Dockerfile -t "$IMAGE" web
           docker push "$IMAGE"
 
+      - name: Notify Discord – Build Succeeded
+        if: success()
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"✅ Build succeeded for **${{ github.repository }}** (#${{ github.run_number }})\n<$RUN_URL>\"}"
+
+      - name: Notify Discord – Build Failed
+        if: failure()
+        run: |
+          LOGS_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/logs}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"❌ Build **failed** for **${{ github.repository }}** (#${{ github.run_number }})\nSee logs: <$LOGS_URL>\"}"
+
   deploy:
     environment: test
     needs: build
     runs-on: ubuntu-latest
+    env:
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
     steps:
+      - name: Notify Discord – Deploy Started
+        if: always()
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🚀 Deploy started for **${{ github.repository }}** (#${{ github.run_number }})\n<$RUN_URL>\"}"
+
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Run server setup script
         run: |
           sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh \
-           -o StrictHostKeyChecking=no \
+            -o StrictHostKeyChecking=no \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=5 \
             root@${{ vars.DEPLOY_HOST }} <<'EOF'
@@ -55,44 +99,46 @@ jobs:
         env:
           ENVARS: ${{ secrets.ENVARS }}
         run: |
-          # write the secret blob to .env
           echo "$ENVARS" > .env
-
-          # build up -e KEY="VALUE" flags
           ENV_ARGS=$(grep -v '^\s*#' .env \
                      | grep -v '^\s*$' \
                      | awk -F= '{printf "-e %s=\"%s\" ", $1, $2}')
-
-          # expose for later steps
           echo "ENV_ARGS=$ENV_ARGS" >> $GITHUB_ENV
           rm .env
-
 
       - name: Deploy to Droplet via password
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
-
           sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
-            # Log in to DOCR
             echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
               --username ${{ secrets.DOCR_USERNAME }} --password-stdin
-
-            # Pull the new image
             docker pull $IMAGE
-
-            # Stop & remove old container
             docker stop sulong-kalinga || true
             docker rm sulong-kalinga || true
-
-            # Run with parsed env args + ENVIRONMENT
             docker run -d --name sulong-kalinga -p 80:8000 \
               $ENV_ARGS -e ENVIRONMENT="${{ github.ref_name }}" $IMAGE
-
-            # Cleanup old images/containers
             docker container prune -f
             docker image prune -f
             docker image prune -a -f
           EOF
+
+      - name: Notify Discord – Deploy Succeeded
+        if: success()
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"✅ Deploy succeeded for **${{ github.repository }}** (#${{ github.run_number }})\n<$RUN_URL>\"}"
+
+      - name: Notify Discord – Deploy Failed
+        if: failure()
+        run: |
+          LOGS_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/logs}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"❌ Deploy **failed** for **${{ github.repository }}** (#${{ github.run_number }})\nSee logs: <$LOGS_URL>\"}"
 
       - name: Install doctl CLI
         run: |
