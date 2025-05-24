@@ -1,32 +1,6 @@
+version: '3'
+
 services:
-  libretranslate:
-    build:
-      context: ./libretranslate
-      dockerfile: Dockerfile
-    volumes:
-      - libretranslate_data:/home/libretranslate/.local/share
-    ports:
-      - "5051:5000"
-    networks:
-      - app-network
-    restart: always
-  calamancy-api:
-    build:
-      context: ./calamancy-api
-      dockerfile: Dockerfile
-    volumes:
-      - calamancy_data:/app/data
-      - calamancy_models:/root/.cache/spacy/downloads
-    networks:
-      - app-network    # Add this line to connect to the app network
-    ports:
-      - "5000:5000"
-    command: >
-        sh -c "pip install --no-deps https://huggingface.co/ljvmiranda921/tl_calamancy_md/resolve/main/tl_calamancy_md-any-py3-none-any.whl && python app.py"
-    deploy:
-      resources:
-        limits:
-          memory: 2G  
   web:
     build:
       context: ./web
@@ -34,11 +8,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "443:443/udp"
     depends_on:
       - db
       - calamancy-api
-      - libretranslate
     environment:
       - DB_CONNECTION=pgsql
       - DB_HOST=db
@@ -47,17 +19,11 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=${DB_PASSWORD}
       - CALAMANCY_API_URL=http://calamancy-api:5000
-      - LIBRETRANSLATE_URL=http://libretranslate:5000
-      - CADDY_GLOBAL_OPTIONS=debug
-      - APP_KEY=${APP_KEY}
     volumes:
-      - web_storage:/app/storage
-      - web_bootstrap:/app/bootstrap/cache
+      - ./web:/app
     restart: always
-    networks:
-      - app-network
 
-  # PostgreSQL database section remains unchanged
+  # PostgreSQL database
   db:
     image: postgres:13
     volumes:
@@ -68,29 +34,15 @@ services:
     ports:
       - "5432:5432"
     restart: always
-    networks:
-      - app-network
-  
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@example.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "5050:80"
-    networks:
-      - app-network
 
-networks:
-  app-network:
-    driver: bridge
+  # calamanCy API service
+  calamancy-api:
+    build: ./calamancy-api
+    ports:
+      - "5000:5000"
+    restart: always
+    volumes:
+      - ./calamancy-api:/app
 
 volumes:
   postgres_data:
-  web_data:
-  web_storage:
-  web_bootstrap:
-  calamancy_data:
-  calamancy_api_data:
-  calamancy_models:
-  libretranslate_data:
