@@ -85,7 +85,7 @@ jobs:
             docker rm sulong-kalinga || true
 
             # Run with parsed env args + ENVIRONMENT
-            docker run -d --name sulong-kalinga -p 80:80 \
+            docker run -d --name sulong-kalinga -p 80:8000 \
               $ENV_ARGS -e ENVIRONMENT="${{ github.ref_name }}" $IMAGE
 
             # Cleanup old images/containers
