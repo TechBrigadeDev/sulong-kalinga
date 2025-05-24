@@ -1,8 +1,9 @@
 import { YStack, XStack, Card, Text, Button, Separator } from 'tamagui';
-import { useUser } from '../../features/user/user.hook';
-import Badge from '../../components/Bagde';
-import { updateEmailStore } from '../../features/user/components/UpdateEmail/store';
-import { updatePasswordStore } from '../../features/user/components/UpdatePassword/store';
+import { useUser } from '~/features/user/user.hook';
+import Badge from '~/components/Bagde';
+import { updateEmailStore } from '~/features/user/components/UpdateEmail/store';
+import { updatePasswordStore } from '~/features/user/components/UpdatePassword/store';
+import LogoutButton from '~/features/auth/components/logout/button';
 
 const OptionScreen = () => {
   const {
@@ -53,6 +54,9 @@ const OptionScreen = () => {
         <XStack gap="$3" style={{ marginTop: 32, justifyContent: 'flex-end' }}>
           <Button theme="blue" onPress={handleUpdateEmail}>Update Email</Button>
           <Button theme="blue" onPress={handleUpdatePassword}>Update Password</Button>
+        </XStack>
+        <XStack style={{ marginTop: 24 }}>
+          <LogoutButton />
         </XStack>
       </Card>
     </YStack>

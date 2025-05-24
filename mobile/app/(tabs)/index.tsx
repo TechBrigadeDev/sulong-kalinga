@@ -1,20 +1,11 @@
-import { StyleSheet } from 'react-native';
-
-import { useLogout } from '~/features/auth/auth.hook';
-import { View } from '~/components/Themed';
+import { SafeAreaView, StyleSheet } from 'react-native';
+import Home from '~/components/screens/Home';
 
 export default function HomeScreen() {
-  const {
-    logout
-  } = useLogout();
-
-  const onPress = async () => {
-    await logout();
-  }
-
   return (
-    <View style={styles.container}>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Home/>
+    </SafeAreaView>
   );
 }
 
