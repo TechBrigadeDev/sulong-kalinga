@@ -46,10 +46,9 @@ def summarize_text():
 
 def extract_sections(text):
     """
-    Extract content into logical sections based on patterns in the text.
-    This is a basic implementation - improve with actual NLP categorization.
+    Extract content into logical sections based on patterns in Tagalog medical text.
     """
-    # Common sections in medical assessments/evaluations
+    # Common sections in medical assessments/evaluations (with Tagalog equivalents)
     potential_sections = {
         "vital_signs": [],
         "symptoms": [],
@@ -60,22 +59,36 @@ def extract_sections(text):
         "follow_up": []
     }
     
-    # Simple pattern matching for demonstration
-    # In real implementation, use a more sophisticated NLP approach
+    # Updated patterns with Tagalog equivalents
     patterns = {
-        "vital_signs": r'(?i)vital signs[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
-        "symptoms": r'(?i)symptoms[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
-        "observations": r'(?i)observations[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
-        "findings": r'(?i)findings[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
-        "recommendations": r'(?i)recommendations[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
-        "treatment": r'(?i)treatment[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
-        "follow_up": r'(?i)follow[- ]up[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)'
+        # Both English and Tagalog terms (vital signs often kept in English)
+        "vital_signs": r'(?i)(vital signs|mga vital sign|pulso|presyon ng dugo|temperatura)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
+        
+        # Symptoms
+        "symptoms": r'(?i)(symptoms|mga sintomas|sintomas|karamdaman)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
+        
+        # Observations 
+        "observations": r'(?i)(observations|mga obserbasyon|obserbasyon|napansin)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
+        
+        # Findings
+        "findings": r'(?i)(findings|mga natuklasan|natuklasan|mga nakita|assessment)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
+        
+        # Recommendations
+        "recommendations": r'(?i)(recommendations|mga rekomendasyon|rekomendasyon|payo)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
+        
+        # Treatment 
+        "treatment": r'(?i)(treatment|paggamot|lunas|gamot)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)',
+        
+        # Follow-up (often kept in English)
+        "follow_up": r'(?i)(follow[- ]up|susunod na checkup|susunod na pagpapatingin)[:\s]+(.*?)(?=\n\s*\n|\n\s*[A-Z]|\Z)'
     }
     
     for section, pattern in patterns.items():
         matches = re.findall(pattern, text)
         if matches:
-            potential_sections[section] = [m.strip() for m in matches]
+            # Extract the content part from the tuple (pattern, content)
+            section_content = [m[1].strip() if isinstance(m, tuple) and len(m) > 1 else m.strip() for m in matches]
+            potential_sections[section] = section_content
     
     # Generate summaries for sections
     sections = {}
@@ -91,7 +104,7 @@ def extract_sections(text):
             else:
                 sections[section] = combined_content.strip()
     
-    # If no sections were found, create general ones
+    # If no sections were found, create general ones with Tagalog-appropriate names
     if not sections:
         doc = nlp(text)
         sentences = list(doc.sents)
@@ -105,7 +118,7 @@ def extract_sections(text):
                 "recommendations": " ".join([s.text for s in sentences[2*n//3:]]).strip()
             }
         else:
-            sections = {"summary": " ".join([s.text for s in sentences]).strip()}
+            sections = {"buod": " ".join([s.text for s in sentences]).strip()}  # "buod" means "summary" in Tagalog
     
     return sections
 
