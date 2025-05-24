@@ -17,6 +17,7 @@ export const useUser = () => {
             const response = await userController.getUser(token);
 
             setUser(response);
+            console.log("User data fetched:", response);
             return response;
         },
         enabled: !!token,
