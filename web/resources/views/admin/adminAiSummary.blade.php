@@ -338,6 +338,19 @@
                                             <i class="bi bi-check-lg me-1"></i> Save
                                         </button>
                                     </div>
+                                    
+                                    <div id="assessmentSummarySections" class="mb-3">
+                                        <!-- Section cards will be added here -->
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <button class="btn btn-outline-secondary action-btn" id="editAssessmentSummary">
+                                            <i class="bi bi-pencil me-1"></i> Edit
+                                        </button>
+                                        <button class="btn btn-success action-btn" id="saveAssessmentSummary" style="display: none;">
+                                            <i class="bi bi-check-lg me-1"></i> Save
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -415,6 +428,13 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Finalize Button -->
+                        <div class="text-center mb-4">
+                            <button class="btn btn-success btn-lg action-btn" id="finalizeSummaries">
+                                <i class="bi bi-check-circle me-1"></i> Finalize Summaries
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1363,7 +1383,7 @@
                     if (progress >= 90) {
                         clearInterval(progressInterval);
                     }
-                }, 150);
+                }, 100);
                 
                 $.ajax({
                     url: '/admin/ai-summary/translate-sections',
