@@ -115,11 +115,11 @@ jobs:
             docker pull $IMAGE
             docker stop sulong-kalinga || true
             docker rm sulong-kalinga || true
-            docker run -d --name sulong-kalinga -p 80:8000 \
-              $ENV_ARGS -e ENVIRONMENT="${{ github.ref_name }}" $IMAGE
             docker container prune -f
             docker image prune -f
             docker image prune -a -f
+            docker run -d --restart unless-stopped --name sulong-kalinga -p 80:8000 \
+              $ENV_ARGS -e ENVIRONMENT="${{ github.ref_name }}" $IMAGE
           EOF
 
       - name: Notify Discord – Deploy Succeeded
