@@ -316,8 +316,13 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
     });
 
     // AI Summary
-    Route::prefix('ai-summary')->name('aiSummary.')->group(function () {
+    Route::prefix('ai-summary')->name('ai-summary.')->group(function () {
         Route::get('/', [AiSummaryController::class, 'index'])->name('index');
+        Route::get('/search', [AiSummaryController::class, 'search'])->name('search');
+        Route::get('/care-plan/{id}', [AiSummaryController::class, 'getCarePlan'])->name('getCarePlan');
+        Route::post('/summarize', [AiSummaryController::class, 'summarize'])->name('summarize');
+        Route::put('/update/{id}', [AiSummaryController::class, 'updateSummary'])->name('update');
+        Route::put('/finalize/{id}', [AiSummaryController::class, 'finalizeSummary'])->name('finalize');
     });
 
     // Shift Histories
