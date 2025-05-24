@@ -1,19 +1,18 @@
 import { SafeAreaView, StyleSheet } from 'react-native';
+import { View } from 'tamagui';
 import Home from '~/components/screens/Home';
 
 export default function HomeScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Home/>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 20,
