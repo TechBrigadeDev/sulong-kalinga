@@ -163,3 +163,23 @@ jobs:
           | xargs -I{} -n1 curl -sSL -X DELETE \
               "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tag/{}" \
               -H "Authorization: Bearer ${DO_API_TOKEN}"
+
+      - name: Health Check Endpoint
+        shell: bash
+        run: |
+          HEALTH_URL="http://${{ vars.DEPLOY_HOST }}/health"
+          for i in 1 2 3; do
+            if curl --fail -s "$HEALTH_URL"; then
+              curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+                -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"content\":\"💚 Health check passed for **${{ github.repository }}** environment **test**\"}"
+              exit 0
+            fi
+            sleep 5
+          done
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🛑 Health check **failed** for **${{ github.repository }}** environment **test**\"}"
+          exit 1

@@ -90,4 +90,8 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'showRese
     
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->name('password.update');
-    
+
+// Health check endpoint
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok'], 200);
+});
