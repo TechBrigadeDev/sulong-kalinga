@@ -56,8 +56,7 @@ function RootLayoutNav() {
       <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Protected guard={isAuthenticated}>
-              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-              <Stack.Screen name="user-management" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
             </Stack.Protected>
             <Stack.Screen name="login"/>

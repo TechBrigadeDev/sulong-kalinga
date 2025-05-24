@@ -1,9 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { Image } from "expo-image";
 
 import { useLogout } from '~/features/auth/auth.hook';
 import { View } from '~/components/Themed';
-import { Button } from 'tamagui';
 
 export default function HomeScreen() {
   const {
@@ -16,13 +14,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Image source={require('~/assets/images/icon.png')} style={styles.image}/>
-      <Button
-        onPressIn={onPress}
-      >
-        Logout
-      </Button>
-        
     </View>
   );
 }
