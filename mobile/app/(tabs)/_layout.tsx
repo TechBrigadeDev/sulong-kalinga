@@ -13,9 +13,9 @@ export default function Layout() {
 
   return (
     <Tabs>
-      <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <TabSlot/>
-      </SafeAreaView>
+      </View>
       <TabList asChild>
         <View
          style={styles.tabList}
@@ -36,7 +36,7 @@ export default function Layout() {
             </TabButton>
           </TabTrigger>
           <TabTrigger
-            name="(tabs)/options"
+            name="/(tabs)/options/index"
             href="/(tabs)/options"
             asChild
           >
