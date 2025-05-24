@@ -73,9 +73,18 @@ jobs:
       - name: Authenticate doctl
         run: doctl auth init -t ${{ secrets.DOCR_TOKEN }}
 
-      - name: Prune old registry tags
+      - name: Prune old registry tags via API
+        env:
+          DO_API_TOKEN: ${{ secrets.DOCR_TOKEN }}
+          REGISTRY_NAME: "sulong-kalinga"
+          REPO_NAME: "sulong-kalinga-web"
+          KEEP: ${{ github.sha }}
         run: |
-          CURRENT=${{ github.sha }}
-          doctl registry repository list-tags sulong-kalinga-web --format Tag --no-header \
-            | grep -v "$CURRENT" \
-            | xargs -r -n1 -I{} doctl registry repository delete-tag sulong-kalinga-web --tag {}
+          curl -sSL -X GET \
+            "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tags" \
+            -H "Authorization: Bearer ${DO_API_TOKEN}" \
+          | jq -r '.tags[].name' \
+          | grep -v "^${KEEP}$" \
+          | xargs -I{} -n1 curl -sSL -X DELETE \
+              "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tag/{}" \
+              -H "Authorization: Bearer ${DO_API_TOKEN}"
