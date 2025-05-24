@@ -54,16 +54,22 @@ jobs:
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
           sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
+            # Log in to DOCR on the remote host
+            echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
+              --username ${{ secrets.DOCR_USERNAME }} --password-stdin
+
+            # Pull, stop, remove, and run
             docker pull $IMAGE
             docker stop sulong-kalinga || true
             docker rm sulong-kalinga || true
             docker run -d --name sulong-kalinga -p 80:80 $IMAGE
-            # Cleanup dangling containers and images
+
+            # Cleanup
             docker container prune -f
             docker image prune -f
-            # Remove all unused images (old web tags, layers, etc.)
             docker image prune -a -f
           EOF
+
 
       - name: Install doctl CLI
         run: |
