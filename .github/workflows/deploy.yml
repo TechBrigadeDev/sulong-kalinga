@@ -1,0 +1,183 @@
+name: Deploy Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Deployment environment (test, prod)"
+        required: true
+        type: string
+      image_tag:
+        description: "Docker image tag to deploy"
+        required: true
+        type: string
+      deploy_host:
+        description: "Server host for SSH deployment"
+        required: true
+        type: string
+    secrets:
+      DISCORD_BOT_TOKEN:
+        required: true
+      DISCORD_PIPELINE_CHANNEL_ID:
+        required: true
+      DOCR_USERNAME:
+        required: true
+      DOCR_TOKEN:
+        required: true
+      CONTAINER_PASSWORD:
+        required: true
+      ENVARS:
+        required: true
+
+jobs:
+  build:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      API_URL: https://discord.com/api/v10/channels
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
+      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
+    steps:
+      - name: Notify Discord – Run Started
+        if: always()
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🚀 Build started for **${{ github.repository }}** (#${{ github.run_number }})\"}"
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to DOCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.DOCR_REGISTRY }}
+          username: ${{ secrets.DOCR_USERNAME }}
+          password: ${{ secrets.DOCR_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ inputs.image_tag }}
+          docker build -f web/docker/Dockerfile -t "$IMAGE" web
+          docker push "$IMAGE"
+
+      - name: Notify Discord – Build Succeeded
+        if: success()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"✅ Build succeeded for **${{ github.repository }}** (#${{ github.run_number }})\"}"
+
+      - name: Notify Discord – Build Failed
+        if: failure()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"❌ Build failed for **${{ github.repository }}** (#${{ github.run_number }})\"}"
+
+  deploy:
+    needs: build
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      API_URL: https://discord.com/api/v10/channels
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
+      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
+      DEPLOY_HOST: ${{ inputs.deploy_host }}
+      CONTAINER_PASSWORD: ${{ secrets.CONTAINER_PASSWORD }}
+      ENVARS: ${{ secrets.ENVARS }}
+    steps:
+      - name: Notify Discord – Deploy Started
+        if: always()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🚀 Deploy started for **${{ github.repository }}** (#${{ github.run_number }}) to ${{ inputs.environment }}\"}"
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Run server setup script
+        run: |
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=5 \
+            root@${{ inputs.deploy_host }} <<'EOF'
+            export DEBIAN_FRONTEND=noninteractive
+            sudo apt-get update -y
+            sudo apt-get install --no-install-recommends -y docker.io
+          EOF
+
+      - name: Parse .env secret into Docker env args
+        shell: bash
+        run: |
+          echo "$ENVARS" > .env
+          ENV_ARGS=$(grep -v '^\s*#' .env \
+                     | grep -v '^\s*$' \
+                     | awk -F= '{printf "-e %s=\"%s\" ", $1, $2}')
+          echo "ENV_ARGS=$ENV_ARGS" >> $GITHUB_ENV
+          rm .env
+
+      - name: Deploy to Droplet
+        run: |
+          IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ inputs.image_tag }}
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ inputs.deploy_host }} <<EOF
+            echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
+              --username ${{ secrets.DOCR_USERNAME }} --password-stdin
+            docker pull $IMAGE
+            docker stop sulong-kalinga || true
+            docker rm sulong-kalinga || true
+            docker container prune -f
+            docker image prune -f
+            docker image prune -a -f
+            docker run -d --restart unless-stopped --name sulong-kalinga -p 80:8000 \
+              $ENV_ARGS -e ENVIRONMENT="${{ inputs.environment }}" $IMAGE
+          EOF
+
+      - name: Health Check
+        shell: bash
+        run: |
+          HEALTH_URL="http://${{ inputs.deploy_host }}/health"
+          for i in 1 2 3; do
+            if curl --fail -s "$HEALTH_URL"; then
+              curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+                -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"content\":\"💚 Health check passed for **${{ github.repository }}** ${{ inputs.environment }}\"}"
+              exit 0
+            fi
+            sleep 5
+          done
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🛑 Health check failed for **${{ github.repository }}** ${{ inputs.environment }}\"}"
+          exit 1
+
+      - name: Prune old registry tags
+        env:
+          DO_API_TOKEN: ${{ secrets.DOCR_TOKEN }}
+          REGISTRY_NAME: "sulong-kalinga"
+          REPO_NAME: "sulong-kalinga-web"
+          KEEP: ${{ inputs.image_tag }}
+        run: |
+          curl -sSL -X GET \
+            "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tags" \
+            -H "Authorization: Bearer ${DO_API_TOKEN}" \
+          | jq -r '.tags[].name' \
+          | grep -v "^${KEEP}$" \
+          | xargs -I{} -n1 curl -sSL -X DELETE \
+              "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tag/{}" \
+              -H "Authorization: Bearer ${DO_API_TOKEN}"
