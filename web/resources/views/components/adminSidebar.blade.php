@@ -126,13 +126,13 @@
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('admin.aiSummary.*') ? 'active' : '' }}">
-      <a href="{{ route('admin.aiSummary.index') }}">
+    <li class="{{ Request::routeIs('admin.ai-summary.*') ? 'active' : '' }}">
+      <a href="{{ route('admin.ai-summary.index') }}">
         <i class="bi bi-stars"></i>
         <span class="link_name">AI Summary</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('admin.aiSummary.index') }}">AI Summary</a></li>
+        <li><a class="link_name" href="{{ route('admin.ai-summary.index') }}">AI Summary</a></li>
       </ul>
     </li>
     
