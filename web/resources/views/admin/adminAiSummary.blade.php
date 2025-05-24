@@ -3,12 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>AI Report Summary</title>
+    <title>Care Records Summarization</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/nlpUI.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        :root {
+            --primary-purple: #6f42c1;
+            --primary-teal: #20c997;
+            --primary-indigo: #4e73df;
+            --primary-slate: #5a6268;
+            --success-green: #198754;
+        }
+        
+        .page-header {
+            color:rgb(39, 39, 39);
+            font-weight: 600;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .search-filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+        }
+        .date-filter-container {
+            display: flex;
+            gap: 10px;
+        }
+        .date-filter {
+            width: 150px;
+        }
+        .form-control, .btn {
+            height: 38px;
+        }
+        
+        /* Table header styling */
+        .table thead {
+            background-color: var(--primary-indigo);
+            color: white;
+        }
+        
+        /* Card header styling */
+        .search-card .card-header {
+            background-color: var(--primary-indigo);
+            color: white;
+        }
+        
+        .results-card .card-header {
+            background-color: var(--primary-indigo);
+            color: white;
+        }
+        
+        .details-card .card-header {
+            background-color: var(--primary-indigo);
+            color: white;
+        }
+        
+        .assessment-card .card-header {
+            background-color: var(--primary-teal);
+            color: white;
+        }
+        
+        .evaluation-card .card-header {
+            background-color: var(--primary-purple);
+            color: white;
+        }
+        
+        /* Section header styling */
+        .section-header-teal {
+            background: linear-gradient(to right, #19a57d, #3dd6b0);
+            padding: 12px 15px;
+            border-left: 4px solid #137a5c;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .section-header-purple {
+            background: linear-gradient(to right, #5e35b1, #8962d5);
+            padding: 12px 15px;
+            border-left: 4px solid #4527a0;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .section-title {
+            color: #ffffff;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        /* Button styling */
+        .btn-generate {
+            background-color: var(--primary-indigo);
+            border-color: var(--primary-indigo);
+            color: white;
+        }
+        
+        .btn-generate:hover {
+            background-color:rgb(20, 42, 117);
+            border-color:rgb(20, 42, 117);
+            color: white;
+        }
+        
+        /* Other styling */
+        .summary-section-teal {
+            border-left: 3px solid var(--primary-teal);
+            padding-left: 15px;
+        }
+        
+        .summary-section-purple {
+            border-left: 3px solid var(--primary-purple);
+            padding-left: 15px;
+        }
+        
+        .custom-badge {
+            font-size: 0.9rem;
+            padding: 6px 10px;
+        }
+        .action-btn {
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        .section-card-teal {
+            border-left: 3px solid var(--primary-teal);
+            transition: all 0.2s;
+        }
+        .section-card-teal:hover {
+            border-left-color: #198754;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .section-card-purple {
+            border-left: 3px solid var(--primary-purple);
+            transition: all 0.2s;
+        }
+        .section-card-purple:hover {
+            border-left-color: #5e35b1;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        #carePlanDetails {
+            animation: fadeIn 0.5s ease-out;
+            scroll-margin-top: 20px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .filters-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-wrapper {
+            flex: 2;
+            min-width: 300px;
+            display: flex;
+        }
+        .date-filters {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
     @php
@@ -19,126 +194,206 @@
     @include('components.adminSidebar')
 
     <div class="home-section">
-        <div class="text-left">
-           AI REPORT SUMMARY
+        <div class="page-header">
+            <i class="bi bi-stars me-2"></i>NLP-POWERED REPORT SUMMARY
         </div>
         
         <div class="container-fluid">
             <div class="row" id="home-content">
                 <div class="col-12">
                     <!-- Report Selection -->
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-body p-2">
-                            <div class="row align-items-center">
-                                <div class="col-md-7">
-                                    <select class="form-select select2" id="reportSelect" data-placeholder="Search for a care plan...">
-                                        <option></option>
-                                        <option value="general_1" data-type="general">John Doe - General Care Plan</option>
-                                        <option value="weekly_1" data-type="weekly">John Doe - Weekly Care Plan (May 10, 2023)</option>
-                                        <option value="general_2" data-type="general">Jane Smith - General Care Plan</option>
-                                        <option value="weekly_2" data-type="weekly">Jane Smith - Weekly Care Plan (May 3, 2023)</option>
-                                    </select>
+                    <div class="card border-0 shadow-sm mb-3 search-card">
+                        <div class="card-header py-3">
+                            <h5 class="mb-0">Search Weekly Care Plans</h5>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="filters-wrapper">
+                                <div class="search-wrapper">
+                                    <input type="text" class="form-control" id="search" placeholder="Search by beneficiary name or care plan ID">
+                                    <button class="btn btn-primary ms-2 d-flex align-items-center" id="searchBtn">
+                                        <i class="bi bi-search me-1"></i> Search
+                                    </button>
                                 </div>
-                                <div class="col-md-5">
-                                    <div class="btn-container">
-                                        <button class="btn btn-primary text-white" id="generateSummary">
-                                            <i class="bi bi-stars me-1"></i> {{ T::translate('Generate AI Summary', 'Bumuo ng Buod') }}
-                                        </button>
-                                        <button class="btn btn-success text-white" id="translateReport">
-                                            <i class="bi bi-translate me-1"></i> {{ T::translate('Translate', 'Isalin sa Tagalog')}}
-                                        </button>
+                                <div class="date-filters">
+                                    <div class="input-group">
+                                        <span class="input-group-text">From:</span>
+                                        <input type="date" class="form-control" id="date_from">
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text">To:</span>
+                                        <input type="date" class="form-control" id="date_to">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <!-- Summary Report Column -->
-                        <div class="col-12">
-                            <div class="summary-container">
-                                <div id="emptySummary" class="empty-summary">
-                                    <i class="bi bi-file-earmark-text-fill"></i>
-                                    <h4>No Report Selected</h4>
-                                    <p class="text-muted">{{ T::translate('Select a care plan from the dropdown above to view the report', 'Pumili ng Care Plan mula sa dropdown sa itaas upang makita ang report')}}</p>
+                    <!-- Care Plan Results Table -->
+                    <div class="card border-0 shadow-sm mb-3 results-card">
+                        <div class="card-header py-3">
+                            <h5 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Weekly Care Plans</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Number</th>
+                                            <th>Beneficiary</th>
+                                            <th>Care Worker</th>
+                                            <th>Date</th>
+                                            <th>AI Summary</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="carePlansTable">
+                                        <!-- Care plans will be loaded here -->
+                                    </tbody>
+                                </table>
+                                <div id="pagination" class="d-flex justify-content-center mt-3">
+                                    <!-- Pagination will be added here -->
                                 </div>
-                                
-                                <div id="originalReport" style="display: none;">
-                                    <div class="summary-header">
-                                        <div class="header-content">
-                                            <div>
-                                                <h4 class="section-title"><span id="patientName">{{ T::translate('Beneficiary Name', 'Pangalan ng Benepisyaryo')}}</span></h4>
-                                                <div class="patient-meta">
-                                                    <span class="patient-meta-item"><span id="patientAge">--</span> {{ T::translate('Years', 'Taon')}}</span>
-                                                    <span class="patient-meta-item"><span id="patientGender">--</span></span>
-                                                    <span class="patient-meta-item"><span id="reportDate">--</span></span>
-                                                </div>
-                                                <div class="report-meta">
-                                                    <span class="report-meta-item">{{ T::translate('Author:', 'Maykatha:')}} <span id="reportAuthor">--</span></span>
-                                                    <span class="report-meta-item">Beneficiary: <span id="reportBeneficiary">--</span></span>
-                                                </div>
-                                            </div>
-                                            <span class="plan-type-badge" id="planTypeBadge">General Plan</span>
-                                        </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Care Plan Details Section (Hidden Initially) -->
+                    <div id="carePlanDetails" style="display: none;">
+                        <!-- Care Plan Info -->
+                        <div class="card border-0 shadow-sm mb-3 details-card">
+                            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Care Plan Details</h5>
+                                <span class="badge bg-light text-primary custom-badge" id="carePlanId"></span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong><i class="bi bi-person me-2"></i>Beneficiary:</strong> <span id="beneficiaryName"></span></p>
+                                        <p><strong><i class="bi bi-people me-2"></i>Care Worker:</strong> <span id="careWorkerName"></span></p>
                                     </div>
-                                    
-                                    <div class="p-3 position-relative">
-                                        <!-- Content will be loaded here dynamically -->
-                                        <div id="originalContent"></div>
-                                    </div>
-                                </div>
-                                
-                                <div id="summaryReport" style="display: none;">
-                                    <div class="summary-header">
-                                        <div class="header-content">
-                                            <div>
-                                                <h4 class="section-title"><span id="summaryPatientName">{{ T::translate('Beneficiary Name', 'Pangalan ng Benepisyaryo')}}</span></h4>
-                                                <div class="patient-meta">
-                                                    <span class="patient-meta-item"><span id="summaryPatientAge">--</span> {{ T::translate('Years', 'Taon')}}</span>
-                                                    <span class="patient-meta-item"><span id="summaryPatientGender">--</span></span>
-                                                    <span class="patient-meta-item"><span id="summaryReportDate">--</span></span>
-                                                </div>
-                                                <div class="report-meta">
-                                                    <span class="report-meta-item">{{ T::translate('Author:', 'Maykatha')}} <span id="summaryReportAuthor">--</span></span>
-                                                    <span class="report-meta-item">Beneficiary: <span id="summaryReportBeneficiary">--</span></span>
-                                                </div>
-                                            </div>
-                                            <span class="plan-type-badge" id="summaryPlanTypeBadge">General Plan</span>
-                                        </div>
-                                        <div class="summary-actions mt-5">
-                                            <button class="btn btn-sm btn-primary" id="viewOriginalReportBtn">
-                                                <i class="bi bi-eye me-1"></i>{{ T::translate('View Original', 'Tingnan ang Orihinal')}} 
-                                            </button>
-                                            <button class="btn btn-sm btn-secondary edit-summary-btn" id="editSummaryBtn">
-                                                <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit', 'I-Edit')}}
-                                            </button>
-                                            <button class="btn btn-sm btn-success save-summary-btn" id="saveSummaryBtn">
-                                                <i class="bi bi-floppy me-1"></i> {{ T::translate('Save', 'I-Save')}}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="p-3 position-relative summary-content-container">
-                                        <!-- Loader container -->
-                                        <div class="loader-container" id="loaderContainer">
-                                            <div class="loader"></div>
-                                            <div class="loader-text" id="loaderText">Generating AI Summary...</div>
-                                            <div class="progress-container">
-                                                <div class="progress-bar" id="progressBar"></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Add section button (visible only in edit mode) -->
-                                        <button class="btn btn-sm btn-primary add-section-btn" id="addSectionBtn">
-                                            <i class="bi bi-plus me-1"></i> {{ T::translate('Add New Section', 'Magdagdag ng Bagong Seksyon')}}
-                                        </button>
-                                        
-                                        <!-- Content will be loaded here dynamically -->
-                                        <div id="summaryContent"></div>
+                                    <div class="col-md-6">
+                                        <p><strong><i class="bi bi-calendar-date me-2"></i>Date:</strong> <span id="carePlanDate"></span></p>
+                                        <p><strong><i class="bi bi-person-badge me-2"></i>Author:</strong> <span id="authorName"></span></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Assessment Section -->
+                        <div class="card border-0 shadow-sm mb-4 assessment-card">
+                            <div class="card-header py-3">
+                                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Assessment</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="section-header-teal">
+                                    <h6 class="section-title">Original Assessment</h6>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="form-control bg-light" style="min-height: 150px; max-height: 300px; overflow-y: auto;" id="originalAssessment"></div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button class="btn btn-generate action-btn" id="generateAssessmentSummary">
+                                        <i class="bi bi-stars me-1"></i> Generate AI Summary
+                                    </button>
+                                </div>
+                                
+                                <!-- Assessment Summary Section (Hidden Initially) -->
+                                <div id="assessmentSummarySection" style="display: none;" class="mt-4 summary-section-teal">
+                                    <hr>
+                                    <div class="section-header-teal">
+                                        <h6 class="section-title">Assessment Summary</h6>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="form-control bg-light" id="assessmentSummaryDraft"></div>
+                                    </div>
+                                    
+                                    <div id="assessmentSummarySections" class="mb-3">
+                                        <!-- Section cards will be added here -->
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <button class="btn btn-outline-secondary action-btn" id="editAssessmentSummary">
+                                            <i class="bi bi-pencil me-1"></i> Edit
+                                        </button>
+                                        <button class="btn btn-success action-btn" id="saveAssessmentSummary" style="display: none;">
+                                            <i class="bi bi-check-lg me-1"></i> Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Evaluation Section -->
+                        <div class="card border-0 shadow-sm mb-4 evaluation-card">
+                            <div class="card-header py-3">
+                                <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Evaluation</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="section-header-purple">
+                                    <h6 class="section-title">Original Evaluation</h6>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="form-control bg-light" style="min-height: 150px; max-height: 300px; overflow-y: auto;" id="originalEvaluation"></div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button class="btn btn-generate action-btn" id="generateEvaluationSummary">
+                                        <i class="bi bi-stars me-1"></i> Generate AI Summary
+                                    </button>
+                                </div>
+                                
+                                <!-- Evaluation Summary Section (Hidden Initially) -->
+                                <div id="evaluationSummarySection" style="display: none;" class="mt-4 summary-section-purple">
+                                    <hr>
+                                    <div class="section-header-purple">
+                                        <h6 class="section-title">Evaluation Summary</h6>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="form-control bg-light" id="evaluationSummaryDraft"></div>
+                                    </div>
+                                    
+                                    <div id="evaluationSummarySections" class="mb-3">
+                                        <!-- Section cards will be added here -->
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <button class="btn btn-outline-secondary action-btn" id="editEvaluationSummary">
+                                            <i class="bi bi-pencil me-1"></i> Edit
+                                        </button>
+                                        <button class="btn btn-success action-btn" id="saveEvaluationSummary" style="display: none;">
+                                            <i class="bi bi-check-lg me-1"></i> Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Finalize Button -->
+                        <div class="text-center mb-4">
+                            <button class="btn btn-success btn-lg action-btn" id="finalizeSummaries">
+                                <i class="bi bi-check-circle me-1"></i> Finalize Summaries
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Animation Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 id="loadingText">Processing...</h5>
+                    <div class="progress mt-3">
+                        <div id="loadingProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -146,8 +401,8 @@
     </div>
 
     <!-- Original Report Modal -->
-    <div class="modal fade full-report-modal" id="originalReportModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="originalReportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="originalReportModalTitle">{{ T::translate('Original Care Plan Report', 'Orihinal na Care Plan Report')}}</h5>
@@ -169,905 +424,607 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize select2 with search
-            $('#reportSelect').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Search for a care plan...',
-                width: '100%'
+            let currentCarePlanId = null;
+            let currentPage = 1;
+            
+            // Load initial data
+            loadCarePlans(1);
+            
+            // Search button click
+            $('#searchBtn').click(function() {
+                loadCarePlans(1);
             });
             
-            // Sample data for demonstration (maintaining original content structure)
-            const sampleData = {
-                general_1: {
-                    type: 'general',
-                    patientName: "John Doe",
-                    patientAge: "72",
-                    patientGender: "Male",
-                    author: "Dr. Maria Santos",
-                    beneficiary: "John Doe",
-                    primaryCaregiver: "Maria Santos",
-                    emergencyContact: "Juan Doe (Son) - 09123456789",
-                    patientAddress: "123 Main St, Barangay 1, City",
-                    patientPhone: "09123456789",
-                    medicalConditions: ["Hypertension", "Type 2 Diabetes"],
-                    careNeeds: [
-                        { need: "Mobility", frequency: "Daily", assistance: "Walking assistance" },
-                        { need: "Medication", frequency: "Twice daily", assistance: "Administration" },
-                        { need: "Personal Hygiene", frequency: "Daily", assistance: "Full assistance" }
-                    ],
-                    medications: [
-                        { name: "Lisinopril", dosage: "10mg", frequency: "Once daily", instructions: "Take in the morning" },
-                        { name: "Metformin", dosage: "500mg", frequency: "Twice daily", instructions: "With meals" }
-                    ],
-                    emergencyProcedures: "Administer prescribed medications and contact emergency services immediately",
-                    reviewDate: "June 15, 2023",
-                    fullReport: `
-                        <h4>Complete General Care Plan Report</h4>
-                        <h5 class="mt-4">Patient Information</h5>
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Name:</strong> John Doe</p>
-                                <p><strong>Age:</strong> 72</p>
-                                <p><strong>Gender:</strong> Male</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Address:</strong> 123 Main St, Barangay 1, City</p>
-                                <p><strong>Phone:</strong> 09123456789</p>
-                                <p><strong>Emergency Contact:</strong> Juan Doe (Son) - 09123456789</p>
-                            </div>
-                        </div>
-                        
-                        <h5 class="mt-4">Medical History</h5>
-                        <hr>
-                        <p><strong>Primary Conditions:</strong> Hypertension, Type 2 Diabetes</p>
-                        <p><strong>Other Conditions:</strong> Mild arthritis, High cholesterol</p>
-                        <p><strong>Allergies:</strong> Penicillin (rash), Latex (mild irritation)</p>
-                        <p><strong>Previous Surgeries:</strong> Appendectomy (1975), Cataract surgery (2018)</p>
-                        
-                        <h5 class="mt-4">Comprehensive Care Needs</h5>
-                        <hr>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Care Need</th>
-                                    <th>Frequency</th>
-                                    <th>Assistance Required</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Mobility</td>
-                                    <td>Daily</td>
-                                    <td>Walking assistance</td>
-                                    <td>Uses cane for short distances, wheelchair for longer distances</td>
-                                </tr>
-                                <tr>
-                                    <td>Medication</td>
-                                    <td>Twice daily</td>
-                                    <td>Administration</td>
-                                    <td>Needs supervision due to memory issues</td>
-                                </tr>
-                                <tr>
-                                    <td>Personal Hygiene</td>
-                                    <td>Daily</td>
-                                    <td>Full assistance</td>
-                                    <td>Requires help with bathing and dressing</td>
-                                </tr>
-                                <tr>
-                                    <td>Meal Preparation</td>
-                                    <td>3x daily</td>
-                                    <td>Partial assistance</td>
-                                    <td>Diabetic diet requirements</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <h5 class="mt-4">Detailed Medication Plan</h5>
-                        <hr>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Medication</th>
-                                    <th>Dosage</th>
-                                    <th>Frequency</th>
-                                    <th>Instructions</th>
-                                    <th>Purpose</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Lisinopril</td>
-                                    <td>10mg</td>
-                                    <td>Once daily</td>
-                                    <td>Take in the morning</td>
-                                    <td>Blood pressure control</td>
-                                </tr>
-                                <tr>
-                                    <td>Metformin</td>
-                                    <td>500mg</td>
-                                    <td>Twice daily</td>
-                                    <td>With meals</td>
-                                    <td>Blood sugar control</td>
-                                </tr>
-                                <tr>
-                                    <td>Atorvastatin</td>
-                                    <td>20mg</td>
-                                    <td>Once daily at bedtime</td>
-                                    <td>Take with water</td>
-                                    <td>Cholesterol management</td>
-                                </tr>
-                                <tr>
-                                    <td>Baby Aspirin</td>
-                                    <td>81mg</td>
-                                    <td>Once daily</td>
-                                    <td>With breakfast</td>
-                                    <td>Cardiovascular protection</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <h5 class="mt-4">Comprehensive Emergency Plan</h5>
-                        <hr>
-                        <p><strong>Emergency Contacts:</strong></p>
-                        <ul>
-                            <li>Primary: Juan Doe (Son) - 09123456789</li>
-                            <li>Secondary: Maria Doe (Daughter) - 09198765432</li>
-                            <li>Physician: Dr. Maria Santos - 09223334444</li>
-                        </ul>
-                        <p><strong>Emergency Procedures:</strong></p>
-                        <ol>
-                            <li>Check patient's vital signs</li>
-                            <li>Administer prescribed emergency medications if applicable</li>
-                            <li>Contact emergency services (911 or local equivalent)</li>
-                            <li>Notify all emergency contacts</li>
-                            <li>Have patient's medical information and medications ready</li>
-                            <li>Accompany patient to hospital if transport is needed</li>
-                        </ol>
-                        
-                        <h5 class="mt-4">Additional Notes</h5>
-                        <hr>
-                        <p>Patient prefers morning showers and has a routine of reading the newspaper after breakfast. He enjoys classical music and responds well to calm environments. Patient has mild short-term memory loss but retains long-term memories well.</p>
-                        <p>Dietary restrictions include low sodium and controlled carbohydrates. Patient is allowed one small sweet treat per day with lunch, as per agreement with nutritionist.</p>
-                    `
-                },
-                weekly_1: {
-                    type: 'weekly',
-                    patientName: "John Doe",
-                    patientAge: "72",
-                    patientGender: "Male",
-                    reportDate: "May 10, 2023",
-                    author: "Nurse Robert Johnson",
-                    beneficiary: "John Doe",
-                    primaryCaregiver: "Maria Santos",
-                    emergencyContact: "Juan Doe (Son) - 09123456789",
-                    medicalConditions: ["Hypertension", "Type 2 Diabetes"],
-                    vitals: {
-                        bloodPressure: "142/88 mmHg",
-                        temperature: "36.8°C",
-                        pulseRate: "78 bpm",
-                        weight: "78.5 kg",
-                        bloodSugar: "128 mg/dL (fasting)"
+            // Search on Enter key press
+            $('#search').keypress(function(e) {
+                if (e.which == 13) {
+                    loadCarePlans(1);
+                }
+            });
+            
+            // Date filter change
+            $('#date_from, #date_to').change(function() {
+                loadCarePlans(1);
+            });
+            
+            // Load care plans via AJAX
+            function loadCarePlans(page) {
+                currentPage = page;
+                let search = $('#search').val();
+                let dateFrom = $('#date_from').val();
+                let dateTo = $('#date_to').val();
+                
+                $.ajax({
+                    url: '/admin/ai-summary/search',
+                    type: 'GET',
+                    data: {
+                        search: search,
+                        date_from: dateFrom,
+                        date_to: dateTo,
+                        page: page
                     },
-                    interventions: [
-                        { activity: "Mobility assistance", duration: "15 min/day", notes: "Improved walking with cane" },
-                        { activity: "Medication administration", duration: "10 min/dose", notes: "100% adherence" },
-                        { activity: "Cognitive exercises", duration: "30 min/session", notes: "Enjoyed memory games" },
-                        { activity: "Blood sugar monitoring", duration: "5 min/day", notes: "Stable readings" }
-                    ],
-                    careAssessment: "The patient requires assistance with mobility due to knee pain, particularly with walking and transfers. Cognitive function is intact but would benefit from memory exercises. Requires full assistance with personal hygiene and medication management.",
-                    evaluation: "This week, patient showed improvement in mobility but blood pressure remains elevated. Medication adherence was excellent. Patient participated in cognitive exercises 3 times this week with good engagement. Nutrition intake was consistent with dietary requirements. Blood sugar levels remained within target range.",
-                    emergencyProcedures: "Administer prescribed medications and contact emergency services immediately",
-                    reviewDate: "May 17, 2023",
-                    fullReport: `
-                        <h4>Complete Weekly Care Plan Report - May 10, 2023</h4>
-                        <h5 class="mt-4">Patient Summary</h5>
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Name:</strong> John Doe</p>
-                                <p><strong>Age:</strong> 72</p>
-                                <p><strong>Primary Conditions:</strong> Hypertension, Type 2 Diabetes</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Week Covered:</strong> May 3-10, 2023</p>
-                                <p><strong>Prepared by:</strong> Nurse Robert Johnson</p>
-                                <p><strong>Next Review:</strong> May 17, 2023</p>
-                            </div>
-                        </div>
-                        
-                        <h5 class="mt-4">Detailed Vital Signs</h5>
-                        <hr>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Blood Pressure</th>
-                                    <th>Temperature</th>
-                                    <th>Pulse Rate</th>
-                                    <th>Weight</th>
-                                    <th>Blood Sugar (Fasting)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>May 3</td>
-                                    <td>140/86 mmHg</td>
-                                    <td>36.7°C</td>
-                                    <td>76 bpm</td>
-                                    <td>78.7 kg</td>
-                                    <td>132 mg/dL</td>
-                                </tr>
-                                <tr>
-                                    <td>May 5</td>
-                                    <td>138/84 mmHg</td>
-                                    <td>36.6°C</td>
-                                    <td>74 bpm</td>
-                                    <td>78.5 kg</td>
-                                    <td>126 mg/dL</td>
-                                </tr>
-                                <tr>
-                                    <td>May 7</td>
-                                    <td>144/90 mmHg</td>
-                                    <td>36.9°C</td>
-                                    <td>80 bpm</td>
-                                    <td>78.3 kg</td>
-                                    <td>130 mg/dL</td>
-                                </tr>
-                                <tr>
-                                    <td>May 10</td>
-                                    <td>142/88 mmHg</td>
-                                    <td>36.8°C</td>
-                                    <td>78 bpm</td>
-                                    <td>78.5 kg</td>
-                                    <td>128 mg/dL</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <h5 class="mt-4">Daily Intervention Log</h5>
-                        <hr>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Intervention</th>
-                                    <th>Duration</th>
-                                    <th>Notes</th>
-                                    <th>Staff</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td rowspan="3">May 3</td>
-                                    <td>Morning medication</td>
-                                    <td>10 min</td>
-                                    <td>Taken without issues</td>
-                                    <td>R. Johnson</td>
-                                </tr>
-                                <tr>
-                                    <td>Mobility assistance</td>
-                                    <td>20 min</td>
-                                    <td>Walked in garden</td>
-                                    <td>R. Johnson</td>
-                                </tr>
-                                <tr>
-                                    <td>Evening medication</td>
-                                    <td>10 min</td>
-                                    <td>Taken with dinner</td>
-                                    <td>M. Garcia</td>
-                                </tr>
-                                <tr>
-                                    <td rowspan="4">May 4</td>
-                                    <td>Morning medication</td>
-                                    <td>10 min</td>
-                                    <td>Normal administration</td>
-                                    <td>M. Garcia</td>
-                                </tr>
-                                <tr>
-                                    <td>Cognitive exercises</td>
-                                    <td>30 min</td>
-                                    <td>Memory card game</td>
-                                    <td>R. Johnson</td>
-                                </tr>
-                                <tr>
-                                    <td>Blood sugar check</td>
-                                    <td>5 min</td>
-                                    <td>128 mg/dL</td>
-                                    <td>R. Johnson</td>
-                                </tr>
-                                <tr>
-                                    <td>Evening medication</td>
-                                    <td>10 min</td>
-                                    <td>Taken with dinner</td>
-                                    <td>M. Garcia</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    `
-                }
-            };
-
-            // When report is selected from dropdown
-            $('#reportSelect').change(function() {
-                const selectedReport = $(this).val();
+                    success: function(response) {
+                        displayCarePlans(response);
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading care plans:', xhr);
+                        alert('Failed to load care plans. Please try again.');
+                    }
+                });
+            }
+            
+            // Display care plans in table
+            function displayCarePlans(data) {
+                let tbody = $('#carePlansTable');
+                tbody.empty();
                 
-                if (!selectedReport) {
-                    $('#emptySummary').show();
-                    $('#originalReport').hide();
-                    $('#summaryReport').hide();
+                if (data.data.length === 0) {
+                    tbody.append('<tr><td colspan="6" class="text-center py-3">No care plans found</td></tr>');
+                    $('#pagination').empty();
                     return;
                 }
                 
-                const planData = sampleData[selectedReport];
-                const isWeeklyPlan = planData.type === 'weekly';
-                
-                // Update plan type badge
-                if (isWeeklyPlan) {
-                    $('#planTypeBadge').text('Weekly Plan').removeClass('general-plan-badge').addClass('weekly-plan-badge');
-                } else {
-                    $('#planTypeBadge').text('General Plan').removeClass('weekly-plan-badge').addClass('general-plan-badge');
-                }
-                
-                // Update patient info
-                $('#patientName').text(planData.patientName);
-                $('#patientAge').text(planData.patientAge);
-                $('#patientGender').text(planData.patientGender);
-                $('#reportDate').text(planData.reportDate || '--');
-                $('#reportAuthor').text(planData.author || '--');
-                $('#reportBeneficiary').text(planData.beneficiary || '--');
-                
-                // Generate original content based on report type
-                let originalContent = '';
-                
-                if (isWeeklyPlan) {
-                    // Weekly Care Plan Original
-                    originalContent = `
-                        <!-- Patient Overview -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Patient Overview</h5>
-                            </div>
-                            <div class="section-body">
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <small>Primary Caregiver</small>
-                                        ${planData.primaryCaregiver}
-                                    </div>
-                                    <div class="info-item">
-                                        <small>Emergency Contact</small>
-                                        ${planData.emergencyContact}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Health Summary -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Health Summary</h5>
-                            </div>
-                            <div class="section-body">
-                                <div class="mb-3">
-                                    <h6 class="mb-2">Medical Conditions</h6>
-                                    <div>
-                                        ${planData.medicalConditions.map(condition => 
-                                            `<span class="badge bg-primary me-2">${condition}</span>`
-                                        ).join('')}
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <h6 class="mb-2">Vital Signs</h6>
-                                    <div class="info-grid">
-                                        <div class="vital-card">
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Blood Pressure</span>
-                                                    <strong class="vital-value">${planData.vitals.bloodPressure}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="vital-card">
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Temperature</span>
-                                                    <strong class="vital-value">${planData.vitals.temperature}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="vital-card">
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Pulse Rate</span>
-                                                    <strong class="vital-value">${planData.vitals.pulseRate}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        ${planData.vitals.weight ? `
-                                        <div class="vital-card">
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Weight</span>
-                                                    <strong class="vital-value">${planData.vitals.weight}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Care Needs Assessment -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Care Needs Assessment</h5>
-                            </div>
-                            <div class="section-body">
-                                <div class="editable-content">
-                                    ${planData.careAssessment}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Implemented Interventions -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Implemented Interventions</h5>
-                            </div>
-                            <div class="section-body">
-                                ${planData.interventions.map(intv => `
-                                    <div class="intervention-item">
-                                        <div>
-                                            <strong>${intv.activity}</strong>
-                                            <div class="text-muted">${intv.notes}</div>
-                                        </div>
-                                        <span class="text-muted">${intv.duration}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        
-                        <!-- Evaluation & Notes -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Evaluation & Notes</h5>
-                            </div>
-                            <div class="section-body">
-                                <div class="editable-content">
-                                    ${planData.evaluation}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // General Care Plan Original
-                    originalContent = `
-                        <!-- Patient Overview -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Patient Overview</h5>
-                            </div>
-                            <div class="section-body">
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <small>Primary Caregiver</small>
-                                        ${planData.primaryCaregiver}
-                                    </div>
-                                    <div class="info-item">
-                                        <small>Emergency Contact</small>
-                                        ${planData.emergencyContact}
-                                    </div>
-                                    ${planData.patientAddress ? `
-                                    <div class="info-item">
-                                        <small>Address</small>
-                                        ${planData.patientAddress}
-                                    </div>
-                                    ` : ''}
-                                    ${planData.patientPhone ? `
-                                    <div class="info-item">
-                                        <small>Phone Number</small>
-                                        ${planData.patientPhone}
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Health Summary -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Health Summary</h5>
-                            </div>
-                            <div class="section-body">
-                                <div class="mb-3">
-                                    <h6 class="mb-2">Medical Conditions</h6>
-                                    <div>
-                                        ${planData.medicalConditions.map(condition => 
-                                            `<span class="badge bg-primary me-2">${condition}</span>`
-                                        ).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Care Needs -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Care Needs</h5>
-                            </div>
-                            <div class="section-body">
-                                <table class="care-needs-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Care Need</th>
-                                            <th>Frequency</th>
-                                            <th>Assistance Required</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${planData.careNeeds.map(need => `
-                                            <tr>
-                                                <td>${need.need}</td>
-                                                <td>${need.frequency}</td>
-                                                <td>${need.assistance}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <!-- Medication Management -->
-                        <div class="section-card">
-                            <div class="section-header">
-                                <h5 class="mb-0">Medication Management</h5>
-                            </div>
-                            <div class="section-body">
-                                ${planData.medications.map(med => `
-                                    <div class="medication-item">
-                                        <strong>${med.name}</strong> ${med.dosage} - ${med.frequency}
-                                        <div class="text-muted">${med.instructions}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                // Update the original content
-                $('#originalContent').html(originalContent);
-                
-                // Show the original report and hide empty state
-                $('#emptySummary').hide();
-                $('#originalReport').show();
-                $('#summaryReport').hide();
-                
-                // Store the current report ID for original report viewing
-                $('#viewOriginalReportBtn').data('report-id', selectedReport);
-            });
+                data.data.forEach(function(carePlan) {
+                    let careWorkerName = 'Not Assigned';
+                    
+                    // Use the joined data from the query
+                    if (carePlan.care_worker_id && carePlan.care_worker_first_name) {
+                        careWorkerName = `${carePlan.care_worker_first_name} ${carePlan.care_worker_last_name}`;
+                    }
 
-            // Generate summary button click
-            $('#generateSummary').click(function() {
-                const selectedReport = $('#reportSelect').val();
-                
-                if (!selectedReport) {
-                    alert('Please select a report first');
-                    return;
-                }
-                
-                // Show loader and hide content
-                $('#loaderContainer').show();
-                $('#summaryContent').hide();
-                $('#loaderText').text('Generating AI Summary...');
-                $('#progressBar').css('width', '0%');
-                
-                const planData = sampleData[selectedReport];
-                const isWeeklyPlan = planData.type === 'weekly';
-                
-                // Simulate API call delay with progress updates
-                let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += 10;
-                    $('#progressBar').css('width', `${progress}%`);
-                    $('#loaderText').text(`Generating AI Summary... ${progress}%`);
-                    
-                    if (progress >= 100) {
-                        clearInterval(progressInterval);
-                        generateSummaryContent();
-                    }
-                }, 200);
-                
-                function generateSummaryContent() {
-                    // Update plan type badge
-                    if (isWeeklyPlan) {
-                        $('#summaryPlanTypeBadge').text('Weekly Plan').removeClass('general-plan-badge').addClass('weekly-plan-badge');
-                    } else {
-                        $('#summaryPlanTypeBadge').text('General Plan').removeClass('weekly-plan-badge').addClass('general-plan-badge');
-                    }
-                    
-                    // Update patient info
-                    $('#summaryPatientName').text(planData.patientName);
-                    $('#summaryPatientAge').text(planData.patientAge);
-                    $('#summaryPatientGender').text(planData.patientGender);
-                    $('#summaryReportDate').text(planData.reportDate || '--');
-                    $('#summaryReportAuthor').text(planData.author || '--');
-                    $('#summaryReportBeneficiary').text(planData.beneficiary || '--');
-                    
-                    // Generate summary content based on report type
-                    let summaryContent = '';
-                    
-                    if (isWeeklyPlan) {
-                        // Weekly Care Plan Summary (AI generated version would be more concise)
-                        summaryContent = `
-                            <!-- Patient Overview -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Patient Overview</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>This weekly care plan covers ${planData.patientName}, a ${planData.patientAge}-year-old ${planData.patientGender.toLowerCase()} with primary conditions: ${planData.medicalConditions.join(', ')}.</p>
-                                    <p>The primary caregiver is ${planData.primaryCaregiver} and emergency contact is ${planData.emergencyContact}.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Key Health Indicators -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Key Health Indicators</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>Recent vital signs show:</p>
-                                    <ul>
-                                        <li>Blood Pressure: ${planData.vitals.bloodPressure}</li>
-                                        <li>Temperature: ${planData.vitals.temperature}</li>
-                                        <li>Pulse Rate: ${planData.vitals.pulseRate}</li>
-                                        ${planData.vitals.weight ? `<li>Weight: ${planData.vitals.weight}</li>` : ''}
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <!-- Care Highlights -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Care Highlights</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>Key interventions this week:</p>
-                                    <ul>
-                                        ${planData.interventions.slice(0, 3).map(intv => `
-                                            <li><strong>${intv.activity}:</strong> ${intv.notes}</li>
-                                        `).join('')}
-                                    </ul>
-                                    <p>Overall assessment: ${planData.careAssessment.split('.')[0]}.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Progress Summary -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Progress Summary</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>${planData.evaluation.split('.')[0]}. ${planData.evaluation.split('.')[1] || ''}</p>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        // General Care Plan Summary (AI generated version would be more concise)
-                        summaryContent = `
-                            <!-- Patient Overview -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Patient Summary</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>${planData.patientName} is a ${planData.patientAge}-year-old ${planData.patientGender.toLowerCase()} with primary conditions: ${planData.medicalConditions.join(', ')}.</p>
-                                    <p>Primary caregiver: ${planData.primaryCaregiver}</p>
-                                    <p>Emergency contact: ${planData.emergencyContact}</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Care Needs Summary -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Care Needs Summary</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>Primary care needs:</p>
-                                    <ul>
-                                        ${planData.careNeeds.slice(0, 3).map(need => `
-                                            <li><strong>${need.need}:</strong> ${need.frequency} (${need.assistance})</li>
-                                        `).join('')}
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <!-- Medication Summary -->
-                            <div class="section-card">
-                                <div class="section-header">
-                                    <h5 class="mb-0">Medication Summary</h5>
-                                </div>
-                                <div class="section-body">
-                                    <p>Key medications:</p>
-                                    <ul>
-                                        ${planData.medications.slice(0, 3).map(med => `
-                                            <li><strong>${med.name} ${med.dosage}:</strong> ${med.frequency} (${med.instructions})</li>
-                                        `).join('')}
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    // Update the summary content
-                    $('#summaryContent').html(summaryContent);
-                    
-                    // Hide loader and show content
-                    setTimeout(() => {
-                        $('#loaderContainer').hide();
-                        $('#summaryContent').show();
-                        $('#editSummaryBtn').show();
-                        $('#saveSummaryBtn').hide();
-                        $('#viewOriginalReportBtn').show();
-                        $('#addSectionBtn').hide();
-                    }, 500);
-                    
-                    // Show the summary and hide original report
-                    $('#originalReport').hide();
-                    $('#summaryReport').fadeIn();
-                    
-                    // Store the current report ID for original report viewing
-                    $('#viewOriginalReportBtn').data('report-id', selectedReport);
-                }
-            });
-
-            // Edit summary button click
-            $('#editSummaryBtn').click(function() {
-                // Make content editable
-                $('#summaryContent').attr('contenteditable', 'true');
-                $('#summaryContent').addClass('editable-content');
-                
-                // Show edit controls for each section
-                $('.section-card').each(function() {
-                    $(this).append(`
-                        <div class="edit-controls">
-                            <button class="btn btn-sm btn-danger btn-remove-section">
-                                <i class="bi bi-trash-fill"></i>
+                    let row = `<tr>
+                        <td>${carePlan.weekly_care_plan_id}</td>
+                        <td>${carePlan.first_name} ${carePlan.last_name}</td>
+                        <td>${careWorkerName}</td>
+                        <td>${new Date(carePlan.created_at).toLocaleDateString()}</td>
+                        <td>${carePlan.has_ai_summary ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary view-btn" data-id="${carePlan.weekly_care_plan_id}">
+                                <i class="bi bi-eye"></i> View
                             </button>
-                        </div>
-                    `);
+                        </td>
+                    </tr>`;
+                    tbody.append(row);
                 });
                 
-                // Show save button and hide edit button
-                $(this).hide();
-                $('#saveSummaryBtn').show();
-                $('#addSectionBtn').show();
+                // Set up pagination - limit visible page numbers
+                let pagination = $('#pagination');
+                pagination.empty();
                 
-                // Focus on the first editable element
-                $('.section-body p:first').focus();
-            });
-
-            // Add new section button click
-            $('#addSectionBtn').click(function() {
-                const sectionCount = $('.section-card').length + 1;
-                const newSection = `
-                    <div class="section-card">
-                        <div class="section-header">
-                            <input type="text" class="section-title-input" value="New Section ${sectionCount}" placeholder="Section Title">
-                        </div>
-                        <div class="section-body editable-content">
-                            <p>Click to edit this section content...</p>
-                        </div>
-                        <div class="edit-controls">
-                            <button class="btn btn-sm btn-danger btn-remove-section">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                $('#summaryContent').append(newSection);
-            });
-
-            // Remove section button (delegated event)
-            $(document).on('click', '.btn-remove-section', function() {
-                $(this).closest('.section-card').remove();
-            });
-
-            // Save summary button click
-            $('#saveSummaryBtn').click(function() {
-                // Show saving loader
-                $('#loaderContainer').show();
-                $('#loaderText').text('Saving changes...');
-                $('#progressBar').css('width', '0%');
+                if (data.last_page > 1) {
+                    let paginationHtml = '<nav><ul class="pagination">';
+                    
+                    // Previous button
+                    paginationHtml += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${data.current_page - 1}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>`;
+                    
+                    // First page
+                    if (data.current_page > 3) {
+                        paginationHtml += `<li class="page-item">
+                            <a class="page-link" href="#" data-page="1">1</a>
+                        </li>`;
+                        
+                        if (data.current_page > 4) {
+                            paginationHtml += `<li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>`;
+                        }
+                    }
+                    
+                    // Visible pages (current ± 2)
+                    const startPage = Math.max(1, data.current_page - 2);
+                    const endPage = Math.min(data.last_page, data.current_page + 2);
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                        paginationHtml += `<li class="page-item ${i === data.current_page ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>`;
+                    }
+                    
+                    // Last page
+                    if (data.current_page < data.last_page - 2) {
+                        if (data.current_page < data.last_page - 3) {
+                            paginationHtml += `<li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>`;
+                        }
+                        
+                        paginationHtml += `<li class="page-item">
+                            <a class="page-link" href="#" data-page="${data.last_page}">${data.last_page}</a>
+                        </li>`;
+                    }
+                    
+                    // Next button
+                    paginationHtml += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${data.current_page + 1}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>`;
+                    
+                    paginationHtml += '</ul></nav>';
+                    pagination.html(paginationHtml);
+                    
+                    // Add click handlers for pagination
+                    $('.page-link').click(function(e) {
+                        e.preventDefault();
+                        let page = $(this).data('page');
+                        if (page > 0 && page <= data.last_page) {
+                            loadCarePlans(page);
+                        }
+                    });
+                }
                 
-                // Simulate save process
+                // Add click handlers for view buttons
+                $('.view-btn').click(function() {
+                    let id = $(this).data('id');
+                    loadCarePlanDetails(id);
+                });
+            }
+            
+            // Load care plan details
+            function loadCarePlanDetails(id) {
+                $.ajax({
+                    url: `/admin/ai-summary/care-plan/${id}`,
+                    type: 'GET',
+                    success: function(carePlan) {
+                        currentCarePlanId = carePlan.weekly_care_plan_id;
+                        displayCarePlanDetails(carePlan);
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading care plan details:', xhr);
+                        alert('Failed to load care plan details. Please try again.');
+                    }
+                });
+            }
+            
+            // Display care plan details
+            function displayCarePlanDetails(carePlan) {
+                // Basic info
+                $('#carePlanId').text(`#${carePlan.weekly_care_plan_id}`);
+                $('#beneficiaryName').text(`${carePlan.beneficiary.first_name} ${carePlan.beneficiary.last_name}`);
+                $('#careWorkerName').text(carePlan.care_worker ? 
+                    `${carePlan.care_worker.first_name} ${carePlan.care_worker.last_name}` : 'N/A');
+                $('#carePlanDate').text(new Date(carePlan.created_at).toLocaleDateString());
+                $('#authorName').text(carePlan.author ? 
+                    `${carePlan.author.first_name} ${carePlan.author.last_name}` : 'N/A');
+                
+                // Original content
+                $('#originalAssessment').text(carePlan.assessment || 'No assessment available');
+                $('#originalEvaluation').text(carePlan.evaluation_recommendations || 'No evaluation available');
+                
+                // Show previously generated summaries if available
+                if (carePlan.has_ai_summary) {
+                    if (carePlan.assessment_summary_draft) {
+                        $('#assessmentSummarySection').show();
+                        $('#assessmentSummaryDraft').text(carePlan.assessment_summary_draft);
+                        displaySummarySections('assessment', carePlan.assessment_summary_sections);
+                    }
+                    
+                    if (carePlan.evaluation_summary_draft) {
+                        $('#evaluationSummarySection').show();
+                        $('#evaluationSummaryDraft').text(carePlan.evaluation_summary_draft);
+                        displaySummarySections('evaluation', carePlan.evaluation_summary_sections);
+                    }
+                } else {
+                    // Hide summary sections if no summaries yet
+                    $('#assessmentSummarySection').hide();
+                    $('#evaluationSummarySection').hide();
+                }
+                
+                // Show details section
+                $('#carePlanDetails').show();
+                
+                // Scroll to details with a small offset and behavior smooth
+                document.getElementById('carePlanDetails').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            // Generate assessment summary
+            $('#generateAssessmentSummary').click(function() {
+                if (!currentCarePlanId) return;
+                
+                const text = $('#originalAssessment').text();
+                if (!text || text === 'No assessment available') {
+                    alert('No assessment text available to summarize');
+                    return;
+                }
+                
+                // Show loading modal
+                $('#loadingText').text('Generating AI Summary...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                // Simulate progress (for better UX)
                 let progress = 0;
                 const progressInterval = setInterval(() => {
-                    progress += 20;
-                    $('#progressBar').css('width', `${progress}%`);
-                    $('#loaderText').text(`Saving changes... ${progress}%`);
+                    progress += 5;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
                     
-                    if (progress >= 100) {
+                    if (progress >= 90) {
                         clearInterval(progressInterval);
-                        completeSave();
                     }
                 }, 150);
                 
-                function completeSave() {
-                    // Make content non-editable
-                    $('#summaryContent').removeAttr('contenteditable');
-                    $('#summaryContent').removeClass('editable-content');
-                    
-                    // Remove edit controls
-                    $('.edit-controls').remove();
-                    
-                    // Show edit button and hide save button
-                    $('#editSummaryBtn').show();
-                    $('#saveSummaryBtn').hide();
-                    $('#addSectionBtn').hide();
-                    
-                    // Hide loader
-                    setTimeout(() => {
-                        $('#loaderContainer').hide();
-                        alert('Summary saved successfully!');
-                    }, 300);
-                }
+                $.ajax({
+                    url: '/admin/ai-summary/summarize',
+                    type: 'POST',
+                    data: {
+                        text: text,
+                        type: 'assessment',
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Display summary and sections
+                            $('#assessmentSummaryDraft').text(response.summary);
+                            displaySummarySections('assessment', response.sections);
+                            $('#assessmentSummarySection').show();
+                            
+                            // Save the generated summary
+                            saveSummary('assessment', response.summary, response.sections);
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error generating summary:', xhr);
+                        alert('Failed to generate summary. Please try again.');
+                    }
+                });
             });
-
-            // Translate report button click
-            $('#translateReport').click(function() {
-                const selectedReport = $('#reportSelect').val();
+            
+            // Generate evaluation summary
+            $('#generateEvaluationSummary').click(function() {
+                if (!currentCarePlanId) return;
                 
-                if (!selectedReport) {
-                    alert('Please select a report first');
+                const text = $('#originalEvaluation').text();
+                if (!text || text === 'No evaluation available') {
+                    alert('No evaluation text available to summarize');
                     return;
                 }
                 
-                if ($('#summaryReport').is(':hidden')) {
-                    alert('Please generate the AI summary first');
-                    return;
+                // Show loading modal
+                $('#loadingText').text('Generating AI Summary...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                // Simulate progress (for better UX)
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
+                    
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                }, 150);
+                
+                $.ajax({
+                    url: '/admin/ai-summary/summarize',
+                    type: 'POST',
+                    data: {
+                        text: text,
+                        type: 'evaluation',
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Display summary and sections
+                            $('#evaluationSummaryDraft').text(response.summary);
+                            displaySummarySections('evaluation', response.sections);
+                            $('#evaluationSummarySection').show();
+                            
+                            // Save the generated summary
+                            saveSummary('evaluation', response.summary, response.sections);
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error generating summary:', xhr);
+                        alert('Failed to generate summary. Please try again.');
+                    }
+                });
+            });
+            
+            // Display summary sections
+            function displaySummarySections(type, sections) {
+                if (!sections) return;
+                
+                let container = $(`#${type}SummarySections`);
+                container.empty();
+                
+                Object.entries(sections).forEach(([key, value]) => {
+                    let sectionTitle = key.replace('_', ' ');
+                    sectionTitle = sectionTitle.charAt(0).toUpperCase() + sectionTitle.slice(1);
+                    
+                    let sectionIcon = '';
+                    switch(key) {
+                        case 'vital_signs': sectionIcon = 'bi-heart-pulse'; break;
+                        case 'symptoms': sectionIcon = 'bi-thermometer-half'; break;
+                        case 'observations': sectionIcon = 'bi-eye'; break;
+                        case 'findings': sectionIcon = 'bi-search'; break;
+                        case 'recommendations': sectionIcon = 'bi-lightbulb'; break;
+                        case 'treatment': sectionIcon = 'bi-capsule'; break;
+                        case 'follow_up': sectionIcon = 'bi-calendar-check'; break;
+                        default: sectionIcon = 'bi-card-text';
+                    }
+                    
+                    // Use different card style based on type
+                    const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
+                    
+                    let sectionHtml = `
+                    <div class="card mb-3 ${cardClass}">
+                        <div class="card-header py-2 bg-light d-flex align-items-center">
+                            <i class="bi ${sectionIcon} me-2"></i>
+                            <h6 class="mb-0">${sectionTitle}</h6>
+                        </div>
+                        <div class="card-body py-2">
+                            <p class="section-content mb-0" data-section="${key}">${value}</p>
+                            <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${value}</textarea>
+                        </div>
+                    </div>`;
+                    
+                    container.append(sectionHtml);
+                });
+            }
+            
+            // Edit assessment summary
+            $('#editAssessmentSummary').click(function() {
+                toggleEditMode('assessment', true);
+            });
+            
+            // Edit evaluation summary
+            $('#editEvaluationSummary').click(function() {
+                toggleEditMode('evaluation', true);
+            });
+            
+            // Save assessment summary
+            $('#saveAssessmentSummary').click(function() {
+                saveEditedSummary('assessment');
+            });
+            
+            // Save evaluation summary
+            $('#saveEvaluationSummary').click(function() {
+                saveEditedSummary('evaluation');
+            });
+            
+            // Toggle edit mode
+            function toggleEditMode(type, isEdit) {
+                if (isEdit) {
+                    // Switch to edit mode
+                    $(`#${type}SummarySections .section-content`).hide();
+                    $(`#${type}SummarySections .section-editor`).show();
+                    $(`#edit${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).hide();
+                    $(`#save${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).show();
+                    
+                    // Make the main summary draft editable
+                    let currentText = $(`#${type}SummaryDraft`).text();
+                    $(`#${type}SummaryDraft`).html(`<textarea class="form-control" id="${type}SummaryDraftEditor">${currentText}</textarea>`);
+                } else {
+                    // Switch back to view mode
+                    $(`#${type}SummarySections .section-content`).show();
+                    $(`#${type}SummarySections .section-editor`).hide();
+                    $(`#edit${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).show();
+                    $(`#save${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).hide();
+                    
+                    // Make the main summary draft non-editable
+                    let currentText = $(`#${type}SummaryDraftEditor`).val();
+                    $(`#${type}SummaryDraft`).text(currentText);
                 }
+            }
+            
+            // Save edited summary
+            function saveEditedSummary(type) {
+                if (!currentCarePlanId) return;
                 
-                // Show loader and hide content
-                $('#loaderContainer').show();
-                $('#loaderText').text('Translating Report...');
-                $('#progressBar').css('width', '0%');
+                // Collect section data
+                let sections = {};
+                $(`#${type}SummarySections .section-editor`).each(function() {
+                    let section = $(this).data('section');
+                    let content = $(this).val();
+                    sections[section] = content;
+                    
+                    // Also update the displayed content
+                    $(this).siblings('.section-content').text(content);
+                });
                 
-                // Simulate translation API call with progress updates
+                // Get the main summary text
+                let summaryText = $(`#${type}SummaryDraftEditor`).val();
+                
+                // Show loading modal
+                $('#loadingText').text('Saving changes...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                // Simulate progress (for better UX)
                 let progress = 0;
                 const progressInterval = setInterval(() => {
                     progress += 10;
-                    $('#progressBar').css('width', `${progress}%`);
-                    $('#loaderText').text(`Translating Report... ${progress}%`);
+                    $('#loadingProgressBar').css('width', `${progress}%`);
                     
-                    if (progress >= 100) {
+                    if (progress >= 90) {
                         clearInterval(progressInterval);
-                        completeTranslation();
                     }
-                }, 200);
+                }, 100);
                 
-                function completeTranslation() {
-                    // In a real implementation, this would update the content with translated text
-                    $('#loaderText').text('Translation complete!');
-                    
-                    setTimeout(() => {
-                        $('#loaderContainer').hide();
-                        $('#summaryContent').show();
-                    }, 500);
+                // Switch back to view mode
+                toggleEditMode(type, false);
+                
+                // Save to database
+                let data = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                };
+                
+                data[`${type}_summary_draft`] = summaryText;
+                data[`${type}_summary_sections`] = sections;
+                
+                $.ajax({
+                    url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                    type: 'PUT',
+                    data: data,
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Show success toast or notification
+                            const toast = `<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+                                <div class="toast show bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+                                    <div class="toast-header bg-success text-white">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <strong class="me-auto">Success</strong>
+                                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                                    </div>
+                                    <div class="toast-body">
+                                        Summary saved successfully!
+                                    </div>
+                                </div>
+                            </div>`;
+                            
+                            $(toast).appendTo('body');
+                            setTimeout(() => {
+                                $('.toast').toast('hide');
+                                setTimeout(() => {
+                                    $('.toast').remove();
+                                }, 500);
+                            }, 3000);
+                            
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error saving summary:', xhr);
+                        alert('Failed to save summary. Please try again.');
+                    }
+                });
+            }
+            
+            // Save summary to database
+            function saveSummary(type, summary, sections) {
+                if (!currentCarePlanId) return;
+                
+                let data = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                };
+                
+                data[`${type}_summary_draft`] = summary;
+                data[`${type}_summary_sections`] = sections;
+                
+                $.ajax({
+                    url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                    type: 'PUT',
+                    data: data,
+                    success: function(response) {
+                        console.log('Summary saved successfully');
+                    },
+                    error: function(xhr) {
+                        console.error('Error saving summary:', xhr);
+                        alert('Failed to save summary. Please try again.');
+                    }
+                });
+            }
+            
+            // Finalize summaries
+            $('#finalizeSummaries').click(function() {
+                if (!currentCarePlanId) return;
+                
+                let assessmentSummary = $('#assessmentSummaryDraft').text();
+                let evaluationSummary = $('#evaluationSummaryDraft').text();
+                
+                if (!assessmentSummary && !evaluationSummary) {
+                    alert('Please generate at least one summary before finalizing.');
+                    return;
                 }
-            });
-
-            // View original report button click
-            $('#viewOriginalReportBtn').click(function() {
-                const reportId = $(this).data('report-id');
-                if (!reportId) return;
                 
-                const planData = sampleData[reportId];
-                $('#originalReportModalTitle').text(`Original ${planData.type === 'weekly' ? 'Weekly' : 'General'} Care Plan Report - ${planData.patientName}`);
-                $('#originalReportContent').html(planData.fullReport);
-                $('#originalReportModal').modal('show');
+                // Show loading modal
+                $('#loadingText').text('Finalizing summaries...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                // Simulate progress (for better UX)
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
+                    
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                }, 100);
+                
+                $.ajax({
+                    url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
+                    type: 'PUT',
+                    data: {
+                        assessment_summary_final: assessmentSummary,
+                        evaluation_summary_final: evaluationSummary,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Show success alert
+                            const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i> Summaries have been finalized successfully!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`;
+                            
+                            // Insert at the top of the care plan details section
+                            $(successAlert).prependTo('#carePlanDetails');
+                            
+                            // Refresh the care plan list to update status
+                            loadCarePlans(currentPage);
+                            
+                            // Auto dismiss after 5 seconds
+                            setTimeout(() => {
+                                $('.alert').alert('close');
+                            }, 5000);
+                            
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error finalizing summaries:', xhr);
+                        alert('Failed to finalize summaries. Please try again.');
+                    }
+                });
             });
         });
     </script>

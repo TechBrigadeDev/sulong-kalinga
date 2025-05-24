@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: docker/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - db
+      - calamancy-api
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=sulong_kalinga_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CALAMANCY_API_URL=http://calamancy-api:5000
+    volumes:
+      - ./web:/app
+    restart: always
+
+  # PostgreSQL database
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=sulong_kalinga_db
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    restart: always
+
+  # calamanCy API service
+  calamancy-api:
+    build: ./calamancy-api
+    ports:
+      - "5000:5000"
+    restart: always
+    volumes:
+      - ./calamancy-api:/app
+
+volumes:
+  postgres_data:

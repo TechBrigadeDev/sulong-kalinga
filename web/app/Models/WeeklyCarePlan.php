@@ -21,7 +21,22 @@ class WeeklyCarePlan extends Model
         'beneficiary_id', 'care_worker_id', 'care_manager_id', 'vital_signs_id', 'date', 
         'assessment', 'illnesses', 'evaluation_recommendations', 'photo_path',
         'created_by', 'updated_by', 'acknowledged_by_beneficiary', 'acknowledged_by_family',
-        'acknowledgement_signature'
+        'acknowledgement_signature',
+        'assessment_summary_draft',
+        'assessment_translation_draft',
+        'evaluation_summary_draft',
+        'evaluation_translation_draft',
+        'assessment_summary_sections',
+        'evaluation_summary_sections',
+        'assessment_summary_final',
+        'evaluation_summary_final',
+        'has_ai_summary'
+    ];
+
+    protected $casts = [
+        'assessment_summary_sections' => 'array',
+        'evaluation_summary_sections' => 'array',
+        'has_ai_summary' => 'boolean',
     ];
 
     public function author()
