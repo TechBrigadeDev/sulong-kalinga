@@ -1,10 +1,9 @@
 import { useUser } from '~/features/user/user.hook';
 import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
-import Lucide from "@react-native-vector-icons/lucide";
 import { View } from 'tamagui';
-import { StyleSheet } from 'react-native';
-import TabButton from '../../components/screens/Home/components/button';
+import { SafeAreaView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import TabButton from '~/components/screens/Home/_components/button';
 
 
 export default function Layout() {
@@ -14,7 +13,9 @@ export default function Layout() {
 
   return (
     <Tabs>
-      <TabSlot/>
+      <SafeAreaView style={{ flex: 1 }}>
+        <TabSlot/>
+      </SafeAreaView>
       <TabList asChild>
         <View
          style={styles.tabList}
@@ -55,9 +56,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: 10,
     backgroundColor: '#ffffff',
-    elevation: 5,
     marginBottom: 20,
-    marginHorizontal: 10,
-    borderRadius: 50 
+    position: 'absolute',
+    bottom: 10,
+    left: 20,
+    right: 20,
+
+    borderRadius: 50,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
 })
