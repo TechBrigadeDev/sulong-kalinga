@@ -16,5 +16,8 @@ COPY . /app
 # Set the working directory
 WORKDIR /app
 
+# Install PHP dependencies for Laravel
+RUN composer install --no-dev --optimize-autoloader --prefer-dist
+
 # Run the application using PHP Octane with FrankenPHP
 ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
