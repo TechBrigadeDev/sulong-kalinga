@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\WeeklyCarePlanApiController;
 use App\Http\Controllers\Api\MedicationScheduleApiController;
 use App\Http\Controllers\Api\InternalAppointmentsApiController;
 use App\Http\Controllers\Api\VisitationApiController;
+use App\Http\Controllers\Api\MessagingApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -159,4 +160,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/visitations/calendar-events', [VisitationApiController::class, 'calendarEvents']);
     Route::get('/visitations/beneficiary/{id}', [VisitationApiController::class, 'showBeneficiary']);
     Route::get('/visitations/beneficiaries', [VisitationApiController::class, 'listBeneficiaries']);
+
+    // Messaging API (for mobile, Supabase sockets)
+    Route::post('/messaging/thread', [MessagingApiController::class, 'createThread']);
+    Route::get('/messaging/thread', [MessagingApiController::class, 'listThreads']);
+    Route::delete('/messaging/thread', [MessagingApiController::class, 'deleteThread']);
+    Route::get('/messaging/thread/{id}/messages', [MessagingApiController::class, 'getThreadMessages']);
+    Route::post('/messaging/thread/{id}/message', [MessagingApiController::class, 'sendMessage']);
 });
