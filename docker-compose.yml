@@ -1,21 +1,6 @@
+version: '3'
+
 services:
-  calamancy-api:
-    build:
-      context: ./calamancy-api
-      dockerfile: Dockerfile
-    volumes:
-      - calamancy_models:/root/.cache/spacy/downloads
-      - ./calamancy-api:/app  # Add this line for live code reloading
-    networks:
-      - app-network    # Add this line to connect to the app network
-    ports:
-      - "5000:5000"
-    command: >
-        sh -c "pip install --no-deps https://huggingface.co/ljvmiranda921/tl_calamancy_md/resolve/main/tl_calamancy_md-any-py3-none-any.whl && python app.py"
-    deploy:
-      resources:
-        limits:
-          memory: 2G  
   web:
     build:
       context: ./web
@@ -34,16 +19,11 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=${DB_PASSWORD}
       - CALAMANCY_API_URL=http://calamancy-api:5000
-    # Use named volume instead of bind mount
     volumes:
-        - ./web:/app
+      - ./web:/app
     restart: always
-    networks:
-      - app-network
-    entrypoint: []
-    command: ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]
 
-  # PostgreSQL database section remains unchanged
+  # PostgreSQL database
   db:
     image: postgres:13
     volumes:
@@ -54,25 +34,15 @@ services:
     ports:
       - "5432:5432"
     restart: always
-    networks:
-      - app-network
-  
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@example.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "5050:80"
-    networks:
-      - app-network
 
-networks:
-  app-network:
-    driver: bridge
+  # calamanCy API service
+  calamancy-api:
+    build: ./calamancy-api
+    ports:
+      - "5000:5000"
+    restart: always
+    volumes:
+      - ./calamancy-api:/app
 
 volumes:
   postgres_data:
-  web_data:
-  calamancy_api_data:
-  calamancy_models:

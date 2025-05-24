@@ -72,12 +72,12 @@
         
         .assessment-card .card-header {
             background-color: var(--primary-teal);
-            color:rgb(29, 29, 29);
+            color: white;
         }
         
         .evaluation-card .card-header {
             background-color: var(--primary-purple);
-            color:rgb(29, 29, 29);
+            color: white;
         }
         
         /* Section header styling */
@@ -304,16 +304,9 @@
                                     <div class="section-header-teal">
                                         <h6 class="section-title">Assessment Summary</h6>
                                     </div>
-
-                                    <!-- New translation section -->
-                                    <div id="assessmentTranslationSection" class="summary-section-blue mb-4" style="display: none;">
-                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
-                                        <div id="assessmentTranslationDraft" class="fst-italic"></div>
-                                        <div class="mt-2">
-                                        </div>
-                                        <button class="btn btn-sm btn-outline-success" id="useAssessmentTranslation">
-                                            <i class="bi bi-check-circle"></i> Use Translation as Final
-                                        </button>
+                                    
+                                    <div class="mb-3">
+                                        <div class="form-control bg-light" id="assessmentSummaryDraft"></div>
                                     </div>
                                     
                                     <div id="assessmentSummarySections" class="mb-3">
@@ -356,6 +349,10 @@
                                     <hr>
                                     <div class="section-header-purple">
                                         <h6 class="section-title">Evaluation Summary</h6>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="form-control bg-light" id="evaluationSummaryDraft"></div>
                                     </div>
                                     
                                     <div id="evaluationSummarySections" class="mb-3">
@@ -693,32 +690,12 @@
                     success: function(response) {
                         clearInterval(progressInterval);
                         $('#loadingProgressBar').css('width', '100%');
-                        
-                        // Check if we have a valid response
-                        if (!response.summary && !response.error) {
-                            $('#loadingModal').modal('hide');
-                            alert('Received an empty response from the service. Please try again.');
-                            return;
-                        }
-                        
-                        if (response.error) {
-                            $('#loadingModal').modal('hide');
-                            alert('Error: ' + response.error);
-                            return;
-                        }
-                        
                         setTimeout(() => {
                             $('#loadingModal').modal('hide');
                             
                             // Display summary and sections
-                            $('#assessmentSummaryDraft').text(response.summary || "No summary generated");
-                            
-                            if (response.sections && Object.keys(response.sections).length > 0) {
-                                displaySummarySections('assessment', response.sections);
-                            } else {
-                                $('#assessmentSummarySections').html('<div class="alert alert-info">No sections were extracted from this text.</div>');
-                            }
-                            
+                            $('#assessmentSummaryDraft').text(response.summary);
+                            displaySummarySections('assessment', response.sections);
                             $('#assessmentSummarySection').show();
                             
                             // Save the generated summary
