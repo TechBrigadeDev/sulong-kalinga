@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\ViewAccountProfileApiController;
 use App\Http\Controllers\Api\WeeklyCarePlanApiController;
 use App\Http\Controllers\Api\MedicationScheduleApiController;
 use App\Http\Controllers\Api\InternalAppointmentsApiController;
+use App\Http\Controllers\Api\VisitationApiController;
+use App\Http\Controllers\Api\MessagingApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -109,5 +111,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // PUT /internal-appointments/{id} - Update an internal appointment
     Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
     // POST /internal-appointments/{id}/cancel - Cancel (archive) an internal appointment
-    Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
+    // Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
+
+    // Visitation API (Read-Only for Mobile)
+    Route::get('/visitations', [VisitationApiController::class, 'index']);
+    Route::get('/visitations/{id}', [VisitationApiController::class, 'show']);
+    Route::get('/visitations/calendar-events', [VisitationApiController::class, 'calendarEvents']);
+    Route::get('/visitations/beneficiary/{id}', [VisitationApiController::class, 'showBeneficiary']);
+    Route::get('/visitations/beneficiaries', [VisitationApiController::class, 'listBeneficiaries']);
+
+    // Messaging API (for mobile, Supabase sockets)
+    Route::post('/messaging/thread', [MessagingApiController::class, 'createThread']);
+    Route::get('/messaging/thread', [MessagingApiController::class, 'listThreads']);
+    Route::delete('/messaging/thread', [MessagingApiController::class, 'deleteThread']);
+    Route::get('/messaging/thread/{id}/messages', [MessagingApiController::class, 'getThreadMessages']);
+    Route::post('/messaging/thread/{id}/message', [MessagingApiController::class, 'sendMessage']);
 });
