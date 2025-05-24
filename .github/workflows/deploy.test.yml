@@ -27,7 +27,7 @@ jobs:
         run: |
           REGISTRY=${{ vars.DOCR_REGISTRY }}
           IMAGE="$REGISTRY/sulong-kalinga-web:${{ github.sha }}"
-          docker build -f web/Dockerfile -t "$IMAGE" web
+          docker build -f web/docker/Dockerfile -t "$IMAGE" web
           docker push "$IMAGE"
 
   deploy:
@@ -50,26 +50,49 @@ jobs:
             sudo apt-get install --no-install-recommends -y docker.io
           EOF
 
+      - name: Parse .env secret into Docker env args
+        shell: bash
+        env:
+          ENVARS: ${{ secrets.ENVARS }}
+        run: |
+          # write the secret blob to .env
+          echo "$ENVARS" > .env
+
+          # build up -e KEY="VALUE" flags
+          ENV_ARGS=$(grep -v '^\s*#' .env \
+                     | grep -v '^\s*$' \
+                     | awk -F= '{printf "-e %s=\"%s\" ", $1, $2}')
+
+          # expose for later steps
+          echo "ENV_ARGS=$ENV_ARGS" >> $GITHUB_ENV
+          rm .env
+
+
       - name: Deploy to Droplet via password
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ github.sha }}
+
           sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
-            # Log in to DOCR on the remote host
+            # Log in to DOCR
             echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
               --username ${{ secrets.DOCR_USERNAME }} --password-stdin
 
-            # Pull, stop, remove, and run
+            # Pull the new image
             docker pull $IMAGE
+
+            # Stop & remove old container
             docker stop sulong-kalinga || true
             docker rm sulong-kalinga || true
-            docker run -d --name sulong-kalinga -p 80:80 $IMAGE
 
-            # Cleanup
+            # Run with parsed env args + ENVIRONMENT
+            docker run -d --name sulong-kalinga -p 80:80 \
+              $ENV_ARGS -e ENVIRONMENT="${{ github.ref_name }}" $IMAGE
+
+            # Cleanup old images/containers
             docker container prune -f
             docker image prune -f
             docker image prune -a -f
           EOF
-
 
       - name: Install doctl CLI
         run: |
