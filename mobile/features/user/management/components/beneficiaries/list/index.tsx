@@ -48,11 +48,11 @@ const BeneficiaryCard: ListRenderItem<IBeneficiary> = ({ item }) => {
   const { beneficiary_id, first_name, last_name } = item;
 
   const onView = () => {
-    router.push(`/user-management/beneficiaries/${beneficiary_id}`);
+    router.push(`/(tabs)/options/user-management/beneficiaries/${beneficiary_id}`);
   };
 
   const onEdit = () => {
-    router.push(`/user-management/beneficiaries/${beneficiary_id}/edit`);
+    router.push(`/(tabs)/options/user-management/beneficiaries/${beneficiary_id}/edit`);
   };
 
   return (

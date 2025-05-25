@@ -4,7 +4,7 @@ import { Button, Card, Text, View } from "tamagui";
 import { familyListStore } from "./store";
 import { useRouter } from "expo-router";
 import FamilySearch from "./search";
-import { IFamilyMember } from "~/user.schema";
+import { IFamilyMember } from "~/features/user/user.schema";
 
 const FamilyList = () => {
     const router = useRouter();
@@ -21,7 +21,7 @@ const FamilyList = () => {
     });
 
     const handleAddFamilyMember = () => {
-        router.push("/user-management/family/add");
+        router.push("/(tabs)/options/user-management/family/add");
     };
 
     if (data.length === 0 && !isLoading) {
@@ -95,11 +95,11 @@ const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
     } = item;
     
     const onView = () => {
-        router.push(`/user-management/family/${family_member_id}`);
+        router.push(`/(tabs)/options/user-management/family/${family_member_id}`);
     }
 
     const onEdit = () => {
-        router.push(`/user-management/family/${family_member_id}/edit`);
+        router.push(`/(tabs)/options/user-management/family/${family_member_id}/edit`);
     }
 
     return (
