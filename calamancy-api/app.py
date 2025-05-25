@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import spacy
+from spacy.cli import download
 import re
 from collections import defaultdict
 
@@ -431,6 +432,168 @@ def extract_key_concerns(doc):
     
     return {
         "concerns": concerns
+    }
+
+def classify_sentences(sentences, is_assessment=False, is_evaluation=False):
+    """
+    Classify sentences into categories based on Tagalog linguistic patterns.
+    This is a heuristic-based classifier specifically for medical/caregiving texts.
+    """
+    categories = defaultdict(list)
+    
+    if is_assessment:
+        # Assessment-specific markers
+        markers = {
+            "kalagayan_pangkaisipan": ["isip", "naaalala", "nakakalimot", "kalimot", "memorya", "memory"],
+            "kalagayan_pangkatawan": ["mabigat", "mahina", "payat", "mataba", "kalagayan", "kondisyon"],
+            "kakayahan_gumalaw": ["paglalakad", "pag-upo", "umupo", "maglakad", "gumalaw", "tumayo"],
+            "mga_sintomas": ["masakit", "sumasakit", "nakakaramdam", "nararamdaman", "kumikirot"],
+            "pang_araw_araw": ["kumain", "natutulog", "naliligo", "nagbibihis", "araw-araw"],
+            "pangangailangan": ["kailangan", "pangangailangan", "gusto", "hinahanap"]
+        }
+    elif is_evaluation:
+        # Evaluation-specific markers
+        markers = {
+            "pagbabago": ["pagbabago", "naging", "hindi na", "nabawasan", "umunlad", "improvement"],
+            "mga_hakbang": ["ginawa", "sinabi ko", "pinayuhan", "siniguro", "inalagaan", "steps"],
+            "rekomendasyon": ["dapat", "kailangan", "pwede", "maaari", "inirerekumenda", "recommend"],
+            "resulta": ["naging", "nagpasalamat", "natuwa", "nagawa", "naitulak", "result"],
+            "susunod_na_plano": ["susunod", "plano", "balak", "next", "follow-up", "continuation"]
+        }
+    else:
+        # Common Tagalog markers for general care documentation
+        markers = {
+            "kalagayan": ["kalagayan", "estado", "kondisyon", "sitwasyon"],
+            "pangunahing_sintomas": ["masakit", "sumasakit", "nakakaramdam", "nararamdaman", "kumikirot"],
+            "obserbasyon": ["napansin", "nakita", "naobserbahan", "namamarkahan"],
+            "pagsusuri": ["natuklasan", "napag-alaman", "nalaman"],
+            "rekomendasyon": ["dapat", "kailangan", "maaari", "pwede", "inirerekumenda", "iminumungkahi"],
+            "pangangalaga": ["alagaan", "tulungan", "subaybayan", "bantayan", "siguraduhin"],
+            "pagpapagaling": ["gamot", "lunas", "therapy", "paggamot"]
+        }
+    
+    for i, sent in enumerate(sentences):
+        sent_text = sent.text.lower()
+        
+        # Check each category's markers
+        for category, category_markers in markers.items():
+            for marker in category_markers:
+                if marker in sent_text:
+                    categories[category].append(i)
+                    break
+        
+        # Special case for observations - often start with "Si nanay" or "Si tatay"
+        if sent_text.startswith(("si nanay", "si tatay", "nanay", "tatay")):
+            if is_assessment:
+                categories["kalagayan_pangkatawan"].append(i)
+            elif is_evaluation:
+                categories["pagbabago"].append(i)
+            else:
+                categories["obserbasyon"].append(i)
+        
+        # Special case for recommendations - often contain action verbs
+        action_verbs = ["tulungan", "bigyan", "alisin", "ilagay", "ilipat", "ipaalam"]
+        if any(verb in sent_text for verb in action_verbs):
+            if is_assessment:
+                categories["pangangailangan"].append(i)
+            elif is_evaluation:
+                categories["rekomendasyon"].append(i)
+            else:
+                categories["rekomendasyon"].append(i)
+    
+    # Sentences with no classification go to default category
+    all_classified = set()
+    for indices in categories.values():
+        all_classified.update(indices)
+    
+    unclassified = [i for i in range(len(sentences)) if i not in all_classified]
+    
+    # Assign default categories based on document type
+    if is_assessment and unclassified:
+        categories["kalagayan_pangkatawan"].extend(unclassified)
+    elif is_evaluation and unclassified:
+        categories["pagbabago"].extend(unclassified)
+    else:
+        categories["obserbasyon"].extend(unclassified)
+    
+    return categories
+
+def extract_key_concerns(doc):
+    """Extract key concerns and important aspects from caregiving text"""
+    concerns = {
+        "mobility_issues": False,
+        "vision_problems": False,
+        "hearing_problems": False,
+        "pain_reported": False,
+        "fall_risk": False,
+        "nutrition_concerns": False,
+        "social_support": None
+    }
+    
+    # Look for specific concerns in the text
+    text = doc.text.lower()
+    
+    # Mobility issues
+    if any(term in text for term in ["hirap", "mahinay", "mahina", "paglalakad", "pag-upo", "assistive device"]):
+        concerns["mobility_issues"] = True
+        
+    # Vision problems
+    if any(term in text for term in ["malabo", "mata", "paningin", "makakita"]):
+        concerns["vision_problems"] = True
+        
+    # Hearing problems
+    if any(term in text for term in ["malalim", "pandinig", "tenga"]):
+        concerns["hearing_problems"] = True
+        
+    # Pain reported
+    if any(term in text for term in ["masakit", "sumasakit", "kirot", "kumikirot"]):
+        concerns["pain_reported"] = True
+        
+    # Fall risk
+    if any(term in text for term in ["tumba", "pagkatumba", "natumba", "nahulog", "nadapa"]):
+        concerns["fall_risk"] = True
+        
+    # Nutrition concerns
+    if any(term in text for term in ["kumain", "pagkain", "gutom", "naduduwal", "nagsusuka", "timbang"]):
+        concerns["nutrition_concerns"] = True
+        
+    # Social support assessment
+    if "pamangkin" in text or "anak" in text or "pamilya" in text:
+        if any(term in text for term in ["tumutulong", "inalagaan", "sinusuportahan", "kasama"]):
+            concerns["social_support"] = "Good"
+        elif any(term in text for term in ["iniwan", "nag-iisa", "walang tumutulong"]):
+            concerns["social_support"] = "Poor" 
+    
+    # Extract specific sentences about key concerns for more context
+    concern_evidence = {}
+    
+    for sent in doc.sents:
+        sent_text = sent.text.lower()
+        
+        # For each identified concern, extract only the relevant sentence
+        if concerns["mobility_issues"] and any(term in sent_text for term in ["hirap", "mahinay", "paglalakad"]):
+            concern_evidence["mobility"] = sent.text
+            continue # Only use one sentence per concern
+            
+        if concerns["vision_problems"] and any(term in sent_text for term in ["malabo", "mata", "paningin", "makakita"]):
+            concern_evidence["vision"] = sent.text
+            continue
+            
+        if concerns["fall_risk"] and any(term in sent_text for term in ["tumba", "pagkatumba", "nahulog", "nadapa"]):
+            concern_evidence["fall_risk"] = sent.text
+            continue
+            
+        if concerns["nutrition_concerns"] and any(term in sent_text for term in ["kumain", "timbang", "pagkain"]):
+            concern_evidence["nutrition"] = sent.text
+            continue
+            
+        if concerns["pain_reported"] and any(term in sent_text for term in ["masakit", "sumasakit", "kirot"]):
+            concern_evidence["pain"] = sent.text
+            continue
+    
+    return {
+        "concerns": concerns,
+        "evidence": concern_evidence
     }
 
 if __name__ == '__main__':
