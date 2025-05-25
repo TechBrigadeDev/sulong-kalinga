@@ -16,7 +16,7 @@ const LoginForm = () => {
       email,
       password,
     });
-    router.replace("/(drawer)");
+    router.replace("/(tabs)");
   };
 
   return (
