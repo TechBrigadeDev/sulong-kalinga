@@ -4,6 +4,7 @@ import { Card as TCard, ScrollView, Text, View, XStack, YStack, H3 } from "tamag
 import { icons } from "lucide-react-native";
 import Constants from "expo-constants";
 import Header from "~/components/Header";
+import LogoutButton from "../../../features/auth/components/logout/button";
 
 const Screen = () => {
     return (
@@ -11,6 +12,7 @@ const Screen = () => {
             <Header name="Options"/>
             <ScrollView style={style.scroll}>
                 <UserManagement/>
+                <LogoutButton/>
             </ScrollView>
         </View>
     )
