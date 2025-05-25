@@ -1,5 +1,6 @@
 import { useUser } from '~/features/user/user.hook';
 import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
+import { Tabs as ExpoTabs } from 'expo-router';
 import { View } from 'tamagui';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -13,7 +14,7 @@ export default function Layout() {
 
   return (
     <Tabs>
-      <View style={{ flex: 1 }}>
+      <View style={styles.tabContainer}>
         <TabSlot/>
       </View>
       <TabList asChild>
@@ -38,12 +39,18 @@ export default function Layout() {
           <TabTrigger
             name="/(tabs)/options/index"
             href="/(tabs)/options"
+            reset="always"
             asChild
           >
             <TabButton icon="EllipsisVertical">
               Options
             </TabButton>
           </TabTrigger>
+          <TabTrigger
+            name="/(tabs)/options/user-management/"
+            href="/(tabs)/options/user-management/beneficiaries"
+            style={{ display: 'none' }}
+          />
         </View>
       </TabList>
     </Tabs>
@@ -51,12 +58,16 @@ export default function Layout() {
 }
 
 const styles = StyleSheet.create({
+  tabContainer: {
+    flex: 1,
+  },
   tabList: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 10,
     backgroundColor: '#ffffff',
     marginBottom: 20,
+
     position: 'absolute',
     bottom: 10,
     left: 20,
