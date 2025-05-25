@@ -678,12 +678,32 @@
                     success: function(response) {
                         clearInterval(progressInterval);
                         $('#loadingProgressBar').css('width', '100%');
+                        
+                        // Check if we have a valid response
+                        if (!response.summary && !response.error) {
+                            $('#loadingModal').modal('hide');
+                            alert('Received an empty response from the service. Please try again.');
+                            return;
+                        }
+                        
+                        if (response.error) {
+                            $('#loadingModal').modal('hide');
+                            alert('Error: ' + response.error);
+                            return;
+                        }
+                        
                         setTimeout(() => {
                             $('#loadingModal').modal('hide');
                             
                             // Display summary and sections
-                            $('#assessmentSummaryDraft').text(response.summary);
-                            displaySummarySections('assessment', response.sections);
+                            $('#assessmentSummaryDraft').text(response.summary || "No summary generated");
+                            
+                            if (response.sections && Object.keys(response.sections).length > 0) {
+                                displaySummarySections('assessment', response.sections);
+                            } else {
+                                $('#assessmentSummarySections').html('<div class="alert alert-info">No sections were extracted from this text.</div>');
+                            }
+                            
                             $('#assessmentSummarySection').show();
                             
                             // Save the generated summary
