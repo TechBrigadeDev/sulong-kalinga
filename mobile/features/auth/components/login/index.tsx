@@ -6,14 +6,9 @@ import { AppIcon } from "~/components/Icon";
 const Login = () => {
     return (
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Card 
-            elevate 
-            elevation="$3" 
-            width="75%" 
-            style={styles.container}
-        >
+        <Card elevate elevation="$3" width="75%" style={styles.container}>
           <Card.Header>
             <Header />
           </Card.Header>
