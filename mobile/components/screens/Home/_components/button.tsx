@@ -46,7 +46,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderColor: "#7a7777",
-    backgroundColor: PlatformColor("SystemControlAcrylicWindowBrush"),
   },
   focusedText: {
     color: "#000",
