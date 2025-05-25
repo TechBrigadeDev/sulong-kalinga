@@ -3,19 +3,18 @@ import { Button, Card } from "tamagui";
 import { Stack, useRouter } from "expo-router";
 import BeneficiariesSearch from "~/features/user/management/components/beneficiaries/list/seach";
 import BeneficiaryList from "~/features/user/management/components/beneficiaries/list";
+import Header from "~/components/Header";
 
 const Beneficiaries = () => {
     const router = useRouter();
 
     const handleAddBeneficiary = () => {
-        router.push("/user-management/beneficiaries/add");
+        router.push("/(tabs)/options/user-management/beneficiaries/add");
     }
 
     return (
             <SafeAreaView style={styles.container}>
-                <Stack.Screen options={{ 
-                    title: 'Beneficiaries',
-                 }} />
+                <Header name="Beneficiary Profiles" />
                 <Card
                     paddingVertical={20}
                     marginVertical={20}
