@@ -2,5 +2,4 @@ public/storage
 node_modules
 vendor
 .git
-
-# Removed .env here so that my local docker can find the environment file.
+.env

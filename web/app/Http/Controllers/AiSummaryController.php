@@ -63,23 +63,42 @@ class AiSummaryController extends Controller
         ]);
 
         try {
-            $apiUrl = env('CALAMANCY_API_URL', 'http://calamancy-api:5000/summarize');
+            // Fix the URL by ensuring we're targeting the /summarize endpoint
+            $baseUrl = env('CALAMANCY_API_URL', 'http://calamancy-api:5000');
+            $apiUrl = rtrim($baseUrl, '/') . '/summarize'; 
+            \Log::info("Calling CalamanCy API at: " . $apiUrl);
+            \Log::info("Request text length: " . strlen($request->text));
             
-            $response = Http::post($apiUrl, [
-                'text' => $request->text,
-                'max_sentences' => $request->max_sentences ?? 3,
-                'sectioned' => true,
-            ]);
+            $response = Http::timeout(60)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
+                ->post($apiUrl, [
+                    'text' => $request->text,
+                    'max_sentences' => $request->max_sentences ?? 3
+                ]);
 
+            \Log::info("API Response Status: " . $response->status());
+            
             if ($response->successful()) {
-                return response()->json($response->json());
+                $data = $response->json();
+                \Log::info("API Response successful");
+                
+                return response()->json([
+                    'summary' => $data['summary'] ?? '',
+                    'sections' => $data['sections'] ?? [],
+                    'entities' => $data['entities'] ?? [],
+                    'key_concerns' => $data['key_concerns'] ?? []
+                ]);
             }
 
+            \Log::error("API Error Response: " . $response->status() . " - " . substr($response->body(), 0, 1000));
             return response()->json([
-                'error' => 'Summarization failed',
+                'error' => 'Summarization failed: ' . $response->status(),
                 'details' => $response->body()
             ], 500);
         } catch (\Exception $e) {
+            \Log::error("API Exception: " . $e->getMessage());
             return response()->json([
                 'error' => 'Summarization service unavailable',
                 'details' => $e->getMessage()
