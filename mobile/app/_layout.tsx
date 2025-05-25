@@ -8,7 +8,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { authStore } from '~/features/auth/auth.store';
 import Providers from '~/components/Providers';
-import { useUser } from '../features/user/user.hook';
 import Dialogs from '../components/Dialogs';
 
 export {
