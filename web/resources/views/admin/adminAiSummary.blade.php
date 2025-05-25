@@ -72,12 +72,12 @@
         
         .assessment-card .card-header {
             background-color: var(--primary-teal);
-            color: white;
+            color:rgb(29, 29, 29);
         }
         
         .evaluation-card .card-header {
             background-color: var(--primary-purple);
-            color: white;
+            color:rgb(29, 29, 29);
         }
         
         /* Section header styling */
@@ -316,10 +316,6 @@
                                         </button>
                                     </div>
                                     
-                                    <div class="mb-3">
-                                        <div class="form-control bg-light" id="assessmentSummaryDraft"></div>
-                                    </div>
-                                    
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
                                     </div>
@@ -360,10 +356,6 @@
                                     <hr>
                                     <div class="section-header-purple">
                                         <h6 class="section-title">Evaluation Summary</h6>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="form-control bg-light" id="evaluationSummaryDraft"></div>
                                     </div>
                                     
                                     <div id="evaluationSummarySections" class="mb-3">
