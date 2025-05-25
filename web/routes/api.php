@@ -167,4 +167,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/messaging/thread', [MessagingApiController::class, 'deleteThread']);
     Route::get('/messaging/thread/{id}/messages', [MessagingApiController::class, 'getThreadMessages']);
     Route::post('/messaging/thread/{id}/message', [MessagingApiController::class, 'sendMessage']);
+
+    // Messaging Group management endpoints
+    Route::get('/messaging/thread/{id}/members', [MessagingApiController::class, 'getThreadMembers']);
+    Route::post('/messaging/thread/{id}/add-member', [MessagingApiController::class, 'addThreadMember']);
+    Route::post('/messaging/thread/{id}/leave', [MessagingApiController::class, 'leaveThread']);
 });
