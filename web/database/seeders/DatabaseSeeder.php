@@ -66,169 +66,244 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Generate portal accounts for beneficiaries (100 accounts for 100 beneficiaries)
-        PortalAccount::factory()->count(100)->create();
-
-        // 2. Generate users with different roles based on the requirements
-        // Create 3 admins
-        User::factory()->count(3)->create(['role_id' => 1]); 
-        
-        // Create 2 care managers
-        $careManagers = [];
-        for ($i = 0; $i < 2; $i++) {
-            $careManagers[] = User::factory()->create([
-                'role_id' => 2,
-            ]);
-        }
-        
-        // Create 10 care workers with assigned care managers - 5 per care manager
-        $careWorkers = [];
-        for ($i = 0; $i < 10; $i++) {
-            // Assign care worker to appropriate care manager based on location
-            $careManagerIndex = ($i < 5) ? 0 : 1; // First 5 to first manager, next 5 to second manager
-            $location = ($careManagerIndex === 0) ? 'San Roque' : 'Mondragon';
-            
-            $careWorkers[] = User::factory()->create([
-                'role_id' => 3,
-                'assigned_care_manager_id' => $careManagers[$careManagerIndex]->id,
-            ]);
+        try {
+            $this->command->info('Seeding portal accounts...');
+            PortalAccount::factory()->count(100)->create();
+            $this->command->info('Portal accounts seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed portal accounts: ' . $e->getMessage());
+            \Log::error('Failed to seed portal accounts', ['exception' => $e]);
         }
 
-        // 3. Create general care plans for all beneficiaries
-        $generalCarePlans = [];
-        for ($i = 1; $i <= 100; $i++) {
-            // Determine which area this care plan belongs to (San Roque or Mondragon)
-            $location = ($i <= 50) ? 'San Roque' : 'Mondragon';
-            
-            // Assign care worker based on location (more realistic distribution)
-            $locationCareWorkers = ($location === 'San Roque') 
-                ? array_slice($careWorkers, 0, 5) 
-                : array_slice($careWorkers, 5, 5);
+        try {
+            $this->command->info('Seeding users...');
+            User::factory()->count(3)->create(['role_id' => 1]);
+            $this->command->info('Users seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed users: ' . $e->getMessage());
+            \Log::error('Failed to seed users', ['exception' => $e]);
+        }
+
+        try {
+            $this->command->info('Seeding care managers...');
+            $careManagers = [];
+            for ($i = 0; $i < 2; $i++) {
+                $careManagers[] = User::factory()->create(['role_id' => 2]);
+            }
+            $this->command->info('Care managers seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed care managers: ' . $e->getMessage());
+            \Log::error('Failed to seed care managers', ['exception' => $e]);
+        }
+
+        try {
+            $this->command->info('Seeding care workers...');
+            $careWorkers = [];
+            for ($i = 0; $i < 10; $i++) {
+                $careManagerIndex = ($i < 5) ? 0 : 1;
+                $location = ($careManagerIndex === 0) ? 'San Roque' : 'Mondragon';
+                $careWorkers[] = User::factory()->create([
+                    'role_id' => 3,
+                    'assigned_care_manager_id' => $careManagers[$careManagerIndex]->id,
+                ]);
+            }
+            $this->command->info('Care workers seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed care workers: ' . $e->getMessage());
+            \Log::error('Failed to seed care workers', ['exception' => $e]);
+        }
+
+        try {
+            $this->command->info('Seeding general care plans...');
+            $generalCarePlans = [];
+            for ($i = 1; $i <= 100; $i++) {
+                // Determine which area this care plan belongs to (San Roque or Mondragon)
+                $location = ($i <= 50) ? 'San Roque' : 'Mondragon';
                 
-            $careWorkerId = $locationCareWorkers[array_rand($locationCareWorkers)]->id;
-            
-            // Create the general care plan with a specific ID
-            $generalCarePlan = GeneralCarePlan::create([
-                'general_care_plan_id' => $i,
-                'review_date' => Carbon::now()->addMonths(6),
-                'emergency_plan' => 'Standard emergency procedures for ' . $location . ' residents',
-                'care_worker_id' => $careWorkerId,
-                'created_at' => now()->subDays(rand(30, 180)), // More varied creation dates
-                'updated_at' => now()->subDays(rand(1, 30))
-            ]);
-            
-            // Create emotional wellbeing for this general care plan
-            EmotionalWellbeing::factory()->create([
-                'general_care_plan_id' => $i,
-            ]);
-            
-            // Create health history for this general care plan
-            HealthHistory::factory()->create([
-                'general_care_plan_id' => $i,
-            ]);
-            
-            // Create cognitive function for this general care plan
-            CognitiveFunction::factory()->create([
-                'general_care_plan_id' => $i,
-            ]);
-            
-            // Create mobility for this general care plan
-            Mobility::factory()->create([
-                'general_care_plan_id' => $i,
-            ]);
-            
-            // Create medications for this general care plan (2-4 medications per beneficiary)
-            foreach (range(1, rand(2, 4)) as $medicationIndex) {
-                Medication::factory()->create([
+                // Assign care worker based on location (more realistic distribution)
+                $locationCareWorkers = ($location === 'San Roque') 
+                    ? array_slice($careWorkers, 0, 5) 
+                    : array_slice($careWorkers, 5, 5);
+                    
+                $careWorkerId = $locationCareWorkers[array_rand($locationCareWorkers)]->id;
+                
+                // Create the general care plan with a specific ID
+                $generalCarePlan = GeneralCarePlan::create([
                     'general_care_plan_id' => $i,
-                ]);
-            }
-            
-            // Create care needs for this general care plan
-            foreach (range(1, 7) as $careCategoryId) {
-                CareNeed::factory()->create([
-                    'general_care_plan_id' => $i,
-                    'care_category_id' => $careCategoryId,
-                ]);
-            }
-            
-            // Create 3-5 care worker responsibilities for this general care plan
-            foreach (range(1, rand(3, 5)) as $index) {
-                CareWorkerResponsibility::factory()->create([
-                    'general_care_plan_id' => $i,
+                    'review_date' => Carbon::now()->addMonths(6),
+                    'emergency_plan' => 'Standard emergency procedures for ' . $location . ' residents',
                     'care_worker_id' => $careWorkerId,
+                    'created_at' => now()->subDays(rand(30, 180)), // More varied creation dates
+                    'updated_at' => now()->subDays(rand(1, 30))
                 ]);
+                
+                // Create emotional wellbeing for this general care plan
+                EmotionalWellbeing::factory()->create([
+                    'general_care_plan_id' => $i,
+                ]);
+                
+                // Create health history for this general care plan
+                HealthHistory::factory()->create([
+                    'general_care_plan_id' => $i,
+                ]);
+                
+                // Create cognitive function for this general care plan
+                CognitiveFunction::factory()->create([
+                    'general_care_plan_id' => $i,
+                ]);
+                
+                // Create mobility for this general care plan
+                Mobility::factory()->create([
+                    'general_care_plan_id' => $i,
+                ]);
+                
+                // Create medications for this general care plan (2-4 medications per beneficiary)
+                foreach (range(1, rand(2, 4)) as $medicationIndex) {
+                    Medication::factory()->create([
+                        'general_care_plan_id' => $i,
+                    ]);
+                }
+                
+                // Create care needs for this general care plan
+                foreach (range(1, 7) as $careCategoryId) {
+                    CareNeed::factory()->create([
+                        'general_care_plan_id' => $i,
+                        'care_category_id' => $careCategoryId,
+                    ]);
+                }
+                
+                // Create 3-5 care worker responsibilities for this general care plan
+                foreach (range(1, rand(3, 5)) as $index) {
+                    CareWorkerResponsibility::factory()->create([
+                        'general_care_plan_id' => $i,
+                        'care_worker_id' => $careWorkerId,
+                    ]);
+                }
+                
+                $generalCarePlans[] = $generalCarePlan;
+            }
+            $this->command->info('General care plans seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed general care plans: ' . $e->getMessage());
+            \Log::error('Failed to seed general care plans', ['exception' => $e]);
+        }
+
+        try {
+            $this->command->info('Seeding beneficiaries...');
+            // 4. Create 50 beneficiaries from San Roque
+            $beneficiaries = [];
+            for ($i = 0; $i < 50; $i++) {
+                // Get the barangay ID instead of the name
+                $barangayName = $this->getRandomBarangay('San Roque');
+                $barangayId = $this->getBarangayIdByName($barangayName, 2); // 2 is San Roque municipality ID
+                
+                $beneficiary = Beneficiary::factory()->create([
+                    'general_care_plan_id' => $i + 1,
+                    'street_address' => $this->generateAddress('San Roque'),
+                    'barangay_id' => $barangayId,
+                    'municipality_id' => 2 // San Roque municipality ID
+                ]);
+                
+                // Create family members for each beneficiary (1-3 members)
+                $familyMemberCount = rand(1, 3);
+                FamilyMember::factory($familyMemberCount)
+                    ->forBeneficiary($beneficiary->beneficiary_id)
+                    ->create();
+                    
+                $beneficiaries[] = $beneficiary;
             }
             
-            $generalCarePlans[] = $generalCarePlan;
+            // 5. Create 50 beneficiaries from Mondragon
+            $mondragronBeneficiaries = [];
+            for ($i = 0; $i < 50; $i++) {
+                $barangayName = $this->getRandomBarangay('Mondragon');
+                $barangayId = $this->getBarangayIdByName($barangayName, 1); // 1 is Mondragon municipality ID
+
+                $beneficiary = Beneficiary::factory()->create([
+                    'general_care_plan_id' => $i + 51, // Starting from 51
+                    'street_address' => $this->generateAddress('Mondragon'),
+                    'barangay_id' => $barangayId,
+                    'municipality_id' => 1 // Mondragon municipality ID
+                ]);
+
+                $familyMemberCount = rand(1, 3);
+                FamilyMember::factory($familyMemberCount)
+                    ->forBeneficiary($beneficiary->beneficiary_id)
+                    ->create();
+
+                $mondragronBeneficiaries[] = $beneficiary;
+            }
+            
+            // Combine all beneficiaries
+            $allBeneficiaries = array_merge($beneficiaries, $mondragronBeneficiaries);
+            $this->command->info('Beneficiaries seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed beneficiaries: ' . $e->getMessage());
+            \Log::error('Failed to seed beneficiaries', ['exception' => $e]);
         }
 
-        // 4. Create 50 beneficiaries from San Roque
-        $beneficiaries = [];
-        for ($i = 0; $i < 50; $i++) {
-            // Get the barangay ID instead of the name
-            $barangayName = $this->getRandomBarangay('San Roque');
-            $barangayId = $this->getBarangayIdByName($barangayName, 2); // 2 is San Roque municipality ID
-            
-            $beneficiary = Beneficiary::factory()->create([
-                'general_care_plan_id' => $i + 1,
-                'street_address' => $this->generateAddress('San Roque'),
-                'barangay_id' => $barangayId,
-                'municipality_id' => 2 // San Roque municipality ID
-            ]);
-            
-            // Create family members for each beneficiary (1-3 members)
-            $familyMemberCount = rand(1, 3);
-            FamilyMember::factory($familyMemberCount)
-                ->forBeneficiary($beneficiary->beneficiary_id)
-                ->create();
-                
-            $beneficiaries[] = $beneficiary;
+        try {
+            $this->command->info('Seeding weekly care plans...');
+            // 6. Generate weekly care plans with realistic intervention data
+            // Reduce frequency to keep DB size manageable but data still meaningful
+            $this->generateRealisticWeeklyCarePlans($careWorkers, $allBeneficiaries);
+            $this->command->info('Weekly care plans seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed weekly care plans: ' . $e->getMessage());
+            \Log::error('Failed to seed weekly care plans', ['exception' => $e]);
         }
-        
-        // 5. Create 50 beneficiaries from Mondragon
-        $mondragronBeneficiaries = [];
-        for ($i = 0; $i < 50; $i++) {
-            // Get the barangay ID instead of the name
-            $barangayName = $this->getRandomBarangay('Mondragon');
-            $barangayId = $this->getBarangayIdByName($barangayName, 1); // 1 is Mondragon municipality ID
-            
-            $beneficiary = Beneficiary::factory()->create([
-                'general_care_plan_id' => $i + 51, // Starting from 51
-                'street_address' => $this->generateAddress('Mondragon'),
-                'barangay_id' => $barangayId,
-                'municipality_id' => 1 // Mondragon municipality ID
-            ]);
-            
-            $familyMemberCount = rand(1, 3);
-            FamilyMember::factory($familyMemberCount)
-                ->forBeneficiary($beneficiary->beneficiary_id)
-                ->create();
-                
-            $mondragronBeneficiaries[] = $beneficiary;
+
+        try {
+            $this->command->info('Seeding notifications...');
+            // 7. Generate notifications - adjusted for new user counts
+            $this->generateNotifications();
+            $this->command->info('Notifications seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed notifications: ' . $e->getMessage());
+            \Log::error('Failed to seed notifications', ['exception' => $e]);
         }
-        
-        // Combine all beneficiaries
-        $allBeneficiaries = array_merge($beneficiaries, $mondragronBeneficiaries);
-        
-        // 6. Generate weekly care plans with realistic intervention data
-        // Reduce frequency to keep DB size manageable but data still meaningful
-        $this->generateRealisticWeeklyCarePlans($careWorkers, $allBeneficiaries);
 
-        // 7. Generate notifications - adjusted for new user counts
-        $this->generateNotifications();
+        try {
+            $this->command->info('Seeding conversations...');
+            // 8. Generate conversations and messages - adjusted for new user structure
+            $this->generateConversations();
+            $this->command->info('Conversations seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed conversations: ' . $e->getMessage());
+            \Log::error('Failed to seed conversations', ['exception' => $e]);
+        }
 
-        // 8. Generate conversations and messages - adjusted for new user structure
-        $this->generateConversations();
+        try {
+            $this->command->info('Seeding scheduling data...');
+            // 9. Generate scheduling data (appointments, visitations, medication schedules)
+            $this->generateSchedulingData($careWorkers, $allBeneficiaries);
+            $this->command->info('Scheduling data seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed scheduling data: ' . $e->getMessage());
+            \Log::error('Failed to seed scheduling data', ['exception' => $e]);
+        }
 
-        // 9. Generate scheduling data (appointments, visitations, medication schedules)
-        $this->generateSchedulingData($careWorkers, $allBeneficiaries);
+        try {
+            $this->command->info('Seeding emergency notices and service requests...');
+            // 10. Generate emergency notices and service requests
+            $this->generateEmergencyAndServiceRequests();
+            $this->command->info('Emergency notices and service requests seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed emergency notices and service requests: ' . $e->getMessage());
+            \Log::error('Failed to seed emergency notices and service requests', ['exception' => $e]);
+        }
 
-        // 10. Generate emergency notices and service requests
-        $this->generateEmergencyAndServiceRequests();
+        try {
+            $this->command->info('Seeding expense tracker data...');
+            // 11. Generate expenses tracker data
+            $this->generateExpenseTrackerData();
+            $this->command->info('Expense tracker data seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed expense tracker data: ' . $e->getMessage());
+            \Log::error('Failed to seed expense tracker data', ['exception' => $e]);
+        }
 
-        // 11. Generate expenses tracker data
-        $this->generateExpenseTrackerData();
+        $this->command->info('Database seeding complete!');
     }
 
     /**
@@ -296,47 +371,26 @@ class DatabaseSeeder extends Seeder
      */
     private function generateRealisticWeeklyCarePlans($careWorkers, $beneficiaries)
     {
-        // Realistic illnesses list
-        $commonIllnesses = [
-            'Common Cold',
-            'Influenza',
-            'Urinary Tract Infection',
-            'Pneumonia',
-            'Bronchitis',
-            'Gastroenteritis',
-            'Shingles',
-            'Pressure Ulcers',
-            'Dehydration',
-            'Acute Confusion',
-            'Constipation',
-            'Cellulitis',
-            'Lower Respiratory Tract Infection',
-            'Conjunctivitis'
-        ];
-
-        // Fetch all care categories
-        $careCategories = CareCategory::all();
-        $interventionsByCategoryId = [];
-
-        // Get all interventions by category
-        foreach ($careCategories as $category) {
-            $interventions = Intervention::where('care_category_id', $category->care_category_id)->get();
-            if ($interventions->count() > 0) {
-                $interventionsByCategoryId[$category->care_category_id] = $interventions->pluck('intervention_id')->toArray();
-            }
-        }
-        
-        // Define the date range - from beginning of 2024 to present (May 2025)
-        $startDate = Carbon::createFromDate(2024, 1, 1); // Start from January 1, 2024
-        $endDate = Carbon::now(); // Current date (May 19, 2025)
-        
-        \Log::info("Generating weekly care plans from {$startDate->toDateString()} to {$endDate->toDateString()}");
-        
+        \Log::info('Starting generateRealisticWeeklyCarePlans');
+        $careWorkerCollection = collect($careWorkers); // <-- Fix for undefined variable
+        $count = 0;
         $wcpCount = 0;
-        $careWorkerCollection = collect($careWorkers);
-        
-        // Create a WCP for each beneficiary weekly in the date range
+
+        // Define the date range for weekly care plans
+        $startDate = Carbon::now()->subMonths(6); // e.g., 6 months ago
+        $endDate = Carbon::now();
+
+        // Define common illnesses and interventions by category
+        $commonIllnesses = [
+            'Hypertension', 'Diabetes', 'Arthritis', 'Asthma', 'COPD', 'Heart Disease', 'Stroke', 'Dementia', 'Depression', 'Chronic Pain'
+        ];
+        $interventionsByCategoryId = Intervention::all()->groupBy('care_category_id')->map(function ($group) {
+            return $group->pluck('intervention_id')->toArray();
+        })->toArray();
+
         foreach ($beneficiaries as $beneficiary) {
+            $count++;
+            \Log::info("Seeding WCP for beneficiary {$beneficiary->beneficiary_id} ({$count}/". count($beneficiaries) .")");
             // Skip if no general care plan exists
             if (!$beneficiary->generalCarePlan) {
                 \Log::warning("Beneficiary ID {$beneficiary->beneficiary_id} has no general care plan");
@@ -480,6 +534,7 @@ class DatabaseSeeder extends Seeder
         }
         
         \Log::info("Created a total of {$wcpCount} weekly care plans");
+        \Log::info('Finished generateRealisticWeeklyCarePlans');
     }
 
     /**
@@ -1589,16 +1644,19 @@ class DatabaseSeeder extends Seeder
     {
         // Fix the visit type to match the enum values in the database
         $visitType = 'routine_care_visit'; // Changed from routine_care
-        
+
         // Pick a start date in the past (1-3 months ago)
         $startDate = Carbon::now()->subMonths(rand(1, 3))->format('Y-m-d');
-        
+
         // Set an end date 4-8 months in the future
         $endDate = Carbon::now()->addMonths(rand(4, 8))->format('Y-m-d');
-        
+
         // Choose a random day of week (1-7)
         $dayOfWeek = rand(1, 7);
-        
+
+        // Set pattern type for use in the loop
+        $patternType = 'weekly'; // <-- Fix for undefined variable
+
         // Create the visitation with all required fields
         $visitation = Visitation::create([
             'care_worker_id' => $careWorker->id,
@@ -1619,6 +1677,7 @@ class DatabaseSeeder extends Seeder
             'visitation_id' => $visitation->visitation_id,
             'pattern_type' => 'weekly',
             'day_of_week' => $dayOfWeek,
+ // Use day_of_week for both weekly and monthly patterns
             'recurrence_end' => $endDate
         ]);
         
@@ -1627,30 +1686,51 @@ class DatabaseSeeder extends Seeder
         $endDateTime = Carbon::parse($endDate);
         
         while ($currentDate->lte($endDateTime)) {
-            // Skip to the next occurrence if the day of week doesn't match
-            if ($currentDate->dayOfWeek !== $dayOfWeek) {
-                $currentDate->addDay();
-                continue;
+            // For weekly pattern, Carbon's dayOfWeek: 0 (Sunday) to 6 (Saturday)
+            // Your $dayOfWeek: 1 (Monday) to 5 (Friday) as string
+            $targetDay = intval($dayOfWeek);
+            $carbonDay = $currentDate->dayOfWeek; // 0 (Sun) to 6 (Sat)
+            // Map 1-5 to 1-5 (Mon-Fri), Carbon: 1 (Mon) to 5 (Fri)
+            if ($patternType === 'weekly') {
+                if ($carbonDay !== $targetDay) {
+                    $currentDate->addDay();
+                    // Prevent infinite loop: break if over 1000 iterations
+                    if ($currentDate->diffInDays($endDateTime, false) < -1000) break;
+                    continue;
+                }
+                // Create occurrence for this date
+                VisitationOccurrence::create([
+                    'visitation_id' => $visitation->visitation_id,
+                    'occurrence_date' => $currentDate->format('Y-m-d'),
+                    'start_time' => null,
+                    'end_time' => null,
+                    'status' => $currentDate->isPast() ? (rand(1, 10) <= 8 ? 'completed' : (rand(1, 10) <= 5 ? 'canceled' : 'scheduled')) : 'scheduled',
+                    'notes' => $currentDate->isPast() ? $this->faker->optional(70)->paragraph() : null,
+                ]);
+                
+                // Move to the next week
+                $currentDate->addWeek();
+            } else {
+                // Monthly pattern - check if day of month matches
+                if ($currentDate->day != intval($dayOfWeek)) {
+                    // Move to the next day
+                    $currentDate->addDay();
+                    continue;
+                }
+                
+                // Create occurrence for this date
+                VisitationOccurrence::create([
+                    'visitation_id' => $visitation->visitation_id,
+                    'occurrence_date' => $currentDate->format('Y-m-d'),
+                    'start_time' => null,
+                    'end_time' => null,
+                    'status' => $currentDate->isPast() ? (rand(1, 10) <= 8 ? 'completed' : (rand(1, 10) <= 5 ? 'canceled' : 'scheduled')) : 'scheduled',
+                    'notes' => $currentDate->isPast() ? $this->faker->optional(70)->paragraph() : null,
+                ]);
+                
+                // Move to the next month
+                $currentDate->addMonth();
             }
-            
-            // For past occurrences, most are completed, some canceled
-            $status = 'scheduled';
-            if ($currentDate->isPast()) {
-                $status = (rand(1, 10) <= 8) ? 'completed' : (rand(1, 10) <= 5 ? 'canceled' : 'scheduled');
-            }
-            
-            // Create occurrence for this date
-            VisitationOccurrence::create([
-                'visitation_id' => $visitation->visitation_id,
-                'occurrence_date' => $currentDate->format('Y-m-d'),
-                'start_time' => null,
-                'end_time' => null,
-                'status' => $status,
-                'notes' => $status == 'completed' ? $this->faker->optional(70)->paragraph() : null,
-            ]);
-            
-            // Move to the next week
-            $currentDate->addWeek();
         }
     }
     
