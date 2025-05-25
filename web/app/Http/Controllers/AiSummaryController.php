@@ -75,6 +75,7 @@ class AiSummaryController extends Controller
                 ])
                 ->post($apiUrl, [
                     'text' => $request->text,
+                    'type' => $request->type,  // Make sure this is passed
                     'max_sentences' => $request->max_sentences ?? 3
                 ]);
 
