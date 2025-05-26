@@ -44,7 +44,7 @@
                         <div class="row justify-content-center align-items-center text-center text-md-start">
                             <!-- Profile Picture Column -->
                             <div class="col-lg-3 col-md-4 col-sm-12 mb-3 mb-md-0">
-                                <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}" 
+                                <img src="{{ $beneficiary->photo ? '/storage/' . $beneficiary->photo : '/images/defaultProfile.png' }}" alt="Profile Picture">
                                     alt="Profile Picture" 
                                     class="img-fluid rounded-circle mx-auto d-block d-md-inline" 
                                     style="width: 150px; height: 150px; border: 1px solid #ced4da;">
@@ -441,7 +441,7 @@
                                     <td style="width: 40%;"><strong>Care Service Agreement:</strong></td>
                                     <td style="width: 60%;">
                                         @if($beneficiary->care_service_agreement_doc)
-                                            <a href="{{ asset('storage/' . $beneficiary->care_service_agreement_doc) }}" download>Download</a>
+                                           <a href="/storage/{{ $beneficiary->care_service_agreement_doc }}" download>Download</a>
                                         @else
                                             N/A
                                         @endif
@@ -451,7 +451,7 @@
                                     <td style="width: 40%;"><strong>General Careplan:</strong></td>
                                     <td style="width: 60%;">
                                         @if($beneficiary->general_care_plan_doc)
-                                            <a href="{{ asset('storage/' . $beneficiary->general_care_plan_doc) }}" download>Download</a>
+                                        <a href="/storage/{{ $beneficiary->general_care_plan_doc }}" download>Download</a>
                                         @else
                                             N/A
                                         @endif
@@ -465,7 +465,7 @@
         </div>
     </div>
 
-    <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
+    <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
    
 </body>
