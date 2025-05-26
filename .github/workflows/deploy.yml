@@ -11,24 +11,28 @@ on:
         description: "Docker image tag to deploy"
         required: true
         type: string
-      deploy_host:
-        description: "Server host for SSH deployment"
-        required: true
-        type: string
     secrets:
       DISCORD_BOT_TOKEN:
         required: true
+        description: "Discord bot token for notifications"
       DISCORD_PIPELINE_CHANNEL_ID:
         required: true
+        description: "Discord channel ID for pipeline notifications"
       DOCR_USERNAME:
         required: true
+        description: "DigitalOcean Container Registry username"
       DOCR_TOKEN:
         required: true
+        description: "DigitalOcean Container Registry token"
       CONTAINER_PASSWORD:
         required: true
+        description: "Password for the deployment server"
       ENVARS:
         required: true
-
+        description: "Environment variables for the Docker container"
+      DEPLOY_HOST:
+        description: "Host for deployment"
+        required: true
 jobs:
   build:
     environment: ${{ inputs.environment }}
@@ -93,7 +97,7 @@ jobs:
       DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
       DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
       DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
-      DEPLOY_HOST: ${{ inputs.deploy_host }}
+      DEPLOY_HOST: ${{ vars.deploy_host }}
       CONTAINER_PASSWORD: ${{ secrets.CONTAINER_PASSWORD }}
       ENVARS: ${{ secrets.ENVARS }}
     steps:
@@ -114,7 +118,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=5 \
-            root@${{ inputs.deploy_host }} <<'EOF'
+            root@${{ vars.DEPLOY_HOST }} <<'EOF'
             export DEBIAN_FRONTEND=noninteractive
             sudo apt-get update -y
             sudo apt-get install --no-install-recommends -y docker.io
@@ -133,7 +137,7 @@ jobs:
       - name: Deploy to Droplet
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ inputs.image_tag }}
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ inputs.deploy_host }} <<EOF
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
             echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
               --username ${{ secrets.DOCR_USERNAME }} --password-stdin
             docker pull $IMAGE
@@ -149,7 +153,7 @@ jobs:
       - name: Health Check
         shell: bash
         run: |
-          HEALTH_URL="http://${{ inputs.deploy_host }}/health"
+          HEALTH_URL="http://${{ vars.DEPLOY_HOST }}/health"
           for i in 1 2 3; do
             if curl --fail -s "$HEALTH_URL"; then
               curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
