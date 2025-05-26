@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
     const exportForm = document.getElementById('exportForm');
     const selectedCareworkers = document.getElementById('selectedCareworkers');
+    const exportPdfButton = document.getElementById('exportPdf');
+    const exportExcelButton = document.getElementById('exportExcel');
     
     // Helper function to get selected IDs
     function getSelectedIds() {
@@ -43,27 +45,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle PDF export
-    const exportPdfButton = document.getElementById('exportPdf');
     if (exportPdfButton) {
         exportPdfButton.addEventListener('click', function(e) {
             e.preventDefault();
             
-            const selectedIds = [...rowCheckboxes]
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value);
-                
-            if (selectedIds.length === 0) {
-                alert('Please select at least one care worker to export.');
-                return;
-            }
+            const selectedIds = getSelectedIds();
+            if (!selectedIds) return;
             
-            document.getElementById('selectedCareworkers').value = JSON.stringify(selectedIds);
-            document.getElementById('exportForm').submit();
+            // Show loading state
+            exportPdfButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+            
+            // Set form data and submit
+            selectedCareworkers.value = JSON.stringify(selectedIds);
+            exportForm.action = exportForm.getAttribute('data-pdf-route');
+            exportForm.method = 'POST'; // Ensure POST method is set
+            exportForm.submit();
+            
+            // Reset button after a delay (for UX)
+            setTimeout(() => {
+                exportPdfButton.innerHTML = 'Export as PDF';
+            }, 3000);
         });
     }
 
     // Handle Excel export
-    const exportExcelButton = document.getElementById('exportExcel');
     if (exportExcelButton) {
         exportExcelButton.addEventListener('click', function(e) {
             e.preventDefault();
@@ -71,9 +76,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedIds = getSelectedIds();
             if (!selectedIds) return;
             
+            // Show loading state
+            exportExcelButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+            
+            // Set form data and submit
             selectedCareworkers.value = JSON.stringify(selectedIds);
             exportForm.action = exportForm.getAttribute('data-excel-route');
+            exportForm.method = 'POST'; // Ensure POST method is set
             exportForm.submit();
+            
+            // Reset button after a delay (for UX)
+            setTimeout(() => {
+                exportExcelButton.innerHTML = 'Export as Excel';
+            }, 3000);
         });
     }
 });
