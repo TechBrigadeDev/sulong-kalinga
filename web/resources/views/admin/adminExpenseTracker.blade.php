@@ -1130,8 +1130,8 @@
             // Use named route for both create and update to ensure consistency
             $.ajax({
                 url: currentExpenseId 
-                    ? '{{ route("admin.expense.update", ["id" => "_id_"]) }}'.replace('_id_', currentExpenseId) 
-                    : '{{ route("admin.expense.store") }}',
+                    ? '/admin/expense-tracker/expense/' + currentExpenseId
+                    : '/admin/expense-tracker/store-expense',
                 method: 'POST', // Always use POST with _method for PUT
                 data: formData,
                 processData: false,
@@ -1214,8 +1214,8 @@
             // Determine if this is an edit or create operation
             const isEdit = currentBudgetId !== null;
             const url = isEdit 
-                ? "{{ route('admin.expense.budget.update', ['id' => '_id_']) }}".replace('_id_', currentBudgetId)
-                : "{{ route('admin.expense.budget.store') }}";
+                ? "/admin/expense-tracker/update-budget/" + currentBudgetId
+                : "/admin/expense-tracker/store-budget";
             const method = isEdit ? 'PUT' : 'POST';
             
             // Send the request
@@ -1287,7 +1287,7 @@
             
             // Fetch expense details
             $.ajax({
-                url: '{{ route("admin.expense.get", "") }}/' + id,
+                url: '/admin/expense-tracker/get-expense/' + id,
                 type: 'GET',
                 success: function(response) {
                     const expense = response.expense;
@@ -1383,7 +1383,7 @@
             $('#saveBudgetBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
             $.ajax({
-                url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
+                url: "/admin/expense-tracker/get-budget/" + id,
                 method: 'GET',
                 success: function(response) {
                     const budget = response.budget;
@@ -1593,13 +1593,9 @@
             // Determine correct API endpoint and parameter name
             let url, paramName;
             
-            if (itemType === 'expense') {
-                url = '{{ route("admin.expense.delete") }}';
-                paramName = 'expense_id';
-            } else {
-                url = '{{ route("admin.expense.budget.delete") }}';
-                paramName = 'budget_id';
-            }
+            let url = itemType === 'expense' 
+                ? '/admin/expense-tracker/delete-expense' 
+                : '/admin/expense-tracker/delete-budget';
             
             // Prepare form data
             const formData = new FormData();
@@ -1663,7 +1659,7 @@
             
             // Make AJAX call to get filtered data
             $.ajax({
-                url: '{{ route("admin.expense.index") }}',
+                url: '/admin/expense-tracker',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -1955,7 +1951,7 @@
             $('#chartSpinner').show();
             
             $.ajax({
-                url: '{{ route("admin.expense.index") }}',
+                url: '/admin/expense-tracker',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -2340,12 +2336,12 @@
 
         // Export expenses to Excel
         function exportExpensesToExcel() {
-            submitExportForm('{{ route("admin.expense.export.excel") }}');
+            submitExportForm('/admin/expense-tracker/export-expenses-excel');
         }
 
         // Export budgets to Excel
         function exportBudgetsToExcel() {
-            submitExportForm('{{ route("admin.expense.budget.export.excel") }}');
+            submitExportForm('/admin/expense-tracker/export-budgets-excel');
         }
 
         // Export filtered expenses to Excel
