@@ -1,3 +1,4 @@
+# .github/workflows/deploy.yml
 name: Deploy Pipeline
 
 on:
@@ -31,19 +32,20 @@ on:
         required: true
         description: "Environment variables for the Docker container"
       DEPLOY_HOST:
-        description: "Host for deployment"
         required: true
+        description: "Host for deployment"
+
 jobs:
   build:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     env:
-      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-      API_URL: https://discord.com/api/v10/channels
-      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
-      DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
-      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
-      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
+      DISCORD_BOT_TOKEN:        ${{ secrets.DISCORD_BOT_TOKEN }}
+      API_URL:                  https://discord.com/api/v10/channels
+      DISCORD_CHANNEL_ID:       ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_REGISTRY:            ${{ vars.DOCR_REGISTRY }}
+      DOCR_USERNAME:            ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN:               ${{ secrets.DOCR_TOKEN }}
     steps:
       - name: Notify Discord – Run Started
         if: always()
@@ -91,15 +93,15 @@ jobs:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     env:
-      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-      API_URL: https://discord.com/api/v10/channels
-      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
-      DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
-      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
-      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
-      DEPLOY_HOST: ${{ vars.deploy_host }}
-      CONTAINER_PASSWORD: ${{ secrets.CONTAINER_PASSWORD }}
-      ENVARS: ${{ secrets.ENVARS }}
+      DISCORD_BOT_TOKEN:        ${{ secrets.DISCORD_BOT_TOKEN }}
+      API_URL:                  https://discord.com/api/v10/channels
+      DISCORD_CHANNEL_ID:       ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_REGISTRY:            ${{ vars.DOCR_REGISTRY }}
+      DOCR_USERNAME:            ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN:               ${{ secrets.DOCR_TOKEN }}
+      DEPLOY_HOST:              ${{ secrets.DEPLOY_HOST }}
+      CONTAINER_PASSWORD:       ${{ secrets.CONTAINER_PASSWORD }}
+      ENVARS:                   ${{ secrets.ENVARS }}
     steps:
       - name: Notify Discord – Deploy Started
         if: always()
@@ -115,10 +117,7 @@ jobs:
       - name: Run server setup script
         run: |
           sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh \
-            -o StrictHostKeyChecking=no \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=5 \
-            root@${{ vars.DEPLOY_HOST }} <<'EOF'
+            -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<'EOF'
             export DEBIAN_FRONTEND=noninteractive
             sudo apt-get update -y
             sudo apt-get install --no-install-recommends -y docker.io
@@ -137,7 +136,7 @@ jobs:
       - name: Deploy to Droplet
         run: |
           IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-web:${{ inputs.image_tag }}
-          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ vars.DEPLOY_HOST }} <<EOF
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<EOF
             echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
               --username ${{ secrets.DOCR_USERNAME }} --password-stdin
             docker pull $IMAGE
@@ -153,7 +152,7 @@ jobs:
       - name: Health Check
         shell: bash
         run: |
-          HEALTH_URL="http://${{ vars.DEPLOY_HOST }}/health"
+          HEALTH_URL="http://${{ secrets.DEPLOY_HOST }}/health"
           for i in 1 2 3; do
             if curl --fail -s "$HEALTH_URL"; then
               curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
