@@ -77,7 +77,7 @@ class CareManagerController extends Controller
             Auth::id()
         );
 
-        return view('admin.viewCareManagerDetails', compact('caremanager'));
+        return view('admin.viewCaremanagerDetails', compact('caremanager'));
     }
 
 

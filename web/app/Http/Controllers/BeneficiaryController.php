@@ -885,13 +885,53 @@ class BeneficiaryController extends Controller
                 'transportation_needs' => $request->input('mobility.transportation_needs'),
             ]);
         
-            // Insert into health_histories table
+            // Process medical conditions
+            $medicalConditions = $request->input('medical_conditions');
+            if (!empty($medicalConditions)) {
+                // Convert comma-separated string to array and trim whitespace
+                $medicalConditionsArray = array_map('trim', explode(',', $medicalConditions));
+                $formattedMedicalConditions = json_encode($medicalConditionsArray);
+            } else {
+                $formattedMedicalConditions = null;
+            }
+
+            // Process medications
+            $medications = $request->input('medications');
+            if (!empty($medications)) {
+                // Convert comma-separated string to array and trim whitespace
+                $medicationsArray = array_map('trim', explode(',', $medications));
+                $formattedMedications = json_encode($medicationsArray);
+            } else {
+                $formattedMedications = null;
+            }
+
+            // Process allergies
+            $allergies = $request->input('allergies');
+            if (!empty($allergies)) {
+                // Convert comma-separated string to array and trim whitespace
+                $allergiesArray = array_map('trim', explode(',', $allergies));
+                $formattedAllergies = json_encode($allergiesArray);
+            } else {
+                $formattedAllergies = null;
+            }
+
+            // Process immunizations
+            $immunizations = $request->input('immunizations');
+            if (!empty($immunizations)) {
+                // Convert comma-separated string to array and trim whitespace
+                $immunizationsArray = array_map('trim', explode(',', $immunizations));
+                $formattedImmunizations = json_encode($immunizationsArray);
+            } else {
+                $formattedImmunizations = null;
+            }
+
+            // Create health history record with formatted values
             HealthHistory::create([
                 'general_care_plan_id' => $generalCarePlanId,
-                'medical_conditions' => $request->input('medical_conditions'),
-                'medications' => $request->input('medications'),
-                'allergies' => $request->input('allergies'),
-                'immunizations' => $request->input('immunizations'),
+                'medical_conditions' => $formattedMedicalConditions,
+                'medications' => $formattedMedications,
+                'allergies' => $formattedAllergies,
+                'immunizations' => $formattedImmunizations,
             ]);
 
             // Insert into medications table
@@ -1436,14 +1476,54 @@ class BeneficiaryController extends Controller
                     ]
                 );
                 
-                // Update health history
+                // Process medical conditions
+                $medicalConditions = $request->input('medical_conditions');
+                if (!empty($medicalConditions)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $medicalConditionsArray = array_map('trim', explode(',', $medicalConditions));
+                    $formattedMedicalConditions = json_encode($medicalConditionsArray);
+                } else {
+                    $formattedMedicalConditions = null;
+                }
+
+                // Process medications
+                $medications = $request->input('medications');
+                if (!empty($medications)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $medicationsArray = array_map('trim', explode(',', $medications));
+                    $formattedMedications = json_encode($medicationsArray);
+                } else {
+                    $formattedMedications = null;
+                }
+
+                // Process allergies
+                $allergies = $request->input('allergies');
+                if (!empty($allergies)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $allergiesArray = array_map('trim', explode(',', $allergies));
+                    $formattedAllergies = json_encode($allergiesArray);
+                } else {
+                    $formattedAllergies = null;
+                }
+
+                // Process immunizations
+                $immunizations = $request->input('immunizations');
+                if (!empty($immunizations)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $immunizationsArray = array_map('trim', explode(',', $immunizations));
+                    $formattedImmunizations = json_encode($immunizationsArray);
+                } else {
+                    $formattedImmunizations = null;
+                }
+
+                // Update health history with formatted values
                 HealthHistory::updateOrCreate(
                     ['general_care_plan_id' => $generalCarePlanId],
                     [
-                        'medical_conditions' => $request->input('medical_conditions'),
-                        'medications' => $request->input('medications'),
-                        'allergies' => $request->input('allergies'),
-                        'immunizations' => $request->input('immunizations'),
+                        'medical_conditions' => $formattedMedicalConditions,
+                        'medications' => $formattedMedications,
+                        'allergies' => $formattedAllergies,
+                        'immunizations' => $formattedImmunizations,
                     ]
                 );
                 

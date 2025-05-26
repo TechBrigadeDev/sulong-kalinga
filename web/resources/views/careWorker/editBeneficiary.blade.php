@@ -168,18 +168,23 @@
                         <div class="row mb-1">
                             <div class="col-md-3">
                                 <label for="medicalConditions" class="form-label">Medical Conditions</label>
-                                <textarea class="form-control" id="medicalConditions" name="medical_conditions" placeholder="List all medical conditions" rows="3">{{ old('medical_conditions', $beneficiary->generalCarePlan->healthHistory->medical_conditions ?? '') }}</textarea>                            </div>
+                                <textarea class="form-control medical-history-field" id="medicalConditions" name="medical_conditions" placeholder="List all medical conditions" rows="3">{{ old('medical_conditions', is_array($beneficiary->generalCarePlan->healthHistory->medical_conditions ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->medical_conditions)) : ($beneficiary->generalCarePlan->healthHistory->medical_conditions ?? '')) }}</textarea>
+                                <small class="text-muted">Separate multiple conditions with commas</small>
+                            </div>
                             <div class="col-md-3">
                                 <label for="medications" class="form-label">Medications</label>
-                                <textarea class="form-control" id="medications" name="medications" placeholder="List all medications" rows="3">{{ old('medications', $beneficiary->generalCarePlan->healthHistory->medications ?? '') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="medications" name="medications" placeholder="List all medications" rows="3">{{ old('medications', is_array($beneficiary->generalCarePlan->healthHistory->medications ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->medications)) : ($beneficiary->generalCarePlan->healthHistory->medications ?? '')) }}</textarea>
+                                <small class="text-muted">Separate multiple medications with commas</small>
                             </div>
                             <div class="col-md-3">
                                 <label for="allergies" class="form-label">Allergies</label>
-                                <textarea class="form-control" id="allergies" name="allergies" placeholder="List all allergies" rows="3">{{ old('allergies', $beneficiary->generalCarePlan->healthHistory->allergies ?? '') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="allergies" name="allergies" placeholder="List all allergies" rows="3">{{ old('allergies', is_array($beneficiary->generalCarePlan->healthHistory->allergies ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->allergies)) : ($beneficiary->generalCarePlan->healthHistory->allergies ?? '')) }}</textarea>
+                                <small class="text-muted">Separate multiple allergies with commas</small>
                             </div>
                             <div class="col-md-3">
                                 <label for="immunizations" class="form-label">Immunizations</label>
-                                <textarea class="form-control" id="immunizations" name="immunizations" placeholder="List all immunizations" rows="3">{{ old('immunizations', $beneficiary->generalCarePlan->healthHistory->immunizations ?? '') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="immunizations" name="immunizations" placeholder="List all immunizations" rows="3">{{ old('immunizations', is_array($beneficiary->generalCarePlan->healthHistory->immunizations ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->immunizations)) : ($beneficiary->generalCarePlan->healthHistory->immunizations ?? '')) }}</textarea>
+                                <small class="text-muted">Separate multiple immunizations with commas</small>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -1149,6 +1154,34 @@
                 } else {
                     confirmPassword.setCustomValidity("");
                 }
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Format medical history fields that might contain JSON arrays
+            document.querySelectorAll('.medical-history-field').forEach(function(field) {
+                const value = field.value;
+                
+                // Check if the value looks like a JSON array
+                if (value.trim().startsWith('[') && value.trim().endsWith(']')) {
+                    try {
+                        // Parse the JSON and display as comma-separated list
+                        const parsedValue = JSON.parse(value);
+                        if (Array.isArray(parsedValue)) {
+                            field.value = parsedValue.join(', ');
+                        }
+                    } catch (e) {
+                        // If parsing fails, keep the original value
+                        console.log('Error parsing JSON field:', e);
+                    }
+                }
+            });
+            
+            // Add form submission handler
+            document.getElementById('beneficiaryForm').addEventListener('submit', function() {
+                // No need for special processing - the backend will handle comma-separated values
             });
         });
     </script>
