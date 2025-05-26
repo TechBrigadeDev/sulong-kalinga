@@ -181,9 +181,9 @@ function showSuccess(deletedCarePlan) {
     // Redirect after a delay
     setTimeout(function() {
         @if(Auth::user()->role_id == 1)
-            xhr1.open('POST', "/admin/validate-password", true);
+            window.location.href = "/admin/beneficiaries";
         @else
-            xhr1.open('POST', "/care-manager/validate-password", true);
+            window.location.href = "/care-manager/beneficiaries";
         @endif
     }, 3000);
 }
@@ -216,9 +216,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const xhr1 = new XMLHttpRequest();
         @if(Auth::user()->role_id == 1)
-            xhr1.open('POST', "{{ route('admin.validate-password') }}", true);
+            xhr1.open('POST', "/admin/validate-password", true);
         @else
-            xhr1.open('POST', "{{ route('care-manager.validate-password') }}", true);
+            xhr1.open('POST', "/care-manager/validate-password", true);
         @endif
 
         // For password validation (xhr1)

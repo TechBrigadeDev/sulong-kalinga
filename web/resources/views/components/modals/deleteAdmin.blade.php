@@ -182,7 +182,7 @@ function showSuccess() {
     document.getElementById('cancelDeleteButton').textContent = 'Close';
     
     setTimeout(function() {
-        window.location.href = "{{ route('admin.administrators.index') }}";
+        window.location.href = "/admin/administrators";
     }, 2000);
 }
 
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('_token', '{{ csrf_token() }}');
         
         const xhr1 = new XMLHttpRequest();
-        xhr1.open('POST', "{{ route('admin.validate-password') }}", true);
+        xhr1.open('POST', "/admin/validate-password", true);
         xhr1.onload = function() {
             if (xhr1.status === 200) {
                 try {
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         deleteForm.append('_token', '{{ csrf_token() }}');
                         
                         const xhr2 = new XMLHttpRequest();
-                        xhr2.open('POST', "{{ route('admin.administrators.delete') }}", true);
+                        xhr2.open('POST', "/admin/administrators/delete", true);
                         xhr2.onload = function() {
                             if (xhr2.status === 200) {
                                 try {

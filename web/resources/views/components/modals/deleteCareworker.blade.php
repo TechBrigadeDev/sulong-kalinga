@@ -169,9 +169,9 @@ function showDependencyError(message, errorType) {
         document.getElementById('cancelDeleteButton').textContent = 'Close';
         
         setTimeout(function() {
-        let redirectRoute = "{{ route('admin.careworkers.index') }}";
+        let redirectRoute = "/admin/careworkers";
         @if(Auth::user()->role_id == 2)
-            redirectRoute = "{{ route('care-manager.careworkers.index') }}";
+            redirectRoute = "/care-manager/careworkers";
         @endif
         window.location.href = redirectRoute;
     }, 2000); // Redirect after 2 seconds
@@ -204,9 +204,9 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('_token', '{{ csrf_token() }}');
         
         const xhr1 = new XMLHttpRequest();
-        let validatePasswordEndpoint = "{{ route('admin.validate-password') }}";
+       let validatePasswordEndpoint = "/admin/validate-password";
         @if(Auth::user()->role_id == 2)
-            validatePasswordEndpoint = "{{ route('care-manager.validate-password') }}";
+            validatePasswordEndpoint = "/care-manager/validate-password";
         @endif
         xhr1.open('POST', validatePasswordEndpoint, true);
         xhr1.onload = function() {
@@ -220,11 +220,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         deleteForm.append('_token', '{{ csrf_token() }}');
                         
                         // Determine which endpoint to use based on the user role
-                        let endpoint = "{{ route('admin.careworkers.delete') }}"; // Default endpoint for admins
+                        let endpoint = "/admin/careworkers/delete";
 
                         // Use care manager endpoint if the current user is a care manager
                         @if(Auth::user()->role_id == 2)
-                            endpoint = "{{ route('care-manager.careworkers.delete') }}";
+                            endpoint = "/care-manager/careworkers/delete";
                         @endif
 
                         const xhr2 = new XMLHttpRequest();
