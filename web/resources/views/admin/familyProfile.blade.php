@@ -62,9 +62,10 @@
                 </div>
 
                 <!-- Hidden form for exporting -->
-                <form id="exportForm" action="{{ route('admin.export.family.pdf') }}" method="POST" style="display: none;"
-                    data-pdf-route="{{ route('admin.export.family.pdf') }}" 
-                    data-excel-route="{{ route('admin.export.family.excel') }}">
+                <form id="exportForm" method="POST" style="display: none;"
+                    action="/admin/export/family-pdf"
+                    data-pdf-route="/admin/export/family-pdf" 
+                    data-excel-route="/admin/export/family-excel">
                     @csrf
                     <input type="hidden" name="selected_family_members" id="selectedFamilyMembers">
                 </form>
