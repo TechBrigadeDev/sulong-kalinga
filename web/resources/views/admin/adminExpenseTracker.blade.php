@@ -2012,7 +2012,7 @@
             $('#allExpensesSpinner').removeClass('d-none');
             
             $.ajax({
-                url: '/admin/expense-tracker/expenses/filtered', // Use the existing filtered route instead
+                url: '/admin/expense-tracker/filtered-expenses', // Use the existing filtered route instead
                 method: 'GET',
                 // No filters means get all expenses
                 data: {
@@ -2150,7 +2150,7 @@
             $('#expensesFilterStatus').html(filterStatus);
             
             $.ajax({
-                url: '/admin/expense-tracker/expenses/filtered',
+                url: '/admin/expense-tracker/filtered-expenses',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -2183,7 +2183,7 @@
             $('#fullHistorySpinner').removeClass('d-none');
             
             $.ajax({
-                url: '/admin/expense-tracker/budgets/filtered',
+                url: '/admin/expense-tracker/filtered-budgets',
                 method: 'GET',
                 // No filters means get all budgets
                 data: {
@@ -2309,7 +2309,7 @@
             $('#budgetFilterStatus').html(filterStatus);
             
             $.ajax({
-                url: '/admin/expense-tracker/budgets/filtered',
+                url: '/admin/expense-tracker/filtered-budgets',
                 method: 'GET',
                 data: {
                     budget_type_id: budgetType,

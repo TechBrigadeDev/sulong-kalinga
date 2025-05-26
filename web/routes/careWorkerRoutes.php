@@ -85,7 +85,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::post('/family-pdf', [ExportController::class, 'exportFamilyToPdf'])->name('family-pdf');
         Route::post('/beneficiaries-excel', [ExportController::class, 'exportBeneficiariesToExcel'])->name('beneficiaries-excel');
         Route::post('/family-excel', [ExportController::class, 'exportFamilyMembersToExcel'])->name('family-excel');
-        Route::post('/export/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
+        Route::post('/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
     });
 
     // Notification routes
