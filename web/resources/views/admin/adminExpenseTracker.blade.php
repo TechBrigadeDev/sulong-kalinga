@@ -1592,10 +1592,13 @@
             
             // Determine correct API endpoint and parameter name
             let url, paramName;
-            
-            let url = itemType === 'expense' 
+
+            url = itemType === 'expense'  // Remove the 'let' keyword here
                 ? '/admin/expense-tracker/delete-expense' 
                 : '/admin/expense-tracker/delete-budget';
+                
+            // Set the correct parameter name based on item type
+            paramName = itemType === 'expense' ? 'expense_id' : 'budget_id';
             
             // Prepare form data
             const formData = new FormData();
