@@ -1213,7 +1213,7 @@
                         <ul></ul>
                     </div>
                     
-                    <form id="deleteMedicationForm" action="{{ route('admin.medication.schedule.delete') }}" method="POST">
+                    <form id="deleteMedicationForm" action="/admin/medication-schedule/delete" method="POST">
                         @csrf
                         <input type="hidden" name="medication_id" id="delete_medication_id">
                         
@@ -2102,7 +2102,7 @@
                 }
                             
                 // Validate password via AJAX
-                fetch('{{ route("admin.validate-password") }}', {
+                fetch('/admin/validate-password', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
