@@ -395,7 +395,7 @@
             
             // Create form and submit
             const form = $('<form>', {
-                'action': '{{ route("care-manager.exports.reports.pdf") }}',
+                'action': '/care-manager/exports/reports-pdf',
                 'method': 'post',
                 'target': '_blank'
             });
@@ -425,6 +425,7 @@
             }));
             
             $('body').append(form);
+            form.attr('method', 'POST'); // Explicitly set method again to ensure POST is used
             form.submit();
             form.remove();
             
