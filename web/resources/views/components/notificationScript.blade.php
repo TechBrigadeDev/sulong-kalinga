@@ -1,35 +1,41 @@
 @php
     // Determine endpoints based on user role
     $userRole = Auth::user()->role_id;
+    // Force HTTPS in production/staging
+    $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+               (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    
+    // Build URL prefix with correct protocol
+    $urlPrefix = "/";  // Use relative URLs instead
     
     if ($userRole == 1) {
         // Admin
-        $notificationsUrl = url('admin/notifications');
-        $markAllReadUrl = route('admin.notifications.read-all');
-        $messagingUrl = url('admin/messaging');
-        $messageUnreadCountUrl = route('admin.messaging.unread-count');
-        $messageRecentUrl = route('admin.messaging.recent');
-        $messageReadAllUrl = route('admin.messaging.read-all');
+        $notificationsUrl = $urlPrefix . 'admin/notifications';
+        $markAllReadUrl = $urlPrefix . 'admin/notifications/read-all';
+        $messagingUrl = $urlPrefix . 'admin/messaging';
+        $messageUnreadCountUrl = $urlPrefix . 'admin/messaging/unread-count';
+        $messageRecentUrl = $urlPrefix . 'admin/messaging/recent';
+        $messageReadAllUrl = $urlPrefix . 'admin/messaging/read-all';
         $roleName = 'admin';
         $rolePrefix = 'admin';
     } elseif ($userRole == 2) {
         // Care Manager
-        $notificationsUrl = url('care-manager/notifications');
-        $markAllReadUrl = route('care-manager.notifications.read-all');
-        $messagingUrl = url('care-manager/messaging');
-        $messageUnreadCountUrl = route('care-manager.messaging.unread-count');
-        $messageRecentUrl = route('care-manager.messaging.recent');
-        $messageReadAllUrl = route('care-manager.messaging.read-all');
+        $notificationsUrl = $urlPrefix . 'care-manager/notifications';
+        $markAllReadUrl = $urlPrefix . 'care-manager/notifications/read-all';
+        $messagingUrl = $urlPrefix . 'care-manager/messaging';
+        $messageUnreadCountUrl = $urlPrefix . 'care-manager/messaging/unread-count';
+        $messageRecentUrl = $urlPrefix . 'care-manager/messaging/recent';
+        $messageReadAllUrl = $urlPrefix . 'care-manager/messaging/read-all';
         $roleName = 'care-manager';
         $rolePrefix = 'care-manager';
     } elseif ($userRole == 3) {
         // Care Worker
-        $notificationsUrl = url('care-worker/notifications');
-        $markAllReadUrl = route('care-worker.notifications.read-all');
-        $messagingUrl = url('care-worker/messaging');
-        $messageUnreadCountUrl = route('care-worker.messaging.unread-count');
-        $messageRecentUrl = route('care-worker.messaging.recent');
-        $messageReadAllUrl = route('care-worker.messaging.read-all');
+        $notificationsUrl = $urlPrefix . 'care-worker/notifications';
+        $markAllReadUrl = $urlPrefix . 'care-worker/notifications/read-all';
+        $messagingUrl = $urlPrefix . 'care-worker/messaging';
+        $messageUnreadCountUrl = $urlPrefix . 'care-worker/messaging/unread-count';
+        $messageRecentUrl = $urlPrefix . 'care-worker/messaging/recent';
+        $messageReadAllUrl = $urlPrefix . 'care-worker/messaging/read-all';
         $roleName = 'care-worker';
         $rolePrefix = 'care-worker';
     }
