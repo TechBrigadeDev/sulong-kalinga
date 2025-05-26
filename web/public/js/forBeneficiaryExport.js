@@ -20,55 +20,79 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update select all checkbox when individual checkboxes change
     rowCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
-            const allChecked = [...rowCheckboxes].every(c => c.checked);
-            const someChecked = [...rowCheckboxes].some(c => c.checked);
-            
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = allChecked;
-                selectAllCheckbox.indeterminate = someChecked && !allChecked;
-            }
+            updateSelectAllCheckbox();
         });
     });
     
-    // Get selected IDs
-    function getSelectedIds() {
-        const selectedIds = [...rowCheckboxes]
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.value);
-            
-        if (selectedIds.length === 0) {
-            alert('Please select at least one beneficiary to export.');
-            return null;
-        }
+    // Function to update the "Select All" checkbox state
+    function updateSelectAllCheckbox() {
+        if (!selectAllCheckbox) return;
         
-        return selectedIds;
+        const checkedBoxes = document.querySelectorAll('.rowCheckbox:checked');
+        selectAllCheckbox.checked = checkedBoxes.length === rowCheckboxes.length && rowCheckboxes.length > 0;
     }
     
     // Handle PDF export
     if (exportPdfButton) {
         exportPdfButton.addEventListener('click', function(e) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default link behavior
             
-            const selectedIds = getSelectedIds();
-            if (!selectedIds) return;
+            // Get all checked beneficiary IDs
+            const selectedIds = getSelectedBeneficiaryIds();
             
+            if (selectedIds.length === 0) {
+                alert('Please select at least one beneficiary to export.');
+                return;
+            }
+            
+            // Show loading state
+            exportPdfButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+            
+            // Set form data and submit
             selectedBeneficiaries.value = JSON.stringify(selectedIds);
             exportForm.action = exportForm.getAttribute('data-pdf-route');
+            exportForm.method = 'POST'; // Ensure POST method is set
             exportForm.submit();
+            
+            // Reset button after a delay (for UX)
+            setTimeout(() => {
+                exportPdfButton.innerHTML = 'Export as PDF';
+            }, 3000);
         });
     }
     
     // Handle Excel export
     if (exportExcelButton) {
         exportExcelButton.addEventListener('click', function(e) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default link behavior
             
-            const selectedIds = getSelectedIds();
-            if (!selectedIds) return;
+            // Get all checked beneficiary IDs
+            const selectedIds = getSelectedBeneficiaryIds();
             
+            if (selectedIds.length === 0) {
+                alert('Please select at least one beneficiary to export.');
+                return;
+            }
+            
+            // Show loading state
+            exportExcelButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+            
+            // Set form data and submit
             selectedBeneficiaries.value = JSON.stringify(selectedIds);
             exportForm.action = exportForm.getAttribute('data-excel-route');
+            exportForm.method = 'POST'; // Ensure POST method is set
             exportForm.submit();
+            
+            // Reset button after a delay (for UX)
+            setTimeout(() => {
+                exportExcelButton.innerHTML = 'Export as Excel';
+            }, 3000);
         });
+    }
+    
+    // Helper function to get all selected beneficiary IDs
+    function getSelectedBeneficiaryIds() {
+        const checkedBoxes = document.querySelectorAll('.rowCheckbox:checked');
+        return Array.from(checkedBoxes).map(checkbox => checkbox.value);
     }
 });
