@@ -63,9 +63,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Validate the password with the server
-            let validatePasswordEndpoint = "{{ route('admin.validate-password') }}";
+            let validatePasswordEndpoint = "/admin/validate-password";
             @if(Auth::user()->role_id == 2)
-                validatePasswordEndpoint = "{{ route('care-manager.validate-password') }}";
+                validatePasswordEndpoint = "/care-manager/validate-password";
             @endif
 
             fetch(validatePasswordEndpoint, {
@@ -82,9 +82,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Update the status in the database
                     let updateStatusEndpoint;
                     @if(Auth::user()->role_id == 2)
-                        updateStatusEndpoint = "{{ route('care-manager.careworkers.updateStatusAjax', '999999') }}".replace('/999999', '/' + careworkerId);
+                        updateStatusEndpoint = "/care-manager/careworkers/" + careworkerId + "/update-status-ajax";
                     @else
-                        updateStatusEndpoint = "{{ route('admin.careworkers.updateStatusAjax', '999999') }}".replace('/999999', '/' + careworkerId);
+                        updateStatusEndpoint = "/admin/careworkers/" + careworkerId + "/update-status-ajax";
                     @endif
 
                     fetch(updateStatusEndpoint, {

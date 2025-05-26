@@ -65,8 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Set the appropriate validation and update URLs based on role
     const passwordValidationUrl = isAdmin 
-        ? "{{ route('admin.validate-password') }}"
-        : "{{ route('care-manager.validate-password') }}";
+        ? "/admin/validate-password"
+        : "/care-manager/validate-password";
         
     const statusUpdateBaseUrl = isAdmin
         ? "/admin/beneficiaries"

@@ -288,7 +288,7 @@
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('admin.emergency.request.viewHistory') }}'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='/admin/emergency-request/filter-history'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
         </div>
@@ -795,7 +795,7 @@
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "/admin/emergency-request/emergency/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -827,7 +827,7 @@
             // If noticeId is provided, fetch fresh data, otherwise use current emergency
             if (noticeId) {
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                    url: "/admin/emergency-request/emergency/" + noticeId,
                     method: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -958,7 +958,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('admin.emergency.request.respond.emergency') }}",
+                url: "/admin/emergency-request/respond-emergency",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1102,7 +1102,7 @@
                 
                 // Submit request
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.handle.service') }}",
+                    url: "/admin/emergency-request/handle-service",
                     method: 'POST',
                     data: formData,
                     processData: false,
@@ -1187,7 +1187,7 @@
             
             // Fetch service request details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "/admin/emergency-request/service-request/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1220,7 +1220,7 @@
         // ===== COMMON FUNCTIONS =====
         function loadCareWorkers() {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.careworkers') }}",
+                url: "/admin/emergency-request/care-workers",
                 method: 'GET',
                 success: function(response) {
                     console.log("Care workers loaded:", response); // Debug line
@@ -1267,7 +1267,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('admin.emergency.request.archive') }}",
+                url: "/admin/emergency-request/archive",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1316,51 +1316,6 @@
             });
         });
 
-        // Care Worker Send Reminder Function
-        function openSendReminderModal(recordId, recordType) {
-            $('#reminderRecordId').val(recordId);
-            $('#reminderRecordType').val(recordType);
-            $('#reminderMessage').val('');
-            $('#sendReminderModal').modal('show');
-        }
-
-        // Submit reminder
-        $('#submitReminder').on('click', function() {
-            const form = $('#sendReminderForm');
-            const formData = new FormData(form[0]);
-            
-            // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
-            
-            // Submit form
-            $.ajax({
-                url: "{{ route('care-worker.emergency.request.send.reminder') }}",
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        toastr.success('Reminder sent successfully to your care manager');
-                        
-                        // Close modal
-                        $('#sendReminderModal').modal('hide');
-                    } else {
-                        // Show error message
-                        toastr.error(response.message || 'Failed to send reminder');
-                    }
-                },
-                error: function() {
-                    toastr.error('Failed to send reminder. Please try again.');
-                },
-                complete: function() {
-                    // Reset button state
-                    $('#submitReminder').prop('disabled', false).html('Send Reminder');
-                }
-            });
-        });
-
         // Initialize tooltips
         $(function () {
         $('[data-bs-toggle="tooltip"]').tooltip();
@@ -1382,7 +1337,7 @@
             // If requestId is provided, fetch fresh data, otherwise use current service request
             if (requestId) {
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                    url: "/admin/emergency-request/service-request/" + requestId,
                     method: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -1679,7 +1634,7 @@
         function openResolveEmergencyModal(noticeId) {
             // Fetch emergency details and then open modal with resolution pre-selected
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "/admin/emergency-request/emergency/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1702,7 +1657,7 @@
 
         function openCompleteServiceRequestModal(requestId) {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "/admin/emergency-request/service-request/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

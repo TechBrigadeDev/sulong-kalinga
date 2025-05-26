@@ -305,7 +305,7 @@
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('care-worker.emergency.request.viewHistory') }}'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='/care-worker/emergency-request/history'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
         </div>
@@ -683,7 +683,7 @@
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ route('care-worker.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "/care-worker/emergency-request/emergency/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -784,7 +784,7 @@
             
             // Fetch service request details
             $.ajax({
-                url: "{{ route('care-worker.emergency.request.get.service', '') }}/" + requestId,
+                url: "/care-worker/emergency-request/service-request/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -882,7 +882,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('care-worker.emergency.request.send.reminder') }}",
+                url: "/care-worker/emergency-request/send-reminder",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1119,7 +1119,7 @@
         function openResolveEmergencyModal(noticeId) {
             // Fetch emergency details and then open modal with resolution pre-selected
             $.ajax({
-                url: "{{ route('care-worker.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "/care-worker/emergency-request/emergency/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1142,7 +1142,7 @@
 
         function openCompleteServiceRequestModal(requestId) {
             $.ajax({
-                url: "{{ route('care-worker.emergency.request.get.service', '') }}/" + requestId,
+                url: "/care-worker/emergency-request/service-request/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

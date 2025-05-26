@@ -2273,7 +2273,7 @@
                 }
                 
                 $.ajax({
-                    url: '{{ route("care-manager.careworker.appointments.cancel") }}',
+                    url: '/care-manager/careworker-appointments/cancel',
                     method: 'POST',
                     data: formData,
                     success: function(response) {
