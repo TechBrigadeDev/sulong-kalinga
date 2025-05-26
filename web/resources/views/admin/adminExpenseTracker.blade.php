@@ -1449,7 +1449,7 @@
             
             // Fetch the expense details first
             $.ajax({
-                url: '{{ route("admin.expense.get", "") }}/' + id,
+                url: '/admin/expense-tracker/get-expense/' + id,
                 type: 'GET',
                 success: function(response) {
                     const expense = response.expense;
@@ -1508,7 +1508,7 @@
             
             // Fetch the budget details first
             $.ajax({
-                url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
+                url: '/admin/expense-tracker/get-budget/' + id,
                 method: 'GET',
                 success: function(response) {
                     const budget = response.budget;
@@ -2012,7 +2012,7 @@
             $('#allExpensesSpinner').removeClass('d-none');
             
             $.ajax({
-                url: '{{ route("admin.expense.filtered") }}', // Use the existing filtered route instead
+                url: '/admin/expense-tracker/expenses/filtered', // Use the existing filtered route instead
                 method: 'GET',
                 // No filters means get all expenses
                 data: {
@@ -2150,7 +2150,7 @@
             $('#expensesFilterStatus').html(filterStatus);
             
             $.ajax({
-                url: '{{ route("admin.expense.filtered") }}',
+                url: '/admin/expense-tracker/expenses/filtered',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -2183,7 +2183,7 @@
             $('#fullHistorySpinner').removeClass('d-none');
             
             $.ajax({
-                url: '{{ route("admin.expense.budget.filtered") }}',
+                url: '/admin/expense-tracker/budgets/filtered',
                 method: 'GET',
                 // No filters means get all budgets
                 data: {
@@ -2309,7 +2309,7 @@
             $('#budgetFilterStatus').html(filterStatus);
             
             $.ajax({
-                url: '{{ route("admin.expense.budget.filtered") }}',
+                url: '/admin/expense-tracker/budgets/filtered',
                 method: 'GET',
                 data: {
                     budget_type_id: budgetType,
@@ -2353,7 +2353,7 @@
             const startDate = $('#expensesFilterStartDate').val();
             const endDate = $('#expensesFilterEndDate').val();
             
-            submitExportForm('{{ route("admin.expense.export.excel") }}', {
+            submitExportForm('/admin/expense-tracker/export-expenses-excel', {
                 category_id: category || '',
                 start_date: startDate || '',
                 end_date: endDate || ''
@@ -2366,7 +2366,7 @@
             const startDate = $('#budgetFilterStartDate').val();
             const endDate = $('#budgetFilterEndDate').val();
             
-            submitExportForm('{{ route("admin.expense.budget.export.excel") }}', {
+            submitExportForm('/admin/expense-tracker/export-budgets-excel', {
                 budget_type_id: budgetType || '',
                 start_date: startDate || '',
                 end_date: endDate || ''
@@ -2462,6 +2462,7 @@
             
             // Add form to body, submit it, and remove it
             document.body.appendChild(form);
+            form.method = 'POST'; // Explicitly set method again to ensure POST is used
             form.submit();
             document.body.removeChild(form);
             
