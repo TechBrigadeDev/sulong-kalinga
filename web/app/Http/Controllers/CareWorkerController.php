@@ -443,7 +443,7 @@ class CareWorkerController extends Controller
                             ->get();
 
         // Pass the data to the view
-        return view($rolePrefix . '.addCareWorker', compact('municipalities', 'careManagers'));
+        return view($rolePrefix . '.addCareworker', compact('municipalities', 'careManagers'));
     }
 
     public function storeCareWorker(Request $request)

@@ -506,7 +506,7 @@
         }
         
         // Fetch beneficiary details via AJAX
-        fetch(`{{ route('care-manager.weeklycareplans.beneficiaryDetails', ['id' => ':id']) }}`.replace(':id', beneficiaryId))
+        fetch(`/care-manager/weekly-care-plans/beneficiary/${beneficiaryId}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
