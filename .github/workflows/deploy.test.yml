@@ -14,11 +14,3 @@ jobs:
     with:
       environment: test
       image_tag: ${{ github.sha }}
-      deploy_host: ${{ vars.DEPLOY_HOST }}
-    secrets:
-      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-      DISCORD_PIPELINE_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
-      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
-      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
-      CONTAINER_PASSWORD: ${{ secrets.CONTAINER_PASSWORD }}
-      ENVARS: ${{ secrets.ENVARS }}
