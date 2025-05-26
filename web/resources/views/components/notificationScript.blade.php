@@ -14,7 +14,7 @@
         $markAllReadUrl = $urlPrefix . 'admin/notifications/read-all';
         $messagingUrl = $urlPrefix . 'admin/messaging';
         $messageUnreadCountUrl = $urlPrefix . 'admin/messaging/unread-count';
-        $messageRecentUrl = $urlPrefix . 'admin/messaging/recent';
+        $messageRecentUrl = $urlPrefix . 'admin/messaging/recent-messages';
         $messageReadAllUrl = $urlPrefix . 'admin/messaging/read-all';
         $roleName = 'admin';
         $rolePrefix = 'admin';
@@ -24,7 +24,7 @@
         $markAllReadUrl = $urlPrefix . 'care-manager/notifications/read-all';
         $messagingUrl = $urlPrefix . 'care-manager/messaging';
         $messageUnreadCountUrl = $urlPrefix . 'care-manager/messaging/unread-count';
-        $messageRecentUrl = $urlPrefix . 'care-manager/messaging/recent';
+        $messageRecentUrl = $urlPrefix . 'care-manager/messaging/recent-messages';
         $messageReadAllUrl = $urlPrefix . 'care-manager/messaging/read-all';
         $roleName = 'care-manager';
         $rolePrefix = 'care-manager';
@@ -34,7 +34,7 @@
         $markAllReadUrl = $urlPrefix . 'care-worker/notifications/read-all';
         $messagingUrl = $urlPrefix . 'care-worker/messaging';
         $messageUnreadCountUrl = $urlPrefix . 'care-worker/messaging/unread-count';
-        $messageRecentUrl = $urlPrefix . 'care-worker/messaging/recent';
+        $messageRecentUrl = $urlPrefix . 'care-worker/messaging/recent-messages';
         $messageReadAllUrl = $urlPrefix . 'care-worker/messaging/read-all';
         $roleName = 'care-worker';
         $rolePrefix = 'care-worker';
