@@ -2276,7 +2276,7 @@
                 }
                 
                 $.ajax({
-                    url: '{{ route("admin.careworker.appointments.cancel") }}',
+                    url: '/admin/careworker-appointments/cancel',
                     method: 'POST',
                     data: formData,
                     success: function(response) {
