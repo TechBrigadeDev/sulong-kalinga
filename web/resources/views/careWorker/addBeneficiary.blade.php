@@ -165,19 +165,23 @@
                         <div class="row mb-1">
                             <div class="col-md-3">
                                 <label for="medicalConditions" class="form-label">Medical Conditions</label>
-                                <textarea class="form-control" id="medicalConditions" name="medical_conditions" placeholder="List all medical conditions" rows="3">{{ old('medical_conditions') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="medicalConditions" name="medical_conditions" placeholder="List all medical conditions" rows="3">{{ old('medical_conditions') }}</textarea>
+                                <small class="text-muted">Separate multiple conditions with commas</small>
                             </div>
                             <div class="col-md-3">
                                 <label for="medications" class="form-label">Medications</label>
-                                <textarea class="form-control" id="medications" name="medications" placeholder="List all medications" rows="3">{{ old('medications') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="medications" name="medications" placeholder="List all medications" rows="3">{{ old('medications') }}</textarea>
+                                <small class="text-muted">Separate multiple medications with commas</small>
                             </div>
                             <div class="col-md-3">
                                 <label for="allergies" class="form-label">Allergies</label>
-                                <textarea class="form-control" id="allergies" name="allergies" placeholder="List all allergies" rows="3">{{ old('allergies') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="allergies" name="allergies" placeholder="List all allergies" rows="3">{{ old('allergies') }}</textarea>
+                                <small class="text-muted">Separate multiple allergies with commas</small>
                             </div>
                             <div class="col-md-3">
                                 <label for="immunizations" class="form-label">Immunizations</label>
-                                <textarea class="form-control" id="immunizations" name="immunizations" placeholder="List all immunizations" rows="3">{{ old('immunizations') }}</textarea>
+                                <textarea class="form-control medical-history-field" id="immunizations" name="immunizations" placeholder="List all immunizations" rows="3">{{ old('immunizations') }}</textarea>
+                                <small class="text-muted">Separate multiple immunizations with commas</small>
                             </div>
                         </div>
                         <div class="row mb-3">
