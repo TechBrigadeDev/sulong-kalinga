@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Validate password
-            fetch("{{ route('admin.validate-password') }}", {
+            fetch("/admin/validate-password", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
