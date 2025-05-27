@@ -219,7 +219,7 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="account_email" class="form-label">New Email</label>
-                                            <input type="email" class="form-control" id="account.email" name="account_email" placeholder="Enter new email address" value="{{ old('account_email') }}" required>
+                                            <input type="email" class="form-control" id="account_email" name="account_email" placeholder="Enter new email address" value="{{ old('account_email') }}" required>
                                         </div>
                                         <div class="mb-3">
                                             <label for="current_password_for_email" class="form-label">Current Password</label>
@@ -326,16 +326,11 @@
         });
 
         // Add this to the submit event of each form
-        document.querySelectorAll('form').forEach(form => {
-            // Check if form already has the required CSRF token
-            if (!form.querySelector('input[name="_token"]')) {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '_token';
-                tokenInput.value = csrfToken;
-                form.appendChild(tokenInput);
-            }
+       document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Ensure method is POST
+                this.method = 'POST';
+            });
         });
     </script>
     <script>
