@@ -123,4 +123,7 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'login_attempt_limit' => env('LOGIN_ATTEMPT_LIMIT', 5),
+    'login_attempt_window' => env('LOGIN_ATTEMPT_WINDOW', 10),
+    'login_lockout_duration' => env('LOGIN_LOCKOUT_DURATION', 10),
 ];
