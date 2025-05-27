@@ -262,7 +262,7 @@
 
 <!-- Message Input Area -->
 <div class="message-input-container">
-    <form id="messageForm" action="{{ route($rolePrefix.'.messaging.send') }}" method="POST" enctype="multipart/form-data">
+    <form id="messageForm" action="/{{$rolePrefix}}/messaging/send-message" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="conversation_id" value="{{ $conversation->conversation_id }}">
         
