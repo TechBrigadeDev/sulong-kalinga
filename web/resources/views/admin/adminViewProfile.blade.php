@@ -244,7 +244,6 @@
                                 <div class="col-md-12">
                                     <form action="/admin/update-password" method="POST">
                                         @csrf
-                                        @method('POST')
                                         <div class="mb-3">
                                             <label for="current_password" class="form-label">Current Password</label>
                                             <div class="input-group">
@@ -327,11 +326,20 @@
 
         // Add this to the submit event of each form
        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                // Ensure method is POST
-                this.method = 'POST';
-            });
-        });
+        // Don't attach a submit event that could interfere with normal submission
+        // Just ensure the form has the correct method directly
+        form.method = 'POST';
+        
+        // Make sure form has the CSRF token
+        if (!form.querySelector('input[name="_token"]')) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '_token';
+            tokenInput.value = csrfToken;
+            form.appendChild(tokenInput);
+        }
+    });
     </script>
     <script>
         // Profile section navigation
