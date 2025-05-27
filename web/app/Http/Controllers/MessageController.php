@@ -509,56 +509,79 @@ class MessageController extends Controller
                     return $this->respondWithError('Only Care Workers can message Beneficiaries and Family Members.', 403, $request);
                 }
             }
-            
-            // Create new conversation
-            $conversation = new Conversation();
-            $conversation->is_group_chat = false;
-            $conversation->save();
-            
-            // Add sender as participant
-            $senderParticipant = new ConversationParticipant();
-            $senderParticipant->conversation_id = $conversation->conversation_id;
-            $senderParticipant->participant_id = $user->id;
-            $senderParticipant->participant_type = 'cose_staff';
-            $senderParticipant->joined_at = now();
-            $senderParticipant->save();
-            
-            // Add recipient as participant
-            $recipientParticipant = new ConversationParticipant();
-            $recipientParticipant->conversation_id = $conversation->conversation_id;
-            $recipientParticipant->participant_id = $recipientId;
-            $recipientParticipant->participant_type = $recipientType;
-            $recipientParticipant->joined_at = now();
-            $recipientParticipant->save();
-            
-            // Create initial message if provided
-            if (!empty($initialMessage)) {
-                $message = new Message();
-                $message->conversation_id = $conversation->conversation_id;
-                $message->sender_id = $user->id;
-                $message->sender_type = 'cose_staff';
-                $message->content = $initialMessage;
-                $message->message_timestamp = now();
-                $message->save();
+
+            // *** ADD THIS TRANSACTION BLOCK - REPLACE THE EXISTING CODE BELOW WITH THIS ***
+            return DB::transaction(function() use ($user, $recipientId, $recipientType, $initialMessage, $request) {
+                // Re-check if conversation exists within transaction to prevent race condition
+                $existingConversation = $this->findExistingConversation($user->id, $recipientId, $recipientType);
+                if ($existingConversation) {
+                    // For AJAX requests
+                    if ($request->ajax() || $request->wantsJson() || $request->header('Accept') == 'application/json') {
+                        return response()->json([
+                            'success' => true,
+                            'exists' => true,
+                            'exists_id' => $existingConversation->conversation_id,
+                            'conversation_id' => $existingConversation->conversation_id
+                        ]);
+                    }
                 
-                // Update conversation's last message ID
-                $conversation->last_message_id = $message->message_id;
+                // For regular form submissions
+                return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
+                        'conversation' => $existingConversation->conversation_id
+                    ])->with('success', 'Conversation already exists');
+                }
+            
+                // Create new conversation
+                $conversation = new Conversation();
+                $conversation->is_group_chat = false;
                 $conversation->save();
-            }
-            
-            // For AJAX/JSON requests
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') == 'application/json') {
-                return response()->json([
-                    'success' => true,
-                    'conversation_id' => $conversation->conversation_id,
-                    'message' => 'Conversation created successfully'
-                ]);
-            } 
-            
-            // For regular form submissions
-            return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
-                'conversation' => $conversation->conversation_id
-            ])->with('success', 'Conversation created successfully');
+                
+                // Add sender as participant
+                $senderParticipant = new ConversationParticipant();
+                $senderParticipant->conversation_id = $conversation->conversation_id;
+                $senderParticipant->participant_id = $user->id;
+                $senderParticipant->participant_type = 'cose_staff';
+                $senderParticipant->joined_at = now();
+                $senderParticipant->save();
+                
+                // Add recipient as participant
+                $recipientParticipant = new ConversationParticipant();
+                $recipientParticipant->conversation_id = $conversation->conversation_id;
+                $recipientParticipant->participant_id = $recipientId;
+                $recipientParticipant->participant_type = $recipientType;
+                $recipientParticipant->joined_at = now();
+                $recipientParticipant->save();
+                
+                // Create initial message if provided
+                if (!empty($initialMessage)) {
+                    $message = new Message();
+                    $message->conversation_id = $conversation->conversation_id;
+                    $message->sender_id = $user->id;
+                    $message->sender_type = 'cose_staff';
+                    $message->content = $initialMessage;
+                    $message->message_timestamp = now();
+                    $message->save();
+                    
+                    // Update conversation's last message ID
+                    $conversation->last_message_id = $message->message_id;
+                    $conversation->save();
+                }
+                
+                // For AJAX/JSON requests
+                if ($request->ajax() || $request->wantsJson() || $request->header('Accept') == 'application/json') {
+                    return response()->json([
+                        'success' => true,
+                        'conversation_id' => $conversation->conversation_id,
+                        'message' => 'Conversation created successfully'
+                    ]);
+                } 
+                
+                // For regular form submissions
+                return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
+                    'conversation' => $conversation->conversation_id
+                ])->with('success', 'Conversation created successfully');
+            });
+            // *** END OF TRANSACTION BLOCK ***
             
         } catch (\Exception $e) {
             Log::error('Error creating conversation: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -998,23 +1021,24 @@ class MessageController extends Controller
      */
     private function findExistingConversation($userId, $recipientId, $recipientType)
     {
-        // Get all conversations where the current user is a participant
-        $userConversations = ConversationParticipant::where('participant_id', $userId)
-            ->where('participant_type', 'cose_staff')
-            ->whereNull('left_at')
-            ->pluck('conversation_id');
-        
-        // Find conversations with both participants and not group chats
-        return Conversation::whereIn('conversation_id', function($query) use ($userConversations, $recipientId, $recipientType) {
-                $query->select('conversation_id')
-                    ->from('conversation_participants')
-                    ->whereIn('conversation_id', $userConversations)
-                    ->where('participant_id', $recipientId)
-                    ->where('participant_type', $recipientType)
-                    ->whereNull('left_at');
-            })
-            ->where('is_group_chat', false)
-            ->first();
+        // Use DB transaction to prevent race conditions
+        return DB::transaction(function() use ($userId, $recipientId, $recipientType) {
+            // Get all private conversations where both users are participants
+            $conversations = Conversation::where('is_group_chat', false)
+                ->whereHas('participants', function($query) use ($userId) {
+                    $query->where('participant_id', $userId)
+                        ->where('participant_type', 'cose_staff')
+                        ->whereNull('left_at');
+                })
+                ->whereHas('participants', function($query) use ($recipientId, $recipientType) {
+                    $query->where('participant_id', $recipientId)
+                        ->where('participant_type', $recipientType)
+                        ->whereNull('left_at');
+                })
+                ->first();
+                
+            return $conversations;
+        });
     }
     
     /**
