@@ -2,7 +2,6 @@ import { Link as ExpoLink, LinkProps, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { Card as TCard, ScrollView, Text, View, XStack, YStack, H3 } from "tamagui";
 import { icons } from "lucide-react-native";
-import Constants from "expo-constants";
 import Header from "~/components/Header";
 import LogoutButton from "../../../features/auth/components/logout/button";
 
@@ -11,12 +10,31 @@ const Screen = () => {
         <View>
             <Header name="Options"/>
             <ScrollView style={style.scroll}>
+                <Profile/>
                 <UserManagement/>
                 <LogoutButton/>
             </ScrollView>
         </View>
     )
 }
+
+const Profile = () => {
+    return (
+        <YStack style={style.section}>
+            <Title name="Profile"/>
+            <Card>
+                <TouchableOpacity style={style.link}>
+                    <XStack gap={10} style={style.linkLabel}>
+                        <icons.User size={24} color="#000" />
+                        <Text>View Profile</Text>
+                    </XStack>
+                    <icons.ChevronRight size={24} color="#000" style={{ marginLeft: 'auto' }} />
+                </TouchableOpacity>
+            </Card>
+        </YStack>
+    )
+}
+
 
 const UserManagement = () => {
     return (
@@ -118,11 +136,12 @@ const Link = ({
 
 const style = StyleSheet.create({
     scroll: {
+        display: "flex",
         marginTop: 20,
-        paddingHorizontal: 20,
+        paddingHorizontal: 40,
     },
     section: {
-        paddingHorizontal: 20,
+        paddingBottom: 30,
     },
     sectionTitle: {
         fontSize: 15,
