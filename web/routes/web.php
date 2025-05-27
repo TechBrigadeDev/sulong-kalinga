@@ -10,6 +10,7 @@ use App\Http\Middleware\CheckRole;
 require __DIR__.'/adminRoutes.php';
 require __DIR__.'/careManagerRoutes.php';
 require __DIR__.'/careWorkerRoutes.php';
+require __DIR__.'/familyPortalRoutes.php';
 
 // Authentication Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -48,6 +49,11 @@ Route::get('/worker/dashboard', function () {
     }
     abort(403);
 })->middleware('auth')->name('workerdashboard');
+
+Route::get('/family/homePage', function () {
+    $showWelcome = session()->pull('show_welcome', false);
+    return view('familyPortal.homePage', ['showWelcome' => $showWelcome]);
+})->middleware('auth')->name('familyPortalHomePage');
 
 // Public website routes
 Route::get('/', function () {
