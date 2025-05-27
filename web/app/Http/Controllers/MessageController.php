@@ -495,7 +495,7 @@ class MessageController extends Controller
             // CRITICAL CHANGE: Use pessimistic locking within a transaction
             return DB::transaction(function() use ($user, $recipientId, $recipientType, $initialMessage, $request) {
                 // First try to lock the participants table to prevent race conditions
-                DB::select('SELECT 1 FROM conversation_participants WITH (TABLOCKX)');
+                DB::statement('LOCK TABLE conversation_participants IN EXCLUSIVE MODE');
                 
                 // Re-check if conversation exists WITHIN the transaction
                 $existingConversation = DB::table('conversations AS c')
