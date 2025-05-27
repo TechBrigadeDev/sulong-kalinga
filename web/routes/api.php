@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/beneficiaries/{id}', [BeneficiaryApiController::class, 'update']);
     Route::patch('/beneficiaries/{id}/status', [BeneficiaryApiController::class, 'changeStatus']);
     Route::delete('/beneficiaries/{id}', [BeneficiaryApiController::class, 'destroy']);
+    Route::post('/beneficiaries/{id}/restore', [BeneficiaryApiController::class, 'restore']);
+    Route::get('/beneficiaries/export', [BeneficiaryApiController::class, 'export']);
 
     // Family Member Management
     Route::get('/family-members', [FamilyMemberApiController::class, 'index']);
