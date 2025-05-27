@@ -1416,6 +1416,9 @@
             $('.service-password-confirmation, .care-worker-options').addClass('d-none');
             $('#completionWarning, #rejectionWarning, #statusValidationWarning, #approvalWarning').addClass('d-none');
             
+            // Default state - enable button for most types
+            $('#submitServiceResponse').prop('disabled', false);
+            
             // Show/hide care worker dropdown
             if (updateType === 'approval' || updateType === 'assignment') {
                 $('.care-worker-options').removeClass('d-none');
@@ -1425,13 +1428,11 @@
                 if (updateType === 'approval' && currentServiceRequest && currentServiceRequest.status === 'approved') {
                     $('#approvalWarning').removeClass('d-none').text('This service request is already approved. Please choose a different action.');
                     $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
                 }
             }
             
             // Show warning for completion
-            if (updateType === 'completion') {
+            else if (updateType === 'completion') {
                 $('.service-password-confirmation').removeClass('d-none');
                 $('#completionWarning').removeClass('d-none');
                 
@@ -1439,16 +1440,15 @@
                 if (currentServiceRequest && currentServiceRequest.status !== 'approved') {
                     $('#statusValidationWarning').removeClass('d-none').text('Only approved service requests can be marked as completed.');
                     $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
                 }
             }
             
             // Show warning for rejection
-            if (updateType === 'rejection') {
+            else if (updateType === 'rejection') {
                 $('#rejectionWarning').removeClass('d-none');
-                $('#submitServiceResponse').prop('disabled', false);
             }
+            
+            // Note option - no additional UI changes needed, button remains enabled
         }
 
         // Tab switcher for main tabs and pending column
