@@ -59,6 +59,7 @@ export const useGetFamilyMembers = (props?: {
         }),
         queryFn: async () => {
             const response = await api.getFamilyMembers();
+            console.log("Family members response", response);
             return response;
         },
         enabled: !!token,
