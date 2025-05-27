@@ -57,8 +57,8 @@
                                         placeholder="Enter first name" 
                                         required 
                                         oninput="validateName(this)" 
-                                        pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                        title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                        pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
+                                        title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
@@ -67,8 +67,8 @@
                                         placeholder="Enter last name" 
                                         required 
                                         oninput="validateName(this)" 
-                                        pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                        title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                        pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
+                                        title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="civilStatus" class="form-label">Civil Status<label style="color:red;"> * </label></label>
@@ -97,7 +97,10 @@
                             </div>
                             <div class="col-md-3 position-relative">
                                 <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
-                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver', $beneficiary->primary_caregiver) }}" placeholder="Enter Primary Caregiver name" required>
+                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name"
+                                    oninput="validateName(this)" 
+                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
+                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">                            
                             </div>
                             <div class="col-md-3">
                                 <label for="mobileNumber" class="form-label">Mobile Number</label>
@@ -473,8 +476,9 @@
                                     value="{{ old('emergency_contact.name', $beneficiary->emergency_contact_name) }}"
                                     placeholder="Enter contact name" 
                                     required 
-                                    pattern="^[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)+$" 
-                                    title="Must be a valid full name with each word starting with an uppercase letter.">
+                                    oninput="validateName(this)"  
+                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
+                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
 
                             <!-- Relation -->
