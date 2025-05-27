@@ -269,7 +269,7 @@ class MessageController extends Controller
             $validatedData = $request->validate([
                 'conversation_id' => 'required|exists:conversations,conversation_id',
                 'content' => 'nullable|string',
-                'attachments.*' => 'sometimes|file|max:10240|mimes:jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt', // 10MB max with specific mime types
+                'attachments.*' => 'sometimes|file|max:5120|mimes:jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt', // 5MB max with specific mime types
             ]);
             
             $conversationId = $request->conversation_id;

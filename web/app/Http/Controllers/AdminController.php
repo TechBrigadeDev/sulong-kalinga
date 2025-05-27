@@ -44,13 +44,13 @@ class AdminController extends Controller
             'first_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$/',
                 'max:100'
             ],
             'last_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$/',
                 'max:100'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(), // Must be older than 14 years
@@ -127,9 +127,9 @@ class AdminController extends Controller
             ],
         
             // Documents
-            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
             'sss_ID' => [
@@ -302,13 +302,13 @@ class AdminController extends Controller
             'first_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$/',
                 'max:100'
             ],
             'last_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$/',
                 'max:100'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
@@ -341,9 +341,9 @@ class AdminController extends Controller
                 'string',
                 'regex:/^[0-9]{7,10}$/',
             ],
-            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
             'sss_ID' => 'nullable|string|max:10',
             'philhealth_ID' => 'nullable|string|max:12',
             'pagibig_ID' => 'nullable|string|max:12',
@@ -354,9 +354,9 @@ class AdminController extends Controller
                 Rule::unique('cose_users', 'email')->ignore($id),
             ],
             'account.password' => 'nullable|string|min:8|confirmed',
-            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
             'Organization_Roles' => [
                 'required',
                 'integer',

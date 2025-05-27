@@ -56,8 +56,8 @@
                                     value="{{ old('first_name', $familyMember->first_name) }}"
                                     required 
                                     oninput="validateName(this)" 
-                                    pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                    title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
+                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
@@ -66,8 +66,8 @@
                                     value="{{ old('last_name', $familyMember->last_name) }}"
                                     required 
                                     oninput="validateName(this)" 
-                                    pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                    title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
+                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="gender" class="form-label">Gender</label>

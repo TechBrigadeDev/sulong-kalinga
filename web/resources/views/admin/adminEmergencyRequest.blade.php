@@ -1419,6 +1419,9 @@
             $('.service-password-confirmation, .care-worker-options').addClass('d-none');
             $('#completionWarning, #rejectionWarning, #statusValidationWarning, #approvalWarning').addClass('d-none');
             
+            // Default state - enable button for most types
+            $('#submitServiceResponse').prop('disabled', false);
+            
             // Show/hide care worker dropdown
             if (updateType === 'approval' || updateType === 'assignment') {
                 $('.care-worker-options').removeClass('d-none');
@@ -1428,13 +1431,11 @@
                 if (updateType === 'approval' && currentServiceRequest && currentServiceRequest.status === 'approved') {
                     $('#approvalWarning').removeClass('d-none').text('This service request is already approved. Please choose a different action.');
                     $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
                 }
             }
             
             // Show warning for completion
-            if (updateType === 'completion') {
+            else if (updateType === 'completion') {
                 $('.service-password-confirmation').removeClass('d-none');
                 $('#completionWarning').removeClass('d-none');
                 
@@ -1442,16 +1443,15 @@
                 if (currentServiceRequest && currentServiceRequest.status !== 'approved') {
                     $('#statusValidationWarning').removeClass('d-none').text('Only approved service requests can be marked as completed.');
                     $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
                 }
             }
             
             // Show warning for rejection
-            if (updateType === 'rejection') {
+            else if (updateType === 'rejection') {
                 $('#rejectionWarning').removeClass('d-none');
-                $('#submitServiceResponse').prop('disabled', false);
             }
+            
+            // Note option - no additional UI changes needed, button remains enabled
         }
 
         // Tab switcher for main tabs and pending column
@@ -1565,6 +1565,10 @@
                         <div class="col-md-8">${formatDate(request.service_date)}</div>
                     </div>
                     <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Requested Time:</div>
+                        <div class="col-md-8">${request.service_time ? formatTime(request.service_time) : 'Not Specified'}</div>
+                    </div>
+                    <div class="row mb-2">
                         <div class="col-md-4 fw-bold">Created:</div>
                         <div class="col-md-8">${formatDateTime(request.created_at)}</div>
                     </div>
@@ -1617,6 +1621,19 @@
             const date = new Date(dateStr);
             return date.toLocaleDateString();
         }
+
+        function formatTime(timeStr) {
+        // Handle cases where timeStr might be just the time portion
+        if (timeStr.length <= 8) {
+            // Create a dummy date with the time value
+            const dummyDate = new Date(`2000-01-01T${timeStr}`);
+            return dummyDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+        }
+        
+        // Handle full datetime strings
+        const date = new Date(timeStr);
+        return date.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
 
         function formatStatus(status) {
             switch(status) {

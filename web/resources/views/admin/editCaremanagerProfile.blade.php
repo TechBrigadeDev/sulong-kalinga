@@ -56,18 +56,20 @@
                             <div class="col-md-3">
                                 <label for="firstName" class="form-label">First Name<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
-                                       value="{{ old('first_name', $caremanager->first_name) }}" 
-                                       placeholder="Enter first name" required 
-                                       pattern="^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$"
-                                       title="First letter must be capital">
+                                    value="{{ old('first_name', $caremanager->first_name) }}" 
+                                    placeholder="Enter first name" 
+                                    required 
+                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$"
+                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
                             <div class="col-md-3">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
-                                       value="{{ old('last_name', $caremanager->last_name) }}" 
-                                       placeholder="Enter last name" required
-                                       pattern="^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$"
-                                       title="First letter must be capital">
+                                    value="{{ old('last_name', $caremanager->last_name) }}" 
+                                    placeholder="Enter last name" 
+                                    required
+                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$"
+                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
                             </div>
                             <div class="col-md-3">
                                 <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
@@ -294,9 +296,10 @@
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent the default form submission
-
+        document.querySelector('form[action="{{ route(\'admin.caremanagers.update\', $caremanager->id) }}"]')
+        .addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent only the main form submission
+            
             // Show the success modal
             const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
             successModal.show();
@@ -350,6 +353,16 @@
         // });
         function restrictToNumbers(input) {
             input.value = input.value.replace(/[^0-9]/g, '');
+        }
+
+        function validateName(input) {
+            const pattern = /^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$/;
+            
+            if (!pattern.test(input.value)) {
+                input.setCustomValidity("Please enter a valid name format. Names must start with an uppercase letter. Compound names like 'de la Cruz', names with enye (Ñ), apostrophes, and periods are allowed.");
+            } else {
+                input.setCustomValidity("");
+            }
         }
     </script>
 
