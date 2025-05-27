@@ -296,9 +296,10 @@
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent the default form submission
-
+        document.querySelector('form[action="{{ route(\'admin.caremanagers.update\', $caremanager->id) }}"]')
+        .addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent only the main form submission
+            
             // Show the success modal
             const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
             successModal.show();
