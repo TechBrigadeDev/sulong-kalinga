@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile | {{ $user->first_name }} {{ $user->last_name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewProfile.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -326,29 +327,15 @@
 
         // Add this to the submit event of each form
         document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                // Prevent default to handle manually
-                e.preventDefault();
-                
-                // Ensure method is POST
-                this.method = 'POST';
-                
-                // Create a new hidden input for CSRF if needed
-                if (!this.querySelector('input[name="_token"]')) {
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    const tokenInput = document.createElement('input');
-                    tokenInput.type = 'hidden';
-                    tokenInput.name = '_token';
-                    tokenInput.value = csrfToken;
-                    this.appendChild(tokenInput);
-                }
-                
-                // Log submission for debugging
-                console.log('Submitting form to: ' + this.action);
-                
-                // Submit the form programmatically
-                this.submit();
-            });
+            // Check if form already has the required CSRF token
+            if (!form.querySelector('input[name="_token"]')) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_token';
+                tokenInput.value = csrfToken;
+                form.appendChild(tokenInput);
+            }
         });
     </script>
     <script>

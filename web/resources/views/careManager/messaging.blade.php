@@ -734,6 +734,8 @@
         }
 
         function refreshConversationListWithDuplicateCheck() {
+            console.log('Refreshing conversation list with duplicate checking...');
+            
             fetch(getRouteUrl(route_prefix + '.get-conversations'), {
                 credentials: 'same-origin',
                 headers: {
@@ -745,8 +747,11 @@
             .then(data => {
                 const conversationListContainer = document.querySelector('.conversation-list-items');
                 if (conversationListContainer) {
-                    // Track seen conversation IDs to prevent duplicates
-                    const seenConversationIds = new Set();
+                    // IMPORTANT: Clear existing conversations first
+                    conversationListContainer.innerHTML = '';
+                    
+                    // Track conversation IDs to prevent duplicates
+                    const seenIds = new Set();
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = data.html;
                     
@@ -755,15 +760,16 @@
                     const filteredHTML = Array.from(newConversations)
                         .filter(item => {
                             const id = item.dataset.conversationId;
-                            if (seenConversationIds.has(id)) {
+                            if (seenIds.has(id)) {
                                 return false; // Skip duplicates
                             }
-                            seenConversationIds.add(id);
+                            seenIds.add(id);
                             return true;
                         })
                         .map(item => item.outerHTML)
                         .join('');
                     
+                    // Set the HTML directly
                     conversationListContainer.innerHTML = filteredHTML;
                     addConversationClickHandlers();
                 }
@@ -4714,6 +4720,23 @@
                 errorModal.show();
             };
         });
+
+        function removeDuplicateConversationsFromDOM() {
+            const conversationItems = document.querySelectorAll('.conversation-item');
+            const seenIds = new Set();
+            
+            conversationItems.forEach(item => {
+                const id = item.dataset.conversationId;
+                if (id) {
+                    if (seenIds.has(id)) {
+                        // This is a duplicate, remove it
+                        item.remove();
+                    } else {
+                        seenIds.add(id);
+                    }
+                }
+            });
+        }
 
         
     </script>
