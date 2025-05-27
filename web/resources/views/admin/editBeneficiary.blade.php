@@ -1195,7 +1195,7 @@
             input.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     const file = this.files[0];
-                    const maxSize = MAX_SIZES[this.id] || 5 * 1024 * 1024; // Default to 5MB
+                    const maxSize = MAX_SIZES[this.id] || 7 * 1024 * 1024; // Default to 7MB
                     
                     if (file.size > maxSize) {
                         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
@@ -1219,7 +1219,7 @@
             document.querySelectorAll('input[type="file"]').forEach(input => {
                 if (input.files.length > 0) {
                     const file = input.files[0];
-                    const maxSize = MAX_SIZES[input.id] || 5 * 1024 * 1024;
+                    const maxSize = MAX_SIZES[input.id] || 7 * 1024 * 1024;
                     
                     if (file.size > maxSize) {
                         e.preventDefault();
