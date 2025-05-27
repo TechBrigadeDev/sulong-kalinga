@@ -174,7 +174,7 @@ function showSuccess() {
     document.getElementById('cancelDeleteButton').textContent = 'Close';
     
     setTimeout(function() {
-        window.location.href = "/admin/caremanagers";
+        window.location.href = "/admin/care-managers";
     }, 2000);
 }
 
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.valid) {
                         // Password is valid, proceed with deletion
                         const xhr2 = new XMLHttpRequest();
-                        xhr2.open('POST', "/admin/caremanagers/delete", true);
+                        xhr2.open('POST', "/admin/care-managers/delete", true);
                         xhr2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                         xhr2.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                         xhr2.onload = function() {
