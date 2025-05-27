@@ -81,12 +81,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (data.valid) {
                     // Update the status in the database
                     let updateStatusEndpoint;
-                    @if(Auth::user()->role_id == 2)
-                        updateStatusEndpoint = "/care-manager/careworkers/" + careworkerId + "/update-status-ajax";
-                    @else
-                        updateStatusEndpoint = "/admin/careworkers/" + careworkerId + "/update-status-ajax";
-                    @endif
-
+                        @if(Auth::user()->role_id == 2)
+                            updateStatusEndpoint = "/care-manager/care-workers/" + careworkerId + "/update-status-ajax";
+                        @else
+                            updateStatusEndpoint = "/admin/care-workers/" + careworkerId + "/update-status-ajax";
+                        @endif
                     fetch(updateStatusEndpoint, {
                         method: 'POST',  // Changed from PUT to POST
                         headers: {
