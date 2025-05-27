@@ -619,6 +619,7 @@
                                 @else
                                     <small class="text-muted">No file uploaded</small>
                                 @endif
+                                <small class="text-danger">Maximum file size: 7MB. Please compress or split larger files.</small>
                         </div>
 
                             <!-- Review Date -->
@@ -648,6 +649,7 @@
                                     @else
                                     <small class="text-muted">No file uploaded</small>
                                     @endif
+                                    <small class="text-danger">Maximum file size: 5MB. Please compress or split larger files.</small>
                             </div>
 
                             <!-- General Careplan -->
@@ -666,6 +668,7 @@
                                     @else
                                     <small class="text-muted">No file uploaded</small>
                                     @endif
+                                    <small class="text-danger">Maximum file size: 5MB. Please compress or split larger files.</small>
                             </div>
                         </div>
 
@@ -1176,6 +1179,62 @@
                 // No need for special processing - the backend will handle comma-separated values
             });
         });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Max sizes in bytes
+        const MAX_SIZES = {
+            'beneficiaryProfilePic': 7 * 1024 * 1024, // 7MB
+            'care_service_agreement': 5 * 1024 * 1024, // 5MB
+            'general_careplan': 5 * 1024 * 1024 // 5MB
+        };
+        
+        // Add file size validation to all file inputs
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const maxSize = MAX_SIZES[this.id] || 5 * 1024 * 1024; // Default to 5MB
+                    
+                    if (file.size > maxSize) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        
+                        // Show clear error message
+                        alert(`File size too large (${fileSizeMB}MB).\nMaximum allowed size is ${maxSizeMB}MB.\nPlease select a smaller file.`);
+                        
+                        // Reset the file input
+                        this.value = '';
+                    }
+                }
+            });
+        });
+        
+        // Add form submission check to prevent large file uploads
+        document.getElementById('beneficiaryForm').addEventListener('submit', function(e) {
+            // Validate all file inputs before submission
+            let isValid = true;
+            
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                if (input.files.length > 0) {
+                    const file = input.files[0];
+                    const maxSize = MAX_SIZES[input.id] || 5 * 1024 * 1024;
+                    
+                    if (file.size > maxSize) {
+                        e.preventDefault();
+                        isValid = false;
+                        
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        alert(`Cannot submit: ${input.id} (${fileSizeMB}MB) exceeds the ${maxSizeMB}MB limit`);
+                    }
+                }
+            });
+            
+            return isValid;
+        });
+    });
     </script>
 
 </body>
