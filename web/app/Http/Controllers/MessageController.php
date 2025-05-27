@@ -42,6 +42,7 @@ class MessageController extends Controller
             
             // Get user's conversations without the problematic relationship
             $conversations = $this->getUserConversations($user);
+            $conversations = $this->deduplicateConversations($conversations);
             
             // Process participant names manually for private conversations
             foreach ($conversations as $conversation) {
@@ -158,6 +159,7 @@ class MessageController extends Controller
             
             // Get all conversations for the sidebar using the getUserConversations method
             $conversations = $this->getUserConversations(Auth::user());
+            $conversations = $this->deduplicateConversations($conversations);
             
             // Process participant names manually for private conversations
             foreach ($conversations as $convo) {
@@ -1523,6 +1525,7 @@ class MessageController extends Controller
             
             // Get conversations
             $conversations = $this->getUserConversations($user);
+            $conversations = $this->deduplicateConversations($conversations);
             
             // Process participant names for display
             foreach ($conversations as $conversation) {
@@ -2032,6 +2035,24 @@ class MessageController extends Controller
             Log::error('Error unsending message: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->jsonResponse(false, 'Error unsending message');
         }
+    }
+
+    /**
+     * Helper method to deduplicate conversations in the query result
+     */
+    private function deduplicateConversations($conversations)
+    {
+        $uniqueConversations = [];
+        $seenIds = [];
+        
+        foreach ($conversations as $conversation) {
+            if (!in_array($conversation->conversation_id, $seenIds)) {
+                $seenIds[] = $conversation->conversation_id;
+                $uniqueConversations[] = $conversation;
+            }
+        }
+        
+        return $uniqueConversations;
     }
 
 }
