@@ -266,11 +266,27 @@ class MessageController extends Controller
             $user = Auth::user();
             $rolePrefix = $this->getRoleRoutePrefix();
             
-            $validatedData = $request->validate([
+            // Move the validation outside the try block to catch validation errors specifically
+            $validator = Validator::make($request->all(), [
                 'conversation_id' => 'required|exists:conversations,conversation_id',
-                'content' => 'nullable|string',
-                'attachments.*' => 'sometimes|file|max:5120|mimes:jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt', // 5MB max with specific mime types
+                'content' => 'nullable|string|max:10000',
+                'attachments.*' => 'sometimes|file|max:5120|mimes:jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt', // 5MB max
             ]);
+            
+            if ($validator->fails()) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors(),
+                        'file_error' => $validator->errors()->has('attachments.*') ? 'One or more files exceed the maximum allowed size (5MB)' : null
+                    ], 422);
+                }
+                
+                return back()->withErrors($validator)->withInput();
+            }
+
+            $validatedData = $validator->validated();
             
             $conversationId = $request->conversation_id;
             $conversation = Conversation::findOrFail($conversationId);
@@ -407,7 +423,8 @@ class MessageController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error sending message: ' . $e->getMessage()
+                    'message' => 'Message could not be sent',
+                    'error' => $e->getMessage()
                 ], 500);
             }
             
