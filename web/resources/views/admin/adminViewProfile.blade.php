@@ -7,6 +7,47 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewProfile.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+        /* Fix z-index issues with buttons */
+        .btn {
+            position: relative;
+            z-index: 100;
+        }
+        
+        /* Remove unnecessary blue bars */
+        .home-section::after,
+        .home-section::before {
+            content: none !important;
+        }
+        
+        /* Fix profile section display */
+        .profile-section {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Ensure proper button spacing */
+        .btn {
+            margin-right: 5px;
+        }
+        
+        /* Fix any positioning issues with the settings row */
+        #updateEmailBtn, 
+        #updatePasswordBtn {
+            display: inline-block !important;
+            margin-bottom: 10px;
+        }
+        
+        /* Fix blue bars at bottom */
+        body::after,
+        body::before {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -161,10 +202,8 @@
                             </div>
                             <div class="row info-row">
                                 <div class="col-md-12 text-end">
-                                    <a href="/admin/administrators/{{ $user->id }}/edit" class="btn btn-primary">
                                     <button class="btn btn-primary" id="updateEmailBtn">Update Email</button>
                                     <button class="btn btn-primary" id="updatePasswordBtn">Update Password</button>
-
                                 </div>
                             </div>
 
@@ -288,8 +327,27 @@
         // Add this to the submit event of each form
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function(e) {
+                // Prevent default to handle manually
+                e.preventDefault();
+                
                 // Ensure method is POST
                 this.method = 'POST';
+                
+                // Create a new hidden input for CSRF if needed
+                if (!this.querySelector('input[name="_token"]')) {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '_token';
+                    tokenInput.value = csrfToken;
+                    this.appendChild(tokenInput);
+                }
+                
+                // Log submission for debugging
+                console.log('Submitting form to: ' + this.action);
+                
+                // Submit the form programmatically
+                this.submit();
             });
         });
     </script>
