@@ -467,8 +467,8 @@
             // Extract just the endpoint part after the last dot
             const endpoint = routeName.replace(/^.*\./, '');
             
-            // Build the full URL
-            const baseUrl = `${window.location.origin}/${rolePrefix}/messaging/`;
+            // Build the full URL with explicitly using relative path
+            const baseUrl = `/${rolePrefix}/messaging/`;
             const fullUrl = baseUrl + endpoint;
             
             console.log(`Converting route ${routeName} to URL: ${fullUrl}`);
@@ -776,6 +776,52 @@
                     console.error('Error refreshing conversation list:', error);
                 });
             }, 800); // INCREASED DELAY from 300ms to 800ms for server processing
+        }
+
+        function refreshConversationListWithDuplicateCheck() {
+            console.log('Refreshing conversation list with duplicate checking...');
+            
+            fetch(getRouteUrl(route_prefix + '.get-conversations'), {
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const conversationListContainer = document.querySelector('.conversation-list-items');
+                if (conversationListContainer) {
+                    // IMPORTANT: Clear existing conversations first
+                    conversationListContainer.innerHTML = '';
+                    
+                    // Track conversation IDs to prevent duplicates
+                    const seenIds = new Set();
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
+                    
+                    // Filter out duplicates before inserting
+                    const newConversations = tempDiv.querySelectorAll('.conversation-item');
+                    const filteredHTML = Array.from(newConversations)
+                        .filter(item => {
+                            const id = item.dataset.conversationId;
+                            if (seenIds.has(id)) {
+                                return false; // Skip duplicates
+                            }
+                            seenIds.add(id);
+                            return true;
+                        })
+                        .map(item => item.outerHTML)
+                        .join('');
+                    
+                    // Set the HTML directly
+                    conversationListContainer.innerHTML = filteredHTML;
+                    addConversationClickHandlers();
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing conversation list:', error);
+            });
         }
 
         function handleFileInputChange(event) {
@@ -1222,8 +1268,11 @@
             }
             
             // FIXED form submission with direct assignment to avoid replaceChild errors
-            newForm.onsubmit = function(e) {
+           newForm.onsubmit = function(e) {
                 e.preventDefault();
+                
+                // Force the URL to be relative and using the same protocol
+                const actionURL = '/' + rolePrefix + '/messaging/send-message';
                 
                 // Validation
                 const hasText = textarea && textarea.value.trim() !== '';
@@ -1279,7 +1328,7 @@
                 }
                 
                 // Submit form - CRITICAL FIX: Use fetch with safer cleanup
-                fetch(this.action, {
+                fetch(actionURL, {  // Replace this.action with actionURL
                     method: 'POST',
                     body: formData,
                     headers: {

@@ -477,9 +477,9 @@ class MessageController extends Controller
                         return $this->respondWithError('Care Managers can only message Administrators, other Care Managers, and Care Workers.', 403, $request);
                     }
                     
-                    if ($user->role_id == 3 && $recipient->role_id != 2) {
-                        // Care Worker can only message Care Managers
-                        return $this->respondWithError('Care Workers can only message Care Managers.', 403, $request);
+                    if ($user->role_id == 3 && !in_array($recipient->role_id, [2, 3])) {
+                        // Care Worker can message Care Managers and other Care Workers
+                        return $this->respondWithError('Care Workers can only message Care Managers and other Care Workers.', 403, $request);
                     }
                 } catch (\Exception $e) {
                     Log::error('Error finding recipient user: ' . $e->getMessage());
@@ -1204,7 +1204,7 @@ class MessageController extends Controller
                 } elseif ($currentUser->role_id == 2) {
                     $staffQuery->whereIn('role_id', [1, 2, 3]);
                 } elseif ($currentUser->role_id == 3) {
-                    $staffQuery->where('role_id', 2);
+                    $staffQuery->whereIn('role_id', [2, 3]); // Allow care workers to see both care managers and other care workers
                 }
                 
                 $staffUsers = $staffQuery->get(['id', 'first_name', 'last_name', 'email', 'mobile', 'role_id']);
