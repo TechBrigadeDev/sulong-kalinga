@@ -60,20 +60,16 @@
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
                                     placeholder="Enter first name" 
                                     value="{{ old('first_name', $careworker->first_name) }}"
-                                    required
-                                    oninput="validateName(this)"
-                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
-                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
+                                    required>
+                                    
                             </div>
                             <div class="col-md-3">
                                 <label for="lastName" class="form-label">Last Name</label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                     placeholder="Enter last name" 
                                     value="{{ old('last_name', $careworker->last_name) }}"
-                                    required
-                                    oninput="validateName(this)"
-                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
-                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
+                                    required>
+                                    
                             </div>
                             <div class="col-md-3">
                                 <label for="birthDate" class="form-label">Birthday</label>
