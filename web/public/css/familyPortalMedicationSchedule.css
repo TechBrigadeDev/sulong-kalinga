@@ -1,0 +1,284 @@
+:root {
+            --primary-color: #5a67d8;
+            --secondary-color: #4c51bf;
+            --accent-color: #667eea;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --bg-light: #f8fafc;
+            --bg-card: #ffffff;
+            --success-color: #48bb78;
+            --warning-color: #ed8936;
+            --danger-color: #f56565;
+            --info-color: #4299e1;
+        }
+        
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+            border-radius: 2px;
+        }
+        
+        /* Health Status Cards */
+        .health-card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .health-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .health-card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .health-card-header i {
+            font-size: 1.5rem;
+        }
+        
+        .health-card-body {
+            padding: 20px;
+            background-color: var(--bg-card);
+        }
+        
+        .condition-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        
+        .condition-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .condition-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .condition-details {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        /* Medication Cards */
+        .medication-card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .medication-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .medication-header {
+            background: linear-gradient(135deg, #6b46c1, #805ad5);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .medication-patient {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .medication-actions .btn {
+            margin-left: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .medication-actions .btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .medication-body {
+            padding: 0;
+            background-color: var(--bg-card);
+        }
+        
+        .medication-title {
+            padding: 15px 20px 10px;
+            font-size: 1rem;
+            color: var(--text-light);
+            border-bottom: 1px solid #edf2f7;
+        }
+        
+        .medication-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #edf2f7;
+            transition: background-color 0.2s ease;
+        }
+        
+        .medication-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        .medication-item:last-child {
+            border-bottom: none;
+        }
+        
+        .medication-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .medication-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .medication-detail {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .medication-detail i {
+            margin-right: 5px;
+            color: var(--accent-color);
+        }
+        
+        .badge-time {
+            background-color: #ebf4ff;
+            color: #4c51bf;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .badge-time i {
+            margin-right: 5px;
+        }
+        
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-active {
+            background-color: #ebf7ef;
+            color: var(--success-color);
+        }
+        
+        .status-completed {
+            background-color: #f0f5ff;
+            color: var(--info-color);
+        }
+        
+        .status-discontinued {
+            background-color: #fff5f5;
+            color: var(--danger-color);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .home-section {
+                margin-left: 0;
+            }
+        }
+
+        .beneficiary-info {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+        }
+
+        .beneficiary-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .beneficiary-avatar i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+        }
+
+        .beneficiary-details h3 {
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+
+        .beneficiary-details p {
+            margin-bottom: 0;
+            color: var(--text-light);
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            font-style: italic;
+        }

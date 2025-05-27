@@ -116,7 +116,6 @@ class LoginController extends Controller
         session([
             'user_type' => 'family',
             'portal_user_id' => $user->id,
-            'portal_user_name' => $user->portal_name,
             'portal_user_email' => $user->portal_email
         ]);
 
@@ -129,8 +128,8 @@ class LoginController extends Controller
             $user->portal_email . ' logged in.',
             $user->id
         );
-
-        return redirect()->route('landing');
+        session()->put('show_welcome', true);
+        return redirect()->route('familyPortalHomePage');
     }
 
     // If no user is found in either table, return an error
