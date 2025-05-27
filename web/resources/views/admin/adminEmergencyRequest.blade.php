@@ -1565,6 +1565,10 @@
                         <div class="col-md-8">${formatDate(request.service_date)}</div>
                     </div>
                     <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Requested Time:</div>
+                        <div class="col-md-8">${request.service_time ? formatTime(request.service_time) : 'Not Specified'}</div>
+                    </div>
+                    <div class="row mb-2">
                         <div class="col-md-4 fw-bold">Created:</div>
                         <div class="col-md-8">${formatDateTime(request.created_at)}</div>
                     </div>
@@ -1617,6 +1621,19 @@
             const date = new Date(dateStr);
             return date.toLocaleDateString();
         }
+
+        function formatTime(timeStr) {
+        // Handle cases where timeStr might be just the time portion
+        if (timeStr.length <= 8) {
+            // Create a dummy date with the time value
+            const dummyDate = new Date(`2000-01-01T${timeStr}`);
+            return dummyDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+        }
+        
+        // Handle full datetime strings
+        const date = new Date(timeStr);
+        return date.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
 
         function formatStatus(status) {
             switch(status) {
