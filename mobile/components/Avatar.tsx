@@ -1,4 +1,4 @@
-import { View } from "tamagui"
+import { Text, View } from "tamagui"
 import { Image } from "expo-image";
 import { useUser } from "~/features/user/user.hook"
 import { createAvatar } from "@dicebear/core";
@@ -12,25 +12,24 @@ const AvatarImage = () => {
     } = useUser();
 
     const source = useMemo(() => {
-      if (!user) {
-        return createAvatar(shapes, {
-          seed: "default-avatar",
-        }).toDataUri();
-      }
-
+      let source = { uri: "" };
       if (user?.photo) {
-        return { uri: user.photo };
+        source.uri = user.photo;
       }
 
-      return createAvatar(shapes, {
-        seed: user?.first_name + user?.last_name,
+      source.uri = createAvatar(shapes, {
+        seed: user?.id.toString() || "default-avatar",
       }).toDataUri();
+
+      return source;
     }, [user]);
 
     return (
       <View style={style.container}>
         <Image
-          source={source}
+          source={{
+            uri: source.uri,
+          }}
           style={style.image}
           contentFit="cover"
         />
