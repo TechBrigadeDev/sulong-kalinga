@@ -169,9 +169,9 @@ function showDependencyError(message, errorType) {
         document.getElementById('cancelDeleteButton').textContent = 'Close';
         
         setTimeout(function() {
-        let redirectRoute = "/admin/careworkers";
+        let redirectRoute = "/admin/care-workers";
         @if(Auth::user()->role_id == 2)
-            redirectRoute = "/care-manager/careworkers";
+            redirectRoute = "/care-manager/care-workers";
         @endif
         window.location.href = redirectRoute;
     }, 2000); // Redirect after 2 seconds
@@ -220,11 +220,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         deleteForm.append('_token', '{{ csrf_token() }}');
                         
                         // Determine which endpoint to use based on the user role
-                        let endpoint = "/admin/careworkers/delete";
-
-                        // Use care manager endpoint if the current user is a care manager
+                        let endpoint = "/admin/care-workers/delete";
                         @if(Auth::user()->role_id == 2)
-                            endpoint = "/care-manager/careworkers/delete";
+                            endpoint = "/care-manager/care-workers/delete";
                         @endif
 
                         const xhr2 = new XMLHttpRequest();
