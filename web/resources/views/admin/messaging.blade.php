@@ -14,6 +14,75 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/userNavbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/messaging.css') }}">
+
+    <style>
+        .file-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .file-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            color: #6c757d;
+        }
+
+        .file-name {
+            font-size: 10px;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-top: 5px;
+        }
+
+        .remove-file-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .remove-file-btn:hover {
+            background-color: rgba(0,0,0,0.7);
+        }
+    </style>
+    
 </head>
 <body class="messaging-page">
 
