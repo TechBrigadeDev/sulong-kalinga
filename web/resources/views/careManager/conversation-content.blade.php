@@ -266,6 +266,7 @@
     @csrf
     <input type="hidden" name="conversation_id" value="{{ $conversation->conversation_id }}">
     
+    <div id="messageErrorContainer" class="alert alert-danger mb-2" style="display: none;"></div>
     <div id="filePreviewContainer" class="file-preview-container mb-2"></div>
     
     <div class="position-relative">
@@ -279,4 +280,67 @@
             </button>
         </div>
     </form>
+
+    <script>
+        // Add form submission handler
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Hide any previous errors
+            document.getElementById('messageErrorContainer').style.display = 'none';
+            
+            // Show loading state on button
+            const sendButton = document.getElementById('sendMessageBtn');
+            const originalButtonContent = sendButton.innerHTML;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            
+            // Submit the form via AJAX
+            fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw errorData;
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Success - clear the form
+                document.getElementById('messageContent').value = '';
+                document.getElementById('fileUpload').value = '';
+                document.getElementById('filePreviewContainer').innerHTML = '';
+                
+                // Force conversation reload to show the new message
+                loadConversation({{ $conversation->conversation_id }});
+            })
+            .catch(error => {
+                // Show error message for file size issues
+                const errorContainer = document.getElementById('messageErrorContainer');
+                
+                if (error.errors && error.errors['attachments.0']) {
+                    errorContainer.textContent = 'File too large! Maximum file size is 5MB.';
+                    errorContainer.style.display = 'block';
+                } else if (error.file_error) {
+                    errorContainer.textContent = error.file_error;
+                    errorContainer.style.display = 'block';
+                } else {
+                    errorContainer.textContent = 'Failed to send message. Please try again.';
+                    errorContainer.style.display = 'block';
+                }
+                
+                // Clear file input to let them try again
+                document.getElementById('fileUpload').value = '';
+            })
+            .finally(() => {
+                // Restore button state
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalButtonContent;
+            });
+        });
+    </script>
 </div>
