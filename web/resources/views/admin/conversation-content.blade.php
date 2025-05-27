@@ -342,5 +342,131 @@
                 sendButton.innerHTML = originalButtonContent;
             });
         });
-        </script>
+        
+    </script>
+
+    <script>
+        // Add this right after the existing form submission script
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileUpload');
+            const attachmentBtn = document.getElementById('attachmentBtn');
+            const errorContainer = document.getElementById('messageErrorContainer');
+            const filePreviewContainer = document.getElementById('filePreviewContainer');
+            
+            // Constants
+            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+            const MAX_TOTAL_SIZE = 8 * 1024 * 1024; // 8MB total
+            
+            // Add click handler for attachment button
+            attachmentBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Add change handler with validation for file input
+            fileInput.addEventListener('change', function() {
+                // Clear previous errors and previews
+                errorContainer.style.display = 'none';
+                filePreviewContainer.innerHTML = '';
+                
+                if (this.files.length > 0) {
+                    // Check total size of all files
+                    let totalSize = 0;
+                    let oversizedFiles = [];
+                    
+                    for (let i = 0; i < this.files.length; i++) {
+                        const file = this.files[i];
+                        totalSize += file.size;
+                        
+                        // Check individual file size
+                        if (file.size > MAX_FILE_SIZE) {
+                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                            oversizedFiles.push(`${file.name} (${fileSizeMB}MB)`);
+                        }
+                    }
+                    
+                    // If any files are too big, show error and reset input
+                    if (oversizedFiles.length > 0) {
+                        errorContainer.innerHTML = `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`;
+                        errorContainer.style.display = 'block';
+                        this.value = ''; // Clear the file input
+                        return;
+                    }
+                    
+                    // Check total size
+                    if (totalSize > MAX_TOTAL_SIZE) {
+                        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                        errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`;
+                        errorContainer.style.display = 'block';
+                        this.value = ''; // Clear the file input
+                        return;
+                    }
+                    
+                    // If all checks pass, preview the files
+                    for (let i = 0; i < this.files.length; i++) {
+                        previewFile(this.files[i]);
+                    }
+                }
+            });
+            
+            // Function to preview files
+            function previewFile(file) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'file-preview-item';
+                
+                // Create preview content based on file type
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.className = 'preview-image';
+                    img.file = file;
+                    previewItem.appendChild(img);
+                    
+                    const reader = new FileReader();
+                    reader.onload = (function(aImg) { 
+                        return function(e) { aImg.src = e.target.result; }; 
+                    })(img);
+                    reader.readAsDataURL(file);
+                } else {
+                    // For non-image files, show icon and name
+                    previewItem.innerHTML = `
+                        <div class="file-icon">
+                            <i class="bi ${getFileIconClass(file.name)}"></i>
+                        </div>
+                        <div class="file-name">${file.name}</div>
+                    `;
+                }
+                
+                // Add a remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-file-btn';
+                removeBtn.setAttribute('type', 'button');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() {
+                    previewItem.remove();
+                    // Note: We can't remove individual files from the FileList,
+                    // but we can clear all files if needed
+                };
+                
+                previewItem.appendChild(removeBtn);
+                filePreviewContainer.appendChild(previewItem);
+            }
+            
+            // Helper to get file icon based on extension
+            function getFileIconClass(filename) {
+                const extension = filename.split('.').pop().toLowerCase();
+                
+                if (['pdf'].includes(extension)) {
+                    return 'bi-file-earmark-pdf';
+                } else if (['doc', 'docx'].includes(extension)) {
+                    return 'bi-file-earmark-word';
+                } else if (['xls', 'xlsx'].includes(extension)) {
+                    return 'bi-file-earmark-excel';
+                } else if (['txt'].includes(extension)) {
+                    return 'bi-file-earmark-text';
+                } else {
+                    return 'bi-file-earmark';
+                }
+            }
+        });
+    </script>
+
 </div>

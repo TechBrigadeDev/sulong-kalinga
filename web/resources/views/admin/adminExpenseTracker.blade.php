@@ -565,7 +565,10 @@
                             <label for="expenseReceipt" class="form-label">Receipt Image (Optional)</label>
                             <input type="file" class="form-control" id="expenseReceipt" name="receipt" accept="image/jpeg,image/png,image/jpg,application/pdf">
                             <div id="receiptError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
-                            <div class="form-text">Upload receipt image or PDF (max 2MB)</div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                Upload receipt image or PDF (max 5MB). Supported formats: JPEG, PNG, PDF.
+                            </div>
                             
                             <!-- Receipt preview area (for edit) -->
                             <div id="receiptPreview" class="mt-2" style="display: none;">
@@ -1005,6 +1008,32 @@
             $('#confirmDeleteBtn').on('click', function() {
                 confirmDelete();
             });
+
+            $('#expenseReceipt').on('change', function() {
+                // Clear previous errors
+                $('#receiptError').text('').hide();
+                
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    
+                    if (file.size > maxSize) {
+                        // Calculate file size in MB for display
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        
+                        // Show error message
+                        $('#receiptError').html(`File too large (${fileSizeMB}MB). Maximum size allowed is 5MB.`).show();
+                        
+                        // Reset file input
+                        $(this).val('');
+                        
+                        // Hide preview if it exists
+                        $('#receiptPreview').hide();
+                        
+                        return false;
+                    }
+                }
+            });
         });
 
         // Initialize expense breakdown chart
@@ -1115,6 +1144,22 @@
             // Clear previous error messages
             $('.expense-error').text('').hide();
             $('#generalExpenseError').empty().hide();
+            
+            // Check receipt file size
+            const receiptInput = document.getElementById('expenseReceipt');
+            if (receiptInput.files.length > 0) {
+                const file = receiptInput.files[0];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                
+                if (file.size > maxSize) {
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    $('#receiptError').html(`File too large (${fileSizeMB}MB). Maximum size allowed is 5MB.`).show();
+                    
+                    // Scroll to the error
+                    $('#receiptError')[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+                    return;
+                }
+            }
             
             // Create FormData object to handle file uploads
             let formData = new FormData($('#expenseForm')[0]);
@@ -1275,6 +1320,9 @@
             
             // Clear any existing form data and errors
             clearExpenseForm();
+
+            // Clear any file input errors
+            $('#receiptError').text('').hide();
             
             // Store the expense ID for use in the save function
             currentExpenseId = id;

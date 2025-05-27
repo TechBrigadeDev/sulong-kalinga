@@ -237,8 +237,8 @@ class CareWorkerController extends Controller
             'municipality' => 'required|integer|exists:municipalities,municipality_id',
         
             // Documents - optional for updates
-            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
             'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
@@ -526,8 +526,8 @@ class CareWorkerController extends Controller
             'municipality' => 'required|integer|exists:municipalities,municipality_id',
         
             // Documents
-            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
             'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs

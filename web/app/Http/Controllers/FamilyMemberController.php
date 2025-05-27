@@ -183,7 +183,7 @@ class FamilyMemberController extends Controller
         // Validate the input data
         $validator = Validator::make($request->all(), [
             // Personal Details
-            'family_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'family_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
             'first_name' => [
                 'required',
                 'string',
@@ -478,7 +478,7 @@ class FamilyMemberController extends Controller
 
         // Validate the input data - similar to your store method but with some modifications
         $validator = Validator::make($request->all(), [
-            'family_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'family_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
             'first_name' => [
                 'required',
                 'string',
