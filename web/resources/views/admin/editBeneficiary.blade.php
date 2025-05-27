@@ -828,6 +828,27 @@
         </div>
     </div>
 
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <p id="fileSizeErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
 
 
@@ -905,6 +926,8 @@
                 const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
                 successModal.show();
             @endif
+
+            const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
         });
     </script>
     <script>
@@ -1186,23 +1209,33 @@
         // Max sizes in bytes
         const MAX_SIZES = {
             'beneficiaryProfilePic': 7 * 1024 * 1024, // 7MB
-            'care_service_agreement': 5 * 1024 * 1024, // 5MB
-            'general_careplan': 5 * 1024 * 1024 // 5MB
+            'careServiceAgreement': 5 * 1024 * 1024, // 5MB
+            'generalCareplan': 5 * 1024 * 1024 // 5MB
         };
+        
+        // Get the modal elements
+        const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+        const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
         
         // Add file size validation to all file inputs
         document.querySelectorAll('input[type="file"]').forEach(input => {
             input.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     const file = this.files[0];
-                    const maxSize = MAX_SIZES[this.id] || 7 * 1024 * 1024; // Default to 7MB
+                    const maxSize = MAX_SIZES[this.id] || 5 * 1024 * 1024; // Default to 5MB
                     
                     if (file.size > maxSize) {
                         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
                         const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        const fieldLabel = this.previousElementSibling ? this.previousElementSibling.textContent : this.id;
                         
-                        // Show clear error message
-                        alert(`File size too large (${fileSizeMB}MB).\nMaximum allowed size is ${maxSizeMB}MB.\nPlease select a smaller file.`);
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
+                            Maximum allowed size is ${maxSizeMB}MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
                         
                         // Reset the file input
                         this.value = '';
@@ -1219,7 +1252,7 @@
             document.querySelectorAll('input[type="file"]').forEach(input => {
                 if (input.files.length > 0) {
                     const file = input.files[0];
-                    const maxSize = MAX_SIZES[input.id] || 7 * 1024 * 1024;
+                    const maxSize = MAX_SIZES[input.id] || 5 * 1024 * 1024;
                     
                     if (file.size > maxSize) {
                         e.preventDefault();
@@ -1227,7 +1260,15 @@
                         
                         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
                         const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
-                        alert(`Cannot submit: ${input.id} (${fileSizeMB}MB) exceeds the ${maxSizeMB}MB limit`);
+                        const fieldLabel = input.previousElementSibling ? input.previousElementSibling.textContent : input.id;
+                        
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>Form submission failed</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
                     }
                 }
             });
