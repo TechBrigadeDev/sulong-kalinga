@@ -326,80 +326,20 @@
 
         // Add this to the submit event of each form
        document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-Requested-With': 'XMLHttpRequest'
+            form.addEventListener('submit', function(e) {
+                // Ensure method is POST and add activeTab
+                this.method = 'POST';
+                
+                // Add hidden field for activeTab if it doesn't exist
+                if (!this.querySelector('input[name="activeTab"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'activeTab';
+                    input.value = 'settings';
+                    this.appendChild(input);
                 }
-            })
-            .then(response => {
-                return response.ok ? 
-                    {success: true} : 
-                    response.json().then(data => ({success: false, errors: data.errors || ['An error occurred']}));
-            })
-            .then(result => {
-                if (result.success) {
-                    // Show success alert
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
-                    alertDiv.setAttribute('role', 'alert');
-                    
-                    // Set appropriate message based on form
-                    const message = this.action.includes('update-email') ? 
-                        'Email updated successfully!' : 
-                        'Password updated successfully!';
-                        
-                    alertDiv.innerHTML = `
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    `;
-                    
-                    // Insert alert before the form
-                    this.parentNode.insertBefore(alertDiv, this);
-                    
-                    // Hide form, show buttons
-                    if (this.action.includes('update-email')) {
-                        document.getElementById('updateEmailForm').style.display = 'none';
-                    } else {
-                        document.getElementById('updatePasswordForm').style.display = 'none';
-                    }
-                    
-                    document.getElementById('updateEmailBtn').style.display = 'inline-block';
-                    document.getElementById('updatePasswordBtn').style.display = 'inline-block';
-                    
-                    // Auto-dismiss alert after 5 seconds and refresh
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    // Show error
-                    alert('Error: ' + (result.errors ? result.errors.join(', ') : 'Update failed.'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An unexpected error occurred. Please try again.');
-            })
-            .finally(() => {
-                // Reset button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
             });
         });
-    });
     </script>
     <script>
         // Profile section navigation
