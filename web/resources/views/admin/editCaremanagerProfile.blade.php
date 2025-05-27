@@ -285,7 +285,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <p>Care Worker has been successfully saved!</p>
+                    <p>Care Manager has been successfully saved!</p>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
@@ -296,7 +296,7 @@
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.querySelector('form[action="{{ route(\'admin.caremanagers.update\', $caremanager->id) }}"]')
+        document.querySelector('form[action="{{ route('admin.caremanagers.update', $caremanager->id) }}"]')
         .addEventListener('submit', function (e) {
             e.preventDefault(); // Prevent only the main form submission
             
