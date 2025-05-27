@@ -461,25 +461,7 @@ class MessageController extends Controller
 
             $user = Auth::user();
             
-            // Check if conversation already exists
-            $existingConversation = $this->findExistingConversation($user->id, $recipientId, $recipientType);
-            if ($existingConversation) {
-                // For AJAX requests
-                if ($request->ajax() || $request->wantsJson() || $request->header('Accept') == 'application/json') {
-                    return response()->json([
-                        'success' => true,
-                        'exists' => true,
-                        'conversation_id' => $existingConversation->conversation_id
-                    ]);
-                }
-                
-                // For regular form submissions
-                return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
-                    'conversation' => $existingConversation->conversation_id
-                ])->with('success', 'Conversation already exists');
-            }
-            
-            // Check permission based on user role
+            // Check permission based on user role - KEEPING ALL PERMISSION CHECKS
             if ($recipientType === 'cose_staff') {
                 try {
                     $recipient = User::findOrFail($recipientId);
@@ -509,13 +491,28 @@ class MessageController extends Controller
                     return $this->respondWithError('Only Care Workers can message Beneficiaries and Family Members.', 403, $request);
                 }
             }
-
-            // *** ADD THIS TRANSACTION BLOCK - REPLACE THE EXISTING CODE BELOW WITH THIS ***
+            
+            // CRITICAL CHANGE: Use pessimistic locking within a transaction
             return DB::transaction(function() use ($user, $recipientId, $recipientType, $initialMessage, $request) {
-                // Re-check if conversation exists within transaction to prevent race condition
-                $existingConversation = $this->findExistingConversation($user->id, $recipientId, $recipientType);
+                // First try to lock the participants table to prevent race conditions
+                DB::select('SELECT 1 FROM conversation_participants WITH (TABLOCKX)');
+                
+                // Re-check if conversation exists WITHIN the transaction
+                $existingConversation = DB::table('conversations AS c')
+                    ->join('conversation_participants AS p1', 'p1.conversation_id', '=', 'c.conversation_id')
+                    ->join('conversation_participants AS p2', 'p2.conversation_id', '=', 'c.conversation_id')
+                    ->where('c.is_group_chat', false)
+                    ->where('p1.participant_id', $user->id)
+                    ->where('p1.participant_type', 'cose_staff')
+                    ->whereNull('p1.left_at')
+                    ->where('p2.participant_id', $recipientId)
+                    ->where('p2.participant_type', $recipientType)
+                    ->whereNull('p2.left_at')
+                    ->select('c.*')
+                    ->first();
+
+                // If conversation exists, return it
                 if ($existingConversation) {
-                    // For AJAX requests
                     if ($request->ajax() || $request->wantsJson() || $request->header('Accept') == 'application/json') {
                         return response()->json([
                             'success' => true,
@@ -524,13 +521,13 @@ class MessageController extends Controller
                             'conversation_id' => $existingConversation->conversation_id
                         ]);
                     }
-                
-                // For regular form submissions
-                return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
+                    
+                    // For regular form submissions
+                    return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
                         'conversation' => $existingConversation->conversation_id
                     ])->with('success', 'Conversation already exists');
                 }
-            
+                
                 // Create new conversation
                 $conversation = new Conversation();
                 $conversation->is_group_chat = false;
@@ -580,9 +577,7 @@ class MessageController extends Controller
                 return redirect()->route($this->getRoleRoutePrefix() . '.messaging.index', [
                     'conversation' => $conversation->conversation_id
                 ])->with('success', 'Conversation created successfully');
-            });
-            // *** END OF TRANSACTION BLOCK ***
-            
+            }, 5); // Retry up to 5 times if deadlock occurs
         } catch (\Exception $e) {
             Log::error('Error creating conversation: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->respondWithError('An error occurred while creating the conversation: ' . $e->getMessage(), 500, $request);

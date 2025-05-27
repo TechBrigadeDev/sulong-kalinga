@@ -326,19 +326,79 @@
 
         // Add this to the submit event of each form
        document.querySelectorAll('form').forEach(form => {
-        // Don't attach a submit event that could interfere with normal submission
-        // Just ensure the form has the correct method directly
-        form.method = 'POST';
-        
-        // Make sure form has the CSRF token
-        if (!form.querySelector('input[name="_token"]')) {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const tokenInput = document.createElement('input');
-            tokenInput.type = 'hidden';
-            tokenInput.name = '_token';
-            tokenInput.value = csrfToken;
-            form.appendChild(tokenInput);
-        }
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                return response.ok ? 
+                    {success: true} : 
+                    response.json().then(data => ({success: false, errors: data.errors || ['An error occurred']}));
+            })
+            .then(result => {
+                if (result.success) {
+                    // Show success alert
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+                    alertDiv.setAttribute('role', 'alert');
+                    
+                    // Set appropriate message based on form
+                    const message = this.action.includes('update-email') ? 
+                        'Email updated successfully!' : 
+                        'Password updated successfully!';
+                        
+                    alertDiv.innerHTML = `
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    
+                    // Insert alert before the form
+                    this.parentNode.insertBefore(alertDiv, this);
+                    
+                    // Hide form, show buttons
+                    if (this.action.includes('update-email')) {
+                        document.getElementById('updateEmailForm').style.display = 'none';
+                    } else {
+                        document.getElementById('updatePasswordForm').style.display = 'none';
+                    }
+                    
+                    document.getElementById('updateEmailBtn').style.display = 'inline-block';
+                    document.getElementById('updatePasswordBtn').style.display = 'inline-block';
+                    
+                    // Auto-dismiss alert after 5 seconds and refresh
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    // Show error
+                    alert('Error: ' + (result.errors ? result.errors.join(', ') : 'Update failed.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            })
+            .finally(() => {
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            });
+        });
     });
     </script>
     <script>
