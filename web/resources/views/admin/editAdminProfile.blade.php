@@ -352,7 +352,14 @@
 
         document.querySelectorAll('input[type="text"]').forEach(input => {
             input.addEventListener('input', function () {
-                this.value = this.value.replace(/[^a-zA-Z0-9\s]/g, ''); // Remove special characters
+                // Special handling for name fields to allow proper Filipino names
+                if (input.id === 'firstName' || input.id === 'lastName' || input.id === 'religion' || input.id === 'nationality') {
+                    // Allow letters, spaces, hyphens, apostrophes, periods, and ñ/Ñ for name fields
+                    this.value = this.value.replace(/[^a-zA-ZÑñ\s\'\.-]/g, '');
+                } else {
+                    // For other text fields, maintain the original restriction
+                    this.value = this.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                }
             });
         });
 
