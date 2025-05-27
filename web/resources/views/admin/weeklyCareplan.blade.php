@@ -297,11 +297,12 @@
                                                                 <label for="upload_picture" class="form-label">Upload Picture <span class="text-danger">*</span></label>
                                                                 <input type="file" class="form-control @error('upload_picture') is-invalid @enderror" 
                                                                     id="upload_picture" name="upload_picture" 
-                                                                    accept="image/*" onchange="previewImage(event)" required>
+                                                                    accept="image/*" onchange="validateAndPreviewImage(event)" required>
                                                                 <small class="form-text text-muted">Use your camera or upload an image for validation purposes. Required.</small>
                                                                 @error('upload_picture')
                                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                                 @enderror
+                                                                <small class="text-danger">Maximum file size: 7MB</small>
                                                             </div>
                                                             <div class="col-md-12 col-sm-12 text-center mt-2">
                                                                 <label class="form-label">Picture Preview</label>
@@ -364,6 +365,27 @@
         </div>
     </template>
 
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <p id="fileSizeErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Client Side Validation -->
 
     <script>
@@ -393,6 +415,30 @@
         // Form submission validation for vital signs
         document.getElementById('weeklyCarePlanForm').addEventListener('submit', function(e) {
             // Existing validation code...
+
+            // Additional validation for upload_picture file size
+            const uploadPicture = document.getElementById('upload_picture');
+            if (uploadPicture && uploadPicture.files && uploadPicture.files[0]) {
+                const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB
+                const file = uploadPicture.files[0];
+                
+                if (file.size > MAX_FILE_SIZE) {
+                    e.preventDefault();
+                    
+                    const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+                    const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+                    
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    fileSizeErrorMessage.innerHTML = `
+                        <strong>Form submission failed</strong><br>
+                        Upload Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
+                        Please select a smaller file or compress your image.
+                    `;
+                    
+                    fileSizeErrorModal.show();
+                    return false;
+                }
+            }
             
             // Additional validation for vital signs
             const bodyTemp = document.getElementById('body_temperature').value;
@@ -1327,24 +1373,62 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-function previewImage(event) {
+function validateAndPreviewImage(event) {
+    const input = event.target;
     const preview = document.getElementById('picture_preview');
     const noPreviewText = document.getElementById('no_preview_text');
-    const file = event.target.files[0];
     
-    if (file) {
+    // Check file size limit (7MB = 7 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 7 * 1024 * 1024;
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+            // Clear the file input
+            input.value = '';
+            
+            // Show error modal
+            const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+            const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+            
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            fileSizeErrorMessage.innerHTML = `
+                <strong>Upload Picture</strong> file is too large (${fileSizeMB}MB).<br>
+                Maximum allowed size is 7MB.<br>
+                Please select a smaller file or compress your image.
+            `;
+            
+            fileSizeErrorModal.show();
+            
+            // Hide preview or show "no preview" message
+            preview.style.display = 'none';
+            if (noPreviewText) {
+                noPreviewText.style.display = 'block';
+            }
+            
+            return false;
+        }
+        
+        // If size is valid, show preview
         const reader = new FileReader();
         
-        reader.onload = function() {
-            preview.src = reader.result;
+        reader.onload = function(e) {
+            preview.src = e.target.result;
             preview.style.display = 'block';
-            noPreviewText.style.display = 'none';
-        }
+            if (noPreviewText) {
+                noPreviewText.style.display = 'none';
+            }
+        };
         
         reader.readAsDataURL(file);
     } else {
+        // No file selected
         preview.style.display = 'none';
-        noPreviewText.style.display = 'block';
+        if (noPreviewText) {
+            noPreviewText.style.display = 'block';
+        }
     }
 }
 </script>
