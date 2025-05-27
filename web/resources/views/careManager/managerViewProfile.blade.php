@@ -143,12 +143,6 @@
                                 <div class="col-md-9">{{ $user->email }}</div>
                             </div>
                             <div class="row info-row">
-                                <div class="col-md-3 info-label">Password:</div>
-                                <div class="col-md-9">
-                                    <span class="text-muted">********</span>
-                                </div>
-                            </div>
-                            <div class="row info-row">
                                 <div class="col-md-3 info-label">Account Status:</div>
                                 <div class="col-md-9">
                                     <span class="badge {{ $user->status == 'Active' ? 'bg-success' : 'bg-danger' }}">{{ $user->status }}</span>
@@ -176,7 +170,7 @@
                             <!-- Hidden Update Email Form -->
                             <div class="row mt-3" id="updateEmailForm" style="display: none;">
                                 <div class="col-md-12">
-                                    <form action="{{ route('care-manager.update.email') }}" method="POST">
+                                    <form action="/care-manager/update-email" method="POST">
                                         @csrf
                                         <div class="mb-3">
                                             <label for="current_email" class="form-label">Current Email</label>
@@ -207,7 +201,7 @@
                             <!-- Hidden Update Password Form -->
                             <div class="row mt-3" id="updatePasswordForm" style="display: none;">
                                 <div class="col-md-12">
-                                    <form action="{{ route('care-manager.update.password') }}" method="POST">
+                                    <form action="/care-manager/update-password" method="POST">
                                         @csrf
                                         <div class="mb-3">
                                             <label for="current_password" class="form-label">Current Password</label>
@@ -287,6 +281,14 @@
             document.getElementById('updateEmailForm').style.display = 'none';
             document.getElementById('updatePasswordBtn').style.display = 'inline-block'; // Show the button
             document.getElementById('updateEmailBtn').style.display = 'inline-block'; // Show the other button
+        });
+
+        // Add this to the submit event of each form
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Ensure method is POST
+                this.method = 'POST';
+            });
         });
     </script>
     <script>
