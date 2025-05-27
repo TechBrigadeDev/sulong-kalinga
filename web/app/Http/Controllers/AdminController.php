@@ -1780,6 +1780,9 @@ class AdminController extends Controller
         }
 
         try {
+            // Get the current user
+            $user = Auth::user();
+            
             // Update email
             $user->email = $request->input('account_email');
             $user->updated_at = now();
@@ -1792,12 +1795,12 @@ class AdminController extends Controller
                 'new_email' => $user->email
             ]);
 
-            // Log the email change to the logs table
+            // Fix: Use $user instead of $administrator
             $this->logService->createLog(
                 'administrator',
-                $administrator->id,
-                LogType::VIEW,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+                $user->id,
+                LogType::UPDATE,  // Changed from VIEW to UPDATE
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their email address'
             );
 
             return redirect()->route('admin.account.profile.index')
@@ -1849,24 +1852,27 @@ class AdminController extends Controller
                 ->with('activeTab', 'settings');
         }
 
-        try {
+         try {
+            // Get the current user
+            $user = Auth::user();
+
             // Update password
             $user->password = bcrypt($request->input('account_password'));
             $user->updated_at = now();
             $user->save();
 
-            // Log the password change (without revealing the actual password)
+            // Log the password change
             \Log::info('Administrator password updated', [
                 'admin_id' => $user->id,
                 'timestamp' => now()
             ]);
 
-            // Log the password change to the logs table
+            // Fix: Use $user instead of $administrator
             $this->logService->createLog(
                 'administrator',
-                $administrator->id,
-                LogType::VIEW,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+                $user->id,
+                LogType::UPDATE,  // Changed from VIEW to UPDATE
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their password'
             );
 
             return redirect()->route('admin.account.profile.index')
