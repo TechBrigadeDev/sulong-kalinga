@@ -605,7 +605,7 @@ class BeneficiaryController extends Controller
             ],
 
             // Beneficiary Picture
-            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:2048', // Max size: 2MB
+            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:10240', // Max size: 2MB
 
             // Review Date
             'date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->format('Y-m-d'),
@@ -1246,7 +1246,7 @@ class BeneficiaryController extends Controller
             // ... [Similar validation rules for care needs, same as in storeBeneficiary]
             
             // Files - Modified for update scenario
-            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:2048',
+            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:10240',
             'care_service_agreement' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'general_careplan' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             
