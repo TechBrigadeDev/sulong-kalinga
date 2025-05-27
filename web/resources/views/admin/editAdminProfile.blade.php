@@ -59,20 +59,16 @@
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
                                     placeholder="Enter first name" 
                                     value="{{ old('first_name', $administrator->first_name) }}" 
-                                    required
-                                    oninput="validateName(this)"
-                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
-                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
+                                    required>
+                                    
                             </div>
                             <div class="col-md-3">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                     placeholder="Enter last name" 
                                     value="{{ old('last_name', $administrator->last_name) }}" 
-                                    required
-                                    oninput="validateName(this)"
-                                    pattern="^[A-ZÑ][a-zA-ZÑñ\'\.]*(?:-[a-zA-ZÑñ\'\.]+)?(?:(?: (?:[A-ZÑ][a-zA-ZÑñ\'\.]*|(?:de|la|del|los|las|von|van|der|den|di|le|da|do|dos|el|al|bin|binti|ibn|[a-z]))(?:-[a-zA-ZÑñ\'\.]+)?)+)?$" 
-                                    title="Names must start with an uppercase letter. Supports spaces, hyphens, apostrophes, periods, and the letter Ñ. Compound names like 'de la Cruz' are allowed.">
+                                    required>
+                                    
                             </div>
                             <!-- <div class="col-md-3">
                                 <label for="birthDate" class="form-label">Birthday</label>
@@ -265,7 +261,6 @@
             </div>
         </div>
     </div>
-    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
@@ -375,15 +370,6 @@
         // Restrict input to numbers only
         function restrictToNumbers(input) {
             input.value = input.value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
-        }
-
-        // Validate names to allow only one hyphen per word and not at the end
-        function validateName(input) {
-            input.value = input.value.replace(/[^a-zA-Z-]/g, ''); // Remove invalid characters
-            input.value = input.value.replace(/-{2,}/g, '-'); // Prevent multiple consecutive hyphens
-            input.value = input.value.replace(/^-|-$/g, ''); // Remove hyphen at the start or end
-            const words = input.value.split(' ');
-            input.value = words.map(word => word.replace(/-/g, (match, offset) => offset === word.indexOf('-') ? '-' : '')).join(' ');
         }
 
         // Prevent spaces in email fields
