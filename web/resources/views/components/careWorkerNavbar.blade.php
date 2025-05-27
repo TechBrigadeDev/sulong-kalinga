@@ -7,7 +7,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ route('landing') }}">
+        <a class="navbar-brand" href="/care-worker/dashboard" >
             <img src="{{ asset('images/cose-logo.png') }}" alt="System Logo" width="30" class="me-2">
             <span class="text-dark">SulongKalinga</span>
         </a>
