@@ -169,6 +169,7 @@
                             <div class="col-md-4">
                                 <label for="administratorPhoto" class="form-label">Administrator Photo</label>
                                 <input type="file" class="form-control" id="administratorPhoto" name="administrator_photo" accept="image/png, image/jpeg">
+                                 <small class="text-danger">Maximum file size: 7MB</small>
                                 @if($administrator->photo)
                                     <small class="text-muted" title="{{ basename($administrator->photo) }}">
                                         Current file: {{ strlen(basename($administrator->photo)) > 30 ? substr(basename($administrator->photo), 0, 30) . '...' : basename($administrator->photo) }}
@@ -180,6 +181,7 @@
                             <div class="col-md-4">
                                 <label for="governmentID" class="form-label">Government Issued ID</label>
                                 <input type="file" class="form-control" id="governmentID" name="government_ID" accept=".jpg,.png">
+                                 <small class="text-danger">Maximum file size: 7MB</small>
                                 @if($administrator->government_issued_id)
                                     <small class="text-muted" title="{{ basename($administrator->government_issued_id) }}">
                                         Current file: {{ strlen(basename($administrator->government_issued_id)) > 30 ? substr(basename($administrator->government_issued_id), 0, 30) . '...' : basename($administrator->government_issued_id) }}
@@ -191,6 +193,7 @@
                             <div class="col-md-4">
                                 <label for="resume" class="form-label">Resume / CV</label>
                                 <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx">
+                                <small class="text-danger">Maximum file size: 5MB</small>
                                 @if($administrator->cv_resume)
                                     <small class="text-muted" title="{{ basename($administrator->cv_resume) }}">
                                         Current file: {{ strlen(basename($administrator->cv_resume)) > 30 ? substr(basename($administrator->cv_resume), 0, 30) . '...' : basename($administrator->cv_resume) }}
@@ -261,28 +264,146 @@
             </div>
         </div>
     </div>
+
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <p id="fileSizeErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-//         document.querySelector('form').addEventListener('submit', function (e) {
-// e.preventDefault(); // Prevent the default form submission
-
-//             e.preventDefault(); // Prevent the default form submission
-
-//             // Show the success modal
-//             const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
-//             successModal.show();
-//         });
-    </script>
-<!-- <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent the default form submission
-
-            // Show the success modal
-            const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
-            successModal.show();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Max sizes in bytes
+        const MAX_SIZES = {
+            'administratorPhoto': 7 * 1024 * 1024, // 7MB
+            'governmentID': 7 * 1024 * 1024,     // 7MB
+            'resume': 5 * 1024 * 1024           // 5MB
+        };
+        
+        // Initialize modal
+        const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+        const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+        
+        // Add file size validation to all file inputs
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const maxSize = MAX_SIZES[this.id] || 5 * 1024 * 1024; // Default to 5MB
+                    
+                    if (file.size > maxSize) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        const fieldLabel = this.previousElementSibling ? this.previousElementSibling.textContent : this.id;
+                        
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
+                            Maximum allowed size is ${maxSizeMB}MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
+                        
+                        // Reset the file input
+                        this.value = '';
+                    }
+                }
+            });
         });
-    </script> -->
+        
+        // Form submission check for file sizes (will be combined with existing handler)
+        function validateFileSize(form) {
+            let isValid = true;
+            
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                if (input.files.length > 0) {
+                    const file = input.files[0];
+                    const maxSize = MAX_SIZES[input.id] || 5 * 1024 * 1024;
+                    
+                    if (file.size > maxSize) {
+                        isValid = false;
+                        
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        const fieldLabel = input.previousElementSibling ? input.previousElementSibling.textContent : input.id;
+                        
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>Form submission failed</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
+                    }
+                }
+            });
+            
+            return isValid;
+        }
+        
+        // Store the validation function globally
+        window.validateFileSize = validateFileSize;
+    });
+    </script>
+    <script>
+    document.querySelector('form').addEventListener('submit', function (e) {
+        // Always prevent the default form submission first
+        e.preventDefault();
+        
+        // Check file sizes first
+        if (!window.validateFileSize(this)) {
+            return false;
+        }
+        
+        // Check if there are validation errors
+        if (!document.querySelector('.alert-danger')) {
+            // No validation errors, show success modal
+            const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
+            const form = this;
+            
+            // Mark form as validated to prevent duplicate checks
+            form.dataset.validated = 'true';
+            
+            // Show modal
+            successModal.show();
+            
+            // Listen for modal hidden event
+            document.getElementById('saveSuccessModal').addEventListener('hidden.bs.modal', function onModalHidden() {
+                // Remove this event listener to prevent multiple submissions
+                document.getElementById('saveSuccessModal').removeEventListener('hidden.bs.modal', onModalHidden);
+                
+                // Submit the form
+                form.submit();
+            });
+            
+            // Add a button click handler for the OK button
+            document.querySelector('#saveSuccessModal .btn-primary').addEventListener('click', function() {
+                // Submit the form when OK is clicked
+                form.submit();
+            });
+        } else {
+            // There are validation errors, allow normal form submission
+            this.submit();
+        }
+    });
+    </script>
     <script>
         // document.addEventListener('DOMContentLoaded', function () {
         //     // Function to filter dropdown items
