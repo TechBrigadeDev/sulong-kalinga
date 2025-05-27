@@ -169,8 +169,8 @@ class CareManagerController extends Controller
             'municipality' => 'required|integer|exists:municipalities,municipality_id',
         
             // Documents
-            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
             'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
@@ -387,8 +387,8 @@ class CareManagerController extends Controller
                 'string',
                 'regex:/^[0-9]{7,10}$/',
             ],
-            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
             'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
             'sss_ID' => 'nullable|string|max:10',
             'philhealth_ID' => 'nullable|string|max:12',
