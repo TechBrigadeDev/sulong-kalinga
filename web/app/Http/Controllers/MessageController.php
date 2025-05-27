@@ -42,7 +42,6 @@ class MessageController extends Controller
             
             // Get user's conversations without the problematic relationship
             $conversations = $this->getUserConversations($user);
-            $conversations = $this->deduplicateConversations($conversations);
             
             // Process participant names manually for private conversations
             foreach ($conversations as $conversation) {
@@ -159,7 +158,6 @@ class MessageController extends Controller
             
             // Get all conversations for the sidebar using the getUserConversations method
             $conversations = $this->getUserConversations(Auth::user());
-            $conversations = $this->deduplicateConversations($conversations);
             
             // Process participant names manually for private conversations
             foreach ($conversations as $convo) {
@@ -965,6 +963,9 @@ class MessageController extends Controller
         ->orderBy('updated_at', 'desc')
         ->get();
 
+        // Add this line to deduplicate conversations
+        $conversations = $this->deduplicateConversations($conversations);
+
         // Process conversations to add other participant name for private chats
         foreach ($conversations as $conversation) {
             if (!$conversation->is_group_chat) {
@@ -1525,7 +1526,6 @@ class MessageController extends Controller
             
             // Get conversations
             $conversations = $this->getUserConversations($user);
-            $conversations = $this->deduplicateConversations($conversations);
             
             // Process participant names for display
             foreach ($conversations as $conversation) {
