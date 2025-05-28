@@ -179,4 +179,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messaging/thread/{id}/members', [MessagingApiController::class, 'getThreadMembers']);
     Route::post('/messaging/thread/{id}/add-member', [MessagingApiController::class, 'addThreadMember']);
     Route::post('/messaging/thread/{id}/leave', [MessagingApiController::class, 'leaveThread']);
+
+    // Records Management API
+    // Weekly Care Plans
+    Route::get('/records/weekly-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listWeekly']);
+    Route::get('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showWeekly']);
+    Route::put('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateWeekly']);
+
+    // General Care Plans
+    Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
+    Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
+    Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
 });
