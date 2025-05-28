@@ -11,6 +11,8 @@ use App\Models\PortalAccount;
 use Illuminate\Support\Facades\Validator;
 use App\Services\LogService;
 use App\Enums\LogType;
+use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class LoginController extends Controller
 {
@@ -28,6 +30,31 @@ class LoginController extends Controller
     // Handle login submission
     public function login(Request $request)
     {
+        // Configurable values
+        $maxAttempts = (int) (env('LOGIN_ATTEMPT_LIMIT', 5));
+        $decayMinutes = (int) (env('LOGIN_ATTEMPT_WINDOW', 10));
+        $lockoutMinutes = (int) (env('LOGIN_LOCKOUT_DURATION', 10));
+
+        $email = strtolower($request->input('email'));
+        $cacheKeyAttempts = 'login_attempts:' . $email;
+        $cacheKeyLockout = 'login_lockout:' . $email;
+
+        // Check for lockout
+        if (Cache::has($cacheKeyLockout)) {
+            $lockoutExpires = Cache::get($cacheKeyLockout);
+            $remaining = Carbon::parse($lockoutExpires)->diffInMinutes(now());
+            $message = "Too many failed attempts. Please try again in {$remaining} minute(s).";
+            // Log lockout event
+            $this->logService->createLog(
+                'user',
+                null,
+                LogType::VIEW,
+                "Lockout: {$email} attempted login during lockout.",
+                null
+            );
+            return redirect()->back()->withErrors(['email' => $message])->withInput();
+        }
+
         // Validate the input data
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -41,10 +68,14 @@ class LoginController extends Controller
 
         // Check in the cose_users table
         $user = \DB::table('cose_users')
-            ->where('email', $request->input('email'))
+            ->where('email', $email)
             ->first();
 
         if ($user && Hash::check($request->input('password'), $user->password)) {
+            // Successful login: clear attempts and lockout
+            Cache::forget($cacheKeyAttempts);
+            Cache::forget($cacheKeyLockout);
+
             // Create a proper user model instance
             $userModel = User::find($user->id);
 
@@ -104,6 +135,38 @@ class LoginController extends Controller
             session()->put('show_welcome', true);
             return redirect()->route('workerdashboard');
         }
+    } else {
+        // Failed login: increment attempts
+        $attempts = Cache::get($cacheKeyAttempts, 0) + 1;
+        Cache::put($cacheKeyAttempts, $attempts, now()->addMinutes($decayMinutes));
+
+        // Log failed attempt
+        $this->logService->createLog(
+            'user',
+            null,
+            LogType::VIEW,
+            "Failed login attempt for {$email} ({$attempts}/{$maxAttempts})",
+            null
+        );
+
+        if ($attempts >= $maxAttempts) {
+            // Set lockout
+            $lockoutUntil = now()->addMinutes($lockoutMinutes);
+            Cache::put($cacheKeyLockout, $lockoutUntil, $lockoutUntil);
+            // Log lockout event
+            $this->logService->createLog(
+                'user',
+                null,
+                LogType::VIEW,
+                "Lockout: {$email} locked out for {$lockoutMinutes} minutes.",
+                null
+            );
+            $message = "Too many failed attempts. Please try again in {$lockoutMinutes} minute(s).";
+            return redirect()->back()->withErrors(['email' => $message])->withInput();
+        }
+
+        // Always show generic error
+        return redirect()->back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
 
     // If not found in cose_users, check in the portal_accounts table
@@ -112,6 +175,10 @@ class LoginController extends Controller
                     ->first();
 
     if ($user && Hash::check($request->input('password'), $user->portal_password)) {
+        // Successful login: clear attempts and lockout
+        Cache::forget($portalCacheKeyAttempts);
+        Cache::forget($portalCacheKeyLockout);
+
         Auth::loginUsingId($user->id);
         session([
             'user_type' => 'family',
@@ -121,7 +188,7 @@ class LoginController extends Controller
         ]);
 
         // Log the login with portal_email
-        $entityType = 'family_member'; // or another appropriate type for portal accounts
+        $entityType = 'family_member';
         $this->logService->createLog(
             $entityType,
             $user->id,
@@ -131,6 +198,35 @@ class LoginController extends Controller
         );
 
         return redirect()->route('landing');
+    } else {
+        // Failed login: increment attempts
+        $attempts = Cache::get($portalCacheKeyAttempts, 0) + 1;
+        Cache::put($portalCacheKeyAttempts, $attempts, now()->addMinutes($decayMinutes));
+
+        $this->logService->createLog(
+            'family_member',
+            null,
+            LogType::VIEW,
+            "Failed portal login attempt for {$email} ({$attempts}/{$maxAttempts})",
+            null
+        );
+
+        if ($attempts >= $maxAttempts) {
+            $lockoutUntil = now()->addMinutes($lockoutMinutes);
+            Cache::put($portalCacheKeyLockout, $lockoutUntil, $lockoutUntil);
+            $this->logService->createLog(
+                'family_member',
+                null,
+                LogType::VIEW,
+                "Lockout: {$email} locked out of portal for {$lockoutMinutes} minutes.",
+                null
+            );
+            $message = "Too many failed attempts. Please try again in {$lockoutMinutes} minute(s).";
+            return redirect()->back()->withErrors(['email' => $message])->withInput();
+        }
+
+        // Always show generic error
+        return redirect()->back()->withErrors(['email' => 'Invalid credentials'])->withInput();
     }
 
     // If no user is found in either table, return an error
