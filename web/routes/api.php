@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth/User Profile
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
-    Route::put('/profile', [UserApiController::class, 'updateProfile']);
+    // Route::put('/profile', [UserApiController::class, 'updateProfile']); OLD
 
     // Mobile Account Profile API 
     Route::get('/account-profile', [ViewAccountProfileApiController::class, 'show']);
