@@ -9,10 +9,18 @@ use App\Models\WeeklyCarePlanInterventions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\UploadService;
 
 // Create only
 class WeeklyCarePlanApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -23,7 +31,7 @@ class WeeklyCarePlanApiController extends Controller
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
             'evaluation_recommendations' => 'required|string|min:20|max:5000',
-            'photo' => 'required|string|max:255', // path from upload API, required because DB requires it
+            'photo' => 'required|image|max:2048', // Now expects an uploaded file
             'selected_interventions' => 'required|array|min:1',
             'duration_minutes' => 'required|array|min:1',
             'duration_minutes.*' => 'required|numeric|min:0.01|max:999.99',
@@ -58,7 +66,8 @@ class WeeklyCarePlanApiController extends Controller
             'evaluation_recommendations.max' => 'Evaluation and recommendations cannot exceed 5000 characters',
 
             'photo.required' => 'A photo is required for documentation purposes',
-            'photo.max' => 'The photo path should not exceed 255 characters',
+            'photo.image' => 'The uploaded file must be an image',
+            'photo.max' => 'The photo should not exceed 2MB',
 
             'selected_interventions.required' => 'Please select at least one intervention',
             'duration_minutes.required' => 'Please specify the duration for all selected interventions',
@@ -102,7 +111,16 @@ class WeeklyCarePlanApiController extends Controller
             // 2. Prepare illnesses as JSON
             $illness = $request->illness ? json_encode(explode(',', $request->illness)) : null;
 
-            // 3. Save Weekly Care Plan
+            // 3. Handle photo upload
+            $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
+            $photoPath = $this->uploadService->upload(
+                $request->file('photo'),
+                'spaces-private',
+                'uploads/weekly_care_plan_photos',
+                'wcp_' . $request->user()->id . '_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
+            );
+
+            // 4. Save Weekly Care Plan
             $wcp = WeeklyCarePlan::create([
                 'beneficiary_id' => $request->beneficiary_id,
                 'care_worker_id' => $request->user()->id,
@@ -111,12 +129,12 @@ class WeeklyCarePlanApiController extends Controller
                 'assessment' => $request->assessment,
                 'illnesses' => $illness,
                 'evaluation_recommendations' => $request->evaluation_recommendations,
-                'photo_path' => $request->photo,
+                'photo_path' => $photoPath,
                 'created_by' => $request->user()->id,
                 'updated_by' => $request->user()->id,
             ]);
 
-            // 4. Save interventions
+            // 5. Save interventions
             foreach ($request->selected_interventions as $idx => $interventionId) {
                 WeeklyCarePlanInterventions::create([
                     'weekly_care_plan_id' => $wcp->weekly_care_plan_id,
@@ -125,7 +143,7 @@ class WeeklyCarePlanApiController extends Controller
                 ]);
             }
 
-            // 5. Save custom interventions if provided
+            // 6. Save custom interventions if provided
             if ($request->custom_category && $request->custom_description && $request->custom_duration) {
                 foreach ($request->custom_category as $idx => $cat) {
                     WeeklyCarePlanInterventions::create([
