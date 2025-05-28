@@ -5,9 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\UnifiedUser;
 use Illuminate\Http\Request;
+use App\Services\UploadService;
 
 class AdminApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     // List all admins
     public function index(Request $request)
     {
@@ -136,35 +144,37 @@ class AdminApiController extends Controller
         }
 
         try {
-            // Handle file uploads
             $firstName = $request->input('first_name');
             $lastName = $request->input('last_name');
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
             $administratorPhotoPath = null;
             if ($request->hasFile('administrator_photo')) {
-                $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-                    'uploads/administrator_photos', 
-                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                    'public'
+                $administratorPhotoPath = $this->uploadService->upload(
+                    $request->file('administrator_photo'),
+                    'spaces-private',
+                    'uploads/administrator_photos',
+                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
                 );
             }
 
             $governmentIDPath = null;
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/administrator_government_ids', 
-                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/administrator_government_ids',
+                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
                 );
             }
 
             $resumePath = null;
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/administrator_resumes', 
-                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/administrator_resumes',
+                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
                 );
             }
 
@@ -330,24 +340,27 @@ class AdminApiController extends Controller
 
             // Handle file uploads
             if ($request->hasFile('administrator_photo')) {
-                $administrator->photo = $request->file('administrator_photo')->storeAs(
-                    'uploads/administrator_photos', 
-                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                    'public'
+                $administrator->photo = $this->uploadService->upload(
+                    $request->file('administrator_photo'),
+                    'spaces-private',
+                    'uploads/administrator_photos',
+                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
                 );
             }
             if ($request->hasFile('government_ID')) {
-                $administrator->government_issued_id = $request->file('government_ID')->storeAs(
-                    'uploads/administrator_government_ids', 
-                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $administrator->government_issued_id = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/administrator_government_ids',
+                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
                 );
             }
             if ($request->hasFile('resume')) {
-                $administrator->cv_resume = $request->file('resume')->storeAs(
-                    'uploads/administrator_resumes', 
-                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $administrator->cv_resume = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/administrator_resumes',
+                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
                 );
             }
 
