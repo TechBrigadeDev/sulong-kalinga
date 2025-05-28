@@ -5,37 +5,75 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\UnifiedUser;
 use Illuminate\Http\Request;
+use App\Services\UploadService;
+use Illuminate\Support\Facades\Storage;
 
 class AdminApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     // List all admins
     public function index(Request $request)
     {
-        // Only allow Admin to view admins
         if ($request->user()->role_id !== 1) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
         $admins = UnifiedUser::where('role_id', 1)->get();
-        return response()->json(['success' => true, 'admins' => $admins]);
+        return response()->json([
+            'success' => true,
+            'admins' => $admins->map(function ($admin) {
+                return [
+                    'id' => $admin->id,
+                    'first_name' => $admin->first_name,
+                    'last_name' => $admin->last_name,
+                    'email' => $admin->email,
+                    'personal_email' => $admin->personal_email,
+                    'mobile' => $admin->mobile,
+                    'photo' => $admin->photo,
+                    'photo_url' => $admin->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($admin->photo, now()->addMinutes(30))
+                        : null,
+                    // Add other fields as needed
+                ];
+            })
+        ]);
     }
 
     // Show a single admin
     public function show(Request $request, $id)
     {
-        // Only allow Admin to view admins
         if ($request->user()->role_id !== 1) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
         $admin = UnifiedUser::where('role_id', 1)->findOrFail($id);
-        return response()->json(['success' => true, 'admin' => $admin]);
+        return response()->json([
+            'success' => true,
+            'admin' => [
+                'id' => $admin->id,
+                'first_name' => $admin->first_name,
+                'last_name' => $admin->last_name,
+                'email' => $admin->email,
+                'personal_email' => $admin->personal_email,
+                'mobile' => $admin->mobile,
+                'photo' => $admin->photo,
+                'photo_url' => $admin->photo
+                    ? Storage::disk('spaces-private')->temporaryUrl($admin->photo, now()->addMinutes(30))
+                    : null,
+                // Add other fields as needed
+            ]
+        ]);
     }
 
     // Store a new admin
     public function store(Request $request)
     {
-        // Only allow Admin to create admins
         if ($request->user()->role_id !== 1) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
@@ -136,39 +174,40 @@ class AdminApiController extends Controller
         }
 
         try {
-            // Handle file uploads
             $firstName = $request->input('first_name');
             $lastName = $request->input('last_name');
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
             $administratorPhotoPath = null;
             if ($request->hasFile('administrator_photo')) {
-                $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-                    'uploads/administrator_photos', 
-                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                    'public'
+                $administratorPhotoPath = $this->uploadService->upload(
+                    $request->file('administrator_photo'),
+                    'spaces-private',
+                    'uploads/administrator_photos',
+                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
                 );
             }
 
             $governmentIDPath = null;
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/administrator_government_ids', 
-                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/administrator_government_ids',
+                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
                 );
             }
 
             $resumePath = null;
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/administrator_resumes', 
-                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/administrator_resumes',
+                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
                 );
             }
 
-            // Save the administrator to the database
             $administrator = new \App\Models\User();
             $administrator->first_name = $request->input('first_name');
             $administrator->last_name = $request->input('last_name');
@@ -199,17 +238,21 @@ class AdminApiController extends Controller
 
             $administrator->save();
 
-            // Log the creation
-            // (Assuming you have a LogService injected)
-            // $this->logService->createLog(...);
-
-            // Send notifications
-            // $this->sendNotificationToAdmin(...);
-            // $this->sendAdminNotification(...);
-
             return response()->json([
                 'success' => true,
-                'administrator' => $administrator
+                'administrator' => [
+                    'id' => $administrator->id,
+                    'first_name' => $administrator->first_name,
+                    'last_name' => $administrator->last_name,
+                    'email' => $administrator->email,
+                    'personal_email' => $administrator->personal_email,
+                    'mobile' => $administrator->mobile,
+                    'photo' => $administrator->photo,
+                    'photo_url' => $administrator->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($administrator->photo, now()->addMinutes(30))
+                        : null,
+                    // Add other fields as needed
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -219,7 +262,6 @@ class AdminApiController extends Controller
     // Update an admin
     public function update(Request $request, $id)
     {
-        // Only allow Admin to update admins
         if ($request->user()->role_id !== 1) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
@@ -328,30 +370,31 @@ class AdminApiController extends Controller
             $lastName = $request->input('last_name');
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
-            // Handle file uploads
             if ($request->hasFile('administrator_photo')) {
-                $administrator->photo = $request->file('administrator_photo')->storeAs(
-                    'uploads/administrator_photos', 
-                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                    'public'
+                $administrator->photo = $this->uploadService->upload(
+                    $request->file('administrator_photo'),
+                    'spaces-private',
+                    'uploads/administrator_photos',
+                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
                 );
             }
             if ($request->hasFile('government_ID')) {
-                $administrator->government_issued_id = $request->file('government_ID')->storeAs(
-                    'uploads/administrator_government_ids', 
-                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $administrator->government_issued_id = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/administrator_government_ids',
+                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
                 );
             }
             if ($request->hasFile('resume')) {
-                $administrator->cv_resume = $request->file('resume')->storeAs(
-                    'uploads/administrator_resumes', 
-                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $administrator->cv_resume = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/administrator_resumes',
+                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
                 );
             }
 
-            // Update fields
             $administrator->first_name = $request->input('first_name');
             $administrator->last_name = $request->input('last_name');
             $administrator->birthday = $request->input('birth_date');
@@ -375,15 +418,21 @@ class AdminApiController extends Controller
 
             $administrator->save();
 
-            // Log the update
-            // $this->logService->createLog(...);
-
-            // Send notifications
-            // $this->sendNotificationToAdmin(...);
-
             return response()->json([
                 'success' => true,
-                'administrator' => $administrator
+                'administrator' => [
+                    'id' => $administrator->id,
+                    'first_name' => $administrator->first_name,
+                    'last_name' => $administrator->last_name,
+                    'email' => $administrator->email,
+                    'personal_email' => $administrator->personal_email,
+                    'mobile' => $administrator->mobile,
+                    'photo' => $administrator->photo,
+                    'photo_url' => $administrator->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($administrator->photo, now()->addMinutes(30))
+                        : null,
+                    // Add other fields as needed
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
