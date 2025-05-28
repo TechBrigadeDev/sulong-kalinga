@@ -282,10 +282,6 @@
     </form>
 
     <script>
-        // Global validation state
-        let fileValidationPassed = true;
-
-        // Add form submission handler
         document.addEventListener('DOMContentLoaded', function() {
             const messageForm = document.getElementById('messageForm');
             const fileInput = document.getElementById('fileUpload');
@@ -297,16 +293,13 @@
             const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
             const MAX_TOTAL_SIZE = 8 * 1024 * 1024; // 8MB total
             
-            // Attach click handler for the attachment button
+            // Click handler for attachment button
             attachmentBtn.addEventListener('click', function() {
                 fileInput.click();
             });
             
             // Validate files when selected
             fileInput.addEventListener('change', function() {
-                // Reset validation state
-                fileValidationPassed = true;
-                
                 // Clear previous error and previews
                 errorContainer.style.display = 'none';
                 filePreviewContainer.innerHTML = '';
@@ -332,7 +325,6 @@
                         errorContainer.innerHTML = `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`;
                         errorContainer.style.display = 'block';
                         this.value = ''; // Clear the file input
-                        fileValidationPassed = false;
                         return;
                     }
                     
@@ -342,7 +334,6 @@
                         errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`;
                         errorContainer.style.display = 'block';
                         this.value = ''; // Clear the file input
-                        fileValidationPassed = false;
                         return;
                     }
                     
@@ -353,80 +344,145 @@
                 }
             });
             
-            // Intercept form submission to check validation state
-            messageForm.addEventListener('submit', function(e) {
-                // If validation previously failed, show error again
-                if (!fileValidationPassed) {
-                    e.preventDefault();
-                    errorContainer.style.display = 'block';
-                    return false;
+            // CRITICAL: Completely replace the form's native submit handling
+            if (messageForm) {
+                // Remove any existing submit events by cloning and replacing
+                const newForm = messageForm.cloneNode(true);
+                messageForm.parentNode.replaceChild(newForm, messageForm);
+                
+                // Re-attach click handler for attachment button on the new form
+                const newAttachmentBtn = document.getElementById('attachmentBtn');
+                const newFileInput = document.getElementById('fileUpload');
+                if (newAttachmentBtn && newFileInput) {
+                    newAttachmentBtn.addEventListener('click', function() {
+                        newFileInput.click();
+                    });
                 }
                 
-                // Additional check right before submission
-                if (fileInput.files.length > 0) {
-                    let totalSize = 0;
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        totalSize += fileInput.files[i].size;
+                // Re-attach file change handler
+                if (newFileInput) {
+                    newFileInput.addEventListener('change', function() {
+                        // Clear previous error and previews
+                        errorContainer.style.display = 'none';
+                        filePreviewContainer.innerHTML = '';
+                        
+                        if (this.files.length > 0) {
+                            // Check total size of all files
+                            let totalSize = 0;
+                            let oversizedFiles = [];
+                            
+                            for (let i = 0; i < this.files.length; i++) {
+                                const file = this.files[i];
+                                totalSize += file.size;
+                                
+                                // Check individual file size
+                                if (file.size > MAX_FILE_SIZE) {
+                                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                                    oversizedFiles.push(`${file.name} (${fileSizeMB}MB)`);
+                                }
+                            }
+                            
+                            // If any files are too big, show error and reset input
+                            if (oversizedFiles.length > 0) {
+                                errorContainer.innerHTML = `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`;
+                                errorContainer.style.display = 'block';
+                                this.value = ''; // Clear the file input
+                                return;
+                            }
+                            
+                            // Check total size
+                            if (totalSize > MAX_TOTAL_SIZE) {
+                                const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                                errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`;
+                                errorContainer.style.display = 'block';
+                                this.value = ''; // Clear the file input
+                                return;
+                            }
+                            
+                            // If all checks pass, preview the files
+                            for (let i = 0; i < this.files.length; i++) {
+                                previewFile(this.files[i]);
+                            }
+                        }
+                    });
+                }
+                
+                // Add new submit handler directly to the form element, not as an event listener
+                newForm.onsubmit = function(e) {
+                    e.preventDefault(); // Always prevent default form submission
+                    
+                    // Check for oversized files one last time
+                    const currentFileInput = document.getElementById('fileUpload');
+                    if (currentFileInput && currentFileInput.files && currentFileInput.files.length > 0) {
+                        let totalSize = 0;
+                        let hasOversizedFile = false;
+                        
+                        for (let i = 0; i < currentFileInput.files.length; i++) {
+                            const file = currentFileInput.files[i];
+                            totalSize += file.size;
+                            
+                            if (file.size > MAX_FILE_SIZE) {
+                                hasOversizedFile = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasOversizedFile || totalSize > MAX_TOTAL_SIZE) {
+                            errorContainer.innerHTML = "File size validation failed. Please remove large attachments.";
+                            errorContainer.style.display = 'block';
+                            return false;
+                        }
                     }
                     
-                    if (totalSize > MAX_TOTAL_SIZE) {
-                        e.preventDefault();
-                        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
-                        errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).`;
+                    // Hide any previous errors
+                    errorContainer.style.display = 'none';
+                    
+                    // Show loading state on button
+                    const sendButton = document.getElementById('sendMessageBtn');
+                    const originalButtonContent = sendButton.innerHTML;
+                    sendButton.disabled = true;
+                    sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                    
+                    // Submit the form via AJAX
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: new FormData(this),
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw errorData;
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Success - clear the form
+                        document.getElementById('messageContent').value = '';
+                        if (currentFileInput) currentFileInput.value = '';
+                        filePreviewContainer.innerHTML = '';
+                        
+                        // Force conversation reload to show the new message
+                        loadConversation({{ $conversation->conversation_id }});
+                    })
+                    .catch(error => {
+                        // Show error message
+                        errorContainer.textContent = error.message || 'Failed to send message. Please try again.';
                         errorContainer.style.display = 'block';
-                        return false;
-                    }
-                }
-                
-                // If we get here, validation passed, proceed with normal form handling
-                e.preventDefault();
-                
-                // Hide any previous errors
-                errorContainer.style.display = 'none';
-                
-                // Show loading state on button
-                const sendButton = document.getElementById('sendMessageBtn');
-                const originalButtonContent = sendButton.innerHTML;
-                sendButton.disabled = true;
-                sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-                
-                // Submit the form via AJAX
-                fetch(this.action, {
-                    method: 'POST',
-                    body: new FormData(this),
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(errorData => {
-                            throw errorData;
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Success - clear the form
-                    document.getElementById('messageContent').value = '';
-                    fileInput.value = '';
-                    filePreviewContainer.innerHTML = '';
+                        
+                        // Clear file input to let them try again
+                        if (currentFileInput) currentFileInput.value = '';
+                    })
+                    .finally(() => {
+                        // Restore button state
+                        sendButton.disabled = false;
+                        sendButton.innerHTML = originalButtonContent;
+                    });
                     
-                    // Force conversation reload to show the new message
-                    loadConversation({{ $conversation->conversation_id }});
-                })
-                .catch(error => {
-                    // Show error message
-                    errorContainer.textContent = error.message || 'Failed to send message. Please try again.';
-                    errorContainer.style.display = 'block';
-                    
-                    // Clear file input to let them try again
-                    fileInput.value = '';
-                })
-                .finally(() => {
-                    // Restore button state
-                    sendButton.disabled = false;
-                    sendButton.innerHTML = originalButtonContent;
-                });
-            });
+                    return false; // Ensure no form submission happens
+                };
+            }
             
             // Function to preview files
             function previewFile(file) {
@@ -464,7 +520,8 @@
                     previewItem.remove();
                     // If all file previews are removed, reset the file input
                     if (filePreviewContainer.children.length === 0) {
-                        fileInput.value = '';
+                        const currentFileInput = document.getElementById('fileUpload');
+                        if (currentFileInput) currentFileInput.value = '';
                     }
                 };
                 
