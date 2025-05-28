@@ -283,86 +283,42 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Immediately get references to critical elements
             const messageForm = document.getElementById('messageForm');
             const fileInput = document.getElementById('fileUpload');
             const errorContainer = document.getElementById('messageErrorContainer');
             const filePreviewContainer = document.getElementById('filePreviewContainer');
             const attachmentBtn = document.getElementById('attachmentBtn');
             
-            // Constants
+            // Size constants
             const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
             const MAX_TOTAL_SIZE = 8 * 1024 * 1024; // 8MB total
             
-            // Click handler for attachment button
-            attachmentBtn.addEventListener('click', function() {
-                fileInput.click();
-            });
+            // CRITICAL: Set a global flag we can check during submissions
+            window.hasOversizedFiles = false;
             
-            // Validate files when selected
-            fileInput.addEventListener('change', function() {
-                // Clear previous error and previews
-                errorContainer.style.display = 'none';
-                filePreviewContainer.innerHTML = '';
-                
-                if (this.files.length > 0) {
-                    // Check total size of all files
-                    let totalSize = 0;
-                    let oversizedFiles = [];
-                    
-                    for (let i = 0; i < this.files.length; i++) {
-                        const file = this.files[i];
-                        totalSize += file.size;
-                        
-                        // Check individual file size
-                        if (file.size > MAX_FILE_SIZE) {
-                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                            oversizedFiles.push(`${file.name} (${fileSizeMB}MB)`);
-                        }
-                    }
-                    
-                    // If any files are too big, show error and reset input
-                    if (oversizedFiles.length > 0) {
-                        errorContainer.innerHTML = `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`;
-                        errorContainer.style.display = 'block';
-                        this.value = ''; // Clear the file input
-                        return;
-                    }
-                    
-                    // Check total size
-                    if (totalSize > MAX_TOTAL_SIZE) {
-                        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
-                        errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`;
-                        errorContainer.style.display = 'block';
-                        this.value = ''; // Clear the file input
-                        return;
-                    }
-                    
-                    // If all checks pass, preview the files
-                    for (let i = 0; i < this.files.length; i++) {
-                        previewFile(this.files[i]);
-                    }
-                }
-            });
-            
-            // CRITICAL: Completely replace the form's native submit handling
+            // CRITICAL: Override form submit at the highest level
             if (messageForm) {
-                // Remove any existing submit events by cloning and replacing
+                // Replace original form with clone to remove all existing event handlers
                 const newForm = messageForm.cloneNode(true);
                 messageForm.parentNode.replaceChild(newForm, messageForm);
                 
-                // Re-attach click handler for attachment button on the new form
-                const newAttachmentBtn = document.getElementById('attachmentBtn');
-                const newFileInput = document.getElementById('fileUpload');
-                if (newAttachmentBtn && newFileInput) {
-                    newAttachmentBtn.addEventListener('click', function() {
-                        newFileInput.click();
+                // Get fresh element references after DOM replacement
+                const updatedForm = document.getElementById('messageForm');
+                const updatedFileInput = document.getElementById('fileUpload');
+                const updatedAttachmentBtn = document.getElementById('attachmentBtn');
+                
+                // Wire up attachment button click
+                if (updatedAttachmentBtn && updatedFileInput) {
+                    updatedAttachmentBtn.addEventListener('click', function() {
+                        updatedFileInput.click();
                     });
                 }
                 
-                // Re-attach file change handler
-                if (newFileInput) {
-                    newFileInput.addEventListener('change', function() {
-                        // Clear previous error and previews
+                // CRITICAL: Validate files immediately on selection
+                if (updatedFileInput) {
+                    updatedFileInput.addEventListener('change', function() {
+                        window.hasOversizedFiles = false;
                         errorContainer.style.display = 'none';
                         filePreviewContainer.innerHTML = '';
                         
@@ -375,7 +331,6 @@
                                 const file = this.files[i];
                                 totalSize += file.size;
                                 
-                                // Check individual file size
                                 if (file.size > MAX_FILE_SIZE) {
                                     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
                                     oversizedFiles.push(`${file.name} (${fileSizeMB}MB)`);
@@ -384,6 +339,7 @@
                             
                             // If any files are too big, show error and reset input
                             if (oversizedFiles.length > 0) {
+                                window.hasOversizedFiles = true;
                                 errorContainer.innerHTML = `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`;
                                 errorContainer.style.display = 'block';
                                 this.value = ''; // Clear the file input
@@ -392,6 +348,7 @@
                             
                             // Check total size
                             if (totalSize > MAX_TOTAL_SIZE) {
+                                window.hasOversizedFiles = true;
                                 const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
                                 errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`;
                                 errorContainer.style.display = 'block';
@@ -407,30 +364,34 @@
                     });
                 }
                 
-                // Add new submit handler directly to the form element, not as an event listener
-                newForm.onsubmit = function(e) {
-                    e.preventDefault(); // Always prevent default form submission
+                // CRITICAL: Multiple barriers to prevent form submission with oversized files
+                
+                // 1. Use onsubmit directly on the form
+                updatedForm.onsubmit = function(e) {
+                    // Prevent default immediately to ensure we control the flow
+                    e.preventDefault();
+                    e.stopPropagation();
                     
-                    // Check for oversized files one last time
+                    // Block submission if we have oversized files
+                    if (window.hasOversizedFiles) {
+                        errorContainer.style.display = 'block';
+                        return false;
+                    }
+                    
+                    // Double-check files one more time
                     const currentFileInput = document.getElementById('fileUpload');
                     if (currentFileInput && currentFileInput.files && currentFileInput.files.length > 0) {
                         let totalSize = 0;
-                        let hasOversizedFile = false;
-                        
                         for (let i = 0; i < currentFileInput.files.length; i++) {
                             const file = currentFileInput.files[i];
                             totalSize += file.size;
                             
-                            if (file.size > MAX_FILE_SIZE) {
-                                hasOversizedFile = true;
-                                break;
+                            if (file.size > MAX_FILE_SIZE || totalSize > MAX_TOTAL_SIZE) {
+                                window.hasOversizedFiles = true;
+                                errorContainer.innerHTML = "File size validation failed. Please remove large attachments.";
+                                errorContainer.style.display = 'block';
+                                return false;
                             }
-                        }
-                        
-                        if (hasOversizedFile || totalSize > MAX_TOTAL_SIZE) {
-                            errorContainer.innerHTML = "File size validation failed. Please remove large attachments.";
-                            errorContainer.style.display = 'block';
-                            return false;
                         }
                     }
                     
@@ -443,7 +404,7 @@
                     sendButton.disabled = true;
                     sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
                     
-                    // Submit the form via AJAX
+                    // Use fetch API for AJAX submission
                     fetch(this.action, {
                         method: 'POST',
                         body: new FormData(this),
@@ -480,11 +441,21 @@
                         sendButton.innerHTML = originalButtonContent;
                     });
                     
-                    return false; // Ensure no form submission happens
+                    return false; // Always return false to prevent native form submission
                 };
+                
+                // 2. Also add event listener as backup
+                updatedForm.addEventListener('submit', function(e) {
+                    if (window.hasOversizedFiles) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        errorContainer.style.display = 'block';
+                        return false;
+                    }
+                }, true); // Use capturing phase to run first
             }
             
-            // Function to preview files
+            // File preview function
             function previewFile(file) {
                 const previewItem = document.createElement('div');
                 previewItem.className = 'file-preview-item';
@@ -518,10 +489,11 @@
                 removeBtn.innerHTML = '&times;';
                 removeBtn.onclick = function() {
                     previewItem.remove();
-                    // If all file previews are removed, reset the file input
+                    // If all file previews are removed, reset the file input and flag
                     if (filePreviewContainer.children.length === 0) {
                         const currentFileInput = document.getElementById('fileUpload');
                         if (currentFileInput) currentFileInput.value = '';
+                        window.hasOversizedFiles = false;
                     }
                 };
                 
