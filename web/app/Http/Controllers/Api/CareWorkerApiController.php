@@ -7,12 +7,20 @@ use App\Models\User;
 use App\Models\Municipality;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Services\UploadService;
+use Illuminate\Support\Facades\Storage;
 
 class CareWorkerApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     /**
      * Display a listing of care workers.
      */
@@ -50,7 +58,22 @@ class CareWorkerApiController extends Controller
         
         return response()->json([
             'success' => true,
-            'careworkers' => $careworkers
+            'careworkers' => $careworkers->map(function($cw) {
+                return array_merge(
+                    $cw->toArray(),
+                    [
+                        'photo_url' => $cw->photo
+                            ? Storage::disk('spaces-private')->temporaryUrl($cw->photo, now()->addMinutes(30))
+                            : null,
+                        'government_issued_id_url' => $cw->government_issued_id
+                            ? Storage::disk('spaces-private')->temporaryUrl($cw->government_issued_id, now()->addMinutes(30))
+                            : null,
+                        'cv_resume_url' => $cw->cv_resume
+                            ? Storage::disk('spaces-private')->temporaryUrl($cw->cv_resume, now()->addMinutes(30))
+                            : null,
+                    ]
+                );
+            })
         ]);
     }
 
@@ -65,7 +88,20 @@ class CareWorkerApiController extends Controller
             
         return response()->json([
             'success' => true,
-            'careworker' => $careworker
+            'careworker' => array_merge(
+                $careworker->toArray(),
+                [
+                    'photo_url' => $careworker->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $careworker->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $careworker->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
@@ -141,33 +177,33 @@ class CareWorkerApiController extends Controller
         $uniqueIdentifier = time() . '_' . Str::random(5);
         
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->storeAs(
+            $careworker->photo = $this->uploadService->upload(
+                $request->file('photo'),
+                'spaces-private',
                 'uploads/careworker_photos',
                 $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' . 
-                $request->file('photo')->getClientOriginalExtension(),
-                'public'
+                $request->file('photo')->getClientOriginalExtension()
             );
-            $careworker->photo = $photoPath;
         }
         
         if ($request->hasFile('government_id')) {
-            $governmentIDPath = $request->file('government_id')->storeAs(
+            $careworker->government_issued_id = $this->uploadService->upload(
+                $request->file('government_id'),
+                'spaces-private',
                 'uploads/careworker_government_ids',
                 $request->input('first_name') . '_' . $request->input('last_name') . '_government_id_' . $uniqueIdentifier . '.' . 
-                $request->file('government_id')->getClientOriginalExtension(),
-                'public'
+                $request->file('government_id')->getClientOriginalExtension()
             );
-            $careworker->government_issued_id = $governmentIDPath;
         }
         
         if ($request->hasFile('resume')) {
-            $resumePath = $request->file('resume')->storeAs(
+            $careworker->cv_resume = $this->uploadService->upload(
+                $request->file('resume'),
+                'spaces-private',
                 'uploads/careworker_resumes',
                 $request->input('first_name') . '_' . $request->input('last_name') . '_resume_' . $uniqueIdentifier . '.' . 
-                $request->file('resume')->getClientOriginalExtension(),
-                'public'
+                $request->file('resume')->getClientOriginalExtension()
             );
-            $careworker->cv_resume = $resumePath;
         }
         
         $careworker->save();
@@ -175,7 +211,20 @@ class CareWorkerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Care Worker created successfully',
-            'careworker' => $careworker
+            'careworker' => array_merge(
+                $careworker->toArray(),
+                [
+                    'photo_url' => $careworker->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $careworker->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $careworker->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ], 201);
     }
 
@@ -277,48 +326,33 @@ class CareWorkerApiController extends Controller
         $uniqueIdentifier = time() . '_' . Str::random(5);
         
         if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            if ($careworker->photo && Storage::disk('public')->exists($careworker->photo)) {
-                Storage::disk('public')->delete($careworker->photo);
-            }
-            
-            $photoPath = $request->file('photo')->storeAs(
+            $careworker->photo = $this->uploadService->upload(
+                $request->file('photo'),
+                'spaces-private',
                 'uploads/careworker_photos',
                 $careworker->first_name . '_' . $careworker->last_name . '_photo_' . $uniqueIdentifier . '.' . 
-                $request->file('photo')->getClientOriginalExtension(),
-                'public'
+                $request->file('photo')->getClientOriginalExtension()
             );
-            $careworker->photo = $photoPath;
         }
         
         if ($request->hasFile('government_id')) {
-            // Delete old file if exists
-            if ($careworker->government_issued_id && Storage::disk('public')->exists($careworker->government_issued_id)) {
-                Storage::disk('public')->delete($careworker->government_issued_id);
-            }
-            
-            $governmentIDPath = $request->file('government_id')->storeAs(
+            $careworker->government_issued_id = $this->uploadService->upload(
+                $request->file('government_id'),
+                'spaces-private',
                 'uploads/careworker_government_ids',
                 $careworker->first_name . '_' . $careworker->last_name . '_government_id_' . $uniqueIdentifier . '.' . 
-                $request->file('government_id')->getClientOriginalExtension(),
-                'public'
+                $request->file('government_id')->getClientOriginalExtension()
             );
-            $careworker->government_issued_id = $governmentIDPath;
         }
         
         if ($request->hasFile('resume')) {
-            // Delete old file if exists
-            if ($careworker->cv_resume && Storage::disk('public')->exists($careworker->cv_resume)) {
-                Storage::disk('public')->delete($careworker->cv_resume);
-            }
-            
-            $resumePath = $request->file('resume')->storeAs(
+            $careworker->cv_resume = $this->uploadService->upload(
+                $request->file('resume'),
+                'spaces-private',
                 'uploads/careworker_resumes',
                 $careworker->first_name . '_' . $careworker->last_name . '_resume_' . $uniqueIdentifier . '.' . 
-                $request->file('resume')->getClientOriginalExtension(),
-                'public'
+                $request->file('resume')->getClientOriginalExtension()
             );
-            $careworker->cv_resume = $resumePath;
         }
         
         $careworker->save();
@@ -326,7 +360,20 @@ class CareWorkerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Care Worker updated successfully',
-            'careworker' => $careworker
+            'careworker' => array_merge(
+                $careworker->toArray(),
+                [
+                    'photo_url' => $careworker->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $careworker->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $careworker->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
@@ -336,18 +383,6 @@ class CareWorkerApiController extends Controller
     public function destroy($id)
     {
         $careworker = User::where('role_id', 3)->findOrFail($id);
-        
-        // Delete associated files
-        if ($careworker->photo && Storage::disk('public')->exists($careworker->photo)) {
-            Storage::disk('public')->delete($careworker->photo);
-        }
-        if ($careworker->government_issued_id && Storage::disk('public')->exists($careworker->government_issued_id)) {
-            Storage::disk('public')->delete($careworker->government_issued_id);
-        }
-        if ($careworker->cv_resume && Storage::disk('public')->exists($careworker->cv_resume)) {
-            Storage::disk('public')->delete($careworker->cv_resume);
-        }
-        
         $careworker->delete();
         
         return response()->json([
