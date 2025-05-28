@@ -3,11 +3,17 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Services\UploadService;
 
 class UploadController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     public function upload(Request $request)
     {
         try {
@@ -21,6 +27,7 @@ class UploadController extends Controller
                     'max:10240', // 10MB
                     'mimes:' . implode(',', $allowedTypesArray),
                 ],
+                'visibility' => 'nullable|in:public,private',
             ]);
 
             if ($validator->fails()) {
@@ -32,10 +39,11 @@ class UploadController extends Controller
             }
 
             $file = $request->file('file');
-            $extension = $file->getClientOriginalExtension();
-            $filename = \Illuminate\Support\Str::uuid() . '.' . $extension;
-            // No table to associate uploads with, so we just store the file
-            $path = $file->storeAs('uploads/mobile', $filename, 'public');
+            $visibility = $request->input('visibility', 'public');
+            $disk = $visibility === 'private' ? 'spaces-private' : 'spaces';
+            $directory = $request->input('directory', $visibility === 'private' ? 'private' : 'public');
+
+            $path = $this->uploadService->upload($file, $disk, $directory);
 
             return response()->json([
                 'success' => true,
