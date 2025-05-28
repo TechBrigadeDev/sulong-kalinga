@@ -4672,6 +4672,131 @@
 
         
     </script>
+
+    <script>
+        // Global file validation function for messaging attachments
+        window.validateMessageAttachments = function(files) {
+            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+            const MAX_TOTAL_SIZE = 8 * 1024 * 1024; // 8MB total
+            let isValid = true;
+            let errorMessage = '';
+            
+            if (files && files.length > 0) {
+                // Check total size of all files
+                let totalSize = 0;
+                let oversizedFiles = [];
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    totalSize += file.size;
+                    
+                    if (file.size > MAX_FILE_SIZE) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        oversizedFiles.push(`${file.name} (${fileSizeMB}MB)`);
+                    }
+                }
+                
+                // If any files are too big, set error message
+                if (oversizedFiles.length > 0) {
+                    return {
+                        isValid: false,
+                        errorMessage: `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`
+                    };
+                }
+                
+                // Check total size
+                if (totalSize > MAX_TOTAL_SIZE) {
+                    const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                    return {
+                        isValid: false,
+                        errorMessage: `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`
+                    };
+                }
+            }
+            
+            return { isValid: true, errorMessage: '' };
+        };
+
+        // Global event delegation for file inputs in dynamically loaded content
+        document.body.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'fileUpload' && e.target.type === 'file') {
+                // Get file input and validation result
+                const fileInput = e.target;
+                const validationResult = window.validateMessageAttachments(fileInput.files);
+                
+                // Get or create error container
+                let errorContainer = document.getElementById('fileErrorContainer');
+                if (!errorContainer) {
+                    errorContainer = document.createElement('div');
+                    errorContainer.id = 'fileErrorContainer';
+                    errorContainer.className = 'alert alert-danger';
+                    errorContainer.style.display = 'none';
+                    
+                    // Insert before the file preview container if it exists
+                    const filePreviewContainer = document.getElementById('filePreviewContainer');
+                    if (filePreviewContainer && filePreviewContainer.parentNode) {
+                        filePreviewContainer.parentNode.insertBefore(errorContainer, filePreviewContainer);
+                    } else if (fileInput.parentNode) {
+                        // Otherwise insert after the file input
+                        fileInput.parentNode.insertBefore(errorContainer, fileInput.nextSibling);
+                    }
+                }
+                
+                // Show error if validation failed
+                if (!validationResult.isValid) {
+                    errorContainer.innerHTML = validationResult.errorMessage;
+                    errorContainer.style.display = 'block';
+                    fileInput.value = ''; // Clear the file input
+                    
+                    // Clear previews if they exist
+                    const filePreviewContainer = document.getElementById('filePreviewContainer');
+                    if (filePreviewContainer) {
+                        filePreviewContainer.innerHTML = '';
+                    }
+                } else {
+                    errorContainer.style.display = 'none';
+                }
+            }
+        }, true);
+
+        // Intercept form submissions to validate files
+        document.body.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'messageForm') {
+                const fileInput = e.target.querySelector('#fileUpload');
+                if (fileInput && fileInput.files.length > 0) {
+                    const validationResult = window.validateMessageAttachments(fileInput.files);
+                    if (!validationResult.isValid) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Show error message
+                        let errorContainer = document.getElementById('fileErrorContainer');
+                        if (!errorContainer) {
+                            errorContainer = document.createElement('div');
+                            errorContainer.id = 'fileErrorContainer';
+                            errorContainer.className = 'alert alert-danger';
+                            
+                            // Insert it in an appropriate location
+                            const filePreviewContainer = document.getElementById('filePreviewContainer');
+                            if (filePreviewContainer && filePreviewContainer.parentNode) {
+                                filePreviewContainer.parentNode.insertBefore(errorContainer, filePreviewContainer);
+                            } else {
+                                e.target.insertBefore(errorContainer, e.target.firstChild);
+                            }
+                        }
+                        
+                        errorContainer.innerHTML = validationResult.errorMessage;
+                        errorContainer.style.display = 'block';
+                        
+                        // Ensure the error is visible
+                        errorContainer.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        
+                        return false;
+                    }
+                }
+            }
+        }, true);
+    </script>
     
 </body>
 </html>
