@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Services\UploadService;
+use Illuminate\Support\Facades\Storage;
 
 class CareManagerApiController extends Controller
 {
@@ -25,7 +26,6 @@ class CareManagerApiController extends Controller
      */
     public function index(Request $request)
     {
-        // Only allow Admin and CM to view care managers
         if (!in_array($request->user()->role_id, [1, 2])) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
@@ -33,7 +33,6 @@ class CareManagerApiController extends Controller
         $query = User::where('role_id', 2)
             ->with('municipality');
             
-        // Add search functionality
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
@@ -43,12 +42,10 @@ class CareManagerApiController extends Controller
             });
         }
         
-        // Add filtering by municipality
         if ($request->has('municipality_id')) {
             $query->where('assigned_municipality_id', $request->get('municipality_id'));
         }
         
-        // Add filtering by status
         if ($request->has('status')) {
             $query->where('volunteer_status', $request->get('status'));
         }
@@ -57,7 +54,22 @@ class CareManagerApiController extends Controller
         
         return response()->json([
             'success' => true,
-            'caremanagers' => $caremanagers
+            'caremanagers' => $caremanagers->map(function($cm) {
+                return array_merge(
+                    $cm->toArray(),
+                    [
+                        'photo_url' => $cm->photo
+                            ? Storage::disk('spaces-private')->temporaryUrl($cm->photo, now()->addMinutes(30))
+                            : null,
+                        'government_issued_id_url' => $cm->government_issued_id
+                            ? Storage::disk('spaces-private')->temporaryUrl($cm->government_issued_id, now()->addMinutes(30))
+                            : null,
+                        'cv_resume_url' => $cm->cv_resume
+                            ? Storage::disk('spaces-private')->temporaryUrl($cm->cv_resume, now()->addMinutes(30))
+                            : null,
+                    ]
+                );
+            })
         ]);
     }
 
@@ -72,7 +84,20 @@ class CareManagerApiController extends Controller
             
         return response()->json([
             'success' => true,
-            'caremanager' => $caremanager
+            'caremanager' => array_merge(
+                $caremanager->toArray(),
+                [
+                    'photo_url' => $caremanager->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $caremanager->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $caremanager->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
@@ -109,9 +134,8 @@ class CareManagerApiController extends Controller
             ], 422);
         }
         
-        // Create a new care manager
         $caremanager = new User();
-        $caremanager->role_id = 2; // Care Manager role
+        $caremanager->role_id = 2;
         $caremanager->first_name = $request->input('first_name');
         $caremanager->last_name = $request->input('last_name');
         $caremanager->birthday = $request->input('birth_date');
@@ -123,7 +147,6 @@ class CareManagerApiController extends Controller
         $caremanager->address = $request->input('address');
         $caremanager->personal_email = $request->input('personal_email');
         
-        // Format mobile number
         $mobile = $request->input('mobile');
         if (substr($mobile, 0, 3) !== '+63') {
             $mobile = '+63' . $mobile;
@@ -136,9 +159,8 @@ class CareManagerApiController extends Controller
         $caremanager->assigned_municipality_id = $request->input('municipality_id');
         $caremanager->volunteer_status = 'Active';
         
-        // Handle file uploads
         $uniqueIdentifier = time() . '_' . Str::random(5);
-        
+
         if ($request->hasFile('photo')) {
             $caremanager->photo = $this->uploadService->upload(
                 $request->file('photo'),
@@ -174,7 +196,20 @@ class CareManagerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Care Manager created successfully',
-            'caremanager' => $caremanager
+            'caremanager' => array_merge(
+                $caremanager->toArray(),
+                [
+                    'photo_url' => $caremanager->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $caremanager->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $caremanager->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ], 201);
     }
 
@@ -223,7 +258,6 @@ class CareManagerApiController extends Controller
             ], 422);
         }
         
-        // Update care manager details
         $fieldsToUpdate = [
             'first_name', 'last_name', 'gender', 'civil_status',
             'religion', 'nationality', 'educational_background', 'address',
@@ -244,7 +278,6 @@ class CareManagerApiController extends Controller
             $caremanager->assigned_municipality_id = $request->input('municipality_id');
         }
         
-        // Format mobile number if provided
         if ($request->has('mobile')) {
             $mobile = $request->input('mobile');
             if (substr($mobile, 0, 3) !== '+63') {
@@ -253,14 +286,12 @@ class CareManagerApiController extends Controller
             $caremanager->mobile = $mobile;
         }
         
-        // Update password if provided
         if ($request->filled('password')) {
             $caremanager->password = Hash::make($request->input('password'));
         }
         
-        // Handle file uploads
         $uniqueIdentifier = time() . '_' . Str::random(5);
-        
+
         if ($request->hasFile('photo')) {
             $caremanager->photo = $this->uploadService->upload(
                 $request->file('photo'),
@@ -296,7 +327,20 @@ class CareManagerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Care Manager updated successfully',
-            'caremanager' => $caremanager
+            'caremanager' => array_merge(
+                $caremanager->toArray(),
+                [
+                    'photo_url' => $caremanager->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $caremanager->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $caremanager->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($caremanager->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
@@ -306,9 +350,6 @@ class CareManagerApiController extends Controller
     public function destroy($id)
     {
         $caremanager = User::where('role_id', 2)->findOrFail($id);
-        
-        // Optionally: delete files from storage if needed
-        // (You may want to implement this in UploadService for consistency)
 
         $caremanager->delete();
         
@@ -317,19 +358,4 @@ class CareManagerApiController extends Controller
             'message' => 'Care Manager deleted successfully'
         ]);
     }
-
-
-    // /**
-    //  * Get the municipality associated with the care manager.
-    //  */
-    // public function municipality($id)
-    // {
-    //     $caremanager = User::where('role_id', 2)->findOrFail($id);
-    //     $municipality = Municipality::findOrFail($caremanager->assigned_municipality_id);
-        
-    //     return response()->json([
-    //         'success' => true,
-    //         'municipality' => $municipality
-    //     ]);
-    // }
 }
