@@ -58,9 +58,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/family-members/{id}', [FamilyMemberApiController::class, 'update']);
     Route::delete('/family-members/{id}', [FamilyMemberApiController::class, 'destroy']);
 
-    // Admin Read-Only
+    // Admin Management (Full CRUD + status + restore)
     Route::get('/admins', [AdminApiController::class, 'index']);
     Route::get('/admins/{id}', [AdminApiController::class, 'show']);
+    Route::post('/admins', [AdminApiController::class, 'store']);
+    Route::put('/admins/{id}', [AdminApiController::class, 'update']);
+    Route::delete('/admins/{id}', [AdminApiController::class, 'destroy']);
+    Route::patch('/admins/{id}/status', [AdminApiController::class, 'changeStatus']);
+    Route::post('/admins/{id}/restore', [AdminApiController::class, 'restore']);
 
     // Care Manager Read-Only
     Route::get('/care-managers', [CareManagerApiController::class, 'index']);
