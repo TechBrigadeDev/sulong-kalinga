@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use App\Models\GeneralCarePlan;
 use App\Models\CareNeed;
 use App\Models\Medication;
@@ -64,7 +65,28 @@ class BeneficiaryApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'beneficiaries' => $beneficiaries->items(),
+            'beneficiaries' => collect($beneficiaries->items())->map(function($b) {
+                return array_merge(
+                    $b->toArray(),
+                    [
+                        'photo_url' => $b->photo
+                            ? Storage::disk('spaces-private')->temporaryUrl($b->photo, now()->addMinutes(30))
+                            : null,
+                        'care_service_agreement_doc_url' => $b->care_service_agreement_doc
+                            ? Storage::disk('spaces-private')->temporaryUrl($b->care_service_agreement_doc, now()->addMinutes(30))
+                            : null,
+                        'general_care_plan_doc_url' => $b->general_care_plan_doc
+                            ? Storage::disk('spaces-private')->temporaryUrl($b->general_care_plan_doc, now()->addMinutes(30))
+                            : null,
+                        'beneficiary_signature_url' => $b->beneficiary_signature
+                            ? Storage::disk('spaces-private')->temporaryUrl($b->beneficiary_signature, now()->addMinutes(30))
+                            : null,
+                        'care_worker_signature_url' => $b->care_worker_signature
+                            ? Storage::disk('spaces-private')->temporaryUrl($b->care_worker_signature, now()->addMinutes(30))
+                            : null,
+                    ]
+                );
+            }),
             'meta' => [
                 'current_page' => $beneficiaries->currentPage(),
                 'last_page' => $beneficiaries->lastPage(),
@@ -106,7 +128,26 @@ class BeneficiaryApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'beneficiary' => $beneficiary
+            'beneficiary' => array_merge(
+                $beneficiary->toArray(),
+                [
+                    'photo_url' => $beneficiary->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->photo, now()->addMinutes(30))
+                        : null,
+                    'care_service_agreement_doc_url' => $beneficiary->care_service_agreement_doc
+                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->care_service_agreement_doc, now()->addMinutes(30))
+                        : null,
+                    'general_care_plan_doc_url' => $beneficiary->general_care_plan_doc
+                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->general_care_plan_doc, now()->addMinutes(30))
+                        : null,
+                    'beneficiary_signature_url' => $beneficiary->beneficiary_signature
+                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->beneficiary_signature, now()->addMinutes(30))
+                        : null,
+                    'care_worker_signature_url' => $beneficiary->care_worker_signature
+                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->care_worker_signature, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
