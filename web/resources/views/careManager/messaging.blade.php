@@ -409,6 +409,27 @@
         </div>
     </div>
 
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <div id="fileSizeErrorMessage"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="{{ asset('js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
@@ -4859,37 +4880,38 @@
                 const fileInput = e.target;
                 const validationResult = window.validateMessageAttachments(fileInput.files);
                 
-                // Get or create error container
-                let errorContainer = document.getElementById('fileErrorContainer');
-                if (!errorContainer) {
-                    errorContainer = document.createElement('div');
-                    errorContainer.id = 'fileErrorContainer';
-                    errorContainer.className = 'alert alert-danger';
-                    errorContainer.style.display = 'none';
-                    
-                    // Insert before the file preview container if it exists
-                    const filePreviewContainer = document.getElementById('filePreviewContainer');
-                    if (filePreviewContainer && filePreviewContainer.parentNode) {
-                        filePreviewContainer.parentNode.insertBefore(errorContainer, filePreviewContainer);
-                    } else if (fileInput.parentNode) {
-                        // Otherwise insert after the file input
-                        fileInput.parentNode.insertBefore(errorContainer, fileInput.nextSibling);
-                    }
-                }
-                
                 // Show error if validation failed
                 if (!validationResult.isValid) {
-                    errorContainer.innerHTML = validationResult.errorMessage;
-                    errorContainer.style.display = 'block';
-                    fileInput.value = ''; // Clear the file input
+                    // Show error in modal instead of just inline
+                    const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+                    const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+                    
+                    // Set error message in modal
+                    fileSizeErrorMessage.innerHTML = validationResult.errorMessage;
+                    
+                    // Show the modal
+                    fileSizeErrorModal.show();
+                    
+                    // Clear the file input
+                    fileInput.value = '';
                     
                     // Clear previews if they exist
                     const filePreviewContainer = document.getElementById('filePreviewContainer');
                     if (filePreviewContainer) {
                         filePreviewContainer.innerHTML = '';
                     }
+                    
+                    // Hide inline error if it exists
+                    let errorContainer = document.getElementById('fileErrorContainer');
+                    if (errorContainer) {
+                        errorContainer.style.display = 'none';
+                    }
                 } else {
-                    errorContainer.style.display = 'none';
+                    // Hide inline error container if validation passes
+                    let errorContainer = document.getElementById('fileErrorContainer');
+                    if (errorContainer) {
+                        errorContainer.style.display = 'none';
+                    }
                 }
             }
         }, true);
@@ -4904,27 +4926,24 @@
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Show error message
-                        let errorContainer = document.getElementById('fileErrorContainer');
-                        if (!errorContainer) {
-                            errorContainer = document.createElement('div');
-                            errorContainer.id = 'fileErrorContainer';
-                            errorContainer.className = 'alert alert-danger';
-                            
-                            // Insert it in an appropriate location
-                            const filePreviewContainer = document.getElementById('filePreviewContainer');
-                            if (filePreviewContainer && filePreviewContainer.parentNode) {
-                                filePreviewContainer.parentNode.insertBefore(errorContainer, filePreviewContainer);
-                            } else {
-                                e.target.insertBefore(errorContainer, e.target.firstChild);
-                            }
+                        // Show error in modal
+                        const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+                        const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+                        
+                        // Set error message in modal
+                        fileSizeErrorMessage.innerHTML = validationResult.errorMessage;
+                        
+                        // Show the modal
+                        fileSizeErrorModal.show();
+                        
+                        // Clear the file input
+                        fileInput.value = '';
+                        
+                        // Clear previews if they exist
+                        const filePreviewContainer = document.getElementById('filePreviewContainer');
+                        if (filePreviewContainer) {
+                            filePreviewContainer.innerHTML = '';
                         }
-                        
-                        errorContainer.innerHTML = validationResult.errorMessage;
-                        errorContainer.style.display = 'block';
-                        
-                        // Ensure the error is visible
-                        errorContainer.scrollIntoView({behavior: 'smooth', block: 'center'});
                         
                         return false;
                     }
