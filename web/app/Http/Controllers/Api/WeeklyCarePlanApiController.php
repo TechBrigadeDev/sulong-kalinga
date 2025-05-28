@@ -65,7 +65,8 @@ class WeeklyCarePlanApiController extends Controller
             'evaluation_recommendations.max' => 'Evaluation and recommendations cannot exceed 5000 characters',
 
             'photo.required' => 'A photo is required for documentation purposes',
-            'photo.max' => 'The photo path should not exceed 255 characters',
+            'photo.image' => 'The uploaded file must be an image',
+            'photo.max' => 'The photo should not exceed 2MB',
 
             'selected_interventions.required' => 'Please select at least one intervention',
             'duration_minutes.required' => 'Please specify the duration for all selected interventions',
