@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Services\UploadService;
+use Illuminate\Support\Facades\Storage;
 
 class CareWorkerApiController extends Controller
 {
@@ -57,7 +58,22 @@ class CareWorkerApiController extends Controller
         
         return response()->json([
             'success' => true,
-            'careworkers' => $careworkers
+            'careworkers' => $careworkers->map(function($cw) {
+                return array_merge(
+                    $cw->toArray(),
+                    [
+                        'photo_url' => $cw->photo
+                            ? Storage::disk('spaces-private')->temporaryUrl($cw->photo, now()->addMinutes(30))
+                            : null,
+                        'government_issued_id_url' => $cw->government_issued_id
+                            ? Storage::disk('spaces-private')->temporaryUrl($cw->government_issued_id, now()->addMinutes(30))
+                            : null,
+                        'cv_resume_url' => $cw->cv_resume
+                            ? Storage::disk('spaces-private')->temporaryUrl($cw->cv_resume, now()->addMinutes(30))
+                            : null,
+                    ]
+                );
+            })
         ]);
     }
 
@@ -72,7 +88,20 @@ class CareWorkerApiController extends Controller
             
         return response()->json([
             'success' => true,
-            'careworker' => $careworker
+            'careworker' => array_merge(
+                $careworker->toArray(),
+                [
+                    'photo_url' => $careworker->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $careworker->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $careworker->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
@@ -182,7 +211,20 @@ class CareWorkerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Care Worker created successfully',
-            'careworker' => $careworker
+            'careworker' => array_merge(
+                $careworker->toArray(),
+                [
+                    'photo_url' => $careworker->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $careworker->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $careworker->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ], 201);
     }
 
@@ -318,7 +360,20 @@ class CareWorkerApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Care Worker updated successfully',
-            'careworker' => $careworker
+            'careworker' => array_merge(
+                $careworker->toArray(),
+                [
+                    'photo_url' => $careworker->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->photo, now()->addMinutes(30))
+                        : null,
+                    'government_issued_id_url' => $careworker->government_issued_id
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->government_issued_id, now()->addMinutes(30))
+                        : null,
+                    'cv_resume_url' => $careworker->cv_resume
+                        ? Storage::disk('spaces-private')->temporaryUrl($careworker->cv_resume, now()->addMinutes(30))
+                        : null,
+                ]
+            )
         ]);
     }
 
@@ -328,18 +383,6 @@ class CareWorkerApiController extends Controller
     public function destroy($id)
     {
         $careworker = User::where('role_id', 3)->findOrFail($id);
-        
-        // Delete associated files
-        if ($careworker->photo && Storage::disk('public')->exists($careworker->photo)) {
-            Storage::disk('public')->delete($careworker->photo);
-        }
-        if ($careworker->government_issued_id && Storage::disk('public')->exists($careworker->government_issued_id)) {
-            Storage::disk('public')->delete($careworker->government_issued_id);
-        }
-        if ($careworker->cv_resume && Storage::disk('public')->exists($careworker->cv_resume)) {
-            Storage::disk('public')->delete($careworker->cv_resume);
-        }
-        
         $careworker->delete();
         
         return response()->json([
