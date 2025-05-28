@@ -282,88 +282,32 @@
     </form>
 
     <script>
-        // Add form submission handler
-        document.getElementById('messageForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Hide any previous errors
-            document.getElementById('messageErrorContainer').style.display = 'none';
-            
-            // Show loading state on button
-            const sendButton = document.getElementById('sendMessageBtn');
-            const originalButtonContent = sendButton.innerHTML;
-            sendButton.disabled = true;
-            sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-            
-            // Submit the form via AJAX
-            fetch(this.action, {
-                method: 'POST',
-                body: new FormData(this),
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw errorData;
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Success - clear the form
-                document.getElementById('messageContent').value = '';
-                document.getElementById('fileUpload').value = '';
-                document.getElementById('filePreviewContainer').innerHTML = '';
-                
-                // Force conversation reload to show the new message
-                loadConversation({{ $conversation->conversation_id }});
-            })
-            .catch(error => {
-                // Show error message for file size issues
-                const errorContainer = document.getElementById('messageErrorContainer');
-                
-                if (error.errors && error.errors['attachments.0']) {
-                    errorContainer.textContent = 'File too large! Maximum file size is 5MB.';
-                    errorContainer.style.display = 'block';
-                } else if (error.file_error) {
-                    errorContainer.textContent = error.file_error;
-                    errorContainer.style.display = 'block';
-                } else {
-                    errorContainer.textContent = 'Failed to send message. Please try again.';
-                    errorContainer.style.display = 'block';
-                }
-                
-                // Clear file input to let them try again
-                document.getElementById('fileUpload').value = '';
-            })
-            .finally(() => {
-                // Restore button state
-                sendButton.disabled = false;
-                sendButton.innerHTML = originalButtonContent;
-            });
-        });
-    </script>
+        // Global validation state
+        let fileValidationPassed = true;
 
-    <script>
-        // Add this right after the existing form submission script
+        // Add form submission handler
         document.addEventListener('DOMContentLoaded', function() {
+            const messageForm = document.getElementById('messageForm');
             const fileInput = document.getElementById('fileUpload');
-            const attachmentBtn = document.getElementById('attachmentBtn');
             const errorContainer = document.getElementById('messageErrorContainer');
             const filePreviewContainer = document.getElementById('filePreviewContainer');
+            const attachmentBtn = document.getElementById('attachmentBtn');
             
             // Constants
             const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
             const MAX_TOTAL_SIZE = 8 * 1024 * 1024; // 8MB total
             
-            // Add click handler for attachment button
+            // Attach click handler for the attachment button
             attachmentBtn.addEventListener('click', function() {
                 fileInput.click();
             });
             
-            // Add change handler with validation for file input
+            // Validate files when selected
             fileInput.addEventListener('change', function() {
-                // Clear previous errors and previews
+                // Reset validation state
+                fileValidationPassed = true;
+                
+                // Clear previous error and previews
                 errorContainer.style.display = 'none';
                 filePreviewContainer.innerHTML = '';
                 
@@ -388,6 +332,7 @@
                         errorContainer.innerHTML = `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`;
                         errorContainer.style.display = 'block';
                         this.value = ''; // Clear the file input
+                        fileValidationPassed = false;
                         return;
                     }
                     
@@ -397,6 +342,7 @@
                         errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`;
                         errorContainer.style.display = 'block';
                         this.value = ''; // Clear the file input
+                        fileValidationPassed = false;
                         return;
                     }
                     
@@ -405,6 +351,81 @@
                         previewFile(this.files[i]);
                     }
                 }
+            });
+            
+            // Intercept form submission to check validation state
+            messageForm.addEventListener('submit', function(e) {
+                // If validation previously failed, show error again
+                if (!fileValidationPassed) {
+                    e.preventDefault();
+                    errorContainer.style.display = 'block';
+                    return false;
+                }
+                
+                // Additional check right before submission
+                if (fileInput.files.length > 0) {
+                    let totalSize = 0;
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        totalSize += fileInput.files[i].size;
+                    }
+                    
+                    if (totalSize > MAX_TOTAL_SIZE) {
+                        e.preventDefault();
+                        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                        errorContainer.innerHTML = `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).`;
+                        errorContainer.style.display = 'block';
+                        return false;
+                    }
+                }
+                
+                // If we get here, validation passed, proceed with normal form handling
+                e.preventDefault();
+                
+                // Hide any previous errors
+                errorContainer.style.display = 'none';
+                
+                // Show loading state on button
+                const sendButton = document.getElementById('sendMessageBtn');
+                const originalButtonContent = sendButton.innerHTML;
+                sendButton.disabled = true;
+                sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                
+                // Submit the form via AJAX
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw errorData;
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Success - clear the form
+                    document.getElementById('messageContent').value = '';
+                    fileInput.value = '';
+                    filePreviewContainer.innerHTML = '';
+                    
+                    // Force conversation reload to show the new message
+                    loadConversation({{ $conversation->conversation_id }});
+                })
+                .catch(error => {
+                    // Show error message
+                    errorContainer.textContent = error.message || 'Failed to send message. Please try again.';
+                    errorContainer.style.display = 'block';
+                    
+                    // Clear file input to let them try again
+                    fileInput.value = '';
+                })
+                .finally(() => {
+                    // Restore button state
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = originalButtonContent;
+                });
             });
             
             // Function to preview files
@@ -441,8 +462,10 @@
                 removeBtn.innerHTML = '&times;';
                 removeBtn.onclick = function() {
                     previewItem.remove();
-                    // Note: We can't remove individual files from the FileList,
-                    // but we can clear all files if needed
+                    // If all file previews are removed, reset the file input
+                    if (filePreviewContainer.children.length === 0) {
+                        fileInput.value = '';
+                    }
                 };
                 
                 previewItem.appendChild(removeBtn);
@@ -467,4 +490,5 @@
             }
         });
     </script>
+
 </div>
