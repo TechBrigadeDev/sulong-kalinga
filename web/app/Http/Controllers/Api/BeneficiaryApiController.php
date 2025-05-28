@@ -21,9 +21,17 @@ use App\Models\PortalAccount;
 use App\Models\User;
 use App\Models\Notification;
 use App\Models\FamilyMember;
+use App\Services\UploadService;
 
 class BeneficiaryApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     /**
      * Display a listing of beneficiaries.
      */
@@ -111,7 +119,6 @@ class BeneficiaryApiController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        // Copy the full validation rules from your web controller here (shortened for brevity)
         $validator = \Validator::make($request->all(), [
             'first_name' => [
                 'required', 'string', 'max:100',
@@ -141,74 +148,69 @@ class BeneficiaryApiController extends Controller
         DB::beginTransaction();
         try {
             $uniqueIdentifier = Str::random(10);
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
 
-            // Handle file uploads (same logic as web controller)
+            // Use UploadService for all file uploads (private disk)
             $beneficiaryPhotoPath = null;
             if ($request->hasFile('beneficiaryProfilePic')) {
-                $beneficiaryPhotoPath = $request->file('beneficiaryProfilePic')->storeAs(
+                $beneficiaryPhotoPath = $this->uploadService->upload(
+                    $request->file('beneficiaryProfilePic'),
+                    'spaces-private',
                     'uploads/beneficiary_photos',
-                    $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' . $request->file('beneficiaryProfilePic')->getClientOriginalExtension(),
-                    'public'
+                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('beneficiaryProfilePic')->getClientOriginalExtension()
                 );
             }
 
             $careServiceAgreementPath = null;
             if ($request->hasFile('care_service_agreement')) {
-                $careServiceAgreementPath = $request->file('care_service_agreement')->storeAs(
+                $careServiceAgreementPath = $this->uploadService->upload(
+                    $request->file('care_service_agreement'),
+                    'spaces-private',
                     'uploads/care_service_agreements',
-                    $request->input('first_name') . '_' . $request->input('last_name') . '_care_service_agreement_' . $uniqueIdentifier . '.' . $request->file('care_service_agreement')->getClientOriginalExtension(),
-                    'public'
+                    $firstName . '_' . $lastName . '_care_service_agreement_' . $uniqueIdentifier . '.' . $request->file('care_service_agreement')->getClientOriginalExtension()
                 );
             }
 
             $generalCarePlanPath = null;
             if ($request->hasFile('general_careplan')) {
-                $generalCarePlanPath = $request->file('general_careplan')->storeAs(
+                $generalCarePlanPath = $this->uploadService->upload(
+                    $request->file('general_careplan'),
+                    'spaces-private',
                     'uploads/general_care_plans',
-                    $request->input('first_name') . '_' . $request->input('last_name') . '_general_care_plan_' . $uniqueIdentifier . '.' . $request->file('general_careplan')->getClientOriginalExtension(),
-                    'public'
+                    $firstName . '_' . $lastName . '_general_care_plan_' . $uniqueIdentifier . '.' . $request->file('general_careplan')->getClientOriginalExtension()
                 );
             }
 
             // Handle signatures (file or base64)
             $beneficiarySignaturePath = null;
             if ($request->hasFile('beneficiary_signature_upload')) {
-                $beneficiarySignaturePath = 'uploads/beneficiary_signatures/' .
-                    $request->input('first_name') . '_' .
-                    $request->input('last_name') . '_signature_' .
-                    $uniqueIdentifier . '.' .
-                    $request->file('beneficiary_signature_upload')->getClientOriginalExtension();
-                $request->file('beneficiary_signature_upload')->storeAs(
-                    'public/' . dirname($beneficiarySignaturePath),
-                    basename($beneficiarySignaturePath)
+                $beneficiarySignaturePath = $this->uploadService->upload(
+                    $request->file('beneficiary_signature_upload'),
+                    'spaces-private',
+                    'uploads/beneficiary_signatures',
+                    $firstName . '_' . $lastName . '_signature_' . $uniqueIdentifier . '.' . $request->file('beneficiary_signature_upload')->getClientOriginalExtension()
                 );
             } elseif ($request->input('beneficiary_signature_canvas')) {
                 $beneficiarySignaturePath = 'uploads/beneficiary_signatures/' .
-                    $request->input('first_name') . '_' .
-                    $request->input('last_name') . '_signature_' .
-                    $uniqueIdentifier . '.png';
+                    $firstName . '_' . $lastName . '_signature_' . $uniqueIdentifier . '.png';
                 $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->input('beneficiary_signature_canvas')));
-                file_put_contents(storage_path('app/public/' . $beneficiarySignaturePath), $decodedImage);
+                $this->uploadService->storeRawImage($decodedImage, $beneficiarySignaturePath, 'spaces-private');
             }
 
             $careWorkerSignaturePath = null;
             if ($request->hasFile('care_worker_signature_upload')) {
-                $careWorkerSignaturePath = 'uploads/care_worker_signatures/' .
-                    $request->input('first_name') . '_' .
-                    $request->input('last_name') . '_care_worker_signature_' .
-                    $uniqueIdentifier . '.' .
-                    $request->file('care_worker_signature_upload')->getClientOriginalExtension();
-                $request->file('care_worker_signature_upload')->storeAs(
-                    'public/' . dirname($careWorkerSignaturePath),
-                    basename($careWorkerSignaturePath)
+                $careWorkerSignaturePath = $this->uploadService->upload(
+                    $request->file('care_worker_signature_upload'),
+                    'spaces-private',
+                    'uploads/care_worker_signatures',
+                    $firstName . '_' . $lastName . '_care_worker_signature_' . $uniqueIdentifier . '.' . $request->file('care_worker_signature_upload')->getClientOriginalExtension()
                 );
             } elseif ($request->input('care_worker_signature_canvas')) {
                 $careWorkerSignaturePath = 'uploads/care_worker_signatures/' .
-                    $request->input('first_name') . '_' .
-                    $request->input('last_name') . '_care_worker_signature_' .
-                    $uniqueIdentifier . '.png';
+                    $firstName . '_' . $lastName . '_care_worker_signature_' . $uniqueIdentifier . '.png';
                 $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->input('care_worker_signature_canvas')));
-                file_put_contents(storage_path('app/public/' . $careWorkerSignaturePath), $decodedImage);
+                $this->uploadService->storeRawImage($decodedImage, $careWorkerSignaturePath, 'spaces-private');
             }
 
             // Create portal account
@@ -428,69 +430,62 @@ class BeneficiaryApiController extends Controller
         DB::beginTransaction();
         try {
             $uniqueIdentifier = Str::random(10);
+            $firstName = $beneficiary->first_name;
+            $lastName = $beneficiary->last_name;
 
-            // Handle file uploads (same logic as store)
             if ($request->hasFile('beneficiaryProfilePic')) {
-                $beneficiary->photo = $request->file('beneficiaryProfilePic')->storeAs(
+                $beneficiary->photo = $this->uploadService->upload(
+                    $request->file('beneficiaryProfilePic'),
+                    'spaces-private',
                     'uploads/beneficiary_photos',
-                    $beneficiary->first_name . '_' . $beneficiary->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('beneficiaryProfilePic')->getClientOriginalExtension(),
-                    'public'
+                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('beneficiaryProfilePic')->getClientOriginalExtension()
                 );
             }
 
             if ($request->hasFile('care_service_agreement')) {
-                $beneficiary->care_service_agreement_doc = $request->file('care_service_agreement')->storeAs(
+                $beneficiary->care_service_agreement_doc = $this->uploadService->upload(
+                    $request->file('care_service_agreement'),
+                    'spaces-private',
                     'uploads/care_service_agreements',
-                    $beneficiary->first_name . '_' . $beneficiary->last_name . '_care_service_agreement_' . $uniqueIdentifier . '.' . $request->file('care_service_agreement')->getClientOriginalExtension(),
-                    'public'
+                    $firstName . '_' . $lastName . '_care_service_agreement_' . $uniqueIdentifier . '.' . $request->file('care_service_agreement')->getClientOriginalExtension()
                 );
             }
 
             if ($request->hasFile('general_careplan')) {
-                $beneficiary->general_care_plan_doc = $request->file('general_careplan')->storeAs(
+                $beneficiary->general_care_plan_doc = $this->uploadService->upload(
+                    $request->file('general_careplan'),
+                    'spaces-private',
                     'uploads/general_care_plans',
-                    $beneficiary->first_name . '_' . $beneficiary->last_name . '_general_care_plan_' . $uniqueIdentifier . '.' . $request->file('general_careplan')->getClientOriginalExtension(),
-                    'public'
+                    $firstName . '_' . $lastName . '_general_care_plan_' . $uniqueIdentifier . '.' . $request->file('general_careplan')->getClientOriginalExtension()
                 );
             }
 
-            // Handle signatures (file or base64)
             if ($request->hasFile('beneficiary_signature_upload')) {
-                $beneficiary->beneficiary_signature = 'uploads/beneficiary_signatures/' . 
-                    $beneficiary->first_name . '_' . 
-                    $beneficiary->last_name . '_signature_' . 
-                    $uniqueIdentifier . '.' . 
-                    $request->file('beneficiary_signature_upload')->getClientOriginalExtension();
-                $request->file('beneficiary_signature_upload')->storeAs(
-                    'public/' . dirname($beneficiary->beneficiary_signature),
-                    basename($beneficiary->beneficiary_signature)
+                $beneficiary->beneficiary_signature = $this->uploadService->upload(
+                    $request->file('beneficiary_signature_upload'),
+                    'spaces-private',
+                    'uploads/beneficiary_signatures',
+                    $firstName . '_' . $lastName . '_signature_' . $uniqueIdentifier . '.' . $request->file('beneficiary_signature_upload')->getClientOriginalExtension()
                 );
             } elseif ($request->input('beneficiary_signature_canvas')) {
-                $beneficiary->beneficiary_signature = 'uploads/beneficiary_signatures/' . 
-                    $beneficiary->first_name . '_' . 
-                    $beneficiary->last_name . '_signature_' . 
-                    $uniqueIdentifier . '.png';
+                $beneficiary->beneficiary_signature = 'uploads/beneficiary_signatures/' .
+                    $firstName . '_' . $lastName . '_signature_' . $uniqueIdentifier . '.png';
                 $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->input('beneficiary_signature_canvas')));
-                file_put_contents(storage_path('app/public/' . $beneficiary->beneficiary_signature), $decodedImage);
+                $this->uploadService->storeRawImage($decodedImage, $beneficiary->beneficiary_signature, 'spaces-private');
             }
 
             if ($request->hasFile('care_worker_signature_upload')) {
-                $beneficiary->care_worker_signature = 'uploads/care_worker_signatures/' . 
-                    $beneficiary->first_name . '_' . 
-                    $beneficiary->last_name . '_care_worker_signature_' . 
-                    $uniqueIdentifier . '.' . 
-                    $request->file('care_worker_signature_upload')->getClientOriginalExtension();
-                $request->file('care_worker_signature_upload')->storeAs(
-                    'public/' . dirname($beneficiary->care_worker_signature),
-                    basename($beneficiary->care_worker_signature)
+                $beneficiary->care_worker_signature = $this->uploadService->upload(
+                    $request->file('care_worker_signature_upload'),
+                    'spaces-private',
+                    'uploads/care_worker_signatures',
+                    $firstName . '_' . $lastName . '_care_worker_signature_' . $uniqueIdentifier . '.' . $request->file('care_worker_signature_upload')->getClientOriginalExtension()
                 );
             } elseif ($request->input('care_worker_signature_canvas')) {
-                $beneficiary->care_worker_signature = 'uploads/care_worker_signatures/' . 
-                    $beneficiary->first_name . '_' . 
-                    $beneficiary->last_name . '_care_worker_signature_' . 
-                    $uniqueIdentifier . '.png';
+                $beneficiary->care_worker_signature = 'uploads/care_worker_signatures/' .
+                    $firstName . '_' . $lastName . '_care_worker_signature_' . $uniqueIdentifier . '.png';
                 $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->input('care_worker_signature_canvas')));
-                file_put_contents(storage_path('app/public/' . $beneficiary->care_worker_signature), $decodedImage);
+                $this->uploadService->storeRawImage($decodedImage, $beneficiary->care_worker_signature, 'spaces-private');
             }
 
             // Update beneficiary fields
