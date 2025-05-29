@@ -32,7 +32,7 @@ const style = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: topBarHeight + 20, 
+    marginTop: topBarHeight, 
     paddingBottom: 30,
   },
   name: {
