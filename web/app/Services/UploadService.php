@@ -23,6 +23,10 @@ class UploadService
         $filename = Str::uuid() . '.' . $extension;
         $path = $file->storeAs($directory, $filename, $disk);
 
+        if (!$path) {
+            throw new \Exception('File upload failed at storage layer.');
+        }
+
         return $path;
     }
 
