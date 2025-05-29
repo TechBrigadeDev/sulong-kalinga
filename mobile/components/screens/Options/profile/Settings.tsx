@@ -3,9 +3,8 @@ import { useUser } from '~/features/user/user.hook';
 import Badge from '~/components/Bagde';
 import { updateEmailStore } from '~/features/user/components/UpdateEmail/store';
 import { updatePasswordStore } from '~/features/user/components/UpdatePassword/store';
-import LogoutButton from '~/features/auth/components/logout/button';
 
-const OptionScreen = () => {
+const ProfileSettings = () => {
   const {
     setIsOpen: setUpdateEmailOpen,
   } = updateEmailStore();
@@ -55,12 +54,9 @@ const OptionScreen = () => {
           <Button theme="blue" onPress={handleUpdateEmail}>Update Email</Button>
           <Button theme="blue" onPress={handleUpdatePassword}>Update Password</Button>
         </XStack>
-        <XStack style={{ marginTop: 24 }}>
-          <LogoutButton />
-        </XStack>
       </Card>
     </YStack>
   );
 };
 
-export default OptionScreen;
+export default ProfileSettings;

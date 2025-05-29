@@ -20,16 +20,16 @@ const Screen = () => {
 
 const Profile = () => {
     return (
-        <YStack style={style.section}>
+        <Section>
             <Title name="Profile"/>
             <Card>
                 <Link
-                    href="/(tabs)/options/profile"
-                    label="Profile"
-                    icon="User"
+                    href="/options/profile"
+                    label="Settings"
+                    icon="UserPen"
                 />
             </Card>
-        </YStack>
+        </Section>
     )
 }
 
@@ -108,19 +108,12 @@ const Link = ({
     const Icon = icons[icon];
     const Chevron = icons.ChevronRight;
 
-    const router = useRouter();
-    const handlePress = () => {
-        router.push(href);
-    }
-
     return (
         <ExpoLink
             href={href}
-            replace
             asChild
         >
             <TouchableOpacity 
-                onPressIn={handlePress}
                 style={style.link}
             >
                 <XStack gap={10} style={style.linkLabel}>

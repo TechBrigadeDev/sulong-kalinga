@@ -1,8 +1,7 @@
 import { useUser } from '~/features/user/user.hook';
 import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
-import { Tabs as ExpoTabs } from 'expo-router';
 import { View } from 'tamagui';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import TabButton from '~/components/screens/Home/_components/button';
 
@@ -47,8 +46,18 @@ export default function Layout() {
             </TabButton>
           </TabTrigger>
           <TabTrigger
-            name="/(tabs)/options/user-management/"
-            href="/(tabs)/options/user-management/beneficiaries"
+            name="/(tabs)/scheduling/care-worker/index"
+            href="/(tabs)/scheduling/care-worker"
+            style={{ display: 'none' }}
+          />
+          <TabTrigger
+            name="/(tabs)/shifts/index"
+            href="/(tabs)/shifts"
+            style={{ display: 'none' }}
+          />
+          <TabTrigger
+            name="/(tabs)/care-plan/index"
+            href="/(tabs)/care-plan"
             style={{ display: 'none' }}
           />
         </View>

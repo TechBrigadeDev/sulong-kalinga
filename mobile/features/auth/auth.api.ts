@@ -22,7 +22,11 @@ class AuthController {
         formData.append("password", password);
 
         try {
-            const response = await this.api.post("/login", formData);
+            const response = await this.api.post("/login", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
             const validate = await loginSchema.response.safeParseAsync(response.data);
             if (!validate.success) {
                 throw new Error("Validation failed");
@@ -34,6 +38,7 @@ class AuthController {
             }
         } catch (error) {
             if (error instanceof AxiosError) {
+                console.error("Axios error occurred:", error.toJSON());
                 switch (error.response?.status) {
                     default:
                         console.error("An error occurred", error.message);
