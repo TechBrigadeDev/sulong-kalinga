@@ -38,6 +38,7 @@ const Beneficiaries = () => {
 
 const styles = StyleSheet.create({
     container: {
+        display: "flex",
         marginHorizontal: 20,
     }
 })
