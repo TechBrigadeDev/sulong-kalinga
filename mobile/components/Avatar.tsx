@@ -1,40 +1,62 @@
 import { Text, View } from "tamagui"
-import { Image } from "expo-image";
+import { Image as ExpoImage } from "expo-image";
 import { useUser } from "~/features/user/user.hook"
 import { createAvatar } from "@dicebear/core";
+import { SvgXml } from "react-native-svg"; 
 import { shapes } from "@dicebear/collection";
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
 
 const AvatarImage = () => {
-    const { 
-        data: user
-    } = useUser();
+  const { data: user } = useUser();
+  const Avatar = user?.photo ? Image : Svg;
 
-    const source = useMemo(() => {
-      let source = { uri: "" };
-      if (user?.photo) {
-        source.uri = user.photo;
-      }
+  return (
+    <View style={style.container}>
+      <Avatar />
+    </View>
+  )
+}
 
-      source.uri = createAvatar(shapes, {
-        seed: user?.id.toString() || "default-avatar",
-      }).toDataUri();
+const Image = () => {
+  const { data: user } = useUser();
 
-      return source;
-    }, [user]);
+  const source = useMemo(() => {
+    let source = { uri: "" };
+    if (user?.photo) {
+      source.uri = user.photo;
+    }
 
-    return (
-      <View style={style.container}>
-        <Image
-          source={{
-            uri: source.uri,
-          }}
-          style={style.image}
-          contentFit="cover"
-        />
-      </View>
-    )
+    source.uri = createAvatar(shapes, {
+      seed: user?.id.toString() || "default-avatar",
+    }).toDataUri();
+
+    return source;
+  }, [user]);
+
+  return (
+    <ExpoImage
+      source={source}
+      style={style.image}
+      contentFit="cover"
+    />
+  );
+}
+
+const Svg = () => {
+  const { data: user } = useUser();
+
+  const xml = useMemo(() => {
+    return createAvatar(shapes, {
+      seed: user?.id.toString() ?? "default-avatar",
+    }).toString(); // returns the raw SVG XML string
+  }, [user]);
+
+  return (
+    <View style={style.container}>
+      <SvgXml xml={xml} style={style.image} />
+    </View>
+  );
 }
 
 const style = StyleSheet.create({
