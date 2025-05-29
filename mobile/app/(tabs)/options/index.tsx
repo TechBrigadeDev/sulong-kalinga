@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { Card as TCard, ScrollView, Text, View, XStack, YStack, H3 } from "tamagui";
 import { icons } from "lucide-react-native";
 import Header from "~/components/Header";
-import LogoutButton from "../../../features/auth/components/logout/button";
+import LogoutButton from "~/features/auth/components/logout/button";
 
 const Screen = () => {
     return (
@@ -23,13 +23,11 @@ const Profile = () => {
         <YStack style={style.section}>
             <Title name="Profile"/>
             <Card>
-                <TouchableOpacity style={style.link}>
-                    <XStack gap={10} style={style.linkLabel}>
-                        <icons.User size={24} color="#000" />
-                        <Text>View Profile</Text>
-                    </XStack>
-                    <icons.ChevronRight size={24} color="#000" style={{ marginLeft: 'auto' }} />
-                </TouchableOpacity>
+                <Link
+                    href="/(tabs)/options/profile"
+                    label="Profile"
+                    icon="User"
+                />
             </Card>
         </YStack>
     )
@@ -107,29 +105,33 @@ const Link = ({
     label: string;
     icon: keyof typeof icons;
 }) => {
-    const router = useRouter();
     const Icon = icons[icon];
     const Chevron = icons.ChevronRight;
 
+    const router = useRouter();
     const handlePress = () => {
-        console.log(`Navigating to ${href}`);
         router.push(href);
     }
 
     return (
+        <ExpoLink
+            href={href}
+            replace
+            asChild
+        >
             <TouchableOpacity 
-                style={style.link}
                 onPressIn={handlePress}
+                style={style.link}
             >
-                <XStack gap={10} style={style.linkLabel} onPress={handlePress}>
+                <XStack gap={10} style={style.linkLabel}>
                     <Icon size={24} color="#000" />
-                    <Text>
-                        {label}
-                    </Text>
+                    <Text>{label}</Text>
                 </XStack>
-                <Chevron size={24} color="#000" style={{ marginLeft: 'auto' }} />
+
+                <Chevron size={24} color="#000" style={{ marginLeft: "auto" }} />
             </TouchableOpacity>
-    )
+        </ExpoLink>
+    );
 }
 
 

@@ -34,13 +34,19 @@ const BeneficiaryList = () => {
     <FlatList
       data={data}
       renderItem={BeneficiaryCard}
-      contentContainerStyle={{ paddingVertical: 16 }}
+      contentContainerStyle={listStyle.container}
       refreshControl={
         <RefreshControl refreshing={isLoading} onRefresh={refetch} />
       }
     />
   );
 };
+
+const listStyle = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+  },
+});
 
 const BeneficiaryCard: ListRenderItem<IBeneficiary> = ({ item }) => {
   const router = useRouter();
