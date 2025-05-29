@@ -65,8 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Set the appropriate validation and update URLs based on role
     const passwordValidationUrl = isAdmin 
-        ? "{{ route('admin.validate-password') }}"
-        : "{{ route('care-manager.validate-password') }}";
+        ? "/admin/validate-password"
+        : "/care-manager/validate-password";
         
     const statusUpdateBaseUrl = isAdmin
         ? "/admin/beneficiaries"
@@ -154,8 +154,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 successMessage.style.display = 'block';
                 
                 // Make the AJAX call to update status - using role-appropriate URL
-                fetch(`${statusUpdateBaseUrl}/${beneficiaryId}/status`, {
-                    method: 'PUT',
+                fetch(`${statusUpdateBaseUrl}/${beneficiaryId}/update-status-ajax`, {
+                    method: 'POST',  // Changed from PUT to POST
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',

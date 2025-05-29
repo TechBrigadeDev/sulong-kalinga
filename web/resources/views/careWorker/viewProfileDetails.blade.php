@@ -40,7 +40,7 @@
                         <div class="row justify-content-center align-items-center text-center text-md-start">
                             <!-- Profile Picture Column -->
                             <div class="col-lg-3 col-md-4 col-sm-12 mb-3 mb-md-0">
-                                <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}" 
+                                <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}"
                                     alt="Profile Picture" 
                                     class="img-fluid rounded-circle mx-auto d-block d-md-inline" 
                                     style="width: 150px; height: 150px; border: 1px solid #ced4da;">

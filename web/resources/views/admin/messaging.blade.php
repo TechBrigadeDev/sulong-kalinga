@@ -14,6 +14,75 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/userNavbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/messaging.css') }}">
+
+    <style>
+        .file-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .file-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            color: #6c757d;
+        }
+
+        .file-name {
+            font-size: 10px;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-top: 5px;
+        }
+
+        .remove-file-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .remove-file-btn:hover {
+            background-color: rgba(0,0,0,0.7);
+        }
+    </style>
+    
 </head>
 <body class="messaging-page">
 
@@ -335,6 +404,27 @@
         </div>
     </div>
 
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <div id="fileSizeErrorMessage"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="{{ asset('js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
@@ -417,8 +507,8 @@
             // Extract just the endpoint part after the last dot
             const endpoint = routeName.replace(/^.*\./, '');
             
-            // Build the full URL
-            const baseUrl = `${window.location.origin}/${rolePrefix}/messaging/`;
+            // Build the full URL with explicitly using relative path
+            const baseUrl = `/${rolePrefix}/messaging/`;
             const fullUrl = baseUrl + endpoint;
             
             console.log(`Converting route ${routeName} to URL: ${fullUrl}`);
@@ -726,6 +816,52 @@
                     console.error('Error refreshing conversation list:', error);
                 });
             }, 800); // INCREASED DELAY from 300ms to 800ms for server processing
+        }
+
+        function refreshConversationListWithDuplicateCheck() {
+            console.log('Refreshing conversation list with duplicate checking...');
+            
+            fetch(getRouteUrl(route_prefix + '.get-conversations'), {
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const conversationListContainer = document.querySelector('.conversation-list-items');
+                if (conversationListContainer) {
+                    // IMPORTANT: Clear existing conversations first
+                    conversationListContainer.innerHTML = '';
+                    
+                    // Track conversation IDs to prevent duplicates
+                    const seenIds = new Set();
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
+                    
+                    // Filter out duplicates before inserting
+                    const newConversations = tempDiv.querySelectorAll('.conversation-item');
+                    const filteredHTML = Array.from(newConversations)
+                        .filter(item => {
+                            const id = item.dataset.conversationId;
+                            if (seenIds.has(id)) {
+                                return false; // Skip duplicates
+                            }
+                            seenIds.add(id);
+                            return true;
+                        })
+                        .map(item => item.outerHTML)
+                        .join('');
+                    
+                    // Set the HTML directly
+                    conversationListContainer.innerHTML = filteredHTML;
+                    addConversationClickHandlers();
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing conversation list:', error);
+            });
         }
 
         function handleFileInputChange(event) {
@@ -1175,6 +1311,9 @@
             newForm.onsubmit = function(e) {
                 e.preventDefault();
                 
+                // Force the URL to be relative and using the same protocol
+                const actionURL = '/' + rolePrefix + '/messaging/send-message';
+                
                 // Validation
                 const hasText = textarea && textarea.value.trim() !== '';
                 const hasFiles = filePreviewContainer && 
@@ -1229,7 +1368,7 @@
                 }
                 
                 // Submit form - CRITICAL FIX: Use fetch with safer cleanup
-                fetch(this.action, {
+                fetch(actionURL, {  // Replace this.action with actionURL
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -4504,5 +4643,129 @@
 
         
     </script>
+
+    <script>
+        // Global file validation function for messaging attachments
+        window.validateMessageAttachments = function(files) {
+            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+            const MAX_TOTAL_SIZE = 8 * 1024 * 1024; // 8MB total
+            let isValid = true;
+            let errorMessage = '';
+            
+            if (files && files.length > 0) {
+                // Check total size of all files
+                let totalSize = 0;
+                let oversizedFiles = [];
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    totalSize += file.size;
+                    
+                    if (file.size > MAX_FILE_SIZE) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        oversizedFiles.push(`${file.name} (${fileSizeMB}MB)`);
+                    }
+                }
+                
+                // If any files are too big, set error message
+                if (oversizedFiles.length > 0) {
+                    return {
+                        isValid: false,
+                        errorMessage: `The following file(s) exceed the 5MB limit:<br>${oversizedFiles.join('<br>')}`
+                    };
+                }
+                
+                // Check total size
+                if (totalSize > MAX_TOTAL_SIZE) {
+                    const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                    return {
+                        isValid: false,
+                        errorMessage: `Total file size (${totalSizeMB}MB) exceeds the maximum allowed (8MB).<br>Please select smaller or fewer files.`
+                    };
+                }
+            }
+            
+            return { isValid: true, errorMessage: '' };
+        };
+
+        // Global event delegation for file inputs in dynamically loaded content
+        document.body.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'fileUpload' && e.target.type === 'file') {
+                // Get file input and validation result
+                const fileInput = e.target;
+                const validationResult = window.validateMessageAttachments(fileInput.files);
+                
+                // Show error if validation failed
+                if (!validationResult.isValid) {
+                    // Show error in modal instead of just inline
+                    const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+                    const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+                    
+                    // Set error message in modal
+                    fileSizeErrorMessage.innerHTML = validationResult.errorMessage;
+                    
+                    // Show the modal
+                    fileSizeErrorModal.show();
+                    
+                    // Clear the file input
+                    fileInput.value = '';
+                    
+                    // Clear previews if they exist
+                    const filePreviewContainer = document.getElementById('filePreviewContainer');
+                    if (filePreviewContainer) {
+                        filePreviewContainer.innerHTML = '';
+                    }
+                    
+                    // Hide inline error if it exists
+                    let errorContainer = document.getElementById('fileErrorContainer');
+                    if (errorContainer) {
+                        errorContainer.style.display = 'none';
+                    }
+                } else {
+                    // Hide inline error container if validation passes
+                    let errorContainer = document.getElementById('fileErrorContainer');
+                    if (errorContainer) {
+                        errorContainer.style.display = 'none';
+                    }
+                }
+            }
+        }, true);
+
+        // Intercept form submissions to validate files
+        document.body.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'messageForm') {
+                const fileInput = e.target.querySelector('#fileUpload');
+                if (fileInput && fileInput.files.length > 0) {
+                    const validationResult = window.validateMessageAttachments(fileInput.files);
+                    if (!validationResult.isValid) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Show error in modal
+                        const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+                        const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+                        
+                        // Set error message in modal
+                        fileSizeErrorMessage.innerHTML = validationResult.errorMessage;
+                        
+                        // Show the modal
+                        fileSizeErrorModal.show();
+                        
+                        // Clear the file input
+                        fileInput.value = '';
+                        
+                        // Clear previews if they exist
+                        const filePreviewContainer = document.getElementById('filePreviewContainer');
+                        if (filePreviewContainer) {
+                            filePreviewContainer.innerHTML = '';
+                        }
+                        
+                        return false;
+                    }
+                }
+            }
+        }, true);
+    </script>
+
 </body>
 </html>

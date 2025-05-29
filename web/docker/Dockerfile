@@ -13,11 +13,15 @@ FROM dunglas/frankenphp
 # Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/* \
     && install-php-extensions \
     pcntl \
     pdo_pgsql \
-    pgsql
+    pgsql \
+    gd
 
 # Copy application code and built vendor
 WORKDIR /app

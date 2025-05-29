@@ -419,8 +419,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Determine the endpoint based on action
         const endpoint = isEditing 
-            ? '{{ route("admin.locations.municipalities.update") }}' 
-            : '{{ route("admin.locations.municipalities.store") }}';
+            ? '/admin/locations/municipalities/update' 
+            : '/admin/locations/municipalities/add';
             
         // Send AJAX request
         fetch(endpoint, {

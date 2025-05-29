@@ -64,9 +64,10 @@
                 </div>
 
                 <!-- Hidden form for exporting -->
-                <form id="exportForm" action="{{ route('care-manager.exports.family-pdf') }}" method="POST" style="display: none;"
-                    data-pdf-route="{{ route('care-manager.exports.family-pdf') }}" 
-                    data-excel-route="{{ route('care-manager.exports.family-excel') }}">
+                <form id="exportForm" method="POST" style="display: none;"
+                    action="/care-manager/export/family-pdf"
+                    data-pdf-route="/care-manager/export/family-pdf" 
+                    data-excel-route="/care-manager/export/family-excel">
                     @csrf
                     <input type="hidden" name="selected_family_members" id="selectedFamilyMembers">
                 </form>

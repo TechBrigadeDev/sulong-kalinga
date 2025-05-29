@@ -53,20 +53,16 @@
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
                                         value="{{ old('first_name') }}"
                                         placeholder="Enter first name" 
-                                        required 
-                                        oninput="validateName(this)" 
-                                        pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                        title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                        required >
+                                       
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                         value="{{ old('last_name') }}"
                                         placeholder="Enter last name" 
-                                        required 
-                                        oninput="validateName(this)" 
-                                        pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                        title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                        required >
+                                       
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="civilStatus" class="form-label">Civil Status<label style="color:red;"> * </label></label>
@@ -95,7 +91,7 @@
                             </div>
                             <div class="col-md-3 position-relative">
                                 <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
-                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name">                            
+                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name">  
                             </div>
                             <div class="col-md-3">
                                 <label for="mobileNumber" class="form-label">Mobile Number</label>
@@ -420,9 +416,7 @@
                                 <input type="text" class="form-control" id="contactName" name="emergency_contact[name]" 
                                     value="{{ old('emergency_contact.name') }}"
                                     placeholder="Enter contact name" 
-                                    required 
-                                    pattern="^[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)+$" 
-                                    title="Must be a valid full name with each word starting with an uppercase letter.">
+                                    required >
                             </div>
 
                             <!-- Relation -->
@@ -544,6 +538,7 @@
                                 @if($errors->any())
                                 <small class="text-danger">Note: You need to select the file again after a validation error.</small>
                                 @endif
+                                <small class="text-danger">Maximum file size: 7MB</small>
                             </div>
 
                             <!-- Review Date -->
@@ -567,6 +562,7 @@
                                 @if($errors->any())
                                 <small class="text-danger">Note: You need to select the file again after a validation error.</small>
                                 @endif
+                                <small class="text-danger">Maximum file size: 5MB</small>
                             </div>
 
                             <!-- General Careplan -->
@@ -578,6 +574,7 @@
                                 @if($errors->any())
                                 <small class="text-danger">Note: You need to select the file again after a validation error.</small>
                                 @endif
+                                <small class="text-danger">Maximum file size: 5MB</small>
                             </div>
                         </div>
 
@@ -717,6 +714,27 @@
         </div>
     </div>
 
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <p id="fileSizeErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
 
 
@@ -789,11 +807,40 @@
 
     </script>
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
+    document.querySelector('form').addEventListener('submit', function (e) {
+        // Before showing the success modal, check file sizes
+        let fileSizeValid = true;
+        
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const maxSize = MAX_SIZES[input.id] || 5 * 1024 * 1024;
+                
+                if (file.size > maxSize) {
+                    e.preventDefault();
+                    fileSizeValid = false;
+                    
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                    
+                    // Set error message and show modal
+                    fileSizeErrorMessage.innerHTML = `
+                        <strong>Form submission failed</strong><br>
+                        ${input.previousElementSibling.textContent} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
+                        Please select a smaller file or compress your existing file.
+                    `;
+                    fileSizeErrorModal.show();
+                    return;
+                }
+            }
+        });
+        
+        if (fileSizeValid) {
             e.preventDefault();
             const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
             successModal.show();
-        });
+        }
+    });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -1054,6 +1101,87 @@
                 @endforeach
             @endif
         }, 100); // Small delay to ensure DOM is fully processed
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Max sizes in bytes
+        const MAX_SIZES = {
+            'beneficiaryProfilePic': 7 * 1024 * 1024, // 7MB
+            'careServiceAgreement': 5 * 1024 * 1024, // 5MB
+            'generalCareplan': 5 * 1024 * 1024, // 5MB
+            'beneficiarySignatureUpload': 2 * 1024 * 1024, // 2MB
+            'careWorkerSignatureUpload': 2 * 1024 * 1024 // 2MB
+        };
+        
+        // Initialize the modal
+        const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+        const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+        
+        // Add file size validation to all file inputs
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const maxSize = MAX_SIZES[this.id] || 5 * 1024 * 1024; // Default to 5MB
+                    
+                    if (file.size > maxSize) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        const fieldLabel = this.previousElementSibling ? this.previousElementSibling.textContent : this.id;
+                        
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
+                            Maximum allowed size is ${maxSizeMB}MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
+                        
+                        // Reset the file input
+                        this.value = '';
+                    }
+                }
+            });
+        });
+        
+        // Add form submission check to prevent large file uploads
+        document.querySelector('form').addEventListener('submit', function(e) {
+            // Don't interfere with the success modal submission handler
+            if (document.getElementById('saveSuccessModal')) {
+                return;
+            }
+            
+            // Validate all file inputs before submission
+            let isValid = true;
+            
+            document.querySelectorAll('input[type="file"]').forEach(input => {
+                if (input.files.length > 0) {
+                    const file = input.files[0];
+                    const maxSize = MAX_SIZES[input.id] || 5 * 1024 * 1024;
+                    
+                    if (file.size > maxSize) {
+                        e.preventDefault();
+                        isValid = false;
+                        
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+                        const fieldLabel = input.previousElementSibling ? input.previousElementSibling.textContent : input.id;
+                        
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>Form submission failed</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
+                    }
+                }
+            });
+            
+            return isValid;
+        });
     });
     </script>
 

@@ -201,7 +201,7 @@
             const name = element.dataset.name;
             
             // Use string replacement instead of concatenation
-            document.getElementById('deleteForm').action = "{{ route('admin.locations.barangays.delete', ['id' => ':id']) }}".replace(':id', id);
+            document.getElementById('deleteForm').action = `/admin/locations/barangays/${id}`;
             document.getElementById('deleteItemName').textContent = name;
         }
         
@@ -294,7 +294,7 @@
                         this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
                         
                         // Send delete request
-                        fetch(`{{ route('admin.locations.barangays.delete', ['id' => ':id']) }}`.replace(':id', barangayId), {
+                        fetch(`/admin/locations/barangays/${barangayId}`, {
                             method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',

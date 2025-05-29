@@ -123,11 +123,11 @@ function showSuccess() {
     document.getElementById('cancelDeleteButton').textContent = 'Close';
     
     // Use role-specific redirect route
-    let redirectRoute = "{{ route('admin.families.index') }}"; // Default for admin
+    let redirectRoute = "/admin/families"; // Default for admin
     
     // Use care manager route if current user is a care manager
     @if(Auth::user()->role_id == 2)
-        redirectRoute = "{{ route('care-manager.families.index') }}";
+        redirectRoute = "/care-manager/families";
     @endif
     
     setTimeout(function() {
@@ -162,9 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('_token', '{{ csrf_token() }}');
         
         const xhr1 = new XMLHttpRequest();
-        let validatePasswordEndpoint = "{{ route('admin.validate-password') }}";
+        let validatePasswordEndpoint = "/admin/validate-password";
         @if(Auth::user()->role_id == 2)
-            validatePasswordEndpoint = "{{ route('care-manager.validate-password') }}";
+            validatePasswordEndpoint = "/care-manager/validate-password";
         @endif
         xhr1.open('POST', validatePasswordEndpoint, true);
         xhr1.onload = function() {
@@ -178,11 +178,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         deleteForm.append('_token', '{{ csrf_token() }}');
                         
                         // Determine which endpoint to use based on the user role
-                        let endpoint = "{{ route('admin.families.delete') }}"; // Default endpoint for admins
+                        let endpoint = "/admin/families/delete"; // Default endpoint for admins
 
                         // Use care manager endpoint if the current user is a care manager
                         @if(Auth::user()->role_id == 2)
-                            endpoint = "{{ route('care-manager.families.delete') }}";
+                            endpoint = "/care-manager/families/delete";
                         @endif
                         
                         const xhr2 = new XMLHttpRequest();

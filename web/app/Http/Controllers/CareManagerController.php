@@ -100,13 +100,13 @@ class CareManagerController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(), // Must be older than 14 years
             'gender' => 'nullable|string|in:Male,Female,Other', // Must match dropdown options
@@ -169,9 +169,9 @@ class CareManagerController extends Controller
             'municipality' => 'required|integer|exists:municipalities,municipality_id',
         
             // Documents
-            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
             'sss_ID' => [
@@ -350,14 +350,14 @@ class CareManagerController extends Controller
             'first_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
-                'max:100'
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
-                'max:100'
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
             'gender' => 'nullable|string|in:Male,Female,Other',
@@ -387,9 +387,9 @@ class CareManagerController extends Controller
                 'string',
                 'regex:/^[0-9]{7,10}$/',
             ],
-            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'caremanager_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
             'sss_ID' => 'nullable|string|max:10',
             'philhealth_ID' => 'nullable|string|max:12',
             'pagibig_ID' => 'nullable|string|max:12',

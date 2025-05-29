@@ -1108,7 +1108,7 @@
                 }, 15000); // 15 seconds timeout
                 
                 $.ajax({
-                    url: '{{ route("care-manager.careworker.appointments.get") }}',
+                    url: '/care-manager/careworker-appointments/get-visitations',
                     method: 'GET',
                     data: {
                         start: start,
@@ -1316,7 +1316,7 @@
             if (!beneficiarySelect) return;
             
             $.ajax({
-                url: '{{ route("care-manager.careworker.appointments.beneficiaries") }}',
+                url: '/care-manager/careworker-appointments/beneficiaries',
                 method: 'GET',
                 success: function(response) {
                     if (response.success && response.beneficiaries && response.beneficiaries.length > 0) {
@@ -1352,7 +1352,7 @@
                 document.getElementById('beneficiaryPhone').value = "Loading...";
                 
                 $.ajax({
-                    url: '{{ route("care-manager.careworker.appointments.beneficiary.details", ["id" => "__id__"]) }}'.replace('__id__', beneficiaryId),
+                     url: `/care-manager/careworker-appointments/beneficiary/${beneficiaryId}`,
                     method: 'GET',
                     success: function(response) {
                         if (response.success && response.beneficiary) {
@@ -2023,9 +2023,9 @@
                 
                 // Set appropriate URL based on whether this is an edit or new appointment
                 const url = visitationId ? 
-                    '{{ route("care-manager.careworker.appointments.update") }}' : 
-                    '{{ route("care-manager.careworker.appointments.store") }}';
-                
+                   '/care-manager/careworker-appointments/update' : 
+                    '/care-manager/careworker-appointments/store' ;
+
                 // Show loading state
                 const originalBtnHtml = submitAppointment.innerHTML;
                 submitAppointment.disabled = true;
@@ -2063,7 +2063,7 @@
                                 
                                 // Add event source with cache-busting parameter
                                 calendar.addEventSource({
-                                    url: '{{ route("care-manager.careworker.appointments.get") }}',
+                                    url: '/care-manager/careworker-appointments/get-visitations',
                                     extraParams: {
                                         cache_buster: timestamp
                                     }
@@ -2273,7 +2273,7 @@
                 }
                 
                 $.ajax({
-                    url: '{{ route("care-manager.careworker.appointments.cancel") }}',
+                    url: '/care-manager/careworker-appointments/cancel',
                     method: 'POST',
                     data: formData,
                     success: function(response) {

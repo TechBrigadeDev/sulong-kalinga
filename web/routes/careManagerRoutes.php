@@ -97,9 +97,9 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/beneficiaries-excel', [ExportController::class, 'exportBeneficiariesToExcel'])->name('beneficiaries-excel');
         Route::post('/family-excel', [ExportController::class, 'exportFamilyMembersToExcel'])->name('family-excel');
         Route::post('/careworkers-excel', [ExportController::class, 'exportCareworkersToExcel'])->name('careworkers-excel');
-        Route::post('/export/health-monitoring-pdf', [ExportController::class, 'exportHealthMonitoringToPdfForCareManager'])->name('health.monitoring.pdf');
-        Route::post('/export/careworker-performance-pdf', [ExportController::class, 'exportCareWorkerPerformanceToPdfForCareManager'])->name('careworker.performance.pdf');
-        Route::post('/export/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
+        Route::post('/health-monitoring-pdf', [ExportController::class, 'exportHealthMonitoringToPdfForCareManager'])->name('health.monitoring.pdf');
+        Route::post('/careworker-performance-pdf', [ExportController::class, 'exportCareWorkerPerformanceToPdfForCareManager'])->name('careworker.performance.pdf');
+        Route::post('/reports-pdf', [ExportController::class, 'exportReportsToPdf'])->name('reports.pdf');
     });
 
     //Municipalities (Read-Only)

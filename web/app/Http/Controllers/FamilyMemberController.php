@@ -183,18 +183,18 @@ class FamilyMemberController extends Controller
         // Validate the input data
         $validator = Validator::make($request->all(), [
             // Personal Details
-            'family_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
+            'family_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
             'first_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'gender' => 'nullable|string|in:Male,Female,Other', // Must match dropdown options
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(), // Must be older than 14 years
@@ -478,18 +478,18 @@ class FamilyMemberController extends Controller
 
         // Validate the input data - similar to your store method but with some modifications
         $validator = Validator::make($request->all(), [
-            'family_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
+            'family_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
             'first_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'gender' => 'nullable|string|in:Male,Female,Other',
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(),

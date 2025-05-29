@@ -27,5 +27,10 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(CoseUserObserver::class); // This observes cose_users
         PortalAccount::observe(PortalAccountObserver::class);
+
+        // Force HTTPS in production
+        if (config('app.env') === 'production' || config('app.env') === 'staging') {
+            \URL::forceScheme('https');
+        }
     }
 }

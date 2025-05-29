@@ -1,11 +1,12 @@
 // Function to handle checkbox selection and export
 document.addEventListener('DOMContentLoaded', function() {
-    // Select All functionality
+    // Elements
     const selectAllCheckbox = document.getElementById('selectAll');
     const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
     const exportForm = document.getElementById('exportForm');
     const selectedFamilyMembers = document.getElementById('selectedFamilyMembers');
     const exportExcelButton = document.getElementById('exportExcel');
+    const exportPdfButton = document.getElementById('exportPdf');
 
     // Define getSelectedIds function
     function getSelectedIds() {
@@ -44,22 +45,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle PDF export
-    const exportPdfButton = document.getElementById('exportPdf');
     if (exportPdfButton) {
         exportPdfButton.addEventListener('click', function(e) {
             e.preventDefault();
             
-            const selectedIds = [...rowCheckboxes]
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value);
-                
-            if (selectedIds.length === 0) {
-                alert('Please select at least one family member to export.');
-                return;
-            }
+            const selectedIds = getSelectedIds();
+            if (!selectedIds) return;
             
-            document.getElementById('selectedFamilyMembers').value = JSON.stringify(selectedIds);
-            document.getElementById('exportForm').submit();
+            // Show loading state
+            exportPdfButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+            
+            // Set form data and submit
+            selectedFamilyMembers.value = JSON.stringify(selectedIds);
+            exportForm.action = exportForm.getAttribute('data-pdf-route');
+            exportForm.method = 'POST'; // Ensure POST method is set
+            exportForm.submit();
+            
+            // Reset button after a delay (for UX)
+            setTimeout(() => {
+                exportPdfButton.innerHTML = 'Export as PDF';
+            }, 3000);
         });
     }
 
@@ -71,9 +76,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedIds = getSelectedIds();
             if (!selectedIds) return;
             
+            // Show loading state
+            exportExcelButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
+            
+            // Set form data and submit
             selectedFamilyMembers.value = JSON.stringify(selectedIds);
             exportForm.action = exportForm.getAttribute('data-excel-route');
+            exportForm.method = 'POST'; // Ensure POST method is set
             exportForm.submit();
+            
+            // Reset button after a delay (for UX)
+            setTimeout(() => {
+                exportExcelButton.innerHTML = 'Export as Excel';
+            }, 3000);
         });
     }
 });

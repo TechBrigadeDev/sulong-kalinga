@@ -171,7 +171,7 @@ class ExpenseTrackerController extends Controller
                 'max:1000',
                 'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
-            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120', // 5MB max for receipt
         ], [
             'title.regex' => 'The title must contain at least one letter and only common characters.',
             'description.regex' => 'The description must contain at least one letter and only common characters.',
@@ -290,7 +290,7 @@ class ExpenseTrackerController extends Controller
                 'max:1000',
                 'regex:/^(?=.*[a-zA-Z])[a-zA-Z0-9\s\-_.,;:()\'\"!?&]+$/'
             ],
-            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120', // 5MB max for receipt
         ], [
             'title.regex' => 'The title must contain at least one letter and only common characters.',
             'description.regex' => 'The description must contain at least one letter and only common characters.',

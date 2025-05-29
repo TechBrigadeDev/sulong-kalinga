@@ -565,7 +565,10 @@
                             <label for="expenseReceipt" class="form-label">Receipt Image (Optional)</label>
                             <input type="file" class="form-control" id="expenseReceipt" name="receipt" accept="image/jpeg,image/png,image/jpg,application/pdf">
                             <div id="receiptError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
-                            <div class="form-text">Upload receipt image or PDF (max 2MB)</div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                Upload receipt image or PDF (max 5MB). Supported formats: JPEG, PNG, PDF.
+                            </div>
                             
                             <!-- Receipt preview area (for edit) -->
                             <div id="receiptPreview" class="mt-2" style="display: none;">
@@ -1005,6 +1008,32 @@
             $('#confirmDeleteBtn').on('click', function() {
                 confirmDelete();
             });
+
+            $('#expenseReceipt').on('change', function() {
+                // Clear previous errors
+                $('#receiptError').text('').hide();
+                
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    
+                    if (file.size > maxSize) {
+                        // Calculate file size in MB for display
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        
+                        // Show error message
+                        $('#receiptError').html(`File too large (${fileSizeMB}MB). Maximum size allowed is 5MB.`).show();
+                        
+                        // Reset file input
+                        $(this).val('');
+                        
+                        // Hide preview if it exists
+                        $('#receiptPreview').hide();
+                        
+                        return false;
+                    }
+                }
+            });
         });
 
         // Initialize expense breakdown chart
@@ -1116,6 +1145,22 @@
             $('.expense-error').text('').hide();
             $('#generalExpenseError').empty().hide();
             
+            // Check receipt file size
+            const receiptInput = document.getElementById('expenseReceipt');
+            if (receiptInput.files.length > 0) {
+                const file = receiptInput.files[0];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                
+                if (file.size > maxSize) {
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    $('#receiptError').html(`File too large (${fileSizeMB}MB). Maximum size allowed is 5MB.`).show();
+                    
+                    // Scroll to the error
+                    $('#receiptError')[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+                    return;
+                }
+            }
+            
             // Create FormData object to handle file uploads
             let formData = new FormData($('#expenseForm')[0]);
             
@@ -1130,8 +1175,8 @@
             // Use named route for both create and update to ensure consistency
             $.ajax({
                 url: currentExpenseId 
-                    ? '{{ route("admin.expense.update", ["id" => "_id_"]) }}'.replace('_id_', currentExpenseId) 
-                    : '{{ route("admin.expense.store") }}',
+                    ? '/admin/expense-tracker/expense/' + currentExpenseId
+                    : '/admin/expense-tracker/store-expense',
                 method: 'POST', // Always use POST with _method for PUT
                 data: formData,
                 processData: false,
@@ -1214,8 +1259,8 @@
             // Determine if this is an edit or create operation
             const isEdit = currentBudgetId !== null;
             const url = isEdit 
-                ? "{{ route('admin.expense.budget.update', ['id' => '_id_']) }}".replace('_id_', currentBudgetId)
-                : "{{ route('admin.expense.budget.store') }}";
+                ? "/admin/expense-tracker/update-budget/" + currentBudgetId
+                : "/admin/expense-tracker/store-budget";
             const method = isEdit ? 'PUT' : 'POST';
             
             // Send the request
@@ -1275,6 +1320,9 @@
             
             // Clear any existing form data and errors
             clearExpenseForm();
+
+            // Clear any file input errors
+            $('#receiptError').text('').hide();
             
             // Store the expense ID for use in the save function
             currentExpenseId = id;
@@ -1287,7 +1335,7 @@
             
             // Fetch expense details
             $.ajax({
-                url: '{{ route("admin.expense.get", "") }}/' + id,
+                url: '/admin/expense-tracker/get-expense/' + id,
                 type: 'GET',
                 success: function(response) {
                     const expense = response.expense;
@@ -1383,7 +1431,7 @@
             $('#saveBudgetBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
             
             $.ajax({
-                url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
+                url: "/admin/expense-tracker/get-budget/" + id,
                 method: 'GET',
                 success: function(response) {
                     const budget = response.budget;
@@ -1449,7 +1497,7 @@
             
             // Fetch the expense details first
             $.ajax({
-                url: '{{ route("admin.expense.get", "") }}/' + id,
+                url: '/admin/expense-tracker/get-expense/' + id,
                 type: 'GET',
                 success: function(response) {
                     const expense = response.expense;
@@ -1508,7 +1556,7 @@
             
             // Fetch the budget details first
             $.ajax({
-                url: "{{ route('admin.expense.budget.get', ['id' => '_id_']) }}".replace('_id_', id),
+                url: '/admin/expense-tracker/get-budget/' + id,
                 method: 'GET',
                 success: function(response) {
                     const budget = response.budget;
@@ -1592,14 +1640,13 @@
             
             // Determine correct API endpoint and parameter name
             let url, paramName;
-            
-            if (itemType === 'expense') {
-                url = '{{ route("admin.expense.delete") }}';
-                paramName = 'expense_id';
-            } else {
-                url = '{{ route("admin.expense.budget.delete") }}';
-                paramName = 'budget_id';
-            }
+
+            url = itemType === 'expense'  // Remove the 'let' keyword here
+                ? '/admin/expense-tracker/delete-expense' 
+                : '/admin/expense-tracker/delete-budget';
+                
+            // Set the correct parameter name based on item type
+            paramName = itemType === 'expense' ? 'expense_id' : 'budget_id';
             
             // Prepare form data
             const formData = new FormData();
@@ -1663,7 +1710,7 @@
             
             // Make AJAX call to get filtered data
             $.ajax({
-                url: '{{ route("admin.expense.index") }}',
+                url: '/admin/expense-tracker',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -1955,7 +2002,7 @@
             $('#chartSpinner').show();
             
             $.ajax({
-                url: '{{ route("admin.expense.index") }}',
+                url: '/admin/expense-tracker',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -2013,7 +2060,7 @@
             $('#allExpensesSpinner').removeClass('d-none');
             
             $.ajax({
-                url: '{{ route("admin.expense.filtered") }}', // Use the existing filtered route instead
+                url: '/admin/expense-tracker/filtered-expenses', // Use the existing filtered route instead
                 method: 'GET',
                 // No filters means get all expenses
                 data: {
@@ -2151,7 +2198,7 @@
             $('#expensesFilterStatus').html(filterStatus);
             
             $.ajax({
-                url: '{{ route("admin.expense.filtered") }}',
+                url: '/admin/expense-tracker/filtered-expenses',
                 method: 'GET',
                 data: {
                     category_id: category,
@@ -2184,7 +2231,7 @@
             $('#fullHistorySpinner').removeClass('d-none');
             
             $.ajax({
-                url: '{{ route("admin.expense.budget.filtered") }}',
+                url: '/admin/expense-tracker/filtered-budgets',
                 method: 'GET',
                 // No filters means get all budgets
                 data: {
@@ -2310,7 +2357,7 @@
             $('#budgetFilterStatus').html(filterStatus);
             
             $.ajax({
-                url: '{{ route("admin.expense.budget.filtered") }}',
+                url: '/admin/expense-tracker/filtered-budgets',
                 method: 'GET',
                 data: {
                     budget_type_id: budgetType,
@@ -2340,12 +2387,12 @@
 
         // Export expenses to Excel
         function exportExpensesToExcel() {
-            submitExportForm('{{ route("admin.expense.export.excel") }}');
+            submitExportForm('/admin/expense-tracker/export-expenses-excel');
         }
 
         // Export budgets to Excel
         function exportBudgetsToExcel() {
-            submitExportForm('{{ route("admin.expense.budget.export.excel") }}');
+            submitExportForm('/admin/expense-tracker/export-budgets-excel');
         }
 
         // Export filtered expenses to Excel
@@ -2354,7 +2401,7 @@
             const startDate = $('#expensesFilterStartDate').val();
             const endDate = $('#expensesFilterEndDate').val();
             
-            submitExportForm('{{ route("admin.expense.export.excel") }}', {
+            submitExportForm('/admin/expense-tracker/export-expenses-excel', {
                 category_id: category || '',
                 start_date: startDate || '',
                 end_date: endDate || ''
@@ -2367,7 +2414,7 @@
             const startDate = $('#budgetFilterStartDate').val();
             const endDate = $('#budgetFilterEndDate').val();
             
-            submitExportForm('{{ route("admin.expense.budget.export.excel") }}', {
+            submitExportForm('/admin/expense-tracker/export-budgets-excel', {
                 budget_type_id: budgetType || '',
                 start_date: startDate || '',
                 end_date: endDate || ''
@@ -2463,6 +2510,7 @@
             
             // Add form to body, submit it, and remove it
             document.body.appendChild(form);
+            form.method = 'POST'; // Explicitly set method again to ensure POST is used
             form.submit();
             document.body.removeChild(form);
             

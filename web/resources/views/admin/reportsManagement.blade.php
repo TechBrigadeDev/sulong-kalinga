@@ -394,7 +394,7 @@
             
             // Create form and submit
             const form = $('<form>', {
-                'action': '{{ route("admin.export.reports.pdf") }}',
+                'action': '/admin/export/reports-pdf',
                 'method': 'post',
                 'target': '_blank'
             });
@@ -424,6 +424,7 @@
             }));
             
             $('body').append(form);
+            form.attr('method', 'POST'); // Explicitly set method again to ensure POST is used
             form.submit();
             form.remove();
             

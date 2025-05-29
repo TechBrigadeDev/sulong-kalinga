@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Who did the action
+            $table->unsignedBigInteger('user_id')->nullable(); // Who did the action
             $table->string('entity_type');         // E.g. 'beneficiary', 'municipality'
-            $table->unsignedBigInteger('entity_id'); // ID of the affected entity
+            $table->unsignedBigInteger('entity_id')->nullable(); // ID of the affected entity
             $table->string('type');                // Enum: create, update, archive, delete
             $table->text('message');               // Description of the change
             $table->timestamps();                  // created_at = when the action happened

@@ -262,10 +262,11 @@
 
 <!-- Message Input Area -->
 <div class="message-input-container">
-    <form id="messageForm" action="{{ route($rolePrefix.'.messaging.send') }}" method="POST" enctype="multipart/form-data">
+    <form id="messageForm" action="/{{$rolePrefix}}/messaging/send-message" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="conversation_id" value="{{ $conversation->conversation_id }}">
-        
+
+        <div id="messageErrorContainer" class="alert alert-danger mb-2" style="display: none;"></div>
         <div id="filePreviewContainer" class="file-preview-container mb-2"></div>
         
         <div class="position-relative">
@@ -279,4 +280,5 @@
             </button>
         </div>
     </form>
+
 </div>

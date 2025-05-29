@@ -654,7 +654,7 @@
             // Create a form to submit the current filter values for PDF export
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ route('care-manager.exports.health.monitoring.pdf') }}';
+            form.action = '/care-manager/exports/health-monitoring-pdf';
             form.style.display = 'none';
             
             // Add CSRF token
@@ -680,6 +680,7 @@
             
             // Append form to body and submit
             document.body.appendChild(form);
+            form.method = 'POST'; // Explicitly set method again to ensure POST is used
             form.submit();
         });
     });
