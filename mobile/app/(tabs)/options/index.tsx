@@ -59,6 +59,11 @@ const UserManagement = () => {
                     href="/options/user-management/care-managers"
                     icon="Smile"
                 />
+                <Link
+                    label="Administrators"
+                    href="/options/user-management/administrators"
+                    icon="ShieldUser"
+                />
             </Card>
         </Section>
     )
