@@ -250,15 +250,21 @@ class DatabaseSeeder extends Seeder
 
         try {
             $this->command->info('Seeding weekly care plans...');
-            // 6. Generate weekly care plans with realistic intervention data
-            // Reduce frequency to keep DB size manageable but data still meaningful
-            $this->generateRealisticWeeklyCarePlans($careWorkers, $allBeneficiaries);
+            // Generate vital signs first
+            VitalSigns::factory()->count(200)->create();
+            
+            // Get care workers for assignment
+            $careWorkers = User::where('role_id', 3)->get();
+            
+            // Generate weekly care plans
+            $this->generateRealisticWeeklyCarePlans($careWorkers, $beneficiaries);
+            
             $this->command->info('Weekly care plans seeded successfully.');
         } catch (\Throwable $e) {
             $this->command->error('Failed to seed weekly care plans: ' . $e->getMessage());
             \Log::error('Failed to seed weekly care plans', ['exception' => $e]);
         }
-
+    
         try {
             $this->command->info('Seeding notifications...');
             // 7. Generate notifications - adjusted for new user counts
