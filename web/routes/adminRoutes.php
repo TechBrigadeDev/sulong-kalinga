@@ -324,6 +324,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::put('/update/{id}', [AiSummaryController::class, 'updateSummary'])->name('update');
         Route::put('/finalize/{id}', [AiSummaryController::class, 'finalizeSummary'])->name('finalize');
         Route::post('/translate', [AiSummaryController::class, 'translate'])->name('translate');
+        Route::post('/translate-sections', [AiSummaryController::class, 'translateSections'])->name('translate-sections');
     });
 
     // Shift Histories

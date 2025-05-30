@@ -36,6 +36,8 @@ class WeeklyCarePlan extends Model
     protected $casts = [
         'assessment_summary_sections' => 'array',
         'evaluation_summary_sections' => 'array',
+        'assessment_translation_sections' => 'array', // Add this line
+        'evaluation_translation_sections' => 'array', // Add this line
         'has_ai_summary' => 'boolean',
     ];
 
