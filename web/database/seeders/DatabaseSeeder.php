@@ -378,169 +378,129 @@ class DatabaseSeeder extends Seeder
     private function generateRealisticWeeklyCarePlans($careWorkers, $beneficiaries)
     {
         \Log::info('Starting generateRealisticWeeklyCarePlans');
-        $careWorkerCollection = collect($careWorkers); // <-- Fix for undefined variable
-        $count = 0;
-        $wcpCount = 0;
-
-        // Define the date range for weekly care plans
-        $startDate = Carbon::now()->subMonths(6); // e.g., 6 months ago
+        $careWorkerCollection = collect($careWorkers);
+        
+        // Define date range parameters
+        $startDate = Carbon::now()->subMonths(12);
         $endDate = Carbon::now();
-
-        // Define common illnesses and interventions by category
-        $commonIllnesses = [
-            'Hypertension', 'Diabetes', 'Arthritis', 'Asthma', 'COPD', 'Heart Disease', 'Stroke', 'Dementia', 'Depression', 'Chronic Pain'
-        ];
-        $interventionsByCategoryId = Intervention::all()->groupBy('care_category_id')->map(function ($group) {
-            return $group->pluck('intervention_id')->toArray();
-        })->toArray();
-
+        
+        // Progress tracking
+        $total = count($beneficiaries);
+        $this->command->getOutput()->progressStart($total);
+        $wcpCount = 0;
+        
+        // Loop through each beneficiary
         foreach ($beneficiaries as $beneficiary) {
-            $count++;
-            \Log::info("Seeding WCP for beneficiary {$beneficiary->beneficiary_id} ({$count}/". count($beneficiaries) .")");
-            // Skip if no general care plan exists
-            if (!$beneficiary->generalCarePlan) {
-                \Log::warning("Beneficiary ID {$beneficiary->beneficiary_id} has no general care plan");
-                continue;
-            }
+            // Determine how many care plans to create for this beneficiary (2-12)
+            $plansToCreate = $this->faker->numberBetween(2, 12);
             
-            $currentDate = $startDate->copy();
+            // Calculate dates evenly across the period
+            $dateStep = $endDate->diffInDays($startDate) / ($plansToCreate + 1);
+            $currentDate = clone $startDate;
             
-            // Get care_worker_id directly from the GeneralCarePlan model
-            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
-            
-            // Determine care worker for this beneficiary
-            $careWorker = null;
-            
-            // First, try to find the exact care worker by ID
-            if ($careWorkerId) {
-                $careWorker = $careWorkerCollection->firstWhere('id', $careWorkerId);
-            }
-            
-            // If no care worker found, assign one based on location
-            if (!$careWorker) {
-                // Determine which area the beneficiary is from based on municipality
-                $isSanRoque = ($beneficiary->municipality_id == 2); // Assuming municipality_id 2 is San Roque
+            for ($i = 0; $i < $plansToCreate; $i++) {
+                // Move date forward for each plan
+                $currentDate = $currentDate->addDays($dateStep + $this->faker->numberBetween(-3, 3)); // Add some randomness
                 
-                // Filter care workers for this location
-                $areaCareWorkers = $careWorkerCollection->filter(function($worker) use ($isSanRoque) {
-                    // For San Roque workers, use even IDs (0,2,4,6,8)
-                    // For Mondragon workers, use odd IDs (1,3,5,7,9)
-                    return $isSanRoque ? ($worker->id % 2 == 0) : ($worker->id % 2 == 1);
-                });
+                // Assign a random care worker who matches the municipality of the beneficiary
+                $careWorker = $careWorkerCollection->where('assigned_municipality_id', $beneficiary->municipality_id)
+                    ->random();
                 
-                if ($areaCareWorkers->count() > 0) {
-                    $careWorker = $areaCareWorkers->random();
-                    \Log::info("Assigned area-matched care worker ID {$careWorker->id} to beneficiary ID {$beneficiary->beneficiary_id}");
-                } else {
-                    // Last resort: just take any care worker
-                    $careWorker = $careWorkerCollection->random();
-                    \Log::warning("Assigned random care worker ID {$careWorker->id} to beneficiary ID {$beneficiary->beneficiary_id}");
-                }
-            }
-            
-            // For each WEEKLY interval in the date range (every 7 days)
-            while ($currentDate->lte($endDate)) {
-                // Create vital signs with realistic values
-                $systolic = $this->faker->numberBetween(110, 160);
-                $diastolic = $this->faker->numberBetween(70, 95);
-                $vitalSigns = VitalSigns::create([
-                    'blood_pressure' => "{$systolic}/{$diastolic}",
-                    'body_temperature' => $this->faker->randomFloat(1, 36.1, 37.2),
-                    'pulse_rate' => $this->faker->numberBetween(60, 100),
-                    'respiratory_rate' => $this->faker->numberBetween(12, 20),
+                // First, create vital signs record
+                $vitalSigns = VitalSigns::factory()->create([
                     'created_by' => $careWorker->id,
-                    'created_at' => $currentDate->copy(),
-                    'updated_at' => $currentDate->copy()
+                    'created_at' => $currentDate,
+                    'updated_at' => $currentDate
                 ]);
                 
-                // Select 0-2 illnesses randomly
-                $selectedIllnesses = $this->faker->randomElements(
-                    $commonIllnesses,
-                    $this->faker->numberBetween(0, 2)
-                );
-                
-                // Pick a random day during the current week (0-3 days from the start of the week)
-                $randomDayOffset = rand(0, 3);
-                $wcpDate = $currentDate->copy()->addDays($randomDayOffset);
-                
-                // Create weekly care plan with realistic assessment and illnesses
-                $weeklyCarePlan = WeeklyCarePlan::create([
+                // Create weekly care plan with gender-appropriate assessments
+                $weeklyCarePlan = WeeklyCarePlan::factory()->create([
                     'beneficiary_id' => $beneficiary->beneficiary_id,
                     'care_worker_id' => $careWorker->id,
+                    'care_manager_id' => $careWorker->assigned_care_manager_id,
                     'vital_signs_id' => $vitalSigns->vital_signs_id,
-                    'date' => $wcpDate,
-                    'assessment' => $this->getRealisticAssessment(),
-                    'illnesses' => !empty($selectedIllnesses) ? json_encode($selectedIllnesses) : null,
-                    'photo_path' => 'weekly_care_plans/photos/seed_photo_' . rand(1, 10) . '.jpg',
-                    'evaluation_recommendations' => $this->getRealisticRecommendation(),
+                    'date' => $currentDate->format('Y-m-d'),
                     'created_by' => $careWorker->id,
-                    'updated_by' => $careWorker->id,
-                    'created_at' => $wcpDate,
-                    'updated_at' => $wcpDate
+                    'updated_by' => $careWorker->assigned_care_manager_id,
+                    'created_at' => $currentDate,
+                    'updated_at' => $currentDate->addDays(1) // Care manager reviews a day later
                 ]);
                 
-                $wcpCount++;
+                // Get interventions from the factory to ensure they match the assessment
+                $interventionsJson = $weeklyCarePlan->interventions;
+                $interventions = $interventionsJson ? json_decode($interventionsJson, true) : [];
                 
-                // Add 3-8 interventions from different categories
-                $numInterventions = rand(3, 8);
-                $usedCategoryIds = [];
-                
-                for ($j = 0; $j < $numInterventions; $j++) {
-                    // Pick a category (prioritize unused ones)
-                    $availableCategoryIds = array_diff(array_keys($interventionsByCategoryId), $usedCategoryIds);
-                    
-                    if (empty($availableCategoryIds)) {
-                        // If we've used all categories, reset and pick randomly
-                        $categoryId = array_rand($interventionsByCategoryId);
-                    } else {
-                        // Pick from unused categories
-                        $categoryId = $availableCategoryIds[array_rand($availableCategoryIds)];
-                        $usedCategoryIds[] = $categoryId;
-                    }
-                    
-                    // Get interventions for this category
-                    $categoryInterventions = $interventionsByCategoryId[$categoryId];
-                    
-                    if (!empty($categoryInterventions)) {
-                        // Pick a random intervention from this category
-                        $interventionId = $categoryInterventions[array_rand($categoryInterventions)];
+                // Now create actual intervention records for the weekly care plan
+                // Either use the interventions from JSON or create new ones from DB
+                if (!empty($interventions)) {
+                    foreach ($interventions as $interventionName) {
+                        // Find a matching intervention in the database or use a general one
+                        $intervention = Intervention::where('intervention_description', 'like', "%$interventionName%")
+                            ->inRandomOrder()
+                            ->first();
                         
-                        // Determine if this should be a custom intervention (20% chance)
-                        $isCustom = (rand(1, 5) === 1);
-                        
-                        if ($isCustom) {
-                            // Custom intervention
-                            WeeklyCarePlanInterventions::create([
-                                'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
-                                'care_category_id' => $categoryId,
-                                'intervention_description' => 'Custom: ' . $this->getRandomCustomIntervention($categoryId),
-                                'duration_minutes' => rand(15, 120),
-                                'implemented' => (rand(1, 10) > 2) // 80% chance of being implemented
-                            ]);
-                        } else {
-                            // Standard intervention
-                            WeeklyCarePlanInterventions::create([
-                                'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
-                                'intervention_id' => $interventionId,
-                                'duration_minutes' => rand(15, 120),
-                                'implemented' => (rand(1, 10) > 2) // 80% chance of being implemented
-                            ]);
+                        // If no exact match found, get any intervention from the care category
+                        if (!$intervention) {
+                            $intervention = Intervention::inRandomOrder()->first();
                         }
+                        
+                        // Create the intervention record
+                        WeeklyCarePlanInterventions::create([
+                            'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
+                            'intervention_id' => $intervention->intervention_id,
+                            'care_category_id' => $intervention->care_category_id,
+                            'duration_minutes' => $this->faker->numberBetween(15, 60),
+                            'implemented' => $this->faker->boolean(80) // 80% chance of being implemented
+                        ]);
+                    }
+                } else {
+                    // Fallback: create 2-4 random interventions 
+                    $interventionCount = $this->faker->numberBetween(2, 4);
+                    $interventions = Intervention::inRandomOrder()->take($interventionCount)->get();
+                    
+                    foreach ($interventions as $intervention) {
+                        WeeklyCarePlanInterventions::create([
+                            'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
+                            'intervention_id' => $intervention->intervention_id,
+                            'care_category_id' => $intervention->care_category_id,
+                            'duration_minutes' => $this->faker->numberBetween(15, 60),
+                            'implemented' => $this->faker->boolean(80)
+                        ]);
                     }
                 }
                 
-                // Move forward by 1 week for weekly plans
-                $currentDate->addWeek();
+                // Randomly set acknowledgements (only for older plans)
+                if ($currentDate->diffInDays(Carbon::now()) > 14 && $this->faker->boolean(40)) {
+                    if ($this->faker->boolean()) {
+                        $weeklyCarePlan->acknowledged_by_beneficiary = $beneficiary->beneficiary_id;
+                    } else {
+                        // Try to get a family member for this beneficiary
+                        $familyMember = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)
+                            ->inRandomOrder()
+                            ->first();
+                            
+                        if ($familyMember) {
+                            $weeklyCarePlan->acknowledged_by_family = $familyMember->family_member_id;
+                        }
+                    }
+                    $weeklyCarePlan->save();
+                }
+                
+                // Remove the 'interventions' JSON field since we've created actual intervention records
+                if (isset($weeklyCarePlan->interventions)) {
+                    $weeklyCarePlan->interventions = null;
+                    $weeklyCarePlan->save();
+                }
+                
+                $wcpCount++;
             }
             
-            // Only log every 10 beneficiaries to reduce log spam
-            if ($beneficiary->beneficiary_id % 10 == 0) {
-                \Log::info("Generated weekly care plans for beneficiaries through ID: {$beneficiary->beneficiary_id}");
-            }
+            $this->command->getOutput()->progressAdvance();
         }
         
-        \Log::info("Created a total of {$wcpCount} weekly care plans");
-        \Log::info('Finished generateRealisticWeeklyCarePlans');
+        $this->command->getOutput()->progressFinish();
+        \Log::info("Created {$wcpCount} weekly care plans");
+        $this->command->info("Created {$wcpCount} weekly care plans");
     }
 
     /**
