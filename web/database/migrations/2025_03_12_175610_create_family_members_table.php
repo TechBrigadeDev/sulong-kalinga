@@ -19,13 +19,13 @@ return new class extends Migration
             $table->string('mobile', 18)->unique()->nullable();
             $table->string('landline', 8)->nullable();
             $table->string('email', 100)->unique();
+            $table->string('password'); // Added password field
             $table->text('photo')->nullable();
             $table->text('street_address');
             $table->string('gender', 50)->nullable();
             $table->integer('related_beneficiary_id');
             $table->string('relation_to_beneficiary', 50);
             $table->boolean('is_primary_caregiver')->default(0);
-            $table->integer('portal_account_id');
             $table->integer('created_by');
             $table->integer('updated_by');
             $table->rememberToken();
@@ -33,7 +33,6 @@ return new class extends Migration
 
             // Foreign Key Constraints
             $table->foreign('related_beneficiary_id')->references('beneficiary_id')->on('beneficiaries')->onDelete('no action');
-            $table->foreign('portal_account_id')->references('id')->on('portal_accounts')->onDelete('no action');
             $table->foreign('created_by')->references('id')->on('cose_users')->onDelete('no action');
             $table->foreign('updated_by')->references('id')->on('cose_users')->onDelete('no action');
         });

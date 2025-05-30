@@ -33,7 +33,11 @@ return new class extends Migration
             $table->integer('beneficiary_status_id');
             $table->string('status_reason', 255)->nullable();
             $table->integer('general_care_plan_id')->nullable();
-            $table->integer('portal_account_id');
+            // New authentication fields
+            $table->string('username')->unique();
+            $table->string('password');
+            $table->rememberToken();
+            // Other existing fields
             $table->text('photo')->nullable();
             $table->text('beneficiary_signature')->nullable();
             $table->text('care_worker_signature')->nullable();
@@ -42,17 +46,14 @@ return new class extends Migration
             $table->integer('created_by');
             $table->integer('updated_by');
             $table->timestamps();
-            $table->rememberToken();
 
             // Foreign Key Constraints
             $table->foreign('municipality_id')->references('municipality_id')->on('municipalities')->onDelete('no action');
             $table->foreign('category_id')->references('category_id')->on('beneficiary_categories')->onDelete('no action');
             $table->foreign('beneficiary_status_id')->references('beneficiary_status_id')->on('beneficiary_status')->onDelete('no action');
-            $table->foreign('portal_account_id')->references('id')->on('portal_accounts')->onDelete('no action');
             $table->foreign('created_by')->references('id')->on('cose_users')->onDelete('no action');
             $table->foreign('updated_by')->references('id')->on('cose_users')->onDelete('no action');
             $table->foreign('barangay_id')->references('barangay_id')->on('barangays')->onDelete('no action');
-
         });
     }
 
