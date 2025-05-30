@@ -18,6 +18,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(UserManagementService::class, function ($app) {
             return new UserManagementService();
         });
+
+        $this->app->register(\App\Providers\RouteServiceProvider::class);
+        
+        // Conditionally register Pail only if the class exists
+        if (config('app.env') === 'local' && config('app.debug') && env('USE_PAIL', false) && class_exists(\Laravel\Pail\PailServiceProvider::class)) {
+            $this->app->register(\Laravel\Pail\PailServiceProvider::class);
+        }
     }
 
     /**
