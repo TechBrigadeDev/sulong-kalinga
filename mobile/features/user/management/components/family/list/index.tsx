@@ -3,11 +3,9 @@ import { useGetFamilyMembers } from "../../../management.hook";
 import { Button, Card, Text, View } from "tamagui";
 import { familyListStore } from "./store";
 import { useRouter } from "expo-router";
-import FamilySearch from "./search";
 import { IFamilyMember } from "~/features/user/user.schema";
 
 const FamilyList = () => {
-    const router = useRouter();
     const {
         search,
     } = familyListStore();
@@ -20,65 +18,24 @@ const FamilyList = () => {
         search
     });
 
-    const handleAddFamilyMember = () => {
-        router.push("/(tabs)/options/user-management/family/add");
-    };
-
     if (data.length === 0 && !isLoading) {
         return (
-            <View style={{ flex: 1, padding: 8 }}>
-                <Card
-                    paddingVertical={20}
-                    marginVertical={20}
-                    borderRadius={10}
-                    display="flex"
-                    gap="$4"
-                >
-                    <Button
-                        size="$3"
-                        theme="dark_blue"
-                        onPressIn={handleAddFamilyMember}
-                    >
-                        Add Family Member
-                    </Button>
-                    <FamilySearch/>
-                </Card>
-                <Text>No family members found</Text>
-            </View>
+            <Text>No family members found</Text>
         )
     }
 
     return (
-        <View style={{ flex: 1 }}>
-            <Card
-                paddingVertical={20}
-                marginVertical={20}
-                borderRadius={10}
-                display="flex"
-                gap="$4"
-                margin="$2"
-            >
-                <Button
-                    size="$3"
-                    theme="dark_blue"
-                    onPressIn={handleAddFamilyMember}
-                >
-                    Add Family Member
-                </Button>
-                <FamilySearch/>
-            </Card>
-            <FlatList 
-                data={data}
-                renderItem={FamilyMemberCard}
-                contentContainerStyle={{ padding: 8 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isLoading}
-                        onRefresh={refetch}
-                    />
-                }
-            />
-        </View>
+        <FlatList 
+            data={data}
+            renderItem={FamilyMemberCard}
+            contentContainerStyle={{ padding: 8 }}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                />
+            }
+        />
     )
 }
 

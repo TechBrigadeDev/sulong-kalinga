@@ -52,14 +52,12 @@ export const useGetFamilyMembers = (props?: {
     }
 
     const api = new UserManagementController(token);
-
     return useQuery({
         queryKey: QK.user.management.getFamilyMembers({
             search: props?.search || "",
         }),
         queryFn: async () => {
             const response = await api.getFamilyMembers();
-            console.log("Family members response", response);
             return response;
         },
         enabled: !!token,
@@ -79,6 +77,27 @@ export const useGetFamilyMember = (id?: string) => {
         queryKey: QK.user.management.getFamilyMember(id),
         queryFn: async () => {
             const response = await api.getFamilyMember(id);
+            return response;
+        },
+        enabled: !!token,
+    })
+}
+
+export const useGetCareWorkers = (props?: {
+    search?: string;
+}) => {
+    const { token } = authStore();
+    if (!token) {
+        throw new Error("No token found");
+    }
+
+    const api = new UserManagementController(token);
+    return useQuery({
+        queryKey: [QK.user.management.getCareWorkers, token, props?.search],
+        queryFn: async () => {
+            const response = await api.getCareWorkers({
+                search: props?.search,
+            });
             return response;
         },
         enabled: !!token,

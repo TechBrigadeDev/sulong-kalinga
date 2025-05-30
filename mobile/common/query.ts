@@ -24,6 +24,7 @@ export const QK = {
                 "user/management/getFamilyMember",
                 id,
             ],
+            getCareWorkers: "user/management/getCareWorkers",
         }
     }
 }
