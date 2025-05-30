@@ -10,6 +10,8 @@ use App\Http\Middleware\CheckRole;
 require __DIR__.'/adminRoutes.php';
 require __DIR__.'/careManagerRoutes.php';
 require __DIR__.'/careWorkerRoutes.php';
+require __DIR__.'/beneficiaryRoutes.php';  // Add beneficiary routes
+require __DIR__.'/familyRoutes.php';       // Add family routes
 
 // Authentication Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -19,7 +21,7 @@ Route::get('/forgot-password', function () {
     return view('forgot-password');
 })->name('forgotPass');
 
-// Dashboard routes by role
+// Dashboard routes by role (for staff users)
 Route::get('/admin/dashboard', function () {
     if (auth()->user()?->role_id == 1) {  // Allow ALL users with role_id=1
         $showWelcome = session()->pull('show_welcome', false);
@@ -31,7 +33,7 @@ Route::get('/admin/dashboard', function () {
         return view('admin.admindashboard', ['showWelcome' => $showWelcome]);
     }
     abort(403, 'Only administrators can access this page');
-})->middleware('auth')->name('admin.dashboard');  // Also fixed the route name
+})->middleware('auth')->name('admin.dashboard');
 
 Route::get('/manager/dashboard', function () {
     if (auth()->user()?->isCareManager()) {
