@@ -60,6 +60,44 @@ return [
             'report' => false,
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | DigitalOcean Spaces
+        |--------------------------------------------------------------------------
+        |
+        | Here you may configure the DigitalOcean Spaces disk. This is similar to
+        | the S3 disk, but uses the DigitalOcean Spaces API. You can use this
+        | disk to store files in a DigitalOcean Space.
+        |
+        */
+        'spaces' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_KEY'),
+            'secret' => env('DO_SPACES_SECRET'),
+            'endpoint' => env('DO_SPACES_ENDPOINT'),
+            'region' => env('DO_SPACES_REGION'),
+            'bucket' => env('DO_SPACES_BUCKET'),
+            'visibility' => 'public', // default for CDN
+            'url' => env('DO_SPACES_ENDPOINT') . '/' . env('DO_SPACES_BUCKET'),
+            'use_path_style_endpoint' => env('DO_SPACES_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'bucket_endpoint' => true,
+            'directory_env' => env('DO_DIRECTORY'),
+        ],
+        // DigitalOcean Spaces with private visibility
+        'spaces-private' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_KEY'),
+            'secret' => env('DO_SPACES_SECRET'),
+            'endpoint' => env('DO_SPACES_ENDPOINT'),
+            'region' => env('DO_SPACES_REGION'),
+            'bucket' => env('DO_SPACES_BUCKET'),
+            'visibility' => 'private',
+            'use_path_style_endpoint' => env('DO_SPACES_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'bucket_endpoint' => true,
+            'directory_env' => env('DO_DIRECTORY'),
+        ],
     ],
 
     /*
@@ -77,4 +115,6 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+   
+    
 ];

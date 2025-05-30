@@ -68,9 +68,10 @@
                 </div>
 
                 <!-- Hidden form for exporting -->
-                <form id="exportForm" action="{{ route('care-manager.exports.careworkers-pdf') }}" method="POST" style="display: none;"
-                    data-pdf-route="{{ route('care-manager.exports.careworkers-pdf') }}"
-                    data-excel-route="{{ route('care-manager.exports.careworkers-excel') }}">
+                <form id="exportForm" method="POST" style="display: none;"
+                    action="/care-manager/exports/careworkers-pdf"
+                    data-pdf-route="/care-manager/exports/careworkers-pdf" 
+                    data-excel-route="/care-manager/exports/careworkers-excel">
                     @csrf
                     <input type="hidden" name="selected_careworkers" id="selectedCareworkers">
                 </form>

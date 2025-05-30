@@ -187,4 +187,105 @@ class MessagingApiController extends Controller
             'message' => 'Conversation deleted (or left) successfully.'
         ]);
     }
+
+    /**
+     * Get all members of a conversation (thread).
+     * GET /messaging/thread/{id}/members
+     */
+    public function getThreadMembers($id, Request $request)
+    {
+        $user = $request->user();
+
+        // Ensure user is a participant
+        $isParticipant = ConversationParticipant::where('conversation_id', $id)
+            ->where('participant_id', $user->id)
+            ->exists();
+
+        if (!$isParticipant) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $members = ConversationParticipant::where('conversation_id', $id)
+            ->with('user') // assumes you have a 'user' relationship on ConversationParticipant
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $members
+        ]);
+    }
+
+    /**
+     * Add a member to a conversation (group thread).
+     * POST /messaging/thread/{id}/add-member
+     * Request: { user_id: int }
+     */
+    public function addThreadMember($id, Request $request)
+    {
+        $user = $request->user();
+
+        // Ensure user is a participant (only participants can add others)
+        $isParticipant = ConversationParticipant::where('conversation_id', $id)
+            ->where('participant_id', $user->id)
+            ->exists();
+
+        if (!$isParticipant) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        // Check if user is already a participant
+        $alreadyMember = ConversationParticipant::where('conversation_id', $id)
+            ->where('participant_id', $request->user_id)
+            ->exists();
+
+        if ($alreadyMember) {
+            return response()->json(['success' => false, 'message' => 'User is already a member.'], 409);
+        }
+
+        ConversationParticipant::create([
+            'conversation_id' => $id,
+            'participant_id' => $request->user_id,
+            'participant_type' => 'cose_user', // adjust if you support other types
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Member added successfully.'
+        ]);
+    }
+
+    /**
+     * Leave a conversation (group thread).
+     * POST /messaging/thread/{id}/leave
+     */
+    public function leaveThread($id, Request $request)
+    {
+        $user = $request->user();
+
+        // Ensure user is a participant
+        $participant = ConversationParticipant::where('conversation_id', $id)
+            ->where('participant_id', $user->id)
+            ->first();
+
+        if (!$participant) {
+            return response()->json(['success' => false, 'message' => 'Not a member of this conversation.'], 403);
+        }
+
+        $participant->delete();
+
+        // Optionally: If no participants left, delete the conversation
+        $remaining = ConversationParticipant::where('conversation_id', $id)->count();
+        if ($remaining === 0) {
+            Conversation::where('conversation_id', $id)->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'You have left the conversation.'
+        ]);
+    }
 }

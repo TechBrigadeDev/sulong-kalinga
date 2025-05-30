@@ -288,7 +288,7 @@
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='{{ route('admin.emergency.request.viewHistory') }}'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='/admin/emergency-request/filter-history'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
         </div>
@@ -795,7 +795,7 @@
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "/admin/emergency-request/emergency/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -827,7 +827,7 @@
             // If noticeId is provided, fetch fresh data, otherwise use current emergency
             if (noticeId) {
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                    url: "/admin/emergency-request/emergency/" + noticeId,
                     method: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -958,7 +958,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('admin.emergency.request.respond.emergency') }}",
+                url: "/admin/emergency-request/respond-emergency",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1102,7 +1102,7 @@
                 
                 // Submit request
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.handle.service') }}",
+                    url: "/admin/emergency-request/handle-service",
                     method: 'POST',
                     data: formData,
                     processData: false,
@@ -1187,7 +1187,7 @@
             
             // Fetch service request details
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "/admin/emergency-request/service-request/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1220,7 +1220,7 @@
         // ===== COMMON FUNCTIONS =====
         function loadCareWorkers() {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.careworkers') }}",
+                url: "/admin/emergency-request/care-workers",
                 method: 'GET',
                 success: function(response) {
                     console.log("Care workers loaded:", response); // Debug line
@@ -1267,7 +1267,7 @@
             
             // Submit form
             $.ajax({
-                url: "{{ route('admin.emergency.request.archive') }}",
+                url: "/admin/emergency-request/archive",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -1316,51 +1316,6 @@
             });
         });
 
-        // Care Worker Send Reminder Function
-        function openSendReminderModal(recordId, recordType) {
-            $('#reminderRecordId').val(recordId);
-            $('#reminderRecordType').val(recordType);
-            $('#reminderMessage').val('');
-            $('#sendReminderModal').modal('show');
-        }
-
-        // Submit reminder
-        $('#submitReminder').on('click', function() {
-            const form = $('#sendReminderForm');
-            const formData = new FormData(form[0]);
-            
-            // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...');
-            
-            // Submit form
-            $.ajax({
-                url: "{{ route('care-worker.emergency.request.send.reminder') }}",
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        toastr.success('Reminder sent successfully to your care manager');
-                        
-                        // Close modal
-                        $('#sendReminderModal').modal('hide');
-                    } else {
-                        // Show error message
-                        toastr.error(response.message || 'Failed to send reminder');
-                    }
-                },
-                error: function() {
-                    toastr.error('Failed to send reminder. Please try again.');
-                },
-                complete: function() {
-                    // Reset button state
-                    $('#submitReminder').prop('disabled', false).html('Send Reminder');
-                }
-            });
-        });
-
         // Initialize tooltips
         $(function () {
         $('[data-bs-toggle="tooltip"]').tooltip();
@@ -1382,7 +1337,7 @@
             // If requestId is provided, fetch fresh data, otherwise use current service request
             if (requestId) {
                 $.ajax({
-                    url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                    url: "/admin/emergency-request/service-request/" + requestId,
                     method: 'GET',
                     success: function(response) {
                         if (response.success) {
@@ -1464,6 +1419,9 @@
             $('.service-password-confirmation, .care-worker-options').addClass('d-none');
             $('#completionWarning, #rejectionWarning, #statusValidationWarning, #approvalWarning').addClass('d-none');
             
+            // Default state - enable button for most types
+            $('#submitServiceResponse').prop('disabled', false);
+            
             // Show/hide care worker dropdown
             if (updateType === 'approval' || updateType === 'assignment') {
                 $('.care-worker-options').removeClass('d-none');
@@ -1473,13 +1431,11 @@
                 if (updateType === 'approval' && currentServiceRequest && currentServiceRequest.status === 'approved') {
                     $('#approvalWarning').removeClass('d-none').text('This service request is already approved. Please choose a different action.');
                     $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
                 }
             }
             
             // Show warning for completion
-            if (updateType === 'completion') {
+            else if (updateType === 'completion') {
                 $('.service-password-confirmation').removeClass('d-none');
                 $('#completionWarning').removeClass('d-none');
                 
@@ -1487,16 +1443,15 @@
                 if (currentServiceRequest && currentServiceRequest.status !== 'approved') {
                     $('#statusValidationWarning').removeClass('d-none').text('Only approved service requests can be marked as completed.');
                     $('#submitServiceResponse').prop('disabled', true);
-                } else {
-                    $('#submitServiceResponse').prop('disabled', false);
                 }
             }
             
             // Show warning for rejection
-            if (updateType === 'rejection') {
+            else if (updateType === 'rejection') {
                 $('#rejectionWarning').removeClass('d-none');
-                $('#submitServiceResponse').prop('disabled', false);
             }
+            
+            // Note option - no additional UI changes needed, button remains enabled
         }
 
         // Tab switcher for main tabs and pending column
@@ -1610,6 +1565,10 @@
                         <div class="col-md-8">${formatDate(request.service_date)}</div>
                     </div>
                     <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Requested Time:</div>
+                        <div class="col-md-8">${request.service_time ? formatTime(request.service_time) : 'Not Specified'}</div>
+                    </div>
+                    <div class="row mb-2">
                         <div class="col-md-4 fw-bold">Created:</div>
                         <div class="col-md-8">${formatDateTime(request.created_at)}</div>
                     </div>
@@ -1663,6 +1622,19 @@
             return date.toLocaleDateString();
         }
 
+        function formatTime(timeStr) {
+        // Handle cases where timeStr might be just the time portion
+        if (timeStr.length <= 8) {
+            // Create a dummy date with the time value
+            const dummyDate = new Date(`2000-01-01T${timeStr}`);
+            return dummyDate.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+        }
+        
+        // Handle full datetime strings
+        const date = new Date(timeStr);
+        return date.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+    }
+
         function formatStatus(status) {
             switch(status) {
                 case 'new': return '<span class="badge bg-danger">New</span>';
@@ -1679,7 +1651,7 @@
         function openResolveEmergencyModal(noticeId) {
             // Fetch emergency details and then open modal with resolution pre-selected
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.emergency', '') }}/" + noticeId,
+                url: "/admin/emergency-request/emergency/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -1702,7 +1674,7 @@
 
         function openCompleteServiceRequestModal(requestId) {
             $.ajax({
-                url: "{{ route('admin.emergency.request.get.service', '') }}/" + requestId,
+                url: "/admin/emergency-request/service-request/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

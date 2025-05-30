@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth/User Profile
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
-    Route::put('/profile', [UserApiController::class, 'updateProfile']);
+    // Route::put('/profile', [UserApiController::class, 'updateProfile']); OLD
 
     // Mobile Account Profile API 
     Route::get('/account-profile', [ViewAccountProfileApiController::class, 'show']);
@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/beneficiaries/{id}', [BeneficiaryApiController::class, 'update']);
     Route::patch('/beneficiaries/{id}/status', [BeneficiaryApiController::class, 'changeStatus']);
     Route::delete('/beneficiaries/{id}', [BeneficiaryApiController::class, 'destroy']);
+    Route::post('/beneficiaries/{id}/restore', [BeneficiaryApiController::class, 'restore']);
+    Route::get('/beneficiaries/export', [BeneficiaryApiController::class, 'export']);
 
     // Family Member Management
     Route::get('/family-members', [FamilyMemberApiController::class, 'index']);
@@ -56,9 +58,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/family-members/{id}', [FamilyMemberApiController::class, 'update']);
     Route::delete('/family-members/{id}', [FamilyMemberApiController::class, 'destroy']);
 
-    // Admin Read-Only
+    // Admin Management (Full CRUD + status + restore)
     Route::get('/admins', [AdminApiController::class, 'index']);
     Route::get('/admins/{id}', [AdminApiController::class, 'show']);
+    Route::post('/admins', [AdminApiController::class, 'store']);
+    Route::put('/admins/{id}', [AdminApiController::class, 'update']);
+    Route::delete('/admins/{id}', [AdminApiController::class, 'destroy']);
+    Route::patch('/admins/{id}/status', [AdminApiController::class, 'changeStatus']);
+    Route::post('/admins/{id}/restore', [AdminApiController::class, 'restore']);
 
     // Care Manager Read-Only
     Route::get('/care-managers', [CareManagerApiController::class, 'index']);
@@ -167,4 +174,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/messaging/thread', [MessagingApiController::class, 'deleteThread']);
     Route::get('/messaging/thread/{id}/messages', [MessagingApiController::class, 'getThreadMessages']);
     Route::post('/messaging/thread/{id}/message', [MessagingApiController::class, 'sendMessage']);
+
+    // Messaging Group management endpoints
+    Route::get('/messaging/thread/{id}/members', [MessagingApiController::class, 'getThreadMembers']);
+    Route::post('/messaging/thread/{id}/add-member', [MessagingApiController::class, 'addThreadMember']);
+    Route::post('/messaging/thread/{id}/leave', [MessagingApiController::class, 'leaveThread']);
+
+    // Records Management API
+    // Weekly Care Plans
+    Route::get('/records/weekly-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listWeekly']);
+    Route::get('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showWeekly']);
+    Route::put('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateWeekly']);
+
+    // General Care Plans
+    Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
+    Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
+    Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
 });

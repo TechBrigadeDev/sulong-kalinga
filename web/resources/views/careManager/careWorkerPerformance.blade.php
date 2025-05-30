@@ -994,7 +994,7 @@
             // Create a form to submit the current filter values
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ route("care-manager.exports.careworker.performance.pdf") }}';
+            form.action = '/care-manager/exports/careworker-performance-pdf';
             form.style.display = 'none';
             
             // Add CSRF token
@@ -1018,6 +1018,7 @@
             
             // Append form to body and submit
             document.body.appendChild(form);
+            form.method = 'POST'; // Explicitly set method again to ensure POST is used
             form.submit();
         });
 

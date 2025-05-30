@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(editForm);
         
         // Send AJAX request
-        fetch('{{ route("admin.locations.barangays.update") }}', {
+        fetch('/admin/locations/barangays/update', {
             method: 'POST',
             body: formData,
             headers: {

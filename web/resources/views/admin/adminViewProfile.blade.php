@@ -4,9 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile | {{ $user->first_name }} {{ $user->last_name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewProfile.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+        /* Fix z-index issues with buttons */
+        .btn {
+            position: relative;
+            z-index: 100;
+        }
+        
+        /* Remove unnecessary blue bars */
+        .home-section::after,
+        .home-section::before {
+            content: none !important;
+        }
+        
+        /* Fix profile section display */
+        .profile-section {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Ensure proper button spacing */
+        .btn {
+            margin-right: 5px;
+        }
+        
+        /* Fix any positioning issues with the settings row */
+        #updateEmailBtn, 
+        #updatePasswordBtn {
+            display: inline-block !important;
+            margin-bottom: 10px;
+        }
+        
+        /* Fix blue bars at bottom */
+        body::after,
+        body::before {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -142,12 +184,6 @@
                                 <div class="col-md-9">{{ $user->email }}</div>
                             </div>
                             <div class="row info-row">
-                                <div class="col-md-3 info-label">Password:</div>
-                                <div class="col-md-9">
-                                    <span class="text-muted">********</span>
-                                </div>
-                            </div>
-                            <div class="row info-row">
                                 <div class="col-md-3 info-label">Account Status:</div>
                                 <div class="col-md-9">
                                     <span class="badge {{ $user->status == 'Active' ? 'bg-success' : 'bg-danger' }}">{{ $user->status }}</span>
@@ -167,17 +203,15 @@
                             </div>
                             <div class="row info-row">
                                 <div class="col-md-12 text-end">
-                                    <a href="{{ route('admin.administrators.edit', $user->id) }}" class="btn btn-primary">Edit Profile</a>
                                     <button class="btn btn-primary" id="updateEmailBtn">Update Email</button>
                                     <button class="btn btn-primary" id="updatePasswordBtn">Update Password</button>
-
                                 </div>
                             </div>
 
                             <!-- Hidden Update Email Form -->
                             <div class="row mt-3" id="updateEmailForm" style="display: none;">
                                 <div class="col-md-12">
-                                    <form action="{{ route('admin.update.email') }}" method="POST">
+                                    <form action="/admin/update-email" method="POST">
                                         @csrf
                                         <div class="mb-3">
                                             <label for="current_email" class="form-label">Current Email</label>
@@ -185,7 +219,7 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="account_email" class="form-label">New Email</label>
-                                            <input type="email" class="form-control" id="account.email" name="account_email" placeholder="Enter new email address" value="{{ old('account_email') }}" required>
+                                            <input type="email" class="form-control" id="account_email" name="account_email" placeholder="Enter new email address" value="{{ old('account_email') }}" required>
                                         </div>
                                         <div class="mb-3">
                                             <label for="current_password_for_email" class="form-label">Current Password</label>
@@ -208,9 +242,8 @@
                             <!-- Hidden Update Password Form -->
                             <div class="row mt-3" id="updatePasswordForm" style="display: none;">
                                 <div class="col-md-12">
-                                    <form action="{{ route('admin.update.password') }}" method="POST">
+                                    <form action="/admin/update-password" method="POST">
                                         @csrf
-                                        @method('POST')
                                         <div class="mb-3">
                                             <label for="current_password" class="form-label">Current Password</label>
                                             <div class="input-group">
@@ -289,6 +322,23 @@
             document.getElementById('updateEmailForm').style.display = 'none';
             document.getElementById('updatePasswordBtn').style.display = 'inline-block'; // Show the button
             document.getElementById('updateEmailBtn').style.display = 'inline-block'; // Show the other button
+        });
+
+        // Add this to the submit event of each form
+       document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Ensure method is POST and add activeTab
+                this.method = 'POST';
+                
+                // Add hidden field for activeTab if it doesn't exist
+                if (!this.querySelector('input[name="activeTab"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'activeTab';
+                    input.value = 'settings';
+                    this.appendChild(input);
+                }
+            });
         });
     </script>
     <script>

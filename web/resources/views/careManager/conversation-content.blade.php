@@ -262,14 +262,15 @@
 
 <!-- Message Input Area -->
 <div class="message-input-container">
-    <form id="messageForm" action="{{ route($rolePrefix.'.messaging.send') }}" method="POST" enctype="multipart/form-data">
-        @csrf
-        <input type="hidden" name="conversation_id" value="{{ $conversation->conversation_id }}">
-        
-        <div id="filePreviewContainer" class="file-preview-container mb-2"></div>
-        
-        <div class="position-relative">
-            <textarea class="form-control message-input" id="messageContent" name="content" rows="1" placeholder="Type a message..."></textarea>
+    <form id="messageForm" action="/{{$rolePrefix}}/messaging/send-message" method="POST" enctype="multipart/form-data">
+    @csrf
+    <input type="hidden" name="conversation_id" value="{{ $conversation->conversation_id }}">
+    
+    <div id="messageErrorContainer" class="alert alert-danger mb-2" style="display: none;"></div>
+    <div id="filePreviewContainer" class="file-preview-container mb-2"></div>
+    
+    <div class="position-relative">
+        <textarea class="form-control message-input" id="messageContent" name="content" rows="1" placeholder="Type a message..."></textarea>
             <input type="file" id="fileUpload" name="attachments[]" class="file-upload d-none" multiple accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain">
             <button type="button" class="attachment-btn" id="attachmentBtn">
                 <i class="bi bi-paperclip"></i>
@@ -279,4 +280,5 @@
             </button>
         </div>
     </form>
+
 </div>

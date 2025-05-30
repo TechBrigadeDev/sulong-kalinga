@@ -688,7 +688,7 @@
                 }, 15000); // 15 seconds timeout
                 
                 $.ajax({
-                    url: '{{ route("care-worker.careworker.appointments.get") }}',
+                    url: '/care-worker/careworker-appointments/get-visitations',
                     method: 'GET',
                     data: {
                         start: start,
@@ -866,7 +866,7 @@
             if (!beneficiarySelect) return;
             
             $.ajax({
-                url: '{{ route("care-worker.careworker.appointments.beneficiaries") }}',
+                url: '/care-worker/careworker-appointments/beneficiaries',
                 method: 'GET',
                 success: function(response) {
                     if (response.success && response.beneficiaries && response.beneficiaries.length > 0) {
@@ -902,7 +902,7 @@
                 document.getElementById('beneficiaryPhone').value = "Loading...";
                 
                 $.ajax({
-                    url: '{{ route("care-worker.careworker.appointments.beneficiary.details", ["id" => "__id__"]) }}'.replace('__id__', beneficiaryId),
+                     url: `/care-worker/careworker-appointments/beneficiary/${beneficiaryId}`,
                     method: 'GET',
                     success: function(response) {
                         if (response.success && response.beneficiary) {

@@ -338,13 +338,13 @@ class BeneficiaryController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/', // First letter uppercase, allows hyphens and spaces
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/', // First letter uppercase, allows hyphens and spaces
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'civil_status' => [
                 'required',
@@ -365,7 +365,7 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/', // First letter uppercase, allows hyphens and spaces
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'mobile_number' => [
                 'required',
@@ -575,8 +575,8 @@ class BeneficiaryController extends Controller
             'emergency_contact.name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)+$/', // Valid full name
                 'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'emergency_contact.relation' => 'required|string|in:Parent,Sibling,Spouse,Child,Relative,Friend',
             'emergency_contact.mobile' => [
@@ -605,7 +605,7 @@ class BeneficiaryController extends Controller
             ],
 
             // Beneficiary Picture
-            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:2048', // Max size: 2MB
+            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:7168', // 7MB 
 
             // Review Date
             'date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->format('Y-m-d'),
@@ -885,13 +885,53 @@ class BeneficiaryController extends Controller
                 'transportation_needs' => $request->input('mobility.transportation_needs'),
             ]);
         
-            // Insert into health_histories table
+            // Process medical conditions
+            $medicalConditions = $request->input('medical_conditions');
+            if (!empty($medicalConditions)) {
+                // Convert comma-separated string to array and trim whitespace
+                $medicalConditionsArray = array_map('trim', explode(',', $medicalConditions));
+                $formattedMedicalConditions = json_encode($medicalConditionsArray);
+            } else {
+                $formattedMedicalConditions = null;
+            }
+
+            // Process medications
+            $medications = $request->input('medications');
+            if (!empty($medications)) {
+                // Convert comma-separated string to array and trim whitespace
+                $medicationsArray = array_map('trim', explode(',', $medications));
+                $formattedMedications = json_encode($medicationsArray);
+            } else {
+                $formattedMedications = null;
+            }
+
+            // Process allergies
+            $allergies = $request->input('allergies');
+            if (!empty($allergies)) {
+                // Convert comma-separated string to array and trim whitespace
+                $allergiesArray = array_map('trim', explode(',', $allergies));
+                $formattedAllergies = json_encode($allergiesArray);
+            } else {
+                $formattedAllergies = null;
+            }
+
+            // Process immunizations
+            $immunizations = $request->input('immunizations');
+            if (!empty($immunizations)) {
+                // Convert comma-separated string to array and trim whitespace
+                $immunizationsArray = array_map('trim', explode(',', $immunizations));
+                $formattedImmunizations = json_encode($immunizationsArray);
+            } else {
+                $formattedImmunizations = null;
+            }
+
+            // Create health history record with formatted values
             HealthHistory::create([
                 'general_care_plan_id' => $generalCarePlanId,
-                'medical_conditions' => $request->input('medical_conditions'),
-                'medications' => $request->input('medications'),
-                'allergies' => $request->input('allergies'),
-                'immunizations' => $request->input('immunizations'),
+                'medical_conditions' => $formattedMedicalConditions,
+                'medications' => $formattedMedications,
+                'allergies' => $formattedAllergies,
+                'immunizations' => $formattedImmunizations,
             ]);
 
             // Insert into medications table
@@ -1099,13 +1139,13 @@ class BeneficiaryController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'civil_status' => [
                 'required',
@@ -1126,7 +1166,7 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'mobile_number' => [
                 'required',
@@ -1206,7 +1246,7 @@ class BeneficiaryController extends Controller
             // ... [Similar validation rules for care needs, same as in storeBeneficiary]
             
             // Files - Modified for update scenario
-            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:2048',
+            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:7168', // 7MB 
             'care_service_agreement' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'general_careplan' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             
@@ -1436,14 +1476,54 @@ class BeneficiaryController extends Controller
                     ]
                 );
                 
-                // Update health history
+                // Process medical conditions
+                $medicalConditions = $request->input('medical_conditions');
+                if (!empty($medicalConditions)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $medicalConditionsArray = array_map('trim', explode(',', $medicalConditions));
+                    $formattedMedicalConditions = json_encode($medicalConditionsArray);
+                } else {
+                    $formattedMedicalConditions = null;
+                }
+
+                // Process medications
+                $medications = $request->input('medications');
+                if (!empty($medications)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $medicationsArray = array_map('trim', explode(',', $medications));
+                    $formattedMedications = json_encode($medicationsArray);
+                } else {
+                    $formattedMedications = null;
+                }
+
+                // Process allergies
+                $allergies = $request->input('allergies');
+                if (!empty($allergies)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $allergiesArray = array_map('trim', explode(',', $allergies));
+                    $formattedAllergies = json_encode($allergiesArray);
+                } else {
+                    $formattedAllergies = null;
+                }
+
+                // Process immunizations
+                $immunizations = $request->input('immunizations');
+                if (!empty($immunizations)) {
+                    // Convert comma-separated string to array and trim whitespace
+                    $immunizationsArray = array_map('trim', explode(',', $immunizations));
+                    $formattedImmunizations = json_encode($immunizationsArray);
+                } else {
+                    $formattedImmunizations = null;
+                }
+
+                // Update health history with formatted values
                 HealthHistory::updateOrCreate(
                     ['general_care_plan_id' => $generalCarePlanId],
                     [
-                        'medical_conditions' => $request->input('medical_conditions'),
-                        'medications' => $request->input('medications'),
-                        'allergies' => $request->input('allergies'),
-                        'immunizations' => $request->input('immunizations'),
+                        'medical_conditions' => $formattedMedicalConditions,
+                        'medications' => $formattedMedications,
+                        'allergies' => $formattedAllergies,
+                        'immunizations' => $formattedImmunizations,
                     ]
                 );
                 

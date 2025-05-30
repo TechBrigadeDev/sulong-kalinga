@@ -54,20 +54,16 @@
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
                                     placeholder="Enter first name" 
                                     value="{{ old('first_name', $familyMember->first_name) }}"
-                                    required 
-                                    oninput="validateName(this)" 
-                                    pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                    title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                    required >
+                                    
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                     placeholder="Enter last name" 
                                     value="{{ old('last_name', $familyMember->last_name) }}"
-                                    required 
-                                    oninput="validateName(this)" 
-                                    pattern="^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$" 
-                                    title="First letter must be uppercase. Only alphabets, single spaces, and hyphens are allowed. Single-letter words are not allowed.">
+                                    required >
+                                   
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="gender" class="form-label">Gender</label>
@@ -113,7 +109,8 @@
                             <div class="col-md-3 relative">
                                 <label for="familyPhoto" class="form-label">Profile Picture</label>
                                 <input type="file" class="form-control" id="familyPhoto" name="family_photo" accept="image/png, image/jpeg">
-                                    @if($familyMember->photo)
+                                <small class="text-danger">Maximum file size: 7MB</small>    
+                                @if($familyMember->photo)
                                         <div class="mt-1">
                                             <small class="text-muted" title="{{ basename($familyMember->photo) }}">
                                                 Current file: {{ strlen(basename($familyMember->photo)) > 30 ? substr(basename($familyMember->photo), 0, 30) . '...' : basename($familyMember->photo) }}
@@ -224,41 +221,83 @@
             </div>
         </div>
     </div>
+
+    <!-- File Size Error Modal -->
+    <div class="modal fade" id="fileSizeErrorModal" tabindex="-1" aria-labelledby="fileSizeErrorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-3" style="font-size: 2rem;"></i>
+                        <p id="fileSizeErrorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            // Always prevent the default form submission first
-            e.preventDefault();
+    document.querySelector('form').addEventListener('submit', function (e) {
+        // Always prevent the default form submission first
+        e.preventDefault();
+        
+        // Check for file size validation errors first
+        const familyPhotoInput = document.getElementById('familyPhoto');
+        if (familyPhotoInput && familyPhotoInput.files.length > 0) {
+            const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB in bytes
+            const file = familyPhotoInput.files[0];
             
-            // Check if there are validation errors
-            if (!document.querySelector('.alert-danger')) {
-                // No validation errors, show success modal
-                const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
-                const form = this;
+            if (file.size > MAX_FILE_SIZE) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
                 
-                // Show modal
-                successModal.show();
+                // Show file size error
+                const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+                const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
                 
-                // Listen for modal hidden event
-                document.getElementById('saveSuccessModal').addEventListener('hidden.bs.modal', function onModalHidden() {
-                    // Remove this event listener to prevent multiple submissions
-                    document.getElementById('saveSuccessModal').removeEventListener('hidden.bs.modal', onModalHidden);
-                    
-                    // Submit the form
-                    form.submit();
-                });
-                
-                // Add a button click handler for the OK button
-                document.querySelector('#saveSuccessModal .btn-primary').addEventListener('click', function() {
-                    // Submit the form when OK is clicked
-                    form.submit();
-                });
-            } else {
-                // There are validation errors, allow normal form submission
-                this.submit();
+                fileSizeErrorMessage.innerHTML = `
+                    <strong>Form submission failed</strong><br>
+                    Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
+                    Please select a smaller file or compress your existing file.
+                `;
+                fileSizeErrorModal.show();
+                return false;
             }
-        });
+        }
+        
+        // Continue with your existing validation and success modal
+        if (!document.querySelector('.alert-danger')) {
+            // No validation errors, show success modal
+            const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
+            const form = this;
+            
+            // Show modal
+            successModal.show();
+            
+            // Listen for modal hidden event
+            document.getElementById('saveSuccessModal').addEventListener('hidden.bs.modal', function onModalHidden() {
+                document.getElementById('saveSuccessModal').removeEventListener('hidden.bs.modal', onModalHidden);
+                form.submit();
+            });
+            
+            // Add a button click handler for the OK button
+            document.querySelector('#saveSuccessModal .btn-primary').addEventListener('click', function() {
+                // Submit the form when OK is clicked
+                form.submit();
+            });
+        } else {
+            // There are validation errors, allow normal form submission
+            this.submit();
+        }
+    });
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -358,6 +397,74 @@
     //         relatedBeneficiaryDropdown.appendChild(option);
     //     });
     // });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Maximum file size - 7MB for profile pictures
+    const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB in bytes
+    
+    // Initialize the modal
+    const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+    const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+    
+    // Add file size validation to profile picture input
+    const familyPhotoInput = document.getElementById('familyPhoto');
+    if (familyPhotoInput) {
+        familyPhotoInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                
+                if (file.size > MAX_FILE_SIZE) {
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    
+                    // Set error message and show modal
+                    fileSizeErrorMessage.innerHTML = `
+                        <strong>Profile Picture</strong> file is too large (${fileSizeMB}MB).<br>
+                        Maximum allowed size is 7MB.<br>
+                        Please select a smaller file or compress your existing file.
+                    `;
+                    fileSizeErrorModal.show();
+                    
+                    // Reset the file input
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Add form submission check to prevent large file uploads
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // Don't interfere if there's already a submission handler for the success modal
+        if (this.dataset.validated === 'true') {
+            return true;
+        }
+        
+        // Check file size before submission
+        if (familyPhotoInput && familyPhotoInput.files.length > 0) {
+            const file = familyPhotoInput.files[0];
+            
+            if (file.size > MAX_FILE_SIZE) {
+                e.preventDefault();
+                
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                
+                // Set error message and show modal
+                fileSizeErrorMessage.innerHTML = `
+                    <strong>Form submission failed</strong><br>
+                    Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
+                    Please select a smaller file or compress your existing file.
+                `;
+                fileSizeErrorModal.show();
+                return false;
+            }
+        }
+        
+        // Mark as validated so we don't check again
+        this.dataset.validated = 'true';
+        return true;
+    });
+});
 </script>
 
 </body>

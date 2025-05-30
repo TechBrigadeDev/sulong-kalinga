@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ViewAccountProfileApiController extends Controller
@@ -37,6 +38,9 @@ class ViewAccountProfileApiController extends Controller
                 'pagibig_id' => $user->pagibig_id,
                 'member_since' => $user->created_at ? $user->created_at->format('M Y') : null,
                 'role' => $user->organizationRole->role_name ?? null,
+                'photo_url' => $user->photo
+                    ? Storage::disk('spaces-private')->temporaryUrl($user->photo, now()->addMinutes(30))
+                    : null,
             ]
         ]);
     }

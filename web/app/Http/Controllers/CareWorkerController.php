@@ -171,13 +171,13 @@ class CareWorkerController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
             'gender' => 'nullable|string|in:Male,Female,Other',
@@ -237,9 +237,9 @@ class CareWorkerController extends Controller
             'municipality' => 'required|integer|exists:municipalities,municipality_id',
         
             // Documents - optional for updates
-            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
             'sss_ID' => [
@@ -443,7 +443,7 @@ class CareWorkerController extends Controller
                             ->get();
 
         // Pass the data to the view
-        return view($rolePrefix . '.addCareWorker', compact('municipalities', 'careManagers'));
+        return view($rolePrefix . '.addCareworker', compact('municipalities', 'careManagers'));
     }
 
     public function storeCareWorker(Request $request)
@@ -457,13 +457,13 @@ class CareWorkerController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(), // Must be older than 14 years
             'gender' => 'nullable|string|in:Male,Female,Other', // Must match dropdown options
@@ -526,9 +526,9 @@ class CareWorkerController extends Controller
             'municipality' => 'required|integer|exists:municipalities,municipality_id',
         
             // Documents
-            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'careworker_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
             'sss_ID' => [

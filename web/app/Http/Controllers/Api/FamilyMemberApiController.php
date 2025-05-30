@@ -6,9 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\FamilyMember;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Services\UploadService;
+use Illuminate\Support\Facades\Storage;
 
 class FamilyMemberApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     // List all family members
     public function index(Request $request)
     {
@@ -38,6 +47,9 @@ class FamilyMemberApiController extends Controller
                     'relation_to_beneficiary' => $fm->relation_to_beneficiary,
                     'is_primary_caregiver' => $fm->is_primary_caregiver,
                     'photo' => $fm->photo,
+                    'photo_url' => $fm->photo
+                        ? Storage::disk('spaces-private')->temporaryUrl($fm->photo, now()->addMinutes(30))
+                        : null,
                     'beneficiary' => $fm->beneficiary,
                     // Add other fields as needed for mobile
                 ];
@@ -61,6 +73,9 @@ class FamilyMemberApiController extends Controller
                 'relation_to_beneficiary' => $familyMember->relation_to_beneficiary,
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
                 'photo' => $familyMember->photo,
+                'photo_url' => $familyMember->photo
+                    ? Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    : null,
                 'beneficiary' => $familyMember->beneficiary,
                 // Add other fields as needed for mobile
             ]
@@ -87,6 +102,7 @@ class FamilyMemberApiController extends Controller
             ],
             'related_beneficiary_id' => 'required|integer|exists:beneficiaries,beneficiary_id',
             'relation_to_beneficiary' => 'required|string|max:50',
+            'photo' => 'sometimes|nullable|image|max:2048',
             // Add other required fields as needed
         ]);
 
@@ -113,11 +129,18 @@ class FamilyMemberApiController extends Controller
         }
         $request->merge(['mobile' => $mobile]);
 
-        $data = $request->all();
+        $data = $request->except('photo');
 
-        // Accept photo path from mobile upload API
-        if ($request->has('photo')) {
-            $data['photo'] = $request->input('photo');
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
+            $data['photo'] = $this->uploadService->upload(
+                $request->file('photo'),
+                'spaces-private',
+                'uploads/family_member_photos',
+                $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' .
+                $request->file('photo')->getClientOriginalExtension()
+            );
         }
 
         $familyMember = FamilyMember::create($data);
@@ -133,6 +156,9 @@ class FamilyMemberApiController extends Controller
                 'relation_to_beneficiary' => $familyMember->relation_to_beneficiary,
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
                 'photo' => $familyMember->photo,
+                'photo_url' => $familyMember->photo
+                    ? Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    : null,
                 'beneficiary' => $familyMember->beneficiary,
                 // Add other fields as needed for mobile
             ]
@@ -161,6 +187,7 @@ class FamilyMemberApiController extends Controller
             ],
             'related_beneficiary_id' => 'sometimes|required|integer|exists:beneficiaries,beneficiary_id',
             'relation_to_beneficiary' => 'sometimes|required|string|max:50',
+            'photo' => 'sometimes|nullable|image|max:2048',
             // Add other fields as needed
         ]);
 
@@ -190,10 +217,18 @@ class FamilyMemberApiController extends Controller
             $request->merge(['mobile' => $mobile]);
         }
 
-        $data = $request->all();
+        $data = $request->except('photo');
 
-        if ($request->has('photo')) {
-            $data['photo'] = $request->input('photo');
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
+            $data['photo'] = $this->uploadService->upload(
+                $request->file('photo'),
+                'spaces-private',
+                'uploads/family_member_photos',
+                $familyMember->first_name . '_' . $familyMember->last_name . '_photo_' . $uniqueIdentifier . '.' .
+                $request->file('photo')->getClientOriginalExtension()
+            );
         }
 
         $familyMember->update($data);
@@ -209,6 +244,9 @@ class FamilyMemberApiController extends Controller
                 'relation_to_beneficiary' => $familyMember->relation_to_beneficiary,
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
                 'photo' => $familyMember->photo,
+                'photo_url' => $familyMember->photo
+                    ? Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    : null,
                 'beneficiary' => $familyMember->beneficiary,
                 // Add other fields as needed for mobile
             ]
@@ -218,7 +256,6 @@ class FamilyMemberApiController extends Controller
     // Delete family member (admin only)
     public function destroy(Request $request, $id)
     {
-        // Only admins and care managers can delete(role 3 is care worker)
         if (!in_array($request->user()->role_id, [1, 2])) {
             return response()->json(['error' => 'Forbidden'], 403);
         }

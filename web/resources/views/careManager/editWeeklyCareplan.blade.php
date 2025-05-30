@@ -538,7 +538,7 @@
             });
         });
         
-        document.getElementById('beneficiary_id').addEventListener('change', function() {
+       fetch(`/care-manager/weekly-care-plans/beneficiary/${beneficiaryId}`)
         const beneficiaryId = this.value;
         
         if (!beneficiaryId) {

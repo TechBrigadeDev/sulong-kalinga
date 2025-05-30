@@ -1111,7 +1111,7 @@
                 }, 15000); // 15 seconds timeout
                 
                 $.ajax({
-                    url: '{{ route("admin.careworker.appointments.get") }}',
+                    url: '/admin/careworker-appointments/get-visitations',
                     method: 'GET',
                     data: {
                         start: start,
@@ -1319,7 +1319,7 @@
             if (!beneficiarySelect) return;
             
             $.ajax({
-                url: '{{ route("admin.careworker.appointments.beneficiaries") }}',
+                url: '/admin/careworker-appointments/beneficiaries',
                 method: 'GET',
                 success: function(response) {
                     if (response.success && response.beneficiaries && response.beneficiaries.length > 0) {
@@ -1355,7 +1355,7 @@
                 document.getElementById('beneficiaryPhone').value = "Loading...";
                 
                 $.ajax({
-                    url: '{{ route("admin.careworker.appointments.beneficiary.details", ["id" => "__id__"]) }}'.replace('__id__', beneficiaryId),
+                     url: `/admin/careworker-appointments/beneficiary/${beneficiaryId}`,
                     method: 'GET',
                     success: function(response) {
                         if (response.success && response.beneficiary) {
@@ -1910,7 +1910,7 @@
         function loadBeneficiariesForEdit(beneficiaryId, careWorkerId) {
             // Load beneficiaries
             $.ajax({
-                url: '{{ route("admin.careworker.appointments.beneficiaries") }}',
+                url: '/admin/careworker-appointments/beneficiaries',
                 method: 'GET',
                 success: function(response) {
                     const select = document.getElementById('beneficiarySelect');
@@ -2026,8 +2026,8 @@
                 
                 // Set appropriate URL based on whether this is an edit or new appointment
                 const url = visitationId ? 
-                    '{{ route("admin.careworker.appointments.update") }}' : 
-                    '{{ route("admin.careworker.appointments.store") }}';
+                    '/admin/careworker-appointments/update' : 
+                    '/admin/careworker-appointments/store';
                 
                 // Show loading state
                 const originalBtnHtml = submitAppointment.innerHTML;
@@ -2066,7 +2066,7 @@
                                 
                                 // Add event source with cache-busting parameter
                                 calendar.addEventSource({
-                                    url: '{{ route("admin.careworker.appointments.get") }}',
+                                    url: '/admin/careworker-appointments/get-visitations',
                                     extraParams: {
                                         cache_buster: timestamp
                                     }
@@ -2276,7 +2276,7 @@
                 }
                 
                 $.ajax({
-                    url: '{{ route("admin.careworker.appointments.cancel") }}',
+                    url: '/admin/careworker-appointments/cancel',
                     method: 'POST',
                     data: formData,
                     success: function(response) {

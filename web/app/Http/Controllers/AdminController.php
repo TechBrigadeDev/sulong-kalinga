@@ -44,13 +44,13 @@ class AdminController extends Controller
             'first_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/',
                 'max:100'
             ],
             'last_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/',
                 'max:100'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(), // Must be older than 14 years
@@ -127,9 +127,9 @@ class AdminController extends Controller
             ],
         
             // Documents
-            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
         
             // IDs
             'sss_ID' => [
@@ -302,13 +302,13 @@ class AdminController extends Controller
             'first_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/',
                 'max:100'
             ],
             'last_name' => [
                 'required',
                 'string',
-                'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/',
                 'max:100'
             ],
             'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
@@ -341,9 +341,9 @@ class AdminController extends Controller
                 'string',
                 'regex:/^[0-9]{7,10}$/',
             ],
-            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|mmax:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
             'sss_ID' => 'nullable|string|max:10',
             'philhealth_ID' => 'nullable|string|max:12',
             'pagibig_ID' => 'nullable|string|max:12',
@@ -354,9 +354,9 @@ class AdminController extends Controller
                 Rule::unique('cose_users', 'email')->ignore($id),
             ],
             'account.password' => 'nullable|string|min:8|confirmed',
-            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'government_ID' => 'nullable|image|mimes:jpeg,png|max:2048',
-            'resume' => 'nullable|mimes:pdf,doc,docx|max:2048',
+            'administrator_photo' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'government_ID' => 'nullable|image|mimes:jpeg,png|max:7168',
+            'resume' => 'nullable|mimes:pdf,doc,docx|max:5120',
             'Organization_Roles' => [
                 'required',
                 'integer',
@@ -1780,6 +1780,9 @@ class AdminController extends Controller
         }
 
         try {
+            // Get the current user
+            $user = Auth::user();
+            
             // Update email
             $user->email = $request->input('account_email');
             $user->updated_at = now();
@@ -1792,12 +1795,12 @@ class AdminController extends Controller
                 'new_email' => $user->email
             ]);
 
-            // Log the email change to the logs table
+            // Fix: Use $user instead of $administrator
             $this->logService->createLog(
                 'administrator',
-                $administrator->id,
-                LogType::VIEW,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+                $user->id,
+                LogType::UPDATE,  // Changed from VIEW to UPDATE
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their email address'
             );
 
             return redirect()->route('admin.account.profile.index')
@@ -1849,24 +1852,27 @@ class AdminController extends Controller
                 ->with('activeTab', 'settings');
         }
 
-        try {
+         try {
+            // Get the current user
+            $user = Auth::user();
+
             // Update password
             $user->password = bcrypt($request->input('account_password'));
             $user->updated_at = now();
             $user->save();
 
-            // Log the password change (without revealing the actual password)
+            // Log the password change
             \Log::info('Administrator password updated', [
                 'admin_id' => $user->id,
                 'timestamp' => now()
             ]);
 
-            // Log the password change to the logs table
+            // Fix: Use $user instead of $administrator
             $this->logService->createLog(
                 'administrator',
-                $administrator->id,
-                LogType::VIEW,
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
+                $user->id,
+                LogType::UPDATE,  // Changed from VIEW to UPDATE
+                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their password'
             );
 
             return redirect()->route('admin.account.profile.index')
