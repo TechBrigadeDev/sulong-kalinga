@@ -45,6 +45,7 @@ const BeneficiaryList = () => {
 const listStyle = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
+    paddingBottom: 50
   },
 });
 

@@ -14,7 +14,11 @@ const Beneficiaries = () => {
 
     return (
             <SafeAreaView style={styles.container}>
-                <Header name="Beneficiary Profiles" />
+                <Stack.Screen
+                    options={{
+                        title: "Beneficiaries",
+                    }}
+                />
                 <Card
                     paddingVertical={20}
                     marginVertical={20}

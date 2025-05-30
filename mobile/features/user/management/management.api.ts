@@ -43,25 +43,33 @@ class UserManagementController {
   }
 
   async getFamilyMembers(params?: { search?: string }) {
-    const response = await this.api.get("/family-members", {
-      params: {
-        ...(params?.search && { search: params.search }),
+    try {
+      const response = await this.api.get("/family-members", {
+        params: {
+          ...(params?.search && { search: params.search }),
+        }
+      });
+      const data = await response.data;
+
+      const valid = await userManagementSchema.getFamilyMembers.safeParseAsync(data);
+      if (!valid.success) {
+        console.error("Family members validation error", valid.error);
+        throw new Error("Family members validation error");
       }
-    });
-    const data = await response.data;
-
-    const valid = await userManagementSchema.getFamilyMembers.safeParseAsync(data);
-    if (!valid.success) {
-      console.error("Family members validation error", valid.error);
-      throw new Error("Family members validation error");
+      return valid.data.family_members;
+    } catch (error) {
+      console.error("\n\n\nError fetching family members:", error);
+      throw error;
     }
-
-    return valid.data.family_members;
   }
 
   async getFamilyMember(id: string) {
     const response = await this.api.get(`/family-members/${id}`);
+    if (!response.data) {
+      throw new Error("No data received from API");
+    }
     const data = await response.data;
+    console.log(JSON.stringify(data, null, 2));
 
     const valid = await userManagementSchema.getFamilyMember.safeParseAsync(data);
     if (!valid.success) {
@@ -70,6 +78,23 @@ class UserManagementController {
     }
 
     return valid.data.family_member;   
+  }
+
+  async getCareWorkers(params?: { search?: string }) {
+    const response = await this.api.get("/care-workers", {
+      params: {
+        ...(params?.search && { search: params.search }),
+      }
+    });
+    
+    const data = await response.data;
+    const valid = await userManagementSchema.getCareWorkers.safeParseAsync(data);
+    if (!valid.success) {
+      console.error("Care workers validation error", valid.error);
+      throw new Error("Care workers validation error");
+    }
+
+    return valid.data.careworkers;
   }
 }
 

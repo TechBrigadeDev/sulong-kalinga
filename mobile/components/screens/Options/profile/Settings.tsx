@@ -6,8 +6,6 @@ import { updatePasswordStore } from '~/features/user/components/UpdatePassword/s
 import AvatarImage from '../../../Avatar';
 import { StyleSheet } from 'react-native';
 import OptionCard from '../_components/Card';
-import { LinkProps, Link as ExpoLink } from 'expo-router';
-import { icons } from 'lucide-react-native';
 import OptionRow from '../_components/Row';
 
 const ProfileSettings = () => {
