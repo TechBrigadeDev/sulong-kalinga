@@ -28,13 +28,16 @@ WORKDIR /app
 COPY --from=builder /app/vendor ./vendor
 COPY . /app
 
-# Copy custom Caddyfile to standard location
-COPY ./docker/Caddyfile /etc/frankenphp/Caddyfile
+# Set proper permissions
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
 # Set development PHP configuration
 RUN cp $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
 
-# Run the application using PHP Octane with FrankenPHP
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80", "--caddyfile=/etc/frankenphp/Caddyfile"]
+# Generate artisan key (for local development)
+# RUN php artisan key:generate --force
+
+# Run the application using PHP Octane with FrankenPHP - WITHOUT specifying a Caddyfile
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]
 
 EXPOSE 80
