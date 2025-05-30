@@ -190,56 +190,62 @@ class DatabaseSeeder extends Seeder
 
         try {
             $this->command->info('Seeding beneficiaries...');
-            // 4. Create 50 beneficiaries from San Roque
+            
+            // Create 100 beneficiaries with Filipino data
             $beneficiaries = [];
-            for ($i = 0; $i < 50; $i++) {
-                // Get the barangay ID instead of the name
-                $barangayName = $this->getRandomBarangay('San Roque');
-                $barangayId = $this->getBarangayIdByName($barangayName, 2); // 2 is San Roque municipality ID
+            
+            // Track the count of beneficiaries per municipality to maintain balance
+            $municipalityCounts = [1 => 0, 2 => 0];
+            $maxPerMunicipality = 50;
+            
+            // Track the count of males and females to maintain balance
+            $genderCounts = ['Male' => 0, 'Female' => 0];
+            $maxPerGender = 50;
+            
+            for ($i = 0; $i < 100; $i++) {
+                // Determine which municipality to use next to maintain balance
+                $municipalityId = ($municipalityCounts[1] < $maxPerMunicipality) ? 1 : 2;
+                if ($municipalityCounts[2] < $maxPerMunicipality && $this->faker->boolean()) {
+                    $municipalityId = 2;
+                }
                 
-                $beneficiary = Beneficiary::factory()->create([
-                    'general_care_plan_id' => $i + 1,
-                    'street_address' => $this->generateAddress('San Roque'),
-                    'barangay_id' => $barangayId,
-                    'municipality_id' => 2 // San Roque municipality ID
+                // Determine which gender to use next to maintain balance
+                $gender = ($genderCounts['Male'] < $maxPerGender) ? 'Male' : 'Female';
+                if ($genderCounts['Female'] < $maxPerGender && $this->faker->boolean()) {
+                    $gender = 'Female';
+                }
+                
+                // Create beneficiary with controlled municipality and gender
+                $beneficiary = \App\Models\Beneficiary::factory()->make([
+                    'municipality_id' => $municipalityId,
+                    'gender' => $gender,
+                    'general_care_plan_id' => $i + 1, // Link to previously created care plans
                 ]);
+                
+                // Save the beneficiary
+                $beneficiary->save();
+                
+                // Update counters
+                $municipalityCounts[$municipalityId]++;
+                $genderCounts[$gender]++;
                 
                 // Create family members for each beneficiary (1-3 members)
                 $familyMemberCount = rand(1, 3);
                 FamilyMember::factory($familyMemberCount)
                     ->forBeneficiary($beneficiary->beneficiary_id)
                     ->create();
-                    
+                
                 $beneficiaries[] = $beneficiary;
             }
             
-            // 5. Create 50 beneficiaries from Mondragon
-            $mondragronBeneficiaries = [];
-            for ($i = 0; $i < 50; $i++) {
-                $barangayName = $this->getRandomBarangay('Mondragon');
-                $barangayId = $this->getBarangayIdByName($barangayName, 1); // 1 is Mondragon municipality ID
-
-                $beneficiary = Beneficiary::factory()->create([
-                    'general_care_plan_id' => $i + 51, // Starting from 51
-                    'street_address' => $this->generateAddress('Mondragon'),
-                    'barangay_id' => $barangayId,
-                    'municipality_id' => 1 // Mondragon municipality ID
-                ]);
-
-                $familyMemberCount = rand(1, 3);
-                FamilyMember::factory($familyMemberCount)
-                    ->forBeneficiary($beneficiary->beneficiary_id)
-                    ->create();
-
-                $mondragronBeneficiaries[] = $beneficiary;
-            }
+            \Log::info('Created ' . count($beneficiaries) . ' beneficiaries');
+            \Log::info('Municipality distribution: Mondragon: ' . $municipalityCounts[1] . ', San Roque: ' . $municipalityCounts[2]);
+            \Log::info('Gender distribution: Male: ' . $genderCounts['Male'] . ', Female: ' . $genderCounts['Female']);
             
-            // Combine all beneficiaries
-            $allBeneficiaries = array_merge($beneficiaries, $mondragronBeneficiaries);
             $this->command->info('Beneficiaries seeded successfully.');
         } catch (\Throwable $e) {
             $this->command->error('Failed to seed beneficiaries: ' . $e->getMessage());
-            \Log::error('Failed to seed beneficiaries', ['exception' => $e]);
+            \Log::error('Failed to seed beneficiaries: ' . $e->getMessage(), ['exception' => $e]);
         }
 
         try {
