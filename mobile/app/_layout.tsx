@@ -56,10 +56,9 @@ function RootLayoutNav() {
           <Stack>
             <Stack.Protected guard={isAuthenticated}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="messaging/index" options={{
-                headerBackTitle: 'Back',
+              <Stack.Screen name="messaging" options={{
                 animation: 'fade',
-                headerTitle: 'Messaging',
+                headerShown: false,
               }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
             </Stack.Protected>
