@@ -10,18 +10,6 @@ services:
     networks:
       - app-network
     restart: always
-  caddy:
-    image: caddy:windowsservercore-ltsc2022
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./site:/srv
-      - caddy_data:/data
-      - caddy_config:/config
   calamancy-api:
     build:
       context: ./calamancy-api
@@ -46,6 +34,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     depends_on:
       - db
       - calamancy-api
@@ -105,5 +94,3 @@ volumes:
   calamancy_api_data:
   calamancy_models:
   libretranslate_data:
-  caddy_data:
-  caddy_config:

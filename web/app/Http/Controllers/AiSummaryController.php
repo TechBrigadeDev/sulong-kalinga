@@ -167,4 +167,53 @@ class AiSummaryController extends Controller
             'carePlan' => $carePlan
         ]);
     }
+
+    public function translate(Request $request)
+    {
+        $request->validate([
+            'text' => 'required|string',
+        ]);
+
+        try {
+            $libreTranslateUrl = env('LIBRETRANSLATE_URL', 'http://libretranslate:5000');
+            
+            \Log::info("Calling LibreTranslate API at: " . $libreTranslateUrl);
+            
+            $response = Http::timeout(30)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
+                ->post($libreTranslateUrl . '/translate', [
+                    'q' => $request->text,
+                    'source' => 'tl', // Tagalog
+                    'target' => 'en', // English
+                    'format' => 'text',
+                ]);
+            
+            \Log::info("API Response Status: " . $response->status());
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                \Log::info("Translation successful");
+                
+                return response()->json([
+                    'translatedText' => $data['translatedText'] ?? '',
+                ]);
+            }
+
+            \Log::error("Translation Error: " . $response->status() . " - " . $response->body());
+            return response()->json([
+                'error' => 'Translation failed: ' . $response->status(),
+                'details' => $response->body()
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error("Translation Exception: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Translation service unavailable',
+                'details' => $e->getMessage()
+            ], 503);
+        }
+    }
+
 }
+
