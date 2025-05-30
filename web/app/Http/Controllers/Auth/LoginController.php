@@ -134,7 +134,8 @@ class LoginController extends Controller
 
     // If no user is found in either table, return an error
     return redirect()->back()->withErrors(['email' => 'Invalid credentials'])->withInput();
-
+    Cache::forget($portalCacheKeyAttempts);
+    Cache::forget($portalCacheKeyLockout);
     
 }
 
