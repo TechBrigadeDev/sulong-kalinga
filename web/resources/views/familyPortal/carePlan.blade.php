@@ -186,10 +186,15 @@
     @include('components.familyPortalSidebar')
 
     <div class="home-section">
-        <div class="text-left">
-            CARE PLAN
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-left">CARE PLAN</div>
+            <a href="{{ route('family.care.plan.allCarePlans') }}">
+                <button class="btn btn-primary btn-md">
+                    <i class="bi bi-file-earmark-text me-1"></i>
+                    View All Care Plan Reports
+                </button>
+            </a>
         </div>
-        
         <div class="container-fluid">
             <div class="row p-1" id="home-content">
                 <!-- Beneficiary Information with Avatar -->

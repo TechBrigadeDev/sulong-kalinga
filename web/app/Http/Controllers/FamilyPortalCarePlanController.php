@@ -11,5 +11,13 @@ class FamilyPortalCarePlanController extends Controller
     {
         return view('familyPortal.carePlan');
     }
+
+    public function allCarePlans()
+    {
+        // Logic to retrieve all care plans
+        $carePlans = []; // Replace with actual data retrieval logic
+
+        return view('familyPortal.viewAllCarePlan', ['carePlans' => $carePlans]);
+    }
 }
 ?>

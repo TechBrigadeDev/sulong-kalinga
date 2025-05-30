@@ -191,6 +191,23 @@
             font-size: var(--fs-sm);
         }
 
+        #emergencyMessage {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #495057;
+            resize: none;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #emergencyMessage:focus {
+            background-color: #fff !important;
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+        }
+
+        .text-white-80 {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
         /* Main Content Grid */
         .request-container {
             display: flex;
@@ -202,6 +219,40 @@
         .request-column {
             flex: 1 1 calc(50% - clamp(0.5rem, 1.5vw, 0.75rem));
             min-width: 300px;
+        }
+
+        /* Filter Modal Styles */
+        #filterModal .modal-content {
+            border-radius: 0.5rem;
+        }
+
+        #filterModal .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+
+        #filterModal .modal-body {
+            padding: 1.5rem;
+        }
+
+        #filterModal .form-label {
+            font-weight: 500;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        #filterModal .form-check-label {
+            color: var(--dark);
+        }
+
+        #filterModal .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Animation for status cards */
+        .status-card {
+            transition: opacity 0.3s ease;
         }
 
         /* Responsive Adjustments */

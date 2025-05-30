@@ -89,10 +89,18 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="text-white-80 mb-4">Immediate help when you need it most. Our team will respond within minutes.</p>
+                                    
+                                    <!-- Add message textarea -->
+                                    <div class="mb-3">
+                                        <label for="emergencyMessage" class="form-label text-white-80">Describe the emergency (optional)</label>
+                                        <textarea class="form-control bg-light border-0" id="emergencyMessage" rows="3" placeholder="Briefly describe the situation..."></textarea>
+                                    </div>
+                                    
                                     <button class="btn emergency-btn" id="emergencyButton">
                                         <i class="bi bi-exclamation-triangle-fill"></i>
                                         <span>Request Emergency Help</span>
                                     </button>
+                                    
                                     <div id="emergencyAlert" class="alert alert-light mt-3 mb-0 d-flex align-items-center d-none" role="alert">
                                         <i class="bi bi-check-circle-fill text-success me-2"></i>
                                         <div>
@@ -121,7 +129,6 @@
                                             <th>Date Submitted</th>
                                             <th>Status</th>
                                             <th>Assigned To</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -130,22 +137,12 @@
                                             <td>Today, 10:30 AM</td>
                                             <td><span class="badge badge-pending">Pending Approval</span></td>
                                             <td>-</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-eye"></i> View
-                                                </button>
-                                            </td>
                                         </tr>
                                         <tr>
                                             <td><span class="badge badge-emergency">Emergency</span></td>
                                             <td>Today, 09:15 AM</td>
                                             <td><span class="badge badge-service">In Progress</span></td>
                                             <td>Nurse Juan Dela Cruz</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-geo-alt"></i> Track
-                                                </button>
-                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -182,9 +179,6 @@
                                         <i class="bi bi-calendar me-1"></i> November 15, 2023
                                         <i class="bi bi-clock ms-3 me-1"></i> 2:30 PM
                                     </small>
-                                    <button class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-three-dots"></i>
-                                    </button>
                                 </div>
                             </div>
                             
@@ -205,9 +199,6 @@
                                         <i class="bi bi-calendar me-1"></i> November 10, 2023
                                         <i class="bi bi-clock ms-3 me-1"></i> 9:00 AM
                                     </small>
-                                    <button class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-three-dots"></i>
-                                    </button>
                                 </div>
                             </div>
                             
@@ -228,9 +219,6 @@
                                         <i class="bi bi-calendar me-1"></i> November 5, 2023
                                         <i class="bi bi-clock ms-3 me-1"></i> 11:45 AM
                                     </small>
-                                    <button class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-three-dots"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -240,21 +228,90 @@
         </div>
     </div>
 
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter Requests</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm">
+                        <div class="mb-3">
+                            <label class="form-label">Request Type</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="emergency" id="filterEmergency" checked>
+                                    <label class="form-check-label" for="filterEmergency">Emergency</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="service" id="filterService" checked>
+                                    <label class="form-check-label" for="filterService">Service</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="completed" id="filterCompleted" checked>
+                                    <label class="form-check-label" for="filterCompleted">Completed</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="rejected" id="filterRejected" checked>
+                                    <label class="form-check-label" for="filterRejected">Rejected</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dateRange" class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRange">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div id="customDateRange" class="row g-3 mb-3" style="display: none;">
+                            <div class="col-6">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                            <div class="col-6">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="applyFilter">Apply Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
         // Emergency button functionality
         document.getElementById('emergencyButton').addEventListener('click', function() {
             const alertDiv = document.getElementById('emergencyAlert');
+            const message = document.getElementById('emergencyMessage').value;
             alertDiv.classList.remove('d-none');
             
             // Simulate API call
             setTimeout(() => {
                 alertDiv.classList.add('d-none');
+                document.getElementById('emergencyMessage').value = ''; // Clear the textarea
             }, 5000);
             
-            // In real implementation, would use fetch() to send request
-            console.log('Emergency request sent to server');
+            // In real implementation, would use fetch() to send request with message
+            console.log('Emergency request sent to server with message:', message);
         });
 
         // Service request form submission
@@ -273,5 +330,59 @@
             console.log('Service request submitted');
         });
     </script>
+
+    <script>
+    // Filter button functionality
+    const filterBtn = document.querySelector('.btn-outline-secondary');
+    const filterModal = new bootstrap.Modal(document.getElementById('filterModal'));
+    const dateRange = document.getElementById('dateRange');
+    const customDateRange = document.getElementById('customDateRange');
+    const applyFilterBtn = document.getElementById('applyFilter');
+
+    // Show filter modal when filter button is clicked
+    filterBtn.addEventListener('click', () => {
+        filterModal.show();
+    });
+
+    // Toggle custom date range fields
+    dateRange.addEventListener('change', (e) => {
+        customDateRange.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+    });
+
+    // Apply filter
+    applyFilterBtn.addEventListener('click', () => {
+        const filters = {
+            types: {
+                emergency: document.getElementById('filterEmergency').checked,
+                service: document.getElementById('filterService').checked
+            },
+            status: {
+                completed: document.getElementById('filterCompleted').checked,
+                rejected: document.getElementById('filterRejected').checked
+            },
+            dateRange: dateRange.value,
+            customDates: {
+                start: document.getElementById('startDate').value,
+                end: document.getElementById('endDate').value
+            }
+        };
+
+        // Here you would typically make an API call with the filters
+        console.log('Applying filters:', filters);
+
+        // For demo purposes, let's add a loading state
+        const historyCards = document.querySelectorAll('.status-card');
+        historyCards.forEach(card => {
+            card.style.opacity = '0.5';
+        });
+
+        setTimeout(() => {
+            historyCards.forEach(card => {
+                card.style.opacity = '1';
+            });
+            filterModal.hide();
+        }, 1000);
+    });
+</script>
 </body>
 </html>

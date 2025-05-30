@@ -84,10 +84,6 @@
                     <div class="card medication-card">
                         <div class="medication-header">
                             <div class="medication-patient">Active Medications</div>
-                            <div class="medication-actions">
-                                <button class="btn" title="Print"><i class="fas fa-print"></i></button>
-                                <button class="btn" title="Download"><i class="fas fa-download"></i></button>
-                            </div>
                         </div>
                         <div class="medication-body">
                             <div class="medication-item">

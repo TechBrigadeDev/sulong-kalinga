@@ -28,7 +28,7 @@ Route::middleware(['auth'])->prefix('family')->name('family.')->group(function (
     Route::get('/family/homePage', function () {
         $showWelcome = session()->pull('show_welcome', false);
         return view('familyPortal.homePage', ['showWelcome' => $showWelcome]);
-    })->name('familyPortalHomePage');
+    })->middleware('auth')->name('familyPortalHomePage');
 
     // Visitation Schedule
     Route::prefix('visitation-schedule')->name('visitation.schedule.')->group(function () {
@@ -48,6 +48,7 @@ Route::middleware(['auth'])->prefix('family')->name('family.')->group(function (
     // Care Plan
     Route::prefix('care-plan')->name('care.plan.')->group(function () {
         Route::get('/', [FamilyPortalCarePlanController::class, 'index'])->name('index');
+        Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
     });
 
     // Family Member Management

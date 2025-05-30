@@ -57,85 +57,121 @@
                 <div class="dashboard-cards">
                     <div class="dashboard-card">
                         <div class="card-header">
-                            <div class="card-title">Visitation Schedule</div>
-                            <div class="card-icon"><i class="bi bi-calendar-check"></i></div>
+                            <div class="card-title">
+                                <i class="bi bi-calendar-check me-2"></i>
+                                Visitation Schedule
+                            </div>
                         </div>
-                        <div class="card-content">
-                            Next visit scheduled for [date] at [time] with [care worker]
+                        <div class="card-body">
+                            <div class="card-content">
+                                Next visit scheduled for [date] at [time] with [care worker]
+                            </div>
                         </div>
-                        <div class="card-action">
-                            <span>View Full Schedule</span>
-                            <i class="bi bi-chevron-right"></i>
+                        <div class="card-footer">
+                            <a href="{{ route('family.visitation.schedule.index') }}" class="card-link">
+                                <span>View Full Schedule</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
                         </div>
                     </div>
                     
                     <div class="dashboard-card">
                         <div class="card-header">
-                            <div class="card-title">Medication Schedule</div>
-                            <div class="card-icon"><i class="bi bi-capsule-pill"></i></div>
+                            <div class="card-title">
+                                <i class="bi bi-capsule-pill me-2"></i>
+                                Medication Schedule
+                            </div>
                         </div>
-                        <div class="card-content">
-                            Next medication: [Medication name] at [time] on [date]
+                        <div class="card-body">
+                            <div class="card-content">
+                                Next medication: [Medication name] at [time] on [date]
+                            </div>
                         </div>
-                        <div class="card-action">
-                            <span>View All Medications</span>
-                            <i class="bi bi-chevron-right"></i>
+                        <div class="card-footer">
+                            <a href="{{ route('family.medication.schedule.index') }}" class="card-link">
+                                <span>View All Medications</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
                         </div>
                     </div>
                     
                     <div class="dashboard-card emergency-card">
                         <div class="card-header">
-                            <div class="card-title">Emergency Request</div>
-                            <div class="card-icon emergency-icon"><i class="bi bi-exclamation-octagon"></i></div>
+                            <div class="card-title">
+                                <i class="bi bi-exclamation-octagon me-2"></i>
+                                Emergency Request
+                            </div>
                         </div>
-                        <div class="card-content">
-                            In case of emergency, request immediate assistance
+                        <div class="card-body">
+                            <div class="card-content">
+                                In case of emergency, request immediate assistance
+                            </div>
                         </div>
-                        <div class="card-action emergency-action">
-                            <span>Request Emergency Care</span>
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <div class="card-title">Service Request</div>
-                            <div class="card-icon"><i class="bi bi-clipboard2-pulse"></i></div>
-                        </div>
-                        <div class="card-content">
-                            Request additional services or report issues
-                        </div>
-                        <div class="card-action">
-                            <span>Create New Request</span>
-                            <i class="bi bi-chevron-right"></i>
+                        <div class="card-footer">
+                            <a href="{{ route('family.emergency.service.index') }}" class="card-link">
+                                <span>Request Emergency Care</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
                         </div>
                     </div>
                     
                     <div class="dashboard-card">
                         <div class="card-header">
-                            <div class="card-title">Weekly Care Plan</div>
-                            <div class="card-icon"><i class="bi bi-clipboard2-check"></i></div>
+                            <div class="card-title">
+                                <i class="bi bi-clipboard2-pulse me-2"></i>
+                                Service Request
+                            </div>
                         </div>
-                        <div class="card-content">
-                            View this week's care interventions and progress
+                        <div class="card-body">
+                            <div class="card-content">
+                                Request additional services such as transportation or additional care.
+                            </div>
                         </div>
-                        <div class="card-action">
-                            <span>View Care Plan</span>
-                            <i class="bi bi-chevron-right"></i>
+                        <div class="card-footer">
+                            <a href="{{ route('family.emergency.service.index') }}" class="card-link">
+                                <span>Create New Request</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
                         </div>
                     </div>
                     
                     <div class="dashboard-card">
                         <div class="card-header">
-                            <div class="card-title">Family Members</div>
-                            <div class="card-icon"><i class="bi bi-people-fill"></i></div>
+                            <div class="card-title">
+                                <i class="bi bi-clipboard2-check me-2"></i>
+                                Weekly Care Plan
+                            </div>
                         </div>
-                        <div class="card-content">
-                            [Number] family members have access to this account
+                        <div class="card-body">
+                            <div class="card-content">
+                                View this week's care interventions and progress
+                            </div>
                         </div>
-                        <div class="card-action">
-                            <span>Manage Family Access</span>
-                            <i class="bi bi-chevron-right"></i>
+                        <div class="card-footer">
+                            <a href="{{ route('family.care.plan.index') }}" class="card-link">
+                                <span>View Care Plan</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="bi bi-people-fill me-2"></i>
+                                Family Members
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">
+                                [Number] family members have access to this account
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ route('family.family.member.index') }}" class="card-link">
+                                <span>Manage Family Members</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
