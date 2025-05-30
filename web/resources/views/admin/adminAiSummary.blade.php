@@ -1,3 +1,5 @@
+adminAiSummary.blade.php
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -301,6 +303,17 @@
                                     <div class="section-header-teal">
                                         <h6 class="section-title">Assessment Summary</h6>
                                     </div>
+
+                                    <!-- New translation section -->
+                                    <div id="assessmentTranslationSection" class="summary-section-blue mb-4" style="display: none; border-left: 3px solid #0d6efd;">
+                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
+                                        <div id="assessmentTranslationDraft" class="fst-italic"></div>
+                                        <div class="mt-2">
+                                            <button id="useAssessmentTranslation" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-check-circle"></i> Use Translation as Final
+                                            </button>
+                                        </div>
+                                    </div>
                                     
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
@@ -309,6 +322,9 @@
                                     <div class="text-end">
                                         <button class="btn btn-outline-secondary action-btn" id="editAssessmentSummary">
                                             <i class="bi bi-pencil me-1"></i> Edit
+                                        </button>
+                                        <button id="translateAssessmentSummary" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-translate"></i> Translate
                                         </button>
                                         <button class="btn btn-success action-btn" id="saveAssessmentSummary" style="display: none;">
                                             <i class="bi bi-check-lg me-1"></i> Save
@@ -347,10 +363,24 @@
                                     <div id="evaluationSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
                                     </div>
+
+                                    <!-- New translation section -->
+                                    <div id="evaluationTranslationSection" class="summary-section-blue mb-4" style="display: none; border-left: 3px solid #0d6efd;">
+                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
+                                        <div id="evaluationTranslationDraft" class="fst-italic"></div>
+                                        <div class="mt-2">
+                                            <button id="useEvaluationTranslation" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-check-circle"></i> Use Translation as Final
+                                            </button>
+                                        </div>
+                                    </div>
                                     
                                     <div class="text-end">
                                         <button class="btn btn-outline-secondary action-btn" id="editEvaluationSummary">
                                             <i class="bi bi-pencil me-1"></i> Edit
+                                        </button>
+                                        <button id="translateEvaluationSummary" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-translate"></i> Translate
                                         </button>
                                         <button class="btn btn-success action-btn" id="saveEvaluationSummary" style="display: none;">
                                             <i class="bi bi-check-lg me-1"></i> Save
@@ -415,6 +445,64 @@
         $(document).ready(function() {
             let currentCarePlanId = null;
             let currentPage = 1;
+
+            // Add these handlers for translation buttons
+            $('#translateAssessmentSummary').click(function() {
+                if (!currentCarePlanId) return;
+                
+                const text = $('#assessmentSummaryDraft').text();
+                if (!text || text === 'No assessment summary available') {
+                    alert('No assessment summary available to translate');
+                    return;
+                }
+                
+                // Show loading modal
+                $('#loadingText').text('Translating to English...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                // Simulate progress
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
+                    
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                }, 150);
+                
+                // Call translation API
+                $.ajax({
+                    url: '/admin/ai-summary/translate',
+                    type: 'POST',
+                    data: {
+                        text: text,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Display translation
+                            $('#assessmentTranslationDraft').text(response.translatedText);
+                            $('#assessmentTranslationSection').show();
+                            
+                            // Save translation draft
+                            saveTranslation('assessment', response.translatedText);
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error translating text:', xhr);
+                        alert('Failed to translate. Please try again.');
+                    }
+                });
+            });
             
             // Load initial data
             loadCarePlans(1);
@@ -604,18 +692,34 @@
                 $('#originalAssessment').text(carePlan.assessment || 'No assessment available');
                 $('#originalEvaluation').text(carePlan.evaluation_recommendations || 'No evaluation available');
                 
-                // Show previously generated summaries if available
+                // Show previously generated summaries and translations if available
                 if (carePlan.has_ai_summary) {
                     if (carePlan.assessment_summary_draft) {
                         $('#assessmentSummarySection').show();
                         $('#assessmentSummaryDraft').text(carePlan.assessment_summary_draft);
                         displaySummarySections('assessment', carePlan.assessment_summary_sections);
+                        
+                        // Show translation if available
+                        if (carePlan.assessment_translation_draft) {
+                            $('#assessmentTranslationDraft').text(carePlan.assessment_translation_draft);
+                            $('#assessmentTranslationSection').show();
+                        } else {
+                            $('#assessmentTranslationSection').hide();
+                        }
                     }
                     
                     if (carePlan.evaluation_summary_draft) {
                         $('#evaluationSummarySection').show();
                         $('#evaluationSummaryDraft').text(carePlan.evaluation_summary_draft);
                         displaySummarySections('evaluation', carePlan.evaluation_summary_sections);
+                        
+                        // Show translation if available
+                        if (carePlan.evaluation_translation_draft) {
+                            $('#evaluationTranslationDraft').text(carePlan.evaluation_translation_draft);
+                            $('#evaluationTranslationSection').show();
+                        } else {
+                            $('#evaluationTranslationSection').hide();
+                        }
                     }
                 } else {
                     // Hide summary sections if no summaries yet
@@ -1035,6 +1139,221 @@
                     }
                 });
             });
+        });
+
+        // Same for evaluation translation
+        $('#translateEvaluationSummary').click(function() {
+            if (!currentCarePlanId) return;
+            
+            const text = $('#evaluationSummaryDraft').text();
+            if (!text || text === 'No evaluation summary available') {
+                alert('No evaluation summary available to translate');
+                return;
+            }
+            
+            // Show loading modal
+            $('#loadingText').text('Translating to English...');
+            $('#loadingProgressBar').css('width', '0%');
+            $('#loadingModal').modal('show');
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                $('#loadingProgressBar').css('width', `${progress}%`);
+                
+                if (progress >= 90) {
+                    clearInterval(progressInterval);
+                }
+            }, 150);
+            
+            // Call translation API
+            $.ajax({
+                url: '/admin/ai-summary/translate',
+                type: 'POST',
+                data: {
+                    text: text,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    clearInterval(progressInterval);
+                    $('#loadingProgressBar').css('width', '100%');
+                    
+                    setTimeout(() => {
+                        $('#loadingModal').modal('hide');
+                        
+                        // Display translation
+                        $('#evaluationTranslationDraft').text(response.translatedText);
+                        $('#evaluationTranslationSection').show();
+                        
+                        // Save translation draft
+                        saveTranslation('evaluation', response.translatedText);
+                    }, 500);
+                },
+                error: function(xhr) {
+                    clearInterval(progressInterval);
+                    $('#loadingModal').modal('hide');
+                    console.error('Error translating text:', xhr);
+                    alert('Failed to translate. Please try again.');
+                }
+            });
+        });
+
+        // Save translation draft to database
+        function saveTranslation(type, translation) {
+            if (!currentCarePlanId) return;
+            
+            let data = {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+            };
+            
+            data[`${type}_translation_draft`] = translation;
+            
+            $.ajax({
+                url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                type: 'PUT',
+                data: data,
+                success: function(response) {
+                    console.log('Translation saved successfully');
+                },
+                error: function(xhr) {
+                    console.error('Error saving translation:', xhr);
+                }
+            });
+        }
+
+        // Use translation as final version
+        $('#useAssessmentTranslation').click(function() {
+            if (!currentCarePlanId) return;
+            
+            const translation = $('#assessmentTranslationDraft').text();
+            if (!translation) return;
+            
+            // Show confirmation dialog
+            if (confirm('Are you sure you want to use this translation as the final assessment summary?')) {
+                // Show loading
+                $('#loadingText').text('Setting translation as final...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
+                    
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                }, 100);
+                
+                // Save as final
+                $.ajax({
+                    url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
+                    type: 'PUT',
+                    data: {
+                        assessment_summary_final: translation,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Show success
+                            const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i> English translation has been set as the final summary!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`;
+                            
+                            // Insert at the top of the care plan details section
+                            $(successAlert).prependTo('#carePlanDetails');
+                            
+                            // Refresh the care plan list
+                            loadCarePlans(currentPage);
+                            
+                            // Auto dismiss after 5 seconds
+                            setTimeout(() => {
+                                $('.alert').alert('close');
+                            }, 5000);
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error finalizing translation:', xhr);
+                        alert('Failed to set translation as final. Please try again.');
+                    }
+                });
+            }
+        });
+
+        // Same for evaluation
+        $('#useEvaluationTranslation').click(function() {
+            if (!currentCarePlanId) return;
+            
+            const translation = $('#evaluationTranslationDraft').text();
+            if (!translation) return;
+            
+            // Show confirmation dialog
+            if (confirm('Are you sure you want to use this translation as the final evaluation summary?')) {
+                // Show loading
+                $('#loadingText').text('Setting translation as final...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+                
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
+                    
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                }, 100);
+                
+                // Save as final
+                $.ajax({
+                    url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
+                    type: 'PUT',
+                    data: {
+                        evaluation_summary_final: translation,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            
+                            // Show success
+                            const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i> English translation has been set as the final summary!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`;
+                            
+                            // Insert at the top of the care plan details section
+                            $(successAlert).prependTo('#carePlanDetails');
+                            
+                            // Refresh the care plan list
+                            loadCarePlans(currentPage);
+                            
+                            // Auto dismiss after 5 seconds
+                            setTimeout(() => {
+                                $('.alert').alert('close');
+                            }, 5000);
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error finalizing translation:', xhr);
+                        alert('Failed to set translation as final. Please try again.');
+                    }
+                });
+            }
         });
     </script>
 </body>
