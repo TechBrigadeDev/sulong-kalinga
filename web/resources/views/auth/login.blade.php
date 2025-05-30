@@ -172,11 +172,21 @@
                         </ul>
                     </div>
                 @endif
+            
+            <!-- User type switch -->
+            <div class="user-type-switch mb-3">
+                <div class="user-type-option active" data-type="staff">Staff</div>
+                <div class="user-type-option" data-type="beneficiary">Beneficiary</div>
+                <div class="user-type-option" data-type="family">Family</div>
+            </div>
+            
             <form action="{{ route('login') }}" method="POST">
                 @csrf
+                <input type="hidden" name="user_type" id="user_type" value="staff">
+                
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="text" id="email" name="email" placeholder="user@example.com" value = "{{ old('email') }}" required>
+                    <label for="email" id="email-label">Email</label>
+                    <input type="text" id="email" name="email" placeholder="user@example.com" value="{{ old('email') }}" required>
                 </div>
 
                 <div class="form-group">
@@ -223,6 +233,33 @@
                     icon.classList.remove('bi-eye');
                     icon.classList.add('bi-eye-slash');
                 }
+            });
+            
+            // User type switcher
+            const userTypeOptions = document.querySelectorAll('.user-type-option');
+            const userTypeInput = document.getElementById('user_type');
+            const emailLabel = document.getElementById('email-label');
+            const emailInput = document.getElementById('email');
+            
+            userTypeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update active class
+                    userTypeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update hidden input
+                    const userType = this.getAttribute('data-type');
+                    userTypeInput.value = userType;
+                    
+                    // Update label and placeholder based on user type
+                    if (userType === 'beneficiary') {
+                        emailLabel.textContent = 'Username';
+                        emailInput.placeholder = 'Enter your username';
+                    } else {
+                        emailLabel.textContent = 'Email';
+                        emailInput.placeholder = 'user@example.com';
+                    }
+                });
             });
         });
     </script>

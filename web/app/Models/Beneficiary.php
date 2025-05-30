@@ -13,7 +13,7 @@ class Beneficiary extends Authenticatable
     protected $table = 'beneficiaries';
     protected $primaryKey = 'beneficiary_id'; // Explicitly set the primary key
     protected $fillable = [
-        'first_name', 'last_name', 'civil_status', 'gender', 'birthday', 'primary_caregiver',
+        'first_name', 'middle_name', 'last_name', 'civil_status', 'gender', 'birthday', 'primary_caregiver',
         'mobile', 'landline', 'street_address', 'barangay_id', 'municipality_id', 'category_id',
         'emergency_contact_name', 'emergency_contact_relation', 'emergency_contact_mobile',
         'emergency_contact_email', 'emergency_procedure', 'beneficiary_status_id', 'status_reason', 

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('beneficiaries', function (Blueprint $table) {
             $table->increments('beneficiary_id');
             $table->string('first_name', 100);
+            $table->string('middle_name', 100);
             $table->string('last_name', 100);
             $table->string('civil_status', 50);
             $table->string('gender', 50);
