@@ -119,20 +119,31 @@ class UserManagementController {
         ...(params?.search && { search: params.search }),
       }
     });
-    
     const data = await response.data;
-    console.log(
-      JSON.stringify(data, null, 2),
-      "\n\n\n\nCare Managers Data"
-    )
-    return [];
-    // const valid = await userManagementSchema.getCareManagers.safeParseAsync(data);
-    // if (!valid.success) {
-    //   console.error("Care managers validation error", valid.error);
-    //   throw new Error("Care managers validation error");
-    // }
+    
+    const valid = await userManagementSchema.getCareManagers.safeParseAsync(data);
+    if (!valid.success) {
+      console.error("Care managers validation error", valid.error);
+      throw new Error("Care managers validation error");
+    }
 
-    // return valid.data.caremanagers;
+    return valid.data.caremanagers;
+  }
+
+  async getCareManager(id: string) {
+    const response = await this.api.get(`/care-managers/${id}`);
+    if (!response.data) {
+      throw new Error("No data received from API");
+    }
+    const data = await response.data;
+
+    const valid = await userManagementSchema.getCareManager.safeParseAsync(data);
+    if (!valid.success) {
+      console.error("Care manager validation error", valid.error);
+      throw new Error("Care manager validation error");
+    }
+
+    return valid.data.caremanager;
   }
 }
 

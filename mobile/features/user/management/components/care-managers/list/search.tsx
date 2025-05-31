@@ -1,8 +1,8 @@
 import { Input } from "tamagui";
 import { useDebounce } from "~/common/hooks";
-import { careManagerListStore } from "../../care-managers/list/store";
+import { careManagerListStore } from "./store";
 
-const CareWorkerSearch = () => {
+const CareManagerSearch = () => {
     const {
         setSearch,
     } = careManagerListStore();
@@ -13,11 +13,11 @@ const CareWorkerSearch = () => {
  
     return (
         <Input
-            placeholder="Search Care Worker"
+            placeholder="Search Care Managers"
             size="$3"
             onChangeText={onSearch}
         />
     )
 }
 
-export default CareWorkerSearch;
+export default CareManagerSearch;
