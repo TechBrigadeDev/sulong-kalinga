@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { authStore } from '~/features/auth/auth.store';
 import Providers from '~/components/Providers';
-import Dialogs from '../components/Dialogs';
+import Dialogs from '../components/dialogs/Dialogs';
 
 export {
   // Catch any errors thrown by the Layout component.
