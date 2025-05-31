@@ -13,6 +13,50 @@ class EmergencyNoticeFactory extends Factory
 {
     protected $model = EmergencyNotice::class;
 
+    // Type-specific emergency messages
+    protected $emergencyMessages = [
+        // Medical Emergency (ID 1)
+        1 => [
+            "Beneficiary experiencing chest pain and difficulty breathing. Needs immediate assistance.",
+            "Blood pressure dangerously high (190/110). Beneficiary feeling dizzy and confused.",
+            "Beneficiary fell unconscious while eating. Need emergency assistance now.",
+            "Severe allergic reaction with swelling and difficulty breathing. Requires immediate medical attention.",
+            "Beneficiary showing signs of stroke - facial drooping and slurred speech. Please send help urgently."
+        ],
+        // Fall Incident (ID 2)
+        2 => [
+            "Beneficiary fell in the bathroom and cannot get up. No visible injuries but in pain.",
+            "Fell while trying to get out of bed. Small cut on forehead and complaining of hip pain.",
+            "Slipped on wet floor and fell. Cannot put weight on right leg. Please send assistance.",
+            "Found beneficiary on floor this morning. Appears to have fallen during the night. Confused and in pain.",
+            "Fell while walking to the kitchen. Has bruising on arm and can't move without severe pain."
+        ],
+        // Medication Issue (ID 3)
+        3 => [
+            "Beneficiary took double dose of blood pressure medication by mistake. What should we do?",
+            "Cannot find insulin medication. Beneficiary's blood sugar reading is 310. Need assistance.",
+            "Adverse reaction to new medication - severe rash and itching. Needs medical advice urgently.",
+            "Beneficiary refusing to take prescribed medications for the past two days. Becoming agitated.",
+            "Mixed up morning and evening medications. Concerned about potential interaction effects."
+        ],
+        // Mental Health Crisis (ID 4)
+        4 => [
+            "Beneficiary extremely disoriented and agitated. Does not recognize family members. Need help.",
+            "Showing signs of extreme anxiety and panic. Breathing rapidly and unable to calm down.",
+            "Expressing suicidal thoughts and very depressed. Need immediate mental health support.",
+            "Hallucinating and showing paranoid behavior. Family cannot manage the situation.",
+            "Severe confusion and agitation since yesterday. Not sleeping and becoming combative."
+        ],
+        // Other Emergency (ID 5)
+        5 => [
+            "Power outage in the area. Beneficiary uses oxygen concentrator and backup battery low.",
+            "Water leak in home, floor slippery and dangerous. Beneficiary unable to leave safely.",
+            "Beneficiary locked out of house in rainy weather. No shelter and getting cold.",
+            "No food in the house for past two days. Beneficiary unable to go shopping due to mobility issues.",
+            "Caregiver had emergency and left suddenly. Beneficiary needs immediate assistance."
+        ]
+    ];
+
     public function definition(): array
     {
         $sender_type = $this->faker->randomElement(['beneficiary', 'family_member']);
@@ -32,6 +76,13 @@ class EmergencyNoticeFactory extends Factory
             
             $sender_id = $familyMember->family_member_id;
         }
+
+        // Get random emergency type
+        $emergencyType = EmergencyType::inRandomOrder()->first();
+        $emergency_type_id = $emergencyType->emergency_type_id;
+        
+        // Get message based on emergency type
+        $message = $this->getEmergencyMessage($emergency_type_id);
 
         // Random status with weighted distribution
         $statusChoices = [
@@ -80,8 +131,8 @@ class EmergencyNoticeFactory extends Factory
             'sender_id' => $sender_id,
             'sender_type' => $sender_type,
             'beneficiary_id' => $beneficiary->beneficiary_id,
-            'emergency_type_id' => EmergencyType::inRandomOrder()->first()->emergency_type_id,
-            'message' => $this->faker->realText(150),
+            'emergency_type_id' => $emergency_type_id,
+            'message' => $message,
             'status' => $status,
             'read_status' => $read_status,
             'read_at' => $read_at,
@@ -92,6 +143,19 @@ class EmergencyNoticeFactory extends Factory
             'created_at' => $created_at,
             'updated_at' => $this->faker->dateTimeBetween($created_at, 'now'),
         ];
+    }
+    
+    /**
+     * Get a realistic emergency message based on the emergency type
+     */
+    protected function getEmergencyMessage($emergency_type_id)
+    {
+        if (isset($this->emergencyMessages[$emergency_type_id])) {
+            return $this->faker->randomElement($this->emergencyMessages[$emergency_type_id]);
+        }
+        
+        // Fallback to generic message if type doesn't match
+        return "Emergency situation requiring immediate assistance. Please respond as soon as possible.";
     }
     
     public function asNew(): Factory

@@ -196,7 +196,7 @@ class BeneficiaryFactory extends Factory
             'status_reason' => null,
             'general_care_plan_id' => null, // Will be set after creation
             'username' => $username,
-            'password' => Hash::make('password123'), // Default password
+            'password' => Hash::make('12312312'), // Default password
             'beneficiary_signature' => null,
             'care_worker_signature' => null,
             'created_by' => $userIdWithRole2,

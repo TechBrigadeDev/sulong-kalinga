@@ -94,7 +94,7 @@ class FamilyMemberFactory extends Factory
             'landline' => $landline,
             'email' => $this->faker->unique()->safeEmail,
             // Hash the password properly
-            'password' => Hash::make('password123'), // Default password that can be changed later
+            'password' => Hash::make('12312312'), // Default password that can be changed later
             'street_address' => $this->faker->address,
             'gender' => $gender,
             'related_beneficiary_id' => function () {
