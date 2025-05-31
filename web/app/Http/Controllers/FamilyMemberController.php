@@ -255,7 +255,7 @@ class FamilyMemberController extends Controller
                 'string',
                 'same:account.password',
             ],
-        ]);
+        ]); 
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
