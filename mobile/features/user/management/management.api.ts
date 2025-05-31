@@ -112,6 +112,28 @@ class UserManagementController {
 
     return valid.data.careworker;
   }
+
+  async getCareManagers(params?: { search?: string }) {
+    const response = await this.api.get("/care-managers", {
+      params: {
+        ...(params?.search && { search: params.search }),
+      }
+    });
+    
+    const data = await response.data;
+    console.log(
+      JSON.stringify(data, null, 2),
+      "\n\n\n\nCare Managers Data"
+    )
+    return [];
+    // const valid = await userManagementSchema.getCareManagers.safeParseAsync(data);
+    // if (!valid.success) {
+    //   console.error("Care managers validation error", valid.error);
+    //   throw new Error("Care managers validation error");
+    // }
+
+    // return valid.data.caremanagers;
+  }
 }
 
 export default UserManagementController;
