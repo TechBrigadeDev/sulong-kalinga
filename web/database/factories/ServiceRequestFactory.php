@@ -178,4 +178,87 @@ class ServiceRequestFactory extends Factory
             ];
         });
     }
+
+    public function approved(): Factory
+    {
+        $faker = $this->faker; // Capture faker
+        
+        return $this->state(function (array $attributes) use ($faker) {
+             $created_at = $faker->dateTimeBetween('-3 months', '-1 week');
+            // Convert DateTime to Carbon to use copy() method
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDays(2));
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(1));
+            
+            return [
+                'status' => 'approved',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'action_type' => 'approved',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at
+            ];
+        });
+    }
+
+    public function rejected(): Factory
+    {
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
+            $created_at = $faker->dateTimeBetween('-3 months', '-1 week');
+            // Convert DateTime to Carbon to use copy() method
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDays(2));
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(1));
+                
+            return [
+                'status' => 'rejected',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'action_type' => 'rejected',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at
+            ];
+        });
+    }
+
+    public function completed(): Factory
+    {
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
+            $created_at = $faker->dateTimeBetween('-3 months', '-2 weeks');
+            // Convert DateTime to Carbon to use copy() method
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDays(2));
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(1));
+            $service_date = $faker->dateTimeBetween('-2 weeks', '-2 days')->format('Y-m-d');
+            
+            return [
+                'status' => 'completed',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'action_type' => 'completed',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'service_date' => $service_date, 
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at
+            ];
+        });
+    }
 }

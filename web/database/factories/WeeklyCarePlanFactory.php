@@ -145,7 +145,192 @@ class WeeklyCarePlanFactory extends Factory
      */
     public function getInterventionSuggestions($assessment)
     {
-        return $this->getMatchingInterventions(['assessment' => $assessment]);
+        // Always ensure we return an array, never a string
+        try {
+            // Get the matched interventions
+            $matchedInterventions = $this->getMatchingInterventions(['assessment' => $assessment]);
+            
+            // Force conversion to array if needed
+            if (is_string($matchedInterventions)) {
+                return [$matchedInterventions];
+            }
+            
+            if (!is_array($matchedInterventions) || empty($matchedInterventions)) {
+                return [
+                    'Provide assistance with daily activities',
+                    'Monitor health status',
+                    'Offer emotional support',
+                    'Assist with medication management',
+                    'Help with mobility exercises'
+                ];
+            }
+            
+            return $matchedInterventions;
+            
+        } catch (\Exception $e) {
+            // If anything goes wrong, return default interventions
+            return [
+                'Provide assistance with daily activities',
+                'Monitor health status',
+                'Offer emotional support',
+                'Assist with medication management',
+                'Help with mobility exercises'
+            ];
+        }
+    }
+
+    /**
+     * Match interventions with assessment-evaluation pairs
+     * This ensures the interventions performed align with the issues described in assessment
+     * 
+     * @param array $assessmentEvaluationPair
+     * @return array Always returns an array of intervention descriptions
+     */
+    protected function getMatchingInterventions($assessmentEvaluationPair)
+    {
+        // If passed a string instead of an array, convert to appropriate format
+        if (is_string($assessmentEvaluationPair)) {
+            $assessment = $assessmentEvaluationPair;
+        } else {
+            $assessment = $assessmentEvaluationPair['assessment'] ?? '';
+        }
+
+        // If assessment is empty, return default interventions
+        if (empty($assessment)) {
+            return [
+                'Provide assistance with daily activities',
+                'Monitor health status',
+                'Offer emotional support'
+            ];
+        }
+
+        // Initialize array to store matched intervention IDs by category
+        $matchedCategoryIds = [];
+        
+        // Analyze assessment text to categorize the type of issue using Tagalog keywords
+        // Mobility and balance related (Category 1)
+        if (strpos($assessment, 'paglalakad') !== false || 
+            strpos($assessment, 'balanse') !== false || 
+            strpos($assessment, 'pagkilos') !== false ||
+            strpos($assessment, 'pagtayo') !== false ||
+            strpos($assessment, 'pag-upo') !== false ||
+            strpos($assessment, 'pagbagsak') !== false ||
+            strpos($assessment, 'pagtisod') !== false ||
+            strpos($assessment, 'pagkadulas') !== false ||
+            strpos($assessment, 'patikin') !== false) {
+            $matchedCategoryIds[] = 1; // Mobility category
+        }
+        
+        // Cognitive assistance related (Category 2)
+        if (strpos($assessment, 'nakakalimot') !== false || 
+            strpos($assessment, 'kalituhan') !== false || 
+            strpos($assessment, 'memorya') !== false ||
+            strpos($assessment, 'nalilito') !== false ||
+            strpos($assessment, 'nalilingat') !== false ||
+            strpos($assessment, 'pagkabalisa') !== false ||
+            strpos($assessment, 'pag-iisip') !== false) {
+            $matchedCategoryIds[] = 2; // Cognitive assistance category
+        }
+        
+        // Personal care related (Category 3)
+        if (strpos($assessment, 'maligo') !== false || 
+            strpos($assessment, 'paliligo') !== false || 
+            strpos($assessment, 'bihis') !== false ||
+            strpos($assessment, 'pagbibihis') !== false ||
+            strpos($assessment, 'palikuran') !== false ||
+            strpos($assessment, 'kalinisan') !== false ||
+            strpos($assessment, 'hygiene') !== false ||
+            strpos($assessment, 'maghugas') !== false ||
+            strpos($assessment, 'paghuhugas') !== false) {
+            $matchedCategoryIds[] = 3; // Personal care category
+        }
+        
+        // Medical care related (Category 4)
+        if (strpos($assessment, 'gamot') !== false || 
+            strpos($assessment, 'medisina') !== false || 
+            strpos($assessment, 'kalusugan') !== false ||
+            strpos($assessment, 'sakit') !== false ||
+            strpos($assessment, 'health') !== false ||
+            strpos($assessment, 'masakit') !== false ||
+            strpos($assessment, 'pagtakbo ng dugo') !== false) {
+            $matchedCategoryIds[] = 4; // Medical care category
+        }
+        
+        // Social activities related (Category 5)
+        if (strpos($assessment, 'malungkot') !== false || 
+            strpos($assessment, 'kalungkutan') !== false || 
+            strpos($assessment, 'social') !== false ||
+            strpos($assessment, 'pakikisalamuha') !== false ||
+            strpos($assessment, 'pakikipag-usap') !== false ||
+            strpos($assessment, 'bisita') !== false ||
+            strpos($assessment, 'kasama') !== false) {
+            $matchedCategoryIds[] = 5; // Social activities category
+        }
+        
+        // Recreation activities related (Category 6)
+        if (strpos($assessment, 'labas') !== false || 
+            strpos($assessment, 'paglabas') !== false || 
+            strpos($assessment, 'recreation') !== false ||
+            strpos($assessment, 'pagmamasid') !== false ||
+            strpos($assessment, 'liwaliw') !== false ||
+            strpos($assessment, 'paglalakad sa labas') !== false) {
+            $matchedCategoryIds[] = 6; // Recreation activities category
+        }
+        
+        // Household related (Category 7)
+        if (strpos($assessment, 'bahay') !== false || 
+            strpos($assessment, 'linis') !== false || 
+            strpos($assessment, 'paglilinis') !== false ||
+            strpos($assessment, 'lutuin') !== false ||
+            strpos($assessment, 'pagluluto') !== false ||
+            strpos($assessment, 'hugasin') !== false ||
+            strpos($assessment, 'labada') !== false ||
+            strpos($assessment, 'paglalaba') !== false) {
+            $matchedCategoryIds[] = 7; // Household category
+        }
+        
+        // If no specific categories were matched, include all categories
+        if (empty($matchedCategoryIds)) {
+            $matchedCategoryIds = [1, 2, 3, 4, 5, 6, 7];
+        }
+        
+        // Initialize an array to store interventions
+        $interventions = [];
+        
+        try {
+            // Get 2-3 interventions per matched category
+            foreach ($matchedCategoryIds as $categoryId) {
+                // Get interventions for this category from the database
+                $categoryInterventions = \App\Models\Intervention::where('care_category_id', $categoryId)
+                    ->inRandomOrder()
+                    ->take(2) // Take 2 random interventions per category
+                    ->pluck('intervention_description')
+                    ->toArray();
+                
+                $interventions = array_merge($interventions, $categoryInterventions);
+            }
+        } catch (\Exception $e) {
+            // If database query fails, use default interventions
+            $interventions = [];
+        }
+        
+        // Ensure we return 2-5 interventions total
+        if (!empty($interventions)) {
+            shuffle($interventions);
+            $interventions = array_slice($interventions, 0, min(count($interventions), 5));
+        }
+        
+        // If we somehow have an empty array, provide defaults
+        if (empty($interventions)) {
+            $interventions = [
+                'Provide assistance with daily activities',
+                'Monitor health status', 
+                'Offer emotional support'
+            ];
+        }
+        
+        // ENSURE WE ALWAYS RETURN AN ARRAY
+        return is_array($interventions) ? $interventions : [$interventions];
     }
 
     /**
@@ -391,73 +576,6 @@ class WeeklyCarePlanFactory extends Factory
         ];
 
         return $this->faker->randomElement($pairs);
-    }
-
-    /**
-     * Match interventions with assessment-evaluation pairs
-     * This ensures the interventions performed align with the issues described in assessment
-     * 
-     * @param array $assessmentEvaluationPair
-     * @return array
-     */
-    protected function getMatchingInterventions($assessmentEvaluationPair)
-    {
-        // Identify key issues from the assessment text
-        $assessment = $assessmentEvaluationPair['assessment'];
-        $interventions = [];
-        
-        // Analyze assessment text to categorize the type of issue
-        if (strpos($assessment, 'paglalakad') !== false || 
-            strpos($assessment, 'mobility') !== false || 
-            strpos($assessment, 'balance') !== false) {
-            $interventions[] = 'Mobility assistance';
-            $interventions[] = 'Balance training';
-            $interventions[] = 'Assistive device recommendation';
-        }
-        
-        if (strpos($assessment, 'oral hygiene') !== false || 
-            strpos($assessment, 'ngipin') !== false || 
-            strpos($assessment, 'dental') !== false) {
-            $interventions[] = 'Oral care assistance';
-            $interventions[] = 'Dental hygiene education';
-        }
-        
-        if (strpos($assessment, 'skin') !== false || 
-            strpos($assessment, 'pressure points') !== false || 
-            strpos($assessment, 'balat') !== false) {
-            $interventions[] = 'Skin care';
-            $interventions[] = 'Pressure ulcer prevention';
-            $interventions[] = 'Wound management';
-        }
-        
-        if (strpos($assessment, 'pagkain') !== false || 
-            strpos($assessment, 'nutrition') !== false || 
-            strpos($assessment, 'diet') !== false) {
-            $interventions[] = 'Nutritional assessment';
-            $interventions[] = 'Diet planning';
-            $interventions[] = 'Feeding assistance';
-        }
-        
-        if (strpos($assessment, 'umiinom') !== false || 
-            strpos($assessment, 'tubig') !== false || 
-            strpos($assessment, 'hydration') !== false) {
-            $interventions[] = 'Hydration monitoring';
-            $interventions[] = 'Fluid intake education';
-        }
-
-        // If no specific interventions were matched, provide general care interventions
-        if (empty($interventions)) {
-            $interventions = [
-                'General health assessment',
-                'Activities of daily living assistance',
-                'Health education',
-                'Care coordination'
-            ];
-        }
-        
-        // Return a subset of the matched interventions (2-4 interventions)
-        shuffle($interventions);
-        return array_slice($interventions, 0, min(count($interventions), rand(2, 4)));
     }
 
     /**
