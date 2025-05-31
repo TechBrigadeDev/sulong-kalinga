@@ -17,3 +17,5 @@ const Section = ({
 const style = StyleSheet.create({
     section: {}
 })
+
+export default Section;

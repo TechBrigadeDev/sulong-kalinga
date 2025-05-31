@@ -8,7 +8,7 @@ interface CustomTabButtonProps extends React.PropsWithChildren, TabTriggerSlotPr
     onPress?: () => void;
 }
 
-export const TabButton = React.forwardRef<View, CustomTabButtonProps>(
+const TabButton = React.forwardRef<View, CustomTabButtonProps>(
   (props, ref) => {
     const { 
         icon,
