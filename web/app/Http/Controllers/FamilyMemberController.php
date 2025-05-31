@@ -209,8 +209,9 @@ class FamilyMemberController extends Controller
             'personal_email' => [
                 'required',
                 'string',
+                'max:100',
                 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
-                'unique:cose_users,personal_email',
+                'unique:family_members,email',
             ],
 
             'is_primary_caregiver' => [
@@ -243,7 +244,17 @@ class FamilyMemberController extends Controller
                 'string',
                 'regex:/^[0-9]{7,10}$/', // Between 7 and 10 digits
             ],
-        
+            // Account Information
+            'account.password' => [
+                'required',
+                'string',
+                'min:8',
+            ],
+            'account.password_confirmation' => [
+                'required',
+                'string',
+                'same:account.password',
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -305,6 +316,7 @@ class FamilyMemberController extends Controller
         $familymember->related_beneficiary_id = $request->input('relatedBeneficiary');
         $familymember->relation_to_beneficiary = $request->input('relation_to_beneficiary');
         $familymember->email = $request->input('personal_email');
+        $familymember->password = bcrypt($request->input('account.password')); // Hash the password
         // $familymember->password = bcrypt($request->input('account.password'));
         $familymember->street_address = $request->input('address_details');
         // $familymember->access = True; // Status for access to the system (REMOVED BECAUSE 'access' COLUMN WILL BE REMOVED)
@@ -315,9 +327,6 @@ class FamilyMemberController extends Controller
 
         // Save file paths and IDs
         $familymember->photo = $familyPhotoPath ?? null;
-
-        // Assign the portal_account_id from the beneficiary
-        $familymember->portal_account_id = $beneficiary->portal_account_id;
 
         // Generate and save the remember_token
         $familymember->remember_token = Str::random(60);
@@ -340,7 +349,7 @@ class FamilyMemberController extends Controller
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             
             // 1. Send welcome notification to the family member (if they have a portal account)
-            if ($familymember->portal_account_id) {
+            if ($familymember) {
                 $welcomeTitle = 'Welcome to SULONG KALINGA';
                 $welcomeMessage = 'Welcome ' . $familymember->first_name . ' ' . $familymember->last_name . 
                                 '! Your family member account has been added to SULONG KALINGA system.';
@@ -534,6 +543,17 @@ class FamilyMemberController extends Controller
                 'string',
                 'regex:/^[0-9]{7,10}$/',
             ],
+            // Password is optional for updates
+            'account.password' => [
+                'nullable',
+                'string',
+                'min:8',
+            ],
+            'account.password_confirmation' => [
+                'nullable',
+                'string',
+                'same:account.password',
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -623,8 +643,12 @@ class FamilyMemberController extends Controller
             $familyMember->email = $request->input('personal_email');
             $familyMember->street_address = $request->input('address_details');
             $familyMember->updated_by = Auth::id();
-            $familyMember->portal_account_id = $beneficiary->portal_account_id;
 
+            // Update password if provided
+            if ($request->filled('account.password')) {
+                $familyMember->password = bcrypt($request->input('account.password'));
+            }
+            
             $familyMember->save();
 
             // Log the update of the family member
@@ -642,7 +666,7 @@ class FamilyMemberController extends Controller
                 $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
                 
                 // 1. Notify the family member about the update
-                if ($familyMember->portal_account_id) {
+                if ($familyMember) {
                     $updateTitle = 'Your Profile Was Updated';
                     $updateMessage = 'Your family member profile information has been updated by ' . $actor . ' (' . $actorRole . ').';
                     $this->sendNotificationToFamilyMember($familyMember->family_member_id, $updateTitle, $updateMessage);
@@ -652,7 +676,7 @@ class FamilyMemberController extends Controller
                 if ($originalBeneficiaryId != $familyMember->related_beneficiary_id) {
                     // Notify old beneficiary if applicable
                     $oldBeneficiary = Beneficiary::find($originalBeneficiaryId);
-                    if ($oldBeneficiary && $oldBeneficiary->portal_account_id) {
+                    if ($oldBeneficiary) {
                         $oldBeneficiaryTitle = 'Family Member Unlinked';
                         $oldBeneficiaryMessage = $familyMember->first_name . ' ' . $familyMember->last_name . 
                                               ' is no longer linked to your profile by ' . $actor . ' (' . $actorRole . ').';
@@ -661,7 +685,7 @@ class FamilyMemberController extends Controller
                     
                     // Notify new beneficiary
                     $newBeneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
-                    if ($newBeneficiary && $newBeneficiary->portal_account_id) {
+                    if ($newBeneficiary) {
                         $newBeneficiaryTitle = 'New Family Member Linked';
                         $newBeneficiaryMessage = $familyMember->first_name . ' ' . $familyMember->last_name . 
                                               ' has been linked to your profile as your ' . strtolower($familyMember->relation_to_beneficiary) . 
@@ -671,7 +695,7 @@ class FamilyMemberController extends Controller
                 } else {
                     // Notify current beneficiary about the family member update
                     $beneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
-                    if ($beneficiary && $beneficiary->portal_account_id) {
+                    if ($beneficiary) {
                         $beneficiaryTitle = 'Family Member Profile Updated';
                         $beneficiaryMessage = 'Your ' . strtolower($familyMember->relation_to_beneficiary) . ', ' . 
                                              $familyMember->first_name . ' ' . $familyMember->last_name . 
@@ -752,7 +776,7 @@ class FamilyMemberController extends Controller
                 $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
                 
                 // 1. Notify the connected beneficiary about the deletion
-                if ($beneficiary && $beneficiary->portal_account_id) {
+                if ($beneficiary) {
                     $beneficiaryTitle = 'Family Member Removed';
                     $beneficiaryMessage = 'Your ' . strtolower($relationshipType) . ', ' . $familyMemberName . 
                                     ', has been removed from the system by ' . $actor . ' (' . $actorRole . ').';
@@ -834,14 +858,14 @@ class FamilyMemberController extends Controller
         try {
             // Get family member to retrieve their portal account ID
             $familyMember = FamilyMember::find($familyMemberId);
-            if (!$familyMember || !$familyMember->portal_account_id) {
+            if (!$familyMember) {
                 \Log::warning('Cannot send notification to family member: No portal account found for ID ' . $familyMemberId);
                 return;
             }
             
             // Create notification
             $notification = new Notification();
-            $notification->user_id = $familyMember->portal_account_id;
+            $notification->user_id = $familyMember->family_member_id;
             $notification->user_type = 'family_member';
             $notification->message_title = $title;
             $notification->message = $message;
@@ -868,14 +892,14 @@ class FamilyMemberController extends Controller
         try {
             // Get beneficiary to retrieve their portal account ID
             $beneficiary = Beneficiary::find($beneficiaryId);
-            if (!$beneficiary || !$beneficiary->portal_account_id) {
+            if (!$beneficiary) {
                 \Log::warning('Cannot send notification to beneficiary: No portal account found for ID ' . $beneficiaryId);
                 return;
             }
             
             // Create notification
             $notification = new Notification();
-            $notification->user_id = $beneficiary->portal_account_id;
+            $notification->user_id = $beneficiary->beneficiary_id;
             $notification->user_type = 'beneficiary';
             $notification->message_title = $title;
             $notification->message = $message;

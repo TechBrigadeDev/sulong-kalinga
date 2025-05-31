@@ -154,9 +154,9 @@ class UserFactory extends Factory
             'mobile' => $mobile,
             'landline' => $landline,
             'personal_email' => strtolower(str_replace(' ', '.', $firstName)) . '.' . 
-                              strtolower(str_replace(' ', '.', $lastName)) . '@cose.org.ph',
+                              strtolower(str_replace(' ', '.', $lastName)) . '@gmail.com',
             'email' => strtolower(str_replace(' ', '.', $firstName)) . '.' . 
-                     strtolower(str_replace(' ', '.', $lastName)) . '@sulong-kalinga.org',
+                     strtolower(str_replace(' ', '.', $lastName)) . '@cose.org.ph',
             'password' => Hash::make('12312312'), // Set the password to '12312312' and hash it
             'address' => $address, // Address now fully contains the barangay information
             // 'barangay_id' => $barangayId, // Removed as it doesn't exist in PostgreSQL schema

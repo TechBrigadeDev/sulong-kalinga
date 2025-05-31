@@ -54,7 +54,6 @@
                                     placeholder="Enter first name" 
                                     value="{{ old('first_name') }}"
                                     required >
-                                    
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
@@ -78,7 +77,6 @@
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ old('birth_date') }}" required onkeydown="return true">
                             </div>
                         </div>
-                        </div>
                         <div class="row mb-1">
                             <div class="col-md-3 relative">
                                 <label for="mobileNumber" class="form-label">Mobile Number<label style="color:red;"> * </label></label>
@@ -90,16 +88,6 @@
                             <div class="col-md-3 relative">
                                 <label for="landlineNumber" class="form-label">Landline Number</label>
                                 <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="Enter Landline number" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
-                            </div>
-                            <div class="col-md-3 relative">
-                                <label for="personalEmail" class="form-label">Personal Email Address<label style="color:red;"> * </label></label>
-                                <input type="email" class="form-control" id="personalEmail" name="personal_email" 
-                                       value="{{ old('personal_email') }}"
-                                       placeholder="Enter personal email" 
-                                       required 
-                                       pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" 
-                                       title="Enter a valid email address (e.g., example@domain.com)" 
-                                       oninput="validateEmail(this)">
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="familyPhoto" class="form-label">Profile Picture</label>
@@ -166,15 +154,56 @@
                                 oninput="validateAddress(this)">{{ old('address_details') }}</textarea>
                             </div>
                         </div>
-                        <!-- Account Registration -->
+                        
+                        <hr class="my-4">
+                        <!-- Login Access -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Family Portal Account Registration</h5> <!-- Row Title -->
+                                <h5 class="text-start">Family Portal Login Access</h5>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <!-- Email Address -->
+                            <div class="col-md-4">
+                                <label for="personalEmail" class="form-label">Email Address<label style="color:red;"> * </label></label>
+                                <input type="email" class="form-control" id="personalEmail" name="personal_email" 
+                                    value="{{ old('personal_email') }}" 
+                                    placeholder="Enter email address" 
+                                    required 
+                                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" 
+                                    title="Please enter a valid email address.">
+                            </div>
+                            <!-- Password -->
+                            <div class="col-md-4">
+                                <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" 
+                                        placeholder="Enter password" 
+                                        minlength="8" 
+                                        required >
+                                    <span class="input-group-text password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="col-md-4">
+                                <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" 
+                                        placeholder="Confirm password" 
+                                        required 
+                                        title="Passwords must match.">
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-12">
-                                <h5 class="text-start" styl="font-weight: normal;"><strong>Note:* </strong>Your Family Portal account will be connected to your <strong>Related Beneficiary's account</strong></h5> <!-- Row Title -->
+                                <h6 class="text-start text-muted"><strong>Note:</strong> The family member will be able to log into the Family Portal using their email address and the password you set here. Their account will be connected to the selected beneficiary's portal account.</h6>
                             </div>
                         </div>
 

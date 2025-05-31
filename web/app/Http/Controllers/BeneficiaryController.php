@@ -686,7 +686,7 @@ class BeneficiaryController extends Controller
             );
 
             // Use the provided password
-            $password = Hash::make($request->input('account.password'));
+            $password = bcrypt($request->input('account.password'));
 
             // Generate unique identifier for file naming
             $uniqueIdentifier = Str::random(10);
@@ -843,7 +843,7 @@ class BeneficiaryController extends Controller
             }
 
             // Store credentials directly in the beneficiary model
-            $password = Hash::make($request->input('account.password'));
+            $password = bcrypt($request->input('account.password'));
 
             // Insert into beneficiaries table
             $beneficiary = Beneficiary::create([
@@ -1572,7 +1572,7 @@ class BeneficiaryController extends Controller
             
             // Update password only if provided
             if ($request->filled('account.password')) {
-                $beneficiary->password = Hash::make($request->input('account.password'));
+                $beneficiary->password = bcrypt($request->input('account.password'));
             }
             
             // Format mobile numbers with +63 prefix if needed

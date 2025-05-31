@@ -32,7 +32,7 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     
     // Emergency Service
     Route::get('/emergency-service', function() {
-        return view('familyPortal.emergencyService');
+        return view('familyPortal.emergencyAndService');
     })->name('emergency.service.index');
     
     // Care Plan
@@ -43,5 +43,10 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     // Family Members
     Route::get('/family-members', function() {
         return view('familyPortal.familyMembers');
-    })->name('family.member.index');
+    })->name('member.index');
+
+    // 
+    Route::get('/faq', function() {
+        return view('familyPortal.FAQuestions');
+    })->name('faQuestions.index');
 });

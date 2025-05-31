@@ -57,13 +57,13 @@
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.member.*') ? 'active' : '' }}">
-      <a href="{{ route('family.member.index') }}">
+    <li class="{{ Request::routeIs('family.family.member.*') ? 'active' : '' }}">
+      <a href="{{ route('family.family.member.index') }}">
         <i class="bi bi-people-fill"></i>
         <span class="link_name">Family Members</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.member.index') }}">Family Members</a></li>
+        <li><a class="link_name" href="{{ route('family.family.member.index') }}">Family Members</a></li>
       </ul>
     </li>
 
