@@ -2,7 +2,6 @@ import { SafeAreaView, StyleSheet } from "react-native";
 import { Button, Card } from "tamagui";
 import { Stack, useRouter } from "expo-router";
 import BeneficiariesSearch from "~/features/user/management/components/beneficiaries/list/seach";
-import Header from "~/components/Header";
 import BeneficiaryList from "~/features/user/management/components/beneficiaries/list";
 
 const Beneficiaries = () => {
