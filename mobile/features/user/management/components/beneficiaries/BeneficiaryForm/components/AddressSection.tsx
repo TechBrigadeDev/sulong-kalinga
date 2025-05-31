@@ -1,6 +1,5 @@
 import { Card, H3, YStack, Input, Select, XStack, Text } from "tamagui";
-import { IBeneficiary } from "../../../user.schema";
-import { useState } from "react";
+import { IBeneficiary } from "~/features/user/management/management.type";
 
 interface Props {
     data?: Partial<IBeneficiary>;
