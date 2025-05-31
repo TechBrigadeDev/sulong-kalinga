@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\MedicationScheduleApiController;
 use App\Http\Controllers\Api\InternalAppointmentsApiController;
 use App\Http\Controllers\Api\VisitationApiController;
 use App\Http\Controllers\Api\MessagingApiController;
+use App\Http\Controllers\Api\ShiftApiController;
+use App\Http\Controllers\Api\ShiftTrackApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -190,4 +192,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
     Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
     Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
+
+    // Shifts API
+    Route::get('/shifts', [ShiftApiController::class, 'index']);
+    Route::post('/shifts', [ShiftApiController::class, 'store']);
+    Route::patch('/shifts/{shift}', [ShiftApiController::class, 'update']);
+    Route::get('/shifts/{shift}', [ShiftApiController::class, 'show']);
+
+    // Shift Tracks API
+    Route::get('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'index']);
+    Route::post('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'store']);
+    Route::post('/shifts/{shift}/tracks/bulk', [ShiftTrackApiController::class, 'bulkStore']);
 });
