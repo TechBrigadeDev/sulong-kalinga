@@ -251,13 +251,13 @@
             
             <!-- User type specific notes -->
             <div id="staff-note" class="user-type-note">
-                For COSE staff: Your account must be active to access the system.
+                <br>
             </div>
             <div id="beneficiary-note" class="user-type-note">
-                For beneficiaries: Enter your username, not email address.
+                <br>
             </div>
             <div id="family-note" class="user-type-note">
-                For family members: Your access depends on the active status of your related beneficiary.
+                <br>
             </div>
             
             <form action="{{ route('login') }}" method="POST">
