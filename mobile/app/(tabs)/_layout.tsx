@@ -1,9 +1,9 @@
+import TabButton from 'components/screens/Home/_components/button';
 import { useRouter } from 'expo-router';
 import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
 import { StyleSheet } from 'react-native';
 import { View } from 'tamagui';
 
-import TabButton from '~/components/screens/Home/_components/button';
 import { useUser } from '~/features/user/user.hook';
 
 

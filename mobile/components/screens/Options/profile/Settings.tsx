@@ -5,25 +5,9 @@ import { StyleSheet } from 'react-native';
 import { Avatar,Text, YStack } from 'tamagui';
 
 import Badge from '~/components/Bagde';
-import { updateEmailStore } from '~/features/user/components/UpdateEmail/store';
-import { updatePasswordStore } from '~/features/user/components/UpdatePassword/store';
 import { useUser } from '~/features/user/user.hook';
 
 const ProfileSettings = () => {
-  const {
-    setIsOpen: setUpdateEmailOpen,
-  } = updateEmailStore();
-  const {
-    setIsOpen: setUpdatePasswordOpen,
-  } = updatePasswordStore();
-
-  const handleUpdateEmail = () => {
-    setUpdateEmailOpen(true);
-  };
-  const handleUpdatePassword = () => {
-    setUpdatePasswordOpen(true);
-  };
-
   const { data: userData } = useUser();
 
   return (
