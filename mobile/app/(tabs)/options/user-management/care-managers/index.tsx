@@ -1,5 +1,5 @@
-import { Stack, useRouter } from "expo-router";
-import { Button, Card, Text, View } from "tamagui"
+import { Stack } from "expo-router";
+import { Card, View } from "tamagui"
 import { StyleSheet } from "react-native";
 import CareManagerSearch from "~/features/user/management/components/care-managers/list/search";
 import CareManagerList from "~/features/user/management/components/care-managers/list";

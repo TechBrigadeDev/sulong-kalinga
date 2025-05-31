@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, View, Text, StyleSheet, PlatformColor } from "react-native";
+import { Pressable, View, Text, StyleSheet } from "react-native";
 import { TabTriggerSlotProps } from "expo-router/ui";
 import { icons } from "lucide-react-native";
 

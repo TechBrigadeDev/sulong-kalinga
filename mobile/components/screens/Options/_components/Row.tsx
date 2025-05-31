@@ -1,5 +1,5 @@
 import { LinkProps, Link as ExpoLink } from "expo-router";
-import { icons, X } from "lucide-react-native";
+import { icons } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { Text, XStack } from "tamagui";
 

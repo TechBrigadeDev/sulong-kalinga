@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { View } from 'tamagui';
 import Home from '~/components/screens/Home/_components/home';
 
