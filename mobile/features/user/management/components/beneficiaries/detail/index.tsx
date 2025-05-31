@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native";
 import { ScrollView, YStack } from "tamagui";
-import { IBeneficiary } from "~/user.schema";
+import { IBeneficiary } from "~/features/user/management/management.type";
 import { Stack } from "expo-router";
 import BeneficiaryHeader from "./BeneficiaryHeader";
 import PersonalInformation from "./PersonalInformation";

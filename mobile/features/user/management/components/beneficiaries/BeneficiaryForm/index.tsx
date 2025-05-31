@@ -1,5 +1,4 @@
 import { Form, YStack, Button, ScrollView } from 'tamagui';
-import { IBeneficiary } from "~/features/user/user.schema";
 import { useState } from "react";
 import { SafeAreaView } from "react-native";
 import { Stack } from "expo-router";
@@ -12,6 +11,7 @@ import { MedicationSection } from './components/MedicationSection';
 import { CognitiveFunctionSection } from './components/CognitiveFunctionSection';
 import { DocumentsSection } from './components/DocumentsSection';
 import { EmergencyContactSection } from './components/EmergencyContactSection';
+import { IBeneficiary } from '~/features/user/management/management.type';
 
 interface Props {
     beneficiary?: IBeneficiary;

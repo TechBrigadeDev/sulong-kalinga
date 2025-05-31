@@ -1,5 +1,5 @@
 import { Card, H3, YStack, Input, Button, XStack, Text } from "tamagui";
-import { IBeneficiary } from "../../../user.schema";
+import { IBeneficiary } from "~/features/user/management/management.type";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 

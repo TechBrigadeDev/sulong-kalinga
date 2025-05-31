@@ -121,3 +121,24 @@ export const useGetCareWorker = (id?: string) => {
         enabled: !!token,
     })
 }
+
+export const useGetCareManagers = (props?: {
+    search?: string;
+}) => {
+    const { token } = authStore();
+    if (!token) {
+        throw new Error("No token found");
+    }
+
+    const api = new UserManagementController(token);
+    return useQuery({
+        queryKey: [QK.user.management.getCareManagers, token, props?.search],
+        queryFn: async () => {
+            const response = await api.getCareManagers({
+                search: props?.search,
+            });
+            return response;
+        },
+        enabled: !!token,
+    })
+}

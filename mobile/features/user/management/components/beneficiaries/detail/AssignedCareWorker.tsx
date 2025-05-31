@@ -1,5 +1,5 @@
 import { Card, H3, Text, YStack } from "tamagui";
-import { IBeneficiary } from "~/user.schema";
+import { IBeneficiary } from "~/features/user/management/management.type";
 
 interface Props {
     beneficiary: IBeneficiary;
