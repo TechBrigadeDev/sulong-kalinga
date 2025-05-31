@@ -1,12 +1,12 @@
-import { useGetCareWorkers } from "~/features/user/management/management.hook";
-import { careManagerListStore } from "../../care-managers/list/store";
+import { useGetCareManagers, useGetCareWorkers } from "~/features/user/management/management.hook";
 import { FlatList, ListRenderItem, RefreshControl, SafeAreaView } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
-import { ICareWorker } from "../../../../user.schema";
 import { useRouter } from "expo-router";
+import { careManagerListStore } from "./store";
+import { ICareManager } from "~/features/user/management/management.type";
 
 
-const CareWorkerList = () => {
+const CareManagerList = () => {
     const {
         search
     } = careManagerListStore();
@@ -15,19 +15,19 @@ const CareWorkerList = () => {
         data = [],
         isLoading,
         refetch
-    } = useGetCareWorkers({
+    } = useGetCareManagers({
         search
     });
 
 
     if (data.length === 0 && !isLoading) {
-      return <Text>No family members found</Text>;
+      return <Text>No Care Manager found</Text>;
     }
 
     return (
       <FlatList
         data={data}
-        renderItem={CareWorkerCard}
+        renderItem={CareManagerCard}
         contentContainerStyle={{ padding: 8 }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} />
@@ -37,20 +37,14 @@ const CareWorkerList = () => {
 }
 
 
-const CareWorkerCard: ListRenderItem<ICareWorker> = ({ item }) => {
+const CareManagerCard: ListRenderItem<ICareManager> = ({ item }) => {
   const router = useRouter();
 
   const { id, first_name, last_name } =
     item;
 
   const onView = () => {
-    router.push(`/(tabs)/options/user-management/family/${id}`);
-  };
-
-  const onEdit = () => {
-    router.push(
-      `/(tabs)/options/user-management/family/${id}/edit`
-    );
+    router.push(`/(tabs)/options/user-management/care-managers/${id}`);
   };
 
   return (
@@ -77,18 +71,9 @@ const CareWorkerCard: ListRenderItem<ICareWorker> = ({ item }) => {
         >
           View
         </Button>
-        <Button
-          size="$3"
-          theme="light"
-          borderColor="gray"
-          onPress={onEdit}
-          variant="outlined"
-        >
-          Edit
-        </Button>
       </View>
     </Card>
   );
 };
 
-export default CareWorkerList;
+export default CareManagerList;
