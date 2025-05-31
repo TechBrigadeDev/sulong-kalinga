@@ -16,5 +16,8 @@ export const userManagementSchema = {
     }),
     getCareWorkers: z.object({
         careworkers: z.array(careWorkerSchema)
-    })   
+    }),
+    getCareWorker: z.object({
+        careworker: careWorkerSchema
+    }),
 }
