@@ -74,6 +74,8 @@
                                     <option value="Divorced" {{ old('civil_status') == 'Divorced' ? 'selected' : '' }}>Divorced</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="row mb-3">
                             <div class="col-md-3 relative">
                                 <label for="gender" class="form-label">Gender<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="gender" name="gender" required>
@@ -83,15 +85,9 @@
                                     <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="row mb-3">
-                        <div class="col-md-3">
+                            <div class="col-md-3">
                                 <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ old('birth_date') }}" required onkeydown="return true">
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
-                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name">  
                             </div>
                             <div class="col-md-3">
                                 <label for="mobileNumber" class="form-label">Mobile Number</label>
@@ -103,6 +99,12 @@
                             <div class="col-md-3">
                                 <label for="landlineNumber" class="form-label">Landline Number</label>
                                 <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="Enter Landline number" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 position-relative">
+                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
+                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name">                
                             </div>
                         </div>
 
@@ -645,39 +647,42 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Family Portal Account Registration</h5> 
+                                <h5 class="text-start">Login Access</h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
                             <!-- Email -->
                             <div class="col-md-4">
-                                <label for="accountEmail" class="form-label">Email<label style="color:red;"> * </label></label>
-                                <input type="email" class="form-control" id="accountEmail" name="account[email]" 
-                                    placeholder="Enter email"
-                                    value="{{ old('account.email') }}" 
-                                    required 
-                                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" 
-                                    title="Enter a valid email address (e.g., example@domain.com)" 
-                                    oninput="validateEmail(this)">
+                                <label for="generatedUsername" class="form-label">Username (Auto-generated)</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="generatedUsername" readonly 
+                                        value="Username will be generated from name fields" disabled>
+                                    <span class="input-group-text"><i class="bi bi-info-circle" title="Username is automatically generated from your name: first initial + middle initial + last name"></i></span>
+                                </div>
+                                <small class="text-muted">The system will create a username based on the beneficiary's name.</small>
                             </div>
 
                             <!-- Password -->
                             <div class="col-md-4">
                                 <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
-                                <input type="password" class="form-control" id="password" name="account[password]" 
-                                    placeholder="Enter password" 
-                                    required 
-                                    minlength="8" 
-                                    title="Password must be at least 8 characters long.">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter password" required minlength="8" 
+                                        title="Password must be at least 8 characters long.">
+                                    <span class="input-group-text password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Confirm Password -->
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
-                                <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" 
-                                    placeholder="Confirm password" 
-                                    required 
-                                    title="Passwords must match.">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm password" required title="Passwords must match.">
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -1183,6 +1188,81 @@
             return isValid;
         });
     });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const firstNameInput = document.getElementById('firstName');
+            const middleNameInput = document.getElementById('middleName');
+            const lastNameInput = document.getElementById('lastName');
+            const usernamePreview = document.getElementById('generatedUsername');
+            
+            // Password toggle functionality
+            document.querySelectorAll('.password-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                });
+            });
+            
+            // Function to update username preview
+            function updateUsernamePreview() {
+                const firstName = firstNameInput.value.trim();
+                const middleName = middleNameInput.value.trim();
+                const lastName = lastNameInput.value.trim();
+                
+                if (!firstName || !lastName) {
+                    usernamePreview.value = "Username will be generated from name fields";
+                    return;
+                }
+                
+                // Create preview username
+                const firstInitial = firstName.charAt(0).toLowerCase();
+                const middleInitial = middleName ? middleName.charAt(0).toLowerCase() : '';
+                const cleanLastName = lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                // Show the preview
+                usernamePreview.value = firstInitial + middleInitial + cleanLastName;
+            }
+            
+            // Add event listeners
+            firstNameInput.addEventListener('input', updateUsernamePreview);
+            middleNameInput.addEventListener('input', updateUsernamePreview);
+            lastNameInput.addEventListener('input', updateUsernamePreview);
+            
+            // Password confirmation validation
+            const password = document.getElementById("password");
+            const confirmPassword = document.getElementById("confirmPassword");
+            
+            confirmPassword.addEventListener("input", function() {
+                if (confirmPassword.value !== password.value) {
+                    confirmPassword.setCustomValidity("Passwords do not match.");
+                } else {
+                    confirmPassword.setCustomValidity("");
+                }
+            });
+            
+            // Also update when password changes
+            password.addEventListener("input", function() {
+                if (confirmPassword.value && confirmPassword.value !== password.value) {
+                    confirmPassword.setCustomValidity("Passwords do not match.");
+                } else {
+                    confirmPassword.setCustomValidity("");
+                }
+            });
+        });
     </script>
 
 </body>

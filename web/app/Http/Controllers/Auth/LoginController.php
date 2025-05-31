@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User; 
-use App\Models\PortalAccount; 
+use App\Models\Beneficiary;
+use App\Models\FamilyMember;
 use Illuminate\Support\Facades\Validator;
 use App\Services\LogService;
 use App\Enums\LogType;
@@ -31,6 +32,7 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $ip = $request->ip();
+        $userType = $request->input('user_type', 'staff');
 
         // Configurable values
         $maxAttempts = (int) (env('LOGIN_ATTEMPT_LIMIT', 5));
@@ -38,20 +40,19 @@ class LoginController extends Controller
         $lockoutMinutes = (int) (env('LOGIN_LOCKOUT_DURATION', 10));
 
         $email = strtolower($request->input('email'));
+        
+        // Generate type-specific cache keys
+        $cacheKeyPrefix = "login_attempts:{$userType}:{$email}:{$ip}";
+        $cacheKeyAttempts = "{$cacheKeyPrefix}:attempts";
+        $cacheKeyLockout = "{$cacheKeyPrefix}:lockout";
 
-        // Per-device/IP cache keys
-        $cacheKeyAttempts = 'login_attempts:' . $email . ':' . $ip;
-        $cacheKeyLockout = 'login_lockout:' . $email . ':' . $ip;
-        $portalCacheKeyAttempts = 'login_attempts:portal:' . $email . ':' . $ip;
-        $portalCacheKeyLockout = 'login_lockout:portal:' . $email . ':' . $ip;
-
-        // Check for lockout (COSE)
+        // Check for lockout
         if (Cache::has($cacheKeyLockout)) {
             $lockoutExpires = Cache::get($cacheKeyLockout);
             $remaining = max(1, ceil(now()->diffInMinutes(Carbon::parse($lockoutExpires), false)));
             $message = "Too many failed attempts. Please try again in {$remaining} minute(s).";
             $this->logService->createLog(
-                'user',
+                $userType === 'staff' ? 'user' : $userType,
                 null,
                 LogType::VIEW,
                 "Lockout: {$email} attempted login during lockout.",
@@ -61,81 +62,210 @@ class LoginController extends Controller
         }
 
         // Validate the input data
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+        $validationRules = [
             'password' => 'required|string|min:8',
-        ]);
+        ];
+        
+        if ($userType === 'beneficiary') {
+            $validationRules['email'] = 'required|string'; // Username for beneficiaries
+        } else {
+            $validationRules['email'] = 'required|email';  // Email for staff and family
+        }
+        
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Check in the cose_users table
-        $user = \DB::table('cose_users')
-            ->where('email', $email)
-            ->first();
+        $authSuccess = false;
 
-        if ($user && Hash::check($request->input('password'), $user->password)) {
-            // Successful login: clear attempts and lockout
-            Cache::forget($cacheKeyAttempts);
-            Cache::forget($cacheKeyLockout);
+        // Try authentication based on user type
+        switch ($userType) {
+            case 'staff':
+                // Existing COSE users logic
+                $user = \DB::table('cose_users')
+                    ->where('email', $email)
+                    ->first();
 
-            $userModel = User::find($user->id);
+                if ($user && Hash::check($request->input('password'), $user->password)) {
+                    // Check if the user status is active
+                    if ($user->status !== 'Active') {
+                        // Log the attempt
+                        $this->logService->createLog(
+                            'user',
+                            $user->id,
+                            LogType::VIEW,
+                            "Login denied: User account '{$email}' is not active."
+                        );
+                        
+                        return redirect()->back()->withErrors(['email' => 'Your account is not active. Please contact the administrator.'])->withInput();
+                    }
+                    
+                    // Successful login: clear attempts and lockout
+                    Cache::forget($cacheKeyAttempts);
+                    Cache::forget($cacheKeyLockout);
 
-            if (!$userModel) {
-                return redirect()->back()->withErrors(['email' => 'User account issue. Please contact support.']);
-            }
+                    $userModel = User::find($user->id);
 
-            Auth::login($userModel);
-            session(['user_type' => 'cose']);
+                    if (!$userModel) {
+                        return redirect()->back()->withErrors(['email' => 'User account issue. Please contact support.']);
+                    }
 
-            $entityType = 'user';
-            if ($userModel && isset($userModel->role_id)) {
-                if ($userModel->role_id == 1) {
-                    $entityType = 'administrator';
-                } elseif ($userModel->role_id == 2) {
-                    $entityType = 'care_manager';
-                } elseif ($userModel->role_id == 3) {
-                    $entityType = 'care_worker';
+                    Auth::login($userModel);
+                    session(['user_type' => 'staff']);
+
+                    $entityType = 'user';
+                    if ($userModel && isset($userModel->role_id)) {
+                        if ($userModel->role_id == 1) {
+                            $entityType = 'administrator';
+                        } elseif ($userModel->role_id == 2) {
+                            $entityType = 'care_manager';
+                        } elseif ($userModel->role_id == 3) {
+                            $entityType = 'care_worker';
+                        }
+                    }
+
+                    $fullName = $userModel->first_name . ' ' . $userModel->last_name;
+                    $this->logService->createLog(
+                        $entityType,
+                        $userModel->id,
+                        LogType::VIEW,
+                        $fullName . ' logged in.',
+                        $userModel->id
+                    );
+
+                    if ($user->role_id == 1) {
+                        session()->put('show_welcome', true);
+                        \Log::debug('Admin login, about to redirect to dashboard', [
+                            'user_id' => $user->id,
+                            'role_id' => $user->role_id,
+                            'org_role_id' => $user->organization_role_id,
+                            'current_url' => $request->fullUrl()
+                        ]);
+                        return redirect('/admin/dashboard')->with('success', 'Welcome, Admin!');
+                    }
+                    if ($user->role_id == 2) {
+                        session()->put('show_welcome', true);
+                        return redirect()->route('care-manager.dashboard');
+                    }
+                    if ($user->role_id == 3) {
+                        session()->put('show_welcome', true);
+                        return redirect()->route('workerdashboard');
+                    }
+                    
+                    $authSuccess = true;
                 }
-            }
+                break;
+                
+            case 'beneficiary':
+                // First check if the beneficiary exists and is active
+                $beneficiary = Beneficiary::where('username', $request->input('email'))->first();
+                
+                if ($beneficiary) {
+                    if ($beneficiary->beneficiary_status_id !== 1) {
+                        // Log the attempt
+                        $this->logService->createLog(
+                            'beneficiary',
+                            $beneficiary->beneficiary_id,
+                            LogType::VIEW,
+                            "Login denied: Beneficiary account '{$request->input('email')}' is not active."
+                        );
+                        
+                        return redirect()->back()->withErrors(['email' => 'Your beneficiary account is currently inactive. Please contact your care provider.'])->withInput();
+                    }
+                }
+                
+                // Try authenticate beneficiary
+                $credentials = [
+                    'username' => $request->input('email'),
+                    'password' => $request->input('password')
+                ];
+                
+                if (Auth::guard('beneficiary')->attempt($credentials)) {
+                    // Successful login: clear attempts and lockout
+                    Cache::forget($cacheKeyAttempts);
+                    Cache::forget($cacheKeyLockout);
+                    
+                    $beneficiary = Auth::guard('beneficiary')->user();
+                    $fullName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+                    
+                    $this->logService->createLog(
+                        'beneficiary',
+                        $beneficiary->beneficiary_id,
+                        LogType::VIEW,
+                        $fullName . ' (beneficiary) logged in.',
+                        $beneficiary->beneficiary_id
+                    );
+                    
+                    session(['user_type' => 'beneficiary']);
+                    session()->put('show_welcome', true);
+                    
+                    return redirect()->route('beneficiary.dashboard');
+                    $authSuccess = true;
+                }
+                break;
+                
+            case 'family':
+                // Try to find the family member
+                $familyMember = FamilyMember::where('email', $email)->first();
+                
+                if ($familyMember) {
+                    // Get the related beneficiary to check status
+                    $relatedBeneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
+                    
+                    if (!$relatedBeneficiary || $relatedBeneficiary->beneficiary_status_id !== 1) {
+                        // Log the attempt
+                        $this->logService->createLog(
+                            'family_member',
+                            $familyMember->family_member_id,
+                            LogType::VIEW,
+                            "Login denied: Related beneficiary account for family member '{$email}' is not active."
+                        );
+                        
+                        return redirect()->back()->withErrors(['email' => 'Access denied. The beneficiary account associated with your profile is currently inactive.'])->withInput();
+                    }
+                }
+                
+                // Try authenticate family member
+                $credentials = [
+                    'email' => $email,
+                    'password' => $request->input('password')
+                ];
+                
+                if (Auth::guard('family')->attempt($credentials)) {
+                    // Successful login: clear attempts and lockout
+                    Cache::forget($cacheKeyAttempts);
+                    Cache::forget($cacheKeyLockout);
+                    
+                    $familyMember = Auth::guard('family')->user();
+                    $fullName = $familyMember->first_name . ' ' . $familyMember->last_name;
+                    
+                    $this->logService->createLog(
+                        'family_member',
+                        $familyMember->family_member_id,
+                        LogType::VIEW,
+                        $fullName . ' (family) logged in.',
+                        $familyMember->family_member_id
+                    );
+                    
+                    session(['user_type' => 'family']);
+                    session()->put('show_welcome', true);
+                    
+                    return redirect()->route('family.dashboard');
+                    $authSuccess = true;
+                }
+                break;
+        }
 
-            $fullName = $userModel->first_name . ' ' . $userModel->last_name;
-            $this->logService->createLog(
-                $entityType,
-                $userModel->id,
-                LogType::VIEW,
-                $fullName . ' logged in.',
-                $userModel->id
-            );
-
-            session(['user_type' => 'cose']);
-
-            if ($user->role_id == 1) {
-                session()->put('show_welcome', true);
-                \Log::debug('Admin login, about to redirect to dashboard', [
-                    'user_id' => $user->id,
-                    'role_id' => $user->role_id,
-                    'org_role_id' => $user->organization_role_id,
-                    'current_url' => $request->fullUrl()
-                ]);
-                return redirect('/admin/dashboard')->with('success', 'Welcome, Admin!');
-            }
-            if ($user->role_id == 2) {
-                session()->put('show_welcome', true);
-                return redirect()->route('care-manager.dashboard');
-            }
-            if ($user->role_id == 3) {
-                session()->put('show_welcome', true);
-                return redirect()->route('workerdashboard');
-            }
-        } else {
+        // If we get here, authentication failed
+        if (!$authSuccess) {
             // Failed login: increment attempts
             $attempts = Cache::get($cacheKeyAttempts, 0) + 1;
             Cache::put($cacheKeyAttempts, $attempts, now()->addMinutes($decayMinutes));
 
             $this->logService->createLog(
-                'user',
+                $userType === 'staff' ? 'user' : $userType,
                 null,
                 LogType::VIEW,
                 "Failed login attempt for {$email} ({$attempts}/{$maxAttempts})",
@@ -145,13 +275,15 @@ class LoginController extends Controller
             if ($attempts >= $maxAttempts) {
                 $lockoutUntil = now()->addMinutes($lockoutMinutes);
                 Cache::put($cacheKeyLockout, $lockoutUntil, $lockoutUntil);
+                
                 $this->logService->createLog(
-                    'user',
+                    $userType === 'staff' ? 'user' : $userType,
                     null,
                     LogType::VIEW,
                     "Lockout: {$email} locked out for {$lockoutMinutes} minutes.",
                     null
                 );
+                
                 $message = "Too many failed attempts. Please try again in {$lockoutMinutes} minute(s).";
                 return redirect()->back()->withErrors(['email' => $message])->withInput();
             }
@@ -159,114 +291,60 @@ class LoginController extends Controller
             return redirect()->back()->withErrors(['email' => 'Invalid credentials'])->withInput();
         }
 
-        // Check for lockout (portal_accounts)
-        if (Cache::has($portalCacheKeyLockout)) {
-            $lockoutExpires = Cache::get($portalCacheKeyLockout);
-            $remaining = max(1, ceil(now()->diffInMinutes(Carbon::parse($lockoutExpires), false)));
-            $message = "Too many failed attempts. Please try again in {$remaining} minute(s).";
-            $this->logService->createLog(
-                'family_member',
-                null,
-                LogType::VIEW,
-                "Lockout: {$email} attempted portal login during lockout.",
-                null
-            );
-            return redirect()->back()->withErrors(['email' => $message])->withInput();
-        }
-
-        // If not found in cose_users, check in the portal_accounts table
-        $user = \DB::table('portal_accounts')
-            ->where('portal_email', $request->input('email'))
-            ->first();
-
-        if ($user && Hash::check($request->input('password'), $user->portal_password)) {
-            // Successful login: clear attempts and lockout
-            Cache::forget($portalCacheKeyAttempts);
-            Cache::forget($portalCacheKeyLockout);
-
-            Auth::loginUsingId($user->id);
-            session([
-                'user_type' => 'family',
-                'portal_user_id' => $user->id,
-                'portal_user_name' => $user->portal_name,
-                'portal_user_email' => $user->portal_email
-            ]);
-
-            $entityType = 'family_member';
-            $this->logService->createLog(
-                $entityType,
-                $user->id,
-                LogType::VIEW,
-                $user->portal_email . ' logged in.',
-                $user->id
-            );
-
-            return redirect()->route('landing');
-        } else {
-            // Failed login: increment attempts
-            $attempts = Cache::get($portalCacheKeyAttempts, 0) + 1;
-            Cache::put($portalCacheKeyAttempts, $attempts, now()->addMinutes($decayMinutes));
-
-            $this->logService->createLog(
-                'family_member',
-                null,
-                LogType::VIEW,
-                "Failed portal login attempt for {$email} ({$attempts}/{$maxAttempts})",
-                null
-            );
-
-            if ($attempts >= $maxAttempts) {
-                $lockoutUntil = now()->addMinutes($lockoutMinutes);
-                Cache::put($portalCacheKeyLockout, $lockoutUntil, $lockoutUntil);
-                $this->logService->createLog(
-                    'family_member',
-                    null,
-                    LogType::VIEW,
-                    "Lockout: {$email} locked out of portal for {$lockoutMinutes} minutes.",
-                    null
-                );
-                $message = "Too many failed attempts. Please try again in {$lockoutMinutes} minute(s).";
-                return redirect()->back()->withErrors(['email' => $message])->withInput();
-            }
-
-            return redirect()->back()->withErrors(['email' => 'Invalid credentials'])->withInput();
-        }
-
-        return redirect()->back()->withErrors(['email' => 'Invalid credentials'])->withInput();
+        return redirect()->route('login');
     }
 
-    // Handle logout
+    // Handle logout (rest of the file unchanged)
     public function logout()
     {
-        $user = Auth::user();
+        // Get the correct guard based on user type
+        $userType = session('user_type', 'staff');
+        $userId = null;
+        $entityType = 'user';
+        $logName = 'Unknown User';
 
-        // If user is null, try to get info from session (for portal_accounts)
-        if (!$user && session('user_type') === 'family') {
-            $userId = session('portal_user_id');
-            $userEmail = session('portal_user_email', 'Unknown Family User');
-            $entityType = 'family_member';
-            $logName = $userEmail;
-        } elseif ($user) {
-            $userId = $user->id;
-            $entityType = 'user';
-            if (isset($user->role_id)) {
-                if ($user->role_id == 1) {
-                    $entityType = 'administrator';
-                } elseif ($user->role_id == 2) {
-                    $entityType = 'care_manager';
-                } elseif ($user->role_id == 3) {
-                    $entityType = 'care_worker';
+        switch ($userType) {
+            case 'staff':
+                $user = Auth::user();
+                if ($user) {
+                    $userId = $user->id;
+                    $entityType = 'user';
+                    if (isset($user->role_id)) {
+                        if ($user->role_id == 1) {
+                            $entityType = 'administrator';
+                        } elseif ($user->role_id == 2) {
+                            $entityType = 'care_manager';
+                        } elseif ($user->role_id == 3) {
+                            $entityType = 'care_worker';
+                        }
+                    }
+                    $logName = $user->first_name . ' ' . $user->last_name;
                 }
-            }
-            $logName = $user->first_name . ' ' . $user->last_name;
-        } else {
-            $userId = null;
-            $entityType = 'user';
-            $logName = 'Unknown User';
+                Auth::logout();
+                break;
+                
+            case 'beneficiary':
+                $beneficiary = Auth::guard('beneficiary')->user();
+                if ($beneficiary) {
+                    $userId = $beneficiary->beneficiary_id;
+                    $entityType = 'beneficiary';
+                    $logName = $beneficiary->first_name . ' ' . $beneficiary->last_name . ' (beneficiary)';
+                }
+                Auth::guard('beneficiary')->logout();
+                break;
+                
+            case 'family':
+                $familyMember = Auth::guard('family')->user();
+                if ($familyMember) {
+                    $userId = $familyMember->family_member_id;
+                    $entityType = 'family_member';
+                    $logName = $familyMember->first_name . ' ' . $familyMember->last_name . ' (family)';
+                }
+                Auth::guard('family')->logout();
+                break;
         }
 
-        Auth::logout();
-
+        // Log the logout if we have a user ID
         if ($userId) {
             $this->logService->createLog(
                 $entityType,
@@ -277,8 +355,8 @@ class LoginController extends Controller
             );
         }
 
-        // Clear session values
-        session()->forget(['portal_user_id', 'portal_user_name', 'portal_user_email', 'user_type']);
+        // Clear all session values
+        session()->flush();
 
         return redirect()->route('login');
     }

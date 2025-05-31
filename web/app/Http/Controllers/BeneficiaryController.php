@@ -13,7 +13,6 @@ use App\Models\BeneficiaryStatus;
 use App\Models\Municipality;
 use App\Models\Barangay;
 use App\Models\CareWorkerResponsibility;
-use App\Models\PortalAccount;
 use App\Models\User;
 use App\Models\EmotionalWellbeing;
 use App\Models\CognitiveFunction;
@@ -340,6 +339,12 @@ class BeneficiaryController extends Controller
                 'max:100',
                 'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
+            'middle_name' => [
+                'nullable', 
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+            ],
             'last_name' => [
                 'required',
                 'string',
@@ -397,25 +402,29 @@ class BeneficiaryController extends Controller
             'medical_conditions' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/', // Allows letters, numbers, spaces, commas, periods, hyphens, and parentheses
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+, // Allows letters, numbers, spaces, commas, periods, hyphens, and parentheses
                 'max:500', // Optional: Limit the length to 500 characters
             ],
             'medications' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
                 'max:500',
             ],
             'allergies' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
                 'max:500',
             ],
             'immunizations' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
                 'max:500',
             ],
             'category' => 'required|exists:beneficiary_categories,category_id', 
@@ -425,13 +434,15 @@ class BeneficiaryController extends Controller
                 'nullable', // Optional field
                 'string',
                 'max:255', // Maximum length of 255 characters
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/', // Allows letters, numbers, spaces, commas, periods, hyphens, and parentheses
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+, // Allows letters, numbers, spaces, commas, periods, hyphens, and parentheses
             ],
             'assistance.mobility' => [
                 'nullable', // Optional field
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
 
             // Care Needs: Cognitive / Communication
@@ -439,13 +450,15 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
             'assistance.cognitive' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
 
             // Care Needs: Self-sustainability
@@ -453,13 +466,15 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
             'assistance.self_sustainability' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
 
             // Care Needs: Disease / Therapy Handling
@@ -467,13 +482,15 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
             'assistance.disease' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
 
             // Care Needs: Daily Life / Social Contact
@@ -481,13 +498,15 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
             'assistance.daily_life' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
 
             // Care Needs: Outdoor Activities
@@ -495,13 +514,14 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
+,
             ],
             'assistance.outdoor' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
 
             // Care Needs: Household Keeping
@@ -509,13 +529,13 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.household' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
 
             // Medications Management
@@ -524,28 +544,28 @@ class BeneficiaryController extends Controller
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'dosage' => 'nullable|array',
             'dosage.*' => [
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency' => 'nullable|array',
             'frequency.*' => [
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'administration_instructions' => 'nullable|array',
             'administration_instructions.*' => [
                 'nullable',
                 'string',
                 'max:500',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
 
             // Mobility
@@ -591,7 +611,7 @@ class BeneficiaryController extends Controller
                 'required',
                 'string',
                 'max:1000', // Optional: Limit the length to 1000 characters
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/', // Allows letters, numbers, spaces, and specific special characters
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/', // Allows letters, numbers, spaces, and specific special characters
             ],
 
             // Care Worker
@@ -601,7 +621,7 @@ class BeneficiaryController extends Controller
                 'required',
                 'string',
                 'max:255', // Limit to 255 characters
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/', // Allow letters, numbers, spaces, and specific special characters
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/', // Allow letters, numbers, spaces, and specific special characters
             ],
 
             // Beneficiary Picture
@@ -624,14 +644,9 @@ class BeneficiaryController extends Controller
                 'care_worker_signature_upload' => 'nullable|file|mimes:jpeg,png|max:2048', // Max size: 2MB
                 'care_worker_signature_canvas' => 'nullable|string', // Base64 string for the canvas signature
             
-            // Email
-            'account.email' => 'required|email|unique:portal_accounts,portal_email|max:255', // Unique in the portal_accounts table
-
-            // Password
+            // Password validation
             'account.password' => 'required|string|min:8|confirmed', // 'confirmed' ensures it matches the confirmation field
 
-
-            
         ]);
 
         if ($validator->fails()) {
@@ -662,6 +677,16 @@ class BeneficiaryController extends Controller
         // try
         try {
             DB::beginTransaction();
+
+            // Generate unique username based on name
+            $username = $this->generateUniqueUsername(
+                $request->input('first_name'),
+                $request->input('middle_name'),
+                $request->input('last_name')
+            );
+
+            // Use the provided password
+            $password = bcrypt($request->input('account.password'));
 
             // Generate unique identifier for file naming
             $uniqueIdentifier = Str::random(10);
@@ -779,15 +804,15 @@ class BeneficiaryController extends Controller
                 file_put_contents($directory . '/' . basename($careWorkerSignaturePath), $decodedImage);
             }   
 
-            // Insert into portal_accounts table
-            $portalAccount = DB::table('portal_accounts')->insertGetId([
-                'portal_email' => $request->input('account.email'),
-                'portal_password' => Hash::make($request->input('account.password')),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // // Insert into portal_accounts table
+            // $portalAccount = DB::table('portal_accounts')->insertGetId([
+            //     'portal_email' => $request->input('account.email'),
+            //     'portal_password' => Hash::make($request->input('account.password')),
+            //     'created_at' => now(),
+            //     'updated_at' => now(),
+            // ]);
         
-            \Log::info('Portal Account ID: ' . $portalAccount);
+            // \Log::info('Portal Account ID: ' . $portalAccount);
         
             // Insert into gcp (General Care Plan) table
             $generalCarePlan = GeneralCarePlan::create([
@@ -817,9 +842,13 @@ class BeneficiaryController extends Controller
                 $emergencyContactMobile = '+63' . $emergencyContactMobile;
             }
 
+            // Store credentials directly in the beneficiary model
+            $password = bcrypt($request->input('account.password'));
+
             // Insert into beneficiaries table
             $beneficiary = Beneficiary::create([
                 'first_name' => $request->input('first_name'),
+                'middle_name' => $request->input('middle_name'),
                 'last_name' => $request->input('last_name'),
                 'birthday' => $request->input('birth_date'),
                 'gender' => $request->input('gender'),
@@ -842,12 +871,14 @@ class BeneficiaryController extends Controller
                 'beneficiary_signature' => $beneficiarySignaturePath,
                 'care_worker_signature' => $careWorkerSignaturePath,
                 'general_care_plan_id' => $generalCarePlanId,
-                'portal_account_id' => $portalAccount,
+                //'portal_account_id' => $portalAccount,
                 'beneficiary_status_id' => 1,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
                 'created_at' => now(),
                 'updated_at' => now(),
+                'username' => $username,
+                'password' => $password,
                 'remember_token' => $remember_token,
             ]);
 
@@ -1141,6 +1172,12 @@ class BeneficiaryController extends Controller
                 'max:100',
                 'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
+            'middle_name' => [
+                'nullable', 
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+            ],
             'last_name' => [
                 'required',
                 'string',
@@ -1184,6 +1221,13 @@ class BeneficiaryController extends Controller
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s,.-]+$/',
             ],
+            'email' => [
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('beneficiaries', 'email')->ignore($id, 'beneficiary_id'),
+            ],
             'municipality' => [
                 'required',
                 'exists:municipalities,municipality_id',
@@ -1192,58 +1236,121 @@ class BeneficiaryController extends Controller
                 'required',
                 'exists:barangays,barangay_id',
             ],
-            
-            // Modified validators for update scenario
-            'account.email' => [
-                'required',
-                'email',
-                'max:255',
-                function ($attribute, $value, $fail) use ($id) {
-                    // Get the current beneficiary
-                    $beneficiary = Beneficiary::find($id);
-                    if (!$beneficiary) return;
-                    
-                    // Check if email exists for any portal account except the current one
-                    $exists = PortalAccount::where('portal_email', $value)
-                        ->where('id', '!=', $beneficiary->portal_account_id)
-                        ->exists();
-                        
-                    if ($exists) {
-                        $fail('The email has already been taken.');
-                    }
-                },
-            ],
             'account.password' => 'nullable|string|min:8|confirmed',
             
             // Medical History - Same as storeBeneficiary
             'medical_conditions' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'medications' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'allergies' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'immunizations' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'category' => 'required|exists:beneficiary_categories,category_id',
-            
+            'email' => 'nullable|string|email|max:255|unique:beneficiaries,email',
+
             // Care Needs - Same as storeBeneficiary
-            // ... [Similar validation rules for care needs, same as in storeBeneficiary]
+            'frequency.mobility' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.mobility' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency.cognitive' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.cognitive' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency.self_sustainability' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.self_sustainability' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency.disease' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.disease' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency.daily_life' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.daily_life' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency.outdoor' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.outdoor' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency.household' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'assistance.household' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
             
             // Files - Modified for update scenario
             'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:7168', // 7MB 
@@ -1257,7 +1364,86 @@ class BeneficiaryController extends Controller
             'care_worker_signature_canvas' => 'nullable|string',
             
             // Other fields - Same as storeBeneficiary
-            // ... [Similar validation rules for other fields, same as in storeBeneficiary]
+            'medication_name' => 'nullable|array',
+            'medication_name.*' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'dosage' => 'nullable|array',
+            'dosage.*' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'frequency' => 'nullable|array',
+            'frequency.*' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+            'administration_instructions' => 'nullable|array',
+            'administration_instructions.*' => [
+                'nullable',
+                'string',
+                'max:500',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+
+            // Mobility
+            'mobility.walking_ability' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'mobility.assistive_devices' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'mobility.transportation_needs' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+
+            // Cognitive Function
+            'cognitive.memory' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.thinking_skills' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.orientation' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.behavior' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+
+            // Emotional Well-being
+            'emotional.mood' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'emotional.social_interactions' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'emotional.emotional_support' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            
+            // Emergency Contact
+            'emergency_contact.name' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+            ],
+            'emergency_contact.relation' => 'required|string|in:Parent,Sibling,Spouse,Child,Relative,Friend',
+            'emergency_contact.mobile' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{10,11}$/',
+            ],
+            'emergency_contact.email' => 'nullable|email|max:100',
+
+            // Emergency Plan
+            'emergency_plan.procedures' => [
+                'required',
+                'string',
+                'max:1000',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+
+            // Care Worker
+            'care_worker.careworker_id' => 'required|exists:cose_users,id',
+            'care_worker.tasks' => 'required|array|min:1',
+            'care_worker.tasks.*' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
+            ],
+
+            // Review Date
+            'date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->format('Y-m-d'),
         ]);
 
         if ($validator->fails()) {
@@ -1268,13 +1454,25 @@ class BeneficiaryController extends Controller
             DB::beginTransaction();
             
             // Get the beneficiary and related data
-            $beneficiary = Beneficiary::with([
-                'generalCarePlan',
-                'portalAccount'
-            ])->findOrFail($id);
+            $beneficiary = Beneficiary::findOrFail($id);
+
+            // Check if name has changed
+            $nameChanged = ($beneficiary->first_name !== $request->input('first_name') || 
+                        $beneficiary->middle_name !== $request->input('middle_name') || 
+                        $beneficiary->last_name !== $request->input('last_name'));
+
+            // If name changed, generate new username
+            if ($nameChanged) {
+                $username = $this->generateUniqueUsername(
+                    $request->input('first_name'),
+                    $request->input('middle_name'),
+                    $request->input('last_name'),
+                    $id // Pass the current ID to exclude from uniqueness check
+                );
+                $beneficiary->username = $username;
+            }
             
             $generalCarePlanId = $beneficiary->general_care_plan_id;
-            $portalAccountId = $beneficiary->portal_account_id;
 
              // Store original care worker ID for comparison later
             $originalCareWorkerId = $beneficiary->generalCarePlan ? $beneficiary->generalCarePlan->care_worker_id : null;
@@ -1372,19 +1570,9 @@ class BeneficiaryController extends Controller
                 file_put_contents(storage_path('app/public/' . $careWorkerSignaturePath), $decodedImage);
             }
             
-            // Update portal account if email or password has changed
-            if ($portalAccountId) {
-                $portalAccount = PortalAccount::find($portalAccountId);
-                if ($portalAccount) {
-                    $portalAccount->portal_email = $request->input('account.email');
-                    
-                    // Update password only if provided
-                    if ($request->filled('account.password')) {
-                        $portalAccount->portal_password = Hash::make($request->input('account.password'));
-                    }
-                    
-                    $portalAccount->save();
-                }
+            // Update password only if provided
+            if ($request->filled('account.password')) {
+                $beneficiary->password = bcrypt($request->input('account.password'));
             }
             
             // Format mobile numbers with +63 prefix if needed
@@ -1400,6 +1588,7 @@ class BeneficiaryController extends Controller
             
             // Update beneficiary details
             $beneficiary->first_name = $request->input('first_name');
+            $beneficiary->middle_name = $request->input('middle_name');
             $beneficiary->last_name = $request->input('last_name');
             $beneficiary->birthday = $request->input('birth_date');
             $beneficiary->gender = $request->input('gender');
@@ -1800,7 +1989,7 @@ class BeneficiaryController extends Controller
             
             // Create notification
             $notification = new Notification();
-            $notification->user_id = $beneficiary->portal_account_id;
+            $notification->user_id = $beneficiaryId;
             $notification->user_type = 'beneficiary';
             $notification->message_title = $title;
             $notification->message = $message;
@@ -1901,20 +2090,18 @@ class BeneficiaryController extends Controller
     private function sendNotificationToFamilyMembers($beneficiaryId, $title, $message)
     {
         try {
-            // Get all family members with portal accounts
-            $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)
-                ->whereNotNull('portal_account_id')
-                ->get();
-                
+            // Get all family members related to this beneficiary
+            $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
+            
             if ($familyMembers->isEmpty()) {
-                \Log::info('No family members with portal accounts found for beneficiary ' . $beneficiaryId);
+                \Log::info('No family members found for beneficiary ' . $beneficiaryId);
                 return;
             }
             
             foreach ($familyMembers as $member) {
-                // Create notification for each family member
+                // Create notification for each family member - use family_member_id directly
                 $notification = new Notification();
-                $notification->user_id = $member->portal_account_id;
+                $notification->user_id = $member->family_member_id;
                 $notification->user_type = 'family_member';
                 $notification->message_title = $title;
                 $notification->message = $message;
@@ -1927,6 +2114,65 @@ class BeneficiaryController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send notifications to family members of beneficiary ' . $beneficiaryId . ': ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate a unique username based on beneficiary's name
+     * Format: first letter of first name + first letter of middle name (if any) + last name
+     * If duplicates exist, append numbers (1, 2, 3, etc.)
+     *
+     * @param string $firstName First name of beneficiary
+     * @param string $middleName Middle name of beneficiary (optional)
+     * @param string $lastName Last name of beneficiary
+     * @param int|null $currentId Current beneficiary ID (for updates)
+     * @return string Unique username
+     */
+    private function generateUniqueUsername($firstName, $middleName, $lastName, $currentId = null)
+    {
+        // Get first letter of first name
+        $firstInitial = mb_substr(trim($firstName), 0, 1, 'UTF-8');
+        
+        // Get first letter of middle name if available
+        $middleInitial = !empty($middleName) ? mb_substr(trim($middleName), 0, 1, 'UTF-8') : '';
+        
+        // Clean and lowercase the lastName
+        $cleanLastName = trim($lastName);
+        
+        // Combine to create base username (all lowercase)
+        $baseUsername = strtolower($firstInitial . $middleInitial . $cleanLastName);
+        
+        // Remove special characters and spaces
+        $baseUsername = preg_replace('/[^a-z0-9]/', '', $baseUsername);
+        
+        // Make sure username is at least 3 characters
+        if (strlen($baseUsername) < 3) {
+            $baseUsername = str_pad($baseUsername, 3, '0');
+        }
+        
+        // Check if username exists
+        $username = $baseUsername;
+        $counter = 1;
+        
+        // Keep checking until we find a unique username
+        while (true) {
+            $query = Beneficiary::where('username', $username);
+            
+            // If updating, exclude the current beneficiary
+            if ($currentId) {
+                $query->where('beneficiary_id', '!=', $currentId);
+            }
+            
+            // If username is unique, break the loop
+            if (!$query->exists()) {
+                break;
+            }
+            
+            // Otherwise, append counter and try again
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+        
+        return $username;
     }
 
 }

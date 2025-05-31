@@ -13,6 +13,50 @@ class ServiceRequestFactory extends Factory
 {
     protected $model = ServiceRequest::class;
 
+    // Type-specific service request messages
+    protected $serviceRequestMessages = [
+        // Home Care Visit (ID 1)
+        1 => [
+            "Requesting additional home care visit this week. Beneficiary has been feeling unwell and needs extra support.",
+            "Need assistance with personal care as regular family caregiver will be away for 3 days.",
+            "Requesting home visit for wound dressing change. Unable to do it properly ourselves.",
+            "Need help with medication organization for the coming week. Prescription was changed by doctor.",
+            "Requesting additional bath assistance visit as beneficiary had a minor accident."
+        ],
+        // Transportation (ID 2)
+        2 => [
+            "Need transportation to medical appointment at Northern Samar Provincial Hospital on the scheduled date.",
+            "Requesting assistance with transportation to pharmacy to pick up new medication.",
+            "Need transportation to local health center for scheduled vaccination.",
+            "Transportation needed to attend senior citizen gathering at municipal hall.",
+            "Requesting transportation assistance to visit family in neighboring barangay for important family event."
+        ],
+        // Medical Appointments (ID 3)
+        3 => [
+            "Need assistance attending doctor's appointment. Beneficiary needs help with mobility and understanding instructions.",
+            "Requesting accompaniment to eye specialist appointment. Beneficiary will need help getting home after pupil dilation.",
+            "Need assistance with upcoming physical therapy appointment. Transportation and in-clinic support needed.",
+            "Requesting help with dental appointment. Beneficiary needs someone to explain dental work needed.",
+            "Need assistance attending quarterly diabetes check-up. Will need note-taking and question-asking support."
+        ],
+        // Meal Delivery (ID 4)
+        4 => [
+            "Requesting meal delivery for 3 days due to temporary difficulty cooking after minor hand injury.",
+            "Need meal assistance as cooking gas supply ran out and replacement delayed until next week.",
+            "Beneficiary has special dietary needs after recent hospital discharge. Requesting meal support for 5 days.",
+            "Regular meal provider (family member) has emergency. Need temporary meal delivery.",
+            "Requesting softer food options for meal delivery as beneficiary has new dental issues."
+        ],
+        // Other Service (ID 5)
+        5 => [
+            "Need assistance reading and responding to important government letter received yesterday.",
+            "Requesting help reorganizing bedroom furniture to make mobility easier for beneficiary.",
+            "Need assistance with phone setup to enable video calls with family members abroad.",
+            "Requesting help acquiring and setting up a raised toilet seat for easier bathroom use.",
+            "Need assistance with small home repairs to prevent water leakage during rainy season."
+        ]
+    ];
+
     public function definition(): array
     {
         $sender_type = $this->faker->randomElement(['beneficiary', 'family_member']);
@@ -32,6 +76,13 @@ class ServiceRequestFactory extends Factory
             
             $sender_id = $familyMember->family_member_id;
         }
+
+        // Get random service type
+        $serviceType = ServiceRequestType::inRandomOrder()->first();
+        $service_type_id = $serviceType->service_type_id;
+        
+        // Get message based on service type
+        $message = $this->getServiceRequestMessage($service_type_id);
 
         // Random status with weighted distribution
         $statusChoices = [
@@ -83,11 +134,11 @@ class ServiceRequestFactory extends Factory
             'sender_id' => $sender_id,
             'sender_type' => $sender_type,
             'beneficiary_id' => $beneficiary->beneficiary_id,
-            'service_type_id' => ServiceRequestType::inRandomOrder()->first()->service_type_id,
+            'service_type_id' => $service_type_id,
             'care_worker_id' => $care_worker_id,
             'service_date' => $service_date,
             'service_time' => $service_time,
-            'message' => $this->faker->paragraph(),
+            'message' => $message,
             'status' => $status,
             'read_status' => $read_status,
             'read_at' => $read_at,
@@ -97,6 +148,19 @@ class ServiceRequestFactory extends Factory
             'created_at' => $created_at,
             'updated_at' => $this->faker->dateTimeBetween($created_at, 'now'),
         ];
+    }
+    
+    /**
+     * Get a realistic service request message based on the service type
+     */
+    protected function getServiceRequestMessage($service_type_id)
+    {
+        if (isset($this->serviceRequestMessages[$service_type_id])) {
+            return $this->faker->randomElement($this->serviceRequestMessages[$service_type_id]);
+        }
+        
+        // Fallback to generic message if type doesn't match
+        return "Requesting assistance with care services. Please contact to discuss details.";
     }
     
     public function asNew(): Factory
@@ -111,6 +175,89 @@ class ServiceRequestFactory extends Factory
                 'action_taken_at' => null,
                 'created_at' => $this->faker->dateTimeBetween('-1 week', 'now'),
                 'service_date' => $this->faker->dateTimeBetween('now', '+1 month')->format('Y-m-d'),
+            ];
+        });
+    }
+
+    public function approved(): Factory
+    {
+        $faker = $this->faker; // Capture faker
+        
+        return $this->state(function (array $attributes) use ($faker) {
+             $created_at = $faker->dateTimeBetween('-3 months', '-1 week');
+            // Convert DateTime to Carbon to use copy() method
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDays(2));
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(1));
+            
+            return [
+                'status' => 'approved',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'action_type' => 'approved',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at
+            ];
+        });
+    }
+
+    public function rejected(): Factory
+    {
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
+            $created_at = $faker->dateTimeBetween('-3 months', '-1 week');
+            // Convert DateTime to Carbon to use copy() method
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDays(2));
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(1));
+                
+            return [
+                'status' => 'rejected',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'action_type' => 'rejected',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at
+            ];
+        });
+    }
+
+    public function completed(): Factory
+    {
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
+            $created_at = $faker->dateTimeBetween('-3 months', '-2 weeks');
+            // Convert DateTime to Carbon to use copy() method
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDays(2));
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(1));
+            $service_date = $faker->dateTimeBetween('-2 weeks', '-2 days')->format('Y-m-d');
+            
+            return [
+                'status' => 'completed',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'action_type' => 'completed',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'service_date' => $service_date, 
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at
             ];
         });
     }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->increments('weekly_care_plan_id');
             $table->integer('beneficiary_id')->after('weekly_care_plan_id');
             $table->integer('care_worker_id')->after('beneficiary_id');
-            $table->integer('vital_signs_id')->after('care_manager_id');
+            $table->integer('vital_signs_id')->after('care_worker_id');
             $table->date('date');
             $table->text('assessment');
             $table->text('evaluation_recommendations');

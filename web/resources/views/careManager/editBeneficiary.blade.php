@@ -58,6 +58,12 @@
                                         required >
                             </div>
                             <div class="col-md-3 relative">
+                                <label for="middleName" class="form-label">Middle Name</label>
+                                <input type="text" class="form-control" id="middleName" name="middle_name" 
+                                        value="{{ old('middle_name', $beneficiary->middle_name) }}"
+                                        placeholder="Enter middle name">
+                            </div>
+                            <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                         value="{{ old('last_name', $beneficiary->last_name) }}"
@@ -74,6 +80,8 @@
                                     <option value="Divorced" {{ old('civil_status', $beneficiary->civil_status) == 'Divorced' ? 'selected' : '' }}>Divorced</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="row mb-3">
                             <div class="col-md-3 relative">
                                 <label for="gender" class="form-label">Gender<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="gender" name="gender" required>
@@ -83,15 +91,9 @@
                                     <option value="Other" {{ old('gender', $beneficiary->gender) == 'Other' ? 'selected' : '' }}>Other</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="row mb-3">
-                        <div class="col-md-3">
+                            <div class="col-md-3">
                                 <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ old('birth_date', $birth_date) }}" required onkeydown="return true">
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
-                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver', $beneficiary->primary_caregiver) }}" placeholder="Enter Primary Caregiver name" required >
                             </div>
                             <div class="col-md-3">
                                 <label for="mobileNumber" class="form-label">Mobile Number</label>
@@ -103,6 +105,12 @@
                             <div class="col-md-3">
                                 <label for="landlineNumber" class="form-label">Landline Number</label>
                                 <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number', $beneficiary->landline) }}" placeholder="Enter Landline number" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 position-relative">
+                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
+                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver', $beneficiary->primary_caregiver) }}" placeholder="Enter Primary Caregiver name">                            
                             </div>
                         </div>
 
@@ -761,37 +769,44 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Family Portal Account Registration</h5> 
+                                <h5 class="text-start">Login Access</h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <!-- Email -->
+                            <!-- Generated Username -->
                             <div class="col-md-4">
-                                <label for="accountEmail" class="form-label">Email<label style="color:red;"> * </label></label>
-                                <input type="email" class="form-control" id="accountEmail" name="account[email]" 
-                                    placeholder="Enter email"
-                                    value="{{ $beneficiary->portalAccount->portal_email ?? '' }}" 
-                                    required 
-                                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" 
-                                    title="Enter a valid email address (e.g., example@domain.com)" 
-                                    oninput="validateEmail(this)">
+                                <label for="generatedUsername" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="generatedUsername" readonly 
+                                        value="{{ $beneficiary->username }}" disabled>
+                                    <span class="input-group-text"><i class="bi bi-info-circle" title="Username is automatically generated from name: first initial + middle initial + last name"></i></span>
+                                </div>
+                                <small class="text-muted">Username will update automatically based on name changes</small>
+                                <!-- Hidden field to pass the new username value if name fields are changed -->
+                                <input type="hidden" id="updatedUsername" name="updated_username" value="{{ $beneficiary->username }}">
                             </div>
 
                             <!-- Password -->
                             <div class="col-md-4">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="account[password]" 
-                                    placeholder="Leave blank to keep current password" 
-                                    minlength="8" 
-                                    title="Password must be at least 8 characters long.">
+                                <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Leave blank to keep old password" minlength="8" 
+                                        title="Password must be at least 8 characters long.">
+                                    <span class="input-group-text password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Confirm Password -->
                             <div class="col-md-4">
-                                <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" 
-                                    placeholder="Confirm new password if changing" 
-                                    title="Passwords must match.">
+                                <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Leave blank to keep old password" title="Passwords must match.">
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -1275,6 +1290,148 @@
             return isValid;
         });
     });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const firstNameInput = document.getElementById('firstName');
+            const middleNameInput = document.getElementById('middleName');
+            const lastNameInput = document.getElementById('lastName');
+            const usernamePreview = document.getElementById('generatedUsername');
+            
+            // Password toggle functionality
+            document.querySelectorAll('.password-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                });
+            });
+            
+            // Function to update username preview
+            function updateUsernamePreview() {
+                const firstName = firstNameInput.value.trim();
+                const middleName = middleNameInput.value.trim();
+                const lastName = lastNameInput.value.trim();
+                
+                if (!firstName || !lastName) {
+                    usernamePreview.value = "Username will be generated from name fields";
+                    return;
+                }
+                
+                // Create preview username
+                const firstInitial = firstName.charAt(0).toLowerCase();
+                const middleInitial = middleName ? middleName.charAt(0).toLowerCase() : '';
+                const cleanLastName = lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                // Show the preview
+                usernamePreview.value = firstInitial + middleInitial + cleanLastName;
+            }
+            
+            // Add event listeners
+            firstNameInput.addEventListener('input', updateUsernamePreview);
+            middleNameInput.addEventListener('input', updateUsernamePreview);
+            lastNameInput.addEventListener('input', updateUsernamePreview);
+            
+            // Password confirmation validation
+            const password = document.getElementById("password");
+            const confirmPassword = document.getElementById("confirmPassword");
+            
+            confirmPassword.addEventListener("input", function() {
+                if (confirmPassword.value !== password.value) {
+                    confirmPassword.setCustomValidity("Passwords do not match.");
+                } else {
+                    confirmPassword.setCustomValidity("");
+                }
+            });
+            
+            // Also update when password changes
+            password.addEventListener("input", function() {
+                if (confirmPassword.value && confirmPassword.value !== password.value) {
+                    confirmPassword.setCustomValidity("Passwords do not match.");
+                } else {
+                    confirmPassword.setCustomValidity("");
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements for name-based username generation
+            const firstNameInput = document.getElementById('firstName');
+            const middleNameInput = document.getElementById('middleName');
+            const lastNameInput = document.getElementById('lastName');
+            const usernameDisplay = document.getElementById('generatedUsername');
+            const hiddenUsernameField = document.getElementById('updatedUsername');
+            
+            // Original name values for comparison
+            const originalFirstName = '{{ $beneficiary->first_name }}';
+            const originalMiddleName = '{{ $beneficiary->middle_name }}';
+            const originalLastName = '{{ $beneficiary->last_name }}';
+            const originalUsername = '{{ $beneficiary->username }}';
+            
+            // Function to generate username from name components
+            function generateUsername(firstName, middleName, lastName) {
+                if (!firstName || !lastName) return originalUsername;
+                
+                // Create username
+                const firstInitial = firstName.charAt(0).toLowerCase();
+                const middleInitial = middleName ? middleName.charAt(0).toLowerCase() : '';
+                const cleanLastName = lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                return firstInitial + middleInitial + cleanLastName;
+            }
+            
+            // Function to check if name has changed and update username preview
+            function updateUsernameIfNameChanged() {
+                const currentFirstName = firstNameInput.value.trim();
+                const currentMiddleName = middleNameInput.value.trim();
+                const currentLastName = lastNameInput.value.trim();
+                
+                // Check if any name component changed
+                if (currentFirstName !== originalFirstName || 
+                    currentMiddleName !== originalMiddleName || 
+                    currentLastName !== originalLastName) {
+                    
+                    // Generate new username
+                    const newUsername = generateUsername(currentFirstName, currentMiddleName, currentLastName);
+                    
+                    // Update the visible username field (for display only)
+                    usernameDisplay.value = newUsername;
+                    
+                    // Set the hidden field value that will be submitted with the form
+                    hiddenUsernameField.value = newUsername;
+                    
+                    // Visual indicator that username will change
+                    usernameDisplay.style.fontWeight = 'bold';
+                    usernameDisplay.style.color = '#007bff';
+                } else {
+                    // Reset to original if changed back
+                    usernameDisplay.value = originalUsername;
+                    hiddenUsernameField.value = originalUsername;
+                    
+                    // Reset styling
+                    usernameDisplay.style.fontWeight = 'normal';
+                    usernameDisplay.style.color = '';
+                }
+            }
+            
+            // Add event listeners to name fields
+            firstNameInput.addEventListener('input', updateUsernameIfNameChanged);
+            middleNameInput.addEventListener('input', updateUsernameIfNameChanged);
+            lastNameInput.addEventListener('input', updateUsernameIfNameChanged);
+        });
     </script>
 
 </body>

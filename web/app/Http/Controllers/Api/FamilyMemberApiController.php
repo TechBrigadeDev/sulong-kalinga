@@ -96,6 +96,12 @@ class FamilyMemberApiController extends Controller
                 'required', 'email',
                 Rule::unique('family_members', 'email'),
             ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+            ],
             'mobile' => [
                 'required', 'string',
                 Rule::unique('family_members', 'mobile'),
@@ -103,7 +109,10 @@ class FamilyMemberApiController extends Controller
             'related_beneficiary_id' => 'required|integer|exists:beneficiaries,beneficiary_id',
             'relation_to_beneficiary' => 'required|string|max:50',
             'photo' => 'sometimes|nullable|image|max:2048',
-            // Add other required fields as needed
+            'gender' => 'nullable|string|in:Male,Female,Other',
+            'street_address' => 'required|string',
+            'landline' => 'nullable|string',
+            'is_primary_caregiver' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -129,7 +138,11 @@ class FamilyMemberApiController extends Controller
         }
         $request->merge(['mobile' => $mobile]);
 
-        $data = $request->except('photo');
+        $data = $request->except(['photo', 'password']);
+        $data['mobile'] = $mobile;
+        $data['password'] = bcrypt($request->password);
+        $data['created_by'] = $request->user()->id;
+        $data['updated_by'] = $request->user()->id;
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -181,6 +194,13 @@ class FamilyMemberApiController extends Controller
                 'sometimes', 'required', 'email',
                 Rule::unique('family_members', 'email')->ignore($familyMember->family_member_id, 'family_member_id'),
             ],
+            'password' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+            ],
             'mobile' => [
                 'sometimes', 'required', 'string',
                 Rule::unique('family_members', 'mobile')->ignore($familyMember->family_member_id, 'family_member_id'),
@@ -188,7 +208,11 @@ class FamilyMemberApiController extends Controller
             'related_beneficiary_id' => 'sometimes|required|integer|exists:beneficiaries,beneficiary_id',
             'relation_to_beneficiary' => 'sometimes|required|string|max:50',
             'photo' => 'sometimes|nullable|image|max:2048',
-            // Add other fields as needed
+            'gender' => 'sometimes|nullable|string|in:Male,Female,Other',
+            'birthday' => 'sometimes|required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
+            'street_address' => 'sometimes|required|string',
+            'landline' => 'sometimes|nullable|string',
+            'is_primary_caregiver' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -217,7 +241,13 @@ class FamilyMemberApiController extends Controller
             $request->merge(['mobile' => $mobile]);
         }
 
-        $data = $request->except('photo');
+        $data = $request->except(['photo', 'password']);
+        $data['updated_by'] = $request->user()->id;
+
+        // Handle password update
+        if ($request->filled('password')) {
+            $data['password'] = bcrypt($request->password);
+        }
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -232,6 +262,17 @@ class FamilyMemberApiController extends Controller
         }
 
         $familyMember->update($data);
+
+        // Handle primary caregiver updates
+        if ($request->has('is_primary_caregiver')) {
+            $beneficiary = Beneficiary::find($request->related_beneficiary_id ?? $familyMember->related_beneficiary_id);
+            if ($request->is_primary_caregiver) {
+                $beneficiary->primary_caregiver = $familyMember->family_member_id;
+            } elseif ($familyMember->is_primary_caregiver && !$request->is_primary_caregiver) {
+                $beneficiary->primary_caregiver = null;
+            }
+            $beneficiary->save();
+        }
 
         return response()->json([
             'success' => true,

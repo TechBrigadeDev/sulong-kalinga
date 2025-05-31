@@ -27,10 +27,6 @@ class UnifiedUser extends Authenticatable
         return $this->belongsTo(CoseUser::class, 'cose_user_id');
     }
 
-    public function portalDetails()
-    {
-        return $this->belongsTo(PortalAccount::class, 'portal_account_id');
-    }
     public function beneficiaryDetails()
     {
         return $this->hasOne(Beneficiary::class, 'portal_account_id', 'portal_account_id');
