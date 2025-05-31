@@ -763,37 +763,41 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Family Portal Account Registration</h5> 
+                                <h5 class="text-start">Login Access</h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
                             <!-- Email -->
                             <div class="col-md-4">
-                                <label for="accountEmail" class="form-label">Email<label style="color:red;"> * </label></label>
-                                <input type="email" class="form-control" id="accountEmail" name="account[email]" 
-                                    placeholder="Enter email"
-                                    value="{{ $beneficiary->portalAccount->portal_email ?? '' }}" 
-                                    required 
-                                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" 
-                                    title="Enter a valid email address (e.g., example@domain.com)" 
-                                    oninput="validateEmail(this)">
+                                <label for="username" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="username" readonly value="{{ $beneficiary->username }}">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                </div>
+                                <small class="text-muted">Username is automatically generated from name. It will update if name changes.</small>
                             </div>
 
                             <!-- Password -->
                             <div class="col-md-4">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="account[password]" 
-                                    placeholder="Leave blank to keep current password" 
-                                    minlength="8" 
+                                <label for="password" class="form-label">New Password</label>
+                                <div class="input-group password-input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Leave blank to keep current password" minlength="8" 
                                     title="Password must be at least 8 characters long.">
+                                    <span class="password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Confirm Password -->
                             <div class="col-md-4">
-                                <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" 
-                                    placeholder="Confirm new password if changing" 
-                                    title="Passwords must match.">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <div class="input-group password-input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Re-type new password" title="Passwords must match.">
+                                    <span class="password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -1277,6 +1281,81 @@
             return isValid;
         });
     });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const firstNameInput = document.getElementById('firstName');
+            const middleNameInput = document.getElementById('middleName');
+            const lastNameInput = document.getElementById('lastName');
+            const usernamePreview = document.getElementById('generatedUsername');
+            
+            // Password toggle functionality
+            document.querySelectorAll('.password-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                });
+            });
+            
+            // Function to update username preview
+            function updateUsernamePreview() {
+                const firstName = firstNameInput.value.trim();
+                const middleName = middleNameInput.value.trim();
+                const lastName = lastNameInput.value.trim();
+                
+                if (!firstName || !lastName) {
+                    usernamePreview.value = "Username will be generated from name fields";
+                    return;
+                }
+                
+                // Create preview username
+                const firstInitial = firstName.charAt(0).toLowerCase();
+                const middleInitial = middleName ? middleName.charAt(0).toLowerCase() : '';
+                const cleanLastName = lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                // Show the preview
+                usernamePreview.value = firstInitial + middleInitial + cleanLastName;
+            }
+            
+            // Add event listeners
+            firstNameInput.addEventListener('input', updateUsernamePreview);
+            middleNameInput.addEventListener('input', updateUsernamePreview);
+            lastNameInput.addEventListener('input', updateUsernamePreview);
+            
+            // Password confirmation validation
+            const password = document.getElementById("password");
+            const confirmPassword = document.getElementById("confirmPassword");
+            
+            confirmPassword.addEventListener("input", function() {
+                if (confirmPassword.value !== password.value) {
+                    confirmPassword.setCustomValidity("Passwords do not match.");
+                } else {
+                    confirmPassword.setCustomValidity("");
+                }
+            });
+            
+            // Also update when password changes
+            password.addEventListener("input", function() {
+                if (confirmPassword.value && confirmPassword.value !== password.value) {
+                    confirmPassword.setCustomValidity("Passwords do not match.");
+                } else {
+                    confirmPassword.setCustomValidity("");
+                }
+            });
+        });
     </script>
 
 </body>

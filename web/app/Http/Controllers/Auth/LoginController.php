@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User; 
+use App\Models\Beneficiary;
+use App\Models\FamilyMember;
 use Illuminate\Support\Facades\Validator;
 use App\Services\LogService;
 use App\Enums\LogType;
@@ -87,6 +89,19 @@ class LoginController extends Controller
                     ->first();
 
                 if ($user && Hash::check($request->input('password'), $user->password)) {
+                    // Check if the user status is active
+                    if ($user->status !== 'Active') {
+                        // Log the attempt
+                        $this->logService->createLog(
+                            'user',
+                            $user->id,
+                            LogType::VIEW,
+                            "Login denied: User account '{$email}' is not active."
+                        );
+                        
+                        return redirect()->back()->withErrors(['email' => 'Your account is not active. Please contact the administrator.'])->withInput();
+                    }
+                    
                     // Successful login: clear attempts and lockout
                     Cache::forget($cacheKeyAttempts);
                     Cache::forget($cacheKeyLockout);
@@ -144,6 +159,23 @@ class LoginController extends Controller
                 break;
                 
             case 'beneficiary':
+                // First check if the beneficiary exists and is active
+                $beneficiary = Beneficiary::where('username', $request->input('email'))->first();
+                
+                if ($beneficiary) {
+                    if ($beneficiary->status !== 'Active') {
+                        // Log the attempt
+                        $this->logService->createLog(
+                            'beneficiary',
+                            $beneficiary->beneficiary_id,
+                            LogType::VIEW,
+                            "Login denied: Beneficiary account '{$request->input('email')}' is not active."
+                        );
+                        
+                        return redirect()->back()->withErrors(['email' => 'Your beneficiary account is currently inactive. Please contact your care provider.'])->withInput();
+                    }
+                }
+                
                 // Try authenticate beneficiary
                 $credentials = [
                     'username' => $request->input('email'),
@@ -175,6 +207,26 @@ class LoginController extends Controller
                 break;
                 
             case 'family':
+                // Try to find the family member
+                $familyMember = FamilyMember::where('email', $email)->first();
+                
+                if ($familyMember) {
+                    // Get the related beneficiary to check status
+                    $relatedBeneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
+                    
+                    if (!$relatedBeneficiary || $relatedBeneficiary->status !== 'Active') {
+                        // Log the attempt
+                        $this->logService->createLog(
+                            'family_member',
+                            $familyMember->family_member_id,
+                            LogType::VIEW,
+                            "Login denied: Related beneficiary account for family member '{$email}' is not active."
+                        );
+                        
+                        return redirect()->back()->withErrors(['email' => 'Access denied. The beneficiary account associated with your profile is currently inactive.'])->withInput();
+                    }
+                }
+                
                 // Try authenticate family member
                 $credentials = [
                     'email' => $email,
@@ -242,7 +294,7 @@ class LoginController extends Controller
         return redirect()->route('login');
     }
 
-    // Handle logout
+    // Handle logout (rest of the file unchanged)
     public function logout()
     {
         // Get the correct guard based on user type

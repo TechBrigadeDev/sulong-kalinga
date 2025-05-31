@@ -7,7 +7,6 @@ use Faker\Factory;
 use App\Models\Beneficiary;
 use App\Models\User;
 use App\Models\FamilyMember;
-use App\Models\PortalAccount;
 use App\Models\GeneralCarePlan;
 use App\Models\HealthHistory;
 use App\Models\EmotionalWellbeing;

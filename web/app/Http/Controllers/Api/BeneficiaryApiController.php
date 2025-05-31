@@ -18,7 +18,6 @@ use App\Models\CognitiveFunction;
 use App\Models\Mobility;
 use App\Models\HealthHistory;
 use App\Models\CareWorkerResponsibility;
-use App\Models\PortalAccount;
 use App\Models\User;
 use App\Models\Notification;
 use App\Models\FamilyMember;
@@ -34,6 +33,57 @@ class BeneficiaryApiController extends Controller
     }
 
     /**
+     * Generate a unique username based on beneficiary's name
+     */
+    private function generateUniqueUsername($firstName, $middleName, $lastName, $currentId = null)
+    {
+        // Get first letter of first name
+        $firstInitial = mb_substr(trim($firstName), 0, 1, 'UTF-8');
+        
+        // Get first letter of middle name if available
+        $middleInitial = !empty($middleName) ? mb_substr(trim($middleName), 0, 1, 'UTF-8') : '';
+        
+        // Clean and lowercase the lastName
+        $cleanLastName = trim($lastName);
+        
+        // Combine to create base username (all lowercase)
+        $baseUsername = strtolower($firstInitial . $middleInitial . $cleanLastName);
+        
+        // Remove special characters and spaces
+        $baseUsername = preg_replace('/[^a-z0-9]/', '', $baseUsername);
+        
+        // Make sure username is at least 3 characters
+        if (strlen($baseUsername) < 3) {
+            $baseUsername = str_pad($baseUsername, 3, '0');
+        }
+        
+        // Check if username exists
+        $username = $baseUsername;
+        $counter = 1;
+        
+        // Keep checking until we find a unique username
+        while (true) {
+            $query = Beneficiary::where('username', $username);
+            
+            // If updating, exclude the current beneficiary
+            if ($currentId) {
+                $query->where('beneficiary_id', '!=', $currentId);
+            }
+            
+            // If username is unique, break the loop
+            if (!$query->exists()) {
+                break;
+            }
+            
+            // Otherwise, append counter and try again
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+        
+        return $username;
+    }
+
+    /**
      * Display a listing of beneficiaries.
      */
     public function index(Request $request)
@@ -45,7 +95,8 @@ class BeneficiaryApiController extends Controller
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
                 $q->whereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                  ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%']);
+                  ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(middle_name) LIKE ?', ['%' . strtolower($search) . '%']);
             });
         }
 
@@ -114,6 +165,8 @@ class BeneficiaryApiController extends Controller
             'generalCarePlan.healthHistory',
             'generalCarePlan.careNeeds',
             'generalCarePlan.careWorkerResponsibility',
+            // Remove portalAccount reference
+            'familyMembers',
         ])->findOrFail($id);
 
         // Care worker can only view assigned beneficiaries
@@ -160,17 +213,245 @@ class BeneficiaryApiController extends Controller
 
         $validator = \Validator::make($request->all(), [
             'first_name' => [
-                'required', 'string', 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+            ],
+            'middle_name' => [
+                'nullable', 
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
             'last_name' => [
-                'required', 'string', 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
             ],
-            // ... (add all other rules from web controller)
-            'account.email' => 'required|email|unique:portal_accounts,portal_email|max:255',
+            'civil_status' => [
+                'required',
+                'string',
+                'in:Single,Married,Widowed,Divorced',
+            ],
+            'gender' => [
+                'required',
+                'string',
+                'in:Male,Female,Other',
+            ],
+            'birth_date' => [
+                'required',
+                'date',
+                'before_or_equal:' . now()->subYears(14)->toDateString(),
+            ],
+            'primary_caregiver' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+            ],
+            'mobile_number' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{10,11}$/',
+            ],
+            'landline_number' => [
+                'nullable',
+                'string',
+                'regex:/^[0-9]{7,10}$/',
+            ],
+            'address_details' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z0-9\s,.-]+$/',
+            ],
+            'municipality' => [
+                'required',
+                'exists:municipalities,municipality_id',
+            ],
+            'barangay' => [
+                'required',
+                'exists:barangays,barangay_id',
+            ],
+            'medical_conditions' => [
+                'nullable',
+                'string',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'max:500',
+            ],
+            'medications' => [
+                'nullable',
+                'string',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'max:500',
+            ],
+            'allergies' => [
+                'nullable',
+                'string',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'max:500',
+            ],
+            'immunizations' => [
+                'nullable',
+                'string',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'max:500',
+            ],
+            'category' => 'required|exists:beneficiary_categories,category_id',
+            'frequency.mobility' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.mobility' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency.cognitive' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.cognitive' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency.self_sustainability' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.self_sustainability' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency.disease' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.disease' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency.daily_life' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.daily_life' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency.outdoor' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.outdoor' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency.household' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'assistance.household' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'medication_name' => 'nullable|array',
+            'medication_name.*' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'dosage' => 'nullable|array',
+            'dosage.*' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'frequency' => 'nullable|array',
+            'frequency.*' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'administration_instructions' => 'nullable|array',
+            'administration_instructions.*' => [
+                'nullable',
+                'string',
+                'max:500',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'mobility.walking_ability' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'mobility.assistive_devices' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'mobility.transportation_needs' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.memory' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.thinking_skills' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.orientation' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'cognitive.behavior' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'emotional.mood' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'emotional.social_interactions' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'emotional.emotional_support' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'emergency_contact.name' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+            ],
+            'emergency_contact.relation' => 'required|string|in:Parent,Sibling,Spouse,Child,Relative,Friend',
+            'emergency_contact.mobile' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{10,11}$/',
+            ],
+            'emergency_contact.email' => 'nullable|email|max:100',
+            'emergency_plan.procedures' => [
+                'required',
+                'string',
+                'max:1000',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'care_worker.careworker_id' => 'required|exists:cose_users,id',
+            'care_worker.tasks' => 'required|array|min:1',
+            'care_worker.tasks.*' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            ],
+            'date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->format('Y-m-d'),
+            'email' => 'nullable|string|email|max:255|unique:beneficiaries,email',
             'account.password' => 'required|string|min:8|confirmed',
-            // File uploads
             'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:2048',
             'care_service_agreement' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'general_careplan' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
@@ -188,6 +469,7 @@ class BeneficiaryApiController extends Controller
         try {
             $uniqueIdentifier = Str::random(10);
             $firstName = $request->input('first_name');
+            $middleName = $request->input('middle_name');
             $lastName = $request->input('last_name');
 
             // Use UploadService for all file uploads (private disk)
@@ -252,14 +534,6 @@ class BeneficiaryApiController extends Controller
                 $this->uploadService->storeRawImage($decodedImage, $careWorkerSignaturePath, 'spaces-private');
             }
 
-            // Create portal account
-            $portalAccountId = PortalAccount::insertGetId([
-                'portal_email' => $request->input('account.email'),
-                'portal_password' => Hash::make($request->input('account.password')),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
             // Create general care plan
             $generalCarePlan = GeneralCarePlan::create([
                 'care_worker_id' => $request->input('care_worker.careworker_id'),
@@ -279,9 +553,13 @@ class BeneficiaryApiController extends Controller
                 $emergencyContactMobile = '+63' . $emergencyContactMobile;
             }
 
+            // Generate unique username
+            $username = $this->generateUniqueUsername($firstName, $middleName, $lastName);
+
             // Create beneficiary
             $beneficiary = Beneficiary::create([
                 'first_name' => $request->input('first_name'),
+                'middle_name' => $middleName,
                 'last_name' => $request->input('last_name'),
                 'birthday' => $request->input('birth_date'),
                 'gender' => $request->input('gender'),
@@ -304,13 +582,15 @@ class BeneficiaryApiController extends Controller
                 'beneficiary_signature' => $beneficiarySignaturePath,
                 'care_worker_signature' => $careWorkerSignaturePath,
                 'general_care_plan_id' => $generalCarePlanId,
-                'portal_account_id' => $portalAccountId,
                 'beneficiary_status_id' => 1,
                 'created_by' => $request->user()->id,
                 'updated_by' => $request->user()->id,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'remember_token' => Str::random(60),
+                'username' => $username,
+                'password' => Hash::make($request->input('account.password')),
+                'email' => $request->input('account.email'),
             ]);
 
             // Create related models (emotional, cognitive, mobility, health, medications, care needs, responsibilities)
@@ -414,63 +694,286 @@ class BeneficiaryApiController extends Controller
      * Update the specified beneficiary.
      */
     public function update(Request $request, $id)
-    {
-        if (!in_array($request->user()->role_id, [1, 2, 3])) {
-            return response()->json(['error' => 'Forbidden'], 403);
+{
+    if (!in_array($request->user()->role_id, [1, 2, 3])) {
+        return response()->json(['error' => 'Forbidden'], 403);
+    }
+
+    $beneficiary = Beneficiary::with([
+        'generalCarePlan',
+        'generalCarePlan.mobility',
+        'generalCarePlan.cognitiveFunction',
+        'generalCarePlan.emotionalWellbeing',
+        'generalCarePlan.medications',
+        'generalCarePlan.healthHistory',
+        'generalCarePlan.careNeeds',
+        'generalCarePlan.careWorkerResponsibility'
+    ])->findOrFail($id);
+
+    // Care worker can only update assigned beneficiaries
+    if ($request->user()->role_id == 3) {
+        $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == $request->user()->id;
+        if (!$isAssigned) {
+            return response()->json(['error' => 'Unauthorized. You can only update beneficiaries assigned to you.'], 403);
         }
+    }
 
-        $beneficiary = Beneficiary::with([
-            'generalCarePlan',
-            'generalCarePlan.mobility',
-            'generalCarePlan.cognitiveFunction',
-            'generalCarePlan.emotionalWellbeing',
-            'generalCarePlan.medications',
-            'generalCarePlan.healthHistory',
-            'generalCarePlan.careNeeds',
-            'generalCarePlan.careWorkerResponsibility'
-        ])->findOrFail($id);
+    $validator = \Validator::make($request->all(), [
+        // Personal Details
+        'first_name' => [
+            'sometimes', 'required', 'string', 'max:100',
+            'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+        ],
+        'middle_name' => [
+            'nullable', 
+            'string',
+            'max:100',
+            'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+        ],
+        'last_name' => [
+            'sometimes', 'required', 'string', 'max:100',
+            'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+        ],
+        'civil_status' => [
+            'sometimes', 'required', 'string', 
+            'in:Single,Married,Widowed,Divorced'
+        ],
+        'gender' => [
+            'sometimes', 'required', 'string',
+            'in:Male,Female,Other'
+        ],
+        'birth_date' => [
+            'sometimes', 'required', 'date',
+            'before_or_equal:' . now()->subYears(14)->toDateString()
+        ],
+        'primary_caregiver' => [
+            'nullable', 'string', 'max:100',
+            'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+        ],
+        'mobile_number' => [
+            'sometimes', 'required', 'string',
+            'regex:/^[0-9]{10,11}$/'
+        ],
+        'landline_number' => [
+            'nullable', 'string',
+            'regex:/^[0-9]{7,10}$/'
+        ],
+        'address_details' => [
+            'sometimes', 'required', 'string', 'max:255',
+            'regex:/^[a-zA-Z0-9\s,.-]+$/'
+        ],
+        'municipality' => [
+            'sometimes', 'required',
+            'exists:municipalities,municipality_id'
+        ],
+        'barangay' => [
+            'sometimes', 'required',
+            'exists:barangays,barangay_id'
+        ],
+        
+        // Medical History
+        'medical_conditions' => [
+            'nullable', 'string',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'max:500'
+        ],
+        'medications' => [
+            'nullable', 'string',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'max:500'
+        ],
+        'allergies' => [
+            'nullable', 'string',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'max:500'
+        ],
+        'immunizations' => [
+            'nullable', 'string',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'max:500'
+        ],
+        'category' => 'sometimes|required|exists:beneficiary_categories,category_id',
+        
+        // Care Needs: Mobility
+        'frequency.mobility' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.mobility' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Needs: Cognitive / Communication
+        'frequency.cognitive' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.cognitive' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Needs: Self-sustainability
+        'frequency.self_sustainability' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.self_sustainability' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Needs: Disease / Therapy Handling
+        'frequency.disease' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.disease' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Needs: Daily Life / Social Contact
+        'frequency.daily_life' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.daily_life' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Needs: Outdoor Activities
+        'frequency.outdoor' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.outdoor' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Needs: Household Keeping
+        'frequency.household' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'assistance.household' => [
+            'nullable', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Medications Management
+        'medication_name' => 'nullable|array',
+        'medication_name.*' => [
+            'nullable', 'string', 'max:100',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'dosage' => 'nullable|array',
+        'dosage.*' => [
+            'nullable', 'string', 'max:100',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'frequency' => 'nullable|array',
+        'frequency.*' => [
+            'nullable', 'string', 'max:100',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        'administration_instructions' => 'nullable|array',
+        'administration_instructions.*' => [
+            'nullable', 'string', 'max:500',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Mobility
+        'mobility.walking_ability' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'mobility.assistive_devices' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'mobility.transportation_needs' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        
+        // Cognitive Function
+        'cognitive.memory' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'cognitive.thinking_skills' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'cognitive.orientation' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'cognitive.behavior' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        
+        // Emotional Well-being
+        'emotional.mood' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'emotional.social_interactions' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        'emotional.emotional_support' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+        
+        // Emergency Contact
+        'emergency_contact.name' => [
+            'sometimes', 'required', 'string', 'max:100',
+            'regex:/^[A-ZÑ][a-zA-ZÑñ\'\.\s\-]*$/'
+        ],
+        'emergency_contact.relation' => 'sometimes|required|string|in:Parent,Sibling,Spouse,Child,Relative,Friend',
+        'emergency_contact.mobile' => [
+            'sometimes', 'required', 'string',
+            'regex:/^[0-9]{10,11}$/'
+        ],
+        'emergency_contact.email' => 'nullable|email|max:100',
+        
+        // Emergency Plan
+        'emergency_plan.procedures' => [
+            'sometimes', 'required', 'string', 'max:1000',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Care Worker
+        'care_worker.careworker_id' => 'sometimes|required|exists:cose_users,id',
+        'care_worker.tasks' => 'sometimes|required|array|min:1',
+        'care_worker.tasks.*' => [
+            'required', 'string', 'max:255',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+        ],
+        
+        // Review Date
+        'date' => 'sometimes|required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->format('Y-m-d'),
+        
+        // Authentication fields
+        'account.email' => [
+            'nullable', 'email', 'max:255',
+            Rule::unique('beneficiaries', 'email')->ignore($id, 'beneficiary_id')
+        ],
+        'account.password' => 'nullable|string|min:8|confirmed',
+        
+        // File uploads - Modified for update scenario (all optional)
+        'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:7168', // 7MB
+        'care_service_agreement' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // 5MB
+        'general_careplan' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // 5MB
+        
+        // Signatures - Modified for update scenario (all optional)
+        'beneficiary_signature_upload' => 'nullable|file|mimes:jpeg,png|max:2048', // 2MB
+        'beneficiary_signature_canvas' => 'nullable|string',
+        'care_worker_signature_upload' => 'nullable|file|mimes:jpeg,png|max:2048', // 2MB
+        'care_worker_signature_canvas' => 'nullable|string',
+    ]);
 
-        // Care worker can only update assigned beneficiaries
-        if ($request->user()->role_id == 3) {
-            $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == $request->user()->id;
-            if (!$isAssigned) {
-                return response()->json(['error' => 'Unauthorized. You can only update beneficiaries assigned to you.'], 403);
-            }
-        }
-
-        $validator = \Validator::make($request->all(), [
-            'first_name' => [
-                'sometimes', 'required', 'string', 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
-            ],
-            'last_name' => [
-                'sometimes', 'required', 'string', 'max:100',
-                'regex:/^[A-Z][a-zA-Z]*(?:-[a-zA-Z]+)?(?: [a-zA-Z]+(?:-[a-zA-Z]+)*)*$/',
-            ],
-            // ... (add all other rules from web controller)
-            'account.email' => [
-                'sometimes', 'required', 'email',
-                Rule::unique('portal_accounts', 'portal_email')->ignore($beneficiary->portal_account_id, 'portal_account_id'),
-            ],
-            // File uploads
-            'beneficiaryProfilePic' => 'nullable|file|mimes:jpeg,png|max:2048',
-            'care_service_agreement' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
-            'general_careplan' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
-            'beneficiary_signature_upload' => 'nullable|file|mimes:jpeg,png|max:2048',
-            'beneficiary_signature_canvas' => 'nullable|string',
-            'care_worker_signature_upload' => 'nullable|file|mimes:jpeg,png|max:2048',
-            'care_worker_signature_canvas' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
 
         DB::beginTransaction();
         try {
             $uniqueIdentifier = Str::random(10);
-            $firstName = $beneficiary->first_name;
-            $lastName = $beneficiary->last_name;
+            $firstName = $request->input('first_name', $beneficiary->first_name);
+            $middleName = $request->input('middle_name', $beneficiary->middle_name);
+            $lastName = $request->input('last_name', $beneficiary->last_name);
+
+            // Check if name changed and update username if needed
+            $nameChanged = ($beneficiary->first_name !== $firstName || 
+                          $beneficiary->middle_name !== $middleName || 
+                          $beneficiary->last_name !== $lastName);
+                          
+            if ($nameChanged) {
+                $beneficiary->username = $this->generateUniqueUsername(
+                    $firstName,
+                    $middleName,
+                    $lastName,
+                    $id
+                );
+            }
 
             if ($request->hasFile('beneficiaryProfilePic')) {
                 $beneficiary->photo = $this->uploadService->upload(
@@ -527,6 +1030,16 @@ class BeneficiaryApiController extends Controller
                 $this->uploadService->storeRawImage($decodedImage, $beneficiary->care_worker_signature, 'spaces-private');
             }
 
+            // Update email if provided
+            if ($request->has('account.email')) {
+                $beneficiary->email = $request->input('account.email');
+            }
+
+            // Update password if provided
+            if ($request->filled('account.password')) {
+                $beneficiary->password = Hash::make($request->input('account.password'));
+            }
+
             // Update beneficiary fields
             $beneficiary->fill($request->only([
                 'first_name',
@@ -553,6 +1066,146 @@ class BeneficiaryApiController extends Controller
 
             // Update related models as needed (similar to store)
             // Example: update general care plan, medications, care needs, etc.
+
+            // Get the general care plan ID
+            $generalCarePlanId = $beneficiary->general_care_plan_id;
+            
+            // Update general care plan if it exists
+            if ($generalCarePlanId) {
+                // Update the general care plan details
+                DB::table('general_care_plans')
+                    ->where('general_care_plan_id', $generalCarePlanId)
+                    ->update([
+                        'review_date' => $request->input('date'),
+                        'emergency_plan' => $request->input('emergency_plan.procedures'),
+                        'care_worker_id' => $request->input('care_worker.careworker_id'),
+                    ]);
+                    
+                // Update emotional wellbeing
+                EmotionalWellbeing::updateOrCreate(
+                    ['general_care_plan_id' => $generalCarePlanId],
+                    [
+                        'mood' => $request->input('emotional.mood'),
+                        'social_interactions' => $request->input('emotional.social_interactions'),
+                        'emotional_support_needs' => $request->input('emotional.emotional_support'),
+                    ]
+                );
+                
+                // Update cognitive function
+                CognitiveFunction::updateOrCreate(
+                    ['general_care_plan_id' => $generalCarePlanId],
+                    [
+                        'memory' => $request->input('cognitive.memory'),
+                        'thinking_skills' => $request->input('cognitive.thinking_skills'),
+                        'orientation' => $request->input('cognitive.orientation'),
+                        'behavior' => $request->input('cognitive.behavior'),
+                    ]
+                );
+                
+                // Update mobility
+                Mobility::updateOrCreate(
+                    ['general_care_plan_id' => $generalCarePlanId],
+                    [
+                        'walking_ability' => $request->input('mobility.walking_ability'),
+                        'assistive_devices' => $request->input('mobility.assistive_devices'),
+                        'transportation_needs' => $request->input('mobility.transportation_needs'),
+                    ]
+                );
+                
+                // Process health history fields
+                $medicalConditions = $request->input('medical_conditions');
+                $medications = $request->input('medications');
+                $allergies = $request->input('allergies');
+                $immunizations = $request->input('immunizations');
+                
+                // Format health history data
+                $formattedMedicalConditions = !empty($medicalConditions) ? 
+                    json_encode(array_map('trim', explode(',', $medicalConditions))) : null;
+                $formattedMedications = !empty($medications) ? 
+                    json_encode(array_map('trim', explode(',', $medications))) : null;
+                $formattedAllergies = !empty($allergies) ? 
+                    json_encode(array_map('trim', explode(',', $allergies))) : null;
+                $formattedImmunizations = !empty($immunizations) ? 
+                    json_encode(array_map('trim', explode(',', $immunizations))) : null;
+                
+                // Update health history
+                HealthHistory::updateOrCreate(
+                    ['general_care_plan_id' => $generalCarePlanId],
+                    [
+                        'medical_conditions' => $formattedMedicalConditions,
+                        'medications' => $formattedMedications,
+                        'allergies' => $formattedAllergies,
+                        'immunizations' => $formattedImmunizations,
+                    ]
+                );
+                
+                // Update medications - first delete existing ones
+                Medication::where('general_care_plan_id', $generalCarePlanId)->delete();
+                
+                // Then add new medications
+                if ($request->has('medication_name')) {
+                    $medicationNames = $request->input('medication_name');
+                    $dosages = $request->input('dosage');
+                    $frequencies = $request->input('frequency');
+                    $administrationInstructions = $request->input('administration_instructions');
+                    
+                    foreach ($medicationNames as $index => $medicationName) {
+                        if (!empty($medicationName)) {
+                            Medication::create([
+                                'general_care_plan_id' => $generalCarePlanId,
+                                'medication' => $medicationName,
+                                'dosage' => $dosages[$index] ?? '',
+                                'frequency' => $frequencies[$index] ?? '',
+                                'administration_instructions' => $administrationInstructions[$index] ?? '',
+                            ]);
+                        }
+                    }
+                }
+                
+                // Update care worker responsibilities - first delete existing ones
+                CareWorkerResponsibility::where('general_care_plan_id', $generalCarePlanId)->delete();
+                
+                // Then add new responsibilities
+                if ($request->has('care_worker.tasks')) {
+                    $tasks = $request->input('care_worker.tasks');
+                    $careWorkerId = $request->input('care_worker.careworker_id');
+                    
+                    foreach ($tasks as $task) {
+                        if (!empty($task)) {
+                            CareWorkerResponsibility::create([
+                                'general_care_plan_id' => $generalCarePlanId,
+                                'care_worker_id' => $careWorkerId,
+                                'task_description' => $task,
+                            ]);
+                        }
+                    }
+                }
+                
+                // Update care needs - first delete existing ones
+                CareNeed::where('general_care_plan_id', $generalCarePlanId)->delete();
+                
+                // Then add new care needs
+                $careCategories = [
+                    1 => ['frequency' => $request->input('frequency.mobility'), 'assistance' => $request->input('assistance.mobility')],
+                    2 => ['frequency' => $request->input('frequency.cognitive'), 'assistance' => $request->input('assistance.cognitive')],
+                    3 => ['frequency' => $request->input('frequency.self_sustainability'), 'assistance' => $request->input('assistance.self_sustainability')],
+                    4 => ['frequency' => $request->input('frequency.disease'), 'assistance' => $request->input('assistance.disease')],
+                    5 => ['frequency' => $request->input('frequency.daily_life'), 'assistance' => $request->input('assistance.daily_life')],
+                    6 => ['frequency' => $request->input('frequency.outdoor'), 'assistance' => $request->input('assistance.outdoor')],
+                    7 => ['frequency' => $request->input('frequency.household'), 'assistance' => $request->input('assistance.household')]
+                ];
+                
+                foreach ($careCategories as $categoryId => $data) {
+                    if (!empty($data['frequency']) || !empty($data['assistance'])) {
+                        CareNeed::create([
+                            'general_care_plan_id' => $generalCarePlanId,
+                            'care_category_id' => $categoryId,
+                            'frequency' => $data['frequency'],
+                            'assistance_required' => $data['assistance']
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
 
@@ -671,7 +1324,7 @@ class BeneficiaryApiController extends Controller
             'generalCarePlan.emotionalWellbeing', 'generalCarePlan.medications',
             'generalCarePlan.healthHistory', 'generalCarePlan.careNeeds',
             'generalCarePlan.careWorkerResponsibility',
-            'portalAccount', 'familyMembers'
+            'familyMembers'
         ])->get();
 
         $headers = [
