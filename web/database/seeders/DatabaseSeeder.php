@@ -402,6 +402,24 @@ class DatabaseSeeder extends Seeder
                         
                         // Get a random vital sign
                         $vitalSign = $vitalSigns->random();
+
+                        $possibleIllnesses = [
+                            'Common Cold',
+                            'Influenza',
+                            'Bronchitis',
+                            'Gastroenteritis',
+                            'Skin Infection',
+                            'Urinary Tract Infection (UTI)',
+                            'Pneumonia',
+                            'Respiratory Infection',
+                            'Allergic Rhinitis',
+                            'Diarrhea',
+                            'Minor Injuries (e.g., falls, sprains)',
+                            'Headache',
+                            'Indigestion',
+                            'Toothache',
+                            'Sore Throat'
+                        ];
                         
                         // Create the weekly care plan without factory method complications
                         $weeklyCarePlan = new WeeklyCarePlan();
@@ -417,6 +435,12 @@ class DatabaseSeeder extends Seeder
                         $weeklyCarePlan->updated_at = $planDate->copy()->addDay();
                         $weeklyCarePlan->photo_path = "uploads/weekly_care_plans/{$planDate->format('Y')}/{$planDate->format('m')}/beneficiary_{$beneficiary->beneficiary_id}_assessment_{$this->faker->randomNumber(8)}.jpg";
                         
+                        // Generate random illnesses (0-3) for this weekly care plan
+                        $weeklyCarePlan->illnesses = json_encode($this->faker->randomElements(
+                            $possibleIllnesses, 
+                            $this->faker->numberBetween(0, 3)
+                        ));
+
                         // Save the weekly care plan to get an ID
                         $weeklyCarePlan->save();
                         
