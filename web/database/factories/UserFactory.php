@@ -137,7 +137,7 @@ class UserFactory extends Factory
         // Generate birthday (18-65 years old for staff)
         $birthday = $this->faker->dateTimeBetween('-65 years', '-18 years')->format('Y-m-d');
         
-        // Pick a barangay from the appropriate municipality
+        // Pick a barangay from the appropriate municipality (for address only, not storing the ID)
         $barangayId = $this->faker->randomElement($this->barangayMap[$municipalityId]);
         $barangay = Barangay::find($barangayId);
         $barangayName = $barangay ? $barangay->barangay_name : 'Unknown Barangay';
@@ -158,8 +158,8 @@ class UserFactory extends Factory
             'email' => strtolower(str_replace(' ', '.', $firstName)) . '.' . 
                      strtolower(str_replace(' ', '.', $lastName)) . '@sulong-kalinga.org',
             'password' => Hash::make('12312312'), // Set the password to '12312312' and hash it
-            'address' => $address,
-            'barangay_id' => $barangayId,
+            'address' => $address, // Address now fully contains the barangay information
+            // 'barangay_id' => $barangayId, // Removed as it doesn't exist in PostgreSQL schema
             'gender' => $gender,
             'religion' => $this->faker->randomElement($this->religions),
             'nationality' => 'Filipino',

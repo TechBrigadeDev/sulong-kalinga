@@ -59,7 +59,10 @@ class EmergencyNoticeFactory extends Factory
 
     public function definition(): array
     {
-        $sender_type = $this->faker->randomElement(['beneficiary', 'family_member']);
+        // Store the faker instance to use in local methods
+        $faker = $this->faker;
+        
+        $sender_type = $faker->randomElement(['beneficiary', 'family_member']);
         $beneficiary = Beneficiary::inRandomOrder()->first();
         
         if ($sender_type === 'beneficiary') {
@@ -91,8 +94,8 @@ class EmergencyNoticeFactory extends Factory
             'resolved' => 50  // Increased weight since we removed 'archived'
         ];
         
-        $status = $this->faker->randomElement(
-            $this->faker->randomElements(
+        $status = $faker->randomElement(
+            $faker->randomElements(
                 array_keys($statusChoices),
                 1,
                 true,
@@ -101,7 +104,7 @@ class EmergencyNoticeFactory extends Factory
         );
         
         // Base creation date
-        $created_at = $this->faker->dateTimeBetween('-3 months', 'now');
+        $created_at = $faker->dateTimeBetween('-3 months', 'now');
         
         // Determine read status and action details based on status
         $read_status = false;
@@ -113,18 +116,18 @@ class EmergencyNoticeFactory extends Factory
 
         if ($status !== 'new') {
             $read_status = true;
-            $read_at = $this->faker->dateTimeBetween($created_at, 'now');
+            $read_at = $faker->dateTimeBetween($created_at, 'now');
             $assigned_to = User::where('role_id', '<=', 3)->inRandomOrder()->first()->id;
         }
         
         if ($status === 'in_progress') {
             $action_type = 'in_progress';
             $action_taken_by = User::where('role_id', '<=', 3)->inRandomOrder()->first()->id;
-            $action_taken_at = $this->faker->dateTimeBetween($read_at ?? $created_at, 'now');
+            $action_taken_at = $faker->dateTimeBetween($read_at ?? $created_at, 'now');
         } elseif ($status === 'resolved' || $status === 'archived') {
             $action_type = 'resolved';
             $action_taken_by = User::where('role_id', '<=', 3)->inRandomOrder()->first()->id;
-            $action_taken_at = $this->faker->dateTimeBetween($read_at ?? $created_at, 'now');
+            $action_taken_at = $faker->dateTimeBetween($read_at ?? $created_at, 'now');
         }
 
         return [
@@ -141,7 +144,7 @@ class EmergencyNoticeFactory extends Factory
             'action_taken_by' => $action_taken_by,
             'action_taken_at' => $action_taken_at,
             'created_at' => $created_at,
-            'updated_at' => $this->faker->dateTimeBetween($created_at, 'now'),
+            'updated_at' => $faker->dateTimeBetween($created_at, 'now'),
         ];
     }
     
@@ -150,8 +153,10 @@ class EmergencyNoticeFactory extends Factory
      */
     protected function getEmergencyMessage($emergency_type_id)
     {
+        $faker = $this->faker; // Store locally
+        
         if (isset($this->emergencyMessages[$emergency_type_id])) {
-            return $this->faker->randomElement($this->emergencyMessages[$emergency_type_id]);
+            return $faker->randomElement($this->emergencyMessages[$emergency_type_id]);
         }
         
         // Fallback to generic message if type doesn't match
@@ -160,7 +165,10 @@ class EmergencyNoticeFactory extends Factory
     
     public function asNew(): Factory
     {
-        return $this->state(function (array $attributes) {
+        // Capture faker before entering closure
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
             return [
                 'status' => 'new',
                 'read_status' => false,
@@ -169,17 +177,26 @@ class EmergencyNoticeFactory extends Factory
                 'action_type' => null,
                 'action_taken_by' => null,
                 'action_taken_at' => null,
-                'created_at' => $this->faker->dateTimeBetween('-1 week', 'now'),
+                'created_at' => $faker->dateTimeBetween('-1 week', 'now'),
             ];
         });
     }
     
     public function inProgress(): Factory
     {
-        return $this->state(function (array $attributes) {
-            $created_at = $this->faker->dateTimeBetween('-1 month', '-2 days');
-            $read_at = $this->faker->dateTimeBetween($created_at, '-1 day');
-            $action_taken_at = $this->faker->dateTimeBetween($read_at, 'now');
+        // Capture faker before entering closure
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
+            $created_at = $faker->dateTimeBetween('-1 month', '-2 days');
+            // Convert to Carbon
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            // Use Carbon for building date ranges
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDay());
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(2));
             
             return [
                 'status' => 'in_progress',
@@ -187,6 +204,35 @@ class EmergencyNoticeFactory extends Factory
                 'read_at' => $read_at,
                 'assigned_to' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
                 'action_type' => 'in_progress',
+                'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_taken_at' => $action_taken_at,
+                'created_at' => $created_at,
+                'updated_at' => $action_taken_at,
+            ];
+        });
+    }
+    
+    public function resolved(): Factory
+    {
+        // Capture faker before entering closure
+        $faker = $this->faker;
+        
+        return $this->state(function (array $attributes) use ($faker) {
+            $created_at = $faker->dateTimeBetween('-3 months', '-4 days');
+            // Convert to Carbon
+            $carbonCreatedAt = \Carbon\Carbon::instance($created_at);
+            
+            $read_at = $faker->dateTimeBetween($created_at, $carbonCreatedAt->copy()->addDay());
+            $carbonReadAt = \Carbon\Carbon::instance($read_at);
+            
+            $action_taken_at = $faker->dateTimeBetween($read_at, $carbonReadAt->copy()->addDays(2));
+            
+            return [
+                'status' => 'resolved',
+                'read_status' => true,
+                'read_at' => $read_at,
+                'assigned_to' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
+                'action_type' => 'resolved',
                 'action_taken_by' => User::where('role_id', '<=', 3)->inRandomOrder()->first()->id,
                 'action_taken_at' => $action_taken_at,
                 'created_at' => $created_at,

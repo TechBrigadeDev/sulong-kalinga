@@ -163,7 +163,7 @@ class LoginController extends Controller
                 $beneficiary = Beneficiary::where('username', $request->input('email'))->first();
                 
                 if ($beneficiary) {
-                    if ($beneficiary->status !== 'Active') {
+                    if ($beneficiary->beneficiary_status_id !== 1) {
                         // Log the attempt
                         $this->logService->createLog(
                             'beneficiary',
@@ -214,7 +214,7 @@ class LoginController extends Controller
                     // Get the related beneficiary to check status
                     $relatedBeneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
                     
-                    if (!$relatedBeneficiary || $relatedBeneficiary->status !== 'Active') {
+                    if (!$relatedBeneficiary || $relatedBeneficiary->beneficiary_status_id !== 1) {
                         // Log the attempt
                         $this->logService->createLog(
                             'family_member',
