@@ -1,7 +1,8 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { Text, View } from "tamagui";
-import { useGetCareManager } from "~/features/user/management/management.hook";
 import CareManagerDetail from "features/user/management/components/care-managers/detail";
+import { Text, View } from "tamagui";
+
+import { useGetCareManager } from "~/features/user/management/management.hook";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();

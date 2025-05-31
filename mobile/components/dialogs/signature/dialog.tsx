@@ -1,7 +1,8 @@
-import { Button, Dialog, XStack, YStack } from 'tamagui';
-import SignatureCanvas from 'react-native-signature-canvas';
-import { useSignatureStore } from './store';
 import { useWindowDimensions } from 'react-native';
+import SignatureCanvas from 'react-native-signature-canvas';
+import { Button, Dialog, XStack, YStack } from 'tamagui';
+
+import { useSignatureStore } from './store';
 
 export const SignatureDialog = () => {
     const { width } = useWindowDimensions();

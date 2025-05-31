@@ -1,12 +1,13 @@
-import { YStack, Text, Avatar } from 'tamagui';
-import { useUser } from '~/features/user/user.hook';
+import AvatarImage from 'components/Avatar';
+import OptionCard from 'components/screens/Options/_components/Card';
+import OptionRow from 'components/screens/Options/_components/Row';
+import { StyleSheet } from 'react-native';
+import { Avatar,Text, YStack } from 'tamagui';
+
 import Badge from '~/components/Bagde';
 import { updateEmailStore } from '~/features/user/components/UpdateEmail/store';
 import { updatePasswordStore } from '~/features/user/components/UpdatePassword/store';
-import AvatarImage from 'components/Avatar';
-import { StyleSheet } from 'react-native';
-import OptionCard from 'components/screens/Options/_components/Card';
-import OptionRow from 'components/screens/Options/_components/Row';
+import { useUser } from '~/features/user/user.hook';
 
 const ProfileSettings = () => {
   const {

@@ -1,8 +1,9 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, Card, View } from "tamagui"
-import CareWorkerSearch from "~/features/user/management/components/care-workers/list/search";
+
 import CareWorkerList from "~/features/user/management/components/care-workers/list";
+import CareWorkerSearch from "~/features/user/management/components/care-workers/list/search";
 
 const CareWorkers = () => {
     const router = useRouter();

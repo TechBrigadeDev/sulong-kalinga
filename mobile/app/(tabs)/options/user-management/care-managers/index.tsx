@@ -1,8 +1,9 @@
 import { Stack } from "expo-router";
-import { Card, View } from "tamagui"
 import { StyleSheet } from "react-native";
-import CareManagerSearch from "~/features/user/management/components/care-managers/list/search";
+import { Card, View } from "tamagui"
+
 import CareManagerList from "~/features/user/management/components/care-managers/list";
+import CareManagerSearch from "~/features/user/management/components/care-managers/list/search";
 
 const CareManagers = () => {
     return (

@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { View } from 'tamagui';
+
 import Home from '~/components/screens/Home/_components/home';
 
 export default function HomeScreen() {

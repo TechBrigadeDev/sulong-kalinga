@@ -1,6 +1,6 @@
-import { Pressable, SafeAreaView } from "react-native";
-import { ScrollView, XStack, Text, Avatar} from "tamagui";
 import { Stack, useRouter } from "expo-router";
+import { Pressable, SafeAreaView } from "react-native";
+import { Avatar,ScrollView, Text, XStack} from "tamagui";
 
 const Screen = () => {
   const router = useRouter();
