@@ -2,14 +2,16 @@ import { Button, ScrollView, YStack } from "tamagui";
 import { IBeneficiary } from "../../../user.schema";
 import { useState } from "react";
 import { SafeAreaView } from "react-native";
-import PersonalDetailsSection from "./PersonalDetailsSection";
-import AddressSection from "./AddressSection";
-import MedicalHistorySection from "./MedicalHistorySection";
-import CareNeedsSection from "./CareNeedsSection";
-import MedicationSection from "./MedicationSection";
-import CognitiveFunctionSection from "./CognitiveFunctionSection";
-import EmergencyContactSection from "./EmergencyContactSection";
-import DocumentsSection from "./DocumentsSection";
+import PersonalDetailsSection from "./components/PersonalDetailsSection";
+import AddressSection from "./components/AddressSection";
+import MedicalHistorySection from "./components/MedicalHistorySection";
+import CareNeedsSection from "./components/CareNeedsSection";
+import MedicationSection from "./components/MedicationSection";
+import CognitiveFunctionSection from "./components/CognitiveFunctionSection";
+import EmergencyContactSection from "./components/EmergencyContactSection";
+import DocumentsSection from "./components/DocumentsSection";
+import { Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 interface Props {
     beneficiary?: IBeneficiary;
@@ -25,7 +27,7 @@ const BeneficiaryForm = ({ beneficiary, onSubmit }: Props) => {
     };
 
     const handleChange = (field: keyof IBeneficiary, value: any) => {
-        setFormData(prev => ({
+        setFormData((prev: Partial<IBeneficiary>) => ({
             ...prev,
             [field]: value
         }));
@@ -33,54 +35,28 @@ const BeneficiaryForm = ({ beneficiary, onSubmit }: Props) => {
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
+            <Stack.Screen options={{
+                title: beneficiary ? "EDIT BENEFICIARY" : "ADD BENEFICIARY",
+                headerShown: true,
+            }} />
             <ScrollView>
-                <YStack style={{ padding: 16 }} space="$4">
-                    <PersonalDetailsSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <AddressSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <MedicalHistorySection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <CareNeedsSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <MedicationSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <CognitiveFunctionSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <EmergencyContactSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
-                    <DocumentsSection
-                        data={formData}
-                        onChange={handleChange}
-                    />
-                    
+                <YStack space="$4" p="$4">
+                    <PersonalDetailsSection data={formData} onChange={handleChange} />
+                    <AddressSection data={formData} onChange={handleChange} />
+                    <MedicalHistorySection data={formData} onChange={handleChange} />
+                    <CareNeedsSection data={formData} onChange={handleChange} />
+                    <MedicationSection data={formData} onChange={handleChange} />
+                    <CognitiveFunctionSection data={formData} onChange={handleChange} />
+                    <EmergencyContactSection data={formData} onChange={handleChange} />
+                    <DocumentsSection data={formData} onChange={handleChange} />
+
                     <Button 
-                        theme="blue"
-                        size="$4"
+                        theme="green"
+                        size="$5"
+                        icon={<Ionicons name="save-outline" size={20} color="white" />}
                         onPress={handleSubmit}
                     >
-                        Save Beneficiary
+                        {beneficiary ? "Update" : "Save"} Beneficiary
                     </Button>
                 </YStack>
             </ScrollView>

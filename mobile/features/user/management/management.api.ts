@@ -96,6 +96,22 @@ class UserManagementController {
 
     return valid.data.careworkers;
   }
+
+  async getCareWorker(id: string) {
+    const response = await this.api.get(`/care-workers/${id}`);
+    if (!response.data) {
+      throw new Error("No data received from API");
+    }
+    const data = await response.data;
+
+    const valid = await userManagementSchema.getCareWorker.safeParseAsync(data);
+    if (!valid.success) {
+      console.error("Care worker validation error", valid.error);
+      throw new Error("Care worker validation error");
+    }
+
+    return valid.data.careworker;
+  }
 }
 
 export default UserManagementController;

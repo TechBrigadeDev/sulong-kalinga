@@ -1,10 +1,15 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, Card, View } from "tamagui"
-import CareWorkerSearch from "../../../../../features/user/management/components/care-workers/list/search";
-import CareWorkerList from "../../../../../features/user/management/components/care-workers/list";
+import CareWorkerSearch from "~/features/user/management/components/care-workers/list/search";
+import CareWorkerList from "~/features/user/management/components/care-workers/list";
 
 const CareWorkers = () => {
+    const router = useRouter();
+
+    const handleAddCareWorker = () => {
+        router.push(`/(tabs)/options/user-management/care-workers/add`);
+    };
     return (
       <View flex={1} bg="$background">
         <Stack.Screen
@@ -23,7 +28,7 @@ const CareWorkers = () => {
             <Button
               size="$3"
               theme="dark_blue"
-            //   onPressIn={handleAddFamilyMember}
+              onPressIn={handleAddCareWorker}
             >
               Add Care Worker 
             </Button>
