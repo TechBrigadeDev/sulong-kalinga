@@ -1,22 +1,15 @@
-import { Card, H3, YStack, Input, XStack, Select } from "tamagui";
+import { Card, H3, YStack, Input, XStack, Text } from "tamagui";
 import { IBeneficiary } from "../../../user.schema";
 
 interface Props {
-    data: Partial<IBeneficiary>;
-    onChange: (field: keyof IBeneficiary, value: any) => void;
+    data?: Partial<IBeneficiary>;
+    onChange?: (field: string | number | symbol, value: any) => void;
 }
 
-const RELATION_OPTIONS = [
-    { label: "Spouse", value: "spouse" },
-    { label: "Parent", value: "parent" },
-    { label: "Child", value: "child" },
-    { label: "Sibling", value: "sibling" },
-    { label: "Other Relative", value: "other_relative" },
-    { label: "Friend", value: "friend" },
-    { label: "Other", value: "other" }
-];
-
-const EmergencyContactSection = ({ data, onChange }: Props) => {
+export const EmergencyContactSection = ({ 
+    data = {}, 
+    onChange = () => {} 
+}: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -24,73 +17,60 @@ const EmergencyContactSection = ({ data, onChange }: Props) => {
             </Card.Header>
             <Card.Footer padded>
                 <YStack space="$4">
-                    <YStack>
-                        <Input
-                            id="emergency_contact_name"
-                            value={data.emergency_contact_name}
-                            onChangeText={(value) => onChange("emergency_contact_name", value)}
-                            placeholder="Contact Name"
-                            autoCapitalize="words"
-                        />
-                    </YStack>
+                    <XStack space="$4">
+                        <YStack flex={1}>
+                            <Text>Contact Person Name *</Text>
+                            <Input
+                                value={data.emergency_contact_name}
+                                onChangeText={(value) => onChange("emergency_contact_name", value)}
+                                placeholder="Enter contact name"
+                                autoCapitalize="words"
+                            />
+                        </YStack>
+                        <YStack flex={1}>
+                            <Text>Relationship *</Text>
+                            <Input
+                                value={data.emergency_contact_relation}
+                                onChangeText={(value) => onChange("emergency_contact_relation", value)}
+                                placeholder="Enter relationship"
+                                autoCapitalize="words"
+                            />
+                        </YStack>
+                    </XStack>
 
                     <XStack space="$4">
                         <YStack flex={1}>
-                            <Select
-                                id="emergency_contact_relation"
-                                value={data.emergency_contact_relation}
-                                onValueChange={(value) => onChange("emergency_contact_relation", value)}
-                            >
-                                <Select.Trigger>
-                                    <Select.Value placeholder="Select Relation" />
-                                </Select.Trigger>
-                                
-                                <Select.Content>
-                                    <Select.ScrollUpButton />
-                                    <Select.Viewport>
-                                        <Select.Group>
-                                            {RELATION_OPTIONS.map((option, i) => (
-                                                <Select.Item index={i} key={option.value} value={option.value}>
-                                                    <Select.ItemText>{option.label}</Select.ItemText>
-                                                </Select.Item>
-                                            ))}
-                                        </Select.Group>
-                                    </Select.Viewport>
-                                    <Select.ScrollDownButton />
-                                </Select.Content>
-                            </Select>
+                            <Text>Mobile Number *</Text>
+                            <XStack space="$2" alignItems="center">
+                                <Input
+                                    flex={1}
+                                    value={data.emergency_contact_mobile?.replace('+63', '')}
+                                    onChangeText={(value) => onChange("emergency_contact_mobile", `+63${value}`)}
+                                    placeholder="Enter mobile number"
+                                    keyboardType="phone-pad"
+                                />
+                            </XStack>
+                        </YStack>
+                        <YStack flex={1}>
+                            <Text>Email</Text>
+                            <Input
+                                value={data.emergency_contact_email}
+                                onChangeText={(value) => onChange("emergency_contact_email", value)}
+                                placeholder="Enter email address"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
                         </YStack>
                     </XStack>
 
                     <YStack>
+                        <Text>Emergency Procedure</Text>
                         <Input
-                            id="emergency_contact_mobile"
-                            value={data.emergency_contact_mobile}
-                            onChangeText={(value) => onChange("emergency_contact_mobile", value)}
-                            placeholder="Mobile Number"
-                            keyboardType="phone-pad"
-                        />
-                    </YStack>
-
-                    <YStack>
-                        <Input
-                            id="emergency_contact_email"
-                            value={data.emergency_contact_email}
-                            onChangeText={(value) => onChange("emergency_contact_email", value)}
-                            placeholder="Email Address"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-                    </YStack>
-
-                    <YStack>
-                        <Input
-                            id="emergency_procedure"
                             value={data.emergency_procedure}
                             onChangeText={(value) => onChange("emergency_procedure", value)}
-                            placeholder="Emergency Procedures"
+                            placeholder="Enter emergency procedure"
                             multiline
-                            numberOfLines={4}
+                            numberOfLines={3}
                             textAlignVertical="top"
                         />
                     </YStack>
@@ -99,5 +79,3 @@ const EmergencyContactSection = ({ data, onChange }: Props) => {
         </Card>
     );
 };
-
-export default EmergencyContactSection;

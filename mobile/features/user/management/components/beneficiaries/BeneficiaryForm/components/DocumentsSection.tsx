@@ -1,13 +1,42 @@
-import { Button, Card, H3, Input, Label, Text, YStack } from "tamagui";
+import { Card, H3, YStack, Input, Button, XStack, Text } from "tamagui";
 import { IBeneficiary } from "../../../user.schema";
-import { View } from "react-native";
+import { useSignatureStore } from "~/components/dialogs/signature/store";
+import * as DocumentPicker from 'expo-document-picker';
+import { useState } from "react";
 
 interface Props {
-    data: Partial<IBeneficiary>;
-    onChange: (field: keyof IBeneficiary, value: any) => void;
+    data?: Partial<IBeneficiary>;
+    onChange?: (field: string | number | symbol, value: any) => void;
 }
 
-const DocumentsSection = ({ data, onChange }: Props) => {
+export const DocumentsSection = ({ 
+    data = {}, 
+    onChange = () => {} 
+}: Props) => {
+    const [reviewDate, setReviewDate] = useState("05/31/2025");
+    const { setIsOpen, setTitle, setOnSave } = useSignatureStore();
+
+    const handleFilePick = async (field: keyof IBeneficiary) => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['image/*', 'application/pdf'],
+                copyToCacheDirectory: true,
+            });
+
+            if (result.type === 'success') {
+                onChange(field, result.uri);
+            }
+        } catch (err) {
+            console.error('Error picking file:', err);
+        }
+    };
+
+    const handleSignature = (field: keyof IBeneficiary) => {
+        setTitle(field === 'beneficiary_signature' ? 'Beneficiary Signature' : 'Care Worker Signature');
+        setOnSave((signature) => onChange(field, signature));
+        setIsOpen(true);
+    };
+
     return (
         <Card elevate>
             <Card.Header padded>
@@ -15,107 +44,75 @@ const DocumentsSection = ({ data, onChange }: Props) => {
             </Card.Header>
             <Card.Footer padded>
                 <YStack space="$4">
-                    {/* Beneficiary Picture */}
                     <YStack>
-                        <Label>Upload Beneficiary Picture</Label>
-                        <Button>Choose File</Button>
-                        <Text>{data.photo ? 'Photo selected' : 'No photo chosen'}</Text>
+                        <Text>Upload Beneficiary Picture</Text>
+                        <Button 
+                            onPress={() => handleFilePick('photo')}
+                            theme="gray"
+                        >
+                            Choose File
+                        </Button>
+                        {data.photo && (
+                            <Text size="$2">File selected</Text>
+                        )}
                     </YStack>
 
-                    {/* Review Date */}
                     <YStack>
-                        <Label htmlFor="review_date">Review Date</Label>
+                        <Text>Review Date</Text>
                         <Input
-                            id="review_date"
-                            placeholder="MM/DD/YYYY"
-                            value="05/10/2025"
+                            value={reviewDate}
                             editable={false}
                         />
                     </YStack>
 
-                    {/* Care Service Agreement */}
                     <YStack>
-                        <Label>Care Service Agreement</Label>
-                        <Button>Choose File</Button>
-                        <Text>
-                            {data.care_service_agreement_doc ? 'File selected' : 'No file chosen'}
-                        </Text>
+                        <Text>Care Service Agreement</Text>
+                        <Button 
+                            onPress={() => handleFilePick('care_service_agreement_doc')}
+                            theme="gray"
+                        >
+                            Choose File
+                        </Button>
+                        {data.care_service_agreement_doc && (
+                            <Text size="$2">File selected</Text>
+                        )}
                     </YStack>
 
-                    {/* General Careplan */}
                     <YStack>
-                        <Label>General Careplan</Label>
-                        <Button>Choose File</Button>
-                        <Text>
-                            {data.general_care_plan_doc ? 'File selected' : 'No file chosen'}
-                        </Text>
+                        <Text>General Careplan</Text>
+                        <Button 
+                            onPress={() => handleFilePick('general_care_plan_doc')}
+                            theme="gray"
+                        >
+                            Choose File
+                        </Button>
+                        {data.general_care_plan_doc && (
+                            <Text size="$2">File selected</Text>
+                        )}
                     </YStack>
 
-                    {/* Beneficiary Signature */}
-                    <YStack>
-                        <Label>Beneficiary Signature</Label>
-                        <View style={{ 
-                            height: 200, 
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: 8,
-                            marginVertical: 8
-                        }} />
-                        <Button>Clear</Button>
-                    </YStack>
-
-                    {/* Care Worker Signature */}
-                    <YStack>
-                        <Label>Care Worker Signature</Label>
-                        <View style={{ 
-                            height: 200, 
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: 8,
-                            marginVertical: 8
-                        }} />
-                        <Button>Clear</Button>
-                    </YStack>
-
-                    {/* Family Portal Registration */}
-                    <Card bordered>
-                        <Card.Header padded>
-                            <Text fontSize="$5">Family Portal Account Registration</Text>
-                        </Card.Header>
-                        <Card.Footer padded>
-                            <YStack space="$3">
-                                <YStack>
-                                    <Label htmlFor="portal_email">Email *</Label>
-                                    <Input
-                                        id="portal_email"
-                                        placeholder="Enter email"
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                    />
-                                </YStack>
-
-                                <YStack>
-                                    <Label htmlFor="portal_password">Password *</Label>
-                                    <Input
-                                        id="portal_password"
-                                        placeholder="Enter password"
-                                        secureTextEntry
-                                    />
-                                </YStack>
-
-                                <YStack>
-                                    <Label htmlFor="portal_confirm_password">Confirm Password *</Label>
-                                    <Input
-                                        id="portal_confirm_password"
-                                        placeholder="Confirm password"
-                                        secureTextEntry
-                                    />
-                                </YStack>
-                            </YStack>
-                        </Card.Footer>
-                    </Card>
+                    <XStack space="$4">
+                        <YStack flex={1}>
+                            <Text>Beneficiary Signature</Text>
+                            <Button 
+                                onPress={() => handleSignature('beneficiary_signature')}
+                                theme={data.beneficiary_signature ? "green" : "gray"}
+                            >
+                                {data.beneficiary_signature ? "Change Signature" : "Add Signature"}
+                            </Button>
+                        </YStack>
+                        <YStack flex={1}>
+                            <Text>Care Worker Signature</Text>
+                            <Button 
+                                onPress={() => handleSignature('care_worker_signature')}
+                                theme={data.care_worker_signature ? "green" : "gray"}
+                            >
+                                {data.care_worker_signature ? "Change Signature" : "Add Signature"}
+                            </Button>
+                        </YStack>
+                    </XStack>
                 </YStack>
             </Card.Footer>
         </Card>
     );
 };
-
-export default DocumentsSection;

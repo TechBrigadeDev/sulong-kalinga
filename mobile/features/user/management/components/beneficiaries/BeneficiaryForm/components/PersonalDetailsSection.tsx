@@ -1,62 +1,68 @@
-import { Card, H3, Input, Label, Select, YStack } from "tamagui";
+import { Card, H3, YStack, Input, Select, XStack, Text } from "tamagui";
 import { IBeneficiary } from "../../../user.schema";
-import { Sheet } from "@tamagui/sheet";
+import { useState } from "react";
 
 interface Props {
-    data: Partial<IBeneficiary>;
-    onChange: (field: keyof IBeneficiary, value: any) => void;
+    data?: Partial<IBeneficiary>;
+    onChange?: (field: string | number | symbol, value: any) => void;
 }
 
 const CIVIL_STATUS_OPTIONS = [
-    { label: "Single", value: "single" },
-    { label: "Married", value: "married" },
-    { label: "Widowed", value: "widowed" },
-    { label: "Divorced", value: "divorced" },
-    { label: "Separated", value: "separated" }
+    { label: "Single", value: "Single" },
+    { label: "Married", value: "Married" },
+    { label: "Widowed", value: "Widowed" },
+    { label: "Divorced", value: "Divorced" },
 ];
 
 const GENDER_OPTIONS = [
-    { label: "Male", value: "male" },
-    { label: "Female", value: "female" }
+    { label: "Male", value: "Male" },
+    { label: "Female", value: "Female" },
+    { label: "Other", value: "Other" },
 ];
 
-const PersonalDetailsSection = ({ data, onChange }: Props) => {
+export const PersonalDetailsSection = ({ 
+    data = {}, 
+    onChange = () => {} 
+}: Props) => {
+    const [birthday, setBirthday] = useState(data.birthday || "");
+
     return (
-        <Card elevate>
-            <Card.Header padded>
+        <Card bordered backgroundColor="$background">
+            <Card.Header>
                 <H3>Personal Details</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <Card.Footer p="$4">
                 <YStack space="$4">
-                    <YStack space="$4">
-                        <YStack space="$2">
-                            <Label htmlFor="first_name">First Name *</Label>
+                    <XStack space="$4">
+                        <YStack flex={1} space="$2">
+                            <Text>First Name *</Text>
                             <Input
-                                id="first_name"
+                                size="$4"
                                 value={data.first_name}
                                 onChangeText={(value) => onChange("first_name", value)}
                                 placeholder="Enter first name"
+                                autoCapitalize="words"
                             />
                         </YStack>
-                        <YStack space="$2">
-                            <Label htmlFor="last_name">Last Name *</Label>
+                        <YStack flex={1} space="$2">
+                            <Text>Last Name *</Text>
                             <Input
-                                id="last_name"
+                                size="$4"
                                 value={data.last_name}
                                 onChangeText={(value) => onChange("last_name", value)}
                                 placeholder="Enter last name"
+                                autoCapitalize="words"
                             />
                         </YStack>
-                    </YStack>
+                    </XStack>
 
-                    <YStack space="$4">
-                        <YStack space="$2">
-                            <Label htmlFor="civil_status">Civil Status *</Label>
+                    <XStack space="$4">
+                        <YStack flex={1} space="$2">
+                            <Text>Civil Status *</Text>
                             <Select
-                                id="civil_status"
+                                size="$4"
                                 value={data.civil_status}
                                 onValueChange={(value) => onChange("civil_status", value)}
-                                native
                             >
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select civil status" />
@@ -64,30 +70,24 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                                 <Select.Content>
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
-                                        {CIVIL_STATUS_OPTIONS.map((option, index) => (
-                                            <Select.Item 
-                                                key={option.value} 
-                                                value={option.value}
-                                                index={index}
-                                            >
-                                                <Select.ItemText>
-                                                    {option.label}
-                                                </Select.ItemText>
-                                            </Select.Item>
-                                        ))}
+                                        <Select.Group>
+                                            {CIVIL_STATUS_OPTIONS.map((option, i) => (
+                                                <Select.Item index={i} key={option.value} value={option.value}>
+                                                    <Select.ItemText>{option.label}</Select.ItemText>
+                                                </Select.Item>
+                                            ))}
+                                        </Select.Group>
                                     </Select.Viewport>
                                     <Select.ScrollDownButton />
                                 </Select.Content>
                             </Select>
                         </YStack>
-
-                        <YStack space="$2">
-                            <Label htmlFor="gender">Gender *</Label>
+                        <YStack flex={1} space="$2">
+                            <Text>Gender *</Text>
                             <Select
-                                id="gender"
+                                size="$4"
                                 value={data.gender}
                                 onValueChange={(value) => onChange("gender", value)}
-                                native
                             >
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select gender" />
@@ -95,69 +95,69 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                                 <Select.Content>
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
-                                        {GENDER_OPTIONS.map((option, index) => (
-                                            <Select.Item 
-                                                key={option.value} 
-                                                value={option.value}
-                                                index={index}
-                                            >
-                                                <Select.ItemText>
-                                                    {option.label}
-                                                </Select.ItemText>
-                                            </Select.Item>
-                                        ))}
+                                        <Select.Group>
+                                            {GENDER_OPTIONS.map((option, i) => (
+                                                <Select.Item index={i} key={option.value} value={option.value}>
+                                                    <Select.ItemText>{option.label}</Select.ItemText>
+                                                </Select.Item>
+                                            ))}
+                                        </Select.Group>
                                     </Select.Viewport>
                                     <Select.ScrollDownButton />
                                 </Select.Content>
                             </Select>
                         </YStack>
-                    </YStack>
+                    </XStack>
 
-                    <YStack space="$4">
-                        <YStack space="$2">
-                            <Label htmlFor="birthday">Birthday *</Label>
+                    <XStack space="$4">
+                        <YStack flex={1} space="$2">
+                            <Text>Birthday *</Text>
                             <Input
-                                id="birthday"
-                                value={data.birthday}
-                                onChangeText={(value) => onChange("birthday", value)}
+                                size="$4"
+                                value={birthday}
+                                onChangeText={(value) => {
+                                    setBirthday(value);
+                                    onChange("birthday", value);
+                                }}
                                 placeholder="YYYY-MM-DD"
                             />
                         </YStack>
-                        <YStack space="$2">
-                            <Label htmlFor="primary_caregiver">Primary Caregiver</Label>
+                        <YStack flex={1} space="$2">
+                            <Text>Primary Caregiver</Text>
                             <Input
-                                id="primary_caregiver"
+                                size="$4"
                                 value={data.primary_caregiver}
                                 onChangeText={(value) => onChange("primary_caregiver", value)}
-                                placeholder="Enter primary caregiver"
+                                placeholder="Enter Primary Caregiver name"
+                                autoCapitalize="words"
                             />
                         </YStack>
-                    </YStack>
+                    </XStack>
 
-                    <YStack space="$4">
-                        <YStack space="$2">
-                            <Label htmlFor="mobile">Mobile Number</Label>
+                    <XStack space="$4">
+                        <YStack flex={1} space="$2">
+                            <Text>Mobile Number *</Text>
                             <Input
-                                id="mobile"
-                                value={data.mobile}
-                                onChangeText={(value) => onChange("mobile", value)}
-                                placeholder="+63"
+                                size="$4"
+                                value={data.mobile?.replace('+63', '')}
+                                onChangeText={(value) => onChange("mobile", `+63${value}`)}
+                                placeholder="Enter mobile number"
+                                keyboardType="phone-pad"
                             />
                         </YStack>
-                        <YStack space="$2">
-                            <Label htmlFor="landline">Landline Number</Label>
+                        <YStack flex={1} space="$2">
+                            <Text>Landline Number</Text>
                             <Input
-                                id="landline"
+                                size="$4"
                                 value={data.landline}
                                 onChangeText={(value) => onChange("landline", value)}
                                 placeholder="Enter landline number"
+                                keyboardType="phone-pad"
                             />
                         </YStack>
-                    </YStack>
+                    </XStack>
                 </YStack>
             </Card.Footer>
         </Card>
     );
 };
-
-export default PersonalDetailsSection;
