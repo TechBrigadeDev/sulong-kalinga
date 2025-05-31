@@ -1,12 +1,15 @@
-import { Card, H3, Input, Label, Select, YStack } from "tamagui";
+import { Card, H3, YStack, Input, Text } from "tamagui";
 import { IBeneficiary } from "../../../user.schema";
 
 interface Props {
-    data: Partial<IBeneficiary>;
-    onChange: (field: keyof IBeneficiary, value: any) => void;
+    data?: Partial<IBeneficiary>;
+    onChange?: (field: string | number | symbol, value: any) => void;
 }
 
-const MedicalHistorySection = ({ data, onChange }: Props) => {
+export const MedicalHistorySection = ({ 
+    data = {}, 
+    onChange = () => {} 
+}: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -15,81 +18,58 @@ const MedicalHistorySection = ({ data, onChange }: Props) => {
             <Card.Footer padded>
                 <YStack space="$4">
                     <YStack>
-                        <Label htmlFor="medical_conditions">Medical Conditions</Label>
+                        <Text>Medical Conditions</Text>
                         <Input
-                            id="medical_conditions" 
+                            multiline
+                            numberOfLines={3}
+                            textAlignVertical="top"
+                            value={data.medical_conditions}
+                            onChangeText={(value) => onChange("medical_conditions", value)}
                             placeholder="List all medical conditions"
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
                         />
+                        <Text opacity={0.6}>Separate multiple conditions with commas</Text>
                     </YStack>
 
                     <YStack>
-                        <Label htmlFor="medications">Medications</Label>
+                        <Text>Medications</Text>
                         <Input
-                            id="medications"
+                            multiline
+                            numberOfLines={3}
+                            textAlignVertical="top"
+                            value={data.medications}
+                            onChangeText={(value) => onChange("medications", value)}
                             placeholder="List all medications"
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
                         />
+                        <Text opacity={0.6}>Separate multiple medications with commas</Text>
                     </YStack>
 
                     <YStack>
-                        <Label htmlFor="allergies">Allergies</Label>
+                        <Text>Allergies</Text>
                         <Input
-                            id="allergies"
+                            multiline
+                            numberOfLines={3}
+                            textAlignVertical="top"
+                            value={data.allergies}
+                            onChangeText={(value) => onChange("allergies", value)}
                             placeholder="List all allergies"
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
                         />
+                        <Text opacity={0.6}>Separate multiple allergies with commas</Text>
                     </YStack>
 
                     <YStack>
-                        <Label htmlFor="immunizations">Immunizations</Label>
+                        <Text>Immunizations</Text>
                         <Input
-                            id="immunizations"
-                            placeholder="List all immunizations"
                             multiline
                             numberOfLines={3}
                             textAlignVertical="top"
+                            value={data.immunizations}
+                            onChangeText={(value) => onChange("immunizations", value)}
+                            placeholder="List all immunizations"
                         />
-                    </YStack>
-
-                    <YStack>
-                        <Label htmlFor="category_id">Category *</Label>
-                        <Select
-                            id="category_id"
-                            value={data.category_id?.toString()}
-                            onValueChange={(value) => onChange("category_id", parseInt(value, 10))}
-                        >
-                            <Select.Trigger>
-                                <Select.Value placeholder="Select category" />
-                            </Select.Trigger>
-
-                            <Select.Content>
-                                <Select.ScrollUpButton />
-                                <Select.Viewport>
-                                    <Select.Item value="1">
-                                        <Select.ItemText>Dementia</Select.ItemText>
-                                    </Select.Item>
-                                    <Select.Item value="2">
-                                        <Select.ItemText>Cancer</Select.ItemText>
-                                    </Select.Item>
-                                    <Select.Item value="3">
-                                        <Select.ItemText>Stroke</Select.ItemText>
-                                    </Select.Item>
-                                </Select.Viewport>
-                                <Select.ScrollDownButton />
-                            </Select.Content>
-                        </Select>
+                        <Text opacity={0.6}>Separate multiple immunizations with commas</Text>
                     </YStack>
                 </YStack>
             </Card.Footer>
         </Card>
     );
 };
-
-export default MedicalHistorySection;
