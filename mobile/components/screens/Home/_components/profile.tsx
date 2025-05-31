@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { Avatar, H1, H2, H3, YStack } from "tamagui"
+import { Avatar, H3, YStack } from "tamagui"
 import AvatarImage from "~/components/Avatar"
 import { useUser } from "~/features/user/user.hook";
 import GradientBackground from "~/components/GradientContainer";

@@ -1,4 +1,4 @@
-import { Text, View } from "tamagui"
+import { View } from "tamagui"
 import { Image as ExpoImage } from "expo-image";
 import { useUser } from "~/features/user/user.hook"
 import { createAvatar } from "@dicebear/core";

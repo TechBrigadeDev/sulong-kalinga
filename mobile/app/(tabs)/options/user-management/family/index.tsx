@@ -1,6 +1,5 @@
-import { Button, Card, ScrollView, View } from "tamagui"
+import { Button, Card, View } from "tamagui"
 import FamilyList from "~/features/user/management/components/family/list";
-import Header from "~/components/Header";
 import { StyleSheet } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import FamilySearch from "~/features/user/management/components/family/list/search";
