@@ -114,8 +114,6 @@ class BeneficiaryApiController extends Controller
             'generalCarePlan.healthHistory',
             'generalCarePlan.careNeeds',
             'generalCarePlan.careWorkerResponsibility',
-            'portalAccount',
-            'familyMembers',
         ])->findOrFail($id);
 
         // Care worker can only view assigned beneficiaries
