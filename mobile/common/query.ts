@@ -25,6 +25,7 @@ export const QK = {
                 id,
             ],
             getCareWorkers: "user/management/getCareWorkers",
+            getCareWorker: (id: string) => ["user/management/getCareWorker", id],
         }
     }
 }

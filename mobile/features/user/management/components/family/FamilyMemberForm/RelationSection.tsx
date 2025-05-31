@@ -1,5 +1,9 @@
 import { Card, H3, Input, Label, Switch, Text, XStack, YStack } from "tamagui";
-import { IFamilyMember } from "~/user.schema";
+
+interface IFamilyMember {
+    relation_to_beneficiary?: string;
+    is_primary_caregiver?: boolean;
+}
 
 interface Props {
     data: Partial<IFamilyMember>;
@@ -8,28 +12,38 @@ interface Props {
 
 const RelationSection = ({ data, onChange }: Props) => {
     return (
-        <Card>
+        <Card elevate bordered>
             <Card.Header padded>
                 <H3>Relationship Information</H3>
             </Card.Header>
             <Card.Footer padded>
                 <YStack space="$4">
-                    <YStack>
+                    <YStack space="$2">
                         <Label htmlFor="relation_to_beneficiary">Relation to Beneficiary</Label>
                         <Input
                             id="relation_to_beneficiary"
                             value={data.relation_to_beneficiary}
                             onChangeText={(value) => onChange("relation_to_beneficiary", value)}
+                            placeholder="e.g. Parent, Sibling, Child"
+                            autoCapitalize="words"
                         />
                     </YStack>
-                    <XStack alignItems="center" space="$4">
-                        <Label htmlFor="is_primary_caregiver">Primary Caregiver</Label>
-                        <Switch
-                            id="is_primary_caregiver"
-                            checked={data.is_primary_caregiver}
-                            onCheckedChange={(value) => onChange("is_primary_caregiver", value)}
-                        />
-                    </XStack>
+                    <YStack space="$2">
+                        <XStack space="$4">
+                            <Switch
+                                id="is_primary_caregiver"
+                                checked={data.is_primary_caregiver}
+                                onCheckedChange={(value) => onChange("is_primary_caregiver", value)}
+                                size="$4"
+                            >
+                                <Switch.Thumb animation="quick" />
+                            </Switch>
+                            <Label htmlFor="is_primary_caregiver">Primary Caregiver</Label>
+                        </XStack>
+                        <Text opacity={0.65}>
+                            Toggle this if this family member is the primary caregiver
+                        </Text>
+                    </YStack>
                 </YStack>
             </Card.Footer>
         </Card>
