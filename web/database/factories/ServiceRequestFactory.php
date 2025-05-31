@@ -13,6 +13,50 @@ class ServiceRequestFactory extends Factory
 {
     protected $model = ServiceRequest::class;
 
+    // Type-specific service request messages
+    protected $serviceRequestMessages = [
+        // Home Care Visit (ID 1)
+        1 => [
+            "Requesting additional home care visit this week. Beneficiary has been feeling unwell and needs extra support.",
+            "Need assistance with personal care as regular family caregiver will be away for 3 days.",
+            "Requesting home visit for wound dressing change. Unable to do it properly ourselves.",
+            "Need help with medication organization for the coming week. Prescription was changed by doctor.",
+            "Requesting additional bath assistance visit as beneficiary had a minor accident."
+        ],
+        // Transportation (ID 2)
+        2 => [
+            "Need transportation to medical appointment at Northern Samar Provincial Hospital on the scheduled date.",
+            "Requesting assistance with transportation to pharmacy to pick up new medication.",
+            "Need transportation to local health center for scheduled vaccination.",
+            "Transportation needed to attend senior citizen gathering at municipal hall.",
+            "Requesting transportation assistance to visit family in neighboring barangay for important family event."
+        ],
+        // Medical Appointments (ID 3)
+        3 => [
+            "Need assistance attending doctor's appointment. Beneficiary needs help with mobility and understanding instructions.",
+            "Requesting accompaniment to eye specialist appointment. Beneficiary will need help getting home after pupil dilation.",
+            "Need assistance with upcoming physical therapy appointment. Transportation and in-clinic support needed.",
+            "Requesting help with dental appointment. Beneficiary needs someone to explain dental work needed.",
+            "Need assistance attending quarterly diabetes check-up. Will need note-taking and question-asking support."
+        ],
+        // Meal Delivery (ID 4)
+        4 => [
+            "Requesting meal delivery for 3 days due to temporary difficulty cooking after minor hand injury.",
+            "Need meal assistance as cooking gas supply ran out and replacement delayed until next week.",
+            "Beneficiary has special dietary needs after recent hospital discharge. Requesting meal support for 5 days.",
+            "Regular meal provider (family member) has emergency. Need temporary meal delivery.",
+            "Requesting softer food options for meal delivery as beneficiary has new dental issues."
+        ],
+        // Other Service (ID 5)
+        5 => [
+            "Need assistance reading and responding to important government letter received yesterday.",
+            "Requesting help reorganizing bedroom furniture to make mobility easier for beneficiary.",
+            "Need assistance with phone setup to enable video calls with family members abroad.",
+            "Requesting help acquiring and setting up a raised toilet seat for easier bathroom use.",
+            "Need assistance with small home repairs to prevent water leakage during rainy season."
+        ]
+    ];
+
     public function definition(): array
     {
         $sender_type = $this->faker->randomElement(['beneficiary', 'family_member']);
@@ -32,6 +76,13 @@ class ServiceRequestFactory extends Factory
             
             $sender_id = $familyMember->family_member_id;
         }
+
+        // Get random service type
+        $serviceType = ServiceRequestType::inRandomOrder()->first();
+        $service_type_id = $serviceType->service_type_id;
+        
+        // Get message based on service type
+        $message = $this->getServiceRequestMessage($service_type_id);
 
         // Random status with weighted distribution
         $statusChoices = [
@@ -83,11 +134,11 @@ class ServiceRequestFactory extends Factory
             'sender_id' => $sender_id,
             'sender_type' => $sender_type,
             'beneficiary_id' => $beneficiary->beneficiary_id,
-            'service_type_id' => ServiceRequestType::inRandomOrder()->first()->service_type_id,
+            'service_type_id' => $service_type_id,
             'care_worker_id' => $care_worker_id,
             'service_date' => $service_date,
             'service_time' => $service_time,
-            'message' => $this->faker->paragraph(),
+            'message' => $message,
             'status' => $status,
             'read_status' => $read_status,
             'read_at' => $read_at,
@@ -97,6 +148,19 @@ class ServiceRequestFactory extends Factory
             'created_at' => $created_at,
             'updated_at' => $this->faker->dateTimeBetween($created_at, 'now'),
         ];
+    }
+    
+    /**
+     * Get a realistic service request message based on the service type
+     */
+    protected function getServiceRequestMessage($service_type_id)
+    {
+        if (isset($this->serviceRequestMessages[$service_type_id])) {
+            return $this->faker->randomElement($this->serviceRequestMessages[$service_type_id]);
+        }
+        
+        // Fallback to generic message if type doesn't match
+        return "Requesting assistance with care services. Please contact to discuss details.";
     }
     
     public function asNew(): Factory
