@@ -1,5 +1,5 @@
-import { XStack, Text } from "tamagui";
 import { PropsWithChildren } from "react";
+import { Text,XStack } from "tamagui";
 
 interface BadgeProps {
   variant?: "success" | "warning" | "error" | "info" | "ghost" | "default";

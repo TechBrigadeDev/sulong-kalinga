@@ -1,9 +1,10 @@
-import { useUser } from '~/features/user/user.hook';
-import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
-import { View } from 'tamagui';
-import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
+import { StyleSheet } from 'react-native';
+import { View } from 'tamagui';
+
 import TabButton from '~/components/screens/Home/_components/button';
+import { useUser } from '~/features/user/user.hook';
 
 
 export default function Layout() {

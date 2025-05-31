@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { SafeAreaView, StyleSheet } from "react-native";
+
 import ProfileSettings from "~/components/screens/Options/profile/Settings";
 
 const ProfileScreen = () => {

@@ -1,5 +1,6 @@
 import { Stack } from "expo-router"
 import { SafeAreaView } from "react-native"
+
 import UpdateEmail from "~/features/user/components/UpdateEmail"
 
 

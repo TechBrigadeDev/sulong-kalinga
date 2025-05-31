@@ -1,8 +1,7 @@
-import { StyleSheet } from "react-native";
-
 import GradientBackground from "components/GradientContainer";
 import { Stack } from "expo-router";
 import Login from "features/auth/components/login";
+import { StyleSheet } from "react-native";
 
 const Screen = () => {
     return (

@@ -1,11 +1,12 @@
-import { View } from "tamagui"
-import { Image as ExpoImage } from "expo-image";
-import { useUser } from "~/features/user/user.hook"
-import { createAvatar } from "@dicebear/core";
-import { SvgXml } from "react-native-svg"; 
 import { shapes } from "@dicebear/collection";
+import { createAvatar } from "@dicebear/core";
+import { Image as ExpoImage } from "expo-image";
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
+import { SvgXml } from "react-native-svg"; 
+import { View } from "tamagui"
+
+import { useUser } from "~/features/user/user.hook"
 
 const AvatarImage = () => {
   const { data: user } = useUser();

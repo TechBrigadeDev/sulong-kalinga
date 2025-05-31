@@ -1,7 +1,7 @@
-import * as React from "react";
-import { Pressable, View, Text, StyleSheet } from "react-native";
 import { TabTriggerSlotProps } from "expo-router/ui";
 import { icons } from "lucide-react-native";
+import * as React from "react";
+import { Pressable, StyleSheet,Text, View } from "react-native";
 
 interface CustomTabButtonProps extends React.PropsWithChildren, TabTriggerSlotProps {
     icon: keyof typeof icons;
