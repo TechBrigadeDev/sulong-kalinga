@@ -46,14 +46,6 @@ class MobileUser extends Authenticatable
     }
 
     /**
-     * Get the portal account associated with this user, if applicable.
-     */
-    public function portalAccount()
-    {
-        return $this->belongsTo(PortalAccount::class, 'portal_account_id', 'id');
-    }
-
-    /**
      * Get the beneficiary associated with this user, if applicable.
      */
     public function beneficiary()
@@ -81,13 +73,5 @@ class MobileUser extends Authenticatable
     public function isCoseStaff(): bool
     {
         return $this->user_type === 'cose';
-    }
-
-    /**
-     * Check if this user is a portal user (beneficiary or family member).
-     */
-    public function isPortalUser(): bool
-    {
-        return $this->user_type === 'portal';
     }
 }
