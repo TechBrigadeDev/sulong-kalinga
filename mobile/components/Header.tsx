@@ -1,7 +1,7 @@
+import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
+import Constants from "expo-constants";
 import { StyleSheet } from "react-native";
 import { H3, View, XStack } from "tamagui";
-import Constants from "expo-constants";
-import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 
 interface Props extends Partial<NativeStackHeaderProps> {
   name: string;

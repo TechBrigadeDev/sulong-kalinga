@@ -1,14 +1,15 @@
+import 'react-native-reanimated';
+
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Dialogs from 'components/dialogs/Dialogs';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { authStore } from '~/features/auth/auth.store';
 import Providers from '~/components/Providers';
-import Dialogs from 'components/dialogs/Dialogs';
+import { authStore } from '~/features/auth/auth.store';
 
 export {
   // Catch any errors thrown by the Layout component.

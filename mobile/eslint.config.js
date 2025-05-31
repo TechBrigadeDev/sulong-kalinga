@@ -2,6 +2,7 @@
 const { defineConfig } = require('eslint/config');
 const expoConfig = require("eslint-config-expo/flat");
 const unusedImports = require("eslint-plugin-unused-imports");
+const simpleSort = require("eslint-plugin-simple-import-sort");
 
 module.exports = defineConfig([
   expoConfig,
@@ -19,6 +20,7 @@ module.exports = defineConfig([
     plugins: {
       "no-relative-import-paths": require("eslint-plugin-no-relative-import-paths"),
       "unused-imports": unusedImports,
+      "simple-import-sort": simpleSort,
     },
     rules: {
       "import/no-unresolved": "error",
@@ -26,6 +28,7 @@ module.exports = defineConfig([
         "error",
         { allowSameFolder: true },
       ],
+
       "no-unused-vars": "off", // or "@typescript-eslint/no-unused-vars": "off",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
@@ -37,6 +40,9 @@ module.exports = defineConfig([
           argsIgnorePattern: "^_",
         },
       ],
+
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
     },
   },
 ]);

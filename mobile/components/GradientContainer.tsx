@@ -1,17 +1,17 @@
-import React, { useEffect } from "react";
-import { View, ViewProps, StyleSheet, useWindowDimensions } from "react-native";
 import {
   Canvas,
   Fill,
+  interpolateColors,
   LinearGradient,
   vec,
-  interpolateColors,
 } from "@shopify/react-native-skia";
+import React, { useEffect } from "react";
+import { StyleSheet, useWindowDimensions,View, ViewProps } from "react-native";
 import {
-  useSharedValue,
   useDerivedValue,
-  withTiming,
+  useSharedValue,
   withRepeat,
+  withTiming,
 } from "react-native-reanimated";
 
 interface AnimatedGradientBackgroundProps extends ViewProps {

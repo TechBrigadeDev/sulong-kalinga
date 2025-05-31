@@ -1,8 +1,8 @@
+import { StyleSheet } from "react-native";
 import { ScrollView } from "tamagui";
 
-import { StyleSheet } from "react-native";
-import Profile from "./profile";
 import HomeMenu from "./menu";
+import Profile from "./profile";
 
 const Home = () => {
     return (
