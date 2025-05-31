@@ -278,25 +278,25 @@ class BeneficiaryApiController extends Controller
             'medical_conditions' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'medications' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'allergies' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'immunizations' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
                 'max:500',
             ],
             'category' => 'required|exists:beneficiary_categories,category_id',
@@ -304,113 +304,113 @@ class BeneficiaryApiController extends Controller
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.mobility' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency.cognitive' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.cognitive' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency.self_sustainability' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.self_sustainability' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency.disease' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.disease' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency.daily_life' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.daily_life' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency.outdoor' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.outdoor' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency.household' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'assistance.household' => [
                 'nullable',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'medication_name' => 'nullable|array',
             'medication_name.*' => [
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'dosage' => 'nullable|array',
             'dosage.*' => [
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'frequency' => 'nullable|array',
             'frequency.*' => [
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'administration_instructions' => 'nullable|array',
             'administration_instructions.*' => [
                 'nullable',
                 'string',
                 'max:500',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'mobility.walking_ability' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
             'mobility.assistive_devices' => 'nullable|string|max:500|regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
@@ -439,7 +439,7 @@ class BeneficiaryApiController extends Controller
                 'required',
                 'string',
                 'max:1000',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'care_worker.careworker_id' => 'required|exists:cose_users,id',
             'care_worker.tasks' => 'required|array|min:1',
@@ -447,7 +447,7 @@ class BeneficiaryApiController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+                'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             ],
             'date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->format('Y-m-d'),
             'email' => 'nullable|string|email|max:255|unique:beneficiaries,email',
@@ -774,22 +774,22 @@ class BeneficiaryApiController extends Controller
         // Medical History
         'medical_conditions' => [
             'nullable', 'string',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             'max:500'
         ],
         'medications' => [
             'nullable', 'string',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             'max:500'
         ],
         'allergies' => [
             'nullable', 'string',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             'max:500'
         ],
         'immunizations' => [
             'nullable', 'string',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/',
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/',
             'max:500'
         ],
         'category' => 'sometimes|required|exists:beneficiary_categories,category_id',
@@ -797,93 +797,93 @@ class BeneficiaryApiController extends Controller
         // Care Needs: Mobility
         'frequency.mobility' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.mobility' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Needs: Cognitive / Communication
         'frequency.cognitive' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.cognitive' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Needs: Self-sustainability
         'frequency.self_sustainability' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.self_sustainability' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Needs: Disease / Therapy Handling
         'frequency.disease' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.disease' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Needs: Daily Life / Social Contact
         'frequency.daily_life' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.daily_life' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Needs: Outdoor Activities
         'frequency.outdoor' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.outdoor' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Needs: Household Keeping
         'frequency.household' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'assistance.household' => [
             'nullable', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Medications Management
         'medication_name' => 'nullable|array',
         'medication_name.*' => [
             'nullable', 'string', 'max:100',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'dosage' => 'nullable|array',
         'dosage.*' => [
             'nullable', 'string', 'max:100',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'frequency' => 'nullable|array',
         'frequency.*' => [
             'nullable', 'string', 'max:100',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         'administration_instructions' => 'nullable|array',
         'administration_instructions.*' => [
             'nullable', 'string', 'max:500',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Mobility
@@ -917,7 +917,7 @@ class BeneficiaryApiController extends Controller
         // Emergency Plan
         'emergency_plan.procedures' => [
             'sometimes', 'required', 'string', 'max:1000',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Care Worker
@@ -925,7 +925,7 @@ class BeneficiaryApiController extends Controller
         'care_worker.tasks' => 'sometimes|required|array|min:1',
         'care_worker.tasks.*' => [
             'required', 'string', 'max:255',
-            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+]+$/'
+            'regex:/^[A-Za-z0-9\s.,\-()\'\"!?+\/]+$/'
         ],
         
         // Review Date

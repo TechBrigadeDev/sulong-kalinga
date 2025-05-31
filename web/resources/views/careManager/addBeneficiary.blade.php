@@ -74,6 +74,8 @@
                                     <option value="Divorced" {{ old('civil_status') == 'Divorced' ? 'selected' : '' }}>Divorced</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="row mb-3">
                             <div class="col-md-3 relative">
                                 <label for="gender" class="form-label">Gender<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="gender" name="gender" required>
@@ -83,15 +85,9 @@
                                     <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="row mb-3">
-                        <div class="col-md-3">
+                            <div class="col-md-3">
                                 <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ old('birth_date') }}" required onkeydown="return true">
-                            </div>
-                            <div class="col-md-3 position-relative">
-                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
-                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name">                
                             </div>
                             <div class="col-md-3">
                                 <label for="mobileNumber" class="form-label">Mobile Number</label>
@@ -103,6 +99,12 @@
                             <div class="col-md-3">
                                 <label for="landlineNumber" class="form-label">Landline Number</label>
                                 <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="Enter Landline number" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 position-relative">
+                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
+                                <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver') }}" placeholder="Enter Primary Caregiver name">                
                             </div>
                         </div>
 
@@ -664,10 +666,10 @@
                             <!-- Password -->
                             <div class="col-md-4">
                                 <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
-                                <div class="input-group password-input-group">
-                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter password" required  minlength="8" 
-                                    title="Password must be at least 8 characters long.">
-                                    <span class="password-toggle" data-target="password">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter password" required minlength="8" 
+                                        title="Password must be at least 8 characters long.">
+                                    <span class="input-group-text password-toggle" data-target="password">
                                         <i class="bi bi-eye-slash"></i>
                                     </span>
                                 </div>
@@ -676,9 +678,9 @@
                             <!-- Confirm Password -->
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
-                                <div class="input-group password-input-group">
+                                <div class="input-group">
                                     <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm password" required title="Passwords must match.">
-                                    <span class="password-toggle" data-target="confirmPassword">
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
                                         <i class="bi bi-eye-slash"></i>
                                     </span>
                                 </div>

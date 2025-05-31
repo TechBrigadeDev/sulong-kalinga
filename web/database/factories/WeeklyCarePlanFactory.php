@@ -38,6 +38,12 @@ class WeeklyCarePlanFactory extends Factory
         $userIdWithRole2 = User::where('role_id', 2)->inRandomOrder()->first()->id;
         $userIdWithRole3 = User::where('role_id', 3)->inRandomOrder()->first()->id;
 
+         // Get a gender-appropriate assessment-evaluation pair
+        $assessmentEvaluationPair = $this->getAssessmentEvaluationPair($gender);
+        
+        // Generate a photo path for weekly care plan documentation
+        $photoPath = $this->generatePhotoPath($beneficiaryId);
+
         // Common illnesses among elderly Filipinos
         $illnesses = [
             'Hypertension',
@@ -53,12 +59,6 @@ class WeeklyCarePlanFactory extends Factory
             $this->faker->numberBetween(0, 3)
         );
 
-       // Get a gender-appropriate assessment-evaluation pair
-        $assessmentEvaluationPair = $this->getAssessmentEvaluationPair($gender);
-        
-        // Get matching interventions based on the assessment-evaluation pair
-        $matchingInterventions = $this->getMatchingInterventions($assessmentEvaluationPair);
-
         // Base definition
         $definition = [
             'beneficiary_id' => $beneficiaryId,
@@ -69,7 +69,7 @@ class WeeklyCarePlanFactory extends Factory
             'assessment' => $assessmentEvaluationPair['assessment'],
             'illnesses' => !empty($selectedIllnesses) ? json_encode($selectedIllnesses) : null,
             'evaluation_recommendations' => $assessmentEvaluationPair['evaluation'],
-            'interventions' => json_encode($matchingInterventions), // Added interventions
+            'photo_path' => $photoPath, // Add the photo path
             'created_by' => $userIdWithRole3,
             'updated_by' => $userIdWithRole2,
             'created_at' => $this->faker->dateTimeBetween('-18 months', 'now'),
@@ -134,6 +134,18 @@ class WeeklyCarePlanFactory extends Factory
         
         // Return a random gender-appropriate pair
         return $this->faker->randomElement($genderAppropriate);
+    }
+
+    /**
+     * Get intervention suggestions based on the assessment
+     * This is now a public method that can be called after the weekly care plan is created
+     * 
+     * @param string $assessment The assessment text
+     * @return array Array of intervention descriptions
+     */
+    public function getInterventionSuggestions($assessment)
+    {
+        return $this->getMatchingInterventions(['assessment' => $assessment]);
     }
 
     /**
@@ -446,6 +458,22 @@ class WeeklyCarePlanFactory extends Factory
         // Return a subset of the matched interventions (2-4 interventions)
         shuffle($interventions);
         return array_slice($interventions, 0, min(count($interventions), rand(2, 4)));
+    }
+
+    /**
+     * Generate a realistic photo path for weekly care plan documentation
+     * 
+     * @param int $beneficiaryId The beneficiary ID
+     * @return string A photo path
+     */
+    protected function generatePhotoPath($beneficiaryId)
+    {
+        $year = $this->faker->dateTimeBetween('-1 year', 'now')->format('Y');
+        $month = $this->faker->dateTimeBetween('-1 year', 'now')->format('m');
+        $photoType = $this->faker->randomElement(['condition', 'therapy', 'activity', 'assessment']);
+        $uniqueId = $this->faker->randomNumber(8);
+        
+        return "uploads/weekly_care_plans/{$year}/{$month}/beneficiary_{$beneficiaryId}_{$photoType}_{$uniqueId}.jpg";
     }
         
 }
