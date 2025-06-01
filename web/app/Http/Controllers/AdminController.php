@@ -168,23 +168,31 @@ class AdminController extends Controller
                     $request->file('administrator_photo'),
                     'spaces-private', // disk
                     'uploads/administrator_photos', // directory
-                    "{$firstName}_{$lastName}_photo_" . $uniqueIdentifier
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
     
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/administrator_government_ids', 
-                    $firstName . '' . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/administrator_government_ids',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
             }
     
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/administrator_resumes', 
-                    $firstName . '' . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/administrator_resumes',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
             }
 
@@ -446,25 +454,33 @@ class AdminController extends Controller
                 $request->file('administrator_photo'),
                 'spaces-private', // disk
                 'uploads/administrator_photos', // directory
-                "{$administrator->first_name}_{$administrator->last_name}_photo_" . $uniqueIdentifier
+                [
+                    'filename' => $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                ]
             );
             $administrator->photo = $administratorPhotoPath;
         }
 
         if ($request->hasFile('government_ID')) {
-            $governmentIDPath = $request->file('government_ID')->storeAs(
+            $governmentIDPath = $this->uploadService->upload(
+                $request->file('government_ID'),
+                'spaces-private',
                 'uploads/administrator_government_ids',
-                $administrator->first_name . '_' . $administrator->last_name . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                'public'
+                [
+                    'filename' => $administrator->first_name . '_' . $administrator->last_name . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                ]
             );
             $administrator->government_issued_id = $governmentIDPath;
         }
 
         if ($request->hasFile('resume')) {
-            $resumePath = $request->file('resume')->storeAs(
+            $resumePath = $this->uploadService->upload(
+                $request->file('resume'),
+                'spaces-private',
                 'uploads/administrator_resumes',
-                $administrator->first_name . '_' . $administrator->last_name . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                'public'
+                [
+                    'filename' => $administrator->first_name . '_' . $administrator->last_name . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                ]
             );
             $administrator->cv_resume = $resumePath;
         }
