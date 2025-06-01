@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class AuthApiController extends Controller
 {
@@ -16,31 +17,12 @@ class AuthApiController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            // 'username' => 'required_without:email|string',
             'email' => 'required|email',
-            'password' => 'required|string',
+            'password' => 'required',
         ]);
 
-        $user = null;
-
-        // Commented out: beneficiary login via username
-        // if ($request->filled('username')) {
-        //     // Only check for beneficiaries (username login)
-        //     $user = \App\Models\User::where('username', $request->username)
-        //         ->where('user_type', 'beneficiary')
-        //         ->first();
-        // } elseif ($request->filled('email')) {
-        //     // Only check for family members and cose users (email login)
-        //     $user = \App\Models\User::where('email', $request->email)
-        //         ->whereIn('user_type', ['family_member', 'cose_user'])
-        //         ->first();
-        // }
-
-        // Only handle cose_user login via email
-        $user = \App\Models\User::where('email', $request->email)
-            ->where('user_type', 'cose_user')
-            ->first();
-
+        $user = User::where('email', $request->email)->first();
+        
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
@@ -48,16 +30,26 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        // Get photo path from the specific table
-        $photo = null;
-        if ($user->user_type === 'cose_user' && $user->cose_user_id) {
-            $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
-            $photo = $coseUser?->photo;
-        }
-        $photo_url = $photo ? Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
-
+        // Revoke old tokens if needed
+        // $user->tokens()->delete();
+        
         $token = $user->createToken('mobile-app')->plainTextToken;
-        // 'username' => $user->username, 
+        
+        if ($user->role_id == 4) {
+            $beneficiary = \App\Models\Beneficiary::where('portal_account_id', $user->portal_account_id)->first();
+            $familyMembers = \App\Models\FamilyMember::where('portal_account_id', $user->portal_account_id)->get();
+
+            return response()->json([
+                'success' => true,
+                'select_user_required' => true,
+                'users' => [
+                    'beneficiary' => $beneficiary,
+                    'family_members' => $familyMembers,
+                ],
+                'token' => $token,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'user' => [
@@ -67,9 +59,7 @@ class AuthApiController extends Controller
                 'email' => $user->email,
                 'mobile' => $user->mobile,
                 'role_id' => $user->role_id,
-                'user_type' => $user->user_type,
-                'status' => $user->status ?? null,
-                'photo_url' => $photo_url,
+                'photo' => $user->photo ? asset('storage/' . $user->photo) : null
             ],
             'token' => $token,
         ]);
@@ -95,17 +85,41 @@ class AuthApiController extends Controller
     {
         $user = $request->user();
 
-        // Map role_id to role name (1-5, no skip)
+        // Example: Map role_id to role name
         $roleNames = [
             1 => 'admin',
             2 => 'care_manager',
             3 => 'care_worker',
-            4 => 'beneficiary',
-            5 => 'family_member',
+            4 => 'portal',
         ];
         $role = $roleNames[$user->role_id] ?? 'unknown';
 
-        // Get photo path from the specific table
+        // If portal user, return selected beneficiary or family member
+        if ($user->role_id == 4) {
+            $type = session('portal_user_type');
+            $id = session('portal_user_id');
+            if ($type === 'beneficiary') {
+                $selected = \App\Models\Beneficiary::find($id);
+            } elseif ($type === 'family_member') {
+                $selected = \App\Models\FamilyMember::find($id);
+            } else {
+                $selected = null;
+            }
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'role' => $role,
+                    'selected_type' => $type,
+                    'selected_user' => $selected,
+                    'email' => $user->email,
+                    'status' => $user->status ?? null,
+                ]
+            ]);
+        }
+
+        // For other users, return unified user data
+        // Retrieve photo from the correct related table
         $photo = null;
         if ($user->user_type === 'beneficiary' && $user->beneficiary_id) {
             $beneficiary = \App\Models\Beneficiary::find($user->beneficiary_id);
@@ -117,9 +131,8 @@ class AuthApiController extends Controller
             $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
             $photo = $coseUser?->photo;
         }
-        $photo_url = $photo ? Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
+        $photo_url = $photo ? \Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
 
-        // 'username' => $user->username,
         return response()->json([
             'success' => true,
             'user' => [
