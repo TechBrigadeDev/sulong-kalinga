@@ -2,6 +2,22 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FamilyMemberController;
+use App\Http\Controllers\WeeklyCareController;
+use App\Http\Controllers\SchedulesAndAppointmentsController;
+use App\Http\Controllers\ViewAccountProfileController;
+use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\HealthMonitoringController;
+use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\FamilyPortalVisitationScheduleController;
+use App\Http\Controllers\FamilyPortalMedicationScheduleController;
+use App\Http\Controllers\FamilyPortalEmergencyServiceRequestController;
+use App\Http\Controllers\FamilyPortalCarePlanController;
+use App\Http\Controllers\FamilyPortalFamilyMemberController;
+use App\Http\Controllers\FamilyPortalFAQuestionsController;
 
 // All routes for beneficiary portal
 // These routes require authentication via the beneficiary guard
@@ -19,9 +35,10 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
     })->name('dashboard');
     
     // Care plan
-    Route::get('/care-plan', function() {
-        return view('beneficiaryPortal.carePlan');
-    })->name('care.plan.index');
+    Route::prefix('care-plan')->name('care.plan.')->group(function () {
+        Route::get('/', [FamilyPortalCarePlanController::class, 'index'])->name('index');
+        Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
+    });
     
     // Visitation Schedule
     Route::get('/visitation-schedule', function() {
