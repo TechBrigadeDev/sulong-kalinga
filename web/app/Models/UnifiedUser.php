@@ -2,6 +2,9 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Foundation\Auth\Beneficiary;
+use Illuminate\Foundation\Auth\CoseUser;
+use Illuminate\Foundation\Auth\FamilyMember;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,5 +33,10 @@ class UnifiedUser extends Authenticatable
     public function beneficiaryDetails()
     {
         return $this->belongsTo(Beneficiary::class, 'beneficiary_id');
+    }
+
+    public function familyMemberDetails()
+    {
+        return $this->belongsTo(FamilyMember::class, 'family_member_id');
     }
 }
