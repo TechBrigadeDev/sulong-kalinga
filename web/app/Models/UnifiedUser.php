@@ -13,8 +13,8 @@ class UnifiedUser extends Authenticatable
     protected $table = 'users';
 
     protected $fillable = [
-        'email', 'password', 'first_name', 'last_name', 'mobile', 'role_id', 'status',
-        'user_type', 'cose_user_id', 'portal_account_id'
+        'email', 'username', 'password', 'first_name', 'last_name', 'mobile', 'role_id', 'status',
+        'user_type', 'cose_user_id', 'beneficiary_id', 'family_member_id'
     ];
 
     protected $hidden = [
@@ -29,11 +29,6 @@ class UnifiedUser extends Authenticatable
 
     public function beneficiaryDetails()
     {
-        return $this->hasOne(Beneficiary::class, 'portal_account_id', 'portal_account_id');
-    }
-
-    public function familyMemberDetails()
-    {
-        return $this->hasOne(FamilyMember::class, 'portal_account_id', 'portal_account_id');
+        return $this->belongsTo(Beneficiary::class, 'beneficiary_id');
     }
 }
