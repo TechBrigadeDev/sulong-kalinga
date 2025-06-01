@@ -7,7 +7,7 @@
     <title>Beneficiary Portal - Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/beneficiaryPortalDashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body>
@@ -68,7 +68,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.schedule.index') }}" class="card-link">
+                            <a href="{{ route('beneficiary.visitation.schedule.index') }}" class="card-link">
                                 <span>View Full Schedule</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>
@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.schedule.index') }}" class="card-link">
+                            <a href="{{ route('beneficiary.medication.schedule.index') }}" class="card-link">
                                 <span>View All Medications</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>
@@ -108,7 +108,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.emergency.index') }}" class="card-link">
+                            <a href="{{ route('beneficiary.emergency.service.index') }}" class="card-link">
                                 <span>Emergency Information</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>

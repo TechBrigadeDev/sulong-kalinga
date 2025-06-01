@@ -23,10 +23,20 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         return view('beneficiaryPortal.carePlan');
     })->name('care.plan.index');
     
-    // Schedule
-    Route::get('/schedule', function() {
-        return view('beneficiaryPortal.schedule');
-    })->name('schedule.index');
+    // Visitation Schedule
+    Route::get('/visitation-schedule', function() {
+        return view('beneficiaryPortal.visitationSchedule');
+    })->name('visitation.schedule.index');
+    
+    // Medication Schedule
+    Route::get('/medication-schedule', function() {
+        return view('beneficiaryPortal.medicationSchedule');
+    })->name('medication.schedule.index');
+    
+    // Emergency Service
+    Route::get('/emergency-service', function() {
+        return view('beneficiaryPortal.emergencyAndService');
+    })->name('emergency.service.index');
     
     // Messages
     Route::get('/messages', function() {
@@ -37,9 +47,14 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
     Route::get('/profile', function() {
         return view('beneficiaryPortal.profile');
     })->name('profile.index');
-    
-    // Emergency contact
-    Route::get('/emergency', function() {
-        return view('beneficiaryPortal.emergency');
-    })->name('emergency.index');
+
+    // Family Members
+    Route::get('/family-members', function() {
+        return view('beneficiaryPortal.familyMembers');
+    })->name('member.index');
+
+    // 
+    Route::get('/faq', function() {
+        return view('beneficiaryPortal.FAQuestions');
+    })->name('faQuestions.index');
 });
