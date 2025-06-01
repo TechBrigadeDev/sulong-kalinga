@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthApiController extends Controller
 {
@@ -32,6 +33,20 @@ class AuthApiController extends Controller
             ], 401);
         }
 
+        // Get photo path from the specific table
+        $photo = null;
+        if ($user->user_type === 'beneficiary' && $user->beneficiary_id) {
+            $beneficiary = \App\Models\Beneficiary::find($user->beneficiary_id);
+            $photo = $beneficiary?->photo;
+        } elseif ($user->user_type === 'family_member' && $user->family_member_id) {
+            $familyMember = \App\Models\FamilyMember::find($user->family_member_id);
+            $photo = $familyMember?->photo;
+        } elseif ($user->user_type === 'cose_user' && $user->cose_user_id) {
+            $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
+            $photo = $coseUser?->photo;
+        }
+        $photo_url = $photo ? Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
+
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         return response()->json([
@@ -46,6 +61,7 @@ class AuthApiController extends Controller
                 'role_id' => $user->role_id,
                 'user_type' => $user->user_type,
                 'status' => $user->status ?? null,
+                'photo_url' => $photo_url,
             ],
             'token' => $token,
         ]);
@@ -81,6 +97,20 @@ class AuthApiController extends Controller
         ];
         $role = $roleNames[$user->role_id] ?? 'unknown';
 
+        // Get photo path from the specific table
+        $photo = null;
+        if ($user->user_type === 'beneficiary' && $user->beneficiary_id) {
+            $beneficiary = \App\Models\Beneficiary::find($user->beneficiary_id);
+            $photo = $beneficiary?->photo;
+        } elseif ($user->user_type === 'family_member' && $user->family_member_id) {
+            $familyMember = \App\Models\FamilyMember::find($user->family_member_id);
+            $photo = $familyMember?->photo;
+        } elseif ($user->user_type === 'cose_user' && $user->cose_user_id) {
+            $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
+            $photo = $coseUser?->photo;
+        }
+        $photo_url = $photo ? Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
+
         return response()->json([
             'success' => true,
             'user' => [
@@ -92,6 +122,7 @@ class AuthApiController extends Controller
                 'email' => $user->email,
                 'mobile' => $user->mobile,
                 'status' => $user->status ?? null,
+                'photo_url' => $photo_url,
             ]
         ]);
     }
