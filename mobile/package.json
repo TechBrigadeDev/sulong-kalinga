@@ -59,6 +59,7 @@
     "react-native-signature-canvas": "^4.7.4",
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
+    "react-native-webview": "13.13.5",
     "tamagui": "^1.126.4",
     "zod": "^3.24.3",
     "zustand": "^5.0.4"
