@@ -16,24 +16,30 @@ class AuthApiController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required_without:email|string',
-            'email' => 'required_without:username|email',
+            // 'username' => 'required_without:email|string',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
         $user = null;
 
-        if ($request->filled('username')) {
-            // Only check for beneficiaries (username login)
-            $user = \App\Models\User::where('username', $request->username)
-                ->where('user_type', 'beneficiary')
-                ->first();
-        } elseif ($request->filled('email')) {
-            // Only check for family members and cose users (email login)
-            $user = \App\Models\User::where('email', $request->email)
-                ->whereIn('user_type', ['family_member', 'cose_user'])
-                ->first();
-        }
+        // Commented out: beneficiary login via username
+        // if ($request->filled('username')) {
+        //     // Only check for beneficiaries (username login)
+        //     $user = \App\Models\User::where('username', $request->username)
+        //         ->where('user_type', 'beneficiary')
+        //         ->first();
+        // } elseif ($request->filled('email')) {
+        //     // Only check for family members and cose users (email login)
+        //     $user = \App\Models\User::where('email', $request->email)
+        //         ->whereIn('user_type', ['family_member', 'cose_user'])
+        //         ->first();
+        // }
+
+        // Only handle cose_user login via email
+        $user = \App\Models\User::where('email', $request->email)
+            ->where('user_type', 'cose_user')
+            ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -44,25 +50,18 @@ class AuthApiController extends Controller
 
         // Get photo path from the specific table
         $photo = null;
-        if ($user->user_type === 'beneficiary' && $user->beneficiary_id) {
-            $beneficiary = \App\Models\Beneficiary::find($user->beneficiary_id);
-            $photo = $beneficiary?->photo;
-        } elseif ($user->user_type === 'family_member' && $user->family_member_id) {
-            $familyMember = \App\Models\FamilyMember::find($user->family_member_id);
-            $photo = $familyMember?->photo;
-        } elseif ($user->user_type === 'cose_user' && $user->cose_user_id) {
+        if ($user->user_type === 'cose_user' && $user->cose_user_id) {
             $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
             $photo = $coseUser?->photo;
         }
         $photo_url = $photo ? Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
 
         $token = $user->createToken('mobile-app')->plainTextToken;
-
+        // 'username' => $user->username, 
         return response()->json([
             'success' => true,
             'user' => [
                 'id' => $user->id,
-                'username' => $user->username,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,
@@ -120,11 +119,11 @@ class AuthApiController extends Controller
         }
         $photo_url = $photo ? Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
 
+        // 'username' => $user->username,
         return response()->json([
             'success' => true,
             'user' => [
                 'id' => $user->id,
-                'username' => $user->username,
                 'role' => $role,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
