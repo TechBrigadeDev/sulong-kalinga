@@ -1,5 +1,13 @@
 {
   "build": {
+    "development": {
+      "android": {
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://test.cosemhcs.org.ph/api"
+      }
+    },
     "preview": {
       "android": {
         "buildType": "apk"
