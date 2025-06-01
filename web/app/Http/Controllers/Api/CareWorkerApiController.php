@@ -326,31 +326,40 @@ class CareWorkerApiController extends Controller
         $uniqueIdentifier = time() . '_' . Str::random(5);
         
         if ($request->hasFile('photo')) {
+            if ($careworker->photo) {
+                $this->uploadService->delete($careworker->photo, 'spaces-private');
+            }
             $careworker->photo = $this->uploadService->upload(
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/careworker_photos',
-                $careworker->first_name . '_' . $careworker->last_name . '_photo_' . $uniqueIdentifier . '.' . 
+                $careworker->first_name . '_' . $careworker->last_name . '_photo_' . $uniqueIdentifier . '.' .
                 $request->file('photo')->getClientOriginalExtension()
             );
         }
         
         if ($request->hasFile('government_id')) {
+            if ($careworker->government_issued_id) {
+                $this->uploadService->delete($careworker->government_issued_id, 'spaces-private');
+            }
             $careworker->government_issued_id = $this->uploadService->upload(
                 $request->file('government_id'),
                 'spaces-private',
                 'uploads/careworker_government_ids',
-                $careworker->first_name . '_' . $careworker->last_name . '_government_id_' . $uniqueIdentifier . '.' . 
+                $careworker->first_name . '_' . $careworker->last_name . '_government_id_' . $uniqueIdentifier . '.' .
                 $request->file('government_id')->getClientOriginalExtension()
             );
         }
         
         if ($request->hasFile('resume')) {
+            if ($careworker->cv_resume) {
+                $this->uploadService->delete($careworker->cv_resume, 'spaces-private');
+            }
             $careworker->cv_resume = $this->uploadService->upload(
                 $request->file('resume'),
                 'spaces-private',
                 'uploads/careworker_resumes',
-                $careworker->first_name . '_' . $careworker->last_name . '_resume_' . $uniqueIdentifier . '.' . 
+                $careworker->first_name . '_' . $careworker->last_name . '_resume_' . $uniqueIdentifier . '.' .
                 $request->file('resume')->getClientOriginalExtension()
             );
         }
