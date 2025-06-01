@@ -24,16 +24,19 @@ use App\Services\LogService;
 use App\Enums\LogType;
 
 use App\Services\UserManagementService;
+use App\Services\UploadService; // Add this at the top with other imports
 
 class AdminController extends Controller
 {
     protected $userManagementService;
     protected $logService;
-    
-    public function __construct(UserManagementService $userManagementService, LogService $logService)
+    protected $uploadService;
+
+    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
     {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     public function storeAdministrator(Request $request)
@@ -159,11 +162,12 @@ class AdminController extends Controller
             $lastName = $request->input('last_name');
             $uniqueIdentifier = time() . '_' . Str::random(5);
     
+            // Use UploadService for administrator photo
             if ($request->hasFile('administrator_photo')) {
-                $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-                    'uploads/administrator_photos', 
-                    $firstName . '' . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                    'public'
+                $administratorPhotoPath = $this->uploadService->upload(
+                    $request->file('administrator_photo'),
+                    'uploads/administrator_photos',
+                    "{$firstName}_{$lastName}_photo_" . $uniqueIdentifier
                 );
             }
     
@@ -435,11 +439,12 @@ class AdminController extends Controller
         // Handle file uploads if new files are provided
         $uniqueIdentifier = time() . '_' . Str::random(5);
 
+        // Use UploadService for administrator photo
         if ($request->hasFile('administrator_photo')) {
-            $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
+            $administratorPhotoPath = $this->uploadService->upload(
+                $request->file('administrator_photo'),
                 'uploads/administrator_photos',
-                $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                'public'
+                "{$administrator->first_name}_{$administrator->last_name}_photo_" . $uniqueIdentifier
             );
             $administrator->photo = $administratorPhotoPath;
         }
@@ -1824,6 +1829,7 @@ class AdminController extends Controller
     public function updateAdminPassword(Request $request)
     {
         // Validate the request
+
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string',
             'account_password' => 'required|string|min:8',
