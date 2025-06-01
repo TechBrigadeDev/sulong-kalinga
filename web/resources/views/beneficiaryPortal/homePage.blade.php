@@ -7,7 +7,7 @@
     <title>Beneficiary Portal - Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/beneficiaryPortalDashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body>

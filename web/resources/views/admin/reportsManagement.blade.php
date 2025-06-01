@@ -3,178 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Records Management</title>
+    <title>Records Management | Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/reportsManagement.css') }}">
-    <style>
-   
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/careRecords.css') }}">
 </head>
 <body>
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     @include('components.modals.viewGcpRedirect')
-@include('components.modals.editGcpRedirect')
+    @include('components.modals.editGcpRedirect')
     
     <div class="home-section">
-    @if(session('success'))
-        <div id="success-message" class="alert alert-success alert-dismissible fade show mx-3" 
-            style="display: block !important; visibility: visible !important; opacity: 1 !important; margin-top: 15px !important; margin-bottom: 15px !important;">
-            <strong>Success!</strong> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-        <div class="text-left">RECORDS MANAGEMENT</div>
-        <div class="container-fluid text-center">
-        <form action="{{ route('admin.reports') }}" method="GET" id="searchFilterForm">
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-12 col-md-6 col-lg-4 mb-2">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-search"></i>
-                            </span>
-                            <input type="text" class="form-control" placeholder="Search by author or beneficiary..." 
-                                id="searchBar" name="search" value="{{ $search ?? '' }}">
-                            <button type="submit" class="btn btn-primary">
-                                Search
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Filter Dropdown -->
-                    <div class="col-12 col-sm-6 col-md-6 col-lg-2 mb-2">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-funnel"></i>
-                            </span>
-                            <select class="form-select" id="filterDropdown" name="filter" onchange="this.form.submit()">
-                                <option value="" {{ empty($filterType ?? '') ? 'selected' : '' }}>Filter by</option>
-                                <option value="author" {{ ($filterType ?? '') == 'author' ? 'selected' : '' }}>Author</option>
-                                <option value="type" {{ ($filterType ?? '') == 'type' ? 'selected' : '' }}>Report Type</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Reports Per Page -->
-                     <div class="col-12 col-sm-6 col-md-6 col-lg-2 mb-2">
-                        <div class="input-group">
-                            <label class="input-group-text" for="perPageSelect">
-                                <i class="bi bi-list-ol"></i>
-                            </label>
-                            <select class="form-select" id="perPageSelect" onchange="changePerPage(this.value)">
-                                <option value="15" {{ request()->get('per_page', 15) == 15 ? 'selected' : '' }}>15 per page</option>
-                                <option value="25" {{ request()->get('per_page') == 25 ? 'selected' : '' }}>25 per page</option>
-                                <option value="50" {{ request()->get('per_page') == 50 ? 'selected' : '' }}>50 per page</option>
-                                <option value="100" {{ request()->get('per_page') == 100 ? 'selected' : '' }}>100 per page</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Sort Order Toggle - Update initial button text -->
-                    <div class="col-6 col-md-3 col-lg-2 mb-2">
-                        <button type="button" class="btn btn-outline-secondary w-100" id="sortToggle" 
-                            onclick="toggleSortOrder()">
-                            <i class="bi {{ ($sortOrder ?? 'asc') == 'desc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up' }}"></i> 
-                            {{ ($sortOrder ?? 'asc') == 'desc' ? 'Newest First' : 'Oldest First' }}
-                        </button>
-                        <input type="hidden" name="sort" id="sortOrder" value="{{ $sortOrder ?? 'asc' }}">
-                    </div>
-
-                    <!-- Export Dropdown -->
-                    <div class="col-6 col-md-3 col-lg-2 mb-2">
-                        <div class="dropdown-center">
-                            <button class="btn btn-secondary dropdown-toggle w-100" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-box-arrow-up"></i> Export
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                                <li><a class="dropdown-item" href="#" onclick="checkSelectedReports()">Export Selected as PDF</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="selectAllAndExport()">Export All as PDF</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </form>
-                      
-            <div class="row" id="recentReports">
-                <div class="col-12">
-                    <div class="table-responsive">
-                        <table class="table table-striped w-100">
-                            <thead>
-                                <tr>
-                                    <th scope="col">
-                                        <input type="checkbox" id="selectAll" />
-                                    </th>
-                                    <th scope="col">Author</th>
-                                    <th scope="col">Report Type</th>
-                                    <th scope="col">Related Beneficiary</th>
-                                    <th scope="col" class="d-none d-sm-table-cell">Date Uploaded</th>
-                                    <th scope="col">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                 @if(isset($reports) && count($reports) > 0)
-                                    @foreach($reports as $report)
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="rowCheckbox" data-id="{{ $report->report_id }}" data-type="{{ $report->report_type }}" />
-                                            </td>
-                                            <td>{{ $report->author_first_name ?? 'Unknown' }} {{ $report->author_last_name ?? '' }}</td>
-                                            <td>{{ $report->report_type ?? 'Unknown' }}</td>
-                                            <td>{{ $report->beneficiary_first_name ?? 'Unknown' }} {{ $report->beneficiary_last_name ?? '' }}</td>
-                                            <td class="d-none d-sm-table-cell">{{ isset($report->created_at) ? \Carbon\Carbon::parse($report->created_at)->format('M d, Y') : 'Unknown' }}</td>
-                                            <td>
-                                            <div class="action-icons">
-                                                @if($report->report_type == 'Weekly Care Plan')
-                                                <a href="{{ route('admin.weeklycareplans.show', $report->report_id) }}" class="pe-2" title="View Weekly Care Plan">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                @elseif($report->report_type === 'General Care Plan')
-                                                    <!-- View GCP link -->
-                                                    <a href="javascript:void(0)" class="pe-2" title="View General Care Plan" 
-                                                    onclick="openViewGcpRedirectModal('{{ $report->beneficiary_id }}')">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                @else
-                                                    <a href="#" class="pe-2" title="View Not Available" onclick="alert('Viewing not available for this report type')">
-                                                        <i class="bi bi-eye text-muted"></i>
-                                                    </a>
-                                                @endif
-                                                @if($report->report_type == 'Weekly Care Plan')
-                                                    <a href="{{ route('admin.weeklycareplans.edit', $report->report_id) }}" class="ps-2" title="Edit Weekly Care Plan">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </a>
-                                                    @elseif($report->report_type === 'General Care Plan')
-                                                        <!-- Edit GCP link -->
-                                                        <a href="javascript:void(0)" class="ps-2" title="Edit General Care Plan" 
-                                                        onclick="openEditGcpRedirectModal('{{ $report->beneficiary_id }}')">
-                                                            <i class="bi bi-pencil-square"></i>
-                                                        </a>
-                                                    @else
-                                                    <a href="#" title="Edit Not Available" class="ps-2" onclick="alert('Editing not available for this report type')">
-                                                        <i class="bi bi-pencil-square text-muted"></i>
-                                                    </a>
-                                                @endif
-                                            </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @else
-                                    <tr>
-                                        <td colspan="6" class="text-center">No reports found</td>
-                                    </tr>
-                                @endif
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                </div>
+        <div class="text-left">REPORTS MANAGEMENT</div>
+        <div class="container-fluid">
+        <div class="row" id="home-content">
+        
+        <div class="card-container">
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="row mt-4">
-                <div class="col-12 d-flex justify-content-center">
-                    {{ $reports->appends(request()->query())->links('pagination::bootstrap-5') }}
-                </div>
+            @endif
+            
+            <div class="filter-section">
+                <form action="{{ route('admin.reports') }}" method="GET" id="searchFilterForm">
+                    <div class="filter-row">
+                        <!-- Search Bar -->
+                        <div>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Search by author or beneficiary..." 
+                                    id="searchBar" name="search" value="{{ $search ?? '' }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filter Dropdown -->
+                        <div>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-funnel"></i>
+                                </span>
+                                <select class="form-select" id="filterDropdown" name="filter" onchange="this.form.submit()">
+                                    <option value="" {{ empty($filterType ?? '') ? 'selected' : '' }}>Filter by</option>
+                                    <option value="author" {{ ($filterType ?? '') == 'author' ? 'selected' : '' }}>Author</option>
+                                    <option value="type" {{ ($filterType ?? '') == 'type' ? 'selected' : '' }}>Report Type</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reports Per Page -->
+                        <div>
+                            <div class="input-group">
+                                <label class="input-group-text" for="perPageSelect">
+                                    <i class="bi bi-list-ol"></i>
+                                </label>
+                                <select class="form-select" id="perPageSelect" onchange="changePerPage(this.value)">
+                                    <option value="15" {{ request()->get('per_page', 15) == 15 ? 'selected' : '' }}>15 per page</option>
+                                    <option value="25" {{ request()->get('per_page') == 25 ? 'selected' : '' }}>25 per page</option>
+                                    <option value="50" {{ request()->get('per_page') == 50 ? 'selected' : '' }}>50 per page</option>
+                                    <option value="100" {{ request()->get('per_page') == 100 ? 'selected' : '' }}>100 per page</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Sort Order Toggle -->
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" id="sortToggle" 
+                                onclick="toggleSortOrder()">
+                                <i class="bi {{ ($sortOrder ?? 'asc') == 'desc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up' }} me-1 me-sm-2"></i> 
+                                <span class="d-none d-sm-inline">{{ ($sortOrder ?? 'asc') == 'desc' ? 'Newest First' : 'Oldest First' }}</span>
+                            </button>
+                            <input type="hidden" name="sort" id="sortOrder" value="{{ $sortOrder ?? 'asc' }}">
+                        </div>
+
+                        <!-- Export Dropdown -->
+                        <div>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                    <li><a class="dropdown-item" href="#" onclick="checkSelectedReports()"><i class="bi bi-file-earmark-pdf me-2"></i>Selected as PDF</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="selectAllAndExport()"><i class="bi bi-file-earmark-pdf-fill me-2"></i>All as PDF</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
+            
+            <div class="table-responsive">
+                @if(isset($reports) && count($reports) > 0)
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="checkbox-cell">
+                                <input type="checkbox" id="selectAll" />
+                            </th>
+                            <th scope="col">Author</th>
+                            <th scope="col">Report Type</th>
+                            <th scope="col">Related Beneficiary</th>
+                            <th scope="col" class="d-none d-sm-table-cell">Date Uploaded</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($reports as $report)
+                            <tr>
+                                <td class="checkbox-cell">
+                                    <input type="checkbox" class="rowCheckbox" data-id="{{ $report->report_id }}" data-type="{{ $report->report_type }}" />
+                                </td>
+                                <td>{{ $report->author_first_name ?? 'Unknown' }} {{ $report->author_last_name ?? '' }}</td>
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                                        {{ $report->report_type ?? 'Unknown' }}
+                                    </span>
+                                </td>
+                                <td>{{ $report->beneficiary_first_name ?? 'Unknown' }} {{ $report->beneficiary_last_name ?? '' }}</td>
+                                <td class="d-none d-sm-table-cell">{{ isset($report->created_at) ? \Carbon\Carbon::parse($report->created_at)->format('M d, Y') : 'Unknown' }}</td>
+                                <td>
+                                    <div class="action-icons">
+                                        @if($report->report_type == 'Weekly Care Plan')
+                                        <a href="{{ route('admin.weeklycareplans.show', $report->report_id) }}" title="View Weekly Care Plan">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ route('admin.weeklycareplans.edit', $report->report_id) }}" title="Edit Weekly Care Plan">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        @elseif($report->report_type === 'General Care Plan')
+                                            <a href="javascript:void(0)" title="View General Care Plan" 
+                                            onclick="openViewGcpRedirectModal('{{ $report->beneficiary_id }}')">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="javascript:void(0)" title="Edit General Care Plan" 
+                                            onclick="openEditGcpRedirectModal('{{ $report->beneficiary_id }}')">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        @else
+                                            <a href="#" title="View Not Available" onclick="alert('Viewing not available for this report type')">
+                                                <i class="bi bi-eye text-muted"></i>
+                                            </a>
+                                            <a href="#" title="Edit Not Available" onclick="alert('Editing not available for this report type')">
+                                                <i class="bi bi-pencil-square text-muted"></i>
+                                            </a>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @else
+                <div class="empty-state">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <h4>No reports found</h4>
+                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                </div>
+                @endif
+            </div>
+            
+            @if(isset($reports) && count($reports) > 0)
+            <div class="d-flex justify-content-center mt-4">
+                {{ $reports->appends(request()->query())->links('pagination::bootstrap-5') }}
+            </div>
+            @endif
         </div>
     </div>
 
@@ -187,26 +187,28 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="exportWarning" class="alert alert-warning d-none">
+                    <div id="exportWarning" class="alert alert-warning d-flex align-items-center">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <span id="exportWarningMessage"></span>
                     </div>
                     
                     <div id="exportInfo" class="mb-3">
-                        <p>You are about to export <span id="exportCount">0</span> reports as PDF.</p>
-                        <p id="exportTypeBreakdown"></p>
+                        <p>You are about to export <strong><span id="exportCount">0</span></strong> reports as PDF.</p>
+                        <div id="exportTypeBreakdown" class="bg-light p-2 rounded"></div>
                     </div>
 
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="includeBeneficiaryDetails">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="includeBeneficiaryDetails">
                         <label class="form-check-label" for="includeBeneficiaryDetails">
-                            Include detailed beneficiary information (for General Care Plans)
+                            Include detailed beneficiary information
                         </label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirmExportBtn" class="btn btn-primary">Export</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmExportBtn" class="btn btn-primary">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
                 </div>
             </div>
         </div>
@@ -220,14 +222,17 @@
                     <h5 class="modal-title" id="noSelectionModalLabel">No Selection</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <p>Please select at least one report to export.</p>
+                <div class="modal-body text-center">
+                    <i class="bi bi-exclamation-circle text-warning" style="font-size: clamp(1.5rem, 4vw, 2rem);"></i>
+                    <p class="mt-2">Please select at least one report to export.</p>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
+    </div>
+    </div>
     </div>
 
     <script src="{{ asset('js/jquery-3.6.0.min.js') }}"></script>
@@ -235,7 +240,7 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('js/forCheckbox.js') }}"></script>
     
-    <script>
+        <script>
         // Updated toggle function to always control date sorting
         function toggleSortOrder() {
             const currentOrder = document.getElementById('sortOrder').value || 'asc';

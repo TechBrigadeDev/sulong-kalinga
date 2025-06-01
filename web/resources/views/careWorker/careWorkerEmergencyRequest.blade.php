@@ -305,9 +305,11 @@
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='/care-worker/emergency-request/history'">
-                <i class="bi bi-clock-history me-1"></i> View History
-            </button>
+            <a href="{{ route('care-worker.emergency.request.viewHistory') }}">
+                <button class="history-btn" id="historyToggle">
+                    <i class="bi bi-clock-history me-1"></i> View History
+                </button>
+            </a>
         </div>
         
         <div class="container-fluid">
