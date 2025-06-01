@@ -293,31 +293,40 @@ class CareManagerApiController extends Controller
         $uniqueIdentifier = time() . '_' . Str::random(5);
 
         if ($request->hasFile('photo')) {
+            if ($caremanager->photo) {
+                $this->uploadService->delete($caremanager->photo, 'spaces-private');
+            }
             $caremanager->photo = $this->uploadService->upload(
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/caremanager_photos',
-                $caremanager->first_name . '_' . $caremanager->last_name . '_photo_' . $uniqueIdentifier . '.' . 
+                $caremanager->first_name . '_' . $caremanager->last_name . '_photo_' . $uniqueIdentifier . '.' .
                 $request->file('photo')->getClientOriginalExtension()
             );
         }
         
         if ($request->hasFile('government_id')) {
+            if ($caremanager->government_issued_id) {
+                $this->uploadService->delete($caremanager->government_issued_id, 'spaces-private');
+            }
             $caremanager->government_issued_id = $this->uploadService->upload(
                 $request->file('government_id'),
                 'spaces-private',
                 'uploads/caremanager_government_ids',
-                $caremanager->first_name . '_' . $caremanager->last_name . '_government_id_' . $uniqueIdentifier . '.' . 
+                $caremanager->first_name . '_' . $caremanager->last_name . '_government_id_' . $uniqueIdentifier . '.' .
                 $request->file('government_id')->getClientOriginalExtension()
             );
         }
         
         if ($request->hasFile('resume')) {
+            if ($caremanager->cv_resume) {
+                $this->uploadService->delete($caremanager->cv_resume, 'spaces-private');
+            }
             $caremanager->cv_resume = $this->uploadService->upload(
                 $request->file('resume'),
                 'spaces-private',
                 'uploads/caremanager_resumes',
-                $caremanager->first_name . '_' . $caremanager->last_name . '_resume_' . $uniqueIdentifier . '.' . 
+                $caremanager->first_name . '_' . $caremanager->last_name . '_resume_' . $uniqueIdentifier . '.' .
                 $request->file('resume')->getClientOriginalExtension()
             );
         }
