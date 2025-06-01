@@ -21,7 +21,7 @@ class BudgetAllocationFactory extends Factory
         $typeIds = BudgetType::pluck('budget_type_id')->toArray();
         
         // Create date range (1-3 months)
-        $startDate = $this->faker->dateTimeBetween('-12 months', '+3 months');
+        $startDate = $this->faker->dateTimeBetween('-12 months', '2025-07-31');
         $endDate = clone $startDate;
         $endDate->modify('+' . rand(1, 3) . ' months');
         
