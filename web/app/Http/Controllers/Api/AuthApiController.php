@@ -16,15 +16,24 @@ class AuthApiController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required|string', // Now using username for login
+            'username' => 'required_without:email|string',
+            'email' => 'required_without:username|email',
             'password' => 'required|string',
         ]);
 
-        // Find user by username (for beneficiary/family_member) or email (for cose users)
-        $user = User::where(function ($q) use ($request) {
-                $q->where('username', $request->username)
-                  ->orWhere('email', $request->username);
-            })->first();
+        $user = null;
+
+        if ($request->filled('username')) {
+            // Only check for beneficiaries (username login)
+            $user = \App\Models\User::where('username', $request->username)
+                ->where('user_type', 'beneficiary')
+                ->first();
+        } elseif ($request->filled('email')) {
+            // Only check for family members and cose users (email login)
+            $user = \App\Models\User::where('email', $request->email)
+                ->whereIn('user_type', ['family_member', 'cose_user'])
+                ->first();
+        }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
