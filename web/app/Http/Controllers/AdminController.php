@@ -166,7 +166,8 @@ class AdminController extends Controller
             if ($request->hasFile('administrator_photo')) {
                 $administratorPhotoPath = $this->uploadService->upload(
                     $request->file('administrator_photo'),
-                    'uploads/administrator_photos',
+                    'spaces-private', // disk
+                    'uploads/administrator_photos', // directory
                     "{$firstName}_{$lastName}_photo_" . $uniqueIdentifier
                 );
             }
@@ -443,7 +444,8 @@ class AdminController extends Controller
         if ($request->hasFile('administrator_photo')) {
             $administratorPhotoPath = $this->uploadService->upload(
                 $request->file('administrator_photo'),
-                'uploads/administrator_photos',
+                'spaces-private', // disk
+                'uploads/administrator_photos', // directory
                 "{$administrator->first_name}_{$administrator->last_name}_photo_" . $uniqueIdentifier
             );
             $administrator->photo = $administratorPhotoPath;
