@@ -1,9 +1,11 @@
-import { FlatList, ListRenderItem, RefreshControl } from "react-native";
-import { useGetFamilyMembers } from "../../../management.hook";
-import { Button, Card, Text, View } from "tamagui";
-import { familyListStore } from "./store";
 import { useRouter } from "expo-router";
-import { IFamilyMember } from "~/features/user/user.schema";
+import { useGetFamilyMembers } from "features/user/management/management.hook";
+import { IFamilyMember } from "features/user/management/management.type";
+import { Button, Card, Text, View } from "tamagui";
+import { FlashList, FlashListProps, ListRenderItem } from "@shopify/flash-list";
+
+import { familyListStore } from "./store";
+import { RefreshControl } from "react-native";
 
 const FamilyList = () => {
     const {
@@ -25,10 +27,12 @@ const FamilyList = () => {
     }
 
     return (
-        <FlatList 
+        <FlashList
             data={data}
             renderItem={FamilyMemberCard}
-            contentContainerStyle={{ padding: 8 }}
+            contentContainerStyle={{ 
+                padding: 8,
+            }}
             refreshControl={
                 <RefreshControl
                     refreshing={isLoading}
@@ -65,6 +69,7 @@ const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
             marginBottom="$2"
             marginHorizontal="$2"
             elevate
+            shadowOpacity={0.1}
             bordered
             padding="$3">
             <View>
