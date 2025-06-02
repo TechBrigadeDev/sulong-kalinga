@@ -6,7 +6,7 @@ export const adminSchema = z.object({
     last_name: z.string(),
     email: z.string().email(),
     personal_email: z.string().nullable(),
-    mobile: z.string().nullable(),
+    mobile: z.string().optional(),
     photo: z.string().nullable(),
     photo_url: z.string().nullable(),
     created_at: z.string().default(() => new Date().toISOString()),

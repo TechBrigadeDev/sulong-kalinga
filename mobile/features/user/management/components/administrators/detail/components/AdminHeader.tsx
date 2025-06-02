@@ -1,5 +1,6 @@
+import AvatarImage from "components/Avatar";
+import { Avatar, Card, H4, Paragraph, Text, XStack, YStack } from "tamagui";
 import { type z } from "zod";
-import { Avatar, Card, H4, Paragraph, XStack, YStack } from "tamagui";
 
 import Badge from "~/components/Bagde";
 import { adminSchema } from "~/features/user/management/schema/admin";
@@ -19,8 +20,10 @@ const AdminHeader = ({ admin }: Props) => {
             <Card.Header p="$4">
                 <XStack gap="$4">
                     <Avatar circular size="$12">
-                        <Avatar.Image source={{ uri: admin.photo_url || 'https://placehold.co/200' }} />
-                        <Avatar.Fallback backgroundColor="gray" />
+                        <AvatarImage
+                            uri={admin.photo_url}
+                            fallback={admin.id.toString()}
+                        />
                     </Avatar>
                     <YStack flex={1} gap="$2">
                         <H4>{admin.first_name} {admin.last_name}</H4>
