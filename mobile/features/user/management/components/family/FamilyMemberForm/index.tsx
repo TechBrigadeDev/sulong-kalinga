@@ -33,7 +33,7 @@ const FamilyMemberForm = ({ familyMember, onSubmit }: Props) => {
     return (
         <ScrollView>
             <Form onSubmit={handleSubmit}>
-                <YStack space="$4" p="$4">
+                <YStack gap="$4" p="$4">
                     <PersonalDetailsSection
                         data={form}
                         onChange={handleFieldChange}

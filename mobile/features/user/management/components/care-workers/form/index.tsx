@@ -35,7 +35,7 @@ export default function CareWorkerForm() {
   return (
     <ScrollView>
       <Form onSubmit={() => console.log(formData)}>
-        <YStack space="$4" p="$4">
+        <YStack gap="$4" p="$4">
           <PersonalDetails formData={formData} setFormData={setFormData} />
           <AddressDetails formData={formData} setFormData={setFormData} />
           <ContactDetails formData={formData} setFormData={setFormData} />

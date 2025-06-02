@@ -23,7 +23,7 @@ const FamilyMemberHeader = ({ familyMember }: Props) => {
                 <AvatarImage uri={familyMember.photo} fallback={familyMember.family_member_id.toLocaleString()}/>
             </Avatar>
             
-            <YStack flex={1} space="$2">
+            <YStack flex={1} gap="$2">
                 <H2 size="$7">{fullName}</H2>
                 <Text opacity={0.6}>Member since {sinceDate}</Text>
             </YStack>

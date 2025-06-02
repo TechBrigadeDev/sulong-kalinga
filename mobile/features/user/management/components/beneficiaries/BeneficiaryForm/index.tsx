@@ -96,7 +96,7 @@ const BeneficiaryForm = ({ beneficiary, onSubmit }: Props) => {
             }} />
             <ScrollView>
                 <Form onSubmit={handleSubmit}>
-                    <YStack space="$4" p="$4">
+                    <YStack gap="$4" p="$4">
                         <PersonalDetailsSection data={formData} onChange={handleChange} />
                         <AddressSection data={formData} onChange={handleChange} />
                         <MedicalHistorySection data={formData} onChange={handleChange} />

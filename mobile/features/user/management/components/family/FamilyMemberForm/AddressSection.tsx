@@ -13,8 +13,8 @@ const AddressSection = ({ data, onChange }: Props) => {
                 <H3>Address Information</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
-                    <YStack space="$2">
+                <YStack gap="$4">
+                    <YStack gap="$2">
                         <Label htmlFor="street_address">Street Address</Label>
                         <Input
                             id="street_address"
@@ -26,7 +26,7 @@ const AddressSection = ({ data, onChange }: Props) => {
                             textAlignVertical="top"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="city">City/Municipality</Label>
                         <Input
                             id="city"
@@ -36,7 +36,7 @@ const AddressSection = ({ data, onChange }: Props) => {
                             autoCapitalize="words"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="province">Province</Label>
                         <Input
                             id="province"
@@ -46,7 +46,7 @@ const AddressSection = ({ data, onChange }: Props) => {
                             autoCapitalize="words"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="postal_code">Postal Code</Label>
                         <Input
                             id="postal_code"

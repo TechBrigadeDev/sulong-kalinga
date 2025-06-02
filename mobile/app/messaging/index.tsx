@@ -28,7 +28,7 @@ const Screen = () => {
                 <XStack
                 //   ai="center"
                 //   p="$4"
-                //   space="$3"
+                //   gap="$3"
                 //   mb="$2"
                 //   bc="$background"
                 //   bw={1}

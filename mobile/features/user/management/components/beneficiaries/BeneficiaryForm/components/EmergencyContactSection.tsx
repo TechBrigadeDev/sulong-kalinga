@@ -16,8 +16,8 @@ export const EmergencyContactSection = ({
                 <H3>Emergency Contact</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
-                    <XStack space="$4">
+                <YStack gap="$4">
+                    <XStack gap="$4">
                         <YStack flex={1}>
                             <Text>Contact Person Name *</Text>
                             <Input
@@ -38,10 +38,10 @@ export const EmergencyContactSection = ({
                         </YStack>
                     </XStack>
 
-                    <XStack space="$4">
+                    <XStack gap="$4">
                         <YStack flex={1}>
                             <Text>Mobile Number *</Text>
-                            <XStack space="$2" alignItems="center">
+                            <XStack gap="$2" alignItems="center">
                                 <Input
                                     flex={1}
                                     value={data.emergency_contact_mobile?.replace('+63', '')}

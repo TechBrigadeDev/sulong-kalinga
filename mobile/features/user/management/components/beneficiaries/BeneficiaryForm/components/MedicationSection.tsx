@@ -52,12 +52,12 @@ export const MedicationSection = ({ data, onChange }: Props) => {
                 <H3>Medication Management</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
+                <YStack gap="$4">
                     {medications.map((med, index) => (
                         <Card key={index} bordered>
                             <Card.Footer padded>
                                 <XStack space justifyContent="space-between" alignItems="center">
-                                    <YStack space="$2" flex={1}>
+                                    <YStack gap="$2" flex={1}>
                                         <Text fontWeight="bold">{med.name}</Text>
                                         <Text>Dosage: {med.dosage}</Text>
                                         <Text>Frequency: {med.frequency}</Text>
@@ -79,7 +79,7 @@ export const MedicationSection = ({ data, onChange }: Props) => {
 
                     <Card bordered theme="gray">
                         <Card.Footer padded>
-                            <YStack space="$4">
+                            <YStack gap="$4">
                                 <Input
                                     placeholder="Medication Name"
                                     value={currentMedication.name}

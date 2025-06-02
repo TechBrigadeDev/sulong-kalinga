@@ -35,10 +35,10 @@ export function PersonalDetails({ formData, setFormData }: FormSectionProps) {
   }
 
   return (
-    <YStack space="$4">
+    <YStack gap="$4">
       <Label size="$6" fontWeight="bold">Personal Details</Label>
       
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="firstName" color="$red10">First Name *</Label>
           <Input
@@ -60,7 +60,7 @@ export function PersonalDetails({ formData, setFormData }: FormSectionProps) {
         </YStack>
       </XStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="birthday" color="$red10">Birthday *</Label>
           <Button
@@ -96,7 +96,7 @@ export function PersonalDetails({ formData, setFormData }: FormSectionProps) {
         </YStack>
       </XStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="civilStatus">Civil Status</Label>
           <Select
@@ -132,7 +132,7 @@ export function PersonalDetails({ formData, setFormData }: FormSectionProps) {
         </YStack>
       </XStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="nationality">Nationality</Label>
           <Input

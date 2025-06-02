@@ -3,10 +3,10 @@ import { FormSectionProps } from '../types'
 
 export function ContactDetails({ formData, setFormData }: FormSectionProps) {
   return (
-    <YStack space="$4">
+    <YStack gap="$4">
       <Label size="$6" fontWeight="bold">Contact Information</Label>
       
-      <YStack space="$3">
+      <YStack gap="$3">
         <Label htmlFor="personalEmail" color="$red10">Personal Email Address *</Label>
         <Input
           id="personalEmail"
@@ -17,10 +17,10 @@ export function ContactDetails({ formData, setFormData }: FormSectionProps) {
         />
       </YStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="mobileNumber" color="$red10">Mobile Number *</Label>
-          <XStack space="$2">
+          <XStack gap="$2">
             <Input value="+63" width={50} editable={false} />
             <Input
               flex={1}

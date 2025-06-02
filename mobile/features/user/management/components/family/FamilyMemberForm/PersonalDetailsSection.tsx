@@ -13,8 +13,8 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                 <H3>Personal Information</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
-                    <YStack space="$2">
+                <YStack gap="$4">
+                    <YStack gap="$2">
                         <Label htmlFor="first_name">First Name</Label>
                         <Input
                             id="first_name"
@@ -24,7 +24,7 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                             autoCapitalize="words"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="last_name">Last Name</Label>
                         <Input
                             id="last_name"
@@ -34,7 +34,7 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                             autoCapitalize="words"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="gender">Gender</Label>
                         <Input
                             id="gender"
@@ -44,7 +44,7 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                             autoCapitalize="none"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="birthday">Birthday</Label>
                         <Input
                             id="birthday"
@@ -53,7 +53,7 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                             placeholder="YYYY-MM-DD"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="mobile">Mobile Number</Label>
                         <Input
                             id="mobile"
@@ -63,7 +63,7 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                             keyboardType="phone-pad"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="landline">Landline</Label>
                         <Input
                             id="landline"
@@ -73,7 +73,7 @@ const PersonalDetailsSection = ({ data, onChange }: Props) => {
                             keyboardType="phone-pad"
                         />
                     </YStack>
-                    <YStack space="$2">
+                    <YStack gap="$2">
                         <Label htmlFor="email">Email</Label>
                         <Input
                             id="email"

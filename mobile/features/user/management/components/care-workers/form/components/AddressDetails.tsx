@@ -3,7 +3,7 @@ import { FormSectionProps } from '../types'
 
 export function AddressDetails({ formData, setFormData }: FormSectionProps) {
   return (
-    <YStack space="$3">
+    <YStack gap="$3">
       <Label size="$6" fontWeight="bold">Current Address</Label>
       <Label htmlFor="address" color="$red10">House No., Street, Subdivision, Barangay, City, Province *</Label>
       <TextArea

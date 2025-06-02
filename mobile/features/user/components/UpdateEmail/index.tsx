@@ -7,7 +7,7 @@ const UpdateEmail = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <YStack space="$4" style={{ padding: 20 }}>
+    <YStack gap="$4" style={{ padding: 20 }}>
       <Label htmlFor="new-email-update">New Email</Label>
       <Input
         id="new-email-update"

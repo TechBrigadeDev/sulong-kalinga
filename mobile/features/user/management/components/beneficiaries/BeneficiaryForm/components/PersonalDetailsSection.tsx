@@ -32,9 +32,9 @@ export const PersonalDetailsSection = ({
                 <H3>Personal Details</H3>
             </Card.Header>
             <Card.Footer p="$4">
-                <YStack space="$4">
-                    <XStack space="$4">
-                        <YStack flex={1} space="$2">
+                <YStack gap="$4">
+                    <XStack gap="$4">
+                        <YStack flex={1} gap="$2">
                             <Text>First Name *</Text>
                             <Input
                                 size="$4"
@@ -44,7 +44,7 @@ export const PersonalDetailsSection = ({
                                 autoCapitalize="words"
                             />
                         </YStack>
-                        <YStack flex={1} space="$2">
+                        <YStack flex={1} gap="$2">
                             <Text>Last Name *</Text>
                             <Input
                                 size="$4"
@@ -56,8 +56,8 @@ export const PersonalDetailsSection = ({
                         </YStack>
                     </XStack>
 
-                    <XStack space="$4">
-                        <YStack flex={1} space="$2">
+                    <XStack gap="$4">
+                        <YStack flex={1} gap="$2">
                             <Text>Civil Status *</Text>
                             <Select
                                 size="$4"
@@ -82,7 +82,7 @@ export const PersonalDetailsSection = ({
                                 </Select.Content>
                             </Select>
                         </YStack>
-                        <YStack flex={1} space="$2">
+                        <YStack flex={1} gap="$2">
                             <Text>Gender *</Text>
                             <Select
                                 size="$4"
@@ -109,8 +109,8 @@ export const PersonalDetailsSection = ({
                         </YStack>
                     </XStack>
 
-                    <XStack space="$4">
-                        <YStack flex={1} space="$2">
+                    <XStack gap="$4">
+                        <YStack flex={1} gap="$2">
                             <Text>Birthday *</Text>
                             <Input
                                 size="$4"
@@ -122,7 +122,7 @@ export const PersonalDetailsSection = ({
                                 placeholder="YYYY-MM-DD"
                             />
                         </YStack>
-                        <YStack flex={1} space="$2">
+                        <YStack flex={1} gap="$2">
                             <Text>Primary Caregiver</Text>
                             <Input
                                 size="$4"
@@ -134,8 +134,8 @@ export const PersonalDetailsSection = ({
                         </YStack>
                     </XStack>
 
-                    <XStack space="$4">
-                        <YStack flex={1} space="$2">
+                    <XStack gap="$4">
+                        <YStack flex={1} gap="$2">
                             <Text>Mobile Number *</Text>
                             <Input
                                 size="$4"

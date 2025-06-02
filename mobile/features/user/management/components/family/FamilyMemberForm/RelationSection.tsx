@@ -17,8 +17,8 @@ const RelationSection = ({ data, onChange }: Props) => {
                 <H3>Relationship Information</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
-                    <YStack space="$2">
+                <YStack gap="$4">
+                    <YStack gap="$2">
                         <Label htmlFor="relation_to_beneficiary">Relation to Beneficiary</Label>
                         <Input
                             id="relation_to_beneficiary"
@@ -28,8 +28,8 @@ const RelationSection = ({ data, onChange }: Props) => {
                             autoCapitalize="words"
                         />
                     </YStack>
-                    <YStack space="$2">
-                        <XStack space="$4">
+                    <YStack gap="$2">
+                        <XStack gap="$4">
                             <Switch
                                 id="is_primary_caregiver"
                                 checked={data.is_primary_caregiver}

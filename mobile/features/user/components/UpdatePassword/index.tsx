@@ -11,7 +11,7 @@ const UpdatePassword = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   return (
-    <YStack space="$4" style={{ padding: 20 }}>
+    <YStack gap="$4" style={{ padding: 20 }}>
       <Label htmlFor="current-password-update">Current Password</Label>
       <XStack style={{ alignItems: "center" }}>
         <Input

@@ -27,7 +27,7 @@ export const AddressSection = ({
                 <H3>Current Address</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
+                <YStack gap="$4">
                     <YStack>
                         <Text>House No., Street, Subdivision, Barangay, City, Province *</Text>
                         <Input
@@ -40,7 +40,7 @@ export const AddressSection = ({
                         />
                     </YStack>
 
-                    <XStack space="$4">
+                    <XStack gap="$4">
                         <YStack flex={1}>
                             <Text>Municipality *</Text>
                             <Select

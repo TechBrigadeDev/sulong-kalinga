@@ -76,9 +76,9 @@ export const CognitiveFunctionSection = ({
     onChange = () => {} 
 }: Props) => {
     const renderFields = (fields: Field[]) => (
-        <YStack space="$4">
+        <YStack gap="$4">
             {fields.map((field, index) => (
-                <YStack key={index} space="$2">
+                <YStack key={index} gap="$2">
                     <Text>{field.label}</Text>
                     <Input
                         value={data[field.field] as string}
@@ -94,7 +94,7 @@ export const CognitiveFunctionSection = ({
     );
 
     return (
-        <YStack space="$4">
+        <YStack gap="$4">
             <Card elevate>
                 <Card.Header padded>
                     <H3>Mobility</H3>

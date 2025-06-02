@@ -7,7 +7,7 @@ interface Props {
 }
 
 const InfoItem = ({ label, value }: { label: string; value: string | number | boolean | null }) => (
-    <YStack space="$1">
+    <YStack gap="$1">
         <Text opacity={0.6} fontSize="$3">{label}</Text>
         <Text fontSize="$4">
             {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value || 'Not provided'}
@@ -22,7 +22,7 @@ const PersonalInformation = ({ familyMember }: Props) => {
                 <H3 size="$6">Personal Information</H3>
             </Card.Header>
             <Card.Footer p="$4">
-                <YStack space="$4">
+                <YStack gap="$4">
                     <InfoItem 
                         label="Full Name" 
                         value={`${familyMember.first_name} ${familyMember.last_name}`} 
@@ -31,14 +31,14 @@ const PersonalInformation = ({ familyMember }: Props) => {
                         label="Contact Information" 
                         value={`${familyMember.email}\n${familyMember.mobile}`} 
                     />
-                    <XStack space="$4">
-                        <YStack flex={1} space="$3">
+                    <XStack gap="$4">
+                        <YStack flex={1} gap="$3">
                             <InfoItem 
                                 label="Relation to Beneficiary" 
                                 value={familyMember.relation_to_beneficiary} 
                             />
                         </YStack>
-                        <YStack flex={1} space="$3">
+                        <YStack flex={1} gap="$3">
                             <InfoItem 
                                 label="Primary Caregiver" 
                                 value={familyMember.is_primary_caregiver} 

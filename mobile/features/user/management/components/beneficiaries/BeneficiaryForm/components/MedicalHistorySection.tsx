@@ -16,7 +16,7 @@ export const MedicalHistorySection = ({
                 <H3>Medical History</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
+                <YStack gap="$4">
                     <YStack>
                         <Text>Medical Conditions</Text>
                         <Input

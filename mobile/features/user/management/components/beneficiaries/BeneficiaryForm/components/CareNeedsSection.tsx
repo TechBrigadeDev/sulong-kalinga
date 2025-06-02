@@ -60,11 +60,11 @@ export const CareNeedsSection = ({
                 <H3>Care Needs</H3>
             </Card.Header>
             <Card.Footer padded>
-                <YStack space="$4">
+                <YStack gap="$4">
                     {CARE_NEEDS.map((need, index) => (
-                        <YStack key={index} space="$2">
+                        <YStack key={index} gap="$2">
                             <Text size="$5" fontWeight="bold">{need.label}</Text>
-                            <YStack space="$2">
+                            <YStack gap="$2">
                                 <Text>Frequency</Text>
                                 <Input
                                     multiline
@@ -75,7 +75,7 @@ export const CareNeedsSection = ({
                                     placeholder="Enter frequency"
                                 />
                             </YStack>
-                            <YStack space="$2">
+                            <YStack gap="$2">
                                 <Text>Assistance Required</Text>
                                 <Input
                                     multiline

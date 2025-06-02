@@ -3,10 +3,10 @@ import { FormSectionProps } from '../types'
 
 export function AccountRegistration({ formData, setFormData }: FormSectionProps) {
   return (
-    <YStack space="$4">
+    <YStack gap="$4">
       <Label size="$6" fontWeight="bold">Care Worker Account Registration</Label>
       
-      <YStack space="$3">
+      <YStack gap="$3">
         <Label htmlFor="workEmail" color="$red10">Work Email Address *</Label>
         <Input
           id="workEmail"
@@ -17,7 +17,7 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
         />
       </YStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="password" color="$red10">Password *</Label>
           <Input
@@ -41,7 +41,7 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
         </YStack>
       </XStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="municipality" color="$red10">Municipality *</Label>
           <Select

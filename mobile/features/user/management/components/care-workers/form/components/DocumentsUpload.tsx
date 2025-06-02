@@ -24,10 +24,10 @@ export function DocumentsUpload({ formData, setFormData }: FormSectionProps) {
   }
 
   return (
-    <YStack space="$4">
+    <YStack gap="$4">
       <Label size="$6" fontWeight="bold">Documents Upload</Label>
       
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label>Care Worker Photo</Label>
           <Button 
@@ -53,7 +53,7 @@ export function DocumentsUpload({ formData, setFormData }: FormSectionProps) {
         </YStack>
       </XStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label>Resume / CV</Label>
           <Button 
@@ -67,7 +67,7 @@ export function DocumentsUpload({ formData, setFormData }: FormSectionProps) {
         </YStack>
       </XStack>
 
-      <XStack space="$3">
+      <XStack gap="$3">
         <YStack flex={1}>
           <Label htmlFor="sssId">SSS ID</Label>
           <Input

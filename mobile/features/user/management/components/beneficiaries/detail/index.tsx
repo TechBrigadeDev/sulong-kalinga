@@ -26,15 +26,15 @@ const BeneficiaryDetail = ({
                 headerShown: true,
             }} />
             <ScrollView>
-                <YStack space="$4" style={{ padding: 16 }}>
+                <YStack gap="$4" style={{ padding: 16 }}>
                     <BeneficiaryHeader beneficiary={beneficiary} />
                     
-                    <YStack space="$4">
+                    <YStack gap="$4">
                         <PersonalInformation beneficiary={beneficiary} />
                         <MedicalHistory beneficiary={beneficiary} />
                     </YStack>
                     
-                    <YStack space="$4">
+                    <YStack gap="$4">
                         <EmergencyContact beneficiary={beneficiary} />
                         <MedicationManagement beneficiary={beneficiary} />
                     </YStack>
