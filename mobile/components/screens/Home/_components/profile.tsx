@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 import { Avatar, H3, YStack } from "tamagui"
 
-import AvatarImage from "~/components/Avatar"
+import UserAvatar from "~/features/user/components/UserAvatar"
 import Badge from "~/components/Bagde";
 import GradientBackground from "~/components/GradientContainer";
 import { topBarHeight } from "~/constants/Layout";
@@ -13,7 +13,7 @@ const Profile = () => {
       <GradientBackground>
         <YStack style={style.container}>
           <Avatar circular size="$10" marginBottom={10}>
-            <AvatarImage/>
+            <UserAvatar/>
           </Avatar>
           <H3 style={style.name}>{user?.first_name} {user?.last_name}</H3>
           <Badge 

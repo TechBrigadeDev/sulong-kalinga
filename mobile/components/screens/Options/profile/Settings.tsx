@@ -1,10 +1,10 @@
-import AvatarImage from 'components/Avatar';
 import OptionCard from 'components/screens/Options/_components/Card';
 import OptionRow from 'components/screens/Options/_components/Row';
 import { StyleSheet } from 'react-native';
 import { Avatar,Text, YStack } from 'tamagui';
 
 import Badge from '~/components/Bagde';
+import UserAvatar from '~/features/user/components/UserAvatar';
 import { useUser } from '~/features/user/user.hook';
 
 const ProfileSettings = () => {
@@ -99,7 +99,7 @@ const Header = () => {
   return (
     <YStack style={headerStyle.container}>
       <Avatar circular size="$8" marginBottom={10}>
-        <AvatarImage />
+        <UserAvatar />
       </Avatar>
       <Text style={headerStyle.name}>
         {fullName}

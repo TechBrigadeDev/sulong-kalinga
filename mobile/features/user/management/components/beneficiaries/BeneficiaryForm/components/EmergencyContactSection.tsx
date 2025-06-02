@@ -51,16 +51,6 @@ export const EmergencyContactSection = ({
                                 />
                             </XStack>
                         </YStack>
-                        <YStack flex={1}>
-                            <Text>Email</Text>
-                            <Input
-                                value={data.emergency_contact_email}
-                                onChangeText={(value) => onChange("emergency_contact_email", value)}
-                                placeholder="Enter email address"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                            />
-                        </YStack>
                     </XStack>
 
                     <YStack>

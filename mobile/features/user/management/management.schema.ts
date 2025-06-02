@@ -1,8 +1,9 @@
 import { z } from "zod";
+
 import { beneficiarySchema } from "./schema/beneficiary";
 import { careManagerSchema } from "./schema/care-manager";
-import { familyMemberSchema } from "./schema/family";
 import { careWorkerSchema } from "./schema/care-worker";
+import { familyMemberSchema } from "./schema/family";
 
 export const userManagementSchema = {
   getBeneficiaries: z.object({
@@ -15,7 +16,7 @@ export const userManagementSchema = {
     family_members: z.array(familyMemberSchema),
   }),
   getFamilyMember: z.object({
-    family_member: familyMemberSchema,
+    data: familyMemberSchema,
   }),
   getCareWorkers: z.object({
     careworkers: z.array(careWorkerSchema),

@@ -28,10 +28,6 @@ const EmergencyContact = ({ beneficiary }: Props) => {
                         </YStack>
                     </XStack>
                     <YStack>
-                        <Text opacity={0.6}>Email</Text>
-                        <Text>{beneficiary.emergency_contact_email}</Text>
-                    </YStack>
-                    <YStack>
                         <Text opacity={0.6}>Emergency Procedure</Text>
                         <Text>{beneficiary.emergency_procedure}</Text>
                     </YStack>

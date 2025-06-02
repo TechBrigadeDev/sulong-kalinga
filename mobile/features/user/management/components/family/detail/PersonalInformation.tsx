@@ -1,62 +1,54 @@
+import { IFamilyMember } from "features/user/management/management.type";
 import { Card, H3, Text, XStack, YStack } from "tamagui";
-import { IFamilyMember } from "~/user.schema";
+
 
 interface Props {
     familyMember: IFamilyMember;
 }
 
+const InfoItem = ({ label, value }: { label: string; value: string | number | boolean | null }) => (
+    <YStack space="$1">
+        <Text opacity={0.6} fontSize="$3">{label}</Text>
+        <Text fontSize="$4">
+            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value || 'Not provided'}
+        </Text>
+    </YStack>
+);
+
 const PersonalInformation = ({ familyMember }: Props) => {
     return (
         <Card elevate>
-            <Card.Header padded>
-                <H3>Personal Information</H3>
+            <Card.Header p="$4">
+                <H3 size="$6">Personal Information</H3>
             </Card.Header>
-            <Card.Footer padded>
-                <YStack gap="$3">
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Full Name</Text>
-                            <Text>{familyMember.first_name} {familyMember.last_name}</Text>
+            <Card.Footer p="$4">
+                <YStack space="$4">
+                    <InfoItem 
+                        label="Full Name" 
+                        value={`${familyMember.first_name} ${familyMember.last_name}`} 
+                    />
+                    <InfoItem 
+                        label="Contact Information" 
+                        value={`${familyMember.email}\n${familyMember.mobile}`} 
+                    />
+                    <XStack space="$4">
+                        <YStack flex={1} space="$3">
+                            <InfoItem 
+                                label="Relation to Beneficiary" 
+                                value={familyMember.relation_to_beneficiary} 
+                            />
                         </YStack>
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Gender</Text>
-                            <Text>{familyMember.gender}</Text>
-                        </YStack>
-                    </XStack>
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Birthday</Text>
-                            <Text>{new Date(familyMember.birthday).toLocaleDateString()}</Text>
-                        </YStack>
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Relation</Text>
-                            <Text>{familyMember.relation_to_beneficiary}</Text>
-                        </YStack>
-                    </XStack>
-                    <YStack>
-                        <Text opacity={0.6}>Address</Text>
-                        <Text>{familyMember.street_address}</Text>
-                    </YStack>
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Mobile</Text>
-                            <Text>{familyMember.mobile}</Text>
-                        </YStack>
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Landline</Text>
-                            <Text>{familyMember.landline}</Text>
+                        <YStack flex={1} space="$3">
+                            <InfoItem 
+                                label="Primary Caregiver" 
+                                value={familyMember.is_primary_caregiver} 
+                            />
                         </YStack>
                     </XStack>
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Email</Text>
-                            <Text>{familyMember.email}</Text>
-                        </YStack>
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Primary Caregiver</Text>
-                            <Text>{familyMember.is_primary_caregiver ? "Yes" : "No"}</Text>
-                        </YStack>
-                    </XStack>
+                    <InfoItem 
+                        label="Connected Beneficiary" 
+                        value={`${familyMember.beneficiary.first_name} ${familyMember.beneficiary.last_name}`} 
+                    />
                 </YStack>
             </Card.Footer>
         </Card>

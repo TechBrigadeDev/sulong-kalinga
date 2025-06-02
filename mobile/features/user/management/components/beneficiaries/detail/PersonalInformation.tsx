@@ -42,10 +42,6 @@ const PersonalInformation = ({ beneficiary }: Props) => {
                             <Text opacity={0.6}>Mobile</Text>
                             <Text>{beneficiary.mobile}</Text>
                         </YStack>
-                        <YStack flex={1}>
-                            <Text opacity={0.6}>Landline</Text>
-                            <Text>{beneficiary.landline}</Text>
-                        </YStack>
                     </XStack>
                 </YStack>
             </Card.Footer>

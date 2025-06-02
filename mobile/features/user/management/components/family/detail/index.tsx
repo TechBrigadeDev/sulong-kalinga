@@ -1,7 +1,8 @@
-import { SafeAreaView } from "react-native";
-import { ScrollView, YStack } from "tamagui";
-import { IFamilyMember } from "~/user.schema";
 import { Stack } from "expo-router";
+import { IFamilyMember } from "features/user/management/management.type";
+import { SafeAreaView, ScrollView, StyleSheet } from "react-native";
+import { YStack } from "tamagui";
+
 import FamilyMemberHeader from "./FamilyMemberHeader";
 import PersonalInformation from "./PersonalInformation";
 
@@ -13,12 +14,14 @@ const FamilyMemberDetail = ({
     familyMember
 }: IDetailProps) => {
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={styles.container}>
             <Stack.Screen options={{
-                title: "VIEW FAMILY PROFILE DETAILS",
+                title: "Family Member",
                 headerShown: true,
             }} />
-            <ScrollView>
+            <ScrollView contentContainerStyle={{
+                paddingBottom: 50
+            }}>
                 <YStack space="$4" style={{ padding: 16 }}>
                     <FamilyMemberHeader familyMember={familyMember} />
                     <PersonalInformation familyMember={familyMember} />
@@ -27,5 +30,14 @@ const FamilyMemberDetail = ({
         </SafeAreaView>
     )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollView: {
+        paddingBottom: 16,
+    },
+})
 
 export default FamilyMemberDetail;

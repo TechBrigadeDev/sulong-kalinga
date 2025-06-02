@@ -1,55 +1,57 @@
 import { shapes } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
-import { generateId } from "common/generator";
 import { Image as ExpoImage } from "expo-image";
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { SvgXml } from "react-native-svg"; 
 import { View } from "tamagui"
 
-type Props = {
-  uri?: string | null;
-  fallback?: string;
-}
+import { useUser } from "~/features/user/user.hook"
 
-const AvatarImage = (props: Props) => {
+const UserAvatar = () => {
+  const { data: user } = useUser();
+  const Avatar = user?.photo_url ? Image : Svg;
+
   return (
     <View style={style.container}>
-      {props.uri ? (
-        <Image uri={props.uri} />
-      ) : (
-        <Svg id={props.fallback} />
-      )}
+      <Avatar />
     </View>
   )
 }
 
-const Image = ({ 
-  uri
-}:{
-  uri: string
-}) => {
+const Image = () => {
+  const { data: user } = useUser();
+
+  const source = useMemo(() => {
+    let source = { uri: "" };
+    if (user?.photo_url) {
+      source.uri = user.photo_url;
+    }
+
+    source.uri = createAvatar(shapes, {
+      seed: user?.id.toString() || "default-avatar",
+    }).toDataUri();
+
+    return source;
+  }, [user]);
+
   return (
     <ExpoImage
-      source={{
-        uri,
-      }}
+      source={source}
       style={style.image}
       contentFit="cover"
     />
   );
 }
 
-const Svg = ({
-  id
-}:{
-  id?: string;
-}) => {
+const Svg = () => {
+  const { data: user } = useUser();
+
   const xml = useMemo(() => {
     return createAvatar(shapes, {
-      seed: id ?? generateId(),
-    }).toString();
-  }, [id]);
+      seed: user?.id.toString() ?? "default-avatar",
+    }).toString(); // returns the raw SVG XML string
+  }, [user]);
 
   return (
     <View style={style.container}>
@@ -71,4 +73,4 @@ const style = StyleSheet.create({
   }
 })
 
-export default AvatarImage;
+export default UserAvatar;

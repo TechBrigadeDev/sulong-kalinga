@@ -77,7 +77,7 @@ class UserManagementController {
       throw new Error("Family member validation error");
     }
 
-    return valid.data.family_member;   
+    return valid.data.data;   
   }
 
   async getCareWorkers(params?: { search?: string }) {

@@ -18,10 +18,6 @@ const CareInformation = ({ beneficiary }: Props) => {
                         <Text>{beneficiary.primary_caregiver}</Text>
                     </YStack>
                     <YStack>
-                        <Text opacity={0.6}>Status</Text>
-                        <Text>{beneficiary.status_reason}</Text>
-                    </YStack>
-                    <YStack>
                         <Text opacity={0.6}>Documents</Text>
                         <Text>Care Service Agreement: {beneficiary.care_service_agreement_doc ? "Available" : "Not Available"}</Text>
                         <Text>General Care Plan: {beneficiary.general_care_plan_doc ? "Available" : "Not Available"}</Text>

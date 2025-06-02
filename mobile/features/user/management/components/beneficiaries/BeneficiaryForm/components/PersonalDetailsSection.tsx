@@ -145,16 +145,6 @@ export const PersonalDetailsSection = ({
                                 keyboardType="phone-pad"
                             />
                         </YStack>
-                        <YStack flex={1} space="$2">
-                            <Text>Landline Number</Text>
-                            <Input
-                                size="$4"
-                                value={data.landline}
-                                onChangeText={(value) => onChange("landline", value)}
-                                placeholder="Enter landline number"
-                                keyboardType="phone-pad"
-                            />
-                        </YStack>
                     </XStack>
                 </YStack>
             </Card.Footer>

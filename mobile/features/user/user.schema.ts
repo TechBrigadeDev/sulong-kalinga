@@ -12,7 +12,7 @@ export const userSchema = z.object({
     id: z.number(),
     last_name: z.string(),
     mobile: z.string(),
-    photo: z.string().nullable(),
+    photo_url: z.string().nullable(),
     role: z.enum(["admin", "care_manager", "care_worker"]),
     status: userStatusSchema,
 })

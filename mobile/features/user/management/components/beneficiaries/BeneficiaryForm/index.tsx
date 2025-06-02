@@ -26,7 +26,6 @@ const initialFormData: Partial<IBeneficiary> = {
     civil_status: '',
     primary_caregiver: '',
     mobile: '',
-    landline: '',
     street_address: '',
     municipality_id: undefined,
     barangay_id: undefined,
@@ -42,7 +41,6 @@ const initialFormData: Partial<IBeneficiary> = {
     emergency_contact_name: '',
     emergency_contact_relation: '',
     emergency_contact_mobile: '',
-    emergency_contact_email: '',
     emergency_procedure: '',
     medications_list: [],
     // Mobility fields
