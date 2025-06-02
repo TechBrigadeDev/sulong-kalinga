@@ -18,7 +18,7 @@ const FamilyMemberHeader = ({ familyMember }: Props) => {
     });
 
     return (
-        <XStack space="$4" margin="$2">
+        <YStack gap="$4" items="center">
             <Avatar size="$14" circular>
                 <AvatarImage uri={familyMember.photo} fallback={familyMember.family_member_id.toLocaleString()}/>
             </Avatar>
@@ -35,7 +35,7 @@ const FamilyMemberHeader = ({ familyMember }: Props) => {
             >
                 Edit
             </Button>
-        </XStack>
+        </YStack>
     );
 };
 

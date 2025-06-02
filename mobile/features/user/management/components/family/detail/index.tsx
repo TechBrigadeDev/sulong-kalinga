@@ -1,10 +1,11 @@
 import { Stack } from "expo-router";
 import { IFamilyMember } from "features/user/management/management.type";
-import { SafeAreaView, ScrollView, StyleSheet } from "react-native";
-import { YStack } from "tamagui";
+import { SafeAreaView, StyleSheet } from "react-native";
+import { ScrollView, YStack } from "tamagui";
 
 import FamilyMemberHeader from "./FamilyMemberHeader";
 import PersonalInformation from "./PersonalInformation";
+import TabScroll from "../../../../../../components/tabs/TabScroll";
 
 interface IDetailProps {
     familyMember: IFamilyMember;
@@ -19,25 +20,17 @@ const FamilyMemberDetail = ({
                 title: "Family Member",
                 headerShown: true,
             }} />
-            <ScrollView contentContainerStyle={{
-                paddingBottom: 50
-            }}>
-                <YStack space="$4" style={{ padding: 16 }}>
+            <TabScroll>
+                <YStack gap="$4" style={{ padding: 16 }}>
                     <FamilyMemberHeader familyMember={familyMember} />
                     <PersonalInformation familyMember={familyMember} />
                 </YStack>
-            </ScrollView>
+            </TabScroll>
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    scrollView: {
-        paddingBottom: 16,
-    },
 })
 
 export default FamilyMemberDetail;
