@@ -1,11 +1,11 @@
+import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
 import { IFamilyMember } from "features/user/management/management.type";
 import { SafeAreaView, StyleSheet } from "react-native";
-import { ScrollView, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 import FamilyMemberHeader from "./FamilyMemberHeader";
 import PersonalInformation from "./PersonalInformation";
-import TabScroll from "../../../../../../components/tabs/TabScroll";
 
 interface IDetailProps {
     familyMember: IFamilyMember;

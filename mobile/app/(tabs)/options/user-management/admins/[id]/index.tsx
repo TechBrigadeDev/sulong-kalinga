@@ -1,7 +1,8 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { Text, View } from "tamagui";
-import { useGetAdmin } from "~/features/user/management/management.hook";
+
 import AdminDetail from "~/features/user/management/components/administrators/detail";
+import { useGetAdmin } from "~/features/user/management/management.hook";
 
 const Screen = () => {
     const { id } = useLocalSearchParams<{

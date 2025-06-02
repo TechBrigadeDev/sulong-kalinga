@@ -1,9 +1,11 @@
-import { useGetCareWorkers } from "~/features/user/management/management.hook";
-import { careManagerListStore } from "../../care-managers/list/store";
-import { FlatList, ListRenderItem, RefreshControl, SafeAreaView } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
-import { ICareWorker } from "../../../../user.schema";
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
+import { careManagerListStore } from "features/user/management/components/care-managers/list/store";
+import { ICareWorker } from "features/user/management/management.type";
+import { RefreshControl } from "react-native";
+import { Button, Card, Text, View } from "tamagui";
+
+import { useGetCareWorkers } from "~/features/user/management/management.hook";
 
 
 const CareWorkerList = () => {
@@ -25,13 +27,15 @@ const CareWorkerList = () => {
     }
 
     return (
-      <FlatList
+      <FlashList
         data={data}
         renderItem={CareWorkerCard}
         contentContainerStyle={{ padding: 8 }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} />
         }
+        estimatedItemSize={100}
+        keyExtractor={(item) => item.id.toString()}
       />
     );
 }
@@ -44,12 +48,12 @@ const CareWorkerCard: ListRenderItem<ICareWorker> = ({ item }) => {
     item;
 
   const onView = () => {
-    router.push(`/(tabs)/options/user-management/family/${id}`);
+    router.push(`/(tabs)/options/user-management/care-workers/${id}`);
   };
 
   const onEdit = () => {
     router.push(
-      `/(tabs)/options/user-management/family/${id}/edit`
+      `/(tabs)/options/user-management/care-workers/${id}/edit`
     );
   };
 

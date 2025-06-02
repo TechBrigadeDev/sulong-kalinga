@@ -43,7 +43,8 @@ const CareWorkers = () => {
 
 const style = StyleSheet.create({
     container: {
-        marginHorizontal: 30
+      flex: 1,
+      marginHorizontal: 30
     }
 })
 export default CareWorkers;

@@ -7,6 +7,7 @@ const simpleSort = require("eslint-plugin-simple-import-sort");
 module.exports = defineConfig([
   expoConfig,
   {
+    files: ["**/*.{ts,tsx}"],
     ignores: ["dist/*"],
     settings: {
       "import/resolver": {
