@@ -249,11 +249,8 @@ class FamilyMemberApiController extends Controller
             $data['password'] = bcrypt($request->password);
         }
 
-        // Handle photo upload (delete old photo if new one is uploaded)
+        // Handle photo upload
         if ($request->hasFile('photo')) {
-            if ($familyMember->photo) {
-                $this->uploadService->delete($familyMember->photo, 'spaces-private');
-            }
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
             $data['photo'] = $this->uploadService->upload(
                 $request->file('photo'),
@@ -268,7 +265,7 @@ class FamilyMemberApiController extends Controller
 
         // Handle primary caregiver updates
         if ($request->has('is_primary_caregiver')) {
-            $beneficiary = \App\Models\Beneficiary::find($request->related_beneficiary_id ?? $familyMember->related_beneficiary_id);
+            $beneficiary = Beneficiary::find($request->related_beneficiary_id ?? $familyMember->related_beneficiary_id);
             if ($request->is_primary_caregiver) {
                 $beneficiary->primary_caregiver = $familyMember->family_member_id;
             } elseif ($familyMember->is_primary_caregiver && !$request->is_primary_caregiver) {
@@ -289,7 +286,7 @@ class FamilyMemberApiController extends Controller
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
                 'photo' => $familyMember->photo,
                 'photo_url' => $familyMember->photo
-                    ? \Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    ? Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
                     : null,
                 'beneficiary' => $familyMember->beneficiary,
                 // Add other fields as needed for mobile
