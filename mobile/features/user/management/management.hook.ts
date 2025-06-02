@@ -161,3 +161,42 @@ export const useGetCareManager = (id?: string) => {
         enabled: !!token,
     })
 }
+
+export const useGetAdministrators = (props?: {
+    search?: string;
+}) => {
+    const { token } = authStore();
+    if (!token) {
+        throw new Error("No token found");
+    }
+
+    const api = new UserManagementController(token);
+    return useQuery({
+        queryKey: [QK.user.management.getAdministrators, token, props?.search],
+        queryFn: async () => {
+            const response = await api.getAdministrators({
+                search: props?.search,
+            });
+            return response;
+        },
+        enabled: !!token,
+    })
+}
+
+export const useGetAdmin = (id?: string) => {
+    const { token } = authStore();
+    if (!token || !id) {
+        throw new Error("No token found");
+    }
+
+    const api = new UserManagementController(token);
+
+    return useQuery({
+        queryKey: QK.user.management.getAdmin(id),
+        queryFn: async () => {
+            const response = await api.getAdmin(id);
+            return response;
+        },
+        enabled: !!token,
+    })
+}

@@ -145,6 +145,40 @@ class UserManagementController {
 
     return valid.data.caremanager;
   }
+
+  async getAdministrators(params?: { search?: string }) {
+    const response = await this.api.get("/admins", {
+      params: {
+        ...(params?.search && { search: params.search }),
+      }
+    });
+
+    const data = await response.data;
+
+    const valid = await userManagementSchema.getAdministrators.safeParseAsync(data);
+    if (!valid.success) {
+      console.error("Administrators validation error", valid.error);
+      throw new Error("Administrators validation error");
+    }
+
+    return valid.data.admins;
+  }
+
+  async getAdmin(id: string) {
+    const response = await this.api.get(`/admins/${id}`);
+    if (!response.data) {
+      throw new Error("No data received from API");
+    }
+    const data = await response.data;
+
+    const valid = await userManagementSchema.getAdmin.safeParseAsync(data);
+    if (!valid.success) {
+      console.error("Admin validation error", valid.error);
+      throw new Error("Admin validation error");
+    }
+
+    return valid.data.admin;
+  }
 }
 
 export default UserManagementController;

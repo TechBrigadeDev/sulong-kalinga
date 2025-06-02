@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { adminSchema } from "./schema/admin";
 import { beneficiarySchema } from "./schema/beneficiary";
 import { careManagerSchema } from "./schema/care-manager";
 import { careWorkerSchema } from "./schema/care-worker";
@@ -29,5 +30,13 @@ export const userManagementSchema = {
   }),
   getCareManager: z.object({
     caremanager: careManagerSchema,
+  }),
+  getAdministrators: z.object({
+    admins: z.array(
+      adminSchema
+    ),
+  }),
+  getAdmin: z.object({
+    admin: adminSchema,
   }),
 };

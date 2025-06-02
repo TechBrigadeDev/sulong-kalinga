@@ -62,7 +62,7 @@ const UserManagement = () => {
                 />
                 <Link
                     label="Administrators"
-                    href="/options/user-management/administrators"
+                    href="/options/user-management/admins"
                     icon="ShieldUser"
                 />
             </Card>

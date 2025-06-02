@@ -1,35 +1,38 @@
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import { useGetFamilyMembers } from "features/user/management/management.hook";
-import { IFamilyMember } from "features/user/management/management.type";
+import { useGetAdministrators } from "features/user/management/management.hook";
+import { adminSchema } from "features/user/management/schema/admin";
 import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
+import { type z } from "zod";
 
-import { familyListStore } from "./store";
+import { adminListStore } from "./store";
 
-const FamilyList = () => {
+type IAdmin = z.infer<typeof adminSchema>;
+
+const AdminList = () => {
     const {
         search,
-    } = familyListStore();
+    } = adminListStore();
 
     const {
         data = [],
         isLoading,
         refetch
-    } = useGetFamilyMembers({
+    } = useGetAdministrators({
         search
     });
 
     if (data.length === 0 && !isLoading) {
         return (
-            <Text>No family members found</Text>
+            <Text>No administrators found</Text>
         )
     }
 
     return (
         <FlashList
             data={data}
-            renderItem={FamilyMemberCard}
+            renderItem={AdminCard}
             contentContainerStyle={{ 
                 padding: 8,
                 paddingBottom: 100,
@@ -45,24 +48,24 @@ const FamilyList = () => {
     )
 }
 
-const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
+const AdminCard: ListRenderItem<IAdmin> = ({
     item
 }) => { 
     const router = useRouter();
 
     const {
-        family_member_id,
+        id,
         first_name,
         last_name,
-        relation_to_beneficiary
+        email,
     } = item;
     
     const onView = () => {
-        router.push(`/(tabs)/options/user-management/family/${family_member_id}`);
+        router.push(`/(tabs)/options/user-management/admins/${id}`);
     }
 
     const onEdit = () => {
-        router.push(`/(tabs)/options/user-management/family/${family_member_id}/edit`);
+        router.push(`/(tabs)/options/user-management/admins/${id}/edit`);
     }
 
     return (
@@ -76,7 +79,7 @@ const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
             padding="$3">
             <View>
                 <Text fontSize="$6" fontWeight="500">{first_name} {last_name}</Text>
-                <Text fontSize="$4" color="gray">{relation_to_beneficiary}</Text>
+                <Text fontSize="$4" color="gray">{email}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <Button
@@ -102,4 +105,4 @@ const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
     );
 };
 
-export default FamilyList;
+export default AdminList;
