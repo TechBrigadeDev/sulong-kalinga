@@ -1,5 +1,6 @@
+import AvatarImage from "components/Avatar";
 import { Stack, useRouter } from "expo-router";
-import { Pressable, SafeAreaView } from "react-native";
+import { Pressable, SafeAreaView, TouchableOpacity } from "react-native";
 import { Avatar,ScrollView, Text, XStack} from "tamagui";
 
 const Screen = () => {
@@ -21,7 +22,7 @@ const Screen = () => {
         />
         <ScrollView contentContainerStyle={{ padding: 10 }}>
             {users.map((user) => (
-            <Pressable
+            <TouchableOpacity
                 key={user.id}
                 onPress={() => router.push(`/messaging/${user.id}`)}
             >
@@ -35,10 +36,15 @@ const Screen = () => {
                 //   bColor="$gray5"
                 //   br="$4"
                 >
-                <Avatar />
+                <Avatar circular size="$10">
+                  <AvatarImage
+                    uri={user.avatar}
+                    fallback={user.id.toString()}
+                  />
+                </Avatar>
                 <Text fontSize={16}>{user.name}</Text>
                 </XStack>
-            </Pressable>
+            </TouchableOpacity>
             ))}
         </ScrollView>
     </SafeAreaView>
