@@ -119,6 +119,20 @@ class AuthApiController extends Controller
         }
 
         // For other users, return unified user data
+        // Retrieve photo from the correct related table
+        $photo = null;
+        if ($user->user_type === 'beneficiary' && $user->beneficiary_id) {
+            $beneficiary = \App\Models\Beneficiary::find($user->beneficiary_id);
+            $photo = $beneficiary?->photo;
+        } elseif ($user->user_type === 'family_member' && $user->family_member_id) {
+            $familyMember = \App\Models\FamilyMember::find($user->family_member_id);
+            $photo = $familyMember?->photo;
+        } elseif ($user->user_type === 'cose_user' && $user->cose_user_id) {
+            $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
+            $photo = $coseUser?->photo;
+        }
+        $photo_url = $photo ? \Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
+
         return response()->json([
             'success' => true,
             'user' => [
@@ -129,7 +143,7 @@ class AuthApiController extends Controller
                 'email' => $user->email,
                 'mobile' => $user->mobile,
                 'status' => $user->status ?? null,
-                'photo' => $user->photo ? asset('storage/' . $user->photo) : null
+                'photo_url' => $photo_url,
             ]
         ]);
     }

@@ -86,6 +86,10 @@
                                     <td>{{ $beneficiary->civil_status }}</td>
                                 </tr>
                                 <tr>
+                                    <td style="width:30%;"><strong>Username:</strong></td>
+                                    <td>{{ $beneficiary->username }}</td>
+                                </tr>
+                                <tr>
                                     <td style="width:30%;"><strong>Mobile Number:</strong></td>
                                     <td>{{ $beneficiary->mobile }}</td>
                                 </tr>

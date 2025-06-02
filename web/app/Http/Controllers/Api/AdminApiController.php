@@ -372,6 +372,9 @@ class AdminApiController extends Controller
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
             if ($request->hasFile('administrator_photo')) {
+                if ($administrator->photo) {
+                    $this->uploadService->delete($administrator->photo, 'spaces-private');
+                }
                 $administrator->photo = $this->uploadService->upload(
                     $request->file('administrator_photo'),
                     'spaces-private',
@@ -380,6 +383,9 @@ class AdminApiController extends Controller
                 );
             }
             if ($request->hasFile('government_ID')) {
+                if ($administrator->government_issued_id) {
+                    $this->uploadService->delete($administrator->government_issued_id, 'spaces-private');
+                }
                 $administrator->government_issued_id = $this->uploadService->upload(
                     $request->file('government_ID'),
                     'spaces-private',
@@ -388,6 +394,9 @@ class AdminApiController extends Controller
                 );
             }
             if ($request->hasFile('resume')) {
+                if ($administrator->cv_resume) {
+                    $this->uploadService->delete($administrator->cv_resume, 'spaces-private');
+                }
                 $administrator->cv_resume = $this->uploadService->upload(
                     $request->file('resume'),
                     'spaces-private',

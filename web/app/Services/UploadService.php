@@ -20,7 +20,7 @@ class UploadService
     public function upload(UploadedFile $file, string $disk = 'spaces', string $directory = 'uploads', array $options = []): string
     {
         $extension = $file->getClientOriginalExtension();
-        $filename = Str::uuid() . '.' . $extension;
+        $filename = $options['filename'] ?? (Str::uuid() . '.' . $extension);
         $path = $file->storeAs($directory, $filename, $disk);
 
         if (!$path) {

@@ -41,8 +41,17 @@ return [
             'provider' => 'users',
         ],
         'unified_api' => [
-            'driver' => 'sanctum', // or 'token' or 'passport' if you use those
+            'driver' => 'sanctum',
             'provider' => 'unified_users',
+        ],
+        // Add these new guards
+        'beneficiary' => [
+            'driver' => 'session',
+            'provider' => 'beneficiaries',
+        ],
+        'family' => [
+            'driver' => 'session',
+            'provider' => 'family_members',
         ],
     ],
 
@@ -69,16 +78,19 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
             'table' => 'cose_users'
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
-
         'unified_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\UnifiedUser::class,
             'table' => 'users'
+        ],
+        // Add these new providers
+        'beneficiaries' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Beneficiary::class,
+        ],
+        'family_members' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\FamilyMember::class,
         ],
     ],
 
@@ -108,8 +120,21 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        // Add these new password brokers
+        'beneficiaries' => [
+            'provider' => 'beneficiaries',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'family_members' => [
+            'provider' => 'family_members',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
     ],
-
+    
     /*
     |--------------------------------------------------------------------------
     | Password Confirmation Timeout

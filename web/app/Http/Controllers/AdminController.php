@@ -24,16 +24,19 @@ use App\Services\LogService;
 use App\Enums\LogType;
 
 use App\Services\UserManagementService;
+use App\Services\UploadService; // Add this at the top with other imports
 
 class AdminController extends Controller
 {
     protected $userManagementService;
     protected $logService;
-    
-    public function __construct(UserManagementService $userManagementService, LogService $logService)
+    protected $uploadService;
+
+    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
     {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     public function storeAdministrator(Request $request)
@@ -159,27 +162,37 @@ class AdminController extends Controller
             $lastName = $request->input('last_name');
             $uniqueIdentifier = time() . '_' . Str::random(5);
     
+            // Use UploadService for administrator photo
             if ($request->hasFile('administrator_photo')) {
-                $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-                    'uploads/administrator_photos', 
-                    $firstName . '' . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                    'public'
+                $administratorPhotoPath = $this->uploadService->upload(
+                    $request->file('administrator_photo'),
+                    'spaces-private', // disk
+                    'uploads/administrator_photos', // directory
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
     
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/administrator_government_ids', 
-                    $firstName . '' . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/administrator_government_ids',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
             }
     
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/administrator_resumes', 
-                    $firstName . '' . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/administrator_resumes',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
             }
 
@@ -435,29 +448,39 @@ class AdminController extends Controller
         // Handle file uploads if new files are provided
         $uniqueIdentifier = time() . '_' . Str::random(5);
 
+        // Use UploadService for administrator photo
         if ($request->hasFile('administrator_photo')) {
-            $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-                'uploads/administrator_photos',
-                $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-                'public'
+            $administratorPhotoPath = $this->uploadService->upload(
+                $request->file('administrator_photo'),
+                'spaces-private', // disk
+                'uploads/administrator_photos', // directory
+                [
+                    'filename' => $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                ]
             );
             $administrator->photo = $administratorPhotoPath;
         }
 
         if ($request->hasFile('government_ID')) {
-            $governmentIDPath = $request->file('government_ID')->storeAs(
+            $governmentIDPath = $this->uploadService->upload(
+                $request->file('government_ID'),
+                'spaces-private',
                 'uploads/administrator_government_ids',
-                $administrator->first_name . '_' . $administrator->last_name . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                'public'
+                [
+                    'filename' => $administrator->first_name . '_' . $administrator->last_name . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                ]
             );
             $administrator->government_issued_id = $governmentIDPath;
         }
 
         if ($request->hasFile('resume')) {
-            $resumePath = $request->file('resume')->storeAs(
+            $resumePath = $this->uploadService->upload(
+                $request->file('resume'),
+                'spaces-private',
                 'uploads/administrator_resumes',
-                $administrator->first_name . '_' . $administrator->last_name . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                'public'
+                [
+                    'filename' => $administrator->first_name . '_' . $administrator->last_name . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                ]
             );
             $administrator->cv_resume = $resumePath;
         }
@@ -1824,6 +1847,7 @@ class AdminController extends Controller
     public function updateAdminPassword(Request $request)
     {
         // Validate the request
+
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string',
             'account_password' => 'required|string|min:8',

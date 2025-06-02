@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Shift;
+use App\Models\User;
 
 class ShiftHistoryController extends Controller
 {
@@ -13,10 +15,24 @@ class ShiftHistoryController extends Controller
      */
     public function index(Request $request)
     {
-        // This will eventually load care worker shift data
-        // For now, we're just returning the view with empty data
-        
+        $query = Shift::with('careWorker');
+
+        // Filtering
+        if ($request->filled('search')) {
+            $query->whereHas('careWorker', function ($q) use ($request) {
+                $q->where('first_name', 'ilike', '%' . $request->search . '%')
+                  ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
+            });
+        }
+        if ($request->filled('date')) {
+            $query->whereDate('time_in', $request->date);
+        }
+        $query->where('status', 'in_progress');
+
+        $shifts = $query->orderBy('time_in', 'desc')->paginate(20);
+
         return view('admin.shiftHistories', [
+            'shifts' => $shifts,
             'search' => $request->search,
             'date' => $request->date
         ]);
@@ -29,10 +45,24 @@ class ShiftHistoryController extends Controller
      */
     public function archived(Request $request)
     {
-        // This will eventually load archived shift history data
-        // For now, we're just returning the view with empty data
-        
+        $query = Shift::with('careWorker');
+
+        // Filtering
+        if ($request->filled('search')) {
+            $query->whereHas('careWorker', function ($q) use ($request) {
+                $q->where('first_name', 'ilike', '%' . $request->search . '%')
+                  ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
+            });
+        }
+        if ($request->filled('date')) {
+            $query->whereDate('time_in', $request->date);
+        }
+        $query->where('status', 'completed');
+
+        $shifts = $query->orderBy('time_in', 'desc')->paginate(20);
+
         return view('admin.archivedShiftHistories', [
+            'shifts' => $shifts,
             'search' => $request->search,
             'date' => $request->date
         ]);

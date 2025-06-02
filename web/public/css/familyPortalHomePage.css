@@ -1,0 +1,205 @@
+:root {
+    --family-primary: #4a6fa5;
+    --family-secondary: #6b8cae;
+    --family-accent: #e67e22;
+    --family-light: #f8f9fa;
+    --family-dark: #343a40;
+    --family-success: #28a745;
+    --family-warning: #ffc107;
+    --family-danger: #dc3545;
+    --family-text: #2d3748;
+    --family-text-light: #6c757d;
+    --family-border: #e2e8f0;
+}
+
+/* Base Typography */
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--family-text);
+    line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+}
+
+/* Banner Grid */
+.banner-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .banner-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Welcome Banner */
+.welcome-banner {
+    background-color: white;
+    border-radius: 0.625rem;
+    padding: clamp(1.25rem, 2vw, 1.75rem);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.welcome-title {
+    font-size: clamp(1.25rem, 1.5vw, 1.75rem);
+    margin-bottom: 0.5rem;
+    color: var(--family-primary);
+}
+
+.welcome-subtitle {
+    color: var(--family-text-light);
+    font-size: clamp(0.875rem, 1vw, 1rem);
+    margin-bottom: 0.75rem;
+}
+
+/* Alert Banner */
+.alert-banner {
+    background-color: #fff8e1;
+    border-left: 4px solid var(--family-warning);
+    padding: clamp(1rem, 1.5vw, 1.25rem);
+    border-radius: 0 0.625rem 0.625rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+}
+
+.alert-icon {
+    color: var(--family-warning);
+    font-size: clamp(1.25rem, 1.5vw, 1.5rem);
+    flex-shrink: 0;
+}
+
+.alert-content {
+    font-size: clamp(0.875rem, 1vw, 1rem);
+}
+
+/* Dashboard Cards */
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: clamp(1.10rem, 2vw, 1.55rem);
+}
+
+.dashboard-card {
+    background-color: white;
+    border-radius: 0.625rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 4px solid var(--family-primary);
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-0.3125rem);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(1.25rem, 1.5vw, 1.5rem) clamp(1.25rem, 1.5vw, 1.5rem) 0;
+}
+
+.card-title {
+    font-size: clamp(1rem, 1.25vw, 1.25rem);
+    font-weight: 600;
+    color: var(--family-dark);
+}
+
+.card-icon {
+    font-size: clamp(1.25rem, 1.5vw, 1.5rem);
+    color: var(--family-primary);
+}
+
+.card-body {
+    flex: 1;
+    padding: clamp(1.25rem, 1.5vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-content {
+    color: var(--family-text-light);
+    font-size: clamp(0.875rem, 1vw, 1rem);
+    flex: 1;
+}
+
+.card-footer {
+    padding: clamp(0.7rem, 1vw, 0.9rem);
+    border-top: 1px solid var(--family-border);
+    background-color: var(--family-light);
+    margin-top: auto;
+}
+
+.card-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    color: var(--family-primary);
+    font-size: clamp(0.875rem, 1vw, 1rem);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.card-link:hover {
+    color: var(--family-secondary);
+}
+
+/* Emergency Card */
+.emergency-card {
+    border-top: 4px solid var(--family-danger);
+}
+
+.emergency-icon {
+    color: var(--family-danger);
+}
+
+.emergency-card .card-link {
+    color: var(--family-danger);
+}
+
+.emergency-card .card-link:hover {
+    color: #c82333;
+}
+
+/* Modal Styles */
+.modal-header {
+    background-color: var(--family-primary);
+}
+
+.modal-title {
+    font-size: clamp(1.25rem, 1.5vw, 1.5rem);
+}
+
+/* Utility Classes */
+.text-primary {
+    color: var(--family-primary) !important;
+}
+
+.bg-primary {
+    background-color: var(--family-primary) !important;
+}
+
+@media (max-width: 768px) {
+    .dashboard-card {
+        min-height: 200px;
+    }
+
+    .card-header,
+    .card-body,
+    .card-footer {
+        padding: 1rem;
+    }
+}

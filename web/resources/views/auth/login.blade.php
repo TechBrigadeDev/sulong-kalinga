@@ -151,6 +151,68 @@
             padding-top: 20px;
         }
         
+        .user-type-switch {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .user-type-option {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .user-type-option.active {
+            background-color: #2c7873;
+            color: white;
+        }
+        
+        .user-type-option:not(.active):hover {
+            background-color: #e9ecef;
+        }
+        
+        .alert {
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.1);
+            color: #055160;
+            border: 1px solid rgba(13, 202, 240, 0.2);
+        }
+        
+        .alert ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        
+        /* User type specific notes */
+        .user-type-note {
+            display: none;
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: -15px;
+            margin-bottom: 15px;
+            text-align: left;
+            padding-left: 2px;
+        }
         
     </style>
 </head>
@@ -163,6 +225,7 @@
             <img src="{{ asset('images/cose-logo.png') }}" alt="" class="logo">
             <h1>Coalition of Services for the Elderly</h1>
             <p class="tagline">Empowering Senior Citizens Since 1989</p>
+            
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -172,11 +235,38 @@
                         </ul>
                     </div>
                 @endif
+                
+                @if (session('status'))
+                    <div class="alert alert-info">
+                        {{ session('status') }}
+                    </div>
+                @endif
+            
+            <!-- User type switch -->
+            <div class="user-type-switch mb-3">
+                <div class="user-type-option active" data-type="staff">Staff</div>
+                <div class="user-type-option" data-type="beneficiary">Beneficiary</div>
+                <div class="user-type-option" data-type="family">Family</div>
+            </div>
+            
+            <!-- User type specific notes -->
+            <div id="staff-note" class="user-type-note">
+                <br>
+            </div>
+            <div id="beneficiary-note" class="user-type-note">
+                <br>
+            </div>
+            <div id="family-note" class="user-type-note">
+                <br>
+            </div>
+            
             <form action="{{ route('login') }}" method="POST">
                 @csrf
+                <input type="hidden" name="user_type" id="user_type" value="staff">
+                
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="text" id="email" name="email" placeholder="user@example.com" value = "{{ old('email') }}" required>
+                    <label for="email" id="email-label">Email</label>
+                    <input type="text" id="email" name="email" placeholder="user@example.com" value="{{ old('email') }}" required>
                 </div>
 
                 <div class="form-group">
@@ -223,6 +313,42 @@
                     icon.classList.remove('bi-eye');
                     icon.classList.add('bi-eye-slash');
                 }
+            });
+            
+            // User type switcher
+            const userTypeOptions = document.querySelectorAll('.user-type-option');
+            const userTypeInput = document.getElementById('user_type');
+            const emailLabel = document.getElementById('email-label');
+            const emailInput = document.getElementById('email');
+            
+            // Initial note display
+            document.getElementById('staff-note').style.display = 'block';
+            
+            userTypeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update active class
+                    userTypeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update hidden input
+                    const userType = this.getAttribute('data-type');
+                    userTypeInput.value = userType;
+                    
+                    // Update label and placeholder based on user type
+                    if (userType === 'beneficiary') {
+                        emailLabel.textContent = 'Username';
+                        emailInput.placeholder = 'Enter your username';
+                    } else {
+                        emailLabel.textContent = 'Email';
+                        emailInput.placeholder = 'user@example.com';
+                    }
+                    
+                    // Show/hide user type specific notes
+                    document.querySelectorAll('.user-type-note').forEach(note => {
+                        note.style.display = 'none';
+                    });
+                    document.getElementById(userType + '-note').style.display = 'block';
+                });
             });
         });
     </script>

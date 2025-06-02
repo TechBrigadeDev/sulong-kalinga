@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\PortalAccount;
+use App\Models\Beneficiary; // Replace PortalAccount with Beneficiary
 use App\Models\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -45,11 +45,11 @@ class PasswordResetController extends Controller
         // Check if email exists in cose_users table
         $coseUser = User::where('email', $email)->first();
         
-        // Check if email exists in portal_accounts table - FIXED COLUMN NAME
-        $portalUser = PortalAccount::where('portal_email', $email)->first();
+        // Check if email exists in beneficiaries table
+        $beneficiary = Beneficiary::where('email', $email)->first();
         
         // If email doesn't exist in either table, the message should be the same as we should not give away which addresses do and don't exist.
-        if (!$coseUser && !$portalUser) {
+        if (!$coseUser && !$beneficiary) {
             return redirect()->back()
                 ->with('status', 'Password reset link has been sent to your email address.');
         }
@@ -60,9 +60,9 @@ class PasswordResetController extends Controller
             $user = $coseUser;
             $userType = 'cose';
         } else {
-            $token = PasswordReset::createToken($email, 'portal');
-            $user = $portalUser;
-            $userType = 'portal';
+            $token = PasswordReset::createToken($email, 'beneficiary');
+            $user = $beneficiary;
+            $userType = 'beneficiary';
         }
         
         // Generate reset URL
@@ -75,15 +75,18 @@ class PasswordResetController extends Controller
         // Send email
         Mail::to($email)->send(new PasswordResetMail($resetUrl, $user));
         
-        
-        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? $email);
+        // Get user name based on user type
+        $userName = $userType === 'cose' 
+            ? ($user->first_name . ' ' . $user->last_name) 
+            : ($user->first_name . ' ' . $user->last_name);
+            
         // Log password reset request
         $this->logService->createLog(
-            $userType === 'cose' ? 'user' : 'portal_account',
-            $user->id,
+            $userType === 'cose' ? 'user' : 'beneficiary',
+            $userType === 'cose' ? $user->id : $user->beneficiary_id,
             LogType::CREATE,
             $userName . ' requested a password reset link.',
-            $user->id
+            $userType === 'cose' ? $user->id : $user->beneficiary_id
         );
 
         return redirect()->back()
@@ -104,7 +107,7 @@ class PasswordResetController extends Controller
         $validator = Validator::make($request->all(), [
             'token' => 'required',
             'email' => 'required|email',
-            'type' => 'required|in:cose,portal',
+            'type' => 'required|in:cose,beneficiary', // Changed portal to beneficiary
             'password' => 'required|confirmed|min:8',
         ]);
         
@@ -129,25 +132,32 @@ class PasswordResetController extends Controller
             }
             $user->password = Hash::make($request->password);
             $user->save();
+            
+            $userId = $user->id;
+            $userName = $user->first_name . ' ' . $user->last_name;
+            $entityType = 'user';
         } else {
-            // FIXED COLUMN NAME
-            $user = PortalAccount::where('portal_email', $request->email)->first();
+            // For beneficiaries
+            $user = Beneficiary::where('email', $request->email)->first();
             if (!$user) {
                 return redirect()->back()
                     ->withErrors(['email' => 'User not found.']);
             }
             $user->password = Hash::make($request->password);
             $user->save();
+            
+            $userId = $user->beneficiary_id;
+            $userName = $user->first_name . ' ' . $user->last_name;
+            $entityType = 'beneficiary';
         }
 
-        $userName = isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : ($user->portal_name ?? $request->email);
         // Log password reset
         $this->logService->createLog(
-            $request->type === 'cose' ? 'user' : 'portal_account',
-            $user->id,
+            $entityType,
+            $userId,
             LogType::UPDATE,
             $userName . ' reset their password.',
-            $user->id
+            $userId
         );
 
         // Mark the token as used

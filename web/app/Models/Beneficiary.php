@@ -3,25 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Beneficiary extends Model
+class Beneficiary extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
     
-
     protected $table = 'beneficiaries';
     protected $primaryKey = 'beneficiary_id'; // Explicitly set the primary key
     protected $fillable = [
-        'first_name', 'last_name', 'civil_status', 'gender', 'birthday', 'primary_caregiver',
+        'first_name', 'middle_name', 'last_name', 'civil_status', 'gender', 'birthday', 'primary_caregiver',
         'mobile', 'landline', 'street_address', 'barangay_id', 'municipality_id', 'category_id',
         'emergency_contact_name', 'emergency_contact_relation', 'emergency_contact_mobile',
-        'emergency_contact_email', 'emergency_procedure', 'beneficiary_status_id', 'status_reason', 'general_care_plan_id',
-        'portal_account_id', 'beneficiary_signature', 'care_worker_signature', 'created_by', 'updated_by', 'photo', 'general_care_plan_doc', 'care_service_agreement_doc'
+        'emergency_contact_email', 'emergency_procedure', 'beneficiary_status_id', 'status_reason', 
+        'general_care_plan_id', 'username', 'password', 'beneficiary_signature', 'care_worker_signature', 
+        'created_by', 'updated_by', 'photo', 'general_care_plan_doc', 'care_service_agreement_doc'
+    ];
+    
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
-    //Get the category associated with the beneficiary.
-
+    // Get the category associated with the beneficiary.
     public function category()
     {
         return $this->belongsTo(BeneficiaryCategory::class, 'category_id', 'category_id');
@@ -34,7 +39,6 @@ class Beneficiary extends Model
     }
 
     // Get the municipality associated with the beneficiary.
-     
     public function municipality()
     {
         return $this->belongsTo(Municipality::class, 'municipality_id', 'municipality_id');
@@ -51,11 +55,6 @@ class Beneficiary extends Model
     {
         return $this->hasOne(GeneralCarePlan::class, 'general_care_plan_id');
     }  
-
-    public function portalAccount()
-    {
-        return $this->belongsTo(PortalAccount::class, 'portal_account_id', 'id');
-    }
 
     public function sentMessages()
     {

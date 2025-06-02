@@ -2,6 +2,9 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Foundation\Auth\Beneficiary;
+use Illuminate\Foundation\Auth\CoseUser;
+use Illuminate\Foundation\Auth\FamilyMember;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,8 +16,8 @@ class UnifiedUser extends Authenticatable
     protected $table = 'users';
 
     protected $fillable = [
-        'email', 'password', 'first_name', 'last_name', 'mobile', 'role_id', 'status',
-        'user_type', 'cose_user_id', 'portal_account_id'
+        'email', 'username', 'password', 'first_name', 'last_name', 'mobile', 'role_id', 'status',
+        'user_type', 'cose_user_id', 'beneficiary_id', 'family_member_id'
     ];
 
     protected $hidden = [
@@ -27,17 +30,13 @@ class UnifiedUser extends Authenticatable
         return $this->belongsTo(CoseUser::class, 'cose_user_id');
     }
 
-    public function portalDetails()
-    {
-        return $this->belongsTo(PortalAccount::class, 'portal_account_id');
-    }
     public function beneficiaryDetails()
     {
-        return $this->hasOne(Beneficiary::class, 'portal_account_id', 'portal_account_id');
+        return $this->belongsTo(Beneficiary::class, 'beneficiary_id');
     }
 
     public function familyMemberDetails()
     {
-        return $this->hasOne(FamilyMember::class, 'portal_account_id', 'portal_account_id');
+        return $this->belongsTo(FamilyMember::class, 'family_member_id');
     }
 }
