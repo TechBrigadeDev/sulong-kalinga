@@ -16,7 +16,7 @@ class FamilyMember extends Authenticatable
     protected $fillable = [
         'first_name', 'last_name', 'birthday', 'mobile', 'landline', 'email', 'password',
         'street_address', 'barangay_id', 'gender', 'related_beneficiary_id', 'relation_to_beneficiary',
-        'is_primary_caregiver', 'created_by', 'updated_by'
+        'is_primary_caregiver', 'created_by', 'updated_by', 'photo'
     ];
     
     protected $hidden = [

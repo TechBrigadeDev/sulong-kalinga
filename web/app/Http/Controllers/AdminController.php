@@ -400,20 +400,22 @@ class AdminController extends Controller
         // Generate unique identifier for file naming
         $uniqueIdentifier = time() . '_' . Str::random(5);
 
-    // Handle Administrator Photo
-    if ($request->hasFile('administrator_photo')) {
-        $directory = public_path('storage/uploads/administrator_photos');
-        if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
 
-        $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-            'uploads/administrator_photos',
-            $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-            'public'
-        );
-        $administrator->photo = $administratorPhotoPath;
-    }
+
+    // Handle Administrator Photo (OLD WAY)
+    // if ($request->hasFile('administrator_photo')) {
+    //     $directory = public_path('storage/uploads/administrator_photos');
+    //     if (!is_dir($directory)) {
+    //         mkdir($directory, 0755, true);
+    //     }
+
+    //     $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
+    //         'uploads/administrator_photos',
+    //         $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
+    //         'public'
+    //     );
+    //     $administrator->photo = $administratorPhotoPath;
+    // }
 
     // Handle Government Issued ID
     if ($request->hasFile('government_ID')) {
@@ -448,8 +450,13 @@ class AdminController extends Controller
         // Handle file uploads if new files are provided
         $uniqueIdentifier = time() . '_' . Str::random(5);
 
-        // Use UploadService for administrator photo
+        // --- FIX: Delete old photo from Spaces if uploading a new one ---
         if ($request->hasFile('administrator_photo')) {
+            // Delete old photo if it exists
+            if ($administrator->photo) {
+                $this->uploadService->delete($administrator->photo, 'spaces-private');
+            }
+            // Upload new photo and save path
             $administratorPhotoPath = $this->uploadService->upload(
                 $request->file('administrator_photo'),
                 'spaces-private', // disk
