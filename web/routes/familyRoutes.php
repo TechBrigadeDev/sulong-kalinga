@@ -20,6 +20,7 @@ use App\Http\Controllers\FamilyPortalFamilyMemberController;
 use App\Http\Controllers\FamilyPortalFAQuestionsController;
 use App\Http\Controllers\PortalVisitationScheduleController;
 use App\Http\Controllers\PortalMedicationScheduleController;
+use App\Http\Controllers\PortalAccountProfileController;
 
 // All routes for family member portal
 // These routes require authentication via the family guard
@@ -67,10 +68,13 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         return view('beneficiaryPortal.messages');
     })->name('messages.index');
 
-    // Profile
-    Route::get('/profile', function() {
-        return view('beneficiaryPortal.profile');
-    })->name('profile.index');
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [PortalAccountProfileController::class, 'familyIndex'])->name('index');
+        Route::get('/settings', [PortalAccountProfileController::class, 'familySettings'])->name('settings');
+        Route::post('/update-email', [PortalAccountProfileController::class, 'updateFamilyEmail'])->name('update-email');
+        Route::post('/update-password', [PortalAccountProfileController::class, 'updateFamilyPassword'])->name('update-password');
+    });
     
     // Care Plan
     Route::prefix('care-plan')->name('care.plan.')->group(function () {

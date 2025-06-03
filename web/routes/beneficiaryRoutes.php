@@ -20,6 +20,7 @@ use App\Http\Controllers\FamilyPortalFamilyMemberController;
 use App\Http\Controllers\FamilyPortalFAQuestionsController;
 use App\Http\Controllers\PortalVisitationScheduleController;
 use App\Http\Controllers\PortalMedicationScheduleController;
+use App\Http\Controllers\PortalAccountProfileController;
 
 // All routes for beneficiary portal
 // These routes require authentication via the beneficiary guard
@@ -73,10 +74,12 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         return view('beneficiaryPortal.messages');
     })->name('messages.index');
     
-    // Profile
-    Route::get('/profile', function() {
-        return view('beneficiaryPortal.profile');
-    })->name('profile.index');
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [PortalAccountProfileController::class, 'beneficiaryIndex'])->name('index');
+        Route::get('/settings', [PortalAccountProfileController::class, 'beneficiarySettings'])->name('settings');
+        Route::post('/update-password', [PortalAccountProfileController::class, 'updateBeneficiaryPassword'])->name('update-password');
+    });
 
     // Family Members
     Route::get('/family-members', function() {
