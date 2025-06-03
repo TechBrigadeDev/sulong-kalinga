@@ -140,7 +140,7 @@
                         </div>
                         <div class="card-footer">
                             <a href="{{ route('beneficiary.emergency.service.index') }}" class="card-link">
-                                <span>Emergency Information</span>
+                                <span>Emergency Notice</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>
                         </div>
