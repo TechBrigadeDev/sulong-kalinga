@@ -288,7 +288,7 @@
     <div class="home-section">
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
-            <button class="history-btn" id="historyToggle" onclick="window.location.href='/admin/emergency-request/filter-history'">
+            <button class="history-btn" id="historyToggle" onclick="window.location.href='/admin/emergency-request/view-history'">
                 <i class="bi bi-clock-history me-1"></i> View History
             </button>
         </div>

@@ -306,7 +306,7 @@
         <div class="page-header">
             <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
             <a href="{{ route('care-worker.emergency.request.viewHistory') }}">
-                <button class="history-btn" id="historyToggle">
+                <button class="history-btn" id="historyToggle" onclick="window.location.href='/care-worker/emergency-request/view-history'">
                     <i class="bi bi-clock-history me-1"></i> View History
                 </button>
             </a>
