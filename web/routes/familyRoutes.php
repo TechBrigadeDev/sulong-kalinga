@@ -62,7 +62,7 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         return view('familyPortal.familyMembers');
     })->name('member.index');
 
-    // 
+    // FAQ Section
     Route::get('/faq', function() {
         return view('familyPortal.FAQuestions');
     })->name('faQuestions.index');

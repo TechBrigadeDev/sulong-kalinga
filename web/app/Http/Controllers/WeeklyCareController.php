@@ -186,7 +186,7 @@ class WeeklyCareController extends Controller
             'upload_picture.required' => 'A photo is required for documentation purposes',
             'upload_picture.image' => 'The uploaded file must be an image',
             'upload_picture.mimes' => 'The photo must be a file of type: jpeg, png, jpg',
-            'upload_picture.max' => 'The photo size should not exceed 10MB',
+            'upload_picture.max' => 'The photo size should not exceed 7MB',
 
             'illness.max' => 'The illnesses list cannot exceed 500 characters',
         ]);
@@ -609,7 +609,7 @@ class WeeklyCareController extends Controller
             // And update the message for upload_picture
             'upload_picture.image' => 'The uploaded file must be an image',
             'upload_picture.mimes' => 'The photo must be a file of type: jpeg, png, jpg',
-            'upload_picture.max' => 'The photo size should not exceed 10MB',
+            'upload_picture.max' => 'The photo size should not exceed 7MB',
 
         ]);
 
