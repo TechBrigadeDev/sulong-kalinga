@@ -19,7 +19,7 @@ const menuItems: IMenuItem[] = [
   },
   {
     title: "Care Plan",
-    href: "/(tabs)/care-plan",
+    href: "/care-plan",
     color: "#1B8000",
     icon: "FileText",
   },
@@ -32,8 +32,6 @@ interface IMenuItem {
 }
 
 const HomeMenu = () => {
-    const router = useRouter();
-
     return (
         <View style={menuStyle.container}>
             {menuItems.map((item, index) => (

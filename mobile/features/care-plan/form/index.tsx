@@ -228,14 +228,14 @@ const WCPForm = () => {
             </Button>
           )} */}
 
-          {/* <Button
+          <Button
             style={{ flex: 1 }}
-            onPress={handleNext}
+            // onPress={handleNext}
             icon={<ArrowRight size={16} />}
-            iconAfter
+            // iconAfter
           >
             Next
-          </Button> */}
+          </Button>
         </XStack>
       </YStack>
     </YStack>

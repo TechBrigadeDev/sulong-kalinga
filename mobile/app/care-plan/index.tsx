@@ -4,10 +4,10 @@ import { SafeAreaView } from "react-native";
 
 const Screen = () => {
     return (
-        <SafeAreaView style={{ flex: 1, padding: 16 }}>
+        <SafeAreaView style={{ flex: 1 }}>
             <Stack.Screen
                 options={{
-                    headerShown: false,
+                    headerTitle: "Weekly Care Plan",
                 }}
             />
             <WCPForm/>
