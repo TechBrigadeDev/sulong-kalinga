@@ -404,6 +404,32 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select all password toggle elements
+            const toggleButtons = document.querySelectorAll('.password-toggle');
+            
+            // Add click event listener to each toggle button
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Get the target input element using the data-target attribute
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    
+                    // Toggle password visibility
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        this.querySelector('i').classList.remove('bi-eye-slash');
+                        this.querySelector('i').classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        this.querySelector('i').classList.remove('bi-eye');
+                        this.querySelector('i').classList.add('bi-eye-slash');
+                    }
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>
