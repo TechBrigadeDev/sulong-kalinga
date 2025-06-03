@@ -30,10 +30,15 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         $familyMember = Auth::guard('family')->user();
         $beneficiary = $familyMember->beneficiary;
         
+        // Get the next upcoming visit
+        $nextVisit = app()->make(\App\Http\Controllers\PortalVisitationScheduleController::class)
+            ->getNextVisit($beneficiary->beneficiary_id);
+        
         return view('familyPortal.homePage', [
             'showWelcome' => $showWelcome,
             'familyMember' => $familyMember,
-            'beneficiary' => $beneficiary
+            'beneficiary' => $beneficiary,
+            'nextVisit' => $nextVisit
         ]);
     })->name('dashboard');
     
@@ -53,6 +58,16 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     Route::get('/emergency-service', function() {
         return view('familyPortal.emergencyAndService');
     })->name('emergency.service.index');
+
+    // Messages
+    Route::get('/messages', function() {
+        return view('beneficiaryPortal.messages');
+    })->name('messages.index');
+
+    // Profile
+    Route::get('/profile', function() {
+        return view('beneficiaryPortal.profile');
+    })->name('profile.index');
     
     // Care Plan
     Route::prefix('care-plan')->name('care.plan.')->group(function () {

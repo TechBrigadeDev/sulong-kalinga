@@ -423,4 +423,63 @@ class PortalVisitationScheduleController extends Controller
                 return '#6c757d'; // gray
         }
     }
+
+    /**
+     * Get the next upcoming visitation for display on the dashboard
+     * 
+     * @param int|null $beneficiaryId Optional beneficiary ID (for family members)
+     * @return array|null Returns visitation details or null if none found
+     */
+    public function getNextVisit($beneficiaryId = null)
+    {
+        try {
+            if (Auth::guard('beneficiary')->check()) {
+                $beneficiaryId = Auth::guard('beneficiary')->id();
+            } elseif (Auth::guard('family')->check() && !$beneficiaryId) {
+                $familyMember = Auth::guard('family')->user();
+                $beneficiaryId = $familyMember->related_beneficiary_id;
+            }
+
+            if (!$beneficiaryId) {
+                return null;
+            }
+            
+            // Get the next scheduled occurrence that hasn't happened yet
+            $nextVisit = \App\Models\VisitationOccurrence::with(['visitation', 'visitation.careWorker'])
+                ->whereHas('visitation', function($query) use ($beneficiaryId) {
+                    $query->where('beneficiary_id', $beneficiaryId);
+                })
+                ->where('status', 'scheduled') // Only get scheduled visits
+                ->where('occurrence_date', '>=', now()->format('Y-m-d')) // Only future visits
+                ->orderBy('occurrence_date', 'asc') // Earliest first
+                ->first();
+            
+            if (!$nextVisit) {
+                return null;
+            }
+            
+            // Get the parent visitation record
+            $visitation = $nextVisit->visitation;
+                
+            // Format the return data
+            return [
+                'date' => \Carbon\Carbon::parse($nextVisit->occurrence_date)->format('F d, Y'),
+                'time' => $visitation->is_flexible_time ? 
+                    'Flexible timing' : 
+                    \Carbon\Carbon::parse($visitation->start_time)->format('g:i A'),
+                'care_worker' => $visitation->careWorker ? 
+                    $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name :
+                    'Not assigned',
+                'visit_type' => ucwords(str_replace('_', ' ', $visitation->visit_type)),
+                'is_flexible_time' => $visitation->is_flexible_time ?? false,
+                'occurrence_id' => $nextVisit->occurrence_id
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error getting next visit: ' . $e->getMessage(), [
+                'exception' => $e,
+                'beneficiary_id' => $beneficiaryId
+            ]);
+            return null;
+        }
+    }
 }

@@ -29,9 +29,14 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         $showWelcome = session()->pull('show_welcome', false);
         $beneficiary = Auth::guard('beneficiary')->user();
         
+        // Get the next upcoming visit
+        $nextVisit = app()->make(\App\Http\Controllers\PortalVisitationScheduleController::class)
+            ->getNextVisit();
+        
         return view('beneficiaryPortal.homePage', [
             'showWelcome' => $showWelcome,
-            'beneficiary' => $beneficiary
+            'beneficiary' => $beneficiary,
+            'nextVisit' => $nextVisit
         ]);
     })->name('dashboard');
     
