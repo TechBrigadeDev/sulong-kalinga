@@ -1,12 +1,17 @@
-import { Text, View } from "tamagui"
+import { Stack } from "expo-router";
+import WCPForm from "features/care-plan/form";
+import { SafeAreaView } from "react-native";
 
 const Screen = () => {
     return (
-        <View>
-            <Text>
-                CarePlan
-            </Text>
-        </View>
+        <SafeAreaView style={{ flex: 1, padding: 16 }}>
+            <Stack.Screen
+                options={{
+                    headerShown: false,
+                }}
+            />
+            <WCPForm/>
+        </SafeAreaView>
     )
 }
 
