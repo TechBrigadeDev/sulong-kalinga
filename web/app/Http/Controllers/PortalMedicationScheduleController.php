@@ -489,5 +489,202 @@ class PortalMedicationScheduleController extends Controller
         return $immunizations;
     }
 
+    // Creates a method to find the next medication scheduled for a beneficiary
+    // Looks for medications due today after the current time
+    // If none are found today, checks for the first medication scheduled tomorrow
+    // Shows medication name, dosage, time, and whether it should be taken with food
+    // Indicates if the medication is due tomorrow
+    // Shows a fallback message if no medications are scheduled
+    
+    /**
+     * Get the next medication due for a beneficiary
+     * 
+     * @param int|null $beneficiaryId Optional beneficiary ID (for family members)
+     * @return array|null Returns medication details or null if none found
+     */
+    public function getNextMedication($beneficiaryId = null)
+    {
+        try {
+            if (Auth::guard('beneficiary')->check()) {
+                $beneficiaryId = Auth::guard('beneficiary')->id();
+            } elseif (Auth::guard('family')->check() && !$beneficiaryId) {
+                $familyMember = Auth::guard('family')->user();
+                $beneficiaryId = $familyMember->related_beneficiary_id;
+            }
+
+            if (!$beneficiaryId) {
+                return null;
+            }
+            
+            // Get the current time
+            $now = Carbon::now();
+            $currentTime = $now->format('H:i:s');
+            $today = $now->format('Y-m-d');
+            
+            // Get all active medications for today
+            $medications = MedicationSchedule::where('beneficiary_id', $beneficiaryId)
+                ->where('status', 'active')
+                ->where(function($query) use ($today) {
+                    $query->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $today);
+                })
+                ->get();
+                
+            // No medications found
+            if ($medications->isEmpty()) {
+                return null;
+            }
+            
+            $nextMedication = null;
+            $earliestTime = null;
+            
+            // Process each medication to find the next due time
+            foreach ($medications as $med) {
+                $times = [
+                    'morning' => $med->morning_time ? $med->morning_time : null,
+                    'noon' => $med->noon_time ? $med->noon_time : null,
+                    'evening' => $med->evening_time ? $med->evening_time : null,
+                    'night' => $med->night_time ? $med->night_time : null
+                ];
+                
+                foreach ($times as $period => $time) {
+                    if (!$time) continue;
+                    
+                    // Convert to Carbon for easier comparison
+                    $timeObj = Carbon::parse($time);
+                    $timeStr = $timeObj->format('H:i:s');
+                    
+                    // Only consider times that are later than current time
+                    if ($timeStr > $currentTime) {
+                        // If this is the first time we found or is earlier than what we found before
+                        if ($earliestTime === null || $timeStr < $earliestTime) {
+                            $earliestTime = $timeStr;
+                            $nextMedication = $med;
+                            $nextPeriod = $period;
+                        }
+                    }
+                }
+            }
+            
+            // Found medication for today
+            if ($nextMedication && $earliestTime) {
+                return [
+                    'name' => $nextMedication->medication_name,
+                    'dosage' => $nextMedication->dosage,
+                    'time' => Carbon::parse($earliestTime)->format('g:i A'),
+                    'period' => $nextPeriod,
+                    'day' => 'today',
+                    'with_food' => $this->checkWithFood($nextMedication, $nextPeriod),
+                    'medication_type' => $nextMedication->medication_type
+                ];
+            }
+            
+            // If no medication found for today, check for tomorrow's first medication
+            $tomorrowMedication = $this->getFirstMedicationForTomorrow($beneficiaryId);
+            if ($tomorrowMedication) {
+                return $tomorrowMedication;
+            }
+            
+            // If we couldn't find any upcoming medication
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error getting next medication: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'beneficiary_id' => $beneficiaryId
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Get first medication scheduled for tomorrow
+     */
+    private function getFirstMedicationForTomorrow($beneficiaryId)
+    {
+        try {
+            $tomorrow = Carbon::tomorrow()->format('Y-m-d');
+            
+            // Get all active medications
+            $medications = MedicationSchedule::where('beneficiary_id', $beneficiaryId)
+                ->where('status', 'active')
+                ->where(function($query) use ($tomorrow) {
+                    $query->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $tomorrow);
+                })
+                ->get();
+                
+            if ($medications->isEmpty()) {
+                return null;
+            }
+            
+            $earliestMed = null;
+            $earliestTime = null;
+            $earliestPeriod = null;
+            
+            // Find the earliest time among all medications
+            foreach ($medications as $med) {
+                $times = [
+                    'morning' => $med->morning_time ? $med->morning_time : null,
+                    'noon' => $med->noon_time ? $med->noon_time : null,
+                    'evening' => $med->evening_time ? $med->evening_time : null,
+                    'night' => $med->night_time ? $med->night_time : null
+                ];
+                
+                foreach ($times as $period => $time) {
+                    if (!$time) continue;
+                    
+                    $timeStr = Carbon::parse($time)->format('H:i:s');
+                    
+                    if ($earliestTime === null || $timeStr < $earliestTime) {
+                        $earliestTime = $timeStr;
+                        $earliestMed = $med;
+                        $earliestPeriod = $period;
+                    }
+                }
+            }
+            
+            if ($earliestMed && $earliestTime) {
+                return [
+                    'name' => $earliestMed->medication_name,
+                    'dosage' => $earliestMed->dosage,
+                    'time' => Carbon::parse($earliestTime)->format('g:i A'),
+                    'period' => $earliestPeriod,
+                    'day' => 'tomorrow',
+                    'with_food' => $this->checkWithFood($earliestMed, $earliestPeriod),
+                    'medication_type' => $earliestMed->medication_type
+                ];
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error getting tomorrow medication: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Check if medication should be taken with food for a given period
+     * 
+     * @param MedicationSchedule $medication The medication record
+     * @param string $period The period (morning, noon, evening, night)
+     * @return bool Whether the medication should be taken with food
+     */
+    private function checkWithFood($medication, $period)
+    {
+        switch ($period) {
+            case 'morning':
+                return $medication->with_food_morning;
+            case 'noon':
+                return $medication->with_food_noon;
+            case 'evening':
+                return $medication->with_food_evening;
+            case 'night':
+                return $medication->with_food_night;
+            default:
+                return false;
+        }
+    }
+
     
 }
