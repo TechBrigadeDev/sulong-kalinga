@@ -119,7 +119,7 @@ return new class extends Migration
             'last_name' => 'Beridico',
             'birthday' => '1990-01-01',
             'civil_status' => 'Single',
-            'educational_background' => 'Graduate',
+            'educational_background' => 'Bachelor\'s Degree',
             'mobile' => '+639154952153 ',
             'landline' => '87096567',
             'personal_email' => 'emily.beridico@gmail.com',
