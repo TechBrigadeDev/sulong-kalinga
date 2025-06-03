@@ -4,14 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Family Portal - Visitation Schedule</title>
+    <title>Visitation Schedule</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/familyPortalVisitationSchedule.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}"> 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    
+    <style>
+        /* Calendar styles */
+        .calendar-view-toggle .btn-group button {
+            font-size: 0.85rem;
+        }
+
+        .card-header {
+            padding: 1rem;
+        }
+
+        .fc .fc-toolbar.fc-header-toolbar{
+            padding-top: 1rem;
+        }
+        /* Schedule cards */
+        .schedule-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .schedule-card-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .schedule-date {
+            font-weight: 500;
+        }
+        
+        .schedule-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        
+        .status-scheduled {
+            background-color: #e7effd;
+            color: #4e73df;
+        }
+        
+        .status-completed {
+            background-color: #e6f8f1;
+            color: #1cc88a;
+        }
+        
+        .status-canceled {
+            background-color: #fce8e8;
+            color: #e74a3b;
+        }
+        
+        .schedule-card-body {
+            padding: 12px 15px;
+        }
+        
+        .schedule-detail-item {
+            margin-bottom: 6px;
+            display: flex;
+        }
+        
+        .schedule-detail-label {
+            font-weight: 500;
+            min-width: 90px;
+            color: #495057;
+            margin-right: 5px;  /* Add spacing between label and value */
+        }
+        
+        .schedule-detail-value {
+            color: #343a40;
+        }
+        
+        /* Filter styles */
+        .schedule-filter select {
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        
+        /* Modal styling */
+        .modal-header {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        /* Event styling */
+        .fc-event {
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Loading state for calendar */
+        #calendar-container.loading {
+            position: relative;
+        }
+
+        #calendar-container.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #calendar-container.loading::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 11;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     @include('components.familyPortalNavbar')
@@ -23,7 +156,7 @@
             <div class="row" id="home-content">
                 <!-- Main Content Row with 2 columns -->
                 <div class="row row-cols-1 row-cols-lg-2">
-                    <!-- Calendar Column (col-7 equivalent) -->
+                    <!-- Calendar Column -->
                     <div class="col-lg-7">
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
@@ -52,7 +185,7 @@
                         </div>
                     </div>
                     
-                    <!-- Upcoming Visits Column (col-5 equivalent) -->
+                    <!-- Upcoming Visits Column -->
                     <div class="col-lg-5">
                         <div class="card h-100">
                             <div class="card-header mb-0">
@@ -70,8 +203,7 @@
                                                 <option value="all">All Visits</option>
                                                 <option value="scheduled">Scheduled</option>
                                                 <option value="completed">Completed</option>
-                                                <option value="pending">Pending Verification</option>
-                                                <option value="missed">Missed</option>
+                                                <option value="canceled">Canceled</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -85,179 +217,23 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Visits List -->
+                                <!-- Visits List Container -->
                                 <div id="visitsList">
-                                    <!-- Sample visit cards - these would be dynamically generated in a real app -->
-                                    <div class="schedule-card">
-                                        <div class="schedule-card-header">
-                                            <span class="schedule-date">Tomorrow, June 15, 2023</span>
-                                            <span class="schedule-status status-scheduled">Scheduled</span>
+                                    <!-- Visits will be loaded here dynamically -->
+                                    <div class="text-center py-4" id="loadingVisits">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
                                         </div>
-                                        <div class="schedule-card-body">
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Time:</span>
-                                                <span class="schedule-detail-value">10:00 AM - 12:00 PM</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Care Worker:</span>
-                                                <span class="schedule-detail-value">Maria Garcia</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Visit Type:</span>
-                                                <span class="schedule-detail-value">Routine Care Visit</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Notes:</span>
-                                                <span class="schedule-detail-value">Medication administration and light housekeeping</span>
-                                            </div>
-                                        </div>
+                                        <p class="mt-2">Loading visits...</p>
                                     </div>
-                                    
-                                    <div class="schedule-card">
-                                        <div class="schedule-card-header">
-                                            <span class="schedule-date">Today, June 14, 2023</span>
-                                            <span class="schedule-status status-pending-verification">Pending Verification</span>
-                                        </div>
-                                        <div class="schedule-card-body">
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Time:</span>
-                                                <span class="schedule-detail-value">2:00 PM - 4:00 PM</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Care Worker:</span>
-                                                <span class="schedule-detail-value">John Smith</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Visit Type:</span>
-                                                <span class="schedule-detail-value">Physical Therapy</span>
-                                            </div>
-                                            <div class="verification-section">
-                                                <p class="mb-2"><strong>Verify this visit:</strong></p>
-                                                <div class="verification-buttons">
-                                                    <button class="btn btn-sm btn-success confirm-visit-btn" data-visit-id="123">
-                                                        <i class="bi bi-check-circle"></i> Confirm Visit Occurred
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger report-missed-btn" data-visit-id="123">
-                                                        <i class="bi bi-exclamation-triangle"></i> Report Missed Visit
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="schedule-card">
-                                        <div class="schedule-card-header">
-                                            <span class="schedule-date">June 12, 2023</span>
-                                            <span class="schedule-status status-completed">Completed</span>
-                                        </div>
-                                        <div class="schedule-card-body">
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Time:</span>
-                                                <span class="schedule-detail-value">9:00 AM - 11:00 AM</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Care Worker:</span>
-                                                <span class="schedule-detail-value">Maria Garcia</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Visit Type:</span>
-                                                <span class="schedule-detail-value">Routine Care Visit</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Verified On:</span>
-                                                <span class="schedule-detail-value">June 12, 2023 at 11:15 AM</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="schedule-card">
-                                        <div class="schedule-card-header">
-                                            <span class="schedule-date">June 10, 2023</span>
-                                            <span class="schedule-status status-missed">Missed</span>
-                                        </div>
-                                        <div class="schedule-card-body">
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Time:</span>
-                                                <span class="schedule-detail-value">1:00 PM - 3:00 PM</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Care Worker:</span>
-                                                <span class="schedule-detail-value">Robert Johnson</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Visit Type:</span>
-                                                <span class="schedule-detail-value">Meal Preparation</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Reported On:</span>
-                                                <span class="schedule-detail-value">June 10, 2023 at 3:30 PM</span>
-                                            </div>
-                                            <div class="schedule-detail-item">
-                                                <span class="schedule-detail-label">Reason:</span>
-                                                <span class="schedule-detail-value">Care worker did not arrive</span>
-                                            </div>
-                                        </div>
+                                    <div class="text-center py-4 d-none" id="noVisitsMessage">
+                                        <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6c757d;"></i>
+                                        <p class="mt-2">No visits found with the selected filters.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-   
-    <!-- Verification Confirmation Modal -->
-    <div class="modal fade" id="verificationModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="verificationModalLabel">Confirm Visit</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="verificationModalBody">
-                    <p>Are you sure you want to confirm that this visit occurred as scheduled?</p>
-                    <div class="mb-3">
-                        <label for="verificationNotes" class="form-label">Additional Notes (Optional)</label>
-                        <textarea class="form-control" id="verificationNotes" rows="3" placeholder="Add any notes about the visit..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmVerification">Confirm Visit</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Missed Visit Modal -->
-    <div class="modal fade" id="missedVisitModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="missedVisitModalLabel">Report Missed Visit</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="missedVisitModalBody">
-                    <p>Please provide details about why this visit was missed:</p>
-                    <div class="mb-3">
-                        <label for="missedReason" class="form-label">Reason</label>
-                        <select class="form-select" id="missedReason">
-                            <option value="">Select a reason</option>
-                            <option value="no_show">Care worker did not arrive</option>
-                            <option value="late">Care worker arrived too late</option>
-                            <option value="wrong_time">Care worker came at wrong time</option>
-                            <option value="other">Other reason</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="missedNotes" class="form-label">Additional Details</label>
-                        <textarea class="form-control" id="missedNotes" rows="3" placeholder="Provide more details about the missed visit..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmMissedVisit">Report Missed Visit</button>
                 </div>
             </div>
         </div>
@@ -269,25 +245,33 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="visitDetailsModalLabel">Visit Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="visit-details">
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Care Worker:</span>
-                            <span class="schedule-detail-value" id="modalCareWorker"></span>
+                            <span class="schedule-detail-label">Date:</span>
+                            <span class="schedule-detail-value" id="modalDate"></span>
+                        </div>
+                        <div class="schedule-detail-item">
+                            <span class="schedule-detail-label">Time:</span>
+                            <span class="schedule-detail-value" id="modalTime"></span>
                         </div>
                         <div class="schedule-detail-item">
                             <span class="schedule-detail-label">Visit Type:</span>
                             <span class="schedule-detail-value" id="modalVisitType"></span>
                         </div>
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Date:</span>
-                            <span class="schedule-detail-value" id="modalDate"></span>
+                            <span class="schedule-detail-label">Care Worker:</span>
+                            <span class="schedule-detail-value" id="modalCareWorker"></span>
                         </div>
                         <div class="schedule-detail-item">
                             <span class="schedule-detail-label">Status:</span>
                             <span class="schedule-detail-value" id="modalStatus"></span>
+                        </div>
+                        <div class="schedule-detail-item">
+                            <span class="schedule-detail-label">Notes:</span>
+                            <span class="schedule-detail-value" id="modalNotes"></span>
                         </div>
                     </div>
                 </div>
@@ -306,14 +290,192 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
     
     <script>
+        
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize modals
-            const verificationModal = new bootstrap.Modal(document.getElementById('verificationModal'));
-            const missedVisitModal = new bootstrap.Modal(document.getElementById('missedVisitModal'));
+            // Explicit cookie handling for AJAX
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                xhrFields: {
+                    withCredentials: true
+                },
+                beforeSend: function(xhr) {
+                    // Add this to enhance cookie handling
+                    xhr.withCredentials = true;
+                }
+            });
             
-            // Current visit ID for verification
-            let currentVisitId = null;
+            // Test authentication immediately
+            $.ajax({
+                url: '{{ url("/session-check") }}',
+                method: 'GET',
+                success: function(response) {
+                    console.log('Session check successful:', response);
+                },
+                error: function(xhr) {
+                    console.error('Session check failed:', xhr.status);
+                }
+            });
             
+            // Initialize the modal
+            const visitDetailsModal = new bootstrap.Modal(document.getElementById('visitDetailsModal'));
+            
+            let currentPage = 1;
+            const visitsPerPage = 3;
+            let allVisits = [];
+
+            // Replace the loadUpcomingVisits function with this new version:
+            function loadUpcomingVisits() {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const timeframeFilter = document.getElementById('timeframeFilter').value;
+                const visitsListContainer = document.getElementById('visitsList');
+                const loadingElement = document.getElementById('loadingVisits');
+                const noVisitsMessage = document.getElementById('noVisitsMessage');
+                
+                // Show loading indicator
+                loadingElement.classList.remove('d-none');
+                noVisitsMessage.classList.add('d-none');
+                
+                // Clear existing visits except loading and no visits message
+                const existingVisits = visitsListContainer.querySelectorAll('.schedule-card, .pagination-container');
+                existingVisits.forEach(card => card.remove());
+                
+                // Reset pagination
+                currentPage = 1;
+                
+                // Make AJAX request to get upcoming visits
+                $.ajax({
+                    url: "{{ route('family.visitation.schedule.upcoming') }}", // or family.visitation.schedule.upcoming
+                    type: 'GET',
+                    data: {
+                        status: statusFilter,
+                        timeframe: timeframeFilter
+                    },
+                    success: function(response) {
+                        // Hide loading indicator
+                        loadingElement.classList.add('d-none');
+                        
+                        if (response.success && response.visits && response.visits.length > 0) {
+                            // Store all visits for pagination
+                            allVisits = response.visits;
+                            
+                            // Render first page
+                            renderVisitsPage(currentPage);
+                        } else {
+                            // Show no visits message
+                            noVisitsMessage.classList.remove('d-none');
+                        }
+                    },
+                    error: function(error) {
+                        // Hide loading indicator and show error message
+                        loadingElement.classList.add('d-none');
+                        console.error('Error loading upcoming visits:', error);
+                        
+                        // Create and append error message
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'alert alert-danger';
+                        errorMessage.textContent = 'Error loading visits. Please try again.';
+                        visitsListContainer.appendChild(errorMessage);
+                    }
+                });
+            }
+
+            // Make sure the renderVisitsPage function is complete:
+            function renderVisitsPage(page) {
+                const visitsListContainer = document.getElementById('visitsList');
+                
+                // Calculate start and end indices for current page
+                const startIndex = (page - 1) * visitsPerPage;
+                const endIndex = startIndex + visitsPerPage;
+                
+                // Get visits for current page
+                const visitsForPage = allVisits.slice(startIndex, endIndex);
+                
+                // Remove existing visit cards and pagination
+                const existingVisits = visitsListContainer.querySelectorAll('.schedule-card, .pagination-container');
+                existingVisits.forEach(card => card.remove());
+                
+                // Create and append visit cards for current page
+                visitsForPage.forEach(visit => {
+                    visitsListContainer.appendChild(createVisitCard(visit));
+                });
+                
+                // Add pagination controls
+                if (allVisits.length > visitsPerPage) {
+                    const totalPages = Math.ceil(allVisits.length / visitsPerPage);
+                    const paginationContainer = document.createElement('div');
+                    paginationContainer.className = 'pagination-container d-flex justify-content-center mt-3';
+                    
+                    const pagination = document.createElement('nav');
+                    pagination.setAttribute('aria-label', 'Visits pagination');
+                    
+                    const paginationList = document.createElement('ul');
+                    paginationList.className = 'pagination pagination-sm';
+                    
+                    // Previous button
+                    const prevItem = document.createElement('li');
+                    prevItem.className = `page-item ${page === 1 ? 'disabled' : ''}`;
+                    
+                    const prevLink = document.createElement('a');
+                    prevLink.className = 'page-link';
+                    prevLink.href = '#';
+                    prevLink.innerHTML = '&laquo;';
+                    prevLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderVisitsPage(currentPage);
+                        }
+                    });
+                    
+                    prevItem.appendChild(prevLink);
+                    paginationList.appendChild(prevItem);
+                    
+                    // Page numbers
+                    for (let i = 1; i <= totalPages; i++) {
+                        const pageItem = document.createElement('li');
+                        pageItem.className = `page-item ${i === page ? 'active' : ''}`;
+                        
+                        const pageLink = document.createElement('a');
+                        pageLink.className = 'page-link';
+                        pageLink.href = '#';
+                        pageLink.textContent = i;
+                        pageLink.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            currentPage = i;
+                            renderVisitsPage(currentPage);
+                        });
+                        
+                        pageItem.appendChild(pageLink);
+                        paginationList.appendChild(pageItem);
+                    }
+                    
+                    // Next button
+                    const nextItem = document.createElement('li');
+                    nextItem.className = `page-item ${page === totalPages ? 'disabled' : ''}`;
+                    
+                    const nextLink = document.createElement('a');
+                    nextLink.className = 'page-link';
+                    nextLink.href = '#';
+                    nextLink.innerHTML = '&raquo;';
+                    nextLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderVisitsPage(currentPage);
+                        }
+                    });
+                    
+                    nextItem.appendChild(nextLink);
+                    paginationList.appendChild(nextItem);
+                    
+                    pagination.appendChild(paginationList);
+                    paginationContainer.appendChild(pagination);
+                    visitsListContainer.appendChild(paginationContainer);
+                }
+            }
+
             // Initialize calendar
             const calendarEl = document.getElementById('calendar');
             const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -326,105 +488,190 @@
                 height: 'auto',
                 contentHeight: 'auto',
                 aspectRatio: 1.5,
-                events: [
-                    // Sample events - in a real app these would come from an API
-                    {
-                        title: 'Routine Care Visit',
-                        start: new Date(new Date().setDate(new Date().getDate() + 1)), // Tomorrow
-                        end: new Date(new Date().setDate(new Date().getDate() + 1)),
-                        extendedProps: {
-                            careWorker: 'Maria Garcia',
-                            visitType: 'Routine Care',
-                            status: 'scheduled'
+                events: function(info, successCallback, failureCallback) {
+                    // Get the status and timeframe filters
+                    const statusFilter = document.getElementById('statusFilter').value;
+                    const timeframeFilter = document.getElementById('timeframeFilter').value;
+                    
+                    // Show loading indicator
+                    document.getElementById('calendar-container').classList.add('loading');
+                    
+                    // Make AJAX request to get events with explicit token and timestamp
+                    $.ajax({
+                        url: "{{ route('family.visitation.schedule.events') }}",
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
-                        backgroundColor: '#4e73df',
-                        borderColor: '#4e73df'
-                    },
-                    {
-                        title: 'Physical Therapy',
-                        start: new Date(), // Today
-                        end: new Date(),
-                        extendedProps: {
-                            careWorker: 'John Smith',
-                            visitType: 'Physical Therapy',
-                            status: 'pending'
+                        data: {
+                            start: info.startStr,
+                            end: info.endStr,
+                            status: statusFilter,
+                            timeframe: timeframeFilter,
+                            _token: "{{ csrf_token() }}",
+                            _t: new Date().getTime() // Prevent caching
                         },
-                        backgroundColor: '#f6c23e',
-                        borderColor: '#f6c23e'
-                    },
-                    {
-                        title: 'Routine Care Visit',
-                        start: new Date(new Date().setDate(new Date().getDate() - 2)), // 2 days ago
-                        end: new Date(new Date().setDate(new Date().getDate() - 2)),
-                        extendedProps: {
-                            careWorker: 'Maria Garcia',
-                            visitType: 'Routine Care',
-                            status: 'completed'
+                        success: function(result) {
+                            console.log("Events received:", result);
+                            
+                            // Add detailed debug information
+                            if (Array.isArray(result)) {
+                                console.log("Event count:", result.length);
+                                if (result.length > 0) {
+                                    console.log("First event details:", {
+                                        id: result[0].id,
+                                        title: result[0].title,
+                                        start: result[0].start,
+                                        end: result[0].end,
+                                        backgroundColor: result[0].backgroundColor
+                                    });
+                                }
+                            }
+                            
+                            document.getElementById('calendar-container').classList.remove('loading');
+                            
+                            if (Array.isArray(result) && result.length > 0) {
+                                // Fix date format if needed
+                                const fixedEvents = result.map(event => {
+                                    // Properly format dates for FullCalendar
+                                    if (event.start) {
+                                        // Fix the timestamp format by removing the double time part
+                                        event.start = event.start.replace('00:00:00T', '');
+                                    }
+                                    if (event.end) {
+                                        event.end = event.end.replace('00:00:00T', '');
+                                    }
+                                    
+                                    // Ensure backgroundColor is set for visibility
+                                    if (!event.backgroundColor) {
+                                        event.backgroundColor = '#4e73df'; // Default blue color
+                                    }
+                                    
+                                    // Add border and text color for visibility
+                                    event.borderColor = event.backgroundColor || '#3a57e8';
+                                    event.textColor = '#ffffff';
+                                    
+                                    // Make sure events display properly
+                                    event.display = 'block';
+                                    
+                                    console.log("Fixed event:", {
+                                        title: event.title,
+                                        start: event.start,
+                                        end: event.end,
+                                        display: event.display
+                                    });
+                                    
+                                    return event;
+                                });
+                                
+                                successCallback(fixedEvents);
+                            } else {
+                                successCallback([]);
+                            }
                         },
-                        backgroundColor: '#1cc88a',
-                        borderColor: '#1cc88a'
-                    },
-                    {
-                        title: 'Meal Preparation',
-                        start: new Date(new Date().setDate(new Date().getDate() - 4)), // 4 days ago
-                        end: new Date(new Date().setDate(new Date().getDate() - 4)),
-                        extendedProps: {
-                            careWorker: 'Robert Johnson',
-                            visitType: 'Meal Preparation',
-                            status: 'missed'
-                        },
-                        backgroundColor: '#e74a3b',
-                        borderColor: '#e74a3b'
-                    }
-                ],
+                        error: function(xhr) {
+                            document.getElementById('calendar-container').classList.remove('loading');
+                            console.error("Could not load events:", xhr);
+                            
+                            // Improved error handling with session debug info
+                            if (xhr.status === 401) {
+                                // Try to verify session first
+                                $.ajax({
+                                    url: "{{ url('/session-check') }}",
+                                    method: 'GET',
+                                    success: function(response) {
+                                        console.log("Session check result:", response);
+                                        
+                                        if (!response.authenticated) {
+                                            alert("Your session has expired. Please log in again.");
+                                            window.location.href = "{{ route('login') }}";
+                                        } else {
+                                            // Session exists but still getting 401 - might be CSRF mismatch
+                                            alert("Authentication error. Please refresh the page.");
+                                            location.reload();
+                                        }
+                                    },
+                                    error: function() {
+                                        alert("Session verification failed. Please log in again.");
+                                        window.location.href = "{{ route('login') }}";
+                                    }
+                                });
+                            } else {
+                                failureCallback(xhr);
+                            }
+                        }
+                    });
+                },
                 eventClick: function(info) {
-                const event = info.event;
-                const visitDetailsModal = new bootstrap.Modal(document.getElementById('visitDetailsModal'));
-                
-                // Update modal content
-                document.getElementById('modalCareWorker').textContent = event.extendedProps.careWorker;
-                document.getElementById('modalVisitType').textContent = event.extendedProps.visitType;
-                document.getElementById('modalDate').textContent = event.start.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                // Add status with appropriate styling
-                const statusElement = document.getElementById('modalStatus');
-                statusElement.textContent = event.extendedProps.status.charAt(0).toUpperCase() + 
-                                        event.extendedProps.status.slice(1);
-                
-                // Remove any existing status classes
-                statusElement.className = 'schedule-detail-value schedule-status';
-                
-                // Add appropriate status class
-                statusElement.classList.add(`status-${event.extendedProps.status}`);
-                
-                visitDetailsModal.show();
-            },
+                    const event = info.event;
+                    const occurrenceId = event.id;
+                    
+                    // Fetch detailed information about this occurrence
+                    $.ajax({
+                        url: `{{ url('family/visitation-schedule/details') }}/${occurrenceId}`,
+                        type: 'GET',
+                        success: function(response) {
+                            if (response.success) {
+                                const details = response.details;
+                                
+                                // Update modal content
+                                document.getElementById('modalDate').textContent = details.date;
+                                document.getElementById('modalTime').textContent = details.time;
+                                document.getElementById('modalVisitType').textContent = details.visit_type;
+                                document.getElementById('modalCareWorker').textContent = details.care_worker;
+                                document.getElementById('modalNotes').textContent = details.notes;
+                                
+                                // Set status with appropriate styling
+                                const statusElement = document.getElementById('modalStatus');
+                                statusElement.textContent = details.status;
+                                statusElement.className = 'schedule-detail-value schedule-status';
+                                statusElement.classList.add(`status-${details.status.toLowerCase()}`);
+                                
+                                // Show the modal
+                                visitDetailsModal.show();
+                            } else {
+                                console.error('Failed to fetch visit details');
+                            }
+                        },
+                        error: function(error) {
+                            console.error('Error fetching visit details:', error);
+                        }
+                    });
+                },
                 eventContent: function(arg) {
-                    // Custom event display
-                    let eventEl = document.createElement('div');
-                    eventEl.className = 'fc-event-main';
+                    // Get event details
+                    const event = arg.event;
+                    const title = event.title;
+                    const status = event.extendedProps ? event.extendedProps.status || 'scheduled' : 'scheduled';
                     
-                    const startTime = arg.event.start ? arg.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                    // Create a custom element for the event
+                    const eventEl = document.createElement('div');
+                    eventEl.className = 'fc-event-custom';
+                    eventEl.style.padding = '2px 4px';
+                    eventEl.style.overflow = 'hidden';
                     
-                    eventEl.innerHTML = `
-                        <div class="event-title">${arg.event.title}</div>
-                        <div class="event-time">${startTime} - ${arg.event.extendedProps.careWorker}</div>
-                    `;
+                    // Create the title element
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'fc-event-title';
+                    titleEl.textContent = title;
+                    titleEl.style.fontWeight = 'bold';
+                    
+                    // Add status indicator
+                    const statusEl = document.createElement('div');
+                    statusEl.className = 'fc-event-status';
+                    statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                    statusEl.style.fontSize = '0.8em';
+                    
+                    // Assemble the event content
+                    eventEl.appendChild(titleEl);
+                    eventEl.appendChild(statusEl);
                     
                     return { domNodes: [eventEl] };
                 },
-                eventDisplay: 'block',
                 eventTimeFormat: {
                     hour: '2-digit',
                     minute: '2-digit',
-                    hour12: true
+                    meridiem: 'short',
                 },
                 views: {
                     dayGridMonth: {
@@ -440,7 +687,11 @@
                 }
             });
             
+            // Render the calendar
             calendar.render();
+            
+            // Load upcoming visits
+            loadUpcomingVisits();
             
             // Calendar view toggle buttons
             document.getElementById('monthViewBtn').addEventListener('click', function() {
@@ -464,121 +715,202 @@
                 document.getElementById('weekViewBtn').classList.remove('active');
             });
             
-            // Filter functionality
+            // Filter functionality - reload data when filters change
             document.getElementById('statusFilter').addEventListener('change', function() {
-                filterVisits();
+                calendar.refetchEvents();
+                loadUpcomingVisits();
             });
             
             document.getElementById('timeframeFilter').addEventListener('change', function() {
-                filterVisits();
+                calendar.refetchEvents();
+                loadUpcomingVisits();
             });
             
-            function filterVisits() {
+            // Function to load upcoming visits
+            function loadUpcomingVisits() {
                 const statusFilter = document.getElementById('statusFilter').value;
                 const timeframeFilter = document.getElementById('timeframeFilter').value;
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
+                const visitsListContainer = document.getElementById('visitsList');
+                const loadingElement = document.getElementById('loadingVisits');
+                const noVisitsMessage = document.getElementById('noVisitsMessage');
                 
-                document.querySelectorAll('.schedule-card').forEach(card => {
-                    const statusElement = card.querySelector('.schedule-status');
-                    const status = statusElement ? 
-                        statusElement.className.replace('schedule-status', '').trim().replace('status-', '') : 
-                        '';
-                    
-                    const dateElement = card.querySelector('.schedule-date');
-                    let dateText = dateElement ? dateElement.textContent : '';
-                    
-                    // Extract date from text (this is simplified - in a real app you'd have actual date data)
-                    let isPast = false;
-                    if (dateText.includes('Today') || dateText.includes('Tomorrow')) {
-                        isPast = dateText.includes('Today') && new Date().getHours() > 18; // Assume past if evening
-                    } else {
-                        // Simple check for demo purposes - would need proper date parsing in real app
-                        const dateMatch = dateText.match(/(\w+ \d{1,2}, \d{4})/);
-                        if (dateMatch) {
-                            const cardDate = new Date(dateMatch[0]);
-                            isPast = cardDate < today;
+                // Show loading indicator
+                loadingElement.classList.remove('d-none');
+                noVisitsMessage.classList.add('d-none');
+                
+                // Clear existing visits except loading and no visits message
+                const existingVisits = visitsListContainer.querySelectorAll('.schedule-card, .pagination-container');
+                existingVisits.forEach(card => card.remove());
+                
+                // Reset pagination
+                currentPage = 1;
+                
+                // Make AJAX request to get upcoming visits with improved error handling
+                $.ajax({
+                    url: "{{ route('family.visitation.schedule.upcoming') }}", // Changed from family to family
+                    method: 'GET',
+                    data: {
+                        status: statusFilter,
+                        timeframe: timeframeFilter
+                    },
+                    success: function(response) {
+                        // Hide loading indicator
+                        loadingElement.classList.add('d-none');
+                        
+                        if (response.success && response.visits && response.visits.length > 0) {
+                            // Store all visits for pagination
+                            allVisits = response.visits;
+                            
+                            // Render first page
+                            renderVisitsPage(currentPage);
+                        } else {
+                            // Show no visits message
+                            noVisitsMessage.classList.remove('d-none');
+                        }
+                    },
+                    error: function(error) {
+                        // Hide loading indicator and show error message
+                        loadingElement.classList.add('d-none');
+                        
+                        if (error.status === 401) {
+                            // Redirect to login if unauthorized
+                            alert("Your session has expired. Please log in again.");
+                            window.location.href = "{{ route('login') }}";
+                        } else {
+                            console.error('Error loading upcoming visits:', error);
+                            
+                            // Create and append error message
+                            const errorMessage = document.createElement('div');
+                            errorMessage.className = 'alert alert-danger';
+                            errorMessage.textContent = 'Error loading visits. Please try again.';
+                            visitsListContainer.appendChild(errorMessage);
                         }
                     }
-                    
-                    let showCard = true;
-                    
-                    // Apply status filter
-                    if (statusFilter !== 'all' && !status.includes(statusFilter)) {
-                        showCard = false;
-                    }
-                    
-                    // Apply timeframe filter
-                    if (timeframeFilter === 'upcoming' && isPast) {
-                        showCard = false;
-                    } else if (timeframeFilter === 'past' && !isPast) {
-                        showCard = false;
-                    }
-                    
-                    card.style.display = showCard ? 'block' : 'none';
                 });
             }
             
-            // Verification buttons
-            document.querySelectorAll('.confirm-visit-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    currentVisitId = this.getAttribute('data-visit-id');
-                    verificationModal.show();
+            // Function to create a visit card element
+            function createVisitCard(visit) {
+                const card = document.createElement('div');
+                card.className = 'schedule-card';
+                
+                // Create card header
+                const header = document.createElement('div');
+                header.className = 'schedule-card-header';
+                
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'schedule-date';
+                dateSpan.textContent = visit.date;
+                
+                const statusSpan = document.createElement('span');
+                statusSpan.className = `schedule-status status-${visit.status}`;
+                statusSpan.textContent = visit.status_label;
+                
+                header.appendChild(dateSpan);
+                header.appendChild(statusSpan);
+                
+                // Create card body
+                const body = document.createElement('div');
+                body.className = 'schedule-card-body';
+                
+                // Add time detail
+                const timeItem = createDetailItem('Time:', visit.time);
+                body.appendChild(timeItem);
+                
+                // Add care worker detail
+                const careWorkerItem = createDetailItem('Care Worker:', visit.care_worker);
+                body.appendChild(careWorkerItem);
+                
+                // Add visit type detail
+                const visitTypeItem = createDetailItem('Visit Type:', visit.visit_type);
+                body.appendChild(visitTypeItem);
+                
+                // Add notes if available
+                // if (visit.notes) {
+                //     const notesItem = createDetailItem('Notes:', visit.notes);
+                //     body.appendChild(notesItem);
+                // }
+                
+                // Add "View Details" button
+                const viewDetailsDiv = document.createElement('div');
+                viewDetailsDiv.className = 'mt-2 text-end';
+                
+                const viewDetailsBtn = document.createElement('button');
+                viewDetailsBtn.className = 'btn btn-sm btn-outline-primary';
+                viewDetailsBtn.innerHTML = '<i class="bi bi-info-circle me-1"></i> View Details';
+                viewDetailsBtn.addEventListener('click', function() {
+                    // Fetch and show visit details in modal
+                    $.ajax({
+                        url: `{{ url('family/visitation-schedule/details') }}/${visit.occurrence_id}`,
+                        type: 'GET',
+                        success: function(response) {
+                            if (response.success) {
+                                const details = response.details;
+                                
+                                // Update modal content
+                                document.getElementById('modalDate').textContent = details.date;
+                                document.getElementById('modalTime').textContent = details.time;
+                                document.getElementById('modalVisitType').textContent = details.visit_type;
+                                document.getElementById('modalCareWorker').textContent = details.care_worker;
+                                document.getElementById('modalNotes').textContent = details.notes;
+                                
+                                // Set status with appropriate styling
+                                const statusElement = document.getElementById('modalStatus');
+                                statusElement.textContent = details.status;
+                                statusElement.className = 'schedule-detail-value schedule-status';
+                                statusElement.classList.add(`status-${details.status.toLowerCase()}`);
+                                
+                                // Show the modal
+                                visitDetailsModal.show();
+                            } else {
+                                console.error('Failed to fetch visit details');
+                            }
+                        },
+                        error: function(error) {
+                            console.error('Error fetching visit details:', error);
+                        }
+                    });
                 });
-            });
-            
-            document.querySelectorAll('.report-missed-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    currentVisitId = this.getAttribute('data-visit-id');
-                    missedVisitModal.show();
-                });
-            });
-            
-            // Confirm verification
-            document.getElementById('confirmVerification').addEventListener('click', function() {
-                const notes = document.getElementById('verificationNotes').value;
                 
-                // In a real app, this would be an AJAX call to the server
-                console.log(`Confirming visit ${currentVisitId} with notes: ${notes}`);
+                viewDetailsDiv.appendChild(viewDetailsBtn);
+                body.appendChild(viewDetailsDiv);
                 
-                // Simulate success
-                setTimeout(() => {
-                    verificationModal.hide();
-                    alert('Visit confirmed successfully!');
-                    // In a real app, you would update the UI to reflect the new status
-                }, 1000);
-            });
+                // Assemble the card
+                card.appendChild(header);
+                card.appendChild(body);
+                
+                return card;
+            }
             
-            // Confirm missed visit
-            document.getElementById('confirmMissedVisit').addEventListener('click', function() {
-                const reason = document.getElementById('missedReason').value;
-                const notes = document.getElementById('missedNotes').value;
+            // Helper function to create detail items
+            function createDetailItem(label, value) {
+                const item = document.createElement('div');
+                item.className = 'schedule-detail-item';
                 
-                if (!reason || !notes) {
-                    alert('Please provide both a reason and details for the missed visit');
-                    return;
-                }
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'schedule-detail-label';
+                // Add a space after the label
+                labelSpan.textContent = label + ' ';  // Add space here
                 
-                // In a real app, this would be an AJAX call to the server
-                console.log(`Reporting missed visit ${currentVisitId} with reason: ${reason} and notes: ${notes}`);
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'schedule-detail-value';
+                valueSpan.textContent = value;
                 
-                // Simulate success
-                setTimeout(() => {
-                    missedVisitModal.hide();
-                    alert('Missed visit reported successfully!');
-                    // In a real app, you would update the UI to reflect the new status
-                }, 1000);
+                item.appendChild(labelSpan);
+                item.appendChild(valueSpan);
+                
+                return item;
+            }
+
+            // Add this at the end of your DOMContentLoaded function
+            window.addEventListener('resize', function() {
+                calendar.updateSize();
             });
-            
-            // Reset form when modals are hidden
-            verificationModal._element.addEventListener('hidden.bs.modal', function() {
-                document.getElementById('verificationNotes').value = '';
-            });
-            
-            missedVisitModal._element.addEventListener('hidden.bs.modal', function() {
-                document.getElementById('missedReason').value = '';
-                document.getElementById('missedNotes').value = '';
-            });
+
+            // Also force a re-render after the initial load
+            setTimeout(function() {
+                calendar.updateSize();
+            }, 500);
         });
     </script>
 </body>

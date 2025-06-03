@@ -18,6 +18,7 @@ use App\Http\Controllers\FamilyPortalEmergencyServiceRequestController;
 use App\Http\Controllers\FamilyPortalCarePlanController;
 use App\Http\Controllers\FamilyPortalFamilyMemberController;
 use App\Http\Controllers\FamilyPortalFAQuestionsController;
+use App\Http\Controllers\PortalVisitationScheduleController;
 
 // All routes for family member portal
 // These routes require authentication via the family guard
@@ -36,10 +37,12 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         ]);
     })->name('dashboard');
     
-    // Visitation Schedule
-    Route::get('/visitation-schedule', function() {
-        return view('familyPortal.visitationSchedule');
-    })->name('visitation.schedule.index');
+    Route::prefix('/visitation-schedule')->name('visitation.schedule.')->group(function () {
+        Route::get('/', [PortalVisitationScheduleController::class, 'index'])->name('index');
+        Route::get('/events', [PortalVisitationScheduleController::class, 'getEvents'])->name('events');
+        Route::get('/details/{id}', [PortalVisitationScheduleController::class, 'getOccurrenceDetails'])->name('details');
+        Route::get('/upcoming', [PortalVisitationScheduleController::class, 'getUpcomingVisits'])->name('upcoming');
+    });
     
     // Medication Schedule
     Route::get('/medication-schedule', function() {
