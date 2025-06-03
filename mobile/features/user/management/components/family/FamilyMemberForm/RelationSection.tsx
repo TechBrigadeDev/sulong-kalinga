@@ -17,8 +17,7 @@ const RelationSection = ({ data, onChange }: Props) => {
 
     const onBeneficiarySelect = () => {
         console.log("Navigating to Select Beneficiary Modal");
-        // router.push("/(modals)/select-beneficiary");
-        router.push("/modal")
+        router.push("/(modals)/select-beneficiary");
     }
     return (
         <Card elevate bordered>
