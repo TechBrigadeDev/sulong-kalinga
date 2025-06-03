@@ -135,7 +135,7 @@
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                In case of emergency, contact your care worker or emergency services
+                                In case of emergency, you may send an emergency notice to COSE here
                             </div>
                         </div>
                         <div class="card-footer">
@@ -159,7 +159,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('family.messages.index') }}" class="card-link">
+                            <a href="{{ route('family.messaging.index') }}" class="card-link">
                                 <span>View Messages</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>

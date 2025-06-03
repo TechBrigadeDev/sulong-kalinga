@@ -21,6 +21,8 @@ use App\Http\Controllers\FamilyPortalFAQuestionsController;
 use App\Http\Controllers\PortalVisitationScheduleController;
 use App\Http\Controllers\PortalMedicationScheduleController;
 use App\Http\Controllers\PortalAccountProfileController;
+use App\Http\Controllers\PortalNotificationsController;
+use App\Http\Controllers\PortalMessagingController;
 
 // All routes for family member portal
 // These routes require authentication via the family guard
@@ -64,9 +66,12 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     })->name('emergency.service.index');
 
     // Messages
-    Route::get('/messages', function() {
-        return view('beneficiaryPortal.messages');
-    })->name('messages.index');
+    Route::prefix('messaging')->name('messaging.')->group(function () {
+        Route::get('/', [PortalMessagingController::class, 'index'])->name('index');
+        Route::get('/unread-count', [PortalMessagingController::class, 'getUnreadCount'])->name('unread-count');
+        Route::get('/recent-messages', [PortalMessagingController::class, 'getRecentMessages'])->name('recent-messages');
+        Route::post('/read-all', [PortalMessagingController::class, 'markAllAsRead'])->name('read-all');
+    });
 
     // Profile Routes
     Route::prefix('profile')->name('profile.')->group(function () {
@@ -91,4 +96,11 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     Route::get('/faq', function() {
         return view('familyPortal.FAQuestions');
     })->name('faQuestions.index');
+
+    // Notification Routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [PortalNotificationsController::class, 'getUserNotifications'])->name('index');
+        Route::post('/{id}/read', [PortalNotificationsController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/read-all', [PortalNotificationsController::class, 'markAllAsRead'])->name('mark-all-read');
+    });
 });
