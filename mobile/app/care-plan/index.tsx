@@ -1,17 +1,19 @@
 import { Stack } from "expo-router";
 import WCPForm from "features/care-plan/form";
-import { SafeAreaView } from "react-native";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Screen = () => {
+    const insets = useSafeAreaInsets();
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaProvider style={{ flex: 1, marginBottom: insets.bottom }}>
             <Stack.Screen
                 options={{
                     headerTitle: "Weekly Care Plan",
                 }}
             />
             <WCPForm/>
-        </SafeAreaView>
+        </SafeAreaProvider>
+
     )
 }
 

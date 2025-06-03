@@ -15,7 +15,19 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sulongkalinga.app"
+      "bundleIdentifier": "com.sulongkalinga.app",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSExceptionDomains": {
+            "test.cosemhcs.org.ph": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionRequiresForwardSecrecy": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0"
+            }
+          }
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {

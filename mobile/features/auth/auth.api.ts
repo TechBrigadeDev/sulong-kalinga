@@ -15,18 +15,36 @@ class AuthController {
     this.jsonApi.defaults.headers.common["Content-Type"] = "application/json";
 
   }
+        
+        
+    private async health(){
+        console.info("test:", this.jsonApi.defaults.baseURL)
+      try {
+        const response = await fetch("https://test.cosemhcs.org.ph/health", {
+          method: "GET",
+        });
+        console.info({response})
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Health check response:", data);
+      } catch (error) {
+        console.error("Error during health check:", error);
+        throw error;
+      }
+    }
+
 
     async login(email: string, password: string) {
+        await this.health();
         const formData = new FormData();
         formData.append("email", email);
         formData.append("password", password);
 
         try {
-            const response = await this.api.post("/login", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const response = await this.api.post("/login", formData);
             const validate = await loginSchema.response.safeParseAsync(response.data);
             if (!validate.success) {
                 throw new Error("Validation failed");
@@ -37,6 +55,7 @@ class AuthController {
                 token: validate.data.token,
             }
         } catch (error) {
+            console.error("Error during login:", error);
             if (error instanceof AxiosError) {
                 console.error("Axios error occurred:", error.toJSON());
                 switch (error.response?.status) {

@@ -2,25 +2,29 @@ import TabButton from 'components/screens/Home/_components/button';
 import { useRouter } from 'expo-router';
 import { TabList, Tabs, TabSlot, TabTrigger } from 'expo-router/ui';
 import { SafeAreaView, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'tamagui';
 
 import { useUser } from '~/features/user/user.hook';
 
 
 export default function Layout() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
 
   useUser();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
       <Tabs>
         <View style={styles.tabContainer}>
           <TabSlot/>
         </View>
         <TabList asChild>
           <View
-          style={styles.tabList}
+            style={{
+              ...styles.tabList,
+              marginBottom: insets.bottom,
+            }}
           >
             <TabButton
               icon="MessageCircle"
@@ -58,14 +62,13 @@ export default function Layout() {
               style={{ display: 'none' }}
             />
             <TabTrigger
-              name="/(tabs)/care-plan/index"
-              href="/(tabs)/care-plan"
+              name="/care-plan/index"
+              href="/care-plan"
               style={{ display: 'none' }}
             />
           </View>
         </TabList>
       </Tabs>
-    </SafeAreaView>
   );
 }
 
@@ -78,10 +81,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: 10,
     backgroundColor: '#ffffff',
-    marginBottom: 20,
 
     position: 'absolute',
-    bottom: 10,
+    bottom: 0,
     left: 20,
     right: 20,
 
