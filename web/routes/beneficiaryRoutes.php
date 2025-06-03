@@ -34,10 +34,15 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         $nextVisit = app()->make(\App\Http\Controllers\PortalVisitationScheduleController::class)
             ->getNextVisit();
         
+        // Get the next upcoming medication
+        $nextMedication = app()->make(\App\Http\Controllers\PortalMedicationScheduleController::class)
+            ->getNextMedication();
+        
         return view('beneficiaryPortal.homePage', [
             'showWelcome' => $showWelcome,
             'beneficiary' => $beneficiary,
-            'nextVisit' => $nextVisit
+            'nextVisit' => $nextVisit,
+            'nextMedication' => $nextMedication
         ]);
     })->name('dashboard');
     

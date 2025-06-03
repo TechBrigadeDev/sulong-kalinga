@@ -25,7 +25,6 @@ use App\Http\Controllers\PortalMedicationScheduleController;
 // These routes require authentication via the family guard
 Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(function () {
     
-    // Dashboard
     Route::get('/dashboard', function () {
         $showWelcome = session()->pull('show_welcome', false);
         $familyMember = Auth::guard('family')->user();
@@ -35,11 +34,16 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         $nextVisit = app()->make(\App\Http\Controllers\PortalVisitationScheduleController::class)
             ->getNextVisit($beneficiary->beneficiary_id);
         
+        // Get the next upcoming medication
+        $nextMedication = app()->make(\App\Http\Controllers\PortalMedicationScheduleController::class)
+            ->getNextMedication($beneficiary->beneficiary_id);
+        
         return view('familyPortal.homePage', [
             'showWelcome' => $showWelcome,
             'familyMember' => $familyMember,
             'beneficiary' => $beneficiary,
-            'nextVisit' => $nextVisit
+            'nextVisit' => $nextVisit,
+            'nextMedication' => $nextMedication
         ]);
     })->name('dashboard');
     

@@ -93,12 +93,29 @@
                         <div class="card-header">
                             <div class="card-title">
                                 <i class="bi bi-capsule-pill me-2"></i>
-                                My Medications
+                                Medications
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                Next medication: Blood pressure medicine at 8:00 PM today
+                                @if ($nextMedication)
+                                    <div>
+                                        Next medication: {{ $nextMedication['name'] }} at {{ $nextMedication['time'] }} 
+                                        @if($nextMedication['day'] == 'tomorrow')
+                                            tomorrow
+                                        @endif
+                                    </div>
+                                    <div class="mt-1 text-muted">
+                                        <small>Dosage: {{ $nextMedication['dosage'] }}</small>
+                                    </div>
+                                    @if($nextMedication['with_food'])
+                                    <div class="mt-1 text-muted">
+                                        <small><i class="bi bi-egg-fried"></i> Take with food</small>
+                                    </div>
+                                    @endif
+                                @else
+                                    No upcoming medications scheduled at this time.
+                                @endif
                             </div>
                         </div>
                         <div class="card-footer">
