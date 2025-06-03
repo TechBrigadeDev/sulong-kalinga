@@ -316,72 +316,12 @@
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Function to filter dropdown items
-        function filterDropdown(inputId, dropdownId) {
-            const input = document.getElementById(inputId);
-            const dropdown = document.getElementById(dropdownId);
-            const items = dropdown.querySelectorAll('.dropdown-item');
-
-            // Filter dropdown items based on user input
-            input.addEventListener('input', function () {
-                const filter = input.value.toLowerCase();
-                let hasVisibleItems = false;
-
-                items.forEach(item => {
-                    if (item.textContent.toLowerCase().includes(filter)) {
-                        item.style.display = 'block';
-                        hasVisibleItems = true;
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-                dropdown.style.display = hasVisibleItems ? 'block' : 'none';
-            });
-
-            // Hide dropdown when input loses focus
-            input.addEventListener('blur', function () {
-                setTimeout(() => dropdown.style.display = 'none', 200);
-            });
-
-            // Show dropdown when input gains focus
-            input.addEventListener('focus', function () {
-                dropdown.style.display = 'block';
-            });
-
-            // Handle item selection
-            items.forEach(item => {
-                item.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    input.value = item.textContent; // Update the input field with the selected item's text
-                    const hiddenInputId = inputId.replace('Input', ''); // Derive the hidden input ID
-                    const hiddenInput = document.getElementById(hiddenInputId);
-                    if (hiddenInput) {
-                        hiddenInput.value = item.getAttribute('data-value'); // Update the hidden input with the selected item's value
-                    }
-                    dropdown.style.display = 'none'; // Hide the dropdown
-                });
-            });
-        }
-
-        // Initialize filtering for each dropdown
-        // filterDropdown('genderInput', 'genderDropdown');
-        filterDropdown('relatedBeneficiaryInput', 'relatedBeneficiaryDropdown');
-
         // Parse the JSON data passed from the controller
-            const beneficiaries = JSON.parse(@json($beneficiaries));
+        const beneficiaries = @json($beneficiaries);
 
         // Get the dropdown element
         const relatedBeneficiaryDropdown = document.getElementById('relatedBeneficiary');
-
-        // Populate the dropdown with beneficiaries
-        beneficiaries.forEach(beneficiary => {
-            const option = document.createElement('option');
-            option.value = beneficiary.beneficiary_id; // Set the value to the beneficiary ID
-            option.textContent = `${beneficiary.first_name} ${beneficiary.last_name}`; // Display full name
-            relatedBeneficiaryDropdown.appendChild(option);
-        });
     });
-    
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -396,91 +336,74 @@
             birthDateInput.setAttribute('max', formattedMaxDate);
         });
     </script>
+
     <script>
-    // document.addEventListener('DOMContentLoaded', function () {
-    //     // Parse the JSON data passed from the controller
-    //     const beneficiaries = {!! $beneficiaries !!};
-
-    //     // Get the dropdown element
-    //     const relatedBeneficiaryDropdown = document.getElementById('relatedBeneficiary');
-
-    //     // Populate the dropdown with beneficiaries
-    //     beneficiaries.forEach(beneficiary => {
-    //         const option = document.createElement('option');
-    //         option.value = beneficiary.beneficiary_id; // Set the value to the beneficiary ID
-    //         option.textContent = `${beneficiary.first_name} ${beneficiary.last_name}`; // Display full name
-    //         relatedBeneficiaryDropdown.appendChild(option);
-    //     });
-    // });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Maximum file size - 7MB for profile pictures
-    const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB in bytes
-    
-    // Initialize the modal
-    const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
-    const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
-    
-    // Add file size validation to profile picture input
-    const familyPhotoInput = document.getElementById('familyPhoto');
-    if (familyPhotoInput) {
-        familyPhotoInput.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                const file = this.files[0];
-                
-                if (file.size > MAX_FILE_SIZE) {
-                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                    
-                    // Set error message and show modal
-                    fileSizeErrorMessage.innerHTML = `
-                        <strong>Profile Picture</strong> file is too large (${fileSizeMB}MB).<br>
-                        Maximum allowed size is 7MB.<br>
-                        Please select a smaller file or compress your existing file.
-                    `;
-                    fileSizeErrorModal.show();
-                    
-                    // Reset the file input
-                    this.value = '';
-                }
-            }
-        });
-    }
-    
-    // Add form submission check to prevent large file uploads
-    document.querySelector('form').addEventListener('submit', function(e) {
-        // Don't interfere if there's already a submission handler for the success modal
-        if (this.dataset.validated === 'true') {
-            return true;
-        }
-        
-        // Check file size before submission
-        if (familyPhotoInput && familyPhotoInput.files.length > 0) {
-            const file = familyPhotoInput.files[0];
+        document.addEventListener('DOMContentLoaded', function() {
+            // Maximum file size - 7MB for profile pictures
+            const MAX_FILE_SIZE = 7 * 1024 * 1024; // 7MB in bytes
             
-            if (file.size > MAX_FILE_SIZE) {
-                e.preventDefault();
-                
-                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                
-                // Set error message and show modal
-                fileSizeErrorMessage.innerHTML = `
-                    <strong>Form submission failed</strong><br>
-                    Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
-                    Please select a smaller file or compress your existing file.
-                `;
-                fileSizeErrorModal.show();
-                return false;
+            // Initialize the modal
+            const fileSizeErrorModal = new bootstrap.Modal(document.getElementById('fileSizeErrorModal'));
+            const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
+            
+            // Add file size validation to profile picture input
+            const familyPhotoInput = document.getElementById('familyPhoto');
+            if (familyPhotoInput) {
+                familyPhotoInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        const file = this.files[0];
+                        
+                        if (file.size > MAX_FILE_SIZE) {
+                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                            
+                            // Set error message and show modal
+                            fileSizeErrorMessage.innerHTML = `
+                                <strong>Profile Picture</strong> file is too large (${fileSizeMB}MB).<br>
+                                Maximum allowed size is 7MB.<br>
+                                Please select a smaller file or compress your existing file.
+                            `;
+                            fileSizeErrorModal.show();
+                            
+                            // Reset the file input
+                            this.value = '';
+                        }
+                    }
+                });
             }
-        }
-        
-        // Mark as validated so we don't check again
-        this.dataset.validated = 'true';
-        return true;
-    });
-});
-</script>
+            
+            // Add form submission check to prevent large file uploads
+            document.querySelector('form').addEventListener('submit', function(e) {
+                // Don't interfere if there's already a submission handler for the success modal
+                if (this.dataset.validated === 'true') {
+                    return true;
+                }
+                
+                // Check file size before submission
+                if (familyPhotoInput && familyPhotoInput.files.length > 0) {
+                    const file = familyPhotoInput.files[0];
+                    
+                    if (file.size > MAX_FILE_SIZE) {
+                        e.preventDefault();
+                        
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        
+                        // Set error message and show modal
+                        fileSizeErrorMessage.innerHTML = `
+                            <strong>Form submission failed</strong><br>
+                            Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
+                            Please select a smaller file or compress your existing file.
+                        `;
+                        fileSizeErrorModal.show();
+                        return false;
+                    }
+                }
+                
+                // Mark as validated so we don't check again
+                this.dataset.validated = 'true';
+                return true;
+            });
+        });
+    </script>
 
 </body>
 </html>
