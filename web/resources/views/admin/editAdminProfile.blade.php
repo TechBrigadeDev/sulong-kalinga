@@ -368,7 +368,7 @@
     });
     </script>
     <script>
-    document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form[action="{{ route("admin.administrators.store") }}"]').addEventListener('submit', function (e) {
         // Always prevent the default form submission first
         e.preventDefault();
         
