@@ -19,6 +19,7 @@ use App\Http\Controllers\FamilyPortalCarePlanController;
 use App\Http\Controllers\FamilyPortalFamilyMemberController;
 use App\Http\Controllers\FamilyPortalFAQuestionsController;
 use App\Http\Controllers\PortalVisitationScheduleController;
+use App\Http\Controllers\PortalMedicationScheduleController;
 
 // All routes for beneficiary portal
 // These routes require authentication via the beneficiary guard
@@ -55,9 +56,7 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
     });
     
     // Medication Schedule
-    Route::get('/medication-schedule', function() {
-        return view('beneficiaryPortal.medicationSchedule');
-    })->name('medication.schedule.index');
+    Route::get('/medication-schedule', [PortalMedicationScheduleController::class, 'index'])->name('medication.schedule.index');
     
     // Emergency Service
     Route::get('/emergency-service', function() {
