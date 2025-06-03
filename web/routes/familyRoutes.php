@@ -19,6 +19,7 @@ use App\Http\Controllers\FamilyPortalCarePlanController;
 use App\Http\Controllers\FamilyPortalFamilyMemberController;
 use App\Http\Controllers\FamilyPortalFAQuestionsController;
 use App\Http\Controllers\PortalVisitationScheduleController;
+use App\Http\Controllers\PortalMedicationScheduleController;
 
 // All routes for family member portal
 // These routes require authentication via the family guard
@@ -50,9 +51,7 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     });
     
     // Medication Schedule
-    Route::get('/medication-schedule', function() {
-        return view('familyPortal.medicationSchedule');
-    })->name('medication.schedule.index');
+    Route::get('/medication-schedule', [PortalMedicationScheduleController::class, 'index'])->name('medication.schedule.index');
     
     // Emergency Service
     Route::get('/emergency-service', function() {
