@@ -3,77 +3,77 @@
 <div class="sidebar">
   <div class="logo-details" id="logoToggle">
     <i class="bi bi-people-fill"></i>
-    <span class="logo_name">Family Portal</span>
+    <span class="logo_name">Beneficiary Portal</span>
   </div>
   
   <ul class="nav-links">
-    <li class="{{ Request::is('family/homePage') ? 'active' : '' }}">
-      <a href="{{ route('familyPortalHomePage') }}">
+    <li class="{{ Request::is('beneficiary.dashboard') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.dashboard') }}">
         <i class="bi bi-house-door"></i>
         <span class="link_name">Home</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('familyPortalHomePage') }}">Home</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.dashboard') }}">Home</a></li>
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.visitation.schedule.*') ? 'active' : '' }}">
-      <a href="{{ route('family.visitation.schedule.index') }}">
+    <li class="{{ Request::routeIs('beneficiary.visitation.schedule.*') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.visitation.schedule.index') }}">
         <i class="bi bi-calendar-check"></i>
         <span class="link_name">Visitation Schedule</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.visitation.schedule.index') }}">Visitation Schedule</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.visitation.schedule.index') }}">Visitation Schedule</a></li>
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.medication.schedule.*') ? 'active' : '' }}">
-      <a href="{{ route('family.medication.schedule.index') }}">
+    <li class="{{ Request::routeIs('beneficiary.medication.schedule.*') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.medication.schedule.index') }}">
         <i class="bi bi-capsule"></i>
         <span class="link_name">Medication Schedule</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.medication.schedule.index') }}">Medication Schedule</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.medication.schedule.index') }}">Medication Schedule</a></li>
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.emergency.service.*') ? 'active' : '' }}">
-      <a href="{{ route('family.emergency.service.index') }}">
+    <li class="{{ Request::routeIs('beneficiary.emergency.service.*') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.emergency.service.index') }}">
         <i class="bi bi-clipboard2-pulse"></i>
         <span class="link_name">Emergency & Service Requests</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.emergency.service.index') }}">Emergency & Service Requests</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.emergency.service.index') }}">Emergency & Service Requests</a></li>
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.care.plan.*') ? 'active' : '' }}">
-      <a href="{{ route('family.care.plan.index') }}">
+    <li class="{{ Request::routeIs('beneficiary.care.plan.*') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.care.plan.index') }}">
         <i class="bi bi-clipboard2-check"></i>
         <span class="link_name">Care Plan</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.care.plan.index') }}">Care Plan</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.care.plan.index') }}">Care Plan</a></li>
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.family.member.*') ? 'active' : '' }}">
-      <a href="{{ route('family.family.member.index') }}">
+    <li class="{{ Request::routeIs('beneficiary.member.*') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.member.index') }}">
         <i class="bi bi-people-fill"></i>
         <span class="link_name">Family Members</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.family.member.index') }}">Family Members</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.member.index') }}">Family Members</a></li>
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.faQuestions.*') ? 'active' : '' }}">
-      <a href="{{ route('family.faQuestions.index') }}">
+    <li class="{{ Request::routeIs('beneficiary.faQuestions.*') ? 'active' : '' }}">
+      <a href="{{ route('beneficiary.faQuestions.index') }}">
         <i class="bi bi-question-square"></i>
         <span class="link_name">Frequently Asked Question</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.faQuestions.index') }}">Frequently Asked Question</a></li>
+        <li><a class="link_name" href="{{ route('beneficiary.faQuestions.index') }}">Frequently Asked Question</a></li>
       </ul>
     </li>
   </ul>

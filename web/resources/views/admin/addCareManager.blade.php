@@ -99,9 +99,14 @@
                                 <label for="educationalBackground" class="form-label">Educational Background</label>
                                 <select class="form-select" id="educationalBackground" name="educational_background">
                                     <option value="" disabled {{ old('educational_background') ? '' : 'selected' }}>Select educational background</option>
-                                    <option value="College" {{ old('educational_background') == 'College' ? 'selected' : '' }}>College</option>
-                                    <option value="Highschool" {{ old('educational_background') == 'Highschool' ? 'selected' : '' }}>High School</option>
-                                    <option value="Doctorate" {{ old('educational_background') == 'Doctorate' ? 'selected' : '' }}>Doctorate</option>
+                                    <option value="Elementary Graduate" {{ old('educational_background') == 'Elementary Graduate' ? 'selected' : '' }}>Elementary Graduate</option>
+                                    <option value="High School Undergraduate" {{ old('educational_background') == 'High School Undergraduate' ? 'selected' : '' }}>High School Undergraduate</option>
+                                    <option value="High School Graduate" {{ old('educational_background') == 'High School Graduate' ? 'selected' : '' }}>High School Graduate</option>
+                                    <option value="Vocational/Technical Course" {{ old('educational_background') == 'Vocational/Technical Course' ? 'selected' : '' }}>Vocational/Technical Course</option>
+                                    <option value="College Undergraduate" {{ old('educational_background') == 'College Undergraduate' ? 'selected' : '' }}>College Undergraduate</option>
+                                    <option value="Bachelor's Degree" {{ old('educational_background') == 'Bachelor\'s Degree' ? 'selected' : '' }}>Bachelor's Degree</option>
+                                    <option value="Master's Degree" {{ old('educational_background') == 'Master\'s Degree' ? 'selected' : '' }}>Master's Degree</option>
+                                     <option value="Doctorate Degree" {{ old('educational_background') == 'Doctorate Degree' ? 'selected' : '' }}>Doctorate Degree</option>
                                 </select>
                             </div>
                         </div>
@@ -301,7 +306,7 @@
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-    document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form[action="{{ route("admin.caremanagers.store") }}"]').addEventListener('submit', function (e) {
         // Always prevent the default form submission first
         e.preventDefault();
         
@@ -372,15 +377,6 @@
         }
     });
     </script>
-<!-- <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent the default form submission
-
-            // Show the success modal
-            const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
-            successModal.show();
-        });
-    </script> -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Function to filter dropdown items
@@ -442,10 +438,19 @@
         document.querySelectorAll('.dropdown-item').forEach(item => {
             item.addEventListener('click', function (e) {
                 e.preventDefault();
-                const input = this.closest('.position-relative').querySelector('input[type="text"]');
-                const hiddenInput = this.closest('.position-relative').querySelector('input[type="hidden"]');
-                input.value = this.textContent;
-                hiddenInput.value = this.getAttribute('data-value');
+                
+                // Get parent element - could be .position-relative, .dropdown, or any wrapper
+                const parentElement = this.closest('.dropdown') || this.parentElement;
+                
+                if (parentElement) {
+                    // Safely try to find the inputs
+                    const input = parentElement.querySelector('input[type="text"]');
+                    const hiddenInput = parentElement.querySelector('input[type="hidden"]');
+                    
+                    // Only set values if elements were found
+                    if (input) input.value = this.textContent;
+                    if (hiddenInput) hiddenInput.value = this.getAttribute('data-value');
+                }
             });
         });
 
@@ -593,7 +598,7 @@
         });
         
         // Add form submission check to prevent large file uploads
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelector('form[action="{{ route("admin.caremanagers.store") }}"]').addEventListener('submit', function (e) {
             // Skip this check if the form is already being submitted after validation
             if (this.dataset.validated === 'true') {
                 return true;
@@ -635,6 +640,53 @@
             return true;
         }, true); // Use capturing phase to run before other handlers
     });
+    </script>
+    <script>
+        // Fix navbar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Fix dropdowns in navbar
+            const navbarDropdowns = document.querySelectorAll('.navbar .dropdown-toggle');
+            navbarDropdowns.forEach(dropdown => {
+                dropdown.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent other handlers from capturing this
+                });
+            });
+            
+            // 2. Fix navbar links - ensure they can navigate
+            const navbarLinks = document.querySelectorAll('.navbar a:not(.dropdown-toggle)');
+            navbarLinks.forEach(link => {
+                // Remove any existing listeners by cloning and replacing
+                const newLink = link.cloneNode(true);
+                if (link.parentNode) {
+                    link.parentNode.replaceChild(newLink, link);
+                }
+                
+                // Add direct navigation handling
+                newLink.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:')) {
+                        // For normal links, let the browser handle navigation
+                        // Don't prevent default behavior
+                    }
+                });
+            });
+            
+            // 3. Ensure logout form works
+            const logoutForm = document.querySelector('form[action$="/logout"]');
+            if (logoutForm) {
+                const newForm = logoutForm.cloneNode(true);
+                logoutForm.parentNode.replaceChild(newForm, logoutForm);
+                
+                // Ensure the logout button works
+                const logoutButton = newForm.querySelector('button[type="submit"]');
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', function(e) {
+                        // Don't prevent default - let the form submit
+                        newForm.submit();
+                    });
+                }
+            }
+        });
     </script>
 </body>
 </html>

@@ -2,6 +2,22 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FamilyMemberController;
+use App\Http\Controllers\WeeklyCareController;
+use App\Http\Controllers\SchedulesAndAppointmentsController;
+use App\Http\Controllers\ViewAccountProfileController;
+use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\HealthMonitoringController;
+use App\Http\Controllers\VisitationController;
+use App\Http\Controllers\MedicationScheduleController;
+use App\Http\Controllers\FamilyPortalVisitationScheduleController;
+use App\Http\Controllers\FamilyPortalMedicationScheduleController;
+use App\Http\Controllers\FamilyPortalEmergencyServiceRequestController;
+use App\Http\Controllers\FamilyPortalCarePlanController;
+use App\Http\Controllers\FamilyPortalFamilyMemberController;
+use App\Http\Controllers\FamilyPortalFAQuestionsController;
 
 // All routes for family member portal
 // These routes require authentication via the family guard
@@ -36,16 +52,17 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     })->name('emergency.service.index');
     
     // Care Plan
-    Route::get('/care-plan', function() {
-        return view('familyPortal.carePlan');
-    })->name('care.plan.index');
+    Route::prefix('care-plan')->name('care.plan.')->group(function () {
+        Route::get('/', [FamilyPortalCarePlanController::class, 'index'])->name('index');
+        Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
+    });
     
     // Family Members
     Route::get('/family-members', function() {
         return view('familyPortal.familyMembers');
     })->name('member.index');
 
-    // 
+    // FAQ Section
     Route::get('/faq', function() {
         return view('familyPortal.FAQuestions');
     })->name('faQuestions.index');

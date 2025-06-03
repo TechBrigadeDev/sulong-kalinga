@@ -2,13 +2,13 @@
 
 <div class="sidebar">
   <div class="logo-details" id="logoToggle">
-    <i class='bx bx-menu'></i>
+    <i class='bi bi-list'></i>
     <span class="logo_name">Menu</span>
   </div>
   <ul class="nav-links">
     <li>
       <a href="{{ route('care-worker.dashboard') }}" class="{{ Request::routeIs('care-worker.dashboard') ? 'active' : '' }}">
-        <i class='bx bx-grid-alt'></i>
+        <i class='bi bi-grid'></i>
         <span class="link_name">Dashboard</span>
       </a>
       <ul class="sub-menu blank">
@@ -16,8 +16,8 @@
       </ul>
     </li>
     <li>
-      <a href="{{ route('care-worker.reports') }}" class="{{ Request::routeIs('care-worker.reports') ? 'active' : '' }}">
-        <i class='bx bx-file'></i>
+      <a href="" class="">
+        <i class='bi bi-file-earmark-text'></i>
         <span class="link_name">Reports Management</span>
       </a>
       <ul class="sub-menu blank">
@@ -27,9 +27,9 @@
     <li>
       <div class="icon-link">
         <a class="{{ Request::is('care-worker/beneficiaries*') || Request::is('care-worker/family-members*') ? 'active' : '' }}">
-          <i class='bx bxs-user-account'></i>
+          <i class='bi bi-people'></i>
           <span class="link_name" onclick="toggleDropdown(this)">User Management</span>
-          <i class='bx bxs-chevron-down arrow' onclick="toggleDropdown(this)"></i>
+          <i class='bi bi-chevron-down arrow dropdown-arrow' onclick="toggleDropdown(this)"></i>
         </a>
       </div>
       <ul class="sub-menu">

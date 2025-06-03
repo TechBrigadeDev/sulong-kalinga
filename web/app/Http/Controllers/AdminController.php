@@ -71,7 +71,7 @@ class AdminController extends Controller
                 'max:50',
                 'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/', 
             ],
-            'educational_background' => 'nullable|string|in:College,Highschool,Doctorate', // Must match dropdown options
+            'educational_background' => 'nullable|string|in:Elementary Graduate,High School Undergraduate,High School Graduate,Vocational/Technical Course,College Undergraduate,Bachelor\'s Degree,Master\'s Degree,Doctorate Degree',
         
             // Address
             'address_details' => [
@@ -330,7 +330,7 @@ class AdminController extends Controller
             'civil_status' => 'nullable|string|in:Single,Married,Widowed,Divorced',
             'religion' => 'nullable|string|regex:/^[a-zA-Z\s]*$/',
             'nationality' => 'nullable|string|regex:/^[a-zA-Z\s]*$/',
-            'educational_background' => 'nullable|string|in:College,Highschool,Doctorate',
+            'educational_background' => 'nullable|string|in:Elementary Graduate,High School Undergraduate,High School Graduate,Vocational/Technical Course,College Undergraduate,Bachelor\'s Degree,Master\'s Degree,Doctorate Degree',
 
             'address_details' => [
                 'required',
