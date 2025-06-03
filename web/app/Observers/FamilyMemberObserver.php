@@ -7,6 +7,7 @@ use App\Models\UnifiedUser;
 
 class FamilyMemberObserver
 {
+
     // public function created(FamilyMember $member)
     // {
     //     UnifiedUser::create([

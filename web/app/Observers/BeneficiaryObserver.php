@@ -46,4 +46,5 @@ class BeneficiaryObserver
     // }
 
     // // Remove all password hashing and username generation from observer
+
 }
