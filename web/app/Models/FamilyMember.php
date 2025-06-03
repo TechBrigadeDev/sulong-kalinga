@@ -18,6 +18,8 @@ class FamilyMember extends Authenticatable
         'street_address', 'barangay_id', 'gender', 'related_beneficiary_id', 'relation_to_beneficiary',
         'is_primary_caregiver', 'created_by', 'updated_by', 'photo'
     ];
+
+    protected $guard = 'family';
     
     protected $hidden = [
         'password',

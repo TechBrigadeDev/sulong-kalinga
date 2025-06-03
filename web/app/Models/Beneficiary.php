@@ -26,6 +26,8 @@ class Beneficiary extends Authenticatable
         'remember_token',
     ];
 
+    protected $guard = 'beneficiary';
+
     // Get the category associated with the beneficiary.
     public function category()
     {
