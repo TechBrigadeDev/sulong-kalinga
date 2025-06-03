@@ -87,10 +87,10 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
     });
     
-    // Family Members
-    Route::get('/family-members', function() {
-        return view('familyPortal.familyMembers');
-    })->name('member.index');
+    // // Family Members
+    // Route::get('/family-members', function() {
+    //     return view('familyPortal.familyMembers');
+    // })->name('member.index');
 
     // FAQ Section
     Route::get('/faq', function() {
