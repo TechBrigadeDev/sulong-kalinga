@@ -18,7 +18,7 @@ class FamilyMemberObserver
             'first_name' => $member->first_name,
             'last_name' => $member->last_name,
             'mobile' => $member->mobile,
-            'role_id' => 6, // or whatever role_id you use for family members
+            'role_id' => 5,
             'status' => null,
             'user_type' => 'family_member',
             'cose_user_id' => null,

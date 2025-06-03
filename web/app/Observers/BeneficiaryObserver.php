@@ -18,7 +18,7 @@ class BeneficiaryObserver
             'first_name' => $beneficiary->first_name,
             'last_name' => $beneficiary->last_name,
             'mobile' => $beneficiary->mobile,
-            'role_id' => 5, // or whatever role_id you use for beneficiaries
+            'role_id' => 4,
             'status' => $beneficiary->beneficiary_status_id,
             'user_type' => 'beneficiary',
             'cose_user_id' => null,
