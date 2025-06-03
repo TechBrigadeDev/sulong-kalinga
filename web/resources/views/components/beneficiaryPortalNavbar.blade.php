@@ -70,12 +70,12 @@
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ Request::routeIs('care-worker.account.profile.*') ? 'active' : '' }}" href="#" id="highlightsDropdown" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle {{ Request::routeIs('beneficiary.profile.*') ? 'active' : '' }}" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown">
                         Account
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
-                            <a class="dropdown-item {{ Request::routeIs('care-worker.account.profile.index') ? 'active' : '' }}" href="{{ route('care-worker.account.profile.index') }}">Account Profile</a>
+                            <a class="dropdown-item {{ Request::routeIs('beneficiary.profile.index') ? 'active' : '' }}" href="{{ route('beneficiary.profile.index') }}">Account Profile</a>
                         </li>
                         <!-- Keep the existing language toggle -->
                         <li>
@@ -92,7 +92,7 @@
                             </div>
                         </li>
                         <li>
-                            <a class="dropdown-item {{ Request::routeIs('care-worker.account.profile.settings') ? 'active' : '' }}" href="{{ route('care-worker.account.profile.settings') }}">Settings</a>
+                            <a class="dropdown-item {{ Request::routeIs('beneficiary.profile.settings') ? 'active' : '' }}" href="{{ route('beneficiary.profile.settings') }}">Settings</a>
                         </li>
                         <li>
                             <form action="{{ route('logout') }}" method="POST">
