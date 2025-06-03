@@ -649,5 +649,52 @@
         });
     });
     </script>
+    <script>
+        // Fix navbar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Fix dropdowns in navbar
+            const navbarDropdowns = document.querySelectorAll('.navbar .dropdown-toggle');
+            navbarDropdowns.forEach(dropdown => {
+                dropdown.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent other handlers from capturing this
+                });
+            });
+            
+            // 2. Fix navbar links - ensure they can navigate
+            const navbarLinks = document.querySelectorAll('.navbar a:not(.dropdown-toggle)');
+            navbarLinks.forEach(link => {
+                // Remove any existing listeners by cloning and replacing
+                const newLink = link.cloneNode(true);
+                if (link.parentNode) {
+                    link.parentNode.replaceChild(newLink, link);
+                }
+                
+                // Add direct navigation handling
+                newLink.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:')) {
+                        // For normal links, let the browser handle navigation
+                        // Don't prevent default behavior
+                    }
+                });
+            });
+            
+            // 3. Ensure logout form works
+            const logoutForm = document.querySelector('form[action$="/logout"]');
+            if (logoutForm) {
+                const newForm = logoutForm.cloneNode(true);
+                logoutForm.parentNode.replaceChild(newForm, logoutForm);
+                
+                // Ensure the logout button works
+                const logoutButton = newForm.querySelector('button[type="submit"]');
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', function(e) {
+                        // Don't prevent default - let the form submit
+                        newForm.submit();
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>
