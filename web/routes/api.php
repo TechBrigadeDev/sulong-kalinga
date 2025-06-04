@@ -126,11 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Flat list of appointment events for calendar display
     Route::get('/internal-appointments/calendar-events', [InternalAppointmentsApiController::class, 'calendarEvents']);
-
-    // Get all appointment types for dropdowns/search
     Route::get('/internal-appointments/types', [InternalAppointmentsApiController::class, 'listAppointmentTypes']);
-
-    // Get all staff users grouped by role (for participant selection)
     Route::get('/internal-appointments/staff', [InternalAppointmentsApiController::class, 'listStaff']);
 
     // Get all beneficiaries (for admin/care manager)
