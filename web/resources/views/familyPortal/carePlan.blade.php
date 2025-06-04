@@ -187,12 +187,9 @@
 
     <div class="home-section">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="text-left">CARE PLAN</div>
-            <a href="{{ route('family.care.plan.allCarePlans') }}">
-                <button class="btn btn-primary btn-md">
-                    <i class="bi bi-file-earmark-text me-1"></i>
-                    View All Care Plan Reports
-                </button>
+            <div class="text-left">CARE PLAN OVERVIEW</div>
+            <a href="{{ route('family.care.plan.index') }}" class="btn btn-primary">
+                <i class="bi bi-file-earmark-text"></i> View All Care Plans
             </a>
         </div>
         <div class="container-fluid">

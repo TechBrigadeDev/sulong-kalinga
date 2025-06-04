@@ -53,7 +53,9 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
     // Care plan
     Route::prefix('care-plan')->name('care.plan.')->group(function () {
         Route::get('/', [FamilyPortalCarePlanController::class, 'index'])->name('index');
-        Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
+        Route::get('/statistics', [FamilyPortalCarePlanController::class, 'statistics'])->name('allCarePlans');
+        Route::get('/view/{id}', [FamilyPortalCarePlanController::class, 'viewWeeklyCarePlan'])->name('view');
+        Route::post('/acknowledge/{id}', [FamilyPortalCarePlanController::class, 'acknowledgeWeeklyCarePlan'])->name('acknowledge');
     });
     
     // Visitation Schedule

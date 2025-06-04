@@ -81,10 +81,12 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         Route::post('/update-password', [PortalAccountProfileController::class, 'updateFamilyPassword'])->name('update-password');
     });
     
-    // Care Plan
+    // Care plan
     Route::prefix('care-plan')->name('care.plan.')->group(function () {
         Route::get('/', [FamilyPortalCarePlanController::class, 'index'])->name('index');
-        Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
+        Route::get('/statistics', [FamilyPortalCarePlanController::class, 'statistics'])->name('allCarePlans');
+        Route::get('/view/{id}', [FamilyPortalCarePlanController::class, 'viewWeeklyCarePlan'])->name('view');
+        Route::post('/acknowledge/{id}', [FamilyPortalCarePlanController::class, 'acknowledgeWeeklyCarePlan'])->name('acknowledge');
     });
     
     // // Family Members
