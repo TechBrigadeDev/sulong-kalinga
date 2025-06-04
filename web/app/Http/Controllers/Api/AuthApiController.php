@@ -73,6 +73,7 @@ class AuthApiController extends Controller
             'last_name' => $user->last_name,
             'mobile' => $user->mobile,
             'role' => $role,
+            'status' => $user->status, 
         ];
 
         if ($role === 'beneficiary') {
@@ -160,6 +161,7 @@ class AuthApiController extends Controller
             'last_name' => $user->last_name,
             'mobile' => $user->mobile,
             'role' => $role,
+            'status' => $user->status, 
         ];
 
         if ($role === 'beneficiary') {
