@@ -8,11 +8,11 @@ use App\Models\Appointment;
 use App\Models\AppointmentOccurrence;
 use App\Models\AppointmentParticipant;
 use App\Models\AppointmentType;
-use App\Models\Beneficiary;
-use App\Models\FamilyMember;
+use App\Models\AppointmentArchive;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class InternalAppointmentsApiController extends Controller
 {
@@ -23,7 +23,6 @@ class InternalAppointmentsApiController extends Controller
     {
         $user = $request->user();
 
-        // Base query: eager load type, participants, and occurrences
         $query = Appointment::with([
             'appointmentType',
             'participants',
@@ -95,6 +94,7 @@ class InternalAppointmentsApiController extends Controller
 
     /**
      * Store a newly created internal appointment (with occurrences and participants).
+     * Only staff (cose_user) can be participants.
      */
     public function store(Request $request)
     {
@@ -109,7 +109,7 @@ class InternalAppointmentsApiController extends Controller
             'is_flexible_time' => 'boolean',
             'meeting_location' => 'nullable|string|max:255',
             'participants' => 'required|array|min:1',
-            'participants.*.participant_type' => 'required|in:cose_user,beneficiary,family_member',
+            'participants.*.participant_type' => 'required|in:cose_user',
             'participants.*.participant_id' => 'required|integer',
             'participants.*.is_organizer' => 'boolean',
             'notes' => 'nullable|string',
@@ -118,7 +118,21 @@ class InternalAppointmentsApiController extends Controller
             'recurrence.pattern_type' => 'nullable|in:daily,weekly,monthly',
             'recurrence.day_of_week' => 'nullable|array',
             'recurrence.recurrence_end' => 'nullable|date|after_or_equal:date',
+        ], [
+            'participants.*.participant_type.in' => 'Only staff can be participants in internal appointments.'
         ]);
+
+        // Extra safety: reject any non-cose_user participants
+        if ($request->has('participants')) {
+            foreach ($request->participants as $p) {
+                if ($p['participant_type'] !== 'cose_user') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Only staff can be participants in internal appointments.'
+                    ], 422);
+                }
+            }
+        }
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -126,7 +140,6 @@ class InternalAppointmentsApiController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. Create the appointment
             $appointment = Appointment::create([
                 'appointment_type_id' => $request->appointment_type_id,
                 'title' => $request->title,
@@ -143,7 +156,6 @@ class InternalAppointmentsApiController extends Controller
                 'updated_by' => $request->user()->id,
             ]);
 
-            // 2. Add participants
             foreach ($request->participants as $p) {
                 AppointmentParticipant::create([
                     'appointment_id' => $appointment->appointment_id,
@@ -153,10 +165,9 @@ class InternalAppointmentsApiController extends Controller
                 ]);
             }
 
-            // 3. Create occurrences (single or recurring)
+            // Occurrences
             $occurrences = [];
             if ($request->filled('recurrence.pattern_type')) {
-                // Recurring logic (simple version, expand as needed)
                 $start = Carbon::parse($request->date);
                 $end = Carbon::parse($request->recurrence['recurrence_end']);
                 $pattern = $request->recurrence['pattern_type'];
@@ -183,7 +194,6 @@ class InternalAppointmentsApiController extends Controller
                     $start->addDay();
                 }
             } else {
-                // Single occurrence
                 $occurrences[] = [
                     'appointment_id' => $appointment->appointment_id,
                     'occurrence_date' => $request->date,
@@ -204,15 +214,17 @@ class InternalAppointmentsApiController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to create appointment', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create appointment.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to create appointment.'
             ], 500);
         }
     }
+
     /**
      * Update an existing internal appointment (with occurrences and participants).
+     * Only staff (cose_user) can be participants.
      */
     public function update(Request $request, $id)
     {
@@ -236,7 +248,7 @@ class InternalAppointmentsApiController extends Controller
             'is_flexible_time' => 'boolean',
             'meeting_location' => 'nullable|string|max:255',
             'participants' => 'required|array|min:1',
-            'participants.*.participant_type' => 'required|in:cose_user,beneficiary,family_member',
+            'participants.*.participant_type' => 'required|in:cose_user',
             'participants.*.participant_id' => 'required|integer',
             'participants.*.is_organizer' => 'boolean',
             'notes' => 'nullable|string',
@@ -245,7 +257,21 @@ class InternalAppointmentsApiController extends Controller
             'recurrence.pattern_type' => 'nullable|in:daily,weekly,monthly',
             'recurrence.day_of_week' => 'nullable|array',
             'recurrence.recurrence_end' => 'nullable|date|after_or_equal:date',
+        ], [
+            'participants.*.participant_type.in' => 'Only staff can be participants in internal appointments.'
         ]);
+
+        // Extra safety: reject any non-cose_user participants
+        if ($request->has('participants')) {
+            foreach ($request->participants as $p) {
+                if ($p['participant_type'] !== 'cose_user') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Only staff can be participants in internal appointments.'
+                    ], 422);
+                }
+            }
+        }
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -253,7 +279,6 @@ class InternalAppointmentsApiController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. Update the appointment
             $appointment->update([
                 'appointment_type_id' => $request->appointment_type_id,
                 'title' => $request->title,
@@ -268,7 +293,6 @@ class InternalAppointmentsApiController extends Controller
                 'updated_by' => $request->user()->id,
             ]);
 
-            // 2. Update participants (delete old, add new)
             AppointmentParticipant::where('appointment_id', $appointment->appointment_id)->delete();
             foreach ($request->participants as $p) {
                 AppointmentParticipant::create([
@@ -279,7 +303,6 @@ class InternalAppointmentsApiController extends Controller
                 ]);
             }
 
-            // 3. Update occurrences (delete old, add new)
             AppointmentOccurrence::where('appointment_id', $appointment->appointment_id)->delete();
             $occurrences = [];
             if ($request->filled('recurrence.pattern_type')) {
@@ -329,15 +352,16 @@ class InternalAppointmentsApiController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to update appointment', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update appointment.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to update appointment.'
             ], 500);
         }
     }
+
     /**
-     * Cancel (archive) an appointment.
+     * Cancel (archive/soft delete) an appointment.
      */
     public function cancel(Request $request, $id)
     {
@@ -359,7 +383,7 @@ class InternalAppointmentsApiController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        // Password check (for security, similar to web)
+        // Password check (for security)
         $user = $request->user();
         if (!\Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -368,10 +392,20 @@ class InternalAppointmentsApiController extends Controller
             ], 403);
         }
 
+        // Throttle password attempts (basic example)
+        $key = 'cancel_attempts:' . $user->id;
+        $attempts = cache()->get($key, 0);
+        if ($attempts >= 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many attempts. Please try again later.'
+            ], 429);
+        }
+        cache()->put($key, $attempts + 1, now()->addMinutes(10));
+
         DB::beginTransaction();
         try {
-            // Archive the appointment
-            \App\Models\AppointmentArchive::create([
+            AppointmentArchive::create([
                 'appointment_id' => $appointment->appointment_id,
                 'original_appointment_id' => $appointment->appointment_id,
                 'title' => $appointment->title,
@@ -386,11 +420,13 @@ class InternalAppointmentsApiController extends Controller
                 'status' => 'cancelled',
                 'notes' => $appointment->notes,
                 'created_by' => $appointment->created_by,
+                'archived_at' => now(),
                 'reason' => $request->reason,
                 'archived_by' => $user->id,
             ]);
 
-            // Delete the appointment (cascade deletes occurrences/participants)
+            // Instead of hard delete, you may want to use soft delete if your Appointment model uses SoftDeletes.
+            // If not, just delete as before.
             $appointment->delete();
 
             DB::commit();
@@ -401,13 +437,14 @@ class InternalAppointmentsApiController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to cancel appointment', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to cancel appointment.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to cancel appointment.'
             ], 500);
         }
     }
+
     /**
      * Get a flat list of appointment events for calendar (like getAppointments in web).
      */
@@ -417,7 +454,6 @@ class InternalAppointmentsApiController extends Controller
 
         $query = Appointment::with(['appointmentType', 'participants', 'occurrences']);
 
-        // Care Worker: only see appointments they organize or participate in
         if ($user->role_id == 3) {
             $query->whereHas('participants', function($q) use ($user) {
                 $q->where('participant_type', 'cose_user')
@@ -425,7 +461,6 @@ class InternalAppointmentsApiController extends Controller
             });
         }
 
-        // Optional: filter by date range for calendar
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereHas('occurrences', function($q) use ($request) {
                 $q->whereBetween('occurrence_date', [$request->start_date, $request->end_date]);
@@ -502,46 +537,6 @@ class InternalAppointmentsApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => $staff
-        ]);
-    }
-
-    /**
-     * Get all beneficiaries (for admin/care manager).
-     */
-    public function listBeneficiaries(Request $request)
-    {
-        $query = Beneficiary::query();
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('first_name', 'ILIKE', "%$search%")
-                  ->orWhere('last_name', 'ILIKE', "%$search%");
-            });
-        }
-        $beneficiaries = $query->limit(50)->get();
-        return response()->json([
-            'success' => true,
-            'data' => $beneficiaries
-        ]);
-    }
-
-    /**
-     * Get all family members (for admin/care manager).
-     */
-    public function listFamilyMembers(Request $request)
-    {
-        $query = FamilyMember::query();
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('first_name', 'ILIKE', "%$search%")
-                  ->orWhere('last_name', 'ILIKE', "%$search%");
-            });
-        }
-        $family = $query->limit(50)->get();
-        return response()->json([
-            'success' => true,
-            'data' => $family
         ]);
     }
 }
