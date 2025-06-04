@@ -22,6 +22,14 @@ class WeeklyCarePlanApiController extends Controller
 
     public function store(Request $request)
     {
+        // Authorization: Only allow Care Workers (role_id == 3)
+        if (!$request->user() || $request->user()->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can create Weekly Care Plans.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'beneficiary_id' => 'required|exists:beneficiaries,beneficiary_id',
             'assessment' => 'required|string|min:20|max:5000',
@@ -30,7 +38,7 @@ class WeeklyCarePlanApiController extends Controller
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
             'evaluation_recommendations' => 'required|string|min:20|max:5000',
-            'photo' => 'required|file|image|max:4096', // Now expects an uploaded file
+            'photo' => 'required|file|image|max:4096',
             'selected_interventions' => 'required|array|min:1',
             'duration_minutes' => 'required|array|min:1',
             'duration_minutes.*' => 'required|numeric|min:0.01|max:999.99',
@@ -104,10 +112,20 @@ class WeeklyCarePlanApiController extends Controller
                 'body_temperature' => $request->body_temperature,
                 'pulse_rate' => $request->pulse_rate,
                 'respiratory_rate' => $request->respiratory_rate,
+                'created_by' => $request->user(), // or another default/test user ID
+                'updated_by' => $request->user(),
             ]);
 
-            // 2. Prepare illnesses as JSON
-            $illness = $request->illness ? json_encode(explode(',', $request->illness)) : null;
+            // 2. Prepare illnesses as JSON (trim, filter, only if not empty)
+            $illnesses = null;
+            if ($request->has('illness') && !empty($request->illness)) {
+                $illnessesArray = array_filter(array_map('trim', explode(',', $request->illness)), function($value) {
+                    return !empty($value);
+                });
+                if (count($illnessesArray) > 0) {
+                    $illnesses = json_encode($illnessesArray);
+                }
+            }
 
             // 3. Handle photo upload using UploadService
             $beneficiary = \App\Models\Beneficiary::find($request->beneficiary_id);
@@ -119,41 +137,64 @@ class WeeklyCarePlanApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/weekly_care_plan_photos',
-                $firstName . '_' . $lastName . '_weeklycare_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $firstName . '_' . $lastName . '_weeklycare_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
+                ]
             );
+
+            // // Use a dummy photo path for testing
+            // $photoPath = 'uploads/weekly_care_plan_photos/dummy.jpg';
 
             // 4. Save Weekly Care Plan
             $wcp = WeeklyCarePlan::create([
                 'beneficiary_id' => $request->beneficiary_id,
-                'care_worker_id' => $request->user()->id,
+                'care_worker_id' => $request->user(), // 1 is your test user ID
                 'vital_signs_id' => $vitalSigns->vital_signs_id,
                 'date' => now()->toDateString(),
                 'assessment' => $request->assessment,
-                'illnesses' => $illness,
+                'illnesses' => $illnesses,
                 'evaluation_recommendations' => $request->evaluation_recommendations,
                 'photo_path' => $photoPath,
-                'created_by' => $request->user()->id,
-                'updated_by' => $request->user()->id,
+                'created_by' => $request->user(),
+                'updated_by' => $request->user(),
             ]);
 
             // 5. Save interventions
             foreach ($request->selected_interventions as $idx => $interventionId) {
-                WeeklyCarePlanInterventions::create([
-                    'weekly_care_plan_id' => $wcp->weekly_care_plan_id,
-                    'intervention_id' => $interventionId,
-                    'duration_minutes' => $request->duration_minutes[$idx] ?? null,
-                ]);
-            }
-
-            // 6. Save custom interventions if provided
-            if ($request->custom_category && $request->custom_description && $request->custom_duration) {
-                foreach ($request->custom_category as $idx => $cat) {
+                if (
+                    isset($request->duration_minutes[$idx]) &&
+                    !is_null($request->duration_minutes[$idx]) &&
+                    $request->duration_minutes[$idx] > 0
+                ) {
                     WeeklyCarePlanInterventions::create([
                         'weekly_care_plan_id' => $wcp->weekly_care_plan_id,
-                        'custom_category' => $cat,
-                        'custom_description' => $request->custom_description[$idx] ?? '',
-                        'duration_minutes' => $request->custom_duration[$idx] ?? null,
+                        'intervention_id' => $interventionId,
+                        'duration_minutes' => $request->duration_minutes[$idx],
                     ]);
+                }
+            }
+
+            // 6. Save custom interventions if provided (strict: only if all fields present and valid)
+            if (
+                $request->has('custom_category') && is_array($request->custom_category) &&
+                $request->has('custom_description') && is_array($request->custom_description) &&
+                $request->has('custom_duration') && is_array($request->custom_duration)
+            ) {
+                foreach ($request->custom_category as $index => $categoryId) {
+                    if (
+                        !empty($categoryId) &&
+                        !empty($request->custom_description[$index]) &&
+                        isset($request->custom_duration[$index]) &&
+                        $request->custom_duration[$index] > 0
+                    ) {
+                        WeeklyCarePlanInterventions::create([
+                            'weekly_care_plan_id' => $wcp->weekly_care_plan_id,
+                            'care_category_id' => $categoryId,
+                            'intervention_description' => $request->custom_description[$index],
+                            'duration_minutes' => $request->custom_duration[$index],
+                            'implemented' => true
+                        ]);
+                    }
                 }
             }
 
@@ -161,7 +202,9 @@ class WeeklyCarePlanApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $wcp->fresh(['vitalSigns', 'beneficiary'])
+                'data' => $wcp->fresh(['vitalSigns', 'beneficiary']),
+                'photo_url' => $photoPath ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30) : null,
+                // 'photo_url' => null,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
