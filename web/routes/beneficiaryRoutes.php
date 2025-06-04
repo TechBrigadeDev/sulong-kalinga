@@ -18,6 +18,12 @@ use App\Http\Controllers\FamilyPortalEmergencyServiceRequestController;
 use App\Http\Controllers\FamilyPortalCarePlanController;
 use App\Http\Controllers\FamilyPortalFamilyMemberController;
 use App\Http\Controllers\FamilyPortalFAQuestionsController;
+use App\Http\Controllers\PortalVisitationScheduleController;
+use App\Http\Controllers\PortalMedicationScheduleController;
+use App\Http\Controllers\PortalAccountProfileController;
+use App\Http\Controllers\PortalMessagingController;
+use App\Http\Controllers\PortalNotificationsController;
+use App\Http\Controllers\PortalFamilyMembersController;
 
 // All routes for beneficiary portal
 // These routes require authentication via the beneficiary guard
@@ -28,50 +34,78 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         $showWelcome = session()->pull('show_welcome', false);
         $beneficiary = Auth::guard('beneficiary')->user();
         
+        // Get the next upcoming visit
+        $nextVisit = app()->make(\App\Http\Controllers\PortalVisitationScheduleController::class)
+            ->getNextVisit();
+        
+        // Get the next upcoming medication
+        $nextMedication = app()->make(\App\Http\Controllers\PortalMedicationScheduleController::class)
+            ->getNextMedication();
+        
         return view('beneficiaryPortal.homePage', [
             'showWelcome' => $showWelcome,
-            'beneficiary' => $beneficiary
+            'beneficiary' => $beneficiary,
+            'nextVisit' => $nextVisit,
+            'nextMedication' => $nextMedication
         ]);
     })->name('dashboard');
     
     // Care plan
     Route::prefix('care-plan')->name('care.plan.')->group(function () {
         Route::get('/', [FamilyPortalCarePlanController::class, 'index'])->name('index');
-        Route::get('/allCareplans', [FamilyPortalCarePlanController::class, 'allCarePlans'])->name('allCarePlans');
+        Route::get('/statistics', [FamilyPortalCarePlanController::class, 'statistics'])->name('allCarePlans');
+        Route::get('/view/{id}', [FamilyPortalCarePlanController::class, 'viewWeeklyCarePlan'])->name('view');
+        Route::post('/acknowledge/{id}', [FamilyPortalCarePlanController::class, 'acknowledgeWeeklyCarePlan'])->name('acknowledge');
     });
     
     // Visitation Schedule
-    Route::get('/visitation-schedule', function() {
-        return view('beneficiaryPortal.visitationSchedule');
-    })->name('visitation.schedule.index');
+    Route::prefix('/visitation-schedule')->name('visitation.schedule.')->group(function () {
+        Route::get('/', [PortalVisitationScheduleController::class, 'index'])->name('index');
+        Route::get('/events', [PortalVisitationScheduleController::class, 'getEvents'])->name('events');
+        Route::get('/details/{id}', [PortalVisitationScheduleController::class, 'getOccurrenceDetails'])->name('details');
+        Route::get('/upcoming', [PortalVisitationScheduleController::class, 'getUpcomingVisits'])->name('upcoming');
+    });
     
     // Medication Schedule
-    Route::get('/medication-schedule', function() {
-        return view('beneficiaryPortal.medicationSchedule');
-    })->name('medication.schedule.index');
+    Route::get('/medication-schedule', [PortalMedicationScheduleController::class, 'index'])->name('medication.schedule.index');
     
-    // Emergency Service
-    Route::get('/emergency-service', function() {
-        return view('beneficiaryPortal.emergencyAndService');
-    })->name('emergency.service.index');
+    // Emergency Service routes (these should already be present)
+    Route::prefix('/emergency-service')->name('emergency.service.')->group(function () {
+        Route::get('/', [FamilyPortalEmergencyServiceRequestController::class, 'index'])->name('index');
+        Route::post('/emergency/submit', [FamilyPortalEmergencyServiceRequestController::class, 'submitEmergencyRequest'])->name('submit-emergency');
+        Route::post('/service/submit', [FamilyPortalEmergencyServiceRequestController::class, 'submitServiceRequest'])->name('submit-service');
+        Route::get('/active', [FamilyPortalEmergencyServiceRequestController::class, 'getActiveRequests'])->name('active');
+        Route::post('/history', [FamilyPortalEmergencyServiceRequestController::class, 'getRequestHistory'])->name('history');
+        Route::post('/cancel', [FamilyPortalEmergencyServiceRequestController::class, 'cancelRequest'])->name('cancel');
+    });
     
     // Messages
-    Route::get('/messages', function() {
-        return view('beneficiaryPortal.messages');
-    })->name('messages.index');
+    Route::prefix('messaging')->name('messaging.')->group(function () {
+        Route::get('/', [PortalMessagingController::class, 'index'])->name('index');
+        Route::get('/unread-count', [PortalMessagingController::class, 'getUnreadCount'])->name('unread-count');
+        Route::get('/recent-messages', [PortalMessagingController::class, 'getRecentMessages'])->name('recent-messages');
+        Route::post('/read-all', [PortalMessagingController::class, 'markAllAsRead'])->name('read-all');
+    });
     
-    // Profile
-    Route::get('/profile', function() {
-        return view('beneficiaryPortal.profile');
-    })->name('profile.index');
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [PortalAccountProfileController::class, 'beneficiaryIndex'])->name('index');
+        Route::get('/settings', [PortalAccountProfileController::class, 'beneficiarySettings'])->name('settings');
+        Route::post('/update-password', [PortalAccountProfileController::class, 'updateBeneficiaryPassword'])->name('update-password');
+    });
 
     // Family Members
-    Route::get('/family-members', function() {
-        return view('beneficiaryPortal.familyMembers');
-    })->name('member.index');
+    Route::get('/family-members', [PortalFamilyMembersController::class, 'index'])->name('member.index');
 
     // 
     Route::get('/faq', function() {
         return view('beneficiaryPortal.FAQuestions');
     })->name('faQuestions.index');
+
+    // Notification Routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [PortalNotificationsController::class, 'getUserNotifications'])->name('index');
+        Route::post('/{id}/read', [PortalNotificationsController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/read-all', [PortalNotificationsController::class, 'markAllAsRead'])->name('mark-all-read');
+    });
 });

@@ -57,16 +57,6 @@
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('family.member.*') ? 'active' : '' }}">
-      <a href="{{ route('family.member.index') }}">
-        <i class="bi bi-people-fill"></i>
-        <span class="link_name">Family Members</span>
-      </a>
-      <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.member.index') }}">Family Members</a></li>
-      </ul>
-    </li>
-
     <li class="{{ Request::routeIs('family.faQuestions.*') ? 'active' : '' }}">
       <a href="{{ route('family.faQuestions.index') }}">
         <i class="bi bi-question-square"></i>
