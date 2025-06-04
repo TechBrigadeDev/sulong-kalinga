@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\VisitationApiController;
 use App\Http\Controllers\Api\MessagingApiController;
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\ShiftTrackApiController;
+use App\Http\Controllers\Api\RecordsManagementApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -184,14 +185,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Records Management API
     // Weekly Care Plans
-    Route::get('/records/weekly-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listWeekly']);
-    Route::get('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showWeekly']);
-    Route::put('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateWeekly']);
+    Route::get('/records/weekly-care-plans', [RecordsManagementApiController::class, 'listWeekly']);
+    Route::get('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'showWeekly']);
+    Route::patch('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'updateWeekly']);
 
-    // General Care Plans
-    Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
-    Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
-    Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
+    // General Care Plans REMOVED
+    // Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
+    // Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
+    // Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
 
     // Shifts API
     Route::get('/shifts', [ShiftApiController::class, 'index']);
