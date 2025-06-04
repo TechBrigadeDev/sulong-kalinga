@@ -74,7 +74,7 @@ class WeeklyCarePlanApiController extends Controller
 
             'photo.required' => 'A photo is required for documentation purposes',
             'photo.image' => 'The uploaded file must be an image',
-            'photo.max' => 'The photo should not exceed 2MB',
+            'photo.max' => 'The photo should not exceed 4MB',
 
             'selected_interventions.required' => 'Please select at least one intervention',
             'duration_minutes.required' => 'Please specify the duration for all selected interventions',
@@ -203,9 +203,8 @@ class WeeklyCarePlanApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $wcp->fresh(['vitalSigns', 'beneficiary']),
+                'data' => $wcp->fresh(['vitalSigns', 'beneficiary', 'interventions']),
                 'photo_url' => $photoPath ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30) : null,
-                // 'photo_url' => null,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
