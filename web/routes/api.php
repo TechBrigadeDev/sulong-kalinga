@@ -114,9 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Internal Appointments API (Staff Only, Full CRUD)
     Route::get('/internal-appointments', [InternalAppointmentsApiController::class, 'index']);
     Route::get('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'show']);
-    Route::post('/internal-appointments', [InternalAppointmentsApiController::class, 'store']);
-    Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
-    Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
+    // Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
     Route::get('/internal-appointments/calendar-events', [InternalAppointmentsApiController::class, 'calendarEvents']);
     Route::get('/internal-appointments/types', [InternalAppointmentsApiController::class, 'listAppointmentTypes']);
     Route::get('/internal-appointments/staff', [InternalAppointmentsApiController::class, 'listStaff']);
