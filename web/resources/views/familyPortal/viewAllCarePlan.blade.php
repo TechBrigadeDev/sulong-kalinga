@@ -74,14 +74,16 @@
                             <form action="{{ route('family.care.plan.index') }}" method="GET" id="searchFilterForm">
                                 <div class="d-flex flex-wrap align-items-center">
                                     <div class="search-container d-flex">
-                                        <div class="position-relative flex-grow-1">
-                                            <i class="bi bi-search search-icon"></i>
-                                            <input type="text" name="search" class="form-control search-input" 
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-search"></i>
+                                            </span>
+                                            <input type="text" name="search" class="form-control search-input"  
                                                 placeholder="Search by author or date..." value="{{ $search ?? '' }}">
+                                            <button type="submit" class="btn btn-primary">
+                                                <span class="d-none d-sm-inline">Search</span>
+                                            </button>
                                         </div>
-                                        <button type="submit" class="btn btn-primary ms-2">
-                                            Search
-                                        </button>
                                     </div>
                                     <div class="filter-container">
                                         <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? 'all') == 'all' ? 'active' : '' }}" data-filter="all">All</button>
