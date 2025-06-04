@@ -73,8 +73,7 @@ class WeeklyCarePlanApiController extends Controller
             'evaluation_recommendations.max' => 'Evaluation and recommendations cannot exceed 5000 characters',
 
             'photo.required' => 'A photo is required for documentation purposes',
-            'photo.image' => 'The uploaded file must be an image',
-            'photo.max' => 'The photo should not exceed 2MB',
+            'photo.max' => 'The photo path should not exceed 255 characters',
 
             'selected_interventions.required' => 'Please select at least one intervention',
             'duration_minutes.required' => 'Please specify the duration for all selected interventions',
@@ -113,8 +112,8 @@ class WeeklyCarePlanApiController extends Controller
                 'body_temperature' => $request->body_temperature,
                 'pulse_rate' => $request->pulse_rate,
                 'respiratory_rate' => $request->respiratory_rate,
-                'created_by' => $request->user(), // or another default/test user ID
-                'updated_by' => $request->user(),
+                'created_by' => $request->user()->id, // or another default/test user ID
+                'updated_by' => $request->user()->id,
             ]);
 
             // 2. Prepare illnesses as JSON (trim, filter, only if not empty)
@@ -149,15 +148,15 @@ class WeeklyCarePlanApiController extends Controller
             // 4. Save Weekly Care Plan
             $wcp = WeeklyCarePlan::create([
                 'beneficiary_id' => $request->beneficiary_id,
-                'care_worker_id' => $request->user(), // 1 is your test user ID
+                'care_worker_id' => $request->user()->id, 
                 'vital_signs_id' => $vitalSigns->vital_signs_id,
                 'date' => now()->toDateString(),
                 'assessment' => $request->assessment,
                 'illnesses' => $illnesses,
                 'evaluation_recommendations' => $request->evaluation_recommendations,
                 'photo_path' => $photoPath,
-                'created_by' => $request->user(),
-                'updated_by' => $request->user(),
+                'created_by' => $request->user()->id,
+                'updated_by' => $request->user()->id,
             ]);
 
             // 5. Save interventions
