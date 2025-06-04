@@ -332,7 +332,7 @@
                                                 </td>
                                                 <td class="text-center">{{ number_format($intervention->duration_minutes, 2) }}</td>
                                             </tr>
-                                        @endforeach
+                                        @endforeach 
                                         
                                         {{-- Custom interventions (description in weekly_care_plan_interventions) --}}
                                         @foreach($categoryCustInterventions as $custom)
