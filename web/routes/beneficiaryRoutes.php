@@ -69,10 +69,15 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
     // Medication Schedule
     Route::get('/medication-schedule', [PortalMedicationScheduleController::class, 'index'])->name('medication.schedule.index');
     
-    // Emergency Service
-    Route::get('/emergency-service', function() {
-        return view('beneficiaryPortal.emergencyAndService');
-    })->name('emergency.service.index');
+    // Emergency Service routes (these should already be present)
+    Route::prefix('/emergency-service')->name('emergency.service.')->group(function () {
+        Route::get('/', [FamilyPortalEmergencyServiceRequestController::class, 'index'])->name('index');
+        Route::post('/emergency/submit', [FamilyPortalEmergencyServiceRequestController::class, 'submitEmergencyRequest'])->name('submit-emergency');
+        Route::post('/service/submit', [FamilyPortalEmergencyServiceRequestController::class, 'submitServiceRequest'])->name('submit-service');
+        Route::get('/active', [FamilyPortalEmergencyServiceRequestController::class, 'getActiveRequests'])->name('active');
+        Route::post('/history', [FamilyPortalEmergencyServiceRequestController::class, 'getRequestHistory'])->name('history');
+        Route::post('/cancel', [FamilyPortalEmergencyServiceRequestController::class, 'cancelRequest'])->name('cancel');
+    });
     
     // Messages
     Route::prefix('messaging')->name('messaging.')->group(function () {
