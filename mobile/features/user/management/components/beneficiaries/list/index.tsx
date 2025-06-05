@@ -1,15 +1,16 @@
+import { useRouter } from "expo-router";
+import { useGetBeneficiaries } from "features/user/management/management.hook";
 import {
   FlatList,
   ListRenderItem,
   RefreshControl,
   StyleSheet,
-  TouchableNativeFeedback,
 } from "react-native";
-import { IBeneficiary } from "~/features/user/management/management.type";
-import { useGetBeneficiaries } from "../../../management.hook";
 import { Button, Card, Text, View } from "tamagui";
+
+import { IBeneficiary } from "~/features/user/management/management.type";
+
 import { beneficiaryListStore } from "./store";
-import { useRouter } from "expo-router";
 
 const BeneficiaryList = () => {
   const { search } = beneficiaryListStore();
@@ -64,10 +65,8 @@ const BeneficiaryCard: ListRenderItem<IBeneficiary> = ({ item }) => {
 
   return (
     <Card
-      theme="light_white"
+      theme="light"
       marginBottom="$2"
-      marginHorizontal="$2"
-      elevate
       bordered
       padding="$3"
     >

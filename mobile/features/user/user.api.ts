@@ -1,5 +1,7 @@
-import axios, { AxiosInstance, isAxiosError } from "axios";
+import { AxiosInstance, isAxiosError } from "axios";
+
 import { axiosClient } from "~/common/api";
+
 import { userSchema } from "./user.schema";
 
 class UserController {
@@ -38,9 +40,9 @@ class UserController {
         
         try {
             const response = await this.jsonApi.get("/user", {
-                // headers: {
-                //     Authorization: `Bearer ${token}`,
-                // },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             });
             console.log("User response:", response.data);
 

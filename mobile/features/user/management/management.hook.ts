@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { QK } from "~/common/query"
 import { authStore } from "~/features/auth/auth.store"
+
 import UserManagementController from "./management.api";
 
 
@@ -71,7 +73,6 @@ export const useGetFamilyMember = (id?: string) => {
     }
 
     const api = new UserManagementController(token);
-    console.log(token, id);
 
     return useQuery({
         queryKey: QK.user.management.getFamilyMember(id),

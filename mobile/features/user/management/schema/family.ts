@@ -7,8 +7,7 @@ export const familyMemberSchema = z.object({
     first_name: z.string(),
     last_name: z.string(),
     email: z.string().email(),
-    // TODO: Uncomment when mobile is available
-    // mobile: z.string(),
+    mobile_number: z.string(),
     relation_to_beneficiary: z.string(),
     is_primary_caregiver: z.boolean(),
     photo: z.string().nullable(),
