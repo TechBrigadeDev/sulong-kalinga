@@ -51,21 +51,6 @@ export default function Layout() {
                 Options
               </TabButton>
             </TabTrigger>
-            <TabTrigger
-              name="/(tabs)/scheduling/care-worker/index"
-              href="/(tabs)/scheduling/care-worker"
-              style={{ display: 'none' }}
-            />
-            <TabTrigger
-              name="/(tabs)/shifts/index"
-              href="/(tabs)/shifts"
-              style={{ display: 'none' }}
-            />
-            <TabTrigger
-              name="/care-plan/index"
-              href="/care-plan"
-              style={{ display: 'none' }}
-            />
           </View>
         </TabList>
       </Tabs>

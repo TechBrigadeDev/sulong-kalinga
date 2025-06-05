@@ -10,15 +10,12 @@ const Calendar = ({
     ...props
 }: Props) => {
     const styles: StyleProp<ViewStyle> = {
-        backgroundColor: '#FFF1E6',
         borderRadius: 12,
         padding: 10,
         ...(style as ViewStyle)
     }
 
     const themes: Theme = {
-        backgroundColor: '#FFF1E6',
-        calendarBackground: '#FFF1E6',
         textSectionTitleColor: '#000',
         selectedDayBackgroundColor: '#000',
         selectedDayTextColor: '#fff',
