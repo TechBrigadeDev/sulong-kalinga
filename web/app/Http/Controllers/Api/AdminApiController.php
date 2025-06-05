@@ -40,7 +40,7 @@ class AdminApiController extends Controller
                     'photo_url' => $admin->photo
                         ? Storage::disk('spaces-private')->temporaryUrl($admin->photo, now()->addMinutes(30))
                         : null,
-                    // Add other fields as needed
+                    'status' => $admin->status,
                 ];
             })
         ]);
@@ -217,7 +217,9 @@ class AdminApiController extends Controller
                     $request->file('administrator_photo'),
                     'spaces-private',
                     'uploads/administrator_photos',
-                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
 
@@ -227,7 +229,9 @@ class AdminApiController extends Controller
                     $request->file('government_ID'),
                     'spaces-private',
                     'uploads/administrator_government_ids',
-                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
             }
 
@@ -237,7 +241,9 @@ class AdminApiController extends Controller
                     $request->file('resume'),
                     'spaces-private',
                     'uploads/administrator_resumes',
-                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
             }
 
@@ -411,7 +417,9 @@ class AdminApiController extends Controller
                     $request->file('administrator_photo'),
                     'spaces-private',
                     'uploads/administrator_photos',
-                    $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
             if ($request->hasFile('government_ID')) {
@@ -422,7 +430,9 @@ class AdminApiController extends Controller
                     $request->file('government_ID'),
                     'spaces-private',
                     'uploads/administrator_government_ids',
-                    $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
             }
             if ($request->hasFile('resume')) {
@@ -433,7 +443,9 @@ class AdminApiController extends Controller
                     $request->file('resume'),
                     'spaces-private',
                     'uploads/administrator_resumes',
-                    $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
             }
 

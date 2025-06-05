@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\FamilyMember;
 
 class Beneficiary extends Authenticatable
 {
@@ -61,5 +62,15 @@ class Beneficiary extends Authenticatable
     public function sentMessages()
     {
         return $this->morphMany(Message::class, 'sender');
+    }
+
+    public function familyMembers()
+    {
+        return $this->hasMany(FamilyMember::class, 'related_beneficiary_id', 'beneficiary_id');
+    }
+    
+    public function assignedCareWorker()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'assigned_care_worker_id', 'id');
     }
 }

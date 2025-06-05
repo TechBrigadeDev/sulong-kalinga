@@ -181,8 +181,10 @@ class CareWorkerApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/careworker_photos',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' . 
-                $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' . 
+                        $request->file('photo')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -191,8 +193,10 @@ class CareWorkerApiController extends Controller
                 $request->file('government_id'),
                 'spaces-private',
                 'uploads/careworker_government_ids',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_government_id_' . $uniqueIdentifier . '.' . 
-                $request->file('government_id')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_government_id_' . $uniqueIdentifier . '.' . 
+                        $request->file('government_id')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -201,8 +205,10 @@ class CareWorkerApiController extends Controller
                 $request->file('resume'),
                 'spaces-private',
                 'uploads/careworker_resumes',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_resume_' . $uniqueIdentifier . '.' . 
-                $request->file('resume')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_resume_' . $uniqueIdentifier . '.' . 
+                        $request->file('resume')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -333,8 +339,10 @@ class CareWorkerApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/careworker_photos',
-                $careworker->first_name . '_' . $careworker->last_name . '_photo_' . $uniqueIdentifier . '.' .
-                $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $careworker->first_name . '_' . $careworker->last_name . '_photo_' . $uniqueIdentifier . '.' .
+                        $request->file('photo')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -346,8 +354,10 @@ class CareWorkerApiController extends Controller
                 $request->file('government_id'),
                 'spaces-private',
                 'uploads/careworker_government_ids',
-                $careworker->first_name . '_' . $careworker->last_name . '_government_id_' . $uniqueIdentifier . '.' .
-                $request->file('government_id')->getClientOriginalExtension()
+                [
+                    'filename' => $careworker->first_name . '_' . $careworker->last_name . '_government_id_' . $uniqueIdentifier . '.' .
+                        $request->file('government_id')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -359,8 +369,10 @@ class CareWorkerApiController extends Controller
                 $request->file('resume'),
                 'spaces-private',
                 'uploads/careworker_resumes',
-                $careworker->first_name . '_' . $careworker->last_name . '_resume_' . $uniqueIdentifier . '.' .
-                $request->file('resume')->getClientOriginalExtension()
+                [
+                    'filename' => $careworker->first_name . '_' . $careworker->last_name . '_resume_' . $uniqueIdentifier . '.' .
+                        $request->file('resume')->getClientOriginalExtension()
+                ]
             );
         }
         

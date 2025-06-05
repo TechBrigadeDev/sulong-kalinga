@@ -166,8 +166,10 @@ class CareManagerApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/caremanager_photos',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' . 
-                $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' .
+                        $request->file('photo')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -176,8 +178,10 @@ class CareManagerApiController extends Controller
                 $request->file('government_id'),
                 'spaces-private',
                 'uploads/caremanager_government_ids',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_government_id_' . $uniqueIdentifier . '.' . 
-                $request->file('government_id')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_government_id_' . $uniqueIdentifier . '.' .
+                        $request->file('government_id')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -186,8 +190,10 @@ class CareManagerApiController extends Controller
                 $request->file('resume'),
                 'spaces-private',
                 'uploads/caremanager_resumes',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_resume_' . $uniqueIdentifier . '.' . 
-                $request->file('resume')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_resume_' . $uniqueIdentifier . '.' .
+                        $request->file('resume')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -300,8 +306,10 @@ class CareManagerApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/caremanager_photos',
-                $caremanager->first_name . '_' . $caremanager->last_name . '_photo_' . $uniqueIdentifier . '.' .
-                $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $caremanager->first_name . '_' . $caremanager->last_name . '_photo_' . $uniqueIdentifier . '.' .
+                        $request->file('photo')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -313,8 +321,10 @@ class CareManagerApiController extends Controller
                 $request->file('government_id'),
                 'spaces-private',
                 'uploads/caremanager_government_ids',
-                $caremanager->first_name . '_' . $caremanager->last_name . '_government_id_' . $uniqueIdentifier . '.' .
-                $request->file('government_id')->getClientOriginalExtension()
+                [
+                    'filename' => $caremanager->first_name . '_' . $caremanager->last_name . '_government_id_' . $uniqueIdentifier . '.' .
+                        $request->file('government_id')->getClientOriginalExtension()
+                ]
             );
         }
         
@@ -326,8 +336,10 @@ class CareManagerApiController extends Controller
                 $request->file('resume'),
                 'spaces-private',
                 'uploads/caremanager_resumes',
-                $caremanager->first_name . '_' . $caremanager->last_name . '_resume_' . $uniqueIdentifier . '.' .
-                $request->file('resume')->getClientOriginalExtension()
+                [
+                    'filename' => $caremanager->first_name . '_' . $caremanager->last_name . '_resume_' . $uniqueIdentifier . '.' .
+                        $request->file('resume')->getClientOriginalExtension()
+                ]
             );
         }
         
