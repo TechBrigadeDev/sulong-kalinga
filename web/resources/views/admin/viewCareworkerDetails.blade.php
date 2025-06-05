@@ -5,7 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/viewProfileDetails.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .profile-img {
+            width: clamp(6.25rem, 15vw, 9.375rem);
+            height: clamp(6.25rem, 15vw, 9.375rem);
+            object-fit: cover;
+            border: 0.1875rem solid white;
+            box-shadow: 0 0.1875rem 0.625rem rgba(0, 0, 0, 0.1);
+        }
+        
+        .profile-header-card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-header-content {
+            width: 100%;
+        }
+        
+        .badge-active {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        
+        .badge-inactive {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+        
+        .status-select {
+            border-radius: 1.25rem;
+            padding: 0.375rem 1rem;
+            font-weight: 500;
+            border: 1px solid var(--medium-gray);
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: clamp(0.75rem, 2vw, 0.8125rem);
+            min-width: 6rem;
+            text-align: center;
+        }
+        
+        .status-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.1875rem rgba(52, 152, 219, 0.2);
+        }
+        
+
+        
+        .detail-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .detail-card-header {
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .detail-item {
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: var(--dark-gray);
+        }
+        
+        .document-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .document-link:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+        
+        .beneficiary-card {
+            transition: all 0.3s;
+            border-radius: 8px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .beneficiary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .beneficiary-img {
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .section-title {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 8px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+        
+        .btn-action {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 8px 15px;
+            transition: all 0.3s;
+        }
+        
+        .btn-edit {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-delete {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .btn-back {
+            background-color: var(--dark-gray);
+            border-color: var(--dark-gray);
+        }
+        
+        .empty-state {
+            color: var(--dark-gray);
+            padding: 30px;
+            text-align: center;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+        }
+        
+        .status-select {
+            border-radius: 20px;
+            padding: 0.3125rem 0.9375rem;
+            font-weight: 500;
+            border: 2px solid var(--primary-color);
+            font-size: clamp(0.8125rem, 0.7875rem + 0.125vw, 0.875rem);
+        }
+        
+        .status-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+
+        .desktop-back-btn {
+            display: none;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-buttons .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 767.98px) {
+            .desktop-back-btn {
+                display: none;
+            }
+            
+            .mobile-back-btn {
+                display: inline-flex;
+            }
+            
+            .header-buttons .btn {
+                padding: 0.375rem 0.5rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .desktop-back-btn {
+                display: inline-flex;
+            }
+            
+            .mobile-back-btn {
+                display: none;
+            }
+            
+            .header-buttons {
+                width: auto !important;
+            }
+        }
+
+    #home-content .row{
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+        
+    </style>
 </head>
 <body>
 
@@ -16,52 +256,69 @@
 
     <div class="home-section">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <!-- Original Back Button -->
-                <a href="{{ route('admin.careworkers.index') }}" class="btn btn-secondary original-back-btn">
-                    <i class="bi bi-arrow-bar-left"></i> Back
+            <!-- Header with Action Buttons -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-2">
+                <a href="{{ route('admin.careworkers.index') }}" class="btn btn-secondary desktop-back-btn align-self-start align-self-md-center">
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">VIEW CARE WORKER PROFILE DETAILS</div>
-                <div>
-                    <!-- Hidden Back Button -->
-                    <a href="beneficiaryProfile" class="btn btn-secondary hidden-back-btn">
-                        <i class="bi bi-arrow-bar-left"></i> Back
+                <h4 class="mb-0 text-center" style="font-size: 20px; font-weight: bold; padding: 10px;">
+                    Care Worker Profile Details
+                </h4>
+                <div class="d-flex justify-content-center w-100 justify-content-md-end gap-2 header-buttons">
+                    <a href="{{ route('admin.careworkers.index') }}" class="btn btn-secondary mobile-back-btn" style="height: 33px;">
+                        <i class="bi bi-arrow-left"></i> Back
                     </a>
-                    <!-- Edit Button with Routing -->
                     <a href="{{ route('admin.careworkers.edit', $careworker->id) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-square"></i> Edit
+                        <i class="bi bi-pencil-square me-1"></i> Edit
                     </a>
-                    <button class="btn btn-danger" onclick="openDeleteCareworkerModal('{{ $careworker->id }}', '{{ $careworker->first_name }} {{ $careworker->last_name }}')">
-                        <i class="bi bi-trash-fill"></i> Delete
+                    <button type="button" class="btn btn-danger" onclick="openDeleteCareworkerModal('{{ $careworker->id }}', '{{ $careworker->first_name }} {{ $careworker->last_name }}')">
+                        <i class="bi bi-trash me-1"></i> Delete
                     </button>
                 </div>
             </div>
-            <div class="row justify-content-center" id="profileDetails">
-                <div class="row justify-content-center mb-3">
-                    <div class="col-lg-8 col-md-12 col-sm-12 mt-3 mb-3" id="profilePic">
-                        <div class="row justify-content-center align-items-center text-center text-md-start">
-                            <!-- Profile Picture Column -->
-                            <div class="col-lg-3 col-md-4 col-sm-12 mb-3 mb-md-0">
-                            <img src="{{ $careworker->photo ? asset('storage/' . $careworker->photo) : asset('images/defaultProfile.png') }}"
-                                    alt="Profile Picture" 
-                                    class="img-fluid rounded-circle mx-auto d-block d-md-inline" 
-                                    style="width: 150px; height: 150px; border: 1px solid #ced4da;">
-                                    
-                            </div>
-                            <!-- Name and Details Column -->
-                            <div class="col-lg-9 col-md-8 col-sm-12">
-                                <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start">
-                                    <!-- Complete Name -->
-                                    <h4 class="me-md-3 mb-2 mb-md-0 mt-2">{{ $careworker->first_name }} {{ $careworker->last_name }}</h4>
-                                    <!-- Dropdown for Status -->
-                                    <div class="form-group mb-0 ms-md-auto">
-                                    <select class="form-select" name="status" id="statusSelect{{ $careworker->id }}" onchange="openStatusChangeCareworkerModal(this, 'Care Worker', {{ $careworker->id }}, '{{ $careworker->status }}')">
-                                                <option value="Active" {{ $careworker->status == 'Active' ? 'selected' : '' }}>Active Care Worker</option>
-                                                <option value="Inactive" {{ $careworker->status == 'Inactive' ? 'selected' : '' }}>Inactive Care Worker</option>
-                                            </select>
+            
+            <div class="row" id="home-content">
+                <!-- Profile Header Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card profile-header-card">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 text-center mb-4 mb-md-0">
+                                        <img src="{{ $careworker->photo ? asset('storage/' . $careworker->photo) : asset('images/defaultProfile.png') }}" 
+                                            alt="Profile Picture" 
+                                            class="img-fluid rounded-circle profile-img">
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-start profile-header-content">
+                                            <div class="text-center text-md-start mb-3 mb-md-0">
+                                                <h3 class="mb-1" style="color: var(--secondary-color);">
+                                                    {{ $careworker->first_name }} {{ $careworker->last_name }}
+                                                </h3>
+                                                <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                                    <span class="badge rounded-pill bg-light text-dark">
+                                                        <i class="bi bi-person-badge me-1"></i> Care Worker
+                                                    </span>
+                                                    <span class="badge rounded-pill {{ $careworker->status == 'Active' ? 'badge-active' : 'badge-inactive' }}">
+                                                        {{ $careworker->status }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-muted mt-2 mb-0">
+                                                    <i class="bi bi-calendar3 me-1"></i> Member since {{ $careworker->status_start_date->format('F j, Y') }}
+                                                </p>
+                                            </div>
+                                            <div class="mt-2 mt-md-0 status-select-container">
+                                                <select class="status-select px-4 text-center" 
+                                                        name="status" 
+                                                        id="statusSelect{{ $careworker->id }}" 
+                                                        onchange="openStatusChangeCareworkerModal(this, 'Care Worker', {{ $careworker->id }}, '{{ $careworker->status }}')">
+                                                    <option value="Active" {{ $careworker->status == 'Active' ? 'selected' : '' }}>Active</option>
+                                                    <option value="Inactive" {{ $careworker->status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <p class="text-muted mt-2 text-center text-md-start">A Care Worker since {{ $careworker->status_start_date->format('F j, Y') }}</p>
                             </div>
                         </div>
                     </div>
@@ -69,144 +326,182 @@
                 
                 <div class="row">
                     <!-- Personal Details Column -->
-                    <div class="col-lg-8 col-md-12 col-sm-12">
-                        <h5 class="text-center">Personal Details</h5>
-                        <table class="table table-striped personal-details">                            
-                            <tbody>
-                                <tr>
-                                    <td style="width:30%;"><strong>Educational Background:</strong></td>
-                                    <td>{{$careworker->educational_background ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Birthday:</strong></td>
-                                    <td>{{$careworker->birthday->format('F j, Y')}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Gender:</strong></td>
-                                    <td>{{$careworker->gender ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Civil Status:</strong></td>
-                                    <td>{{$careworker->civil_status ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Religion:</strong></td>
-                                    <td>{{$careworker->religion ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Nationality:</strong></td>
-                                    <td>{{$careworker->nationality ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Assigned Municipality:</strong></td>
-                                    <td>{{$careworker->municipality->municipality_name}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Assigned Care Manager:</strong></td>
-                                    <td>
-                                        @if($careworker->assignedCareManager)
-                                            {{ $careworker->assignedCareManager->first_name }} {{ $careworker->assignedCareManager->last_name }}
-                                        @else
-                                            <span class="text-muted">Unassigned</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Email Address:</strong></td>
-                                    <td>{{$careworker->email}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Mobile Number:</strong></td>
-                                    <td>{{$careworker->mobile}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Landline Number:</strong></td>
-                                    <td>{{$careworker->landline ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Current Address:</strong></td>
-                                    <td><p>{{$careworker->address}}</p></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="col-lg-4 col-md-12 col-sm-12">
-                        <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                                <h5 class="text-center">Documents</h5>
-                                <table class="table table-striped">
-                                    <tbody>
-                                        <tr>
-                                            <td style="width: 40%;"><strong>Government Issued ID:</strong></td>
-                                            <td style="width: 60%;">
-                                                @if($careworker->government_issued_id)
-                                                    <a href="{{ asset('storage/' . $careworker->government_issued_id) }}" download>Download</a>
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </td>                                     
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 40%;"><strong>Resume / CV:</strong></td>
-                                            <td style="width: 60%;">
-                                                @if($careworker->cv_resume)
-                                                    <a href="{{ asset('storage/' . $careworker->cv_resume) }}" download>Download</a>
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </td>                                                
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <div class="col-lg-8">
+                        <div class="detail-card card mb-4">
+                            <div class="card-header detail-card-header">
+                                <i class="fas fa-user-circle me-2"></i>Personal Information
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                                <h5 class="text-center">Government ID Numbers</h5>
-                                <table class="table table-striped">
-                                    <tbody>
-                                        <tr>
-                                            <td style="width: 40%;"><strong>SSS ID Number:</strong></td>
-                                            <td style="width: 60%;">{{$careworker->sss_id_number ?? 'N/A'}}</td>                                 
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 40%;"><strong>PhilHealth ID Number:</strong></td>
-                                            <td style="width: 60%;">{{$careworker->philhealth_id_number ?? 'N/A'}}</td>                                   
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 40%;"><strong>Pag-Ibig ID Number:</strong></td>
-                                            <td style="width: 60%;">{{$careworker->pagibig_id_number ?? 'N/A'}}</td>                                 
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row justify-content-center">
-                        <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center">
-                            <h5 class="text-center">Managed Beneficiary</h5>
-                        </div>
-                        <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center flex-wrap">
-                            @forelse ($beneficiaries as $beneficiary)
-                                <div class="card text-center p-1 m-1" style="max-width: 160px;">
-                                    <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
-                                        <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}" class="img-fluid" alt="..." style="max-width: 100px; max-height: 100px;">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-label">Educational Background</div>
+                                            <div class="detail-value">{{$careworker->educational_background ?? 'N/A'}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Birthday</div>
+                                            <div class="detail-value">{{$careworker->birthday->format('F j, Y')}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Gender</div>
+                                            <div class="detail-value">{{$careworker->gender ?? 'N/A'}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Civil Status</div>
+                                            <div class="detail-value">{{$careworker->civil_status ?? 'N/A'}}</div>
+                                        </div>
                                     </div>
-                                    <div class="card-body p-1">
-                                        <p class="card-text" style="font-size:14px;">{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}</p>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-label">Religion</div>
+                                            <div class="detail-value">{{$careworker->religion ?? 'N/A'}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Nationality</div>
+                                            <div class="detail-value">{{$careworker->nationality ?? 'N/A'}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Assigned Municipality</div>
+                                            <div class="detail-value">{{$careworker->municipality->municipality_name}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Assigned Care Manager</div>
+                                            <div class="detail-value">
+                                                @if($careworker->assignedCareManager)
+                                                    {{ $careworker->assignedCareManager->first_name }} {{ $careworker->assignedCareManager->last_name }}
+                                                @else
+                                                    <span class="text-muted">Unassigned</span>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            @empty
-                                <p class="text-center">No beneficiaries being handled currently.</p>
-                            @endforelse
+                            </div>
                         </div>
+                        
+                        <div class="detail-card card mb-4">
+                            <div class="card-header detail-card-header">
+                                <i class="fas fa-address-card me-2"></i>Contact Information
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-label">Email Address</div>
+                                            <div class="detail-value">{{$careworker->email}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Mobile Number</div>
+                                            <div class="detail-value">{{$careworker->mobile}}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-label">Landline Number</div>
+                                            <div class="detail-value">{{$careworker->landline ?? 'N/A'}}</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Current Address</div>
+                                            <div class="detail-value">{{$careworker->address}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Documents and IDs Column -->
+                    <div class="col-lg-4">
+                        <div class="detail-card card mb-4">
+                            <div class="card-header detail-card-header">
+                                <i class="fas fa-file-alt me-2"></i>Documents
+                            </div>
+                            <div class="card-body">
+                                <div class="detail-item">
+                                    <div class="detail-label">Government Issued ID</div>
+                                    <div class="detail-value">
+                                        @if($careworker->government_issued_id)
+                                            <a href="{{ asset('storage/' . $careworker->government_issued_id) }}" download class="document-link">
+                                                <i class="fas fa-download me-2"></i>Download
+                                            </a>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Resume / CV</div>
+                                    <div class="detail-value">
+                                        @if($careworker->cv_resume)
+                                            <a href="{{ asset('storage/' . $careworker->cv_resume) }}" download class="document-link">
+                                                <i class="fas fa-download me-2"></i>Download
+                                            </a>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-card card mb-4">
+                            <div class="card-header detail-card-header">
+                                <i class="fas fa-id-card me-2"></i>Government ID Numbers
+                            </div>
+                            <div class="card-body">
+                                <div class="detail-item">
+                                    <div class="detail-label">SSS ID Number</div>
+                                    <div class="detail-value">{{$careworker->sss_id_number ?? 'N/A'}}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">PhilHealth ID Number</div>
+                                    <div class="detail-value">{{$careworker->philhealth_id_number ?? 'N/A'}}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Pag-Ibig ID Number</div>
+                                    <div class="detail-value">{{$careworker->pagibig_id_number ?? 'N/A'}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Managed Beneficiaries Section -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h4 class="section-title"><i class="fas fa-users me-2"></i>Managed Beneficiaries</h4>
+                        
+                        @if($beneficiaries->isEmpty())
+                            <div class="empty-state">
+                                <i class="fas fa-user-slash fa-3x mb-3" style="color: var(--medium-gray);"></i>
+                                <h5>No Beneficiaries Assigned</h5>
+                                <p class="mb-0">This care worker is not currently managing any beneficiaries.</p>
+                            </div>
+                        @else
+                            <div class="row">
+                                @foreach ($beneficiaries as $beneficiary)
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                        <div class="beneficiary-card card h-100">
+                                            <div class="d-flex justify-content-center align-items-center p-3" style="height: 120px;">
+                                                <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}" 
+                                                    class="beneficiary-img img-fluid" 
+                                                    alt="{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}">
+                                            </div>
+                                            <div class="card-body text-center p-3">
+                                                <h6 class="card-title mb-0">{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
+    <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
    
 </body>
