@@ -121,19 +121,19 @@ class BeneficiaryApiController extends Controller
                     $b->toArray(),
                     [
                         'photo_url' => $b->photo
-                            ? Storage::disk('spaces-private')->temporaryUrl($b->photo, now()->addMinutes(30))
+                            ? $this->uploadService->getTemporaryPrivateUrl($b->photo, 30)
                             : null,
                         'care_service_agreement_doc_url' => $b->care_service_agreement_doc
-                            ? Storage::disk('spaces-private')->temporaryUrl($b->care_service_agreement_doc, now()->addMinutes(30))
+                            ? $this->uploadService->getTemporaryPrivateUrl($b->care_service_agreement_doc, 30)
                             : null,
                         'general_care_plan_doc_url' => $b->general_care_plan_doc
-                            ? Storage::disk('spaces-private')->temporaryUrl($b->general_care_plan_doc, now()->addMinutes(30))
+                            ? $this->uploadService->getTemporaryPrivateUrl($b->general_care_plan_doc, 30)
                             : null,
                         'beneficiary_signature_url' => $b->beneficiary_signature
-                            ? Storage::disk('spaces-private')->temporaryUrl($b->beneficiary_signature, now()->addMinutes(30))
+                            ? $this->uploadService->getTemporaryPrivateUrl($b->beneficiary_signature, 30)
                             : null,
                         'care_worker_signature_url' => $b->care_worker_signature
-                            ? Storage::disk('spaces-private')->temporaryUrl($b->care_worker_signature, now()->addMinutes(30))
+                            ? $this->uploadService->getTemporaryPrivateUrl($b->care_worker_signature, 30)
                             : null,
                     ]
                 );
@@ -165,7 +165,6 @@ class BeneficiaryApiController extends Controller
             'generalCarePlan.healthHistory',
             'generalCarePlan.careNeeds',
             'generalCarePlan.careWorkerResponsibility',
-            // Remove portalAccount reference
             'familyMembers',
         ])->findOrFail($id);
 
@@ -183,19 +182,19 @@ class BeneficiaryApiController extends Controller
                 $beneficiary->toArray(),
                 [
                     'photo_url' => $beneficiary->photo
-                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->photo, now()->addMinutes(30))
+                        ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->photo, 30)
                         : null,
                     'care_service_agreement_doc_url' => $beneficiary->care_service_agreement_doc
-                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->care_service_agreement_doc, now()->addMinutes(30))
+                        ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->care_service_agreement_doc, 30)
                         : null,
                     'general_care_plan_doc_url' => $beneficiary->general_care_plan_doc
-                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->general_care_plan_doc, now()->addMinutes(30))
+                        ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->general_care_plan_doc, 30)
                         : null,
                     'beneficiary_signature_url' => $beneficiary->beneficiary_signature
-                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->beneficiary_signature, now()->addMinutes(30))
+                        ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->beneficiary_signature, 30)
                         : null,
                     'care_worker_signature_url' => $beneficiary->care_worker_signature
-                        ? Storage::disk('spaces-private')->temporaryUrl($beneficiary->care_worker_signature, now()->addMinutes(30))
+                        ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->care_worker_signature, 30)
                         : null,
                 ]
             )
@@ -1257,6 +1256,20 @@ class BeneficiaryApiController extends Controller
             $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == $request->user()->id;
             if (!$isAssigned) {
                 return response()->json(['error' => 'Unauthorized. You can only delete beneficiaries assigned to you.'], 403);
+            }
+        }
+
+        // --- DELETE ALL ASSOCIATED FILES ---
+        $filesToDelete = [
+            $beneficiary->photo,
+            $beneficiary->care_service_agreement_doc,
+            $beneficiary->general_care_plan_doc,
+            $beneficiary->beneficiary_signature,
+            $beneficiary->care_worker_signature,
+        ];
+        foreach ($filesToDelete as $file) {
+            if ($file) {
+                $this->uploadService->delete($file, 'spaces-private');
             }
         }
 

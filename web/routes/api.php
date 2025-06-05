@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\VisitationApiController;
 use App\Http\Controllers\Api\MessagingApiController;
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\ShiftTrackApiController;
+use App\Http\Controllers\Api\RecordsManagementApiController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -110,58 +111,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'update']);
     Route::delete('/medication-schedules/{id}', [MedicationScheduleApiController::class, 'destroy']);
 
-    // Internal Appointments API (Read-Only for Mobile)
-
-    // List all internal appointments (with occurrences and participants)
-    // Internal Appointments API (Read-Only for Mobile)
-
-    // List all internal appointments (with occurrences and participants)
+    // Internal Appointments API (Staff Only, Full CRUD)
     Route::get('/internal-appointments', [InternalAppointmentsApiController::class, 'index']);
-
-    // Show a single internal appointment with all details
-
-    // Show a single internal appointment with all details
     Route::get('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'show']);
-
-    // Flat list of appointment events for calendar display
-    Route::get('/internal-appointments/calendar-events', [InternalAppointmentsApiController::class, 'calendarEvents']);
-
-    // Get all appointment types for dropdowns/search
-    Route::get('/internal-appointments/types', [InternalAppointmentsApiController::class, 'listAppointmentTypes']);
-
-    // Get all staff users grouped by role (for participant selection)
-    Route::get('/internal-appointments/staff', [InternalAppointmentsApiController::class, 'listStaff']);
-
-    // Get all beneficiaries (for admin/care manager)
-    Route::get('/internal-appointments/beneficiaries', [InternalAppointmentsApiController::class, 'listBeneficiaries']);
-
-    // Get all family members (for admin/care manager)
-    Route::get('/internal-appointments/family-members', [InternalAppointmentsApiController::class, 'listFamilyMembers']);
-    //REMOVED NON-READ ONLY ENDPOINTS
-
-    // Flat list of appointment events for calendar display
-    Route::get('/internal-appointments/calendar-events', [InternalAppointmentsApiController::class, 'calendarEvents']);
-
-    // Get all appointment types for dropdowns/search
-    Route::get('/internal-appointments/types', [InternalAppointmentsApiController::class, 'listAppointmentTypes']);
-
-    // Get all staff users grouped by role (for participant selection)
-    Route::get('/internal-appointments/staff', [InternalAppointmentsApiController::class, 'listStaff']);
-
-    // Get all beneficiaries (for admin/care manager)
-    Route::get('/internal-appointments/beneficiaries', [InternalAppointmentsApiController::class, 'listBeneficiaries']);
-
-    // Get all family members (for admin/care manager)
-    Route::get('/internal-appointments/family-members', [InternalAppointmentsApiController::class, 'listFamilyMembers']);
-    //REMOVED NON-READ ONLY ENDPOINTS
-    // POST /internal-appointments - Create a new internal appointment
-    // Route::post('/internal-appointments', [InternalAppointmentsApiController::class, 'store']);
-    // Route::post('/internal-appointments', [InternalAppointmentsApiController::class, 'store']);
-    // PUT /internal-appointments/{id} - Update an internal appointment
-    // Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
-    // Route::put('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'update']);
-    // POST /internal-appointments/{id}/cancel - Cancel (archive) an internal appointment
     // Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
+    Route::get('/internal-appointments/calendar-events', [InternalAppointmentsApiController::class, 'calendarEvents']);
+    Route::get('/internal-appointments/types', [InternalAppointmentsApiController::class, 'listAppointmentTypes']);
+    Route::get('/internal-appointments/staff', [InternalAppointmentsApiController::class, 'listStaff']);
+
+    // REMOVE these lines (do not expose beneficiary/family endpoints for internal appointments):
+    // Route::get('/internal-appointments/beneficiaries', ...);
+    // Route::get('/internal-appointments/family-members', ...);
 
     // Visitation API (Read-Only for Mobile)
     Route::get('/visitations', [VisitationApiController::class, 'index']);
@@ -184,14 +144,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Records Management API
     // Weekly Care Plans
-    Route::get('/records/weekly-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listWeekly']);
-    Route::get('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showWeekly']);
-    Route::put('/records/weekly-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateWeekly']);
+    Route::get('/records/weekly-care-plans', [RecordsManagementApiController::class, 'listWeekly']);
+    Route::get('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'showWeekly']);
+    Route::patch('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'updateWeekly']);
 
-    // General Care Plans
-    Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
-    Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
-    Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
+    // General Care Plans REMOVED
+    // Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
+    // Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
+    // Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
 
     // Shifts API
     Route::get('/shifts', [ShiftApiController::class, 'index']);

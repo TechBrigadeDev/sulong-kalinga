@@ -3,10 +3,211 @@
 <link rel="stylesheet" href="{{ asset('css/message-dropdown.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
+@include('components.portalNotificationScript')
+
+<style>
+    /* Notification dropdown styles */
+
+    .modal-title {
+        color: white;
+    }
+        
+    .dropdown-notifications {
+        width: 500px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .dropdown-notifications .dropdown-header {
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .dropdown-notifications .dropdown-footer {
+        background-color: #f8f9fa;
+        padding: 10px;
+        text-align: center;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .notification-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .notification-item {
+        display: flex;
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .notification-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .notification-item.unread {
+        background-color: #f0f7ff;
+    }
+
+    .notification-icon {
+        margin-right: 15px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .notification-icon i {
+        font-size: 1.2rem;
+    }
+
+    .notification-icon-info {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+
+    .notification-icon-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .notification-icon-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .notification-icon-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .notification-icon-primary {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+
+    .notification-content {
+        flex-grow: 1;
+        min-width: 0; /* Fix for text overflow */
+    }
+
+    .notification-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+        position: relative;
+        padding-right: 15px; /* Space for unread indicator */
+    }
+
+    .unread-indicator {
+        width: 8px;
+        height: 8px;
+        background-color: #0d6efd;
+        border-radius: 50%;
+        display: inline-block;
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .notification-text {
+        color: #6c757d;
+        margin-bottom: 5px;
+        word-wrap: break-word;
+    }
+
+    .notification-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: #adb5bd;
+    }
+
+    .notification-time {
+        color: #6c757d;
+    }
+
+    .mark-all-read {
+        color: #0d6efd;
+        cursor: pointer;
+        font-size: 0.8rem;
+        user-select: none;
+    }
+
+    .mark-all-read:hover {
+        text-decoration: underline;
+    }
+
+    .mark-as-read {
+        font-size: 0.75rem;
+        padding: 0;
+        color: #0d6efd;
+    }
+
+    .mark-as-read:hover {
+        text-decoration: underline;
+    }
+
+    /* Notification badge on the bell icon */
+    .nav-notification-link {
+        position: relative;
+    }
+
+    .notification-count {
+        position: absolute;
+        top: 0;
+        right: -5px;
+        font-size: 0.65rem;
+    }
+
+    /* Notification modal styles */
+    .notification-modal .modal-body {
+        padding: 1rem;
+    }
+
+    .notification-modal .notification-list {
+        max-height: 400px;
+    }
+
+    .notification-modal .notification-item {
+        margin-bottom: 10px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+    }
+
+    .notification-modal .notification-item.highlight {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+
+    .notification-item.flash {
+        animation: flash-notification 1s;
+    }
+
+    @keyframes flash-notification {
+        0% { background-color: #cfe2ff; }
+        100% { background-color: #f8f9fa; }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .dropdown-notifications {
+            width: 300px;
+        }
+    }
+</style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ route('landing') }}">
+        <a class="navbar-brand" href="{{ route('family.dashboard') }}">
             <img src="{{ asset('images/cose-logo.png') }}" alt="System Logo" width="30" class="me-2">
             <span class="text-dark">SulongKalinga</span>
         </a>
@@ -44,7 +245,7 @@
                         </div>
                         
                         <li class="dropdown-footer">
-                            <a href="{{ route('care-worker.messaging.index') }}" class="text-decoration-none text-primary">
+                            <a href="{{ route('family.messaging.index') }}" class="text-decoration-none text-primary">
                                 See all messages
                             </a>
                         </li>
@@ -70,12 +271,12 @@
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ Request::routeIs('care-worker.account.profile.*') ? 'active' : '' }}" href="#" id="highlightsDropdown" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle {{ Request::routeIs('family.profile.*') ? 'active' : '' }}" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown">
                         Account
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
-                            <a class="dropdown-item {{ Request::routeIs('care-worker.account.profile.index') ? 'active' : '' }}" href="{{ route('care-worker.account.profile.index') }}">Account Profile</a>
+                            <a class="dropdown-item {{ Request::routeIs('family.profile.index') ? 'active' : '' }}" href="{{ route('family.profile.index') }}">Account Profile</a>
                         </li>
                         <!-- Keep the existing language toggle -->
                         <li>
@@ -92,7 +293,7 @@
                             </div>
                         </li>
                         <li>
-                            <a class="dropdown-item {{ Request::routeIs('care-worker.account.profile.settings') ? 'active' : '' }}" href="{{ route('care-worker.account.profile.settings') }}">Settings</a>
+                            <a class="dropdown-item {{ Request::routeIs('family.profile.settings') ? 'active' : '' }}" href="{{ route('family.profile.settings') }}">Settings</a>
                         </li>
                         <li>
                             <form action="{{ route('logout') }}" method="POST">

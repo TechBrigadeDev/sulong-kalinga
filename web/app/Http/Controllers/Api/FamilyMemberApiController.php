@@ -42,13 +42,17 @@ class FamilyMemberApiController extends Controller
                     'family_member_id' => $fm->family_member_id,
                     'first_name' => $fm->first_name,
                     'last_name' => $fm->last_name,
+                    'gender' => $fm->gender,
+                    'birth_date' => $fm->birthday,
                     'email' => $fm->email,
-                    'mobile' => $fm->mobile,
+                    'mobile_number' => $fm->mobile,
+                    'landline_number' => $fm->landline,
                     'relation_to_beneficiary' => $fm->relation_to_beneficiary,
                     'is_primary_caregiver' => $fm->is_primary_caregiver,
+                    'address_details' => $fm->street_address,
                     'photo' => $fm->photo,
                     'photo_url' => $fm->photo
-                        ? Storage::disk('spaces-private')->temporaryUrl($fm->photo, now()->addMinutes(30))
+                        ? $this->uploadService->getTemporaryPrivateUrl($fm->photo, 30)
                         : null,
                     'beneficiary' => $fm->beneficiary,
                     // Add other fields as needed for mobile
@@ -60,7 +64,52 @@ class FamilyMemberApiController extends Controller
     // Show a single family member
     public function show($id)
     {
-        $familyMember = FamilyMember::with('beneficiary')->findOrFail($id);
+        $user = request()->user();
+
+        $familyMember = FamilyMember::with(['beneficiary.municipality'])->findOrFail($id);
+
+        // --- Care worker access control (only assigned beneficiaries) ---
+        if ($user && $user->role_id == 3) {
+            $assignedBeneficiaryIds = \App\Models\Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
+                $query->where('care_worker_id', $user->id);
+            })->pluck('beneficiary_id');
+            if (!$assignedBeneficiaryIds->contains($familyMember->related_beneficiary_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to view this family member.'
+                ], 403);
+            }
+        }
+
+        // --- Logging (view action) ---
+        if (class_exists('\App\Services\LogService')) {
+            try {
+                $logService = app(\App\Services\LogService::class);
+                $logService->createLog(
+                    'family_member',
+                    $familyMember->family_member_id,
+                    \App\Enums\LogType::VIEW,
+                    ($user ? $user->first_name . ' ' . $user->last_name : 'Unknown user') . ' viewed family member ' . $familyMember->first_name . ' ' . $familyMember->last_name,
+                    $user ? $user->id : null
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to log family member view: ' . $e->getMessage());
+            }
+        }
+
+        // Compute status based on access (if field exists)
+        $status = null;
+        if (isset($familyMember->access)) {
+            $status = $familyMember->access == 1 ? 'Approved' : 'Denied';
+        }
+
+        // Add municipality info if available
+        $municipality = $familyMember->beneficiary && $familyMember->beneficiary->municipality
+            ? [
+                'municipality_id' => $familyMember->beneficiary->municipality->municipality_id,
+                'municipality_name' => $familyMember->beneficiary->municipality->municipality_name,
+            ]
+            : null;
 
         return response()->json([
             'success' => true,
@@ -68,16 +117,22 @@ class FamilyMemberApiController extends Controller
                 'family_member_id' => $familyMember->family_member_id,
                 'first_name' => $familyMember->first_name,
                 'last_name' => $familyMember->last_name,
+                'gender' => $familyMember->gender,
+                'birth_date' => $familyMember->birthday,
                 'email' => $familyMember->email,
-                'mobile' => $familyMember->mobile,
+                'mobile_number' => $familyMember->mobile,
+                'landline_number' => $familyMember->landline,
                 'relation_to_beneficiary' => $familyMember->relation_to_beneficiary,
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
+                'address_details' => $familyMember->street_address,
                 'photo' => $familyMember->photo,
                 'photo_url' => $familyMember->photo
-                    ? Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    ? $this->uploadService->getTemporaryPrivateUrl($familyMember->photo, 30)
                     : null,
                 'beneficiary' => $familyMember->beneficiary,
-                // Add other fields as needed for mobile
+                'municipality' => $municipality,
+                'access' => $familyMember->access ?? null,
+                'status' => $status,
             ]
         ]);
     }
@@ -92,6 +147,8 @@ class FamilyMemberApiController extends Controller
         $validator = \Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'gender' => 'nullable|string|in:Male,Female,Other',
+            'birth_date' => 'required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
             'email' => [
                 'required', 'email',
                 Rule::unique('family_members', 'email'),
@@ -102,16 +159,15 @@ class FamilyMemberApiController extends Controller
                 'min:8',
                 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
             ],
-            'mobile' => [
+            'mobile_number' => [
                 'required', 'string',
                 Rule::unique('family_members', 'mobile'),
             ],
+            'landline_number' => 'nullable|string',
             'related_beneficiary_id' => 'required|integer|exists:beneficiaries,beneficiary_id',
             'relation_to_beneficiary' => 'required|string|max:50',
             'photo' => 'sometimes|nullable|image|max:2048',
-            'gender' => 'nullable|string|in:Male,Female,Other',
-            'street_address' => 'required|string',
-            'landline' => 'nullable|string',
+            'address_details' => 'required|string',
             'is_primary_caregiver' => 'boolean',
         ]);
 
@@ -132,17 +188,27 @@ class FamilyMemberApiController extends Controller
             }
         }
 
-        $mobile = $request->mobile;
+        $mobile = $request->mobile_number;
         if (preg_match('/^09\d{9}$/', $mobile)) {
             $mobile = preg_replace('/^0/', '+63', $mobile);
         }
-        $request->merge(['mobile' => $mobile]);
 
-        $data = $request->except(['photo', 'password']);
-        $data['mobile'] = $mobile;
-        $data['password'] = bcrypt($request->password);
-        $data['created_by'] = $request->user()->id;
-        $data['updated_by'] = $request->user()->id;
+        $data = [
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'gender' => $request->gender,
+            'birthday' => $request->birth_date,
+            'email' => $request->email,
+            'mobile' => $mobile,
+            'landline' => $request->landline_number,
+            'relation_to_beneficiary' => $request->relation_to_beneficiary,
+            'is_primary_caregiver' => $request->is_primary_caregiver ?? false,
+            'street_address' => $request->address_details,
+            'related_beneficiary_id' => $request->related_beneficiary_id,
+            'password' => bcrypt($request->password),
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
+        ];
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -151,8 +217,9 @@ class FamilyMemberApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/family_member_photos',
-                $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' .
-                $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_photo_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
+                ]
             );
         }
 
@@ -164,16 +231,19 @@ class FamilyMemberApiController extends Controller
                 'family_member_id' => $familyMember->family_member_id,
                 'first_name' => $familyMember->first_name,
                 'last_name' => $familyMember->last_name,
+                'gender' => $familyMember->gender,
+                'birth_date' => $familyMember->birthday,
                 'email' => $familyMember->email,
-                'mobile' => $familyMember->mobile,
+                'mobile_number' => $familyMember->mobile,
+                'landline_number' => $familyMember->landline,
                 'relation_to_beneficiary' => $familyMember->relation_to_beneficiary,
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
+                'address_details' => $familyMember->street_address,
                 'photo' => $familyMember->photo,
                 'photo_url' => $familyMember->photo
-                    ? Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    ? $this->uploadService->getTemporaryPrivateUrl($familyMember->photo, 30)
                     : null,
                 'beneficiary' => $familyMember->beneficiary,
-                // Add other fields as needed for mobile
             ]
         ]);
     }
@@ -190,6 +260,8 @@ class FamilyMemberApiController extends Controller
         $validator = \Validator::make($request->all(), [
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
+            'gender' => 'sometimes|nullable|string|in:Male,Female,Other',
+            'birth_date' => 'sometimes|required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
             'email' => [
                 'sometimes', 'required', 'email',
                 Rule::unique('family_members', 'email')->ignore($familyMember->family_member_id, 'family_member_id'),
@@ -201,17 +273,15 @@ class FamilyMemberApiController extends Controller
                 'min:8',
                 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
             ],
-            'mobile' => [
+            'mobile_number' => [
                 'sometimes', 'required', 'string',
                 Rule::unique('family_members', 'mobile')->ignore($familyMember->family_member_id, 'family_member_id'),
             ],
+            'landline_number' => 'sometimes|nullable|string',
             'related_beneficiary_id' => 'sometimes|required|integer|exists:beneficiaries,beneficiary_id',
             'relation_to_beneficiary' => 'sometimes|required|string|max:50',
             'photo' => 'sometimes|nullable|image|max:2048',
-            'gender' => 'sometimes|nullable|string|in:Male,Female,Other',
-            'birthday' => 'sometimes|required|date|before_or_equal:' . now()->subYears(14)->toDateString(),
-            'street_address' => 'sometimes|required|string',
-            'landline' => 'sometimes|nullable|string',
+            'address_details' => 'sometimes|required|string',
             'is_primary_caregiver' => 'sometimes|boolean',
         ]);
 
@@ -233,16 +303,32 @@ class FamilyMemberApiController extends Controller
             }
         }
 
-        if ($request->has('mobile')) {
-            $mobile = $request->mobile;
+        if ($request->has('mobile_number')) {
+            $mobile = $request->mobile_number;
             if (preg_match('/^09\d{9}$/', $mobile)) {
                 $mobile = preg_replace('/^0/', '+63', $mobile);
             }
-            $request->merge(['mobile' => $mobile]);
+            $request->merge(['mobile_number' => $mobile]);
         }
 
-        $data = $request->except(['photo', 'password']);
-        $data['updated_by'] = $request->user()->id;
+        $data = [
+            'updated_by' => $request->user()->id,
+        ];
+        foreach (['first_name', 'last_name', 'gender', 'birth_date', 'email', 'mobile_number', 'landline_number', 'relation_to_beneficiary', 'is_primary_caregiver', 'address_details', 'related_beneficiary_id'] as $field) {
+            if ($request->has($field)) {
+                if ($field === 'birth_date') {
+                    $data['birthday'] = $request->birth_date;
+                } elseif ($field === 'mobile_number') {
+                    $data['mobile'] = $request->mobile_number;
+                } elseif ($field === 'landline_number') {
+                    $data['landline'] = $request->landline_number;
+                } elseif ($field === 'address_details') {
+                    $data['street_address'] = $request->address_details;
+                } else {
+                    $data[$field] = $request->$field;
+                }
+            }
+        }
 
         // Handle password update
         if ($request->filled('password')) {
@@ -259,8 +345,10 @@ class FamilyMemberApiController extends Controller
                 $request->file('photo'),
                 'spaces-private',
                 'uploads/family_member_photos',
-                $familyMember->first_name . '_' . $familyMember->last_name . '_photo_' . $uniqueIdentifier . '.' .
-                $request->file('photo')->getClientOriginalExtension()
+                [
+                    'filename' => $familyMember->first_name . '_' . $familyMember->last_name . '_photo_' . $uniqueIdentifier . '.' .
+                    $request->file('photo')->getClientOriginalExtension()
+                ]
             );
         }
 
@@ -283,16 +371,19 @@ class FamilyMemberApiController extends Controller
                 'family_member_id' => $familyMember->family_member_id,
                 'first_name' => $familyMember->first_name,
                 'last_name' => $familyMember->last_name,
+                'gender' => $familyMember->gender,
+                'birth_date' => $familyMember->birthday,
                 'email' => $familyMember->email,
-                'mobile' => $familyMember->mobile,
+                'mobile_number' => $familyMember->mobile,
+                'landline_number' => $familyMember->landline,
                 'relation_to_beneficiary' => $familyMember->relation_to_beneficiary,
                 'is_primary_caregiver' => $familyMember->is_primary_caregiver,
+                'address_details' => $familyMember->street_address,
                 'photo' => $familyMember->photo,
                 'photo_url' => $familyMember->photo
-                    ? \Storage::disk('spaces-private')->temporaryUrl($familyMember->photo, now()->addMinutes(30))
+                    ? $this->uploadService->getTemporaryPrivateUrl($familyMember->photo, 30)
                     : null,
                 'beneficiary' => $familyMember->beneficiary,
-                // Add other fields as needed for mobile
             ]
         ]);
     }
@@ -313,6 +404,11 @@ class FamilyMemberApiController extends Controller
                     'delete' => ['Cannot delete: Family member has acknowledged care plans.']
                 ]
             ], 422);
+        }
+
+        // Delete photo from storage
+        if ($familyMember->photo) {
+            $this->uploadService->delete($familyMember->photo, 'spaces-private');
         }
 
         $familyMember->delete();

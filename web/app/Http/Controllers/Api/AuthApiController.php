@@ -3,26 +3,49 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\User; // cose_users table
+use App\Models\Beneficiary;
+use App\Models\FamilyMember;
+use App\Models\UnifiedUser; // users table
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Services\UploadService;
 
 class AuthApiController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     /**
      * Authenticate user and return token
      */
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
-        
+        if (!$request->has('email') && !$request->has('username')) {
+            return response()->json([
+                'message' => 'Either email or username is required.',
+                'errors' => [
+                    'email' => ['The email field is required when username is not present.'],
+                    'username' => ['The username field is required when email is not present.'],
+                ]
+            ], 422);
+        }
+
+        $user = null;
+        if ($request->filled('email')) {
+            $user = UnifiedUser::where('email', $request->email)->first();
+        } elseif ($request->filled('username')) {
+            $user = UnifiedUser::where('username', $request->username)->first();
+        }
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
@@ -30,37 +53,75 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        // Revoke old tokens if needed
-        // $user->tokens()->delete();
-        
+        $user->tokens()->delete();
         $token = $user->createToken('mobile-app')->plainTextToken;
-        
-        if ($user->role_id == 4) {
-            $beneficiary = \App\Models\Beneficiary::where('portal_account_id', $user->portal_account_id)->first();
-            $familyMembers = \App\Models\FamilyMember::where('portal_account_id', $user->portal_account_id)->get();
 
-            return response()->json([
-                'success' => true,
-                'select_user_required' => true,
-                'users' => [
-                    'beneficiary' => $beneficiary,
-                    'family_members' => $familyMembers,
-                ],
-                'token' => $token,
-            ]);
+        // Role mapping
+        $roleNames = [
+            1 => 'admin',
+            2 => 'care_manager',
+            3 => 'care_worker',
+            4 => 'beneficiary',
+            5 => 'family_member',
+        ];
+        $role = $roleNames[$user->role_id] ?? 'unknown';
+
+        // Build uniform response
+        $responseUser = [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'mobile' => $user->mobile,
+            'role' => $role,
+            'status' => $user->status, 
+        ];
+
+        if ($role === 'beneficiary') {
+            $beneficiary = Beneficiary::find($user->beneficiary_id);
+            $photo = $beneficiary?->photo;
+            $responseUser['photo'] = $photo;
+            $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
+            $responseUser['username'] = $user->username;
+            $familyMembers = FamilyMember::where('related_beneficiary_id', $user->beneficiary_id)
+                ->get()
+                ->map(function ($fm) {
+                    return [
+                        'id' => $fm->family_member_id,
+                        'first_name' => $fm->first_name,
+                        'last_name' => $fm->last_name,
+                        'mobile' => $fm->mobile,
+                        'photo' => $fm->photo,
+                        'photo_url' => $fm->photo
+                            ? app(UploadService::class)->getTemporaryPrivateUrl($fm->photo, 30)
+                            : null,
+                    ];
+                })
+                ->values();
+            $responseUser['family_members'] = $familyMembers;
+        } elseif ($role === 'family_member') {
+            $familyMember = FamilyMember::find($user->family_member_id);
+            $photo = $familyMember?->photo;
+            $responseUser['photo'] = $photo;
+            $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
+            $responseUser['email'] = $familyMember?->email;
+            $responseUser['related_beneficiary_id'] = $familyMember?->related_beneficiary_id;
+        } elseif ($role === 'admin') {
+            $admin = User::find($user->cose_user_id);
+            $photo = $admin?->photo;
+            $responseUser['photo'] = $photo;
+            $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
+            $responseUser['email'] = $admin?->email;
+            $responseUser['organization_role_id'] = $admin?->organization_role_id ?? null;
+        } else {
+            // care_manager, care_worker
+            $responseUser['photo'] = $user->photo;
+            $responseUser['photo_url'] = $user->photo ? $this->uploadService->getTemporaryPrivateUrl($user->photo, 30) : null;
+            $responseUser['email'] = $user->email;
         }
 
         return response()->json([
             'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'mobile' => $user->mobile,
-                'role_id' => $user->role_id,
-                'photo' => $user->photo ? asset('storage/' . $user->photo) : null
-            ],
+            'user' => $responseUser,
             'token' => $token,
         ]);
     }
@@ -71,13 +132,13 @@ class AuthApiController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Successfully logged out'
         ]);
     }
-    
+
     /**
      * Get authenticated user details
      */
@@ -85,66 +146,70 @@ class AuthApiController extends Controller
     {
         $user = $request->user();
 
-        // Example: Map role_id to role name
         $roleNames = [
             1 => 'admin',
             2 => 'care_manager',
             3 => 'care_worker',
-            4 => 'portal',
+            4 => 'beneficiary',
+            5 => 'family_member',
         ];
         $role = $roleNames[$user->role_id] ?? 'unknown';
 
-        // If portal user, return selected beneficiary or family member
-        if ($user->role_id == 4) {
-            $type = session('portal_user_type');
-            $id = session('portal_user_id');
-            if ($type === 'beneficiary') {
-                $selected = \App\Models\Beneficiary::find($id);
-            } elseif ($type === 'family_member') {
-                $selected = \App\Models\FamilyMember::find($id);
-            } else {
-                $selected = null;
-            }
-            return response()->json([
-                'success' => true,
-                'user' => [
-                    'id' => $user->id,
-                    'role' => $role,
-                    'selected_type' => $type,
-                    'selected_user' => $selected,
-                    'email' => $user->email,
-                    'status' => $user->status ?? null,
-                ]
-            ]);
-        }
+        $responseUser = [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'mobile' => $user->mobile,
+            'role' => $role,
+            'status' => $user->status, 
+        ];
 
-        // For other users, return unified user data
-        // Retrieve photo from the correct related table
-        $photo = null;
-        if ($user->user_type === 'beneficiary' && $user->beneficiary_id) {
-            $beneficiary = \App\Models\Beneficiary::find($user->beneficiary_id);
+        if ($role === 'beneficiary') {
+            $beneficiary = Beneficiary::find($user->beneficiary_id);
             $photo = $beneficiary?->photo;
-        } elseif ($user->user_type === 'family_member' && $user->family_member_id) {
-            $familyMember = \App\Models\FamilyMember::find($user->family_member_id);
+            $responseUser['photo'] = $photo;
+            $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
+            $responseUser['username'] = $user->username;
+            $familyMembers = FamilyMember::where('related_beneficiary_id', $user->beneficiary_id)
+                ->get()
+                ->map(function ($fm) {
+                    return [
+                        'id' => $fm->family_member_id,
+                        'first_name' => $fm->first_name,
+                        'last_name' => $fm->last_name,
+                        'mobile' => $fm->mobile,
+                        'photo' => $fm->photo,
+                        'photo_url' => $fm->photo
+                            ? app(UploadService::class)->getTemporaryPrivateUrl($fm->photo, 30)
+                            : null,
+                    ];
+                })
+                ->values();
+            $responseUser['family_members'] = $familyMembers;
+        } elseif ($role === 'family_member') {
+            $familyMember = FamilyMember::find($user->family_member_id);
             $photo = $familyMember?->photo;
-        } elseif ($user->user_type === 'cose_user' && $user->cose_user_id) {
-            $coseUser = \App\Models\CoseUser::find($user->cose_user_id);
-            $photo = $coseUser?->photo;
+            $responseUser['photo'] = $photo;
+            $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
+            $responseUser['email'] = $familyMember?->email;
+            $responseUser['related_beneficiary_id'] = $familyMember?->related_beneficiary_id;
+        } elseif ($role === 'admin') {
+            $admin = User::find($user->cose_user_id);
+            $photo = $admin?->photo;
+            $responseUser['photo'] = $photo;
+            $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
+            $responseUser['email'] = $admin?->email;
+            $responseUser['organization_role_id'] = $admin?->organization_role_id ?? null;
+        } else {
+            // care_manager, care_worker
+            $responseUser['photo'] = $user->photo;
+            $responseUser['photo_url'] = $user->photo ? $this->uploadService->getTemporaryPrivateUrl($user->photo, 30) : null;
+            $responseUser['email'] = $user->email;
         }
-        $photo_url = $photo ? \Storage::disk('spaces-private')->temporaryUrl($photo, now()->addMinutes(30)) : null;
 
         return response()->json([
             'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'role' => $role,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'mobile' => $user->mobile,
-                'status' => $user->status ?? null,
-                'photo_url' => $photo_url,
-            ]
+            'user' => $responseUser,
         ]);
     }
 }

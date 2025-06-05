@@ -99,9 +99,14 @@
                                 <label for="educationalBackground" class="form-label">Educational Background</label>
                                 <select class="form-select" id="educationalBackground" name="educational_background">
                                     <option value="" disabled {{ old('educational_background') ? '' : 'selected' }}>Select educational background</option>
-                                    <option value="College" {{ old('educational_background') == 'College' ? 'selected' : '' }}>College</option>
-                                    <option value="Highschool" {{ old('educational_background') == 'Highschool' ? 'selected' : '' }}>High School</option>
-                                    <option value="Doctorate" {{ old('educational_background') == 'Doctorate' ? 'selected' : '' }}>Doctorate</option>
+                                    <option value="Elementary Graduate" {{ old('educational_background') == 'Elementary Graduate' ? 'selected' : '' }}>Elementary Graduate</option>
+                                    <option value="High School Undergraduate" {{ old('educational_background') == 'High School Undergraduate' ? 'selected' : '' }}>High School Undergraduate</option>
+                                    <option value="High School Graduate" {{ old('educational_background') == 'High School Graduate' ? 'selected' : '' }}>High School Graduate</option>
+                                    <option value="Vocational/Technical Course" {{ old('educational_background') == 'Vocational/Technical Course' ? 'selected' : '' }}>Vocational/Technical Course</option>
+                                    <option value="College Undergraduate" {{ old('educational_background') == 'College Undergraduate' ? 'selected' : '' }}>College Undergraduate</option>
+                                    <option value="Bachelor's Degree" {{ old('educational_background') == 'Bachelor\'s Degree' ? 'selected' : '' }}>Bachelor's Degree</option>
+                                    <option value="Master's Degree" {{ old('educational_background') == 'Master\'s Degree' ? 'selected' : '' }}>Master's Degree</option>
+                                     <option value="Doctorate Degree" {{ old('educational_background') == 'Doctorate Degree' ? 'selected' : '' }}>Doctorate Degree</option>
                                 </select>
                             </div>
                         </div>
@@ -251,7 +256,7 @@
                             <div class="col-md-4">
                                 <label for="assigned_care_manager" class="form-label">Assigned Care Manager<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="assigned_care_manager" name="assigned_care_manager" required>
-                                    <option value="" selected>None (Unassigned)</option>
+                                    <option value="" disabled selected>Select care manager</option>
                                     @foreach ($careManagers as $careManager)
                                         <option value="{{ $careManager->id }}" {{ old('assigned_care_manager') == $careManager->id ? 'selected' : '' }}>
                                             {{ $careManager->first_name }} {{ $careManager->last_name }}
@@ -641,6 +646,54 @@
             return true;
         });
     });
+    </script>
+
+    <script>
+        // Fix navbar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Fix dropdowns in navbar
+            const navbarDropdowns = document.querySelectorAll('.navbar .dropdown-toggle');
+            navbarDropdowns.forEach(dropdown => {
+                dropdown.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent other handlers from capturing this
+                });
+            });
+            
+            // 2. Fix navbar links - ensure they can navigate
+            const navbarLinks = document.querySelectorAll('.navbar a:not(.dropdown-toggle)');
+            navbarLinks.forEach(link => {
+                // Remove any existing listeners by cloning and replacing
+                const newLink = link.cloneNode(true);
+                if (link.parentNode) {
+                    link.parentNode.replaceChild(newLink, link);
+                }
+                
+                // Add direct navigation handling
+                newLink.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:')) {
+                        // For normal links, let the browser handle navigation
+                        // Don't prevent default behavior
+                    }
+                });
+            });
+            
+            // 3. Ensure logout form works
+            const logoutForm = document.querySelector('form[action$="/logout"]');
+            if (logoutForm) {
+                const newForm = logoutForm.cloneNode(true);
+                logoutForm.parentNode.replaceChild(newForm, logoutForm);
+                
+                // Ensure the logout button works
+                const logoutButton = newForm.querySelector('button[type="submit"]');
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', function(e) {
+                        // Don't prevent default - let the form submit
+                        newForm.submit();
+                    });
+                }
+            }
+        });
     </script>
 </body>
 </html>

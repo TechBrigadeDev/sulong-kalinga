@@ -44,10 +44,8 @@ class MedicationScheduleApiController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        // Role-based access control (optional, but recommended)
         $user = $request->user();
         if ($user->role_id == 3) { // Care Worker
-            // Only allow creating for assigned beneficiaries
             $assignedBeneficiaryIds = \App\Models\Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
                 $query->where('care_worker_id', $user->id);
             })->pluck('beneficiary_id');
@@ -79,8 +77,8 @@ class MedicationScheduleApiController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'status' => $request->status,
-                'created_by' => $request->user()->id,
-                'updated_by' => $request->user()->id,
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
             ]);
 
             DB::commit();
@@ -93,8 +91,7 @@ class MedicationScheduleApiController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create medication schedule.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to create medication schedule.'
             ], 500);
         }
     }
@@ -111,7 +108,6 @@ class MedicationScheduleApiController extends Controller
             'beneficiary',
         ]);
 
-        // Care Worker: only see their assigned beneficiaries' schedules
         if ($user->role_id == 3) {
             $assignedBeneficiaryIds = \App\Models\Beneficiary::whereHas('generalCarePlan', function($q) use ($user) {
                 $q->where('care_worker_id', $user->id);
@@ -119,7 +115,6 @@ class MedicationScheduleApiController extends Controller
             $query->whereIn('beneficiary_id', $assignedBeneficiaryIds);
         }
 
-        // Filter by search (medication name, dosage, or beneficiary name)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -132,17 +127,14 @@ class MedicationScheduleApiController extends Controller
             });
         }
 
-        // Filter by status
         if ($request->filled('status') && in_array($request->status, ['active', 'completed', 'paused'])) {
             $query->where('status', $request->status);
         }
 
-        // Filter by beneficiary
         if ($request->filled('beneficiary_id')) {
             $query->where('beneficiary_id', $request->beneficiary_id);
         }
 
-        // Filter by period (today, upcoming, past)
         if ($request->filled('period')) {
             $today = now()->toDateString();
             if ($request->period === 'today') {
@@ -159,7 +151,6 @@ class MedicationScheduleApiController extends Controller
 
         $schedules = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // Format health history for each schedule (as in web controller)
         foreach ($schedules as $schedule) {
             if (
                 $schedule->beneficiary &&
@@ -168,7 +159,6 @@ class MedicationScheduleApiController extends Controller
             ) {
                 $healthHistory = $schedule->beneficiary->generalCarePlan->healthHistory;
 
-                // Format conditions
                 if ($healthHistory->medical_conditions) {
                     $conditions = json_decode($healthHistory->medical_conditions, true);
                     $healthHistory->formatted_conditions = is_array($conditions)
@@ -176,7 +166,6 @@ class MedicationScheduleApiController extends Controller
                         : $healthHistory->medical_conditions;
                 }
 
-                // Format immunizations
                 if ($healthHistory->immunizations) {
                     $immunizations = json_decode($healthHistory->immunizations, true);
                     $healthHistory->formatted_immunizations = is_array($immunizations)
@@ -184,7 +173,6 @@ class MedicationScheduleApiController extends Controller
                         : $healthHistory->immunizations;
                 }
 
-                // Format allergies
                 if ($healthHistory->allergies) {
                     $allergies = json_decode($healthHistory->allergies, true);
                     $healthHistory->formatted_allergies = is_array($allergies)
@@ -217,7 +205,6 @@ class MedicationScheduleApiController extends Controller
             ], 404);
         }
 
-        // Format health history as in index
         if (
             $schedule->beneficiary &&
             $schedule->beneficiary->generalCarePlan &&
@@ -294,7 +281,6 @@ class MedicationScheduleApiController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        // Role-based access control (optional, but recommended)
         $user = $request->user();
         if ($user->role_id == 3) { // Care Worker
             $assignedBeneficiaryIds = \App\Models\Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
@@ -308,28 +294,32 @@ class MedicationScheduleApiController extends Controller
             }
         }
 
+        // Change detection: block update if no changes
+        $input = $request->only([
+            'beneficiary_id', 'medication_name', 'dosage', 'medication_type',
+            'morning_time', 'noon_time', 'evening_time', 'night_time', 'as_needed',
+            'with_food_morning', 'with_food_noon', 'with_food_evening', 'with_food_night',
+            'special_instructions', 'start_date', 'end_date', 'status'
+        ]);
+        $hasChanges = false;
+        foreach ($input as $key => $value) {
+            if ($schedule->$key != $value) {
+                $hasChanges = true;
+                break;
+            }
+        }
+        if (!$hasChanges) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No changes detected.'
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
-            $schedule->update([
-                'beneficiary_id' => $request->beneficiary_id,
-                'medication_name' => $request->medication_name,
-                'dosage' => $request->dosage,
-                'medication_type' => $request->medication_type,
-                'morning_time' => $request->morning_time,
-                'noon_time' => $request->noon_time,
-                'evening_time' => $request->evening_time,
-                'night_time' => $request->night_time,
-                'as_needed' => $request->as_needed ?? false,
-                'with_food_morning' => $request->with_food_morning ?? false,
-                'with_food_noon' => $request->with_food_noon ?? false,
-                'with_food_evening' => $request->with_food_evening ?? false,
-                'with_food_night' => $request->with_food_night ?? false,
-                'special_instructions' => $request->special_instructions,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'status' => $request->status,
+            $schedule->update(array_merge($input, [
                 'updated_by' => $user->id,
-            ]);
+            ]));
 
             DB::commit();
 
@@ -341,14 +331,14 @@ class MedicationScheduleApiController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update medication schedule.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to update medication schedule.'
             ], 500);
         }
     }
 
     /**
      * Remove the specified medication schedule.
+     * Requires password and reason for audit.
      */
     public function destroy(Request $request, $id)
     {
@@ -361,8 +351,22 @@ class MedicationScheduleApiController extends Controller
             ], 404);
         }
 
-        // Role-based access control (optional, but recommended)
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string',
+            'reason' => 'required|string|max:255',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
         $user = $request->user();
+        if (!\Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect password.'
+            ], 403);
+        }
+
         if ($user->role_id == 3) { // Care Worker
             $assignedBeneficiaryIds = \App\Models\Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
                 $query->where('care_worker_id', $user->id);
@@ -377,6 +381,13 @@ class MedicationScheduleApiController extends Controller
 
         DB::beginTransaction();
         try {
+            // Optionally, log the reason and user for audit (implement as needed)
+            // MedicationScheduleDeleteLog::create([
+            //     'medication_schedule_id' => $schedule->medication_schedule_id,
+            //     'deleted_by' => $user->id,
+            //     'reason' => $request->reason,
+            // ]);
+
             $schedule->delete();
             DB::commit();
 
@@ -388,8 +399,7 @@ class MedicationScheduleApiController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete medication schedule.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to delete medication schedule.'
             ], 500);
         }
     }

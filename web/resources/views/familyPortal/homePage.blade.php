@@ -48,7 +48,11 @@
                     <div class="alert-banner">
                         <span class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
                         <div class="alert-content">
-                            <strong>Upcoming Visit:</strong> Care worker scheduled for {{ \Carbon\Carbon::now()->addDays(2)->format('F d, Y') }} at 2:00 PM
+                            @if ($nextVisit)
+                                <strong>Upcoming Visit:</strong> Care worker {{ $nextVisit['care_worker'] }} scheduled for {{ $nextVisit['date'] }} at {{ $nextVisit['time'] }}
+                            @else
+                                <strong>No upcoming visits</strong> currently scheduled.
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -64,7 +68,17 @@
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                Next visit scheduled for {{ \Carbon\Carbon::now()->addDays(2)->format('F d, Y') }} at 2:00 PM
+                                @if ($nextVisit)
+                                    Next visit scheduled for {{ $nextVisit['date'] }} at {{ $nextVisit['time'] }}
+                                    <div class="mt-1 text-muted">
+                                        <small>Care Worker: {{ $nextVisit['care_worker'] }}</small>
+                                    </div>
+                                    <div class="mt-1 text-muted">
+                                        <small>Visit Type: {{ $nextVisit['visit_type'] }}</small>
+                                    </div>
+                                @else
+                                    No upcoming visits scheduled at this time.
+                                @endif
                             </div>
                         </div>
                         <div class="card-footer">
@@ -75,7 +89,122 @@
                         </div>
                     </div>
                     
-                    <!-- Rest of the cards remain the same -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="bi bi-capsule-pill me-2"></i>
+                                Medications
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">
+                                @if ($nextMedication)
+                                    <div>
+                                        Next medication: {{ $nextMedication['name'] }} at {{ $nextMedication['time'] }} 
+                                        @if($nextMedication['day'] == 'tomorrow')
+                                            tomorrow
+                                        @endif
+                                    </div>
+                                    <div class="mt-1 text-muted">
+                                        <small>Dosage: {{ $nextMedication['dosage'] }}</small>
+                                    </div>
+                                    @if($nextMedication['with_food'])
+                                    <div class="mt-1 text-muted">
+                                        <small><i class="bi bi-egg-fried"></i> Take with food</small>
+                                    </div>
+                                    @endif
+                                @else
+                                    No upcoming medications scheduled at this time.
+                                @endif
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ route('family.medication.schedule.index') }}" class="card-link">
+                                <span>View All Medications</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card emergency-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="bi bi-exclamation-octagon me-2"></i>
+                                Emergency Contact
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">
+                                In case of emergency, you may send an emergency notice to COSE here
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ route('family.emergency.service.index') }}" class="card-link">
+                                <span>Emergency Notice</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="bi bi-chat-dots me-2"></i>
+                                Messages
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">
+                                You have 2 unread messages from your care worker
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ route('family.messaging.index') }}" class="card-link">
+                                <span>View Messages</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="bi bi-clipboard2-check me-2"></i>
+                                My Care Plan
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">
+                                View your personalized care plan and weekly goals
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ route('family.care.plan.index') }}" class="card-link">
+                                <span>View Care Plan</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="bi bi-person-circle me-2"></i>
+                                My Profile
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">
+                                Update your personal information and preferences
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ route('family.profile.index') }}" class="card-link">
+                                <span>View Profile</span>
+                                <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

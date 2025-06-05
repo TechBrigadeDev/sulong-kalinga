@@ -53,21 +53,53 @@ class AdminApiController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        $admin = UnifiedUser::where('role_id', 1)->findOrFail($id);
+        $admin = \App\Models\User::where('role_id', 1)->findOrFail($id);
+
+        // Get role name from organization_roles table
+        $roleName = null;
+        if ($admin->organization_role_id) {
+            $role = \DB::table('organization_roles')->where('organization_role_id', $admin->organization_role_id)->first();
+            $roleName = $role ? $role->role_name : null;
+        }
+
         return response()->json([
             'success' => true,
             'admin' => [
                 'id' => $admin->id,
                 'first_name' => $admin->first_name,
                 'last_name' => $admin->last_name,
-                'email' => $admin->email,
-                'personal_email' => $admin->personal_email,
-                'mobile' => $admin->mobile,
                 'photo' => $admin->photo,
                 'photo_url' => $admin->photo
                     ? Storage::disk('spaces-private')->temporaryUrl($admin->photo, now()->addMinutes(30))
                     : null,
-                // Add other fields as needed
+                'role_name' => $roleName,
+                'status' => $admin->status,
+                'volunteer_status' => $admin->volunteer_status,
+                'status_start_date' => $admin->status_start_date,
+                'status_end_date' => $admin->status_end_date ?? null,
+                'created_at' => $admin->created_at,
+                'educational_background' => $admin->educational_background,
+                'birthday' => $admin->birthday,
+                'gender' => $admin->gender,
+                'civil_status' => $admin->civil_status,
+                'religion' => $admin->religion,
+                'nationality' => $admin->nationality,
+                'email' => $admin->email,
+                'personal_email' => $admin->personal_email,
+                'mobile_number' => $admin->mobile,
+                'landline_number' => $admin->landline,
+                'current_address' => $admin->address,
+                'government_issued_id' => $admin->government_issued_id,
+                'government_issued_id_url' => $admin->government_issued_id
+                    ? Storage::disk('spaces-private')->temporaryUrl($admin->government_issued_id, now()->addMinutes(30))
+                    : null,
+                'cv_resume' => $admin->cv_resume,
+                'cv_resume_url' => $admin->cv_resume
+                    ? Storage::disk('spaces-private')->temporaryUrl($admin->cv_resume, now()->addMinutes(30))
+                    : null,
+                'sss_id_number' => $admin->sss_id_number,
+                'philhealth_id_number' => $admin->philhealth_id_number,
+                'pagibig_id_number' => $admin->pagibig_id_number,
             ]
         ]);
     }

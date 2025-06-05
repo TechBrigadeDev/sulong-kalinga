@@ -25,7 +25,7 @@ class ExpenseFactory extends Factory
             'category_id' => $this->faker->randomElement($categoryIds),
             'amount' => $this->faker->randomFloat(2, 100, 10000),
             'payment_method' => $this->faker->randomElement(['cash', 'check', 'bank_transfer', 'gcash']),
-            'date' => $this->faker->dateTimeBetween('-6 months', 'now')->format('Y-m-d'),
+            'date' => $this->faker->dateTimeBetween('2024-09-01', '2025-07-31')->format('Y-m-d'),
             'receipt_number' => strtoupper($this->faker->randomElement(['INV-', 'OR-', 'RCT-'])) . $this->faker->numberBetween(10000, 99999),
             'description' => $this->faker->paragraph(1),
             'receipt_path' => null, // No actual file upload in seeding

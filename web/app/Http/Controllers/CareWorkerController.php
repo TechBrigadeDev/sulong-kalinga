@@ -194,7 +194,7 @@ class CareWorkerController extends Controller
                 'max:50',
                 'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
             ],
-            'educational_background' => 'nullable|string|in:College,Highschool,Doctorate',
+            'educational_background' => 'nullable|string|in:Elementary Graduate,High School Undergraduate,High School Graduate,Vocational/Technical Course,College Undergraduate,Bachelor\'s Degree,Master\'s Degree,Doctorate Degree',
         
             // Address
             'address_details' => [
@@ -480,7 +480,7 @@ class CareWorkerController extends Controller
                 'max:50',
                 'regex:/^[A-Z][a-zA-Z]{1,}(?:-[a-zA-Z]{1,})?(?: [a-zA-Z]{2,}(?:-[a-zA-Z]{1,})?)*$/'
             ],
-            'educational_background' => 'nullable|string|in:College,Highschool,Doctorate', // Must match dropdown options
+            'educational_background' => 'nullable|string|in:Elementary Graduate,High School Undergraduate,High School Graduate,Vocational/Technical Course,College Undergraduate,Bachelor\'s Degree,Master\'s Degree,Doctorate Degree', // Must match dropdown options
         
             // Address
             'address_details' => [

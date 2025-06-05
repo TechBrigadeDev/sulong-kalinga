@@ -273,6 +273,99 @@
                             </div>
                         </div>
                     </div>
+
+                    <hr class="my-4">
+
+                    @if($weeklyCareplan->acknowledged_by_beneficiary || $weeklyCareplan->acknowledged_by_family || $weeklyCareplan->acknowledgement_signature)
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">Acknowledgement Details</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            @if($weeklyCareplan->acknowledged_by_beneficiary && $weeklyCareplan->acknowledgedByBeneficiary)
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Acknowledged By:</strong></p>
+                                                    <p>{{ $weeklyCareplan->acknowledgedByBeneficiary->first_name }} {{ $weeklyCareplan->acknowledgedByBeneficiary->last_name }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Role:</strong></p>
+                                                    <p>Beneficiary</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Date:</strong></p>
+                                                    <p>{{ \Carbon\Carbon::parse($weeklyCareplan->beneficiary_acknowledged_at)->format('M d, Y g:i A') }}</p>
+                                                </div>
+                                            @elseif($weeklyCareplan->acknowledged_by_family && $weeklyCareplan->acknowledgedByFamily)
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Acknowledged By:</strong></p>
+                                                    <p>{{ $weeklyCareplan->acknowledgedByFamily->first_name }} {{ $weeklyCareplan->acknowledgedByFamily->last_name }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Role:</strong></p>
+                                                    <p>Family Member</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Date:</strong></p>
+                                                    <p>{{ \Carbon\Carbon::parse($weeklyCareplan->family_acknowledged_at)->format('M d, Y g:i A') }}</p>
+                                                </div>
+                                            @elseif($weeklyCareplan->acknowledgement_signature)
+                                                @php
+                                                    $signatureData = json_decode($weeklyCareplan->acknowledgement_signature, true);
+                                                @endphp
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Acknowledged By:</strong></p>
+                                                    <p>{{ $signatureData['name'] ?? 'Unknown' }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Role:</strong></p>
+                                                    <p>{{ $signatureData['acknowledged_by'] ?? 'Unknown' }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <p class="mb-1"><strong>Date:</strong></p>
+                                                    <p>{{ isset($signatureData['date']) ? \Carbon\Carbon::parse($signatureData['date'])->format('M d, Y g:i A') : 'Unknown' }}</p>
+                                                </div>
+                                                
+                                                @if(isset($signatureData['signature']))
+                                                    <div class="col-12 mt-3">
+                                                        <p class="mb-1"><strong>Signature:</strong></p>
+                                                        <div class="border p-3">
+                                                            <img src="{{ $signatureData['signature'] }}" alt="Signature" class="img-fluid" style="max-height: 100px;">
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                            
+                                            <div class="col-12 mt-3">
+                                                <p class="mb-1"><strong>Acknowledgement Statement:</strong></p>
+                                                <p class="fst-italic">
+                                                    "By acknowledging this care plan, the person named above confirms they have thoroughly reviewed
+                                                    all of the information in this care plan, understand the assessment, care needs, and interventions
+                                                    outlined for the beneficiary, and agree with the care plan as documented."
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-warning text-white">
+                                        <h5 class="mb-0">Acknowledgement Pending</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>This care plan has not been acknowledged yet by the beneficiary or family member.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    
                 </div>
             </div>
         </div>

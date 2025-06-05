@@ -7,7 +7,7 @@
     <title>Beneficiary Portal - Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/beneficiaryPortalDashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body>
@@ -41,14 +41,18 @@
                 <div class="banner-grid">
                     <div class="welcome-banner">
                         <h1 class="welcome-title">Welcome, {{ Auth::guard('beneficiary')->user()->first_name }}!</h1>
-                        <p class="welcome-subtitle">Your care worker is monitoring your progress</p>
+                        <p class="welcome-subtitle">We are passionate about giving you the best care possible.</p>
                         <p>Last care worker visit: <span class="fw-bold">{{ \Carbon\Carbon::now()->subDays(3)->format('F d, Y') }}</span></p>
                     </div>
                     
                     <div class="alert-banner">
                         <span class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
                         <div class="alert-content">
-                            <strong>Upcoming Visit:</strong> Care worker scheduled for {{ \Carbon\Carbon::now()->addDays(2)->format('F d, Y') }} at 2:00 PM
+                            @if ($nextVisit)
+                                <strong>Upcoming Visit:</strong> Care worker {{ $nextVisit['care_worker'] }} scheduled for {{ $nextVisit['date'] }} at {{ $nextVisit['time'] }}
+                            @else
+                                <strong>No upcoming visits</strong> currently scheduled.
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -64,11 +68,21 @@
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                Next visit scheduled for {{ \Carbon\Carbon::now()->addDays(2)->format('F d, Y') }} at 2:00 PM
+                                @if ($nextVisit)
+                                    Next visit scheduled for {{ $nextVisit['date'] }} at {{ $nextVisit['time'] }}
+                                    <div class="mt-1 text-muted">
+                                        <small>Care Worker: {{ $nextVisit['care_worker'] }}</small>
+                                    </div>
+                                    <div class="mt-1 text-muted">
+                                        <small>Visit Type: {{ $nextVisit['visit_type'] }}</small>
+                                    </div>
+                                @else
+                                    No upcoming visits scheduled at this time.
+                                @endif
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.schedule.index') }}" class="card-link">
+                            <a href="{{ route('beneficiary.visitation.schedule.index') }}" class="card-link">
                                 <span>View Full Schedule</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>
@@ -84,11 +98,28 @@
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                Next medication: Blood pressure medicine at 8:00 PM today
+                                @if ($nextMedication)
+                                    <div>
+                                        Next medication: {{ $nextMedication['name'] }} at {{ $nextMedication['time'] }} 
+                                        @if($nextMedication['day'] == 'tomorrow')
+                                            tomorrow
+                                        @endif
+                                    </div>
+                                    <div class="mt-1 text-muted">
+                                        <small>Dosage: {{ $nextMedication['dosage'] }}</small>
+                                    </div>
+                                    @if($nextMedication['with_food'])
+                                    <div class="mt-1 text-muted">
+                                        <small><i class="bi bi-egg-fried"></i> Take with food</small>
+                                    </div>
+                                    @endif
+                                @else
+                                    No upcoming medications scheduled at this time.
+                                @endif
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.schedule.index') }}" class="card-link">
+                            <a href="{{ route('beneficiary.medication.schedule.index') }}" class="card-link">
                                 <span>View All Medications</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>
@@ -104,12 +135,12 @@
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                In case of emergency, contact your care worker or emergency services
+                                In case of emergency, you may send an emergency notice to COSE here
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.emergency.index') }}" class="card-link">
-                                <span>Emergency Information</span>
+                            <a href="{{ route('beneficiary.emergency.service.index') }}" class="card-link">
+                                <span>Emergency Notice</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>
                         </div>
@@ -128,7 +159,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ route('beneficiary.messages.index') }}" class="card-link">
+                            <a href="{{ route('beneficiary.messaging.index') }}" class="card-link">
                                 <span>View Messages</span>
                                 <i class="bi bi-chevron-right ms-2"></i>
                             </a>

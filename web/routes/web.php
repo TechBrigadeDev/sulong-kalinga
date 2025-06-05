@@ -21,6 +21,19 @@ Route::get('/forgot-password', function () {
     return view('forgot-password');
 })->name('forgotPass');
 
+// Session Checking for Family and Beneficiary
+Route::get('/session-check', function () {
+    return response()->json([
+        'authenticated' => Auth::check() || Auth::guard('beneficiary')->check() || Auth::guard('family')->check(),
+        'beneficiary_auth' => Auth::guard('beneficiary')->check(),
+        'beneficiary_id' => Auth::guard('beneficiary')->check() ? Auth::guard('beneficiary')->id() : null,
+        'family_auth' => Auth::guard('family')->check(),
+        'family_id' => Auth::guard('family')->check() ? Auth::guard('family')->id() : null,
+        'session_id' => session()->getId(),
+        'csrf' => csrf_token()
+    ]);
+});
+
 // Dashboard routes by role (for staff users)
 Route::get('/admin/dashboard', function () {
     if (auth()->user()?->role_id == 1) {  // Allow ALL users with role_id=1

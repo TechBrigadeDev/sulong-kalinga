@@ -99,9 +99,14 @@
                                 <label for="educationalBackground" class="form-label">Educational Background</label>
                                 <select class="form-select" id="educationalBackground" name="educational_background">
                                     <option value="" disabled {{ old('educational_background') ? '' : 'selected' }}>Select educational background</option>
-                                    <option value="College" {{ old('educational_background') == 'College' ? 'selected' : '' }}>College</option>
-                                    <option value="Highschool" {{ old('educational_background') == 'Highschool' ? 'selected' : '' }}>High School</option>
-                                    <option value="Doctorate" {{ old('educational_background') == 'Doctorate' ? 'selected' : '' }}>Doctorate</option>
+                                    <option value="Elementary Graduate" {{ old('educational_background') == 'Elementary Graduate' ? 'selected' : '' }}>Elementary Graduate</option>
+                                    <option value="High School Undergraduate" {{ old('educational_background') == 'High School Undergraduate' ? 'selected' : '' }}>High School Undergraduate</option>
+                                    <option value="High School Graduate" {{ old('educational_background') == 'High School Graduate' ? 'selected' : '' }}>High School Graduate</option>
+                                    <option value="Vocational/Technical Course" {{ old('educational_background') == 'Vocational/Technical Course' ? 'selected' : '' }}>Vocational/Technical Course</option>
+                                    <option value="College Undergraduate" {{ old('educational_background') == 'College Undergraduate' ? 'selected' : '' }}>College Undergraduate</option>
+                                    <option value="Bachelor's Degree" {{ old('educational_background') == 'Bachelor\'s Degree' ? 'selected' : '' }}>Bachelor's Degree</option>
+                                    <option value="Master's Degree" {{ old('educational_background') == 'Master\'s Degree' ? 'selected' : '' }}>Master's Degree</option>
+                                     <option value="Doctorate Degree" {{ old('educational_background') == 'Doctorate Degree' ? 'selected' : '' }}>Doctorate Degree</option>
                                 </select>
                             </div>
                         </div>
@@ -372,7 +377,7 @@
     });
     </script>
     <script>
-    document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form[action="{{ route("admin.administrators.store") }}"]').addEventListener('submit', function (e) {
         // Always prevent the default form submission first
         e.preventDefault();
         

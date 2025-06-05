@@ -1259,9 +1259,9 @@
             // Determine if this is an edit or create operation
             const isEdit = currentBudgetId !== null;
             const url = isEdit 
-                ? "/admin/expense-tracker/update-budget/" + currentBudgetId
+                ? "/admin/expense-tracker/update-budget/" + currentBudgetId // Keep URL the same
                 : "/admin/expense-tracker/store-budget";
-            const method = isEdit ? 'PUT' : 'POST';
+            const method = isEdit ? 'POST' : 'POST'; // Change PUT to POST
             
             // Send the request
             $.ajax({

@@ -7,13 +7,13 @@
   </div>
   
   <ul class="nav-links">
-    <li class="{{ Request::is('family/homePage') ? 'active' : '' }}">
-      <a href="{{ route('familyPortalHomePage') }}">
+    <li class="{{ Request::is('family.dashboard') ? 'active' : '' }}">
+      <a href="{{ route('family.dashboard') }}">
         <i class="bi bi-house-door"></i>
         <span class="link_name">Home</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('familyPortalHomePage') }}">Home</a></li>
+        <li><a class="link_name" href="{{ route('family.dashboard') }}">Home</a></li>
       </ul>
     </li>
 
@@ -54,16 +54,6 @@
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('family.care.plan.index') }}">Care Plan</a></li>
-      </ul>
-    </li>
-
-    <li class="{{ Request::routeIs('family.member.*') ? 'active' : '' }}">
-      <a href="{{ route('family.member.index') }}">
-        <i class="bi bi-people-fill"></i>
-        <span class="link_name">Family Members</span>
-      </a>
-      <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('family.member.index') }}">Family Members</a></li>
       </ul>
     </li>
 
