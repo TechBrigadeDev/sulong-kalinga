@@ -403,7 +403,7 @@
             const alertDiv = $('#emergencyAlert');
             
             $.ajax({
-                url: '{{ route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.submit-emergency" : "family.emergency.service.submit-emergency") }}',
+                url: '{{ secure_url(route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.submit-emergency" : "family.emergency.service.submit-emergency", [], false)) }}',
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -451,7 +451,7 @@
             const alertDiv = $('#serviceRequestAlert');
             
             $.ajax({
-                url: '{{ route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.submit-service" : "family.emergency.service.submit-service") }}',
+                url: '{{ secure_url(route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.submit-service" : "family.emergency.service.submit-service", [], false)) }}',
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -518,7 +518,7 @@
             const requestType = $('#cancelRequestType').val();
             
             $.ajax({
-                url: '{{ route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.cancel" : "family.emergency.service.cancel") }}',
+                url: '{{ secure_url(route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.cancel" : "family.emergency.service.cancel", [], false)) }}',
                 type: 'POST',
                 data: {
                     request_id: requestId,
@@ -576,7 +576,7 @@
         // Function to refresh active requests
         function refreshActiveRequests() {
             $.ajax({
-                url: '{{ route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.active" : "family.emergency.service.active") }}',
+                url: '{{ secure_url(route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.active" : "family.emergency.service.active", [], false)) }}',
                 type: 'GET',
                 success: function(response) {
                     // Build the new table content
@@ -681,7 +681,7 @@
             $('#historyContainer').html('<div class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading history...</p></div>');
             
             $.ajax({
-                url: '{{ route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.history" : "family.emergency.service.history") }}',
+                url: '{{ secure_url(route(Auth::guard("beneficiary")->check() ? "beneficiary.emergency.service.history" : "family.emergency.service.history", [], false)) }}',
                 type: 'POST',
                 data: {
                     include_emergency: includeEmergency ? 1 : 0,

@@ -308,7 +308,7 @@
             
             // Test authentication immediately
             $.ajax({
-                url: '{{ url("/session-check") }}',
+                url: '{{ secure_url("/session-check") }}',
                 method: 'GET',
                 success: function(response) {
                     console.log('Session check successful:', response);
@@ -577,7 +577,7 @@
                             if (xhr.status === 401) {
                                 // Try to verify session first
                                 $.ajax({
-                                    url: "{{ url('/session-check') }}",
+                                    url: "{{ secure_url('/session-check') }}",
                                     method: 'GET',
                                     success: function(response) {
                                         console.log("Session check result:", response);
@@ -608,7 +608,7 @@
                     
                     // Fetch detailed information about this occurrence
                     $.ajax({
-                        url: `{{ url('family/visitation-schedule/details') }}/${occurrenceId}`,
+                        url: `{{ route('family.visitation.schedule.details', '') }}/${occurrenceId}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.success) {
