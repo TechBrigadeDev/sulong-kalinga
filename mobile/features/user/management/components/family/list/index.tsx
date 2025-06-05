@@ -1,9 +1,10 @@
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { useGetFamilyMembers } from "features/user/management/management.hook";
 import { IFamilyMember } from "features/user/management/management.type";
 import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
+
+import FlatList from "~/components/FlatList";
 
 import { familyListStore } from "./store";
 
@@ -27,27 +28,27 @@ const FamilyList = () => {
     }
 
     return (
-        <FlashList
+        <FlatList
             data={data}
-            renderItem={FamilyMemberCard}
-            contentContainerStyle={{ 
-                padding: 8,
-                paddingBottom: 100,
-            }}
+            renderItem={({ item }) => <FamilyMemberCard item={item} />}
+            contentContainerStyle={{ paddingBottom: 120 }}
             refreshControl={
                 <RefreshControl
                     refreshing={isLoading}
                     onRefresh={refetch}
                 />
             }
-            estimatedItemSize={100}
         />
     )
 }
 
-const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
+interface FamilyMemberCardProps {
+    item: IFamilyMember;
+}
+
+const FamilyMemberCard = ({
     item
-}) => { 
+}: FamilyMemberCardProps) => { 
     const router = useRouter();
 
     const {
@@ -67,22 +68,24 @@ const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
 
     return (
         <Card 
-            theme="light_white" 
+            theme="light"
             marginBottom="$2"
-            marginHorizontal="$2"
-            elevate
-            shadowOpacity={0.1}
-            bordered
-            padding="$3">
+            padding="$3"
+            bg="#F8F9FA"
+            borderRadius={8}
+            borderColor="#E9ECEF"
+            borderWidth={1}
+        >
             <View>
-                <Text fontSize="$6" fontWeight="500">{first_name} {last_name}</Text>
+                <Text fontSize="$6" fontWeight="500" color="#495057">{first_name} {last_name}</Text>
                 <Text fontSize="$4" color="gray">{relation_to_beneficiary}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <Button
                     size="$3"
-                    theme="light"
-                    borderColor="gray"
+                    bg="#E9ECEF"
+                    color="#495057"
+                    borderColor="#DEE2E6"
                     onPress={onView}
                     variant="outlined"
                 >
@@ -90,8 +93,9 @@ const FamilyMemberCard: ListRenderItem<IFamilyMember> = ({
                 </Button>
                 <Button
                     size="$3"
-                    theme="light"
-                    borderColor="gray"
+                    bg="#E9ECEF"
+                    color="#495057"
+                    borderColor="#DEE2E6"
                     onPress={onEdit}
                     variant="outlined"
                 >

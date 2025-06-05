@@ -1,12 +1,11 @@
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { careManagerListStore } from "features/user/management/components/care-managers/list/store";
 import { ICareWorker } from "features/user/management/management.type";
 import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
 
+import FlatList from "~/components/FlatList";
 import { useGetCareWorkers } from "~/features/user/management/management.hook";
-
 
 const CareWorkerList = () => {
     const {
@@ -23,25 +22,27 @@ const CareWorkerList = () => {
 
 
     if (data.length === 0 && !isLoading) {
-      return <Text>No family members found</Text>;
+      return <Text>No care workers found</Text>;
     }
 
     return (
-      <FlashList
+      <FlatList
         data={data}
-        renderItem={CareWorkerCard}
-        contentContainerStyle={{ padding: 8 }}
+        renderItem={({ item }) => <CareWorkerCard item={item} />}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} />
         }
-        estimatedItemSize={100}
-        keyExtractor={(item) => item.id.toString()}
       />
     );
 }
 
 
-const CareWorkerCard: ListRenderItem<ICareWorker> = ({ item }) => {
+interface CareWorkerCardProps {
+  item: ICareWorker;
+}
+
+const CareWorkerCard = ({ item }: CareWorkerCardProps) => {
   const router = useRouter();
 
   const { id, first_name, last_name } =
@@ -59,23 +60,25 @@ const CareWorkerCard: ListRenderItem<ICareWorker> = ({ item }) => {
 
   return (
     <Card
-      theme="light_white"
+      theme="light"
       marginBottom="$2"
-      marginHorizontal="$2"
-      elevate
-      bordered
       padding="$3"
+      bg="#F8F9FA"
+      borderRadius={8}
+      borderColor="#E9ECEF"
+      borderWidth={1}
     >
       <View>
-        <Text fontSize="$6" fontWeight="500">
+        <Text fontSize="$6" fontWeight="500" color="#495057">
           {first_name} {last_name}
         </Text>
       </View>
       <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
         <Button
           size="$3"
-          theme="light"
-          borderColor="gray"
+          bg="#E9ECEF"
+          color="#495057"
+          borderColor="#DEE2E6"
           onPress={onView}
           variant="outlined"
         >
@@ -83,8 +86,9 @@ const CareWorkerCard: ListRenderItem<ICareWorker> = ({ item }) => {
         </Button>
         <Button
           size="$3"
-          theme="light"
-          borderColor="gray"
+          bg="#E9ECEF"
+          color="#495057"
+          borderColor="#DEE2E6"
           onPress={onEdit}
           variant="outlined"
         >

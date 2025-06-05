@@ -1,13 +1,9 @@
 import { useRouter } from "expo-router";
 import { useGetBeneficiaries } from "features/user/management/management.hook";
-import {
-  FlatList,
-  ListRenderItem,
-  RefreshControl,
-  StyleSheet,
-} from "react-native";
+import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
 
+import FlatList from "~/components/FlatList";
 import { IBeneficiary } from "~/features/user/management/management.type";
 
 import { beneficiaryListStore } from "./store";
@@ -32,27 +28,25 @@ const BeneficiaryList = () => {
   }
 
   return (
-    <FlatList
-      data={data}
-      renderItem={BeneficiaryCard}
-      contentContainerStyle={listStyle.container}
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-      }
-    />
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={data}
+        renderItem={({ item }) => <BeneficiaryCard item={item} />}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refetch} />
+        }
+      />
+    </View>
   );
 };
 
-const listStyle = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingBottom: 50
-  },
-});
+interface BeneficiaryCardProps {
+  item: IBeneficiary;
+}
 
-const BeneficiaryCard: ListRenderItem<IBeneficiary> = ({ item }) => {
+const BeneficiaryCard = ({ item }: BeneficiaryCardProps) => {
   const router = useRouter();
-
   const { beneficiary_id, first_name, last_name } = item;
 
   const onView = () => {
@@ -67,17 +61,21 @@ const BeneficiaryCard: ListRenderItem<IBeneficiary> = ({ item }) => {
     <Card
       theme="light"
       marginBottom="$2"
-      bordered
       padding="$3"
+      bg="#F8F9FA"
+      borderRadius={8}
+      borderColor="#E9ECEF"
+      borderWidth={1}
     >
-      <Text fontSize="$6" fontWeight="500">
+      <Text fontSize="$6" fontWeight="500" color="#495057">
         {first_name} {last_name}
       </Text>
       <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
         <Button
           size="$3"
-          theme="light"
-          borderColor="gray"
+          bg="#E9ECEF"
+          color="#495057"
+          borderColor="#DEE2E6"
           onPress={onView}
           variant="outlined"
         >
@@ -85,8 +83,9 @@ const BeneficiaryCard: ListRenderItem<IBeneficiary> = ({ item }) => {
         </Button>
         <Button
           size="$3"
-          theme="light"
-          borderColor="gray"
+          bg="#E9ECEF"
+          color="#495057"
+          borderColor="#DEE2E6"
           onPress={onEdit}
           variant="outlined"
         >

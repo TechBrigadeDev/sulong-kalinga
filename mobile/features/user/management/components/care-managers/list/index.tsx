@@ -1,10 +1,12 @@
-import { useGetCareManagers, useGetCareWorkers } from "~/features/user/management/management.hook";
-import { FlatList, ListRenderItem, RefreshControl, SafeAreaView } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
 import { useRouter } from "expo-router";
-import { careManagerListStore } from "./store";
+import { RefreshControl } from "react-native";
+import { Button, Card, Text, View } from "tamagui";
+
+import FlatList from "~/components/FlatList";
+import { useGetCareManagers } from "~/features/user/management/management.hook";
 import { ICareManager } from "~/features/user/management/management.type";
 
+import { careManagerListStore } from "./store";
 
 const CareManagerList = () => {
     const {
@@ -27,8 +29,8 @@ const CareManagerList = () => {
     return (
       <FlatList
         data={data}
-        renderItem={CareManagerCard}
-        contentContainerStyle={{ padding: 8 }}
+        renderItem={({ item }) => <CareManagerCard item={item} />}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} />
         }
@@ -37,7 +39,11 @@ const CareManagerList = () => {
 }
 
 
-const CareManagerCard: ListRenderItem<ICareManager> = ({ item }) => {
+interface CareManagerCardProps {
+  item: ICareManager;
+}
+
+const CareManagerCard = ({ item }: CareManagerCardProps) => {
   const router = useRouter();
 
   const { id, first_name, last_name } =
@@ -49,23 +55,25 @@ const CareManagerCard: ListRenderItem<ICareManager> = ({ item }) => {
 
   return (
     <Card
-      theme="light_white"
+      theme="light"
       marginBottom="$2"
-      marginHorizontal="$2"
-      elevate
-      bordered
       padding="$3"
+      bg="#F8F9FA"
+      borderRadius={8}
+      borderColor="#E9ECEF"
+      borderWidth={1}
     >
       <View>
-        <Text fontSize="$6" fontWeight="500">
+        <Text fontSize="$6" fontWeight="500" color="#495057">
           {first_name} {last_name}
         </Text>
       </View>
       <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
         <Button
           size="$3"
-          theme="light"
-          borderColor="gray"
+          bg="#E9ECEF"
+          color="#495057"
+          borderColor="#DEE2E6"
           onPress={onView}
           variant="outlined"
         >

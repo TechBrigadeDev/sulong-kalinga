@@ -1,6 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
-import { Button, Card, View } from "tamagui"
+import { Button, View, YStack } from "tamagui"
 
 import CareWorkerList from "~/features/user/management/components/care-workers/list";
 import CareWorkerSearch from "~/features/user/management/components/care-workers/list/search";
@@ -12,20 +12,14 @@ const CareWorkers = () => {
         router.push(`/(tabs)/options/user-management/care-workers/add`);
     };
     return (
-      <View flex={1} bg="$background">
+      <View flex={1} bg="#C8E6C9">
         <Stack.Screen
           options={{
             title: "Care Workers",
           }}
         />
         <View style={style.container}>
-          <Card
-            paddingVertical={20}
-            marginVertical={20}
-            borderRadius={10}
-            display="flex"
-            gap="$4"
-          >
+          <YStack py="$4" gap="$4">
             <Button
               size="$3"
               theme="dark_blue"
@@ -34,8 +28,10 @@ const CareWorkers = () => {
               Add Care Worker 
             </Button>
             <CareWorkerSearch/>
-          </Card>
-          <CareWorkerList />
+          </YStack>
+          <View style={{ flex: 1 }}>
+            <CareWorkerList />
+          </View>
         </View>
       </View>
     );
@@ -43,8 +39,8 @@ const CareWorkers = () => {
 
 const style = StyleSheet.create({
     container: {
-      flex: 1,
-      marginHorizontal: 30
-    }
-})
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+});
 export default CareWorkers;

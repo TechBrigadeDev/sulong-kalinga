@@ -1,6 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
-import { Button, Card, View } from "tamagui"
+import { Button, View, YStack } from "tamagui"
 
 import FamilyList from "~/features/user/management/components/family/list";
 import FamilySearch from "~/features/user/management/components/family/list/search";
@@ -13,20 +13,14 @@ const Family = () => {
     };
 
     return (
-        <View flex={1} bg="$background">
+        <View flex={1} bg="#FFCC80">
             <Stack.Screen
                 options={{
                     title: "Family Members",
                 }}
             />
             <View style={style.container}>
-                <Card
-                    paddingVertical={20}
-                    marginVertical={20}
-                    borderRadius={10}
-                    display="flex"
-                    gap="$4"
-                >
+                <YStack py="$4" gap="$4">
                     <Button
                         size="$3"
                         theme="dark_blue"
@@ -35,8 +29,10 @@ const Family = () => {
                         Add Family Member
                     </Button>
                     <FamilySearch/>
-                </Card>
-                <FamilyList />
+                </YStack>
+                <View style={{ flex: 1 }}>
+                    <FamilyList />
+                </View>
             </View>
         </View>
     )
@@ -45,7 +41,7 @@ const Family = () => {
 const style = StyleSheet.create({
     container: {
         flex: 1,
-        marginHorizontal: 30
+        paddingHorizontal: 16,
     }
 })
 
