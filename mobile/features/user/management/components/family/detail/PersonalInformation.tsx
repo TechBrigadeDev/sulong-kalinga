@@ -27,10 +27,10 @@ const PersonalInformation = ({ familyMember }: Props) => {
                         label="Full Name" 
                         value={`${familyMember.first_name} ${familyMember.last_name}`} 
                     />
-                    <InfoItem 
+                    {/* <InfoItem 
                         label="Contact Information" 
                         value={`${familyMember.email}\n${familyMember.mobile}`} 
-                    />
+                    /> */}
                     <XStack gap="$4">
                         <YStack flex={1} gap="$3">
                             <InfoItem 
