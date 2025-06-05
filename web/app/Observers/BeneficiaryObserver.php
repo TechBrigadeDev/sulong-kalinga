@@ -19,7 +19,8 @@ class BeneficiaryObserver
             'last_name' => $beneficiary->last_name,
             'mobile' => $beneficiary->mobile,
             'role_id' => 4,
-            'status' => $beneficiary->beneficiary_status_id,
+            // Set status to 'Active' if beneficiary_status_id == 1, else 'Inactive'
+            'status' => $beneficiary->beneficiary_status_id == 1 ? 'Active' : 'Inactive',
             'user_type' => 'beneficiary',
             'cose_user_id' => null,
             'beneficiary_id' => $beneficiary->beneficiary_id,
@@ -45,7 +46,8 @@ class BeneficiaryObserver
             'first_name' => $beneficiary->first_name,
             'last_name' => $beneficiary->last_name,
             'mobile' => $beneficiary->mobile,
-            'status' => $beneficiary->beneficiary_status_id,
+            // Set status to 'Active' if beneficiary_status_id == 1, else 'Inactive'
+            'status' => $beneficiary->beneficiary_status_id == 1 ? 'Active' : 'Inactive',
             'username' => $beneficiary->username,
             'password' => $beneficiary->password,
             'email' => null,

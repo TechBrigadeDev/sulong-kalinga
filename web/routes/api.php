@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/family-members/{id}', [FamilyMemberApiController::class, 'show']);
     Route::post('/family-members', [FamilyMemberApiController::class, 'store']);
     Route::put('/family-members/{id}', [FamilyMemberApiController::class, 'update']);
+    Route::patch('/family-members/{id}/status', [FamilyMemberApiController::class, 'changeStatus']);
     Route::delete('/family-members/{id}', [FamilyMemberApiController::class, 'destroy']);
 
     // Admin Management (Full CRUD + status + restore)
@@ -113,11 +114,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Internal Appointments API (Staff Only, Full CRUD)
     Route::get('/internal-appointments', [InternalAppointmentsApiController::class, 'index']);
-    Route::get('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'show']);
     // Route::post('/internal-appointments/{id}/cancel', [InternalAppointmentsApiController::class, 'cancel']);
     Route::get('/internal-appointments/calendar-events', [InternalAppointmentsApiController::class, 'calendarEvents']);
     Route::get('/internal-appointments/types', [InternalAppointmentsApiController::class, 'listAppointmentTypes']);
     Route::get('/internal-appointments/staff', [InternalAppointmentsApiController::class, 'listStaff']);
+    Route::get('/internal-appointments/{id}', [InternalAppointmentsApiController::class, 'show']);
 
     // REMOVE these lines (do not expose beneficiary/family endpoints for internal appointments):
     // Route::get('/internal-appointments/beneficiaries', ...);
@@ -125,10 +126,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Visitation API (Read-Only for Mobile)
     Route::get('/visitations', [VisitationApiController::class, 'index']);
-    Route::get('/visitations/{id}', [VisitationApiController::class, 'show']);
     Route::get('/visitations/calendar-events', [VisitationApiController::class, 'calendarEvents']);
-    Route::get('/visitations/beneficiary/{id}', [VisitationApiController::class, 'showBeneficiary']);
     Route::get('/visitations/beneficiaries', [VisitationApiController::class, 'listBeneficiaries']);
+    Route::get('/visitations/{id}', [VisitationApiController::class, 'show']);
+    Route::get('/visitations/beneficiary/{id}', [VisitationApiController::class, 'showBeneficiary']);
 
     // Messaging API (for mobile, Supabase sockets)
     Route::post('/messaging/thread', [MessagingApiController::class, 'createThread']);

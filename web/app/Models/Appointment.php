@@ -378,4 +378,8 @@ class Appointment extends Model
         
         return $count;
     }
+    public function appointmentType()
+    {
+        return $this->belongsTo(AppointmentType::class, 'appointment_type_id', 'appointment_type_id');
+    }
 }

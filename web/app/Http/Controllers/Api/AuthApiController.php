@@ -53,9 +53,6 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        $user->tokens()->delete();
-        $token = $user->createToken('mobile-app')->plainTextToken;
-
         // Role mapping
         $roleNames = [
             1 => 'admin',
@@ -65,6 +62,36 @@ class AuthApiController extends Controller
             5 => 'family_member',
         ];
         $role = $roleNames[$user->role_id] ?? 'unknown';
+
+        // --- Status checks ---
+        // For family_member, check related beneficiary's status
+        if ($role === 'family_member') {
+            $familyMember = FamilyMember::find($user->family_member_id);
+            if (!$familyMember) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Family member account not found.'
+                ], 403);
+            }
+            $beneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
+            if (!$beneficiary || $beneficiary->beneficiary_status_id != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account is inactive because the related beneficiary is not active.'
+                ], 403);
+            }
+        } else {
+            // For all other users, check their own status
+            if (strtolower($user->status) !== 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account is inactive. Please contact support.'
+                ], 403);
+            }
+        }
+
+        $user->tokens()->delete();
+        $token = $user->createToken('mobile-app')->plainTextToken;
 
         // Build uniform response
         $responseUser = [

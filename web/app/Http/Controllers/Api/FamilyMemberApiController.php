@@ -55,7 +55,6 @@ class FamilyMemberApiController extends Controller
                         ? $this->uploadService->getTemporaryPrivateUrl($fm->photo, 30)
                         : null,
                     'beneficiary' => $fm->beneficiary,
-                    // Add other fields as needed for mobile
                 ];
             })
         ]);
@@ -397,22 +396,51 @@ class FamilyMemberApiController extends Controller
 
         $familyMember = FamilyMember::findOrFail($id);
 
-        // Dependency check: prevent deletion if acknowledged care plans exist
+        // Check for acknowledged care plans
         if (method_exists($familyMember, 'acknowledgedCarePlans') && $familyMember->acknowledgedCarePlans()->exists()) {
             return response()->json([
                 'errors' => [
-                    'delete' => ['Cannot delete: Family member has acknowledged care plans.']
+                    'delete' => ['Cannot delete because this family member has acknowledged care plans in weekly_care_plans.']
                 ]
             ], 422);
         }
 
-        // Delete photo from storage
-        if ($familyMember->photo) {
-            $this->uploadService->delete($familyMember->photo, 'spaces-private');
+        // Check if this family member is set as primary_caregiver in beneficiaries
+        $isPrimaryInBeneficiary = \App\Models\Beneficiary::where('primary_caregiver', $familyMember->family_member_id)->exists();
+        if ($isPrimaryInBeneficiary) {
+            return response()->json([
+                'errors' => [
+                    'delete' => ['Cannot delete because this family member is set as the primary caregiver for a beneficiary.']
+                ]
+            ], 422);
         }
 
-        $familyMember->delete();
+        // Attempt delete and catch foreign key constraint errors
+        try {
+            // Delete photo from storage
+            if ($familyMember->photo) {
+                $this->uploadService->delete($familyMember->photo, 'spaces-private');
+            }
 
-        return response()->json(['success' => true]);
+            $familyMember->delete();
+
+            return response()->json(['success' => true]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Check for foreign key violation
+            if ($e->getCode() === '23503') {
+                return response()->json([
+                    'errors' => [
+                        'delete' => ['Cannot delete because this family member is still referenced in other records (e.g., weekly_care_plans or other related tables).']
+                    ]
+                ], 422);
+            }
+            // Other database errors
+            return response()->json([
+                'errors' => [
+                    'delete' => ['Delete failed due to a database error: ' . $e->getMessage()]
+                ]
+            ], 500);
+        }
     }
+
 }
