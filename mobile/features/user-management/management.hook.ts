@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import { QK } from "~/common/query"
 import { authStore } from "~/features/auth/auth.store"
@@ -8,6 +8,7 @@ import UserManagementController from "./management.api";
 
 export const useGetBeneficiaries = (props?: {
     search?: string;
+    limit?: number;
 }) => {   
     const { token } = authStore();
     if (!token) {
@@ -15,16 +16,26 @@ export const useGetBeneficiaries = (props?: {
     }
 
     const api = new UserManagementController(token);
-    return useQuery({
+    
+    return useInfiniteQuery({
         queryKey: [QK.user.management.getBeneficiaries, token, props?.search],
-        queryFn: async () => {
+        queryFn: async ({ pageParam = 1 }) => {
             const response = await api.getBeneficiaries({
                 search: props?.search,
+                page: pageParam,
+                limit: props?.limit || 10,
             });
-            return response;
+            return {
+                data: response.data,
+                meta: response.meta,
+            };
         },
-        enabled: !!token,
-    })
+        getNextPageParam: (lastPage) => 
+            lastPage.meta.current_page < lastPage.meta.last_page
+                ? lastPage.meta.current_page + 1
+                : undefined,
+        initialPageParam: 1,
+    });
 }
 
 export const useGetBeneficiary = (id?: string) => {

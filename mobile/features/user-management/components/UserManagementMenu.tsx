@@ -1,5 +1,5 @@
-import { Card, H2, H3, Paragraph, XStack } from "tamagui";
 import { LinkProps, useRouter } from "expo-router";
+import { Card, H3, XStack } from "tamagui";
 
 
 const UserManagementMenu = () => {
@@ -11,27 +11,27 @@ const UserManagementMenu = () => {
         {
             title: "Beneficiaries",
             icon: "user", 
-            link: "/user-management/beneficiaries" 
+            link: "/(tabs)/options/user-management/beneficiaries" 
         },
         { 
             title: "Family or Relatives", 
             icon: "users", 
-            link: "/user-management/family" 
+            link: "/(tabs)/options/user-management/family"
         },
         {
             title: "Care Workers", 
             icon: "user-md", 
-            link: "/user-management/care-workers" 
+            link: "/(tabs)/options/user-management/care-workers"
         },
         { 
             title: "Care Managers", 
             icon: "user-shield", 
-            link: "/user-management/care-managers" 
+            link: "/(tabs)/options/user-management/care-managers" 
         },
         { 
             title: "Administrators", 
             icon: "user-cog", 
-            link: "/user-management/administrators" 
+            link: "/(tabs)/options/user-management/admins"
         }
     ]
 

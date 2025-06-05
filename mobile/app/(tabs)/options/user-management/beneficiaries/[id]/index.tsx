@@ -1,9 +1,9 @@
 import LoadingScreen from "components/loaders/LoadingScreen";
 import { Redirect, Stack, useLocalSearchParams } from "expo-router";
+import BeneficiaryDetail from "features/user-management/components/beneficiaries/detail";
+import { useGetBeneficiary } from "features/user-management/management.hook";
 import { Text, View } from "tamagui";
 
-import BeneficiaryDetail from "~/features/user/management/components/beneficiaries/detail";
-import { useGetBeneficiary } from "~/features/user/management/management.hook";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();

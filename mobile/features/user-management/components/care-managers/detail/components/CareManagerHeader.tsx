@@ -2,8 +2,8 @@ import { Avatar, Card, H4, Paragraph, XStack, YStack } from "tamagui";
 import { type z } from "zod";
 
 import Badge from "~/components/Bagde";
-import { careManagerSchema } from "~/features/user/management/schema/care-manager";
-import AvatarImage from "../../../../../../../components/Avatar";
+import { careManagerSchema } from "~/features/user-management/schema/care-manager";
+import AvatarImage from "~/components/Avatar";
 
 type ICareManager = z.infer<typeof careManagerSchema>;
 

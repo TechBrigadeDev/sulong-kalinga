@@ -1,11 +1,11 @@
 import { useRouter } from "expo-router";
-import { careManagerListStore } from "features/user/management/components/care-managers/list/store";
-import { ICareWorker } from "features/user/management/management.type";
+import { careManagerListStore } from "features/user-management/components/care-managers/list/store";
+import { ICareWorker } from "features/user-management/management.type";
 import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
 
 import FlatList from "~/components/FlatList";
-import { useGetCareWorkers } from "~/features/user/management/management.hook";
+import { useGetCareWorkers } from "~/features/user-management/management.hook";
 
 const CareWorkerList = () => {
     const {

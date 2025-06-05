@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { QK } from "../../common/query"
+import { QK } from "~/common/query"
 import userController from "./user.api";
 import { authStore } from "../auth/auth.store";
 import { userStore } from "./user.store";

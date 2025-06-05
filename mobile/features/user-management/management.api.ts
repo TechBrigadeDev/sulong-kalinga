@@ -1,6 +1,7 @@
 import { AxiosInstance } from "axios";
 import { axiosClient } from "~/common/api";
 import { userManagementSchema } from "./management.schema";
+import { PaginatedResponse, IBeneficiary } from "./management.type";
 
 class UserManagementController {
   private api: AxiosInstance = axiosClient;
@@ -11,10 +12,16 @@ class UserManagementController {
     this.api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   }
 
-  async getBeneficiaries(params?: { search?: string }) {
+  async getBeneficiaries(params?: { 
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<IBeneficiary>> {
     const response = await this.api.get("/beneficiaries", {
       params: {
         ...(params?.search && { search: params.search }),
+        ...(params?.page && { page: params.page }),
+        ...(params?.limit && { limit: params.limit }),
       }
     });
     
@@ -26,7 +33,10 @@ class UserManagementController {
       throw new Error("Beneficiaries validation error");
     }
 
-    return valid.data.beneficiaries;
+    return {
+      data: valid.data.beneficiaries,
+      meta: valid.data.meta
+    };
   }
 
   async getBeneficiary(id: string) {

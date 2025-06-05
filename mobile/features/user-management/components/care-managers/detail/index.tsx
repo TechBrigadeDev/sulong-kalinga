@@ -3,7 +3,7 @@ import React from 'react';
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { Text,YStack } from 'tamagui';
 
-import { ICareManager } from "~/features/user/management/management.type";
+import { ICareManager } from "~/features/user-management/management.type";
 
 import CareManagerHeader from './components/CareManagerHeader';
 import ContactInformation from './components/ContactInformation';

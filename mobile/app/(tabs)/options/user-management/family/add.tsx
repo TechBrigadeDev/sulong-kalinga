@@ -1,6 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 
-import FamilyMemberForm from "~/features/user/management/components/family/FamilyMemberForm";
+import FamilyMemberForm from "~/features/user-management/components/family/FamilyMemberForm";
 
 const FamilyMemberAdd = () => {
     const router = useRouter();

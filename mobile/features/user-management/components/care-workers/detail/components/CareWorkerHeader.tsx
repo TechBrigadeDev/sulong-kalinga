@@ -1,9 +1,9 @@
 import { Avatar, Card, H4, Paragraph, XStack, YStack } from "tamagui";
 import { type z } from "zod";
 import Badge from "~/components/Bagde";
-import { careWorkerSchema } from "~/features/user/management/schema/care-worker";
+import { careWorkerSchema } from "~/features/user-management/schema/care-worker";
 import SectionTitle from "../SectionTitle";
-import AvatarImage from "../../../../../../../components/Avatar";
+import AvatarImage from "~/components/Avatar";
 
 type ICareWorker = z.infer<typeof careWorkerSchema>;
 

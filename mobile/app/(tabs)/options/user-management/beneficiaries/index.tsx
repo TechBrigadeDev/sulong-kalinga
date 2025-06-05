@@ -2,8 +2,8 @@ import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, View, YStack } from "tamagui";
 
-import BeneficiaryList from "~/features/user/management/components/beneficiaries/list";
-import BeneficiariesSearch from "~/features/user/management/components/beneficiaries/list/seach";
+import BeneficiaryList from "~/features/user-management/components/beneficiaries/list";
+import BeneficiariesSearch from "~/features/user-management/components/beneficiaries/list/seach";
 
 const Beneficiaries = () => {
     const router = useRouter();

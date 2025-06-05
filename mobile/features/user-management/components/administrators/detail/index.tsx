@@ -2,7 +2,7 @@ import TabScroll from "components/tabs/TabScroll";
 import { Text, YStack } from "tamagui";
 import { type z } from "zod";
 
-import { adminSchema } from "~/features/user/management/schema/admin";
+import { adminSchema } from "~/features/user-management/schema/admin";
 
 import AdminHeader from "./components/AdminHeader";
 import ContactInformation from "./components/ContactInformation";

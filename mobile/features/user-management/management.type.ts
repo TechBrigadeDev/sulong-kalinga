@@ -4,6 +4,18 @@ import { careManagerSchema } from "./schema/care-manager";
 import { careWorkerSchema } from "./schema/care-worker";
 import { familyMemberSchema } from "./schema/family";
 
+export interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 export type IBeneficiary = z.infer<typeof beneficiarySchema>; 
 
 export type ICareManager = z.infer<typeof careManagerSchema>;

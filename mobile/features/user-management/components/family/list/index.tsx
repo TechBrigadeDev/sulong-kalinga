@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import { useGetFamilyMembers } from "features/user/management/management.hook";
-import { IFamilyMember } from "features/user/management/management.type";
+import { useGetFamilyMembers } from "features/user-management/management.hook";
+import { IFamilyMember } from "features/user-management/management.type";
 import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
 

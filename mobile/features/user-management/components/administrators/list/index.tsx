@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import { useGetAdministrators } from "features/user/management/management.hook";
-import { adminSchema } from "features/user/management/schema/admin";
+import { useGetAdministrators } from "features/user-management/management.hook";
+import { adminSchema } from "features/user-management/schema/admin";
 import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
 import { type z } from "zod";

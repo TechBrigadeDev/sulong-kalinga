@@ -1,6 +1,6 @@
 import AvatarImage from "components/Avatar";
 import { useRouter } from "expo-router";
-import { IFamilyMember } from "features/user/management/management.type";
+import { IFamilyMember } from "features/user-management/management.type";
 import { Avatar, Button, H2, Text, XStack, YStack } from "tamagui";
 
 

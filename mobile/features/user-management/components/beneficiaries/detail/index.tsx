@@ -1,16 +1,18 @@
+import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native";
 import { ScrollView, YStack } from "tamagui";
-import { IBeneficiary } from "~/features/user/management/management.type";
-import { Stack } from "expo-router";
+
+import { IBeneficiary } from "~/features/user-management/management.type";
+
+import AssignedCareWorker from "./AssignedCareWorker";
 import BeneficiaryHeader from "./BeneficiaryHeader";
-import PersonalInformation from "./PersonalInformation";
-import MedicalHistory from "./MedicalHistory";
-import EmergencyContact from "./EmergencyContact";
-import MedicationManagement from "./MedicationManagement";
 import CareNeeds from "./CareNeeds";
 import CognitiveFunctionAndMobility from "./CognitiveFunctionAndMobility";
+import EmergencyContact from "./EmergencyContact";
 import EmotionalWellbeing from "./EmotionalWellbeing";
-import AssignedCareWorker from "./AssignedCareWorker";
+import MedicalHistory from "./MedicalHistory";
+import MedicationManagement from "./MedicationManagement";
+import PersonalInformation from "./PersonalInformation";
 
 interface IDetailProps {
     beneficiary: IBeneficiary

@@ -1,8 +1,9 @@
 import { Stack, useLocalSearchParams } from "expo-router";
+import CareWorkerDetail from "features/user-management/components/care-workers/detail";
+import { useGetCareWorker } from "features/user-management/management.hook";
 import { View } from "react-native";
 import { Text } from "tamagui";
-import CareWorkerDetail from "features/user/management/components/care-workers/detail";
-import { useGetCareWorker } from "~/features/user/management/management.hook";
+
 
 
 const Screen = () => {

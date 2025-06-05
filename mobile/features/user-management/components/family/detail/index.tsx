@@ -1,6 +1,6 @@
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
-import { IFamilyMember } from "features/user/management/management.type";
+import { IFamilyMember } from "features/user-management/management.type";
 import { SafeAreaView, StyleSheet } from "react-native";
 import { YStack } from "tamagui";
 

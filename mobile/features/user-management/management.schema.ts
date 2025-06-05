@@ -6,9 +6,17 @@ import { careManagerSchema } from "./schema/care-manager";
 import { careWorkerSchema } from "./schema/care-worker";
 import { familyMemberSchema } from "./schema/family";
 
+const paginationMetaSchema = z.object({
+  current_page: z.number(),
+  last_page: z.number(),
+  per_page: z.number(),
+  total: z.number(),
+});
+
 export const userManagementSchema = {
   getBeneficiaries: z.object({
     beneficiaries: z.array(beneficiarySchema),
+    meta: paginationMetaSchema,
   }),
   getBeneficiary: z.object({
     beneficiary: beneficiarySchema,

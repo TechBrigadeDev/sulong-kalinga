@@ -1,10 +1,10 @@
 import { useRouter } from "expo-router";
-import { useGetBeneficiaries } from "features/user/management/management.hook";
+import { useGetBeneficiaries } from "features/user-management/management.hook";
 import { RefreshControl } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
+import { Button, Card, Spinner,Text, View, YStack } from "tamagui";
 
 import FlatList from "~/components/FlatList";
-import { IBeneficiary } from "~/features/user/management/management.type";
+import { IBeneficiary } from "~/features/user-management/management.type";
 
 import { beneficiaryListStore } from "./store";
 
@@ -12,29 +12,57 @@ const BeneficiaryList = () => {
   const { search } = beneficiaryListStore();
 
   const {
-    data = [],
+    data,
     isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     refetch,
   } = useGetBeneficiaries({
     search,
+    limit: 10,
   });
 
-  if (data.length === 0 && !isLoading) {
+  if (!data?.pages && isLoading) {
     return (
-      <View>
-        <Text>No beneficiaries found</Text>
-      </View>
+      <YStack flex={1} style={{ justifyContent: "center", alignItems: "center" }}>
+        <Spinner size="large" />
+      </YStack>
     );
   }
+
+  if (data?.pages[0].data.length === 0 && !isLoading) {
+    return (
+      <YStack flex={1} style={{ justifyContent: "center", alignItems: "center" }}>
+        <Text>No beneficiaries found</Text>
+      </YStack>
+    );
+  }
+
+  const onLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const allBeneficiaries = data?.pages.flatMap((page) => page.data) || [];
 
   return (
     <View style={{ flex: 1 }}>
       <FlatList
-        data={data}
+        data={allBeneficiaries}
         renderItem={({ item }) => <BeneficiaryCard item={item} />}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        onEndReached={onLoadMore}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} />
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <YStack style={{ padding: 16, alignItems: "center" }}>
+              <Spinner />
+            </YStack>
+          ) : null
         }
       />
     </View>
@@ -50,11 +78,15 @@ const BeneficiaryCard = ({ item }: BeneficiaryCardProps) => {
   const { beneficiary_id, first_name, last_name } = item;
 
   const onView = () => {
-    router.push(`/(tabs)/options/user-management/beneficiaries/${beneficiary_id}`);
+    router.push(
+      `/(tabs)/options/user-management/beneficiaries/${beneficiary_id}`
+    );
   };
 
   const onEdit = () => {
-    router.push(`/(tabs)/options/user-management/beneficiaries/${beneficiary_id}/edit`);
+    router.push(
+      `/(tabs)/options/user-management/beneficiaries/${beneficiary_id}/edit`
+    );
   };
 
   return (

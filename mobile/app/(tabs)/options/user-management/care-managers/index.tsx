@@ -2,8 +2,8 @@ import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, View, YStack } from "tamagui"
 
-import CareManagerList from "~/features/user/management/components/care-managers/list";
-import CareManagerSearch from "~/features/user/management/components/care-managers/list/search";
+import CareManagerList from "~/features/user-management/components/care-managers/list";
+import CareManagerSearch from "~/features/user-management/components/care-managers/list/search";
 
 const CareManagers = () => {
     const router = useRouter();

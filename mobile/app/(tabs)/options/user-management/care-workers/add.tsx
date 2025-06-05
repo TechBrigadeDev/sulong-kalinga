@@ -1,7 +1,6 @@
 import { Stack, useRouter } from "expo-router";
-import CareWorkerForm from "features/user/management/components/care-workers/form";
-
-import { ICareWorker } from "~/features/user/user.schema";
+import CareWorkerForm from "features/user-management/components/care-workers/form";
+import { ICareWorker } from "features/user-management/management.type";
 
 
 const Screen = () => {

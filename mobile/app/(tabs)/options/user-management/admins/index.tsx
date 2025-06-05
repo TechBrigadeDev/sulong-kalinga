@@ -2,8 +2,8 @@ import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, View, YStack } from "tamagui";
 
-import AdminList from "~/features/user/management/components/administrators/list";
-import AdminSearch from "~/features/user/management/components/administrators/list/search";
+import AdminList from "~/features/user-management/components/administrators/list";
+import AdminSearch from "~/features/user-management/components/administrators/list/search";
 
 const Administrators = () => {
     const router = useRouter();

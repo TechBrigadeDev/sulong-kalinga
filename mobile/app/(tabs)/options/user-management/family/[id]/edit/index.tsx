@@ -1,8 +1,8 @@
 import { Stack, useLocalSearchParams,useRouter } from "expo-router";
 import { Text, View } from "tamagui";
 
-import FamilyMemberForm from "~/features/user/management/components/family/FamilyMemberForm";
-import { useGetFamilyMember } from "~/features/user/management/management.hook";
+import FamilyMemberForm from "~/features/user-management/components/family/FamilyMemberForm";
+import { useGetFamilyMember } from "~/features/user-management/management.hook";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();

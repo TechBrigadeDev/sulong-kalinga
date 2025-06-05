@@ -11,7 +11,7 @@ import { MedicationSection } from './components/MedicationSection';
 import { CognitiveFunctionSection } from './components/CognitiveFunctionSection';
 import { DocumentsSection } from './components/DocumentsSection';
 import { EmergencyContactSection } from './components/EmergencyContactSection';
-import { IBeneficiary } from '~/features/user/management/management.type';
+import { IBeneficiary } from '~/features/user-management/management.type';
 
 interface Props {
     beneficiary?: IBeneficiary;

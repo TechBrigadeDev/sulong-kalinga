@@ -1,4 +1,4 @@
-import { IFamilyMember } from "features/user/management/management.type";
+import { IFamilyMember } from "features/user-management/management.type";
 import { Card, H3, Text, XStack, YStack } from "tamagui";
 
 

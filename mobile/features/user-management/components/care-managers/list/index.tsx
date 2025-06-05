@@ -3,8 +3,8 @@ import { RefreshControl } from "react-native";
 import { Button, Card, Text, View } from "tamagui";
 
 import FlatList from "~/components/FlatList";
-import { useGetCareManagers } from "~/features/user/management/management.hook";
-import { ICareManager } from "~/features/user/management/management.type";
+import { useGetCareManagers } from "~/features/user-management/management.hook";
+import { ICareManager } from "~/features/user-management/management.type";
 
 import { careManagerListStore } from "./store";
 

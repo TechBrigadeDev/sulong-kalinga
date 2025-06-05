@@ -1,6 +1,6 @@
 import { Card, YStack } from "tamagui";
 import { type z } from "zod";
-import { careManagerSchema } from "~/features/user/management/schema/care-manager";
+import { careManagerSchema } from "~/features/user-management/schema/care-manager";
 import DetailRow from "../DetailRow";
 import SectionTitle from "../SectionTitle";
 

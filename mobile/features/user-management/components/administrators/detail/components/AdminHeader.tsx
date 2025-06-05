@@ -3,7 +3,7 @@ import { Avatar, Card, H4, Paragraph, Text, XStack, YStack } from "tamagui";
 import { type z } from "zod";
 
 import Badge from "~/components/Bagde";
-import { adminSchema } from "~/features/user/management/schema/admin";
+import { adminSchema } from "~/features/user-management/schema/admin";
 
 type IAdmin = z.infer<typeof adminSchema>;
 

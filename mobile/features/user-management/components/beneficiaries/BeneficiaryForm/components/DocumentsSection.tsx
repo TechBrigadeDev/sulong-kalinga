@@ -1,5 +1,5 @@
 import { Card, H3, YStack, Input, Button, XStack, Text } from "tamagui";
-import { IBeneficiary } from "~/features/user/management/management.type";
+import { IBeneficiary } from "~/features/user-management/management.type";
 import { useSignatureStore } from "~/components/dialogs/signature/store";
 import * as DocumentPicker from 'expo-document-picker';
 import { useState } from "react";
