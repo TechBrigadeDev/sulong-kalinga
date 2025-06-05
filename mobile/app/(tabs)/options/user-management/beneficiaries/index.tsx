@@ -10,7 +10,7 @@ const Beneficiaries = () => {
 
     const handleAddBeneficiary = () => {
         router.push("/(tabs)/options/user-management/beneficiaries/add");
-    }
+    };
 
     return (
         <View flex={1} bg="#BBDEFB">
@@ -21,28 +21,24 @@ const Beneficiaries = () => {
             />
             <View style={styles.container}>
                 <YStack py="$4" gap="$4">
-                    <Button
-                        size="$3"
-                        theme="dark_blue"
-                        onPressIn={handleAddBeneficiary}
-                    >
+                    <Button size="$3" theme="dark_blue" onPressIn={handleAddBeneficiary}>
                         Add Beneficiary
                     </Button>
-                    <BeneficiariesSearch/>
+                    <BeneficiariesSearch />
                 </YStack>
                 <View style={{ flex: 1 }}>
                     <BeneficiaryList />
                 </View>
             </View>
         </View>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 16,
-    }
+    },
 });
 
 export default Beneficiaries;

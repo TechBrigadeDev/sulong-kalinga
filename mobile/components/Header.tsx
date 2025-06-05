@@ -4,20 +4,18 @@ import { StyleSheet } from "react-native";
 import { H3, View, XStack } from "tamagui";
 
 interface Props extends Partial<NativeStackHeaderProps> {
-  name: string;
+    name: string;
 }
 
-const Header = ({
-    name
-}: Props) => {
+const Header = ({ name }: Props) => {
     return (
         <View style={headerStyle.container}>
             <XStack>
                 <H3 fontWeight="bold">{name}</H3>
             </XStack>
-        </View> 
-    )
-}
+        </View>
+    );
+};
 
 const headerStyle = StyleSheet.create({
     container: {
@@ -25,8 +23,8 @@ const headerStyle = StyleSheet.create({
         paddingHorizontal: 10,
     },
     title: {
-        fontWeight: 'bold',
-    }
+        fontWeight: "bold",
+    },
 });
 
 export default Header;

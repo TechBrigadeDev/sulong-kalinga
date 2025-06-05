@@ -4,19 +4,14 @@ import { useGetCareWorker } from "features/user-management/management.hook";
 import { View } from "react-native";
 import { Text } from "tamagui";
 
-
-
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
-    const {
-     data,
-     isLoading
-    } = useGetCareWorker(id as string);
+    const { data, isLoading } = useGetCareWorker(id as string);
 
     if (isLoading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <Text>Loading...</Text>
             </View>
         );
@@ -24,7 +19,7 @@ const Screen = () => {
 
     if (!data) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <Text>No Care Worker found</Text>
             </View>
         );
@@ -32,13 +27,15 @@ const Screen = () => {
 
     return (
         <>
-            <Stack.Screen options={{
-                title: "Care Worker Details",
-                headerShown: true
-            }}/>
+            <Stack.Screen
+                options={{
+                    title: "Care Worker Details",
+                    headerShown: true,
+                }}
+            />
             <CareWorkerDetail careWorker={data} />
         </>
     );
-}
+};
 
 export default Screen;

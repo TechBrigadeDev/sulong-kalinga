@@ -2,11 +2,7 @@ import { useRef, useState } from "react";
 import { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { GetProps, ScrollView } from "tamagui";
 
-const TabScroll = ({
-    children,
-    contentContainerStyle,
-    ...props
-}: GetProps<typeof ScrollView>) => {
+const TabScroll = ({ children, contentContainerStyle, ...props }: GetProps<typeof ScrollView>) => {
     const scrollViewRef = useRef<any>(null);
     const [lastOffset, setLastOffset] = useState(0);
 
@@ -14,7 +10,7 @@ const TabScroll = ({
         const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
         const scrollPercentage = (contentOffset.y + layoutMeasurement.height) / contentSize.height;
         const isScrollingDown = contentOffset.y > lastOffset;
-        
+
         setLastOffset(contentOffset.y);
 
         if (scrollPercentage >= 0.99 && isScrollingDown) {
@@ -29,13 +25,13 @@ const TabScroll = ({
             scrollEventThrottle={16}
             contentContainerStyle={{
                 paddingBlockEnd: 110,
-                ...(contentContainerStyle as any)
+                ...(contentContainerStyle as any),
             }}
             {...props}
         >
             {children}
         </ScrollView>
-    )
-}
+    );
+};
 
 export default TabScroll;

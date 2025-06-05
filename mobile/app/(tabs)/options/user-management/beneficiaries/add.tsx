@@ -14,10 +14,12 @@ const BeneficiaryAdd = () => {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerShown: true,
-                title: "Add Beneficiary",
-            }}/>
+            <Stack.Screen
+                options={{
+                    headerShown: true,
+                    title: "Add Beneficiary",
+                }}
+            />
             <BeneficiaryForm onSubmit={handleSubmit} />
         </>
     );

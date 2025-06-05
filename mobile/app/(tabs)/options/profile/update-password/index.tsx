@@ -1,8 +1,7 @@
-import { Stack } from "expo-router"
-import { SafeAreaView } from "react-native"
+import { Stack } from "expo-router";
+import { SafeAreaView } from "react-native";
 
-import UpdatePassword from "~/features/user/components/UpdatePassword"
-
+import UpdatePassword from "~/features/user/components/UpdatePassword";
 
 const Screen = () => {
     return (
@@ -15,13 +14,13 @@ const Screen = () => {
             />
             <UpdatePassword />
         </SafeAreaView>
-    )
-}
+    );
+};
 
 const style = {
     container: {
         flex: 1,
     },
-}
+};
 
 export default Screen;

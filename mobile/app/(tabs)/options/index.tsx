@@ -9,47 +9,38 @@ import LogoutButton from "~/features/auth/components/logout/button";
 const Screen = () => {
     return (
         <View>
-            <Header name="Options"/>
+            <Header name="Options" />
             <ScrollView style={style.scroll}>
-                <Profile/>
-                <UserManagement/>
-                <LogoutButton/>
+                <Profile />
+                <UserManagement />
+                <LogoutButton />
             </ScrollView>
         </View>
-    )
-}
+    );
+};
 
 const Profile = () => {
     return (
         <Section>
-            <Title name="Profile"/>
+            <Title name="Profile" />
             <Card>
-                <Link
-                    href="/options/profile"
-                    label="Settings"
-                    icon="UserPen"
-                />
+                <Link href="/options/profile" label="Settings" icon="UserPen" />
             </Card>
         </Section>
-    )
-}
-
+    );
+};
 
 const UserManagement = () => {
     return (
         <Section>
-            <Title name="User Management"/>
+            <Title name="User Management" />
             <Card>
                 <Link
                     label="Beneficiaries"
                     href="/options/user-management/beneficiaries"
                     icon="HandHelping"
                 />
-                <Link
-                    label="Families"
-                    href="/options/user-management/family"
-                    icon="UsersRound"
-                />
+                <Link label="Families" href="/options/user-management/family" icon="UsersRound" />
                 <Link
                     label="Care Workers"
                     href="/options/user-management/care-workers"
@@ -67,46 +58,26 @@ const UserManagement = () => {
                 />
             </Card>
         </Section>
-    )
-}
+    );
+};
 
-const Card = ({
-    children
-}: {
-    children?: React.ReactNode;
-}) => {
-    return (
-        <TCard style={style.sectionCard}>
-            {children}
-        </TCard>
-    )
-}
+const Card = ({ children }: { children?: React.ReactNode }) => {
+    return <TCard style={style.sectionCard}>{children}</TCard>;
+};
 
-const Section = ({
-    children,
-}:{
-    children: React.ReactNode;
-}) => {
-    return (
-        <YStack style={style.section}>
-            {children}
-        </YStack>
-    )
-}
+const Section = ({ children }: { children: React.ReactNode }) => {
+    return <YStack style={style.section}>{children}</YStack>;
+};
 
-const Title = ({
-    name: title
-}: {
-    name: string;
-}) => <Text style={style.sectionTitle}>
-    {title}
-</Text>
+const Title = ({ name: title }: { name: string }) => (
+    <Text style={style.sectionTitle}>{title}</Text>
+);
 
 const Link = ({
     href,
     label,
-    icon
-}:{
+    icon,
+}: {
     href: LinkProps["href"];
     label: string;
     icon: keyof typeof icons;
@@ -115,13 +86,8 @@ const Link = ({
     const Chevron = icons.ChevronRight;
 
     return (
-        <ExpoLink
-            href={href}
-            asChild
-        >
-            <TouchableOpacity 
-                style={style.link}
-            >
+        <ExpoLink href={href} asChild>
+            <TouchableOpacity style={style.link}>
                 <XStack gap={10} style={style.linkLabel}>
                     <Icon size={24} color="#000" />
                     <Text>{label}</Text>
@@ -131,9 +97,7 @@ const Link = ({
             </TouchableOpacity>
         </ExpoLink>
     );
-}
-
-
+};
 
 const style = StyleSheet.create({
     scroll: {
@@ -161,7 +125,7 @@ const style = StyleSheet.create({
     },
     linkLabel: {
         alignItems: "center",
-    }
+    },
 });
 
 export default Screen;

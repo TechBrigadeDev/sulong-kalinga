@@ -1,47 +1,49 @@
 import { StyleSheet } from "react-native";
-import { Avatar, H3, YStack } from "tamagui"
+import { Avatar, H3, YStack } from "tamagui";
 
 import GradientBackground from "~/components/GradientContainer";
 import { topBarHeight } from "~/constants/Layout";
-import UserAvatar from "~/features/user/components/UserAvatar"
+import UserAvatar from "~/features/user/components/UserAvatar";
 import { useUser } from "~/features/user/user.hook";
 
 const Profile = () => {
     const { data: user } = useUser();
     return (
-      <GradientBackground>
-        <YStack style={style.container}>
-          <Avatar circular size="$10" marginBottom={10}>
-            <UserAvatar/>
-          </Avatar>
-          <H3 style={style.name}>{user?.first_name} {user?.last_name}</H3>
-        </YStack>
-      </GradientBackground>
+        <GradientBackground>
+            <YStack style={style.container}>
+                <Avatar circular size="$10" marginBottom={10}>
+                    <UserAvatar />
+                </Avatar>
+                <H3 style={style.name}>
+                    {user?.first_name} {user?.last_name}
+                </H3>
+            </YStack>
+        </GradientBackground>
     );
-}
+};
 
 const style = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: topBarHeight, 
-    paddingBottom: 30,
-  },
-  name: {
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 10,
-  },
-  shadow: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
+    container: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: topBarHeight,
+        paddingBottom: 30,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  }
+    name: {
+        fontWeight: "bold",
+        color: "#fff",
+        marginBottom: 10,
+    },
+    shadow: {
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
+    },
 });
 
 export default Profile;

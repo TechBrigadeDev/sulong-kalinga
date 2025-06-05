@@ -6,16 +6,15 @@ import Profile from "./profile";
 
 const Home = () => {
     return (
-        <ScrollView style={styles.container}> 
-            <Profile/>
-            <HomeMenu/>
+        <ScrollView style={styles.container}>
+            <Profile />
+            <HomeMenu />
         </ScrollView>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    container: {
-    },
+    container: {},
     calendar: {
         marginBottom: 20,
     },

@@ -13,7 +13,7 @@ const Screen = () => {
 
     if (isLoading) {
         return (
-            <View style={{ padding: 16, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ padding: 16, justifyContent: "center", alignItems: "center" }}>
                 <Text>Loading...</Text>
             </View>
         );
@@ -21,7 +21,7 @@ const Screen = () => {
 
     if (!data) {
         return (
-            <View style={{ padding: 16, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ padding: 16, justifyContent: "center", alignItems: "center" }}>
                 <Text>No administrator found</Text>
             </View>
         );
@@ -29,13 +29,15 @@ const Screen = () => {
 
     return (
         <>
-            <Stack.Screen options={{
-                title: "Administrator Details",
-                headerShown: true
-            }}/>
+            <Stack.Screen
+                options={{
+                    title: "Administrator Details",
+                    headerShown: true,
+                }}
+            />
             <AdminDetail admin={data} />
         </>
     );
-}
+};
 
 export default Screen;

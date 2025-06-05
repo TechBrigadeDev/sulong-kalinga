@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface SignatureStore {
     isOpen: boolean;
@@ -15,11 +15,11 @@ interface SignatureStore {
 export const useSignatureStore = create<SignatureStore>((set) => ({
     isOpen: false,
     signature: null,
-    title: '',
+    title: "",
     onSave: undefined,
     setIsOpen: (isOpen) => set({ isOpen }),
     setSignature: (signature) => set({ signature }),
     setTitle: (title) => set({ title }),
     setOnSave: (callback) => set({ onSave: callback }),
-    reset: () => set({ isOpen: false, signature: null, title: '', onSave: undefined }),
+    reset: () => set({ isOpen: false, signature: null, title: "", onSave: undefined }),
 }));

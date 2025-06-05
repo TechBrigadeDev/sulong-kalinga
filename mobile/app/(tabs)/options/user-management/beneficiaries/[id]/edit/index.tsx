@@ -8,11 +8,7 @@ import { useGetBeneficiary } from "~/features/user-management/management.hook";
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
-    const {
-        data,
-        isLoading,
-        error
-    } = useGetBeneficiary(id as string);
+    const { data, isLoading, error } = useGetBeneficiary(id as string);
 
     if (isLoading) {
         return <LoadingScreen />;
@@ -20,9 +16,7 @@ const Screen = () => {
 
     if (!isLoading && error) {
         console.error("Error fetching beneficiary:", error);
-        return (
-            <Redirect href="/(tabs)/options/user-management/beneficiaries" />
-        );
+        return <Redirect href="/(tabs)/options/user-management/beneficiaries" />;
     }
 
     if (!data) {
@@ -37,12 +31,12 @@ const Screen = () => {
         <>
             <Stack.Screen
                 options={{
-                    title: 'Edit Beneficiary',
+                    title: "Edit Beneficiary",
                 }}
             />
             <BeneficiaryForm beneficiary={data} />
         </>
-    )
-}
+    );
+};
 
 export default Screen;

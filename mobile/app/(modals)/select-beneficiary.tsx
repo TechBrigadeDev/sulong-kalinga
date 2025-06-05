@@ -7,15 +7,15 @@ const Screen = () => {
             <Stack.Screen
                 name="Select Beneficiary"
                 options={{
-                    presentation: 'modal',
+                    presentation: "modal",
                     headerShown: false,
-                    title: 'Select Beneficiary',
-                    headerTitle: 'Select Beneficiary',
+                    title: "Select Beneficiary",
+                    headerTitle: "Select Beneficiary",
                 }}
             />
-            <SelectBeneficiary/>
+            <SelectBeneficiary />
         </>
-    )
-}
+    );
+};
 
 export default Screen;

@@ -13,10 +13,12 @@ const FamilyMemberAdd = () => {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerShown: true,
-                title: "Add Family Member",
-            }}/>
+            <Stack.Screen
+                options={{
+                    headerShown: true,
+                    title: "Add Family Member",
+                }}
+            />
             <FamilyMemberForm onSubmit={handleSubmit} />
         </>
     );

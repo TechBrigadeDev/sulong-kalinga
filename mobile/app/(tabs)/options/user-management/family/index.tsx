@@ -1,10 +1,9 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
-import { Button, View, YStack } from "tamagui"
+import { Button, View, YStack } from "tamagui";
 
 import FamilyList from "~/features/user-management/components/family/list";
 import FamilySearch from "~/features/user-management/components/family/list/search";
-
 
 const Family = () => {
     const router = useRouter();
@@ -22,28 +21,24 @@ const Family = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button
-                        size="$3"
-                        theme="dark_blue"
-                        onPressIn={handleAddFamilyMember}
-                    >
+                    <Button size="$3" theme="dark_blue" onPressIn={handleAddFamilyMember}>
                         Add Family Member
                     </Button>
-                    <FamilySearch/>
+                    <FamilySearch />
                 </YStack>
                 <View style={{ flex: 1 }}>
                     <FamilyList />
                 </View>
             </View>
         </View>
-    )
-}
+    );
+};
 
 const style = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 16,
-    }
-})
+    },
+});
 
 export default Family;

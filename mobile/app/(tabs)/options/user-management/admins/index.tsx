@@ -21,11 +21,7 @@ const Administrators = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button
-                        size="$3"
-                        theme="dark_blue"
-                        onPressIn={handleAddAdmin}
-                    >
+                    <Button size="$3" theme="dark_blue" onPressIn={handleAddAdmin}>
                         Add Administrator
                     </Button>
                     <AdminSearch />
@@ -35,8 +31,8 @@ const Administrators = () => {
                 </View>
             </View>
         </View>
-    )
-}
+    );
+};
 
 const style = StyleSheet.create({
     container: {

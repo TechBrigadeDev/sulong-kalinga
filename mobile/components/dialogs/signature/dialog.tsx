@@ -1,12 +1,13 @@
-import { useWindowDimensions } from 'react-native';
-import SignatureCanvas from 'react-native-signature-canvas';
-import { Button, Dialog, XStack, YStack } from 'tamagui';
+import { useWindowDimensions } from "react-native";
+import SignatureCanvas from "react-native-signature-canvas";
+import { Button, Dialog, XStack, YStack } from "tamagui";
 
-import { useSignatureStore } from './store';
+import { useSignatureStore } from "./store";
 
 export const SignatureDialog = () => {
     const { width } = useWindowDimensions();
-    const { isOpen, title, signature, onSave, setIsOpen, setSignature, reset } = useSignatureStore();
+    const { isOpen, title, signature, onSave, setIsOpen, setSignature, reset } =
+        useSignatureStore();
 
     const handleOK = (signature: string) => {
         setSignature(signature);
@@ -40,7 +41,7 @@ export const SignatureDialog = () => {
                     elevate
                     key="content"
                     animation={[
-                        'quick',
+                        "quick",
                         {
                             opacity: {
                                 overshootClamping: true,
@@ -66,8 +67,12 @@ export const SignatureDialog = () => {
                                     }`}
                         />
                         <XStack space justifyContent="flex-end">
-                            <Button onPress={handleClose} theme="gray">Cancel</Button>
-                            <Button onPress={handleClear} theme="red">Clear</Button>
+                            <Button onPress={handleClose} theme="gray">
+                                Cancel
+                            </Button>
+                            <Button onPress={handleClear} theme="red">
+                                Clear
+                            </Button>
                         </XStack>
                     </YStack>
                 </Dialog.Content>

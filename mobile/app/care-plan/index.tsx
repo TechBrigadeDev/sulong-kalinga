@@ -11,10 +11,9 @@ const Screen = () => {
                     headerTitle: "Weekly Care Plan",
                 }}
             />
-            <WCPForm/>
+            <WCPForm />
         </SafeAreaProvider>
-
-    )
-}
+    );
+};
 
 export default Screen;
