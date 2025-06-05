@@ -1,5 +1,5 @@
+import Calendar from "components/Calendar";
 import { SafeAreaView } from "react-native";
-import { Calendar } from "react-native-calendars";
 import { Text } from "tamagui";
 
 

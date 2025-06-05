@@ -13,8 +13,7 @@
     "android:build:prod": "eas build --platform android --local --profile production",
     "test": "jest --watchAll",
     "lint": "expo lint",
-    "lint:fix": "expo lint --fix",
-    "watchman:clear": "watchman watch-del \"$PWD\" && watchman watch-project \"$PWD\""
+    "lint:fix": "expo lint --fix"
   },
   "jest": {
     "preset": "jest-expo"
