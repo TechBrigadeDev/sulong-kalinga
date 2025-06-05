@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ScrollView } from "react-native";
-import { Card, H4, Text, XStack, YStack } from "tamagui";
+import { Card, H4, Text, XStack } from "tamagui";
 
 interface ShiftDetailsProps {
   label: string;

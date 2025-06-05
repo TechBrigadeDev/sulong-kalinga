@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 import { ScrollView } from "react-native";
-import { Card, H4, Text, XStack, YStack } from "tamagui";
+import { Card, Text, XStack, YStack } from "tamagui";
 
 const WorkHistoryCard = ({
   beneficiary,

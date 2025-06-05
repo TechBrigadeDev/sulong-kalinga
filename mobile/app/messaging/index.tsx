@@ -1,6 +1,6 @@
 import AvatarImage from "components/Avatar";
 import { Stack, useRouter } from "expo-router";
-import { Pressable, SafeAreaView, TouchableOpacity } from "react-native";
+import { SafeAreaView, TouchableOpacity } from "react-native";
 import { Avatar,ScrollView, Text, XStack} from "tamagui";
 
 const Screen = () => {

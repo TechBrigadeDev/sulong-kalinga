@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native";
 import { Avatar, H3, YStack } from "tamagui"
 
-import Badge from "~/components/Bagde";
 import GradientBackground from "~/components/GradientContainer";
 import { topBarHeight } from "~/constants/Layout";
 import UserAvatar from "~/features/user/components/UserAvatar"

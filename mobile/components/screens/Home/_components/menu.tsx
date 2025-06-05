@@ -1,4 +1,4 @@
-import { Href, Link, useRouter } from "expo-router";
+import { Href, Link } from "expo-router";
 import { icons } from "lucide-react-native";
 import { StyleSheet, TouchableNativeFeedback } from "react-native";
 import { Card, GetThemeValueForKey, Text, View } from "tamagui";
