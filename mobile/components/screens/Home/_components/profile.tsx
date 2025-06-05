@@ -16,13 +16,6 @@ const Profile = () => {
             <UserAvatar/>
           </Avatar>
           <H3 style={style.name}>{user?.first_name} {user?.last_name}</H3>
-          <Badge 
-            variant={user?.status === 'Active' ? 'success' : 'warning'}
-            style={style.shadow}
-            size={15}
-          >
-            {user?.status}
-          </Badge>
         </YStack>
       </GradientBackground>
     );

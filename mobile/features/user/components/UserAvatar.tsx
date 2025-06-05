@@ -26,12 +26,11 @@ const Image = () => {
     let source = { uri: "" };
     if (user?.photo_url) {
       source.uri = user.photo_url;
+    } else {
+      source.uri = createAvatar(shapes, {
+        seed: user?.id.toString() || "default-avatar",
+      }).toDataUri()
     }
-
-    source.uri = createAvatar(shapes, {
-      seed: user?.id.toString() || "default-avatar",
-    }).toDataUri();
-
     return source;
   }, [user]);
 
@@ -39,7 +38,7 @@ const Image = () => {
     <ExpoImage
       source={source}
       style={style.image}
-      contentFit="cover"
+      contentFit="fill"
     />
   );
 }
@@ -69,7 +68,9 @@ const style = StyleSheet.create({
   },
   image: {
     flex: 1,
-    width: "100%",
+    width: "150%",
+    aspectRatio: 1,
+    borderRadius: 100,
   }
 })
 

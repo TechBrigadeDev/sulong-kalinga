@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, isAxiosError } from "axios";
 import { axiosClient } from "~/common/api";
 import { userSchema } from "./user.schema";
 
@@ -38,9 +38,9 @@ class UserController {
         
         try {
             const response = await this.jsonApi.get("/user", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                // headers: {
+                //     Authorization: `Bearer ${token}`,
+                // },
             });
             console.log("User response:", response.data);
 
@@ -53,7 +53,7 @@ class UserController {
             return validate.data;
         } catch (error) {
             console.error("Error fetching user data:", error);
-            if (axios.isAxiosError(error)) {
+            if (isAxiosError(error)) {
                 // capture network error
                 if (error.response) {
                   console.error("Status:", error.response.status);

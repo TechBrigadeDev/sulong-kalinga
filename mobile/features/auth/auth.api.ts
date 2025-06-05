@@ -45,10 +45,13 @@ class AuthController {
 
         try {
             const response = await this.api.post("/login", formData);
+            console.log("Login response:", response);
             const validate = await loginSchema.response.safeParseAsync(response.data);
             if (!validate.success) {
                 throw new Error("Validation failed");
             }
+
+            axiosClient.defaults.headers.common["Authorization"] = `Bearer ${validate.data.token}`;
 
             return {
                 success: validate.data.success,
