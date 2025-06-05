@@ -1,5 +1,7 @@
 import { AxiosError, AxiosInstance } from "axios";
+
 import { axiosClient } from "~/common/api";
+
 import { loginSchema } from "./auth.schema";
 
 
@@ -9,11 +11,9 @@ class AuthController {
   constructor(
     private api: AxiosInstance = axiosClient
   ) {
-    // add header Accept: application/json 
     this.jsonApi = api;
     this.jsonApi.defaults.headers.common["Accept"] = "application/json";
     this.jsonApi.defaults.headers.common["Content-Type"] = "application/json";
-
   }
         
         
