@@ -2,8 +2,9 @@ import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, View, YStack } from "tamagui"
 
-import FamilyList from "~/features/user/management/components/family/list";
-import FamilySearch from "~/features/user/management/components/family/list/search";
+import FamilyList from "~/features/user-management/components/family/list";
+import FamilySearch from "~/features/user-management/components/family/list/search";
+
 
 const Family = () => {
     const router = useRouter();
