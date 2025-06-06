@@ -13,7 +13,7 @@ const TabScroll = ({ children, contentContainerStyle, ...props }: GetProps<typeo
 
         setLastOffset(contentOffset.y);
 
-        if (scrollPercentage >= 0.99 && isScrollingDown) {
+        if (scrollPercentage >= 0.95 && isScrollingDown) {
             scrollViewRef.current?.scrollToEnd({ animated: false });
         }
     };

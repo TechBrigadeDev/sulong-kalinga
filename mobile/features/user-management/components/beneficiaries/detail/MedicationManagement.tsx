@@ -6,7 +6,7 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const MedicationManagement = ({ beneficiary }: Props) => {
+const MedicationManagement = ({ beneficiary: _beneficiary }: Props) => {
     const medications = [
         {
             name: "sit",

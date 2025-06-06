@@ -1,5 +1,4 @@
 import * as DocumentPicker from "expo-document-picker";
-import { useState } from "react";
 import { Button, Card, H3, Input, Text, XStack, YStack } from "tamagui";
 
 import { useSignatureStore } from "~/components/dialogs/signature/store";
@@ -11,7 +10,6 @@ interface Props {
 }
 
 export const DocumentsSection = ({ data = {}, onChange = () => {} }: Props) => {
-    const [reviewDate, setReviewDate] = useState("05/31/2025");
     const { setIsOpen, setTitle, setOnSave } = useSignatureStore();
 
     const handleFilePick = async (field: keyof IBeneficiary) => {

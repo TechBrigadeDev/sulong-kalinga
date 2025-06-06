@@ -6,7 +6,7 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const CareNeeds = ({ beneficiary }: Props) => {
+const CareNeeds = ({ beneficiary: _beneficiary }: Props) => {
     const careNeeds = [
         {
             type: "Mobility",

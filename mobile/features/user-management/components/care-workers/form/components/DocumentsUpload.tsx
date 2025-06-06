@@ -6,7 +6,7 @@ import { Button, Input, Label, XStack, YStack } from "tamagui";
 
 export function DocumentsUpload({ formData, setFormData }: FormSectionProps) {
     const handleUploadPhoto = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
+        const _result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
@@ -16,7 +16,7 @@ export function DocumentsUpload({ formData, setFormData }: FormSectionProps) {
     };
 
     const handleUploadDocument = async () => {
-        const result = await DocumentPicker.getDocumentAsync({
+        const _result = await DocumentPicker.getDocumentAsync({
             type: "application/pdf",
             copyToCacheDirectory: true,
         });

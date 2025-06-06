@@ -8,7 +8,7 @@ interface State {
     setToken: (token: string | null) => void;
 }
 
-const store: StateCreator<State> = (set, get) => ({
+const store: StateCreator<State> = (set) => ({
     token: null,
     setToken: (token) => {
         set({ token });

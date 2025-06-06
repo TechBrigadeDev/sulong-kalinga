@@ -6,7 +6,7 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const EmotionalWellbeing = ({ beneficiary }: Props) => {
+const EmotionalWellbeing = ({ beneficiary: _beneficiary }: Props) => {
     const emotionalInfo = {
         Mood: "Expedita sint nemo quaerat qui dignissimos consequatur consequatur.",
         "Social Interactions": "Quas similique est voluptatum est sunt similique.",

@@ -6,7 +6,7 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const MedicalHistory = ({ beneficiary }: Props) => {
+const MedicalHistory = ({ beneficiary: _beneficiary }: Props) => {
     const medicalInfo = {
         "Medical Conditions": "Et voluptas repudiandae qui voluptatem quod neque fugiat.",
         Medications: "Quos aliquam nulla qui facilis.",

@@ -6,7 +6,7 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const CognitiveFunctionAndMobility = ({ beneficiary }: Props) => {
+const CognitiveFunctionAndMobility = ({ beneficiary: _beneficiary }: Props) => {
     const cognitiveInfo = {
         Memory: "Rem necessitatibus quia eum.",
         "Thinking Skills": "Ratione nobis velit possimus quis.",

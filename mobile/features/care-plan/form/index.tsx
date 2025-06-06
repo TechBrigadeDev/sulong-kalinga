@@ -78,21 +78,10 @@ const WCPForm = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
 
-    const handleNext = () => {
-        if (currentStep < FORM_STEPS.length - 1) {
-            setCurrentStep(currentStep + 1);
-        }
-    };
-
     const handlePrevious = () => {
         if (currentStep > 0) {
             setCurrentStep(currentStep - 1);
         }
-    };
-
-    const handleSubmit = () => {
-        console.log("Form submitted:", formData);
-        // TODO: Implement form submission
     };
 
     const updateFormData = <K extends keyof FormData>(step: K, data: Partial<FormData[K]>) => {

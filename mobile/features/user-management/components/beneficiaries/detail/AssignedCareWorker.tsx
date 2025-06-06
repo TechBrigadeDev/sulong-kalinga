@@ -6,7 +6,7 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const AssignedCareWorker = ({ beneficiary }: Props) => {
+const AssignedCareWorker = ({ beneficiary: _beneficiary }: Props) => {
     const tasks = [
         "Ut voluptas earum non.",
         "Explicabo ut numquam hic sit.",

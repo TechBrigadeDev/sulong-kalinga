@@ -16,7 +16,7 @@ const ShiftDetails = ({ label, value }: ShiftDetailsProps) => (
 );
 
 const Screen = () => {
-    const { id } = useLocalSearchParams();
+    const { id: _id } = useLocalSearchParams();
 
     // Dummy data for the shift details
     const shiftDetails = {

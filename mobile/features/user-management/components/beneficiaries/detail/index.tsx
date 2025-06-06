@@ -1,6 +1,7 @@
+import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native";
-import { ScrollView, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
@@ -27,7 +28,7 @@ const BeneficiaryDetail = ({ beneficiary }: IDetailProps) => {
                     headerShown: true,
                 }}
             />
-            <ScrollView>
+            <TabScroll>
                 <YStack gap="$4" style={{ padding: 16 }}>
                     <BeneficiaryHeader beneficiary={beneficiary} />
 
@@ -46,7 +47,7 @@ const BeneficiaryDetail = ({ beneficiary }: IDetailProps) => {
                     <EmotionalWellbeing beneficiary={beneficiary} />
                     <AssignedCareWorker beneficiary={beneficiary} />
                 </YStack>
-            </ScrollView>
+            </TabScroll>
         </SafeAreaView>
     );
 };
