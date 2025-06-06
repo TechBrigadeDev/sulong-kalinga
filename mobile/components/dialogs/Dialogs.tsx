@@ -1,12 +1,11 @@
-
-import { SignatureDialog } from './signature/dialog';
+import { SignatureDialog } from "./signature/dialog";
 
 const Dialogs = () => {
-  return (
-    <>
-      <SignatureDialog />
-    </>
-  )
+    return (
+        <>
+            <SignatureDialog />
+        </>
+    );
 };
 
 export default Dialogs;

@@ -1,7 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 
-import BeneficiaryForm from "~/features/user/management/components/beneficiaries/BeneficiaryForm";
-import { IBeneficiary } from "~/features/user/management/management.type";
+import BeneficiaryForm from "~/features/user-management/components/beneficiaries/BeneficiaryForm";
+import { IBeneficiary } from "~/features/user-management/management.type";
 
 const BeneficiaryAdd = () => {
     const router = useRouter();
@@ -14,10 +14,12 @@ const BeneficiaryAdd = () => {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerShown: true,
-                title: "Add Beneficiary",
-            }}/>
+            <Stack.Screen
+                options={{
+                    headerShown: true,
+                    title: "Add Beneficiary",
+                }}
+            />
             <BeneficiaryForm onSubmit={handleSubmit} />
         </>
     );

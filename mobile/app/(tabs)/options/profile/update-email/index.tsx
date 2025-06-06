@@ -1,8 +1,7 @@
-import { Stack } from "expo-router"
-import { SafeAreaView } from "react-native"
+import { Stack } from "expo-router";
+import { SafeAreaView } from "react-native";
 
-import UpdateEmail from "~/features/user/components/UpdateEmail"
-
+import UpdateEmail from "~/features/user/components/UpdateEmail";
 
 const Screen = () => {
     return (
@@ -15,13 +14,13 @@ const Screen = () => {
             />
             <UpdateEmail />
         </SafeAreaView>
-    )
-}
+    );
+};
 
 const style = {
     container: {
         flex: 1,
     },
-}
+};
 
 export default Screen;

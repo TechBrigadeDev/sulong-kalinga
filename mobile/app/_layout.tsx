@@ -1,72 +1,83 @@
-import 'react-native-reanimated';
+import "react-native-reanimated";
 
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Dialogs from 'components/dialogs/Dialogs';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Dialogs from "components/dialogs/Dialogs";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import Providers from '~/components/Providers';
-import { authStore } from '~/features/auth/auth.store';
+import Providers from "~/components/Providers";
+import { authStore } from "~/features/auth/auth.store";
 
 export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+    // Catch any errors thrown by the Layout component.
+    ErrorBoundary,
+} from "expo-router";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(drawer)',
+    // Ensure that reloading on `/modal` keeps a back button present.
+    initialRouteName: "(drawer)",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('~/assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
+    const [loaded, error] = useFonts({
+        SpaceMono: require("~/assets/fonts/SpaceMono-Regular.ttf"),
+        ...FontAwesome.font,
+    });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+    // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+    useEffect(() => {
+        if (error) throw error;
+    }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    useEffect(() => {
+        if (loaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [loaded]);
+
+    if (!loaded) {
+        return null;
     }
-  }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
+    return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
-  const isAuthenticated = authStore((state) => state.token) !== null;
+    const isAuthenticated = authStore((state) => state.token) !== null;
 
-  return (
-    <Providers>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack>
-            <Stack.Protected guard={isAuthenticated}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="messaging" options={{
-                animation: 'fade',
-                headerShown: false,
-              }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-            </Stack.Protected>
-            <Stack.Screen name="login"/>
-          </Stack>
-      </GestureHandlerRootView>
-      <Dialogs />
-    </Providers>
-  );
+    return (
+        <Providers>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <Stack>
+                    <Stack.Protected guard={isAuthenticated}>
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen
+                            name="messaging"
+                            options={{
+                                animation: "fade",
+                                headerShown: false,
+                            }}
+                        />
+                        <Stack.Screen
+                            name="scheduling"
+                            options={{
+                                title: "Scheduling",
+                                headerTitle: "Scheduling",
+                            }}
+                        />
+                        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+                        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+                    </Stack.Protected>
+                    <Stack.Screen name="login" />
+                </Stack>
+            </GestureHandlerRootView>
+            <Dialogs />
+        </Providers>
+    );
 }

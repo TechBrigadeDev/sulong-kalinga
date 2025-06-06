@@ -1,24 +1,21 @@
-import { Stack, useLocalSearchParams,useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Text, View } from "tamagui";
 
-import FamilyMemberForm from "~/features/user/management/components/family/FamilyMemberForm";
-import { useGetFamilyMember } from "~/features/user/management/management.hook";
+import FamilyMemberForm from "~/features/user-management/components/family/FamilyMemberForm";
+import { useGetFamilyMember } from "~/features/user-management/management.hook";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();
     const router = useRouter();
 
-    const {
-        data,
-        isLoading
-    } = useGetFamilyMember(id as string);
+    const { data, isLoading } = useGetFamilyMember(id as string);
 
     if (isLoading) {
         return (
             <View>
                 <Text>Loading...</Text>
             </View>
-        )
+        );
     }
 
     if (!data) {
@@ -26,7 +23,7 @@ const Screen = () => {
             <View>
                 <Text>No family member found</Text>
             </View>
-        )
+        );
     }
 
     const handleSubmit = (formData: FormData) => {
@@ -39,15 +36,12 @@ const Screen = () => {
         <>
             <Stack.Screen
                 options={{
-                    title: 'Edit Family Member',
+                    title: "Edit Family Member",
                 }}
             />
-            <FamilyMemberForm
-                familyMember={data} 
-                onSubmit={handleSubmit}
-            />
+            <FamilyMemberForm familyMember={data} onSubmit={handleSubmit} />
         </>
-    )
-}
+    );
+};
 
 export default Screen;

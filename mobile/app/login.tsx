@@ -7,36 +7,36 @@ const Screen = () => {
     return (
         <>
             <Stack.Screen
-            options={{
-                headerShown: false,
-            }}
+                options={{
+                    headerShown: false,
+                }}
             />
             <GradientBackground
                 colors={["#ff6ec7", "#ffa100", "#00d2ff"]}
                 animationDuration={10000}
                 style={styles.gradientContainer}
             >
-                <Login/>
+                <Login />
             </GradientBackground>
         </>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    safe: { 
-        flex: 1, 
-        backgroundColor: "#000"
+    safe: {
+        flex: 1,
+        backgroundColor: "#000",
     },
-    gradientContainer: { 
-        justifyContent: "center", 
+    gradientContainer: {
+        justifyContent: "center",
         alignItems: "center",
         // paddingHorizontal: 30,
         // paddingVertical: 10,
     },
-    title: { 
-        color: "#fff", 
-        fontSize: 24, 
-        fontWeight: "bold"
+    title: {
+        color: "#fff",
+        fontSize: 24,
+        fontWeight: "bold",
     },
 });
 

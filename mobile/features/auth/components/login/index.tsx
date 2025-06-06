@@ -1,37 +1,34 @@
-import { Card, Text, View } from "tamagui";
-import LoginForm from "./form";
 import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
+import { Card, Text, View } from "tamagui";
+
 import { AppIcon } from "~/components/Icon";
+
+import LoginForm from "./form";
 
 const Login = () => {
     return (
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <Card elevate elevation="$3" width="75%" style={styles.container}>
-          <Card.Header>
-            <Header />
-          </Card.Header>
-          <View>
-            <LoginForm />
-          </View>
-        </Card>
-      </KeyboardAvoidingView>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <Card elevate elevation="$3" width="75%" style={styles.container}>
+                <Card.Header>
+                    <Header />
+                </Card.Header>
+                <View>
+                    <LoginForm />
+                </View>
+            </Card>
+        </KeyboardAvoidingView>
     );
-}
+};
 
 const Header = () => {
     return (
         <View style={styles.header}>
-            <AppIcon
-              width={100}
-              height={100}
-            />
+            <AppIcon width={100} height={100} />
             <Text style={styles.headerText}>Coalition of Services for the Elderly</Text>
             <Text style={styles.headerSubtitle}>Empowering Senior Citizens Since 1989</Text>
         </View>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -51,7 +48,7 @@ const styles = StyleSheet.create({
     headerSubtitle: {
         fontStyle: "italic",
         fontSize: 12,
-    }
+    },
 });
 
 export default Login;

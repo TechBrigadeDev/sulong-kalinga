@@ -1,23 +1,21 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import LoadingScreen from "components/loaders/LoadingScreen";
+import { Redirect, Stack, useLocalSearchParams } from "expo-router";
+import BeneficiaryDetail from "features/user-management/components/beneficiaries/detail";
+import { useGetBeneficiary } from "features/user-management/management.hook";
 import { Text, View } from "tamagui";
-
-import BeneficiaryDetail from "~/features/user/management/components/beneficiaries/detail";
-import { useGetBeneficiary } from "~/features/user/management/management.hook";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
-    const {
-     data,
-     isLoading
-    } = useGetBeneficiary(id as string);
+    const { data, isLoading, error } = useGetBeneficiary(id as string);
 
     if (isLoading) {
-        return (
-            <View>
-                <Text>Loading...</Text>
-            </View>
-        )
+        return <LoadingScreen />;
+    }
+
+    if (!isLoading && error) {
+        console.error("Error fetching beneficiary:", error);
+        return <Redirect href="/(tabs)/options/user-management/beneficiaries" />;
     }
 
     if (!data) {
@@ -25,15 +23,21 @@ const Screen = () => {
             <View>
                 <Text>No beneficiary found</Text>
             </View>
-        )
+        );
     }
 
-    return (
-        <>
-            <Stack.Screen/>
-            <BeneficiaryDetail beneficiary={data}/>
-        </>
-    )
-}
+    return <BeneficiaryDetail beneficiary={data} />;
+};
 
-export default Screen;
+const Layout = () => (
+    <>
+        <Stack.Screen
+            options={{
+                headerTitle: "Beneficiary",
+            }}
+        />
+        <Screen />
+    </>
+);
+
+export default Layout;

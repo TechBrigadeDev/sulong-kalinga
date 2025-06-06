@@ -1,38 +1,41 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { Text, View } from "tamagui";
-
-import { useGetCareWorker } from "~/features/user/management/management.hook";
-
+import CareWorkerDetail from "features/user-management/components/care-workers/detail";
+import { useGetCareWorker } from "features/user-management/management.hook";
+import { View } from "react-native";
+import { Text } from "tamagui";
 
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
-    const {
-     data,
-     isLoading
-    } = useGetCareWorker(id as string);
+    const { data, isLoading } = useGetCareWorker(id as string);
 
     if (isLoading) {
         return (
-            <View>
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <Text>Loading...</Text>
             </View>
-        )
+        );
     }
 
     if (!data) {
         return (
-            <View>
-                <Text>No beneficiary found</Text>
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <Text>No Care Worker found</Text>
             </View>
-        )
+        );
     }
 
     return (
         <>
-            <Stack.Screen/>
+            <Stack.Screen
+                options={{
+                    title: "Care Worker Details",
+                    headerShown: true,
+                }}
+            />
+            <CareWorkerDetail careWorker={data} />
         </>
-    )
-}
+    );
+};
 
 export default Screen;
