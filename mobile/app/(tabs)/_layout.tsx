@@ -40,11 +40,6 @@ export default function Layout() {
                         <TabButton icon="EllipsisVertical">Options</TabButton>
                     </TabTrigger>
                     <TabTrigger
-                        name="/(tabs)/scheduling/index"
-                        href="/(tabs)/scheduling"
-                        style={{ display: "none" }}
-                    />
-                    <TabTrigger
                         name="/(tabs)/shifts/index"
                         href="/(tabs)/shifts"
                         style={{ display: "none" }}

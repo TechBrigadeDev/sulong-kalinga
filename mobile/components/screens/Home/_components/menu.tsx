@@ -6,7 +6,7 @@ import { Card, GetThemeValueForKey, Text, View } from "tamagui";
 const menuItems: IMenuItem[] = [
     {
         title: "Scheduling",
-        href: "/(tabs)/scheduling",
+        href: "/scheduling",
         color: "#0222FF",
         icon: "Calendar",
     },
