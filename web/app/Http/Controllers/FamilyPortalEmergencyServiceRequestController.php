@@ -154,7 +154,6 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             'service_date' => 'required|date|after_or_equal:today',
             'service_time' => 'required',
             'message' => 'required|string|max:1000',
-            'is_recurring' => 'sometimes|boolean'
         ]);
 
         if ($validator->fails()) {

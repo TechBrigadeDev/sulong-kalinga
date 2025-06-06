@@ -65,10 +65,6 @@
                                         </div>
                                         
                                         <div class="d-flex justify-content-between align-items-center mt-auto">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="recurring" name="is_recurring">
-                                                <label class="form-check-label" for="recurring">Recurring service</label>
-                                            </div>
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="bi bi-send-fill me-1"></i> Submit Request
                                             </button>
