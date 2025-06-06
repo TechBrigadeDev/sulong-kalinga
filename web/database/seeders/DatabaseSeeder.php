@@ -1676,8 +1676,12 @@ class DatabaseSeeder extends Seeder
                 Carbon::parse($pattern->recurrence_end) : 
                 $startDate->copy()->addMonths($months);
         
+        // Define includeCancellations with a default value to fix undefined variable
+        $includeCancellations = false;
+        
         // Generate based on pattern type
         if ($pattern->pattern_type === 'weekly') {
+            // Weekly pattern code remains unchanged
             // Parse day_of_week string into array of integers
             $daysOfWeek = [];
             if (strpos($pattern->day_of_week, ',') !== false) {
@@ -1735,15 +1739,34 @@ class DatabaseSeeder extends Seeder
                 
                 // Only create an occurrence if we're still in range
                 if ($currentDate <= $endDate) {
-                    // Create the occurrence
+                    // Determine status based on date
+                    $status = 'scheduled';
+                    if ($currentDate->isPast()) {
+                        $status = $this->faker->randomElement(['completed', 'completed', 'canceled']);
+                    }
+                    
+                    // Create appropriate notes
+                    $notes = null;
+                    if ($status === 'canceled') {
+                        $notes = $this->faker->randomElement([
+                            'Meeting canceled due to scheduling conflict',
+                            'Participants unavailable',
+                            'Rescheduled to next available date',
+                            'Canceled due to emergency',
+                            'Location unavailable'
+                        ]);
+                    } elseif ($status === 'completed') {
+                        $notes = $this->faker->optional(0.7)->paragraph();
+                    }
+                    
+                    // FIX: Use AppointmentOccurrence and $appointment instead of VisitationOccurrence and $visitation
                     $occurrence = AppointmentOccurrence::create([
                         'appointment_id' => $appointment->appointment_id,
                         'occurrence_date' => $currentDate->format('Y-m-d'),
                         'start_time' => $appointment->start_time,
                         'end_time' => $appointment->end_time,
-                        'status' => $currentDate->isPast() ? 
-                            $this->faker->randomElement(['completed', 'completed', 'canceled']) : 'scheduled',
-                        'notes' => $currentDate->isPast() ? $this->faker->optional(0.7)->paragraph() : null
+                        'status' => $status ?: 'scheduled',
+                        'notes' => $notes
                     ]);
                     
                     $occurrences[] = $occurrence->occurrence_id;
@@ -2065,7 +2088,7 @@ class DatabaseSeeder extends Seeder
                     
                     // Calculate status based on date and cancellation flag
                     $status = 'scheduled';
-                    if ($dateIterator->isPast()) {
+                    if ($dateIterator->isPast()) { // Use Carbon object for comparison
                         $status = $shouldCancel ? 'canceled' : 'completed';
                     } else {
                         $status = $shouldCancel ? 'canceled' : 'scheduled';
@@ -2090,9 +2113,9 @@ class DatabaseSeeder extends Seeder
                     // Create the occurrence
                     $occurrence = VisitationOccurrence::create([
                         'visitation_id' => $visitation->visitation_id,
-                        'occurrence_date' => $dateIterator->format('Y-m-d'),
-                        'start_time' => $visitation->start_time,
-                        'end_time' => $visitation->end_time,
+                        'occurrence_date' => $dateIterator->format('Y-m-d'), // Store as string in DB
+                        'start_time' => $visitation->is_flexible_time ? null : $visitation->start_time,
+                        'end_time' => $visitation->is_flexible_time ? null : $visitation->end_time,
                         'status' => $status ?: 'scheduled', // Make sure status is never empty
                         'notes' => $notes
                     ]);
@@ -2145,13 +2168,13 @@ class DatabaseSeeder extends Seeder
                         $notes = $this->faker->optional(0.7)->sentence();
                     }
                     
-                    // Create the occurrence
+                    // Create the occurrence - USE CURRENTDATE INSTEAD OF DATEITERATOR
                     $occurrence = VisitationOccurrence::create([
                         'visitation_id' => $visitation->visitation_id,
-                        'occurrence_date' => $currentDate->format('Y-m-d'),
-                        'start_time' => $visitation->start_time,
-                        'end_time' => $visitation->end_time,
-                        'status' => $status,
+                        'occurrence_date' => $currentDate->format('Y-m-d'), // Fixed: use currentDate
+                        'start_time' => $visitation->is_flexible_time ? null : $visitation->start_time,
+                        'end_time' => $visitation->is_flexible_time ? null : $visitation->end_time,
+                        'status' => $status ?: 'scheduled',
                         'notes' => $notes
                     ]);
                     

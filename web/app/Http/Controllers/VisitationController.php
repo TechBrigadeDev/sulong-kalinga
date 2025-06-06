@@ -66,7 +66,7 @@ class VisitationController extends Controller
     {
 
         // Set a reasonable timeout
-        set_time_limit(60); 
+        set_time_limit(30); 
         
         $viewType = $request->input('view_type', 'dayGridMonth');
         $startDate = $request->input('start');
@@ -75,7 +75,7 @@ class VisitationController extends Controller
         $today = Carbon::today();
         
         // For month view, limit to 3 months of data at most
-        /*if ($viewType === 'dayGridMonth') {
+        if ($viewType === 'dayGridMonth') {
             $calendarStartDate = Carbon::parse($startDate);
             $calendarEndDate = Carbon::parse($endDate);
             
@@ -85,7 +85,7 @@ class VisitationController extends Controller
                 $calendarEndDate = $maxEndDate;
                 $endDate = $maxEndDate->format('Y-m-d');
             }
-        }*/
+        }
 
         try {
             // APPROACH 1: For visitations with occurrences
@@ -216,18 +216,22 @@ class VisitationController extends Controller
                 
                 // Build the event object
                 $event = [
-                        'id' => 'occ-' . $occurrence->occurrence_id,
-                        'title' => $title,
-                        // FIX: Extract only the date part and use space separator with proper time
-                        'start' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
-                                ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->start_time)->format('H:i:s')),
-                        'end' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
-                                ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->end_time)->format('H:i:s')),
-                        'backgroundColor' => $this->getStatusColor($occurrence->status),
-                        'borderColor' => $this->getStatusColor($occurrence->status),
-                        'textColor' => '#fff',
-                        'allDay' => $visitation->is_flexible_time,
-                        'extendedProps' => [
+                    'id' => 'occ-' . $occurrence->occurrence_id,
+                    'title' => $title,
+                    // Extract just the date part to avoid doubled time components
+                    'start' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
+                            ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->start_time)->format('H:i:s')),
+                    'end' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
+                            ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->end_time)->format('H:i:s')),
+                    'backgroundColor' => $this->getStatusColor($occurrence->status),
+                    'borderColor' => $this->getStatusColor($occurrence->status),
+                    'textColor' => '#fff',
+                    'allDay' => $visitation->is_flexible_time,
+                    'backgroundColor' => $this->getStatusColor($occurrence->status),
+                    'borderColor' => $this->getStatusColor($occurrence->status),
+                    'textColor' => '#fff',
+                    'allDay' => $visitation->is_flexible_time,
+                    'extendedProps' => [
                         'visitation_id' => $visitation->visitation_id,
                         'occurrence_id' => $occurrence->occurrence_id,
                         'care_worker' => $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name,
@@ -330,12 +334,11 @@ class VisitationController extends Controller
                     // Non-recurring event
                     $event = $baseEvent;
                     $event['id'] = $visitation->visitation_id;
-                    // FIX: Use space separator with time (ensure flexible time gets proper format)
-                    $event['start'] = $visitation->visitation_date->format('Y-m-d') . 
-                                    ($visitation->is_flexible_time ? ' 00:00:00' : ' ' . $visitation->start_time->format('H:i:s'));
-                    $event['end'] = $visitation->visitation_date->format('Y-m-d') . 
-                    ($visitation->is_flexible_time ? ' 00:00:00' : ' ' . $visitation->end_time->format('H:i:s'));
-                    
+                    $event['start'] = $visitation->visitation_date->format('Y-m-d') . ' ' . 
+                                ($visitation->is_flexible_time ? '00:00:00' : $visitation->start_time->format('H:i:s'));
+                    $event['end'] = $visitation->visitation_date->format('Y-m-d') . ' ' . 
+                                ($visitation->is_flexible_time ? '00:00:00' : $visitation->end_time->format('H:i:s'));
+
                     $events[] = $event;
                 }
                 
@@ -351,16 +354,19 @@ class VisitationController extends Controller
             $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
             $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
 
+            // Fix the query that calculates all appointments by day of week
             $dailyCounts = DB::table('visitation_occurrences')
                 ->join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
                 ->join('recurring_patterns', 'visitations.visitation_id', '=', 'recurring_patterns.visitation_id')
-                ->whereBetween('occurrence_date', [$weekStart, $weekEnd])
+                ->whereBetween('occurrence_date', [$request->start, $request->end])
                 ->where('recurring_patterns.pattern_type', 'weekly')
-                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), DB::raw('COUNT(*) as count'))
+                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), 
+                        DB::raw('COUNT(DISTINCT visitation_occurrences.occurrence_id) as count'))
                 ->groupBy(DB::raw('EXTRACT(DOW FROM occurrence_date)'))
                 ->orderBy('day_of_week')
                 ->get();
 
+            // Fix the filtered query with the same COUNT DISTINCT approach
             $filteredDailyCounts = DB::table('visitation_occurrences')
                 ->join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
                 ->join('recurring_patterns', 'visitations.visitation_id', '=', 'recurring_patterns.visitation_id')
@@ -369,7 +375,8 @@ class VisitationController extends Controller
                 ->when($request->has('care_worker_id') && !empty($request->care_worker_id), function($query) use ($request) {
                     return $query->where('visitations.care_worker_id', $request->care_worker_id);
                 })
-                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), DB::raw('COUNT(*) as count'))
+                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), 
+                        DB::raw('COUNT(DISTINCT visitation_occurrences.occurrence_id) as count'))
                 ->groupBy(DB::raw('EXTRACT(DOW FROM occurrence_date)'))
                 ->orderBy('day_of_week')
                 ->get();
@@ -1960,6 +1967,70 @@ class VisitationController extends Controller
             'beneficiary' => $beneficiary->beneficiary_id,
             'split_date' => $dateFormatted
         ]);
+    }
+
+    /**
+     * Function that transforms visitation occurrences into calendar events
+     * Fixed for proper date/time formatting across all calendar view types
+     */
+    private function transformVisitationsToEvents($visitations, $view_type = null) 
+    {
+        $events = [];
+        
+        foreach ($visitations as $visitation) {
+            // Skip if no occurrences or related data
+            $occurrences = $visitation->occurrences;
+            if (!$occurrences || !$visitation->careWorker || !$visitation->beneficiary) {
+                continue;
+            }
+            
+            // Create title
+            $title = $visitation->beneficiary->first_name . ' ' . $visitation->beneficiary->last_name;
+            
+            foreach ($occurrences as $occurrence) {
+                // IMPORTANT: Always use YYYY-MM-DD format for dates and ensure space separator
+                // Extract just the date part without any time components
+                $occurrenceDate = date('Y-m-d', strtotime($occurrence->occurrence_date));
+                
+                // Format time components consistently with space separator
+                $startTime = $visitation->is_flexible_time ? 
+                    '00:00:00' : 
+                    date('H:i:s', strtotime($occurrence->start_time));
+                    
+                $endTime = $visitation->is_flexible_time ? 
+                    '23:59:59' : 
+                    date('H:i:s', strtotime($occurrence->end_time));
+                
+                // Create event with consistent SPACE separator format
+                $event = [
+                    'id' => 'occ-' . $occurrence->occurrence_id,
+                    'title' => $title,
+                    'start' => $occurrenceDate . ' ' . $startTime, // ALWAYS use space separator
+                    'end' => $occurrenceDate . ' ' . $endTime,     // ALWAYS use space separator
+                    'backgroundColor' => $this->getStatusColor($occurrence->status),
+                    'borderColor' => $this->getStatusColor($occurrence->status),
+                    'textColor' => '#fff',
+                    'allDay' => $visitation->is_flexible_time,
+                    'extendedProps' => [
+                        'visitation_id' => $visitation->visitation_id,
+                        'occurrence_id' => $occurrence->occurrence_id,
+                        'care_worker' => $careWorker->first_name . ' ' . $careWorker->last_name,
+                        'care_worker_id' => $visitation->care_worker_id,
+                        'beneficiary' => $beneficiary->first_name . ' ' . $beneficiary->last_name,
+                        'beneficiary_id' => $visitation->beneficiary_id,
+                        'visit_type' => ucwords(str_replace('_', ' ', $visitation->visit_type)),
+                        'status' => ucfirst($occurrence->status),
+                        'is_flexible_time' => $visitation->is_flexible_time,
+                        'notes' => $occurrence->notes,
+                        'recurring' => $visitation->recurringPattern ? true : false
+                    ]
+                ];
+                
+                $events[] = $event;
+            }
+        }
+        
+        return $events;
     }
 
 }
