@@ -301,14 +301,43 @@ class DatabaseSeeder extends Seeder
         // Create family members for beneficiaries
         try {
             $this->command->info('Seeding family members...');
+            
+            // Reset the primary caregiver tracking
+            FamilyMemberFactory::resetPrimaryCaregivers();
+            
             // Create 1-3 family members for each beneficiary
             foreach ($beneficiaries as $beneficiary) {
-                $familyMemberCount = $this->faker->numberBetween(1, 3);
-                FamilyMember::factory()
-                    ->count($familyMemberCount)
-                    ->forBeneficiary($beneficiary->beneficiary_id)
-                    ->create();
+                $familyMemberCount = mt_rand(1, 3);
+                
+                // Create family members for this beneficiary
+                $familyMembers = [];
+                for ($i = 0; $i < $familyMemberCount; $i++) {
+                    $familyMembers[] = FamilyMember::factory()
+                        ->forBeneficiary($beneficiary->beneficiary_id)
+                        ->create();
+                }
+                
+                // If this beneficiary doesn't yet have a primary caregiver, assign one
+                if (!FamilyMemberFactory::hasPrimaryCaregiver($beneficiary->beneficiary_id) && count($familyMembers) > 0) {
+                    // Choose the most likely family member to be primary caregiver
+                    // Prefer spouse or child if available
+                    $primaryIndex = 0;
+                    
+                    foreach ($familyMembers as $index => $familyMember) {
+                        if (in_array($familyMember->relation_to_beneficiary, ['Spouse', 'Child'])) {
+                            $primaryIndex = $index;
+                            break;
+                        }
+                    }
+                    
+                    // Update the selected family member to be the primary caregiver
+                    $familyMembers[$primaryIndex]->update(['is_primary_caregiver' => true]);
+                    
+                    // Mark this beneficiary as having a primary caregiver
+                    FamilyMemberFactory::setPrimaryCaregiver($beneficiary->beneficiary_id);
+                }
             }
+            
             $this->command->info('Family members seeded successfully.');
         } catch (\Throwable $e) {
             $this->command->error('Failed to seed family members: ' . $e->getMessage());

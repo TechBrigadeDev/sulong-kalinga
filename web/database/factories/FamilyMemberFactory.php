@@ -13,6 +13,9 @@ class FamilyMemberFactory extends Factory
 {
     protected $model = FamilyMember::class;
 
+    // Static property to track beneficiaries with assigned primary caregivers
+    protected static $primaryCaregiverAssigned = [];
+
     // Filipino first names (mixed gender)
     protected $firstNames = [
         // Male names
@@ -35,21 +38,21 @@ class FamilyMemberFactory extends Factory
         'Morales', 'Pascual', 'Padilla', 'Robles', 'Rosario'
     ];
 
-    // Filipino family relationships (culturally appropriate)
+    // Family relationships in English
     protected $relationships = [
-        'Anak' => 10, // Child
-        'Apo' => 8,   // Grandchild
-        'Pamangkin' => 5, // Niece/Nephew
-        'Pinsan' => 5,   // Cousin
-        'Kapatid' => 15,  // Sibling
-        'Bayaw/Hipag' => 3, // Brother/Sister-in-law
-        'Manugang' => 3,   // Son/Daughter-in-law
-        'Biyenan' => 2,    // Parent-in-law
-        'Asawa' => 12,     // Spouse
-        'Inaanak' => 2,    // Godchild
-        'Ninong/Ninang' => 2, // Godparent
-        'Kapitbahay' => 1, // Neighbor (sometimes treated as family)
-        'Kaibigan' => 1,   // Friend (sometimes treated as family)
+        'Child' => 10,
+        'Grandchild' => 8,
+        'Niece/Nephew' => 5,
+        'Cousin' => 5,
+        'Sibling' => 15,
+        'Brother/Sister-in-law' => 3,
+        'Son/Daughter-in-law' => 3,
+        'Parent-in-law' => 2,
+        'Spouse' => 12,
+        'Godchild' => 2,
+        'Godparent' => 2,
+        'Neighbor' => 1,
+        'Friend' => 1,
     ];
 
     /**
@@ -86,6 +89,10 @@ class FamilyMemberFactory extends Factory
         // Generate a realistic landline format for Philippines (7-digit)
         $landline = $this->faker->numberBetween(2000000, 8999999);
         
+        // Default to not being a primary caregiver
+        // Will be set properly in forBeneficiary or makePrimaryCaregiver
+        $isPrimaryCaregiver = false;
+        
         return [
             'first_name' => $firstName,
             'last_name' => $lastName,
@@ -93,7 +100,6 @@ class FamilyMemberFactory extends Factory
             'mobile' => $mobile,
             'landline' => $landline,
             'email' => $this->faker->unique()->safeEmail,
-            // Hash the password properly
             'password' => Hash::make('12312312'), // Default password that can be changed later
             'street_address' => $this->faker->address,
             'gender' => $gender,
@@ -101,8 +107,7 @@ class FamilyMemberFactory extends Factory
                 return Beneficiary::inRandomOrder()->first()->beneficiary_id;
             },
             'relation_to_beneficiary' => $relationship,
-            'is_primary_caregiver' => $relationship === 'Anak' || $relationship === 'Asawa' ? 
-                                      $this->faker->boolean(70) : $this->faker->boolean(20),
+            'is_primary_caregiver' => $isPrimaryCaregiver, // Default to false, will be set later
             'created_by' => $userIdWithRole2,
             'updated_by' => $userIdWithRole2,
             'created_at' => now(),
@@ -127,8 +132,55 @@ class FamilyMemberFactory extends Factory
                 'related_beneficiary_id' => $beneficiaryId,
                 'last_name' => $this->faker->boolean(70) ? $beneficiary->last_name : $attributes['last_name'],
                 'street_address' => $this->faker->boolean(60) ? $beneficiary->street_address : $attributes['street_address'],
+                'is_primary_caregiver' => false, // Default to false, will be set explicitly with makePrimaryCaregiver method
             ];
         });
+    }
+    
+    /**
+     * Mark this family member as the primary caregiver for their beneficiary
+     * 
+     * @return $this
+     */
+    public function makePrimaryCaregiver()
+    {
+        return $this->state(function (array $attributes) {
+            // Mark this family member as the primary caregiver
+            return [
+                'is_primary_caregiver' => true,
+            ];
+        });
+    }
+    
+    /**
+     * Check if a beneficiary already has a primary caregiver assigned
+     * 
+     * @param int $beneficiaryId
+     * @return bool
+     */
+    public static function hasPrimaryCaregiver($beneficiaryId)
+    {
+        return isset(self::$primaryCaregiverAssigned[$beneficiaryId]) && 
+               self::$primaryCaregiverAssigned[$beneficiaryId] === true;
+    }
+    
+    /**
+     * Set a beneficiary as having a primary caregiver
+     * 
+     * @param int $beneficiaryId
+     */
+    public static function setPrimaryCaregiver($beneficiaryId)
+    {
+        self::$primaryCaregiverAssigned[$beneficiaryId] = true;
+    }
+    
+    /**
+     * Reset the primary caregiver tracking
+     * Useful for testing or before running seeds
+     */
+    public static function resetPrimaryCaregivers()
+    {
+        self::$primaryCaregiverAssigned = [];
     }
     
     /**
