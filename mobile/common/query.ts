@@ -25,4 +25,9 @@ export const QK = {
             getAdmin: (id: string) => ["user/management/getAdmin", id],
         },
     },
+    scheduling: {
+        medication: {
+            getSchedules: "user/scheduling/medication/getSchedules",
+        },
+    },
 };

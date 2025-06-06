@@ -17,6 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sulongkalinga.app",
       "infoPlist": {
+        "NSCalendarsUsageDescription": "Allows this app to access your calendar to schedule and display events.",
         "NSAppTransportSecurity": {
           "NSExceptionDomains": {
             "test.cosemhcs.org.ph": {
@@ -50,6 +51,12 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos."
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "The app needs to access your calendar."
         }
       ]
     ],

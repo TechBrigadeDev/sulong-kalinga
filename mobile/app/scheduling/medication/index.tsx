@@ -1,16 +1,19 @@
-import { WeekCalendar } from "components/Calendar";
+import { WeekCalendar } from "components/calendars";
+import WeekCalendarButton from "components/calendars/WeekCalendar/button";
 import { Stack } from "expo-router";
-import { View } from "tamagui";
+import { useMedicationSchedule } from "features/scheduling/medication/medication.hook";
+import { YStack } from "tamagui";
 
 const Screen = () => {
+    useMedicationSchedule();
     return (
-        <View flex={1} bg="$background">
-            <WeekCalendar
-                provider={{
-                    date: new Date().toISOString().split("T")[0],
-                }}
-            />
-        </View>
+        <YStack flex={1} bg="$background">
+            <YStack>
+                <WeekCalendar />
+                <WeekCalendarButton />
+            </YStack>
+            <YStack flex={1} bg="red"></YStack>
+        </YStack>
     );
 };
 
