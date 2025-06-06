@@ -1,10 +1,21 @@
-import { Card, H3, Input, Select, Text, XStack, YStack } from "tamagui";
+import {
+    Card,
+    H3,
+    Input,
+    Select,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
     data?: Partial<IBeneficiary>;
-    onChange?: (field: string | number | symbol, value: any) => void;
+    onChange?: (
+        field: string | number | symbol,
+        value: any,
+    ) => void;
 }
 
 // TODO: These should come from an API or store
@@ -18,7 +29,10 @@ const BARANGAY_OPTIONS = [
     { label: "Barangay 2", value: "2" },
 ];
 
-export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
+export const AddressSection = ({
+    data = {},
+    onChange = () => {},
+}: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -27,10 +41,23 @@ export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
             <Card.Footer padded>
                 <YStack gap="$4">
                     <YStack>
-                        <Text>House No., Street, Subdivision, Barangay, City, Province *</Text>
+                        <Text>
+                            House No., Street,
+                            Subdivision, Barangay,
+                            City, Province *
+                        </Text>
                         <Input
-                            value={data.street_address}
-                            onChangeText={(value) => onChange("street_address", value)}
+                            value={
+                                data.street_address
+                            }
+                            onChangeText={(
+                                value,
+                            ) =>
+                                onChange(
+                                    "street_address",
+                                    value,
+                                )
+                            }
                             placeholder="Enter complete current address"
                             multiline
                             numberOfLines={3}
@@ -40,11 +67,20 @@ export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
 
                     <XStack gap="$4">
                         <YStack flex={1}>
-                            <Text>Municipality *</Text>
+                            <Text>
+                                Municipality *
+                            </Text>
                             <Select
                                 value={data.municipality_id?.toString()}
-                                onValueChange={(value) =>
-                                    onChange("municipality_id", parseInt(value))
+                                onValueChange={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "municipality_id",
+                                        parseInt(
+                                            value,
+                                        ),
+                                    )
                                 }
                             >
                                 <Select.Trigger>
@@ -55,17 +91,30 @@ export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
                                         <Select.Group>
-                                            {MUNICIPALITY_OPTIONS.map((option, i) => (
-                                                <Select.Item
-                                                    index={i}
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    <Select.ItemText>
-                                                        {option.label}
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ))}
+                                            {MUNICIPALITY_OPTIONS.map(
+                                                (
+                                                    option,
+                                                    i,
+                                                ) => (
+                                                    <Select.Item
+                                                        index={
+                                                            i
+                                                        }
+                                                        key={
+                                                            option.value
+                                                        }
+                                                        value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        <Select.ItemText>
+                                                            {
+                                                                option.label
+                                                            }
+                                                        </Select.ItemText>
+                                                    </Select.Item>
+                                                ),
+                                            )}
                                         </Select.Group>
                                     </Select.Viewport>
                                     <Select.ScrollDownButton />
@@ -74,10 +123,21 @@ export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
                         </YStack>
 
                         <YStack flex={1}>
-                            <Text>Barangay *</Text>
+                            <Text>
+                                Barangay *
+                            </Text>
                             <Select
                                 value={data.barangay_id?.toString()}
-                                onValueChange={(value) => onChange("barangay_id", parseInt(value))}
+                                onValueChange={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "barangay_id",
+                                        parseInt(
+                                            value,
+                                        ),
+                                    )
+                                }
                             >
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select barangay" />
@@ -87,17 +147,30 @@ export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
                                         <Select.Group>
-                                            {BARANGAY_OPTIONS.map((option, i) => (
-                                                <Select.Item
-                                                    index={i}
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    <Select.ItemText>
-                                                        {option.label}
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ))}
+                                            {BARANGAY_OPTIONS.map(
+                                                (
+                                                    option,
+                                                    i,
+                                                ) => (
+                                                    <Select.Item
+                                                        index={
+                                                            i
+                                                        }
+                                                        key={
+                                                            option.value
+                                                        }
+                                                        value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        <Select.ItemText>
+                                                            {
+                                                                option.label
+                                                            }
+                                                        </Select.ItemText>
+                                                    </Select.Item>
+                                                ),
+                                            )}
                                         </Select.Group>
                                     </Select.Viewport>
                                     <Select.ScrollDownButton />

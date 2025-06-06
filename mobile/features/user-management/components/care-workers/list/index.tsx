@@ -2,7 +2,12 @@ import { useRouter } from "expo-router";
 import { careManagerListStore } from "features/user-management/components/care-managers/list/store";
 import { ICareWorker } from "features/user-management/management.type";
 import { RefreshControl } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
+import {
+    Button,
+    Card,
+    Text,
+    View,
+} from "tamagui";
 
 import FlatList from "~/components/FlatList";
 import { useGetCareWorkers } from "~/features/user-management/management.hook";
@@ -25,9 +30,18 @@ const CareWorkerList = () => {
     return (
         <FlatList
             data={data}
-            renderItem={({ item }) => <CareWorkerCard item={item} />}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+            renderItem={({ item }) => (
+                <CareWorkerCard item={item} />
+            )}
+            contentContainerStyle={{
+                paddingBottom: 120,
+            }}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                />
+            }
         />
     );
 };
@@ -36,17 +50,23 @@ interface CareWorkerCardProps {
     item: ICareWorker;
 }
 
-const CareWorkerCard = ({ item }: CareWorkerCardProps) => {
+const CareWorkerCard = ({
+    item,
+}: CareWorkerCardProps) => {
     const router = useRouter();
 
     const { id, first_name, last_name } = item;
 
     const onView = () => {
-        router.push(`/(tabs)/options/user-management/care-workers/${id}`);
+        router.push(
+            `/(tabs)/options/user-management/care-workers/${id}`,
+        );
     };
 
     const onEdit = () => {
-        router.push(`/(tabs)/options/user-management/care-workers/${id}/edit`);
+        router.push(
+            `/(tabs)/options/user-management/care-workers/${id}/edit`,
+        );
     };
 
     return (
@@ -60,11 +80,21 @@ const CareWorkerCard = ({ item }: CareWorkerCardProps) => {
             borderWidth={1}
         >
             <View>
-                <Text fontSize="$6" fontWeight="500" color="#495057">
+                <Text
+                    fontSize="$6"
+                    fontWeight="500"
+                    color="#495057"
+                >
                     {first_name} {last_name}
                 </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginTop: 12,
+                }}
+            >
                 <Button
                     size="$3"
                     bg="#E9ECEF"

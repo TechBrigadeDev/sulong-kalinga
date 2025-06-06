@@ -1,8 +1,15 @@
-import { Platform, StatusBar } from "react-native";
+import {
+    Platform,
+    StatusBar,
+} from "react-native";
 
 const getTopBarHeight = () => {
-    const statusBarHeight = StatusBar.currentHeight || 0;
-    const topBarHeight = Platform.OS === "ios" ? statusBarHeight + 44 : statusBarHeight + 56;
+    const statusBarHeight =
+        StatusBar.currentHeight || 0;
+    const topBarHeight =
+        Platform.OS === "ios"
+            ? statusBarHeight + 44
+            : statusBarHeight + 56;
 
     return topBarHeight;
 };

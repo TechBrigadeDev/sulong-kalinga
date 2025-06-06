@@ -5,7 +5,9 @@ interface BeneficiaryListState {
     setSearch: (search: string) => void;
 }
 
-export const beneficiaryListStore = create<BeneficiaryListState>((set) => ({
-    search: "",
-    setSearch: (search) => set(() => ({ search })),
-}));
+export const beneficiaryListStore =
+    create<BeneficiaryListState>((set) => ({
+        search: "",
+        setSearch: (search) =>
+            set(() => ({ search })),
+    }));

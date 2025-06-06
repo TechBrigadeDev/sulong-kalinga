@@ -5,7 +5,9 @@ interface State {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-export const updatePasswordStore = create<State>((set) => ({
-    isOpen: false,
-    setIsOpen: (isOpen) => set({ isOpen }),
-}));
+export const updatePasswordStore = create<State>(
+    (set) => ({
+        isOpen: false,
+        setIsOpen: (isOpen) => set({ isOpen }),
+    }),
+);

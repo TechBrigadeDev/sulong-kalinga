@@ -9,7 +9,9 @@ const CareWorkers = () => {
     const router = useRouter();
 
     const handleAddCareWorker = () => {
-        router.push(`/(tabs)/options/user-management/care-workers/add`);
+        router.push(
+            `/(tabs)/options/user-management/care-workers/add`,
+        );
     };
     return (
         <View flex={1} bg="#C8E6C9">
@@ -20,7 +22,13 @@ const CareWorkers = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddCareWorker}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddCareWorker
+                        }
+                    >
                         Add Care Worker
                     </Button>
                     <CareWorkerSearch />

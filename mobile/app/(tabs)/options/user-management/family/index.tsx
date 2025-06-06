@@ -9,7 +9,9 @@ const Family = () => {
     const router = useRouter();
 
     const handleAddFamilyMember = () => {
-        router.push("/(tabs)/options/user-management/family/add");
+        router.push(
+            "/(tabs)/options/user-management/family/add",
+        );
     };
 
     return (
@@ -21,7 +23,13 @@ const Family = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddFamilyMember}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddFamilyMember
+                        }
+                    >
                         Add Family Member
                     </Button>
                     <FamilySearch />

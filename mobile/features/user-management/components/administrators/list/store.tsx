@@ -5,7 +5,10 @@ interface Store {
     setSearch: (search: string) => void;
 }
 
-export const adminListStore = create<Store>((set) => ({
-    search: "",
-    setSearch: (search: string) => set({ search }),
-}));
+export const adminListStore = create<Store>(
+    (set) => ({
+        search: "",
+        setSearch: (search: string) =>
+            set({ search }),
+    }),
+);

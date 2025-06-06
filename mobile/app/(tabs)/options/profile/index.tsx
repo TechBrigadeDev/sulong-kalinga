@@ -1,5 +1,8 @@
 import { Stack } from "expo-router";
-import { SafeAreaView, StyleSheet } from "react-native";
+import {
+    SafeAreaView,
+    StyleSheet,
+} from "react-native";
 
 import ProfileSettings from "~/components/screens/Options/profile/Settings";
 
@@ -8,7 +11,8 @@ const ProfileScreen = () => {
         <SafeAreaView style={style.container}>
             <Stack.Screen
                 options={{
-                    headerTitle: "Profile Settings",
+                    headerTitle:
+                        "Profile Settings",
                     headerShown: true,
                 }}
             />

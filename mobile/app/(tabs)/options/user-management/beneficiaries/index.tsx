@@ -9,7 +9,9 @@ const Beneficiaries = () => {
     const router = useRouter();
 
     const handleAddBeneficiary = () => {
-        router.push("/(tabs)/options/user-management/beneficiaries/add");
+        router.push(
+            "/(tabs)/options/user-management/beneficiaries/add",
+        );
     };
 
     return (
@@ -21,7 +23,13 @@ const Beneficiaries = () => {
             />
             <View style={styles.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddBeneficiary}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddBeneficiary
+                        }
+                    >
                         Add Beneficiary
                     </Button>
                     <BeneficiariesSearch />

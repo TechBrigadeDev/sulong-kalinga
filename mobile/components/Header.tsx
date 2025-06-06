@@ -3,7 +3,8 @@ import Constants from "expo-constants";
 import { StyleSheet } from "react-native";
 import { H3, View, XStack } from "tamagui";
 
-interface Props extends Partial<NativeStackHeaderProps> {
+interface Props
+    extends Partial<NativeStackHeaderProps> {
     name: string;
 }
 

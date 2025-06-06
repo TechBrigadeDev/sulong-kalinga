@@ -1,4 +1,7 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+} from "expo-router";
 import { Text, View } from "tamagui";
 
 import FamilyMemberDetail from "~/features/user-management/components/family/detail";
@@ -7,7 +10,8 @@ import { useGetFamilyMember } from "~/features/user-management/management.hook";
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
-    const { data, isLoading } = useGetFamilyMember(id as string);
+    const { data, isLoading } =
+        useGetFamilyMember(id as string);
 
     if (isLoading) {
         return (
@@ -20,7 +24,9 @@ const Screen = () => {
     if (!data) {
         return (
             <View>
-                <Text>No family member found</Text>
+                <Text>
+                    No family member found
+                </Text>
             </View>
         );
     }
@@ -28,7 +34,9 @@ const Screen = () => {
     return (
         <>
             <Stack.Screen />
-            <FamilyMemberDetail familyMember={data} />
+            <FamilyMemberDetail
+                familyMember={data}
+            />
         </>
     );
 };

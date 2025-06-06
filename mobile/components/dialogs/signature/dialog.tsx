@@ -1,13 +1,25 @@
 import { useWindowDimensions } from "react-native";
 import SignatureCanvas from "react-native-signature-canvas";
-import { Button, Dialog, XStack, YStack } from "tamagui";
+import {
+    Button,
+    Dialog,
+    XStack,
+    YStack,
+} from "tamagui";
 
 import { useSignatureStore } from "./store";
 
 export const SignatureDialog = () => {
     const { width } = useWindowDimensions();
-    const { isOpen, title, signature, onSave, setIsOpen, setSignature, reset } =
-        useSignatureStore();
+    const {
+        isOpen,
+        title,
+        signature,
+        onSave,
+        setIsOpen,
+        setSignature,
+        reset,
+    } = useSignatureStore();
 
     const handleOK = (signature: string) => {
         setSignature(signature);
@@ -27,7 +39,11 @@ export const SignatureDialog = () => {
     };
 
     return (
-        <Dialog modal open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog
+            modal
+            open={isOpen}
+            onOpenChange={setIsOpen}
+        >
             <Dialog.Portal>
                 <Dialog.Overlay
                     key="overlay"
@@ -44,15 +60,28 @@ export const SignatureDialog = () => {
                         "quick",
                         {
                             opacity: {
-                                overshootClamping: true,
+                                overshootClamping:
+                                    true,
                             },
                         },
                     ]}
-                    enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-                    exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+                    enterStyle={{
+                        x: 0,
+                        y: -20,
+                        opacity: 0,
+                        scale: 0.9,
+                    }}
+                    exitStyle={{
+                        x: 0,
+                        y: 10,
+                        opacity: 0,
+                        scale: 0.95,
+                    }}
                     width={width * 0.9}
                 >
-                    <Dialog.Title>{title}</Dialog.Title>
+                    <Dialog.Title>
+                        {title}
+                    </Dialog.Title>
                     <YStack space>
                         <SignatureCanvas
                             onOK={handleOK}
@@ -66,11 +95,24 @@ export const SignatureDialog = () => {
                                         border: none;
                                     }`}
                         />
-                        <XStack space justifyContent="flex-end">
-                            <Button onPress={handleClose} theme="gray">
+                        <XStack
+                            space
+                            justifyContent="flex-end"
+                        >
+                            <Button
+                                onPress={
+                                    handleClose
+                                }
+                                theme="gray"
+                            >
                                 Cancel
                             </Button>
-                            <Button onPress={handleClear} theme="red">
+                            <Button
+                                onPress={
+                                    handleClear
+                                }
+                                theme="red"
+                            >
                                 Clear
                             </Button>
                         </XStack>

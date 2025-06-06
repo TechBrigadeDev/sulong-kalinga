@@ -49,30 +49,56 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-    const isAuthenticated = authStore((state) => state.token) !== null;
+    const isAuthenticated =
+        authStore((state) => state.token) !==
+        null;
 
     return (
         <Providers>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView
+                style={{ flex: 1 }}
+            >
                 <Stack>
-                    <Stack.Protected guard={isAuthenticated}>
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Protected
+                        guard={isAuthenticated}
+                    >
+                        <Stack.Screen
+                            name="(tabs)"
+                            options={{
+                                headerShown:
+                                    false,
+                            }}
+                        />
                         <Stack.Screen
                             name="messaging"
                             options={{
                                 animation: "fade",
-                                headerShown: false,
+                                headerShown:
+                                    false,
                             }}
                         />
                         <Stack.Screen
                             name="scheduling"
                             options={{
                                 title: "Scheduling",
-                                headerTitle: "Scheduling",
+                                headerTitle:
+                                    "Scheduling",
                             }}
                         />
-                        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-                        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+                        <Stack.Screen
+                            name="modal"
+                            options={{
+                                presentation:
+                                    "modal",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="(modals)"
+                            options={{
+                                headerShown:
+                                    false,
+                            }}
+                        />
                     </Stack.Protected>
                     <Stack.Screen name="login" />
                 </Stack>

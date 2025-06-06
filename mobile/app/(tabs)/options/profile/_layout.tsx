@@ -3,7 +3,9 @@ import React from "react";
 
 const Layout = () => {
     return (
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack
+            screenOptions={{ headerShown: false }}
+        >
             <Slot />
         </Stack>
     );

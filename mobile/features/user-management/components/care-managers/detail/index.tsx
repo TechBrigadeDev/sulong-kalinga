@@ -1,6 +1,10 @@
 import TabScroll from "components/tabs/TabScroll";
 import React from "react";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import {
+    SafeAreaView,
+    StyleSheet,
+    View,
+} from "react-native";
 import { Text, YStack } from "tamagui";
 
 import { ICareManager } from "~/features/user-management/management.type";
@@ -15,11 +19,16 @@ interface CareManagerDetailProps {
     careManager: ICareManager;
 }
 
-function CareManagerDetail({ careManager }: CareManagerDetailProps) {
+function CareManagerDetail({
+    careManager,
+}: CareManagerDetailProps) {
     if (!careManager) {
         return (
             <View style={styles.centered}>
-                <Text>Care Manager data is not available</Text>
+                <Text>
+                    Care Manager data is not
+                    available
+                </Text>
             </View>
         );
     }
@@ -27,12 +36,25 @@ function CareManagerDetail({ careManager }: CareManagerDetailProps) {
     return (
         <SafeAreaView style={styles.container}>
             <TabScroll>
-                <YStack gap="$4" style={{ padding: 16 }}>
-                    <CareManagerHeader careManager={careManager} />
-                    <PersonalDetails careManager={careManager} />
-                    <ContactInformation careManager={careManager} />
-                    <Documents careManager={careManager} />
-                    <GovernmentIDs careManager={careManager} />
+                <YStack
+                    gap="$4"
+                    style={{ padding: 16 }}
+                >
+                    <CareManagerHeader
+                        careManager={careManager}
+                    />
+                    <PersonalDetails
+                        careManager={careManager}
+                    />
+                    <ContactInformation
+                        careManager={careManager}
+                    />
+                    <Documents
+                        careManager={careManager}
+                    />
+                    <GovernmentIDs
+                        careManager={careManager}
+                    />
                 </YStack>
             </TabScroll>
         </SafeAreaView>

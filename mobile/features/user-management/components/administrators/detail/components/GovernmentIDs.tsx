@@ -15,13 +15,26 @@ const GovernmentIDs = ({ admin }: Props) => {
     return (
         <Card elevate>
             <Card.Header p="$4">
-                <SectionTitle>Government ID Numbers</SectionTitle>
+                <SectionTitle>
+                    Government ID Numbers
+                </SectionTitle>
             </Card.Header>
             <Card.Footer p="$4">
                 <YStack gap="$3">
-                    <DetailRow label="SSS ID Number" value={admin.sss_id} />
-                    <DetailRow label="PhilHealth ID Number" value={admin.philhealth_id} />
-                    <DetailRow label="Pag-Ibig ID Number" value={admin.pagibig_id} />
+                    <DetailRow
+                        label="SSS ID Number"
+                        value={admin.sss_id}
+                    />
+                    <DetailRow
+                        label="PhilHealth ID Number"
+                        value={
+                            admin.philhealth_id
+                        }
+                    />
+                    <DetailRow
+                        label="Pag-Ibig ID Number"
+                        value={admin.pagibig_id}
+                    />
                 </YStack>
             </Card.Footer>
         </Card>

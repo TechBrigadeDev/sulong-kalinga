@@ -27,13 +27,15 @@ module.exports = defineConfig([
         },
         rules: {
             "import/no-unresolved": "error",
-            "no-relative-import-paths/no-relative-import-paths": [
-                "error",
-                { allowSameFolder: true },
-            ],
+            "no-relative-import-paths/no-relative-import-paths":
+                [
+                    "error",
+                    { allowSameFolder: true },
+                ],
 
             "no-unused-vars": "off", // or "@typescript-eslint/no-unused-vars": "off",
-            "unused-imports/no-unused-imports": "error",
+            "unused-imports/no-unused-imports":
+                "error",
             "unused-imports/no-unused-vars": [
                 "warn",
                 {

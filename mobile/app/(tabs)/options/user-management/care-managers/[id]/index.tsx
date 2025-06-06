@@ -1,4 +1,7 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+} from "expo-router";
 import { Text, YStack } from "tamagui";
 
 import CareManagerDetail from "~/features/user-management/components/care-managers/detail";
@@ -7,11 +10,19 @@ import { useGetCareManager } from "~/features/user-management/management.hook";
 const Screen = () => {
     const { id } = useLocalSearchParams();
 
-    const { data, isLoading } = useGetCareManager(id as string);
+    const { data, isLoading } = useGetCareManager(
+        id as string,
+    );
 
     if (isLoading) {
         return (
-            <YStack style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <YStack
+                style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
                 <Text>Loading...</Text>
             </YStack>
         );
@@ -20,7 +31,12 @@ const Screen = () => {
     if (!data) {
         return (
             <YStack
-                style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }}
+                style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: 16,
+                }}
             >
                 <Text>No Care Manager found</Text>
             </YStack>
@@ -35,7 +51,9 @@ const Screen = () => {
                     headerShown: true,
                 }}
             />
-            <CareManagerDetail careManager={data} />
+            <CareManagerDetail
+                careManager={data}
+            />
         </>
     );
 };

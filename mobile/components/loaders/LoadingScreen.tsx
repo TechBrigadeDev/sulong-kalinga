@@ -1,4 +1,7 @@
-import { SafeAreaView, StyleSheet } from "react-native";
+import {
+    SafeAreaView,
+    StyleSheet,
+} from "react-native";
 import { Spinner } from "tamagui";
 
 const LoadingScreen = () => (

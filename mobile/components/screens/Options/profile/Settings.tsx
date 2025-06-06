@@ -16,16 +16,41 @@ const ProfileSettings = () => {
             <OptionCard style={styles.card}>
                 <OptionRow
                     label="Email"
-                    value={userData?.email || "Not set"}
-                    href={"/options/profile/update-email"}
+                    value={
+                        userData?.email ||
+                        "Not set"
+                    }
+                    href={
+                        "/options/profile/update-email"
+                    }
                 />
-                <OptionRow label="Mobile Number" value={userData?.mobile || "Not set"} />
-                <OptionRow label="Password" href={"/options/profile/update-password"} />
+                <OptionRow
+                    label="Mobile Number"
+                    value={
+                        userData?.mobile ||
+                        "Not set"
+                    }
+                />
+                <OptionRow
+                    label="Password"
+                    href={
+                        "/options/profile/update-password"
+                    }
+                />
             </OptionCard>
             <OptionCard style={styles.card}>
-                <OptionRow label="SSS ID Number" value={"1234567890"} />
-                <OptionRow label="PhilHealth ID Number" value={"1234567890"} />
-                <OptionRow label="Pag-IBIG ID Number" value={"1234567890"} />
+                <OptionRow
+                    label="SSS ID Number"
+                    value={"1234567890"}
+                />
+                <OptionRow
+                    label="PhilHealth ID Number"
+                    value={"1234567890"}
+                />
+                <OptionRow
+                    label="Pag-IBIG ID Number"
+                    value={"1234567890"}
+                />
             </OptionCard>
             {/* <YStack gap="$3">
           <XStack gap="$2">
@@ -79,16 +104,28 @@ const styles = StyleSheet.create({
 const Header = () => {
     const { data: user } = useUser();
 
-    const fullName = user ? `${user.first_name} ${user.last_name}` : "User";
+    const fullName = user
+        ? `${user.first_name} ${user.last_name}`
+        : "User";
 
     return (
         <YStack style={headerStyle.container}>
-            <Avatar circular size="$8" marginBottom={10}>
+            <Avatar
+                circular
+                size="$8"
+                marginBottom={10}
+            >
                 <UserAvatar />
             </Avatar>
-            <Text style={headerStyle.name}>{fullName}</Text>
+            <Text style={headerStyle.name}>
+                {fullName}
+            </Text>
             <Badge
-                variant={user?.status === "Active" ? "success" : "warning"}
+                variant={
+                    user?.status === "Active"
+                        ? "success"
+                        : "warning"
+                }
                 style={headerStyle.shadow}
                 size={15}
             >

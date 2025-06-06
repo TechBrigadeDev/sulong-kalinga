@@ -6,11 +6,20 @@ import { useDebounce } from "~/common/hooks";
 const CareWorkerSearch = () => {
     const { setSearch } = careManagerListStore();
 
-    const onSearch = useDebounce((text: string) => {
-        setSearch(text);
-    }, 500);
+    const onSearch = useDebounce(
+        (text: string) => {
+            setSearch(text);
+        },
+        500,
+    );
 
-    return <Input placeholder="Search Care Worker" size="$3" onChangeText={onSearch} />;
+    return (
+        <Input
+            placeholder="Search Care Worker"
+            size="$3"
+            onChangeText={onSearch}
+        />
+    );
 };
 
 export default CareWorkerSearch;

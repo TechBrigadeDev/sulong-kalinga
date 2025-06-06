@@ -21,14 +21,21 @@ const LoginForm = () => {
 
     return (
         <View style={styles.container}>
-            <Input placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} />
+            <Input
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={styles.input}
+            />
             <Input
                 placeholder="Password"
                 secureTextEntry
                 onChangeText={setPassword}
                 style={styles.input}
             />
-            <Button onPress={onLogin}>Login</Button>
+            <Button onPress={onLogin}>
+                Login
+            </Button>
         </View>
     );
 };

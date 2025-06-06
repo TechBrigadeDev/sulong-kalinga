@@ -15,7 +15,11 @@ type Props = {
 const AvatarImage = (props: Props) => {
     return (
         <View style={style.container}>
-            {props.uri ? <Image uri={props.uri} /> : <Svg id={props.fallback} />}
+            {props.uri ? (
+                <Image uri={props.uri} />
+            ) : (
+                <Svg id={props.fallback} />
+            )}
         </View>
     );
 };
@@ -41,7 +45,10 @@ const Svg = ({ id }: { id?: string }) => {
 
     return (
         <View style={style.container}>
-            <SvgXml xml={xml} style={style.image} />
+            <SvgXml
+                xml={xml}
+                style={style.image}
+            />
         </View>
     );
 };

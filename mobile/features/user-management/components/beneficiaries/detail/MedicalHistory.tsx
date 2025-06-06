@@ -6,12 +6,18 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const MedicalHistory = ({ beneficiary: _beneficiary }: Props) => {
+const MedicalHistory = ({
+    beneficiary: _beneficiary,
+}: Props) => {
     const medicalInfo = {
-        "Medical Conditions": "Et voluptas repudiandae qui voluptatem quod neque fugiat.",
-        Medications: "Quos aliquam nulla qui facilis.",
-        Allergies: "Repellendus cum est eum natus ab.",
-        Immunizations: "Ea numquam rerum sit rerum consequatur corrupti et.",
+        "Medical Conditions":
+            "Et voluptas repudiandae qui voluptatem quod neque fugiat.",
+        Medications:
+            "Quos aliquam nulla qui facilis.",
+        Allergies:
+            "Repellendus cum est eum natus ab.",
+        Immunizations:
+            "Ea numquam rerum sit rerum consequatur corrupti et.",
         Category: "Dementia",
     };
 
@@ -22,9 +28,13 @@ const MedicalHistory = ({ beneficiary: _beneficiary }: Props) => {
             </Card.Header>
             <Card.Footer padded>
                 <YStack gap="$3">
-                    {Object.entries(medicalInfo).map(([key, value]) => (
+                    {Object.entries(
+                        medicalInfo,
+                    ).map(([key, value]) => (
                         <YStack key={key}>
-                            <Text opacity={0.6}>{key}</Text>
+                            <Text opacity={0.6}>
+                                {key}
+                            </Text>
                             <Text>{value}</Text>
                         </YStack>
                     ))}

@@ -41,6 +41,8 @@ export const careWorkerSchema = z.object({
         updated_at: z.string(),
     }),
     photo_url: z.string().nullable(),
-    government_issued_id_url: z.string().nullable(),
+    government_issued_id_url: z
+        .string()
+        .nullable(),
     cv_resume_url: z.string().nullable(),
 });
