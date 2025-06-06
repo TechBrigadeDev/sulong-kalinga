@@ -46,6 +46,13 @@ module.exports = defineConfig([
 
             "simple-import-sort/imports": "error",
             "simple-import-sort/exports": "error",
+
+            "import/namespace": [
+                "error",
+                {
+                    allowComputed: true,
+                },
+            ],
         },
     },
 ]);

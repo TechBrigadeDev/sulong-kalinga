@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { ScrollView } from "react-native";
 import { Card, H4, Text, XStack } from "tamagui";
+
+import TabScroll from "~/components/tabs/TabScroll";
 
 interface ShiftDetailsProps {
     label: string;
@@ -39,7 +40,7 @@ const Screen = () => {
     };
 
     return (
-        <ScrollView style={{ flex: 1 }}>
+        <TabScroll style={{ flex: 1 }}>
             <Stack.Screen
                 options={{
                     title: "SHIFT DETAILS",
@@ -76,7 +77,7 @@ const Screen = () => {
                     </Card>
                 ))}
             </Card>
-        </ScrollView>
+        </TabScroll>
     );
 };
 

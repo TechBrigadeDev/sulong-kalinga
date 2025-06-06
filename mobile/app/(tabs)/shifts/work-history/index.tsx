@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
-import { ScrollView } from "react-native";
 import { Card, Text, XStack, YStack } from "tamagui";
+
+import TabScroll from "~/components/tabs/TabScroll";
 
 const WorkHistoryCard = ({
     beneficiary,
@@ -43,7 +44,7 @@ const Screen = () => {
     ];
 
     return (
-        <ScrollView style={{ flex: 1 }}>
+        <TabScroll style={{ flex: 1 }}>
             <Stack.Screen
                 options={{
                     title: "VIEW WORK HISTORY",
@@ -61,7 +62,7 @@ const Screen = () => {
                     />
                 ))}
             </YStack>
-        </ScrollView>
+        </TabScroll>
     );
 };
 

@@ -1,7 +1,7 @@
 import AvatarImage from "components/Avatar";
+import TabScroll from "components/tabs/TabScroll";
 import { Link } from "expo-router";
 import { useState } from "react";
-import { ScrollView } from "react-native";
 import { Avatar, Button, Card, H4, Stack, Text, XStack, YStack } from "tamagui";
 
 const VisitationCard = ({
@@ -59,7 +59,7 @@ const Screen = () => {
     const [isOnShift, setOnShift] = useState(true);
 
     return (
-        <ScrollView style={{ flex: 1 }}>
+        <TabScroll style={{ flex: 1 }}>
             <Stack style={{ padding: 16 }}>
                 <Card elevate style={{ marginBottom: 16, padding: 16 }}>
                     <YStack>
@@ -123,7 +123,7 @@ const Screen = () => {
                     type="Service Request"
                 />
             </Stack>
-        </ScrollView>
+        </TabScroll>
     );
 };
 

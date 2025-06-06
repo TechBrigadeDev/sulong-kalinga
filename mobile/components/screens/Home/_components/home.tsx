@@ -1,15 +1,16 @@
 import { StyleSheet } from "react-native";
-import { ScrollView } from "tamagui";
+
+import TabScroll from "~/components/tabs/TabScroll";
 
 import HomeMenu from "./menu";
 import Profile from "./profile";
 
 const Home = () => {
     return (
-        <ScrollView style={styles.container}>
+        <TabScroll style={styles.container}>
             <Profile />
             <HomeMenu />
-        </ScrollView>
+        </TabScroll>
     );
 };
 

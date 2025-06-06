@@ -1,20 +1,21 @@
 import { Link as ExpoLink, LinkProps } from "expo-router";
 import { icons } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity } from "react-native";
-import { Card as TCard, ScrollView, Text, View, XStack, YStack } from "tamagui";
+import { Card as TCard, Text, View, XStack, YStack } from "tamagui";
 
 import Header from "~/components/Header";
+import TabScroll from "~/components/tabs/TabScroll";
 import LogoutButton from "~/features/auth/components/logout/button";
 
 const Screen = () => {
     return (
         <View>
             <Header name="Options" />
-            <ScrollView style={style.scroll}>
+            <TabScroll style={style.scroll}>
                 <Profile />
                 <UserManagement />
                 <LogoutButton />
-            </ScrollView>
+            </TabScroll>
         </View>
     );
 };
