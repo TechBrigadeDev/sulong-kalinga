@@ -641,38 +641,92 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Database seeding complete!');
     }
 
+
     private function generateNotifications()
     {
-        // Generate notifications for all beneficiaries (but limit to 1-3 per beneficiary)
+        // Generate notifications for all beneficiaries (1-3 per beneficiary)
         $beneficiaries = Beneficiary::all();
         $notificationCount = 0;
         
+        // Realistic notification types for beneficiaries
+        $beneficiaryNotifications = [
+            'Care Plan Updated' => 'Your weekly care plan has been updated by your care worker. Please review the new recommendations.',
+            'Upcoming Appointment' => 'You have an appointment scheduled for tomorrow at 10:00 AM with your care worker.',
+            'Medication Reminder' => 'Please remember to take your prescribed medication as scheduled.',
+            'Service Request Status' => 'Your service request for home assistance has been approved.',
+        ];
+        
         foreach ($beneficiaries as $beneficiary) {
-            if (rand(1, 4) > 1) { // 75% of beneficiaries get notifications
-                $count = rand(1, 3);
-                Notification::factory()
-                    ->count($count)
-                    ->forBeneficiary($beneficiary->beneficiary_id)
-                    ->create();
+            $count = rand(1, 3);
+            $selectedNotifications = array_rand($beneficiaryNotifications, min($count, count($beneficiaryNotifications)));
+                
+            // Convert to array if only one notification is selected
+            if (!is_array($selectedNotifications)) {
+                $selectedNotifications = [$selectedNotifications];
+            }
+                
+            foreach ($selectedNotifications as $notificationType) {
+                Notification::create([
+                    'user_id' => $beneficiary->beneficiary_id,
+                    'user_type' => 'beneficiary',
+                    'message_title' => $notificationType,
+                    'message' => $beneficiaryNotifications[$notificationType],
+                    'date_created' => now()->subDays(rand(1, 14)),
+                    'is_read' => (rand(1, 3) == 1), // 1/3 chance of being read
+                    'created_at' => now()->subDays(rand(1, 14)),
+                    'updated_at' => now()
+                ]);
                     
-                $notificationCount += $count;
+                $notificationCount++;
             }
         }
         
         \Log::info("Created {$notificationCount} notifications for beneficiaries");
         
-        // Generate notifications for some family members
-        $familyMembers = FamilyMember::inRandomOrder()->take(50)->get(); // Half of all family members
+        // Generate notifications for family members
+        $familyMembers = FamilyMember::all();
         $notificationCount = 0;
         
+        // Realistic notification types for family members
+        $familyNotifications = [
+            'Beneficiary Health Update' => 'The weekly care plan for your family member has been updated. Please review the changes.',
+            'Upcoming Visit Information' => 'A care worker visit is scheduled for your family member tomorrow at 11:00 AM.',
+            'Medication Change Alert' => 'There has been a change in your family member\'s medication schedule. Please review the details.',
+            'Care Plan Approval Needed' => 'Please review and approve the proposed care plan for your family member.',
+            'Service Request Update' => 'The additional service request you submitted for your family member is being processed.',
+        ];
+        
         foreach ($familyMembers as $familyMember) {
+            // Create 1-2 notifications for each family member
             $count = rand(1, 2);
-            Notification::factory()
-                ->count($count)
-                ->forFamilyMember($familyMember->family_member_id)
-                ->create();
+            $selectedNotifications = array_rand($familyNotifications, min($count, count($familyNotifications)));
+            
+            // Convert to array if only one notification is selected
+            if (!is_array($selectedNotifications)) {
+                $selectedNotifications = [$selectedNotifications];
+            }
+            
+            foreach ($selectedNotifications as $notificationType) {
+                // Get related beneficiary name for personalization
+                $beneficiary = Beneficiary::find($familyMember->related_beneficiary_id);
+                $beneficiaryName = $beneficiary ? $beneficiary->name : "your family member";
                 
-            $notificationCount += $count;
+                // Personalize the message
+                $message = str_replace("your family member", $beneficiaryName, $familyNotifications[$notificationType]);
+                
+                Notification::create([
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
+                    'message_title' => $notificationType,
+                    'message' => $message,
+                    'date_created' => now()->subDays(rand(1, 10)),
+                    'is_read' => (rand(1, 3) == 1), // 1/3 chance of being read
+                    'created_at' => now()->subDays(rand(1, 10)),
+                    'updated_at' => now()
+                ]);
+                
+                $notificationCount++;
+            }
         }
         
         \Log::info("Created {$notificationCount} notifications for family members");
@@ -684,39 +738,33 @@ class DatabaseSeeder extends Seeder
         $notificationTypes = [
             // Admin notifications (role_id = 1)
             1 => [
-                'System Update' => 'The system has been updated with new features.',
-                'Internal Appointment Created' => 'A new internal appointment has been created.',
-                'Internal Appointment Updated' => 'An internal appointment has been updated.',
-                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
-                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
-                'Security Alert' => 'A new security patch has been applied.',
-                'New User Registration' => 'A new user has registered in the system.',
-                'Data Backup Complete' => 'Automatic data backup has completed successfully.',
-                'Performance Report' => 'Monthly performance report is now available.'
+                'System Update' => 'The system has been updated with new features for care plan management.',
+                'Internal Appointment Created' => 'A new internal team meeting has been scheduled for next Monday at 10:00 AM.',
+                'Staff Performance Report' => 'The monthly staff performance reports are now available for review.',
+                'Security Alert' => 'A new security patch has been applied to protect beneficiary data.',
+                'New User Registration' => 'Three new care workers have been registered in the system.',
+                'Data Backup Complete' => 'The weekly data backup has completed successfully.',
+                'Performance Report' => 'The quarterly performance metrics report is ready for your review.'
             ],
             // Care Manager notifications (role_id = 2)
             2 => [
-                'New Case Assigned' => 'You have been assigned a new case to manage.',
-                'Internal Appointment Created' => 'A new internal appointment has been created.',
-                'Internal Appointment Updated' => 'An internal appointment has been updated.',
-                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
-                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
-                'Care Plan Review' => 'A care plan is due for review this week.',
-                'Staff Schedule Update' => 'There are changes to the staff schedule.',
-                'Patient Status Alert' => 'A patient status has been updated.',
-                'Weekly Report Due' => 'Your weekly report is due in 2 days.'
+                'New Case Assigned' => 'You have been assigned 3 new beneficiaries to manage.',
+                'Internal Appointment Created' => 'A staff training session has been scheduled for Wednesday at 2:00 PM.',
+                'Care Plan Review' => 'Five care plans are due for review this week.',
+                'Staff Schedule Update' => 'There are changes to the care worker schedule for next week.',
+                'Patient Status Alert' => 'Beneficiary Maria Santos has reported increased pain levels.',
+                'Weekly Report Due' => 'Your weekly team status report is due tomorrow.',
+                'Training Completion' => 'Your team has completed 95% of the required training modules.'
             ],
             // Care Worker notifications (role_id = 3)
             3 => [
-                'Visit Reminder' => 'You have a scheduled visit tomorrow.',
-                'Medication Update' => 'Medication schedule has been updated for a patient.',
-                'Training Available' => 'New training modules are available for you.',
-                'Shift Change Request' => 'A shift change has been requested.',
-                'Internal Appointment Created' => 'A new internal appointment has been created.',
-                'Internal Appointment Updated' => 'An internal appointment has been updated.',
-                'Internal Appointment Canceled' => 'An internal appointment has been canceled.',
-                'Internal Appointment Reminder' => 'Reminder: You have an upcoming internal appointment.',
-                'Documentation Reminder' => 'Please complete your visit documentation.'
+                'Visit Reminder' => 'You have 3 scheduled visits tomorrow starting at 9:00 AM.',
+                'Medication Update' => 'Medication schedule has been updated for beneficiary Juan Cruz.',
+                'Training Available' => 'A new training module on diabetes management is available for completion.',
+                'Shift Change Request' => 'Your schedule change request for next Friday has been approved.',
+                'Documentation Reminder' => 'Please complete your visit documentation for today\'s appointments.',
+                'Assessment Due' => 'Weekly assessment for beneficiary Elena Reyes is due by Thursday.',
+                'Supply Restock' => 'Your care supply kit has been restocked and is ready for pickup.'
             ]
         ];
         
@@ -726,18 +774,22 @@ class DatabaseSeeder extends Seeder
             $count = rand(3, 7); // Create 3-7 notifications per user
             
             // Create some read and some unread notifications
-            for ($i = 0; $i < $count; $i++) {
-                $title = array_rand($roleSpecificMessages);
-                $message = $roleSpecificMessages[$title];
+            $selectedNotifications = array_rand($roleSpecificMessages, min($count, count($roleSpecificMessages)));
+            
+            // Convert to array if only one notification is selected
+            if (!is_array($selectedNotifications)) {
+                $selectedNotifications = [$selectedNotifications];
+            }
                 
+            foreach ($selectedNotifications as $title) {
                 Notification::create([
                     'user_id' => $staff->id,
                     'user_type' => 'cose_staff',
                     'message_title' => $title,
-                    'message' => $message,
+                    'message' => $roleSpecificMessages[$title],
                     'date_created' => now()->subHours(rand(1, 72)), // Random time within last 3 days
                     'is_read' => rand(0, 100) < 30, // 30% chance of being read
-                    'created_at' => now(),
+                    'created_at' => now()->subHours(rand(1, 72)),
                     'updated_at' => now()
                 ]);
                 
