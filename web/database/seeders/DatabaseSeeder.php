@@ -344,6 +344,8 @@ class DatabaseSeeder extends Seeder
             \Log::error('Failed to seed family members', ['exception' => $e]);
         }
 
+        
+
         // Create weekly care plans using the factory
         try {
             $this->command->info('Seeding weekly care plans...');
@@ -1588,12 +1590,73 @@ class DatabaseSeeder extends Seeder
         try {
             // Track visitation counts for reporting
             $regularCount = 0;
-            $recurringCount = 0;
+            $weeklyRecurringCount = 0;
+            $monthlyRecurringCount = 0;
             $occurrenceCount = 0;
+            $canceledCount = 0;
             
-            // Create 40 regular (non-recurring) visitations
-            for ($i = 0; $i < 40; $i++) {
-                // Randomly select a care worker and an appropriate beneficiary (same municipality)
+            // Create base weekly routine care visits for EVERY beneficiary first
+            $this->command->info('Creating one weekly routine care visit for each beneficiary with their assigned care worker...');
+            
+            // Track which beneficiaries have already been assigned weekly recurring visits
+            $beneficiariesWithWeeklyVisits = [];
+            
+            foreach ($beneficiaries as $beneficiary) {
+                // Check if beneficiary has a general care plan with an assigned care worker
+                if ($beneficiary->general_care_plan_id) {
+                    $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
+                    
+                    if ($generalCarePlan && $generalCarePlan->care_worker_id) {
+                        // Find the assigned care worker from the general care plan
+                        $assignedCareWorker = $careWorkers->firstWhere('id', $generalCarePlan->care_worker_id);
+                        
+                        // If found, use the assigned care worker, otherwise find one from the same municipality
+                        if (!$assignedCareWorker) {
+                            // Find a care worker in the same municipality
+                            $municipalityId = $beneficiary->municipality_id;
+                            $municipalityCareWorkers = $careWorkers->filter(function($worker) use ($municipalityId) {
+                                return $worker->assigned_municipality_id == $municipalityId;
+                            });
+                            
+                            // If no workers in this municipality, use any available care worker
+                            if ($municipalityCareWorkers->isEmpty()) {
+                                $assignedCareWorker = $careWorkers->random();
+                            } else {
+                                $assignedCareWorker = $municipalityCareWorkers->random();
+                            }
+                        }
+                        
+                        // Create a weekly recurring routine care visit for this beneficiary
+                        $startDate = $this->faker->dateTimeBetween('-2 weeks', 'now');
+                        $visitation = $this->createRecurringVisitation(
+                            $assignedCareWorker, 
+                            $beneficiary, 
+                            'routine_care_visit', 
+                            'weekly',
+                            $startDate
+                        );
+                        
+                        // Generate occurrences for this recurring visitation (6 months worth)
+                        $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 6, true);
+                        $occurrenceCount += count($generatedOccurrences);
+                        $weeklyRecurringCount++;
+                        
+                        // Count how many occurrences were canceled
+                        $canceledOccurrences = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+                            ->where('status', 'canceled')
+                            ->count();
+                        $canceledCount += $canceledOccurrences;
+                        
+                        // Mark this beneficiary as having a weekly visit
+                        $beneficiariesWithWeeklyVisits[] = $beneficiary->beneficiary_id;
+                    }
+                }
+            }
+            
+            // Create regular (non-recurring) visitations for variety
+            $this->command->info('Creating additional non-recurring visitations...');
+            for ($i = 0; $i < 30; $i++) {
+                // Randomly select a care worker
                 $careWorker = $careWorkers->random();
                 $municipalityId = $careWorker->assigned_municipality_id;
                 
@@ -1611,7 +1674,7 @@ class DatabaseSeeder extends Seeder
                 $visitation = Visitation::factory()->create([
                     'care_worker_id' => $careWorker->id,
                     'beneficiary_id' => $beneficiary->beneficiary_id,
-                    'visit_type' => $this->faker->randomElement(['routine_care_visit', 'service_request']),
+                    'visit_type' => $this->faker->randomElement(['service_request', 'emergency_visit']), // Only non-routine visits
                     'visitation_date' => $this->faker->dateTimeBetween('-2 weeks', '+2 weeks')->format('Y-m-d'),
                     'assigned_by' => User::where('role_id', 2)
                         ->where('assigned_municipality_id', $municipalityId)
@@ -1619,7 +1682,7 @@ class DatabaseSeeder extends Seeder
                 ]);
                 
                 // Create a single occurrence for this visitation
-                VisitationOccurrence::factory()->create([
+                $occurrence = VisitationOccurrence::factory()->create([
                     'visitation_id' => $visitation->visitation_id,
                     'occurrence_date' => $visitation->visitation_date,
                     'start_time' => $visitation->start_time,
@@ -1628,44 +1691,29 @@ class DatabaseSeeder extends Seeder
                         $this->faker->randomElement(['completed', 'canceled']) : 'scheduled'
                 ]);
                 
+                // Count canceled occurrences
+                if ($occurrence->status === 'canceled') {
+                    $canceledCount++;
+                }
+                
                 $regularCount++;
             }
             
-            // Create 15 recurring visitations (weekly pattern)
-            for ($i = 0; $i < 15; $i++) {
-                // Randomly select a care worker and beneficiary from the same area
+            // Create some recurring visitations with monthly pattern (for additional variety)
+            $this->command->info('Creating monthly recurring visitations for additional variety...');
+            for ($i = 0; $i < 8; $i++) {
+                // Randomly select a care worker
                 $careWorker = $careWorkers->random();
                 $municipalityId = $careWorker->assigned_municipality_id;
-                $municipalityBeneficiaries = $beneficiaries->where('municipality_id', $municipalityId);
-                $beneficiary = $municipalityBeneficiaries->isEmpty() ? 
-                            $beneficiaries->random() : 
-                            $municipalityBeneficiaries->random();
                 
-                // Create the visitation with weekly recurring pattern
-                $startDate = $this->faker->dateTimeBetween('-1 month', '+1 week');
-                $visitation = $this->createRecurringVisitation(
-                    $careWorker, 
-                    $beneficiary, 
-                    'routine_care_visit', 
-                    'weekly',
-                    $startDate
-                );
-                
-                // Generate occurrences for this recurring visitation
-                $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 3);
-                $occurrenceCount += count($generatedOccurrences);
-                $recurringCount++;
-            }
-            
-            // Create 5 recurring visitations (monthly pattern)
-            for ($i = 0; $i < 5; $i++) {
-                // Randomly select a care worker and beneficiary from the same area
-                $careWorker = $careWorkers->random();
-                $municipalityId = $careWorker->assigned_municipality_id;
+                // Find beneficiaries in the same municipality, preferably ones that don't already have monthly visits
                 $municipalityBeneficiaries = $beneficiaries->where('municipality_id', $municipalityId);
-                $beneficiary = $municipalityBeneficiaries->isEmpty() ? 
-                            $beneficiaries->random() : 
-                            $municipalityBeneficiaries->random();
+                
+                if ($municipalityBeneficiaries->isEmpty()) {
+                    $beneficiary = $beneficiaries->random();
+                } else {
+                    $beneficiary = $municipalityBeneficiaries->random();
+                }
                 
                 // Create the visitation with monthly recurring pattern
                 $startDate = $this->faker->dateTimeBetween('-1 month', '+1 week');
@@ -1678,12 +1726,19 @@ class DatabaseSeeder extends Seeder
                 );
                 
                 // Generate occurrences for this recurring visitation
-                $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 6);
+                $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 6, true);
                 $occurrenceCount += count($generatedOccurrences);
-                $recurringCount++;
+                $monthlyRecurringCount++;
+                
+                // Count canceled occurrences
+                $newCanceledCount = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+                    ->where('status', 'canceled')
+                    ->count();
+                $canceledCount += $newCanceledCount;
             }
             
-            $this->command->info("Generated visitations: {$regularCount} regular, {$recurringCount} recurring with {$occurrenceCount} occurrences");
+            $this->command->info("Generated visitations: {$regularCount} regular, {$weeklyRecurringCount} weekly recurring, " . 
+                "{$monthlyRecurringCount} monthly recurring with {$occurrenceCount} total occurrences ({$canceledCount} canceled)");
             
         } catch (\Throwable $e) {
             $this->command->error('Failed to generate care worker visitations: ' . $e->getMessage());
@@ -1748,8 +1803,13 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Generate occurrences for a recurring visitation
+     * 
+     * @param Visitation $visitation The visitation to generate occurrences for
+     * @param int $months Number of months to generate occurrences for
+     * @param bool $includeCancellations Whether to include random cancellations
+     * @return array Array of generated occurrence IDs
      */
-    private function generateVisitationOccurrences($visitation, $months = 3)
+    private function generateVisitationOccurrences($visitation, $months = 3, $includeCancellations = false)
     {
         // Check if this is a recurring visitation
         $pattern = RecurringPattern::where('visitation_id', $visitation->visitation_id)->first();
@@ -1790,15 +1850,41 @@ class DatabaseSeeder extends Seeder
                 // Create occurrences for this day of week until the end date
                 $dateIterator = $firstDate->copy();
                 while ($dateIterator <= $endDate) {
+                    // Determine if this occurrence should be canceled (about 10% chance)
+                    $shouldCancel = $includeCancellations && $this->faker->boolean(10);
+                    
+                    // Calculate status based on date and cancellation flag
+                    $status = 'scheduled';
+                    if ($dateIterator->isPast()) {
+                        $status = $shouldCancel ? 'canceled' : 'completed';
+                    } else {
+                        $status = $shouldCancel ? 'canceled' : 'scheduled';
+                    }
+                    
+                    // Create appropriate notes only for canceled or completed visits
+                    $notes = null;
+                    if ($status === 'canceled') {
+                        $notes = $this->faker->randomElement([
+                            'Canceled due to care worker illness',
+                            'Beneficiary requested to reschedule',
+                            'Scheduling conflict with medical appointment',
+                            'Weather conditions made travel unsafe',
+                            'Family emergency required rescheduling',
+                            'Beneficiary hospitalized on this date',
+                            'Care worker reassigned to emergency case'
+                        ]);
+                    } elseif ($status === 'completed') {
+                        $notes = $this->faker->optional(0.7)->sentence();
+                    }
+                    
                     // Create the occurrence
                     $occurrence = VisitationOccurrence::create([
                         'visitation_id' => $visitation->visitation_id,
                         'occurrence_date' => $dateIterator->format('Y-m-d'),
                         'start_time' => $visitation->start_time,
                         'end_time' => $visitation->end_time,
-                        'status' => $dateIterator->isPast() ? 
-                            $this->faker->randomElement(['completed', 'completed', 'canceled']) : 'scheduled',
-                        'notes' => $dateIterator->isPast() ? $this->faker->optional(0.7)->sentence() : null
+                        'status' => $status,
+                        'notes' => $notes
                     ]);
                     
                     $occurrences[] = $occurrence->occurrence_id;
@@ -1822,15 +1908,41 @@ class DatabaseSeeder extends Seeder
                 
                 // Only create an occurrence if we're still in range
                 if ($currentDate <= $endDate) {
+                    // Determine if this occurrence should be canceled (about 10% chance)
+                    $shouldCancel = $includeCancellations && $this->faker->boolean(10);
+                    
+                    // Calculate status based on date and cancellation flag
+                    $status = 'scheduled';
+                    if ($currentDate->isPast()) {
+                        $status = $shouldCancel ? 'canceled' : 'completed';
+                    } else {
+                        $status = $shouldCancel ? 'canceled' : 'scheduled';
+                    }
+                    
+                    // Create appropriate notes only for canceled or completed visits
+                    $notes = null;
+                    if ($status === 'canceled') {
+                        $notes = $this->faker->randomElement([
+                            'Canceled due to care worker illness',
+                            'Beneficiary requested to reschedule',
+                            'Scheduling conflict with medical appointment',
+                            'Weather conditions made travel unsafe',
+                            'Family emergency required rescheduling',
+                            'Beneficiary hospitalized on this date',
+                            'Care worker reassigned to emergency case'
+                        ]);
+                    } elseif ($status === 'completed') {
+                        $notes = $this->faker->optional(0.7)->sentence();
+                    }
+                    
                     // Create the occurrence
                     $occurrence = VisitationOccurrence::create([
                         'visitation_id' => $visitation->visitation_id,
                         'occurrence_date' => $currentDate->format('Y-m-d'),
                         'start_time' => $visitation->start_time,
                         'end_time' => $visitation->end_time,
-                        'status' => $currentDate->isPast() ? 
-                            $this->faker->randomElement(['completed', 'completed', 'canceled']) : 'scheduled',
-                        'notes' => $currentDate->isPast() ? $this->faker->optional(0.7)->sentence() : null
+                        'status' => $status,
+                        'notes' => $notes
                     ]);
                     
                     $occurrences[] = $occurrence->occurrence_id;
@@ -1843,9 +1955,6 @@ class DatabaseSeeder extends Seeder
         
         return $occurrences;
     }
-
-
-
 
     /**
      * Generate medication schedules for beneficiaries
