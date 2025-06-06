@@ -9,6 +9,46 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/emergencyAndService.css') }}">
+
+    <style>
+        /* Timeline styling */
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        .timeline-indicator {
+            position: relative;
+            width: 20px;
+        }
+        .timeline-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            top: 5px;
+            left: 0;
+        }
+        .timeline-content {
+            border-left: 1px solid #dee2e6;
+            padding-left: 15px;
+            flex: 1;
+        }
+        .timeline-item:last-child .timeline-content {
+            border-left-color: transparent;
+        }
+        
+        /* Make rows/cards clickable */
+        .clickable-row, .clickable-card {
+            cursor: pointer;
+        }
+        .clickable-row:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .clickable-card:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease;
+        }
+    </style>
 </head>
 <body>
     @if(Auth::guard('beneficiary')->check())
@@ -65,10 +105,7 @@
                                         </div>
                                         
                                         <div class="d-flex justify-content-between align-items-center mt-auto">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="recurring" name="is_recurring">
-                                                <label class="form-check-label" for="recurring">Recurring service</label>
-                                            </div>
+
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="bi bi-send-fill me-1"></i> Submit Request
                                             </button>
@@ -157,7 +194,7 @@
                                             </tr>
                                         @else
                                             @foreach($activeEmergencies as $emergency)
-                                                <tr>
+                                                <tr class="clickable-row" data-request-id="{{ $emergency->notice_id }}" data-request-type="emergency">
                                                     <td>
                                                         <span class="badge bg-danger">
                                                             {{ $emergency->emergencyType ? $emergency->emergencyType->name : 'Emergency' }}
@@ -188,7 +225,7 @@
                                             @endforeach
                                             
                                             @foreach($activeServiceRequests as $service)
-                                                <tr>
+                                                <tr class="clickable-row" data-request-id="{{ $service->service_request_id }}" data-request-type="service">
                                                     <td>
                                                         <span class="badge bg-primary">
                                                             {{ $service->serviceType ? $service->serviceType->name : 'Service' }}
@@ -242,7 +279,9 @@
                                 </div>
                             @else
                                 @foreach($emergencyHistory as $emergency)
-                                    <div class="status-card status-emergency p-3 mb-3">
+                                    <div class="status-card status-emergency p-3 mb-3 clickable-card" 
+                                        data-request-id="{{ $emergency->notice_id }}" 
+                                        data-request-type="emergency">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <div class="d-flex align-items-center mb-1">
@@ -262,7 +301,9 @@
                                 @endforeach
                                 
                                 @foreach($serviceRequestHistory as $service)
-                                    <div class="status-card status-service p-3 mb-3">
+                                    <div class="status-card status-service p-3 mb-3 clickable-card" 
+                                        data-request-id="{{ $service->service_request_id }}" 
+                                        data-request-type="service">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <div class="d-flex align-items-center mb-1">
@@ -379,6 +420,60 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Request</button>
                     <button type="button" class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Details Modal -->
+    <div class="modal fade" id="emergencyDetailsModal" tabindex="-1" aria-labelledby="emergencyDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="emergencyDetailsModalLabel"><i class="bi bi-info-circle"></i> Emergency Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="emergencyDetailsContent">
+                        <!-- Emergency details will be loaded here -->
+                    </div>
+                    
+                    <div class="updates-history mt-4">
+                        <h6 class="border-bottom pb-2">Updates History</h6>
+                        <div id="emergencyUpdatesTimeline">
+                            <!-- Updates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Request Details Modal -->
+    <div class="modal fade" id="serviceRequestDetailsModal" tabindex="-1" aria-labelledby="serviceRequestDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="serviceRequestDetailsModalLabel"><i class="bi bi-info-circle"></i> Service Request Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="serviceRequestDetailsContent">
+                        <!-- Service request details will be loaded here -->
+                    </div>
+                    
+                    <div class="updates-history mt-4">
+                        <h6 class="border-bottom pb-2">Updates History</h6>
+                        <div id="serviceUpdatesTimeline">
+                            <!-- Updates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -827,6 +922,240 @@
         function formatStatus(status) {
             // Replace underscores with spaces and capitalize first letter
             return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Make table rows clickable
+        $(document).on('click', '.clickable-row', function() {
+            const requestId = $(this).data('request-id');
+            const requestType = $(this).data('request-type');
+            
+            if (requestType === 'emergency') {
+                viewEmergencyDetails(requestId);
+            } else {
+                viewServiceRequestDetails(requestId);
+            }
+        });
+
+        // Make history cards clickable
+        $(document).on('click', '.clickable-card', function() {
+            const requestId = $(this).data('request-id');
+            const requestType = $(this).data('request-type');
+            
+            if (requestType === 'emergency') {
+                viewEmergencyDetails(requestId);
+            } else {
+                viewServiceRequestDetails(requestId);
+            }
+        });
+
+        // View emergency details
+        function viewEmergencyDetails(noticeId) {
+            // Show loading state
+            $('#emergencyDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            
+            // Open the modal
+            $('#emergencyDetailsModal').modal('show');
+            
+            // Fetch emergency details
+            $.ajax({
+                url: "{{ route('beneficiary.emergency.service.emergency-details', '') }}/" + noticeId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Render emergency details
+                        renderEmergencyDetails(response.emergency_notice);
+                    } else {
+                        $('#emergencyDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                    }
+                },
+                error: function() {
+                    $('#emergencyDetailsContent').html('<div class="alert alert-danger">Failed to load emergency details. Please try again.</div>');
+                }
+            });
+        }
+
+        // View service request details
+        function viewServiceRequestDetails(requestId) {
+            // Show loading state
+            $('#serviceRequestDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            
+            // Open the modal
+            $('#serviceRequestDetailsModal').modal('show');
+            
+            // Fetch service request details
+            $.ajax({
+                url: "{{ route('beneficiary.emergency.service.service-details', '') }}/" + requestId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Render service request details
+                        renderServiceRequestDetails(response.service_request);
+                    } else {
+                        $('#serviceRequestDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                    }
+                },
+                error: function() {
+                    $('#serviceRequestDetailsContent').html('<div class="alert alert-danger">Failed to load service request details. Please try again.</div>');
+                }
+            });
+        }
+
+        // Render emergency details in view modal
+        function renderEmergencyDetails(emergency) {
+            let content = `
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Emergency Information</h5>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Type:</div>
+                        <div class="col-md-8"><span class="badge bg-danger me-2">${emergency.emergency_type ? emergency.emergency_type.name : 'Emergency'}</span></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">${formatStatus(emergency.status)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-8">${formatDateTime(emergency.created_at)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Assigned To:</div>
+                        <div class="col-md-8">${emergency.assigned_user ? emergency.assigned_user.name : 'Not assigned'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Message:</div>
+                        <div class="col-md-8">${emergency.message}</div>
+                    </div>
+                </div>
+            `;
+            
+            $('#emergencyDetailsContent').html(content);
+            
+            // Load updates timeline if any
+            if (emergency.updates && emergency.updates.length > 0) {
+                let updatesHtml = '';
+                
+                emergency.updates.forEach(update => {
+                    updatesHtml += `
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-indicator">
+                                    <div class="timeline-badge ${getUpdateTypeBadgeClass(update.update_type)}"></div>
+                                </div>
+                                <div class="timeline-content ms-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-bold">${formatUpdateType(update.update_type)}</span>
+                                        <small class="text-muted">${formatDateTime(update.created_at)}</small>
+                                    </div>
+                                    <p class="mb-1">${update.message}</p>
+                                    <small class="text-muted">By: ${update.updated_by_name || 'System'}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#emergencyUpdatesTimeline').html(updatesHtml);
+            } else {
+                $('#emergencyUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+            }
+        }
+
+        // Render service request details in view modal
+        function renderServiceRequestDetails(request) {
+            let content = `
+                <div class="mb-4">
+                    <h5 class="border-bottom pb-2">Service Request Information</h5>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Service Type:</div>
+                        <div class="col-md-8"><span class="badge bg-primary">${request.service_type ? request.service_type.name : 'Service'}</span></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">${formatStatus(request.status)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Requested Date:</div>
+                        <div class="col-md-8">${formatDate(request.service_date)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Requested Time:</div>
+                        <div class="col-md-8">${request.service_time ? formatTime(request.service_time) : 'Not specified'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-8">${formatDateTime(request.created_at)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Assigned To:</div>
+                        <div class="col-md-8">${request.care_worker ? request.care_worker.name : 'Not assigned'}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">Message:</div>
+                        <div class="col-md-8">${request.message}</div>
+                    </div>
+                </div>
+            `;
+            
+            $('#serviceRequestDetailsContent').html(content);
+            
+            // Load updates timeline if any
+            if (request.updates && request.updates.length > 0) {
+                let updatesHtml = '';
+                
+                request.updates.forEach(update => {
+                    updatesHtml += `
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-indicator">
+                                    <div class="timeline-badge ${getUpdateTypeBadgeClass(update.update_type)}"></div>
+                                </div>
+                                <div class="timeline-content ms-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-bold">${formatUpdateType(update.update_type)}</span>
+                                        <small class="text-muted">${formatDateTime(update.created_at)}</small>
+                                    </div>
+                                    <p class="mb-1">${update.message}</p>
+                                    <small class="text-muted">By: ${update.updated_by_name || 'System'}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#serviceUpdatesTimeline').html(updatesHtml);
+            } else {
+                $('#serviceUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+            }
+        }
+
+        // Helper function to get badge class based on update type
+        function getUpdateTypeBadgeClass(updateType) {
+            switch(updateType) {
+                case 'response': return 'bg-primary';
+                case 'status_change': return 'bg-warning';
+                case 'assignment': return 'bg-info';
+                case 'resolution': return 'bg-success';
+                case 'completion': return 'bg-success';
+                case 'rejection': return 'bg-danger';
+                case 'approval': return 'bg-success';
+                case 'note': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Helper function to format update type
+        function formatUpdateType(updateType) {
+            switch(updateType) {
+                case 'response': return 'Response';
+                case 'status_change': return 'Status Change';
+                case 'assignment': return 'Assignment';
+                case 'resolution': return 'Resolution';
+                case 'completion': return 'Completion';
+                case 'rejection': return 'Rejection';
+                case 'approval': return 'Approval';
+                case 'note': return 'Note';
+                default: return updateType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
         }
     </script>
 </body>

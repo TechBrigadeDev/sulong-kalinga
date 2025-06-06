@@ -68,6 +68,8 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         Route::get('/active', [FamilyPortalEmergencyServiceRequestController::class, 'getActiveRequests'])->name('active');
         Route::post('/history', [FamilyPortalEmergencyServiceRequestController::class, 'getRequestHistory'])->name('history');
         Route::post('/cancel', [FamilyPortalEmergencyServiceRequestController::class, 'cancelRequest'])->name('cancel');
+        Route::get('/emergency-service/emergency/{id}', [FamilyPortalEmergencyServiceRequestController::class, 'getEmergencyDetails'])->name('emergency.service.emergency-details');
+        Route::get('/emergency-service/service/{id}', [FamilyPortalEmergencyServiceRequestController::class, 'getServiceDetails'])->name('emergency.service.service-details');
     });
 
     // Messages

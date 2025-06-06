@@ -346,7 +346,7 @@
                 
                 // Make AJAX request to get upcoming visits
                 $.ajax({
-                    url: "{{ route('family.visitation.schedule.upcoming') }}", // or family.visitation.schedule.upcoming
+                    url: "{{ secure_url(route('family.visitation.schedule.upcoming', [], false)) }}", // or family.visitation.schedule.upcoming
                     type: 'GET',
                     data: {
                         status: statusFilter,
@@ -498,7 +498,7 @@
                     
                     // Make AJAX request to get events with explicit token and timestamp
                     $.ajax({
-                        url: "{{ route('family.visitation.schedule.events') }}",
+                        url: "{{ secure_url(route('family.visitation.schedule.events', [], false)) }}",
                         method: 'GET',
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -841,7 +841,7 @@
                 viewDetailsBtn.addEventListener('click', function() {
                     // Fetch and show visit details in modal
                     $.ajax({
-                        url: `{{ url('family/visitation-schedule/details') }}/${visit.occurrence_id}`,
+                        url: `{{ secure_url('family/visitation-schedule/details') }}/${visit.occurrence_id}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.success) {

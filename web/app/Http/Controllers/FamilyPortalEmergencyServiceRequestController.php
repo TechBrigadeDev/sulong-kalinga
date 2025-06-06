@@ -154,7 +154,6 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             'service_date' => 'required|date|after_or_equal:today',
             'service_time' => 'required',
             'message' => 'required|string|max:1000',
-            'is_recurring' => 'sometimes|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -439,6 +438,98 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to cancel request.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get detailed information about an emergency notice
+     */
+    public function getEmergencyDetails($id)
+    {
+        try {
+            // Determine whether the user is a beneficiary or family member
+            $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+            
+            if ($userType === 'beneficiary') {
+                $user = Auth::guard('beneficiary')->user();
+                $beneficiaryId = $user->beneficiary_id;
+            } else {
+                $user = Auth::guard('family')->user();
+                $beneficiaryId = $user->related_beneficiary_id;
+            }
+            
+            // Get emergency notice with relationships
+            $emergencyNotice = EmergencyNotice::with(['emergencyType', 'assignedUser', 'updates', 'updates.updatedBy'])
+                ->where('notice_id', $id)
+                ->where('beneficiary_id', $beneficiaryId)
+                ->first();
+                
+            if (!$emergencyNotice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Emergency notice not found or you do not have access.'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'emergency_notice' => $emergencyNotice
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting emergency details: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get emergency details.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get detailed information about a service request
+     */
+    public function getServiceDetails($id)
+    {
+        try {
+            // Determine whether the user is a beneficiary or family member
+            $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+            
+            if ($userType === 'beneficiary') {
+                $user = Auth::guard('beneficiary')->user();
+                $beneficiaryId = $user->beneficiary_id;
+            } else {
+                $user = Auth::guard('family')->user();
+                $beneficiaryId = $user->related_beneficiary_id;
+            }
+            
+            // Get service request with relationships
+            $serviceRequest = ServiceRequest::with(['serviceType', 'careWorker', 'updates', 'updates.updatedBy'])
+                ->where('service_request_id', $id)
+                ->where('beneficiary_id', $beneficiaryId)
+                ->first();
+                
+            if (!$serviceRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Service request not found or you do not have access.'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'service_request' => $serviceRequest
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting service request details: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get service request details.',
                 'error' => $e->getMessage()
             ], 500);
         }
