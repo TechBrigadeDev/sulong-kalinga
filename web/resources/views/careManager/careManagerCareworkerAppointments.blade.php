@@ -1237,7 +1237,7 @@
                 minute: '2-digit',
                 meridiem: false
             },
-            dayMaxEvents: true,
+            dayMaxEvents: false, // Show all events, no matter how many
             firstDay: 0, // Start week on Sunday
             height: 'auto'
         });

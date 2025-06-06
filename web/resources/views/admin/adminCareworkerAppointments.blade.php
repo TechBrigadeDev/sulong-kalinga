@@ -1089,7 +1089,18 @@
             lazyFetching: true,
             progressiveEventRendering: true,
             initialDate: new Date(),
-            dayMaxEvents: 300, // Use dayMaxEvents instead of maxEvents
+            dayMaxEventRows: false,      // Remove any limit on event rows
+            dayMaxEvents: false,         // Already added but ensure it's here
+            eventLimit: false,           // Legacy option for older versions
+            eventDisplay: 'block',       // Use block display for maximum visibility
+
+            eventDidMount: function(info) {
+                // Force all events to be visible
+                info.el.style.display = 'block';
+                
+                // Log to verify events are being processed
+                console.log('Event mounted:', info.event.title, info.event.extendedProps.visitation_id);
+            },
             
             events: function(info, successCallback, failureCallback) {
                 const start = info.startStr;
@@ -1240,7 +1251,7 @@
                 minute: '2-digit',
                 meridiem: false
             },
-            dayMaxEvents: true,
+            dayMaxEvents: false, // Show all events, no matter how many
             firstDay: 0, // Start week on Sunday
             height: 'auto'
         });
@@ -1307,6 +1318,76 @@
             
             calendarActions.insertBefore(resetButton, calendarActions.firstChild);
         }
+
+        // Insert this after calendar initialization but before calendar.render()
+        calendar.setOption('dayMaxEventRows', false);  // Remove the "more" limit
+        calendar.setOption('eventMaxStack', 0);        // No stacking limits
+        calendar.setOption('eventDisplay', 'block');   // Force block display 
+
+        // Ensure window object can access calendar
+        window.calendar = calendar;
+
+        // Override FullCalendar's event hiding behavior
+        const originalDisplayEvent = calendar.setOption;
+        calendar.setOption = function(name, value) {
+            // Always disable event limiting options
+            if (name === 'dayMaxEvents' || name === 'dayMaxEventRows') {
+                value = false;
+            }
+            return originalDisplayEvent.call(this, name, value);
+        };
+
+        // Add event for after all events are drawn
+        calendar.on('eventDidMount', function(info) {
+            // Force all events to visible
+            info.el.style.display = 'block';
+            info.el.style.visibility = 'visible';
+        });
+
+        // Add counter for each day after view is loaded
+        calendar.on('viewDidMount', function() {
+            // Wait for events to load
+            setTimeout(function() {
+                const days = document.querySelectorAll('.fc-daygrid-day');
+                days.forEach(function(day) {
+                    const dateAttr = day.getAttribute('data-date');
+                    if (!dateAttr) return;
+                    
+                    const events = calendar.getEvents().filter(e => {
+                        return e.start && e.start.toISOString().split('T')[0] === dateAttr;
+                    });
+                    
+                    if (events.length > 0) {
+                        // Create counter badge
+                        const badge = document.createElement('div');
+                        badge.className = 'event-count-badge';
+                        badge.innerText = events.length;
+                        badge.style.cssText = `
+                            position: absolute;
+                            top: 5px;
+                            right: 5px;
+                            background-color: #4e73df;
+                            color: white;
+                            font-weight: bold;
+                            border-radius: 50%;
+                            width: 20px;
+                            height: 20px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 10px;
+                            z-index: 50;
+                        `;
+                        
+                        const dayTop = day.querySelector('.fc-daygrid-day-top');
+                        if (dayTop) {
+                            dayTop.style.position = 'relative';
+                            dayTop.appendChild(badge);
+                        }
+                    }
+                });
+            }, 500);
+        });
 
         calendar.render();
         

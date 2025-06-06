@@ -65,12 +65,8 @@ class VisitationController extends Controller
     public function getVisitations(Request $request)
     {
 
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Cache-Control: post-check=0, pre-check=0', false);
-        header('Pragma: no-cache');
-
         // Set a reasonable timeout
-        set_time_limit(30); 
+        set_time_limit(60); 
         
         $viewType = $request->input('view_type', 'dayGridMonth');
         $startDate = $request->input('start');
@@ -79,7 +75,7 @@ class VisitationController extends Controller
         $today = Carbon::today();
         
         // For month view, limit to 3 months of data at most
-        if ($viewType === 'dayGridMonth') {
+        /*if ($viewType === 'dayGridMonth') {
             $calendarStartDate = Carbon::parse($startDate);
             $calendarEndDate = Carbon::parse($endDate);
             
@@ -89,7 +85,7 @@ class VisitationController extends Controller
                 $calendarEndDate = $maxEndDate;
                 $endDate = $maxEndDate->format('Y-m-d');
             }
-        }
+        }*/
 
         try {
             // APPROACH 1: For visitations with occurrences
@@ -169,14 +165,15 @@ class VisitationController extends Controller
             }
             
             // Execute queries with limits to prevent timeouts
-            $occurrences = $occurrenceQuery->limit(1000)->get();
-            $visitations = $visitations->limit(500)->get();
+            $occurrences = $occurrenceQuery->get(); // No limit
+            $visitations = $visitations->get(); // No limit
             
             // DEBUG: Log the query counts
-            \Log::info('Visitation queries executed', [
+            \Log::info('Visitation queries executed (UNLIMITED)', [
                 'occurrences_count' => $occurrences->count(),
                 'visitations_count' => $visitations->count(),
-                'date_range' => [$startDate, $endDate]
+                'date_range' => [$startDate, $endDate],
+                'search_term' => $request->has('search') ? $request->search : 'None'
             ]);
 
             $events = [];
@@ -219,17 +216,18 @@ class VisitationController extends Controller
                 
                 // Build the event object
                 $event = [
-                    'id' => 'occ-' . $occurrence->occurrence_id,
-                    'title' => $title,
-                    'start' => $occurrence->occurrence_date . 
-                            ($visitation->is_flexible_time ? '' : 'T' . Carbon::parse($occurrence->start_time)->format('H:i:s')),
-                    'end' => $occurrence->occurrence_date . 
-                            ($visitation->is_flexible_time ? '' : 'T' . Carbon::parse($occurrence->end_time)->format('H:i:s')),
-                    'backgroundColor' => $this->getStatusColor($occurrence->status),
-                    'borderColor' => $this->getStatusColor($occurrence->status),
-                    'textColor' => '#fff',
-                    'allDay' => $visitation->is_flexible_time,
-                    'extendedProps' => [
+                        'id' => 'occ-' . $occurrence->occurrence_id,
+                        'title' => $title,
+                        // FIX: Extract only the date part and use space separator with proper time
+                        'start' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
+                                ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->start_time)->format('H:i:s')),
+                        'end' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
+                                ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->end_time)->format('H:i:s')),
+                        'backgroundColor' => $this->getStatusColor($occurrence->status),
+                        'borderColor' => $this->getStatusColor($occurrence->status),
+                        'textColor' => '#fff',
+                        'allDay' => $visitation->is_flexible_time,
+                        'extendedProps' => [
                         'visitation_id' => $visitation->visitation_id,
                         'occurrence_id' => $occurrence->occurrence_id,
                         'care_worker' => $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name,
@@ -332,10 +330,11 @@ class VisitationController extends Controller
                     // Non-recurring event
                     $event = $baseEvent;
                     $event['id'] = $visitation->visitation_id;
+                    // FIX: Use space separator with time (ensure flexible time gets proper format)
                     $event['start'] = $visitation->visitation_date->format('Y-m-d') . 
-                                    ($visitation->is_flexible_time ? '' : 'T' . $visitation->start_time->format('H:i:s'));
+                                    ($visitation->is_flexible_time ? ' 00:00:00' : ' ' . $visitation->start_time->format('H:i:s'));
                     $event['end'] = $visitation->visitation_date->format('Y-m-d') . 
-                                ($visitation->is_flexible_time ? '' : 'T' . $visitation->end_time->format('H:i:s'));
+                    ($visitation->is_flexible_time ? ' 00:00:00' : ' ' . $visitation->end_time->format('H:i:s'));
                     
                     $events[] = $event;
                 }
@@ -346,6 +345,42 @@ class VisitationController extends Controller
                     $visitation->generateOccurrences(3);
                 }
             }
+
+            // Add this right before returning the events in getVisitations method
+            // Count appointments by day for the current week
+            $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
+
+            $dailyCounts = DB::table('visitation_occurrences')
+                ->join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
+                ->join('recurring_patterns', 'visitations.visitation_id', '=', 'recurring_patterns.visitation_id')
+                ->whereBetween('occurrence_date', [$weekStart, $weekEnd])
+                ->where('recurring_patterns.pattern_type', 'weekly')
+                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), DB::raw('COUNT(*) as count'))
+                ->groupBy(DB::raw('EXTRACT(DOW FROM occurrence_date)'))
+                ->orderBy('day_of_week')
+                ->get();
+
+            $filteredDailyCounts = DB::table('visitation_occurrences')
+                ->join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
+                ->join('recurring_patterns', 'visitations.visitation_id', '=', 'recurring_patterns.visitation_id')
+                ->whereBetween('occurrence_date', [$request->start, $request->end])
+                ->where('recurring_patterns.pattern_type', 'weekly')
+                ->when($request->has('care_worker_id') && !empty($request->care_worker_id), function($query) use ($request) {
+                    return $query->where('visitations.care_worker_id', $request->care_worker_id);
+                })
+                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), DB::raw('COUNT(*) as count'))
+                ->groupBy(DB::raw('EXTRACT(DOW FROM occurrence_date)'))
+                ->orderBy('day_of_week')
+                ->get();
+
+            \Log::info('Weekly appointment distribution - All vs. Filtered', [
+                'date_range' => [$request->start, $request->end],
+                'care_worker_filter' => $request->has('care_worker_id') ? $request->care_worker_id : 'None',
+                'all_appointments' => $dailyCounts,
+                'filtered_appointments' => $filteredDailyCounts,
+                'total_events_returned' => count($events)
+            ]);
             
             return response()->json($events);
         } catch (\Exception $e) {
@@ -1926,7 +1961,5 @@ class VisitationController extends Controller
             'split_date' => $dateFormatted
         ]);
     }
-
-    
 
 }

@@ -1775,61 +1775,94 @@ class DatabaseSeeder extends Seeder
             // Create base weekly routine care visits for EVERY beneficiary first
             $this->command->info('Creating one weekly routine care visit for each beneficiary with their assigned care worker...');
             
-            // Track which beneficiaries have already been assigned weekly recurring visits
-            $beneficiariesWithWeeklyVisits = [];
+            // Distribute appointments across weekdays (Monday=1 to Saturday=6)
+            $weekDays = [1, 2, 3, 4, 5, 6]; // Skip Sunday
+            $appointmentsPerDay = ceil(count($beneficiaries) / count($weekDays));
+            $currentDay = 0;
+            $currentDayCount = 0;
             
             foreach ($beneficiaries as $beneficiary) {
+                // Distribute appointments evenly across days
+                if ($currentDayCount >= $appointmentsPerDay) {
+                    $currentDay = ($currentDay + 1) % count($weekDays);
+                    $currentDayCount = 0;
+                }
+                
+                // Get the day of week for this appointment
+                $dayOfWeek = $weekDays[$currentDay];
+                
+                // Find an appropriate care worker for this beneficiary
                 // Check if beneficiary has a general care plan with an assigned care worker
+                $assignedCareWorker = null;
                 if ($beneficiary->general_care_plan_id) {
                     $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
                     
                     if ($generalCarePlan && $generalCarePlan->care_worker_id) {
                         // Find the assigned care worker from the general care plan
                         $assignedCareWorker = $careWorkers->firstWhere('id', $generalCarePlan->care_worker_id);
-                        
-                        // If found, use the assigned care worker, otherwise find one from the same municipality
-                        if (!$assignedCareWorker) {
-                            // Find a care worker in the same municipality
-                            $municipalityId = $beneficiary->municipality_id;
-                            $municipalityCareWorkers = $careWorkers->filter(function($worker) use ($municipalityId) {
-                                return $worker->assigned_municipality_id == $municipalityId;
-                            });
-                            
-                            // If no workers in this municipality, use any available care worker
-                            if ($municipalityCareWorkers->isEmpty()) {
-                                $assignedCareWorker = $careWorkers->random();
-                            } else {
-                                $assignedCareWorker = $municipalityCareWorkers->random();
-                            }
-                        }
-                        
-                        // Create a weekly recurring routine care visit for this beneficiary
-                        $startDate = $this->faker->dateTimeBetween('-2 weeks', 'now');
-                        $visitation = $this->createRecurringVisitation(
-                            $assignedCareWorker, 
-                            $beneficiary, 
-                            'routine_care_visit', 
-                            'weekly',
-                            $startDate
-                        );
-                        
-                        // Generate occurrences for this recurring visitation (6 months worth)
-                        $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 6, true);
-                        $occurrenceCount += count($generatedOccurrences);
-                        $weeklyRecurringCount++;
-                        
-                        // Count how many occurrences were canceled
-                        $canceledOccurrences = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
-                            ->where('status', 'canceled')
-                            ->count();
-                        $canceledCount += $canceledOccurrences;
-                        
-                        // Mark this beneficiary as having a weekly visit
-                        $beneficiariesWithWeeklyVisits[] = $beneficiary->beneficiary_id;
                     }
                 }
+                
+                // If no assigned care worker found, find one from the same municipality
+                if (!$assignedCareWorker) {
+                    $municipalityId = $beneficiary->municipality_id;
+                    $municipalityCareWorkers = $careWorkers->filter(function($worker) use ($municipalityId) {
+                        return $worker->assigned_municipality_id == $municipalityId;
+                    });
+                    
+                    // If no workers in this municipality, use any available care worker
+                    if ($municipalityCareWorkers->isEmpty()) {
+                        $assignedCareWorker = $careWorkers->random();
+                    } else {
+                        $assignedCareWorker = $municipalityCareWorkers->random();
+                    }
+                }
+                
+                // Create a start date for the recurring appointment
+                // Use the current week as a starting point
+                $startDate = Carbon::now()->startOfWeek()->addDays($dayOfWeek - 1);
+                
+                // Create the visitation with this specific day
+                $visitation = $this->createRecurringVisitation(
+                    $assignedCareWorker, 
+                    $beneficiary, 
+                    'routine_care_visit', 
+                    'weekly', 
+                    $startDate
+                );
+                
+                // Make sure we're using the proper day of week in the recurring pattern
+                RecurringPattern::where('visitation_id', $visitation->visitation_id)
+                    ->update(['day_of_week' => $dayOfWeek]);
+                
+                // Generate occurrences for 12 months to ensure adequate future visibility
+                $occurrences = $this->generateVisitationOccurrences($visitation, 12, true);
+                $occurrenceCount += count($occurrences);
+                $weeklyRecurringCount++;
+                
+                // Increment counter for current day
+                $currentDayCount++;
             }
+
+            // Right after the foreach loop in generateCareWorkerVisitations
+            $actualWeeklyVisitations = Visitation::whereHas('recurringPattern', function($query) {
+                $query->where('pattern_type', 'weekly');
+            })->count();
+
+            $this->command->info("Expected 100 weekly visitations, actually created: {$actualWeeklyVisitations}");
             
+            // If fewer than expected, log which beneficiaries are missing appointments
+            if ($actualWeeklyVisitations < count($beneficiaries)) {
+                $beneficiariesWithVisits = Visitation::whereHas('recurringPattern', function($query) {
+                    $query->where('pattern_type', 'weekly');
+                })->pluck('beneficiary_id')->toArray();
+                
+                $missingBeneficiaries = Beneficiary::whereNotIn('beneficiary_id', $beneficiariesWithVisits)
+                    ->get();
+                    
+                $this->command->warn("{$missingBeneficiaries->count()} beneficiaries have no weekly visits");
+            }
+
             // Create regular (non-recurring) visitations for variety
             $this->command->info('Creating additional non-recurring visitations...');
             for ($i = 0; $i < 30; $i++) {
@@ -1883,7 +1916,7 @@ class DatabaseSeeder extends Seeder
                 $careWorker = $careWorkers->random();
                 $municipalityId = $careWorker->assigned_municipality_id;
                 
-                // Find beneficiaries in the same municipality, preferably ones that don't already have monthly visits
+                // Find beneficiaries in the same municipality
                 $municipalityBeneficiaries = $beneficiaries->where('municipality_id', $municipalityId);
                 
                 if ($municipalityBeneficiaries->isEmpty()) {
@@ -1903,7 +1936,7 @@ class DatabaseSeeder extends Seeder
                 );
                 
                 // Generate occurrences for this recurring visitation
-                $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 6, true);
+                $generatedOccurrences = $this->generateVisitationOccurrences($visitation, 12, true);
                 $occurrenceCount += count($generatedOccurrences);
                 $monthlyRecurringCount++;
                 
@@ -2060,7 +2093,7 @@ class DatabaseSeeder extends Seeder
                         'occurrence_date' => $dateIterator->format('Y-m-d'),
                         'start_time' => $visitation->start_time,
                         'end_time' => $visitation->end_time,
-                        'status' => $status,
+                        'status' => $status ?: 'scheduled', // Make sure status is never empty
                         'notes' => $notes
                     ]);
                     
