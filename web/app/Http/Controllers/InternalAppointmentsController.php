@@ -1592,28 +1592,65 @@ class InternalAppointmentsController extends Controller
             $userId = $participant->participant_id;
             $userType = $participant->participant_type;
             
-            // Convert participant type for notification system
+            // Skip participants without IDs
+            if (!$userId) {
+                continue;
+            }
+            
+            // Convert participant type for notification system 
+            $notificationType = $userType;
             if ($userType === 'cose_user') {
-                $userType = 'cose_staff';
+                $notificationType = 'cose_staff';
+            } else if ($userType === 'beneficiary') {
+                $notificationType = 'beneficiary';
+            } else if ($userType === 'family_member') {
+                $notificationType = 'family_member';
+            } else {
+                // Skip unknown participant types
+                \Log::warning("Unknown participant type: {$userType}");
+                continue;
             }
             
             // Skip duplicates
-            $key = $userType . '-' . $userId;
+            $key = $notificationType . '-' . $userId;
             if (in_array($key, $notifiedUsers)) {
                 continue;
             }
             
-            // Create notification with ALL required fields
-            Notification::create([
-                'user_id' => $userId,
-                'user_type' => $userType,
-                'message_title' => $title ?? 'Appointment Notification',
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            // Customize message for each user type
+            $customMessage = $message;
             
-            $notifiedUsers[] = $key;
+            // For beneficiaries, you might want to simplify or customize the message
+            if ($userType === 'beneficiary') {
+                // Optional: Add beneficiary-specific information or formatting
+                $customMessage = "Dear Beneficiary, " . $message;
+            } 
+            // For family members, add context about which beneficiary this relates to
+            else if ($userType === 'family_member') {
+                // Get family member and related beneficiary
+                $familyMember = \App\Models\FamilyMember::find($userId);
+                if ($familyMember && $familyMember->beneficiary) {
+                    $beneficiaryName = $familyMember->beneficiary->first_name . ' ' . $familyMember->beneficiary->last_name;
+                    $customMessage = "Regarding {$beneficiaryName}: " . $message;
+                }
+            }
+            
+            try {
+                // Create notification with ALL required fields
+                Notification::create([
+                    'user_id' => $userId,
+                    'user_type' => $notificationType,
+                    'message_title' => $title ?? 'Appointment Notification',
+                    'message' => $customMessage,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                
+                $notifiedUsers[] = $key;
+                \Log::info("Sent {$type} notification to {$notificationType} #{$userId}");
+            } catch (\Exception $e) {
+                \Log::error("Failed to send notification to {$notificationType} #{$userId}: " . $e->getMessage());
+            }
         }
         
         \Log::info("Sent notifications about appointment {$appointment->appointment_id}", [
