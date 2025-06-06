@@ -23,5 +23,7 @@ export interface CareWorkerFormData {
 
 export interface FormSectionProps {
     formData: CareWorkerFormData;
-    setFormData: (data: CareWorkerFormData) => void;
+    setFormData: (
+        data: CareWorkerFormData,
+    ) => void;
 }

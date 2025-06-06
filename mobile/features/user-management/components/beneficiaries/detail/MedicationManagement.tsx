@@ -1,4 +1,10 @@
-import { Card, H3, Text, XStack, YStack } from "tamagui";
+import {
+    Card,
+    H3,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
@@ -6,7 +12,9 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const MedicationManagement = ({ beneficiary: _beneficiary }: Props) => {
+const MedicationManagement = ({
+    beneficiary: _beneficiary,
+}: Props) => {
     const medications = [
         {
             name: "sit",
@@ -18,13 +26,15 @@ const MedicationManagement = ({ beneficiary: _beneficiary }: Props) => {
             name: "aut",
             dosage: "ut",
             frequency: "autem",
-            instructions: "Natus sint ratione voluptatem error eaque nobis facere atque.",
+            instructions:
+                "Natus sint ratione voluptatem error eaque nobis facere atque.",
         },
         {
             name: "recusandae",
             dosage: "dolores",
             frequency: "voluptate",
-            instructions: "Repellat et aut harum aliquam sunt suscipit.",
+            instructions:
+                "Repellat et aut harum aliquam sunt suscipit.",
         },
     ];
 
@@ -35,31 +45,80 @@ const MedicationManagement = ({ beneficiary: _beneficiary }: Props) => {
             </Card.Header>
             <Card.Footer padded>
                 <YStack gap="$3">
-                    {medications.map((med, index) => (
-                        <Card key={index} bordered>
-                            <Card.Header padded>
-                                <Text fontSize="$5">{med.name}</Text>
-                            </Card.Header>
-                            <Card.Footer padded>
-                                <YStack gap="$2">
-                                    <XStack gap="$4">
-                                        <YStack flex={1}>
-                                            <Text opacity={0.6}>Dosage</Text>
-                                            <Text>{med.dosage}</Text>
+                    {medications.map(
+                        (med, index) => (
+                            <Card
+                                key={index}
+                                bordered
+                            >
+                                <Card.Header
+                                    padded
+                                >
+                                    <Text fontSize="$5">
+                                        {med.name}
+                                    </Text>
+                                </Card.Header>
+                                <Card.Footer
+                                    padded
+                                >
+                                    <YStack gap="$2">
+                                        <XStack gap="$4">
+                                            <YStack
+                                                flex={
+                                                    1
+                                                }
+                                            >
+                                                <Text
+                                                    opacity={
+                                                        0.6
+                                                    }
+                                                >
+                                                    Dosage
+                                                </Text>
+                                                <Text>
+                                                    {
+                                                        med.dosage
+                                                    }
+                                                </Text>
+                                            </YStack>
+                                            <YStack
+                                                flex={
+                                                    1
+                                                }
+                                            >
+                                                <Text
+                                                    opacity={
+                                                        0.6
+                                                    }
+                                                >
+                                                    Frequency
+                                                </Text>
+                                                <Text>
+                                                    {
+                                                        med.frequency
+                                                    }
+                                                </Text>
+                                            </YStack>
+                                        </XStack>
+                                        <YStack>
+                                            <Text
+                                                opacity={
+                                                    0.6
+                                                }
+                                            >
+                                                Instructions
+                                            </Text>
+                                            <Text>
+                                                {
+                                                    med.instructions
+                                                }
+                                            </Text>
                                         </YStack>
-                                        <YStack flex={1}>
-                                            <Text opacity={0.6}>Frequency</Text>
-                                            <Text>{med.frequency}</Text>
-                                        </YStack>
-                                    </XStack>
-                                    <YStack>
-                                        <Text opacity={0.6}>Instructions</Text>
-                                        <Text>{med.instructions}</Text>
                                     </YStack>
-                                </YStack>
-                            </Card.Footer>
-                        </Card>
-                    ))}
+                                </Card.Footer>
+                            </Card>
+                        ),
+                    )}
                 </YStack>
             </Card.Footer>
         </Card>

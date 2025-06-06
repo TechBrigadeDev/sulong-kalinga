@@ -1,4 +1,7 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+} from "expo-router";
 import { Text, View } from "tamagui";
 
 import AdminDetail from "~/features/user-management/components/administrators/detail";
@@ -13,7 +16,13 @@ const Screen = () => {
 
     if (isLoading) {
         return (
-            <View style={{ padding: 16, justifyContent: "center", alignItems: "center" }}>
+            <View
+                style={{
+                    padding: 16,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
                 <Text>Loading...</Text>
             </View>
         );
@@ -21,8 +30,16 @@ const Screen = () => {
 
     if (!data) {
         return (
-            <View style={{ padding: 16, justifyContent: "center", alignItems: "center" }}>
-                <Text>No administrator found</Text>
+            <View
+                style={{
+                    padding: 16,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <Text>
+                    No administrator found
+                </Text>
             </View>
         );
     }

@@ -6,8 +6,13 @@ import { IBeneficiary } from "~/features/user-management/management.type";
 const BeneficiaryAdd = () => {
     const router = useRouter();
 
-    const handleSubmit = (data: Partial<IBeneficiary>) => {
-        console.log("Submitting beneficiary data:", data);
+    const handleSubmit = (
+        data: Partial<IBeneficiary>,
+    ) => {
+        console.log(
+            "Submitting beneficiary data:",
+            data,
+        );
         // TODO: Add API call to create beneficiary
         router.back();
     };
@@ -20,7 +25,9 @@ const BeneficiaryAdd = () => {
                     title: "Add Beneficiary",
                 }}
             />
-            <BeneficiaryForm onSubmit={handleSubmit} />
+            <BeneficiaryForm
+                onSubmit={handleSubmit}
+            />
         </>
     );
 };

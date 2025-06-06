@@ -1,5 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { StyleProp, ViewStyle } from "react-native";
+import {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+import {
+    StyleProp,
+    ViewStyle,
+} from "react-native";
 import {
     CalendarContextProviderProps,
     CalendarProvider,
@@ -10,8 +17,12 @@ import { View } from "tamagui";
 
 import { weekCalendarStore } from "./store";
 
-interface WeekCalendarComponentProps extends Omit<WeekCalendarProps, "date"> {
-    provider?: Omit<CalendarContextProviderProps, "date">;
+interface WeekCalendarComponentProps
+    extends Omit<WeekCalendarProps, "date"> {
+    provider?: Omit<
+        CalendarContextProviderProps,
+        "date"
+    >;
     containerStyle?: StyleProp<ViewStyle>;
     onDateChanged?: (date: string) => void;
 }
@@ -32,12 +43,17 @@ const WeekCalendar = ({
         style,
     ];
 
-    const [currentDate, setCurrentDate] = useState<Date | undefined>(date);
+    const [currentDate, setCurrentDate] =
+        useState<Date | undefined>(date);
     const dateString = useMemo(() => {
         if (currentDate) {
-            return currentDate.toISOString().split("T")[0];
+            return currentDate
+                .toISOString()
+                .split("T")[0];
         } else {
-            return new Date().toISOString().split("T")[0];
+            return new Date()
+                .toISOString()
+                .split("T")[0];
         }
     }, [currentDate]);
 
@@ -56,8 +72,15 @@ const WeekCalendar = ({
 
     return (
         <View minH={100}>
-            <CalendarProvider date={dateString} onDateChanged={onDateChanged} {...provider}>
-                <RNWeekCalendar style={calendarStyle} {...props} />
+            <CalendarProvider
+                date={dateString}
+                onDateChanged={onDateChanged}
+                {...provider}
+            >
+                <RNWeekCalendar
+                    style={calendarStyle}
+                    {...props}
+                />
             </CalendarProvider>
         </View>
     );

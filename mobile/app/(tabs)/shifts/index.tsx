@@ -2,7 +2,16 @@ import AvatarImage from "components/Avatar";
 import TabScroll from "components/tabs/TabScroll";
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Avatar, Button, Card, H4, Stack, Text, XStack, YStack } from "tamagui";
+import {
+    Avatar,
+    Button,
+    Card,
+    H4,
+    Stack,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 const VisitationCard = ({
     name,
@@ -19,35 +28,93 @@ const VisitationCard = ({
     onArrive?: () => void;
     onDepart?: () => void;
 }) => (
-    <Card elevate style={{ marginBottom: 12, padding: 16 }}>
+    <Card
+        elevate
+        style={{ marginBottom: 12, padding: 16 }}
+    >
         <YStack>
             <XStack style={{ marginBottom: 8 }}>
-                <Text style={{ flex: 1, fontWeight: "600" }}>{name}</Text>
+                <Text
+                    style={{
+                        flex: 1,
+                        fontWeight: "600",
+                    }}
+                >
+                    {name}
+                </Text>
                 <Card
                     elevate
                     style={{
-                        backgroundColor: type === "Regular Visit" ? "#0077FF" : "#00AA00",
+                        backgroundColor:
+                            type ===
+                            "Regular Visit"
+                                ? "#0077FF"
+                                : "#00AA00",
                         borderRadius: 20,
                         paddingHorizontal: 8,
                         paddingVertical: 4,
                     }}
                 >
-                    <Text style={{ color: "white", fontSize: 12 }}>{type}</Text>
+                    <Text
+                        style={{
+                            color: "white",
+                            fontSize: 12,
+                        }}
+                    >
+                        {type}
+                    </Text>
                 </Card>
             </XStack>
-            <XStack style={{ marginBottom: 8, alignItems: "center", gap: 8 }}>
-                <Text style={{ color: "#666" }}>📍</Text>
-                <Text style={{ flex: 1, color: "#666", fontSize: 14 }}>{address}</Text>
+            <XStack
+                style={{
+                    marginBottom: 8,
+                    alignItems: "center",
+                    gap: 8,
+                }}
+            >
+                <Text style={{ color: "#666" }}>
+                    📍
+                </Text>
+                <Text
+                    style={{
+                        flex: 1,
+                        color: "#666",
+                        fontSize: 14,
+                    }}
+                >
+                    {address}
+                </Text>
             </XStack>
-            <XStack style={{ marginBottom: 12, alignItems: "center", gap: 8 }}>
-                <Text style={{ color: "#666" }}>🕒</Text>
-                <Text style={{ color: "#666", fontSize: 14 }}>{time}</Text>
+            <XStack
+                style={{
+                    marginBottom: 12,
+                    alignItems: "center",
+                    gap: 8,
+                }}
+            >
+                <Text style={{ color: "#666" }}>
+                    🕒
+                </Text>
+                <Text
+                    style={{
+                        color: "#666",
+                        fontSize: 14,
+                    }}
+                >
+                    {time}
+                </Text>
             </XStack>
             <XStack style={{ gap: 8 }}>
-                <Button style={{ flex: 1 }} onPress={onArrive}>
+                <Button
+                    style={{ flex: 1 }}
+                    onPress={onArrive}
+                >
                     Arrived
                 </Button>
-                <Button style={{ flex: 1 }} onPress={onDepart}>
+                <Button
+                    style={{ flex: 1 }}
+                    onPress={onDepart}
+                >
                     Departed
                 </Button>
             </XStack>
@@ -56,48 +123,121 @@ const VisitationCard = ({
 );
 
 const Screen = () => {
-    const [isOnShift, setOnShift] = useState(true);
+    const [isOnShift, setOnShift] =
+        useState(true);
 
     return (
         <TabScroll style={{ flex: 1 }}>
             <Stack style={{ padding: 16 }}>
-                <Card elevate style={{ marginBottom: 16, padding: 16 }}>
+                <Card
+                    elevate
+                    style={{
+                        marginBottom: 16,
+                        padding: 16,
+                    }}
+                >
                     <YStack>
-                        <H4 style={{ marginBottom: 16 }}>CARE WORKER ACTIVITY</H4>
-                        <XStack style={{ gap: 16, marginBottom: 16 }}>
-                            <Avatar circular size="$4">
-                                <AvatarImage uri="https://placekitten.com/200/200" fallback="CW" />
+                        <H4
+                            style={{
+                                marginBottom: 16,
+                            }}
+                        >
+                            CARE WORKER ACTIVITY
+                        </H4>
+                        <XStack
+                            style={{
+                                gap: 16,
+                                marginBottom: 16,
+                            }}
+                        >
+                            <Avatar
+                                circular
+                                size="$4"
+                            >
+                                <AvatarImage
+                                    uri="https://placekitten.com/200/200"
+                                    fallback="CW"
+                                />
                             </Avatar>
-                            <YStack style={{ flex: 1, justifyContent: "center" }}>
-                                <XStack style={{ alignItems: "center", gap: 8 }}>
-                                    <Text>Status:</Text>
+                            <YStack
+                                style={{
+                                    flex: 1,
+                                    justifyContent:
+                                        "center",
+                                }}
+                            >
+                                <XStack
+                                    style={{
+                                        alignItems:
+                                            "center",
+                                        gap: 8,
+                                    }}
+                                >
+                                    <Text>
+                                        Status:
+                                    </Text>
                                     <Card
                                         elevate
                                         style={{
-                                            backgroundColor: isOnShift ? "#00AA00" : "#666",
+                                            backgroundColor:
+                                                isOnShift
+                                                    ? "#00AA00"
+                                                    : "#666",
                                             borderRadius: 20,
                                             paddingHorizontal: 8,
                                             paddingVertical: 4,
                                         }}
                                     >
-                                        <Text style={{ color: "white", fontSize: 12 }}>
-                                            {isOnShift ? "On-Shift" : "Off-Shift"}
+                                        <Text
+                                            style={{
+                                                color: "white",
+                                                fontSize: 12,
+                                            }}
+                                        >
+                                            {isOnShift
+                                                ? "On-Shift"
+                                                : "Off-Shift"}
                                         </Text>
                                     </Card>
                                 </XStack>
-                                <XStack style={{ gap: 8, marginTop: 8 }}>
+                                <XStack
+                                    style={{
+                                        gap: 8,
+                                        marginTop: 8,
+                                    }}
+                                >
                                     <Button
                                         style={{
                                             flex: 1,
-                                            backgroundColor: isOnShift ? "#FF4444" : "#00AA00",
+                                            backgroundColor:
+                                                isOnShift
+                                                    ? "#FF4444"
+                                                    : "#00AA00",
                                         }}
-                                        onPress={() => setOnShift(!isOnShift)}
+                                        onPress={() =>
+                                            setOnShift(
+                                                !isOnShift,
+                                            )
+                                        }
                                     >
-                                        {isOnShift ? "END Shift" : "START Shift"}
+                                        {isOnShift
+                                            ? "END Shift"
+                                            : "START Shift"}
                                     </Button>
-                                    <Link href="/shifts/work-history" asChild>
-                                        <Button style={{ flex: 1, backgroundColor: "#0077FF" }}>
-                                            VIEW Work History
+                                    <Link
+                                        href="/shifts/work-history"
+                                        asChild
+                                    >
+                                        <Button
+                                            style={{
+                                                flex: 1,
+                                                backgroundColor:
+                                                    "#0077FF",
+                                            }}
+                                        >
+                                            VIEW
+                                            Work
+                                            History
                                         </Button>
                                     </Link>
                                 </XStack>
@@ -106,7 +246,9 @@ const Screen = () => {
                     </YStack>
                 </Card>
 
-                <H4 style={{ marginBottom: 16 }}>Scheduled Visitations</H4>
+                <H4 style={{ marginBottom: 16 }}>
+                    Scheduled Visitations
+                </H4>
 
                 {/* Dummy data for scheduled visitations */}
                 <VisitationCard

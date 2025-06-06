@@ -13,7 +13,12 @@ const medicationTypeEnum = z.enum([
     "other",
 ]);
 
-const medicationStatusEnum = z.enum(["active", "completed", "paused", "discontinued"]);
+const medicationStatusEnum = z.enum([
+    "active",
+    "completed",
+    "paused",
+    "discontinued",
+]);
 
 const healthHistorySchema = z.object({
     health_history_id: z.number(),
@@ -71,21 +76,24 @@ const paginationLinkSchema = z.object({
     active: z.boolean(),
 });
 
-export const medicationSchedulesResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.object({
-        current_page: z.number(),
-        data: z.array(medicationScheduleSchema),
-        first_page_url: z.string(),
-        from: z.number(),
-        last_page: z.number(),
-        last_page_url: z.string(),
-        links: z.array(paginationLinkSchema),
-        next_page_url: z.string().nullable(),
-        path: z.string(),
-        per_page: z.number(),
-        prev_page_url: z.string().nullable(),
-        to: z.number(),
-        total: z.number(),
-    }),
-});
+export const medicationSchedulesResponseSchema =
+    z.object({
+        success: z.boolean(),
+        data: z.object({
+            current_page: z.number(),
+            data: z.array(
+                medicationScheduleSchema,
+            ),
+            first_page_url: z.string(),
+            from: z.number(),
+            last_page: z.number(),
+            last_page_url: z.string(),
+            links: z.array(paginationLinkSchema),
+            next_page_url: z.string().nullable(),
+            path: z.string(),
+            per_page: z.number(),
+            prev_page_url: z.string().nullable(),
+            to: z.number(),
+            total: z.number(),
+        }),
+    });

@@ -9,8 +9,12 @@ export const adminSchema = z.object({
     mobile: z.string().optional(),
     photo: z.string().nullable(),
     photo_url: z.string().nullable(),
-    created_at: z.string().default(() => new Date().toISOString()),
-    updated_at: z.string().default(() => new Date().toISOString()),
+    created_at: z
+        .string()
+        .default(() => new Date().toISOString()),
+    updated_at: z
+        .string()
+        .default(() => new Date().toISOString()),
     educational_background: z.string().optional(),
     birthday: z.string().optional(),
     gender: z.string().optional(),

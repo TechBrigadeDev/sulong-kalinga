@@ -6,11 +6,15 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const EmotionalWellbeing = ({ beneficiary: _beneficiary }: Props) => {
+const EmotionalWellbeing = ({
+    beneficiary: _beneficiary,
+}: Props) => {
     const emotionalInfo = {
         Mood: "Expedita sint nemo quaerat qui dignissimos consequatur consequatur.",
-        "Social Interactions": "Quas similique est voluptatum est sunt similique.",
-        "Emotional Support Need": "Nam cumque et delectus qui tempore nam.",
+        "Social Interactions":
+            "Quas similique est voluptatum est sunt similique.",
+        "Emotional Support Need":
+            "Nam cumque et delectus qui tempore nam.",
     };
 
     return (
@@ -20,9 +24,13 @@ const EmotionalWellbeing = ({ beneficiary: _beneficiary }: Props) => {
             </Card.Header>
             <Card.Footer padded>
                 <YStack gap="$3">
-                    {Object.entries(emotionalInfo).map(([key, value]) => (
+                    {Object.entries(
+                        emotionalInfo,
+                    ).map(([key, value]) => (
                         <YStack key={key}>
-                            <Text opacity={0.6}>{key}</Text>
+                            <Text opacity={0.6}>
+                                {key}
+                            </Text>
                             <Text>{value}</Text>
                         </YStack>
                     ))}

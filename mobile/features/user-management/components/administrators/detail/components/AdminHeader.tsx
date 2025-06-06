@@ -1,5 +1,12 @@
 import AvatarImage from "components/Avatar";
-import { Avatar, Card, H4, Paragraph, XStack, YStack } from "tamagui";
+import {
+    Avatar,
+    Card,
+    H4,
+    Paragraph,
+    XStack,
+    YStack,
+} from "tamagui";
 import { type z } from "zod";
 
 import Badge from "~/components/Bagde";
@@ -20,21 +27,36 @@ const AdminHeader = ({ admin }: Props) => {
             <Card.Header p="$4">
                 <XStack gap="$4">
                     <Avatar circular size="$12">
-                        <AvatarImage uri={admin.photo_url} fallback={admin.id.toString()} />
+                        <AvatarImage
+                            uri={admin.photo_url}
+                            fallback={admin.id.toString()}
+                        />
                     </Avatar>
                     <YStack flex={1} gap="$2">
                         <H4>
-                            {admin.first_name} {admin.last_name}
+                            {admin.first_name}{" "}
+                            {admin.last_name}
                         </H4>
                         <Paragraph>
-                            A Project Coordinator since{" "}
-                            {joinDate.toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                            })}
+                            A Project Coordinator
+                            since{" "}
+                            {joinDate.toLocaleDateString(
+                                "en-US",
+                                {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                },
+                            )}
                         </Paragraph>
-                        <Badge variant={status.toLowerCase() === "active" ? "success" : "warning"}>
+                        <Badge
+                            variant={
+                                status.toLowerCase() ===
+                                "active"
+                                    ? "success"
+                                    : "warning"
+                            }
+                        >
                             {status}
                         </Badge>
                     </YStack>

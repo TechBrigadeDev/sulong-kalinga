@@ -2,12 +2,27 @@ import { PropsWithChildren } from "react";
 import { Text, XStack } from "tamagui";
 
 interface BadgeProps {
-    variant?: "success" | "warning" | "error" | "info" | "ghost" | "default";
+    variant?:
+        | "success"
+        | "warning"
+        | "error"
+        | "info"
+        | "ghost"
+        | "default";
     color?: string;
     backgroundColor?: string;
     borderColor?: string;
     size?: number;
-    fontWeight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+    fontWeight?:
+        | 100
+        | 200
+        | 300
+        | 400
+        | 500
+        | 600
+        | 700
+        | 800
+        | 900;
     borderRadius?: number;
     paddingHorizontal?: number;
     paddingVertical?: number;
@@ -17,7 +32,11 @@ interface BadgeProps {
 
 const VARIANT_STYLES: Record<
     string,
-    { backgroundColor: string; color: string; borderColor: string }
+    {
+        backgroundColor: string;
+        color: string;
+        borderColor: string;
+    }
 > = {
     success: {
         backgroundColor: "#22c55e",
@@ -64,7 +83,9 @@ const Badge = ({
     style = {},
     children,
 }: PropsWithChildren<BadgeProps>) => {
-    const variantStyle = VARIANT_STYLES[variant] || VARIANT_STYLES.default;
+    const variantStyle =
+        VARIANT_STYLES[variant] ||
+        VARIANT_STYLES.default;
     return (
         <XStack
             borderWidth={1}
@@ -75,8 +96,12 @@ const Badge = ({
                 flexShrink: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: backgroundColor ?? variantStyle.backgroundColor,
-                borderColor: borderColor ?? variantStyle.borderColor,
+                backgroundColor:
+                    backgroundColor ??
+                    variantStyle.backgroundColor,
+                borderColor:
+                    borderColor ??
+                    variantStyle.borderColor,
                 borderRadius,
                 paddingHorizontal,
                 paddingVertical,
@@ -84,7 +109,13 @@ const Badge = ({
             }}
         >
             <Text
-                style={{ color: color ?? variantStyle.color, fontSize: size, fontWeight }}
+                style={{
+                    color:
+                        color ??
+                        variantStyle.color,
+                    fontSize: size,
+                    fontWeight,
+                }}
                 numberOfLines={1}
                 ellipsizeMode="tail"
             >

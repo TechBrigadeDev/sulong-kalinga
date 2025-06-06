@@ -1,5 +1,8 @@
 import { create, StateCreator } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import {
+    createJSONStorage,
+    persist,
+} from "zustand/middleware";
 
 import { secureStorage } from "~/common/storage/secure.store";
 
@@ -18,6 +21,8 @@ const store: StateCreator<State> = (set) => ({
 export const authStore = create<State>()(
     persist(store, {
         name: "auth-storage",
-        storage: createJSONStorage(() => secureStorage),
+        storage: createJSONStorage(
+            () => secureStorage,
+        ),
     }),
 );

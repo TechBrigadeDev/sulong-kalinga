@@ -9,7 +9,9 @@ const CareManagers = () => {
     const router = useRouter();
 
     const handleAddCareManager = () => {
-        router.push("/(tabs)/options/user-management/care-managers/add");
+        router.push(
+            "/(tabs)/options/user-management/care-managers/add",
+        );
     };
 
     return (
@@ -21,7 +23,13 @@ const CareManagers = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddCareManager}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddCareManager
+                        }
+                    >
                         Add Care Manager
                     </Button>
                     <CareManagerSearch />

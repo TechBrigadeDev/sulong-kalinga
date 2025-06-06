@@ -22,7 +22,9 @@ export const userManagementSchema = {
         beneficiary: beneficiarySchema,
     }),
     getFamilyMembers: z.object({
-        family_members: z.array(familyMemberSchema),
+        family_members: z.array(
+            familyMemberSchema,
+        ),
     }),
     getFamilyMember: z.object({
         data: familyMemberSchema,

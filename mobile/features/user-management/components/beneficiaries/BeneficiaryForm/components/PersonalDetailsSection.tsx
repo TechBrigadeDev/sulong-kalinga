@@ -1,11 +1,22 @@
 import { useState } from "react";
-import { Card, H3, Input, Select, Text, XStack, YStack } from "tamagui";
+import {
+    Card,
+    H3,
+    Input,
+    Select,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
     data?: Partial<IBeneficiary>;
-    onChange?: (field: string | number | symbol, value: any) => void;
+    onChange?: (
+        field: string | number | symbol,
+        value: any,
+    ) => void;
 }
 
 const CIVIL_STATUS_OPTIONS = [
@@ -21,11 +32,19 @@ const GENDER_OPTIONS = [
     { label: "Other", value: "Other" },
 ];
 
-export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props) => {
-    const [birthday, setBirthday] = useState(data.birthday || "");
+export const PersonalDetailsSection = ({
+    data = {},
+    onChange = () => {},
+}: Props) => {
+    const [birthday, setBirthday] = useState(
+        data.birthday || "",
+    );
 
     return (
-        <Card bordered backgroundColor="$background">
+        <Card
+            bordered
+            backgroundColor="$background"
+        >
             <Card.Header>
                 <H3>Personal Details</H3>
             </Card.Header>
@@ -33,21 +52,43 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
                 <YStack gap="$4">
                     <XStack gap="$4">
                         <YStack flex={1} gap="$2">
-                            <Text>First Name *</Text>
+                            <Text>
+                                First Name *
+                            </Text>
                             <Input
                                 size="$4"
-                                value={data.first_name}
-                                onChangeText={(value) => onChange("first_name", value)}
+                                value={
+                                    data.first_name
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "first_name",
+                                        value,
+                                    )
+                                }
                                 placeholder="Enter first name"
                                 autoCapitalize="words"
                             />
                         </YStack>
                         <YStack flex={1} gap="$2">
-                            <Text>Last Name *</Text>
+                            <Text>
+                                Last Name *
+                            </Text>
                             <Input
                                 size="$4"
-                                value={data.last_name}
-                                onChangeText={(value) => onChange("last_name", value)}
+                                value={
+                                    data.last_name
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "last_name",
+                                        value,
+                                    )
+                                }
                                 placeholder="Enter last name"
                                 autoCapitalize="words"
                             />
@@ -56,11 +97,22 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
 
                     <XStack gap="$4">
                         <YStack flex={1} gap="$2">
-                            <Text>Civil Status *</Text>
+                            <Text>
+                                Civil Status *
+                            </Text>
                             <Select
                                 size="$4"
-                                value={data.civil_status}
-                                onValueChange={(value) => onChange("civil_status", value)}
+                                value={
+                                    data.civil_status
+                                }
+                                onValueChange={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "civil_status",
+                                        value,
+                                    )
+                                }
                             >
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select civil status" />
@@ -69,17 +121,30 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
                                         <Select.Group>
-                                            {CIVIL_STATUS_OPTIONS.map((option, i) => (
-                                                <Select.Item
-                                                    index={i}
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    <Select.ItemText>
-                                                        {option.label}
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ))}
+                                            {CIVIL_STATUS_OPTIONS.map(
+                                                (
+                                                    option,
+                                                    i,
+                                                ) => (
+                                                    <Select.Item
+                                                        index={
+                                                            i
+                                                        }
+                                                        key={
+                                                            option.value
+                                                        }
+                                                        value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        <Select.ItemText>
+                                                            {
+                                                                option.label
+                                                            }
+                                                        </Select.ItemText>
+                                                    </Select.Item>
+                                                ),
+                                            )}
                                         </Select.Group>
                                     </Select.Viewport>
                                     <Select.ScrollDownButton />
@@ -90,8 +155,17 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
                             <Text>Gender *</Text>
                             <Select
                                 size="$4"
-                                value={data.gender}
-                                onValueChange={(value) => onChange("gender", value)}
+                                value={
+                                    data.gender
+                                }
+                                onValueChange={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "gender",
+                                        value,
+                                    )
+                                }
                             >
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select gender" />
@@ -100,17 +174,30 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
                                         <Select.Group>
-                                            {GENDER_OPTIONS.map((option, i) => (
-                                                <Select.Item
-                                                    index={i}
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    <Select.ItemText>
-                                                        {option.label}
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ))}
+                                            {GENDER_OPTIONS.map(
+                                                (
+                                                    option,
+                                                    i,
+                                                ) => (
+                                                    <Select.Item
+                                                        index={
+                                                            i
+                                                        }
+                                                        key={
+                                                            option.value
+                                                        }
+                                                        value={
+                                                            option.value
+                                                        }
+                                                    >
+                                                        <Select.ItemText>
+                                                            {
+                                                                option.label
+                                                            }
+                                                        </Select.ItemText>
+                                                    </Select.Item>
+                                                ),
+                                            )}
                                         </Select.Group>
                                     </Select.Viewport>
                                     <Select.ScrollDownButton />
@@ -121,23 +208,43 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
 
                     <XStack gap="$4">
                         <YStack flex={1} gap="$2">
-                            <Text>Birthday *</Text>
+                            <Text>
+                                Birthday *
+                            </Text>
                             <Input
                                 size="$4"
                                 value={birthday}
-                                onChangeText={(value) => {
-                                    setBirthday(value);
-                                    onChange("birthday", value);
+                                onChangeText={(
+                                    value,
+                                ) => {
+                                    setBirthday(
+                                        value,
+                                    );
+                                    onChange(
+                                        "birthday",
+                                        value,
+                                    );
                                 }}
                                 placeholder="YYYY-MM-DD"
                             />
                         </YStack>
                         <YStack flex={1} gap="$2">
-                            <Text>Primary Caregiver</Text>
+                            <Text>
+                                Primary Caregiver
+                            </Text>
                             <Input
                                 size="$4"
-                                value={data.primary_caregiver}
-                                onChangeText={(value) => onChange("primary_caregiver", value)}
+                                value={
+                                    data.primary_caregiver
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "primary_caregiver",
+                                        value,
+                                    )
+                                }
                                 placeholder="Enter Primary Caregiver name"
                                 autoCapitalize="words"
                             />
@@ -146,11 +253,23 @@ export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props
 
                     <XStack gap="$4">
                         <YStack flex={1} gap="$2">
-                            <Text>Mobile Number *</Text>
+                            <Text>
+                                Mobile Number *
+                            </Text>
                             <Input
                                 size="$4"
-                                value={data.mobile?.replace("+63", "")}
-                                onChangeText={(value) => onChange("mobile", `+63${value}`)}
+                                value={data.mobile?.replace(
+                                    "+63",
+                                    "",
+                                )}
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "mobile",
+                                        `+63${value}`,
+                                    )
+                                }
                                 placeholder="Enter mobile number"
                                 keyboardType="phone-pad"
                             />

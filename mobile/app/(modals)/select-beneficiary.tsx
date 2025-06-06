@@ -10,7 +10,8 @@ const Screen = () => {
                     presentation: "modal",
                     headerShown: false,
                     title: "Select Beneficiary",
-                    headerTitle: "Select Beneficiary",
+                    headerTitle:
+                        "Select Beneficiary",
                 }}
             />
             <SelectBeneficiary />

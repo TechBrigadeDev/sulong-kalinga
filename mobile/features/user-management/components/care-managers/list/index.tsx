@@ -1,6 +1,11 @@
 import { useRouter } from "expo-router";
 import { RefreshControl } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
+import {
+    Button,
+    Card,
+    Text,
+    View,
+} from "tamagui";
 
 import FlatList from "~/components/FlatList";
 import { useGetCareManagers } from "~/features/user-management/management.hook";
@@ -26,9 +31,18 @@ const CareManagerList = () => {
     return (
         <FlatList
             data={data}
-            renderItem={({ item }) => <CareManagerCard item={item} />}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+            renderItem={({ item }) => (
+                <CareManagerCard item={item} />
+            )}
+            contentContainerStyle={{
+                paddingBottom: 120,
+            }}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                />
+            }
         />
     );
 };
@@ -37,13 +51,17 @@ interface CareManagerCardProps {
     item: ICareManager;
 }
 
-const CareManagerCard = ({ item }: CareManagerCardProps) => {
+const CareManagerCard = ({
+    item,
+}: CareManagerCardProps) => {
     const router = useRouter();
 
     const { id, first_name, last_name } = item;
 
     const onView = () => {
-        router.push(`/(tabs)/options/user-management/care-managers/${id}`);
+        router.push(
+            `/(tabs)/options/user-management/care-managers/${id}`,
+        );
     };
 
     return (
@@ -57,11 +75,21 @@ const CareManagerCard = ({ item }: CareManagerCardProps) => {
             borderWidth={1}
         >
             <View>
-                <Text fontSize="$6" fontWeight="500" color="#495057">
+                <Text
+                    fontSize="$6"
+                    fontWeight="500"
+                    color="#495057"
+                >
                     {first_name} {last_name}
                 </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginTop: 12,
+                }}
+            >
                 <Button
                     size="$3"
                     bg="#E9ECEF"

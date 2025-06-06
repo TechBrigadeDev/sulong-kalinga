@@ -16,13 +16,23 @@ interface AdminDetailProps {
     admin: IAdmin;
 }
 
-function AdminDetail({ admin }: AdminDetailProps) {
+function AdminDetail({
+    admin,
+}: AdminDetailProps) {
     if (!admin) {
         return (
             <YStack
-                style={{ padding: 16, flex: 1, alignItems: "center", justifyContent: "center" }}
+                style={{
+                    padding: 16,
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
             >
-                <Text>Administrator data is not available</Text>
+                <Text>
+                    Administrator data is not
+                    available
+                </Text>
             </YStack>
         );
     }
@@ -32,7 +42,9 @@ function AdminDetail({ admin }: AdminDetailProps) {
             <YStack p="$4" gap="$4">
                 <AdminHeader admin={admin} />
                 <PersonalDetails admin={admin} />
-                <ContactInformation admin={admin} />
+                <ContactInformation
+                    admin={admin}
+                />
                 <Documents admin={admin} />
                 <GovernmentIDs admin={admin} />
             </YStack>

@@ -5,20 +5,34 @@ class AppController {
     private api: AxiosInstance = axiosClient;
 
     public async health() {
-        console.info("test:", this.api.defaults.baseURL);
+        console.info(
+            "test:",
+            this.api.defaults.baseURL,
+        );
         try {
-            const response = await fetch("https://test.cosemhcs.org.ph/health", {
-                method: "GET",
-            });
+            const response = await fetch(
+                "https://test.cosemhcs.org.ph/health",
+                {
+                    method: "GET",
+                },
+            );
             console.info({ response });
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(
+                    `HTTP error! status: ${response.status}`,
+                );
             }
 
             const data = await response.json();
-            console.log("Health check response:", data);
+            console.log(
+                "Health check response:",
+                data,
+            );
         } catch (error) {
-            console.error("Error during health check:", error);
+            console.error(
+                "Error during health check:",
+                error,
+            );
             throw error;
         }
     }

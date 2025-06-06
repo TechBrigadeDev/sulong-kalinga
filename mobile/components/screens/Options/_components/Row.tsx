@@ -1,6 +1,12 @@
-import { Link as ExpoLink, LinkProps } from "expo-router";
+import {
+    Link as ExpoLink,
+    LinkProps,
+} from "expo-router";
 import { icons } from "lucide-react-native";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import {
+    StyleSheet,
+    TouchableOpacity,
+} from "react-native";
 import { Text, XStack } from "tamagui";
 
 const OptionRow = ({
@@ -17,18 +23,32 @@ const OptionRow = ({
     if (!href) {
         return (
             <XStack style={style.row} gap={10}>
-                <XStack gap={10} style={style.linkLabel}>
+                <XStack
+                    gap={10}
+                    style={style.linkLabel}
+                >
                     <Icon />
-                    <Text style={style.rowLabel}>{label}</Text>
+                    <Text style={style.rowLabel}>
+                        {label}
+                    </Text>
                 </XStack>
-                <XStack style={{ marginLeft: "auto" }}>
+                <XStack
+                    style={{ marginLeft: "auto" }}
+                >
                     <Text>{value}</Text>
                 </XStack>
             </XStack>
         );
     }
 
-    return <Link href={href} label={label} value={value} icon={icon} />;
+    return (
+        <Link
+            href={href}
+            label={label}
+            value={value}
+            icon={icon}
+        />
+    );
 };
 
 const Link = ({
@@ -47,25 +67,44 @@ const Link = ({
     return (
         <ExpoLink href={href} asChild>
             <TouchableOpacity style={style.row}>
-                <XStack gap={10} style={style.rowLabel}>
+                <XStack
+                    gap={10}
+                    style={style.rowLabel}
+                >
                     <Icon icon={icon} />
-                    <Text style={style.rowLabel}>{label}</Text>
+                    <Text style={style.rowLabel}>
+                        {label}
+                    </Text>
                 </XStack>
                 <XStack style={style.rowValue}>
-                    {value && <Text>{value}</Text>}
-                    <Chevron size={24} color="#000" style={{ marginLeft: "auto" }} />
+                    {value && (
+                        <Text>{value}</Text>
+                    )}
+                    <Chevron
+                        size={24}
+                        color="#000"
+                        style={{
+                            marginLeft: "auto",
+                        }}
+                    />
                 </XStack>
             </TouchableOpacity>
         </ExpoLink>
     );
 };
 
-const Icon = ({ icon }: { icon?: keyof typeof icons }) => {
+const Icon = ({
+    icon,
+}: {
+    icon?: keyof typeof icons;
+}) => {
     if (!icon) {
         return null;
     }
     const IconComponent = icons[icon];
-    return <IconComponent size={24} color="#000" />;
+    return (
+        <IconComponent size={24} color="#000" />
+    );
 };
 
 const style = StyleSheet.create({

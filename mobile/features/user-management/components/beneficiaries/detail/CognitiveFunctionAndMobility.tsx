@@ -1,4 +1,10 @@
-import { Card, H3, Text, XStack, YStack } from "tamagui";
+import {
+    Card,
+    H3,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
@@ -6,18 +12,26 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const CognitiveFunctionAndMobility = ({ beneficiary: _beneficiary }: Props) => {
+const CognitiveFunctionAndMobility = ({
+    beneficiary: _beneficiary,
+}: Props) => {
     const cognitiveInfo = {
         Memory: "Rem necessitatibus quia eum.",
-        "Thinking Skills": "Ratione nobis velit possimus quis.",
-        Orientation: "Non ut doloribus possimus et repellendus in.",
-        Behavior: "Eum aspernatur illum aut voluptas laborum perferendis.",
+        "Thinking Skills":
+            "Ratione nobis velit possimus quis.",
+        Orientation:
+            "Non ut doloribus possimus et repellendus in.",
+        Behavior:
+            "Eum aspernatur illum aut voluptas laborum perferendis.",
     };
 
     const mobilityInfo = {
-        "Walking Ability": "Quibusdam voluptate aut veritatis velit dicta.",
-        "Assistive Devices": "Nihil ipsum similique sequi modi error repudiandae unde.",
-        "Transportation Needs": "Consequatur et in omnis mollitia voluptas eligendi.",
+        "Walking Ability":
+            "Quibusdam voluptate aut veritatis velit dicta.",
+        "Assistive Devices":
+            "Nihil ipsum similique sequi modi error repudiandae unde.",
+        "Transportation Needs":
+            "Consequatur et in omnis mollitia voluptas eligendi.",
     };
 
     return (
@@ -28,10 +42,18 @@ const CognitiveFunctionAndMobility = ({ beneficiary: _beneficiary }: Props) => {
                 </Card.Header>
                 <Card.Footer padded>
                     <YStack gap="$3">
-                        {Object.entries(cognitiveInfo).map(([key, value]) => (
+                        {Object.entries(
+                            cognitiveInfo,
+                        ).map(([key, value]) => (
                             <YStack key={key}>
-                                <Text opacity={0.6}>{key}</Text>
-                                <Text>{value}</Text>
+                                <Text
+                                    opacity={0.6}
+                                >
+                                    {key}
+                                </Text>
+                                <Text>
+                                    {value}
+                                </Text>
                             </YStack>
                         ))}
                     </YStack>
@@ -44,10 +66,18 @@ const CognitiveFunctionAndMobility = ({ beneficiary: _beneficiary }: Props) => {
                 </Card.Header>
                 <Card.Footer padded>
                     <YStack gap="$3">
-                        {Object.entries(mobilityInfo).map(([key, value]) => (
+                        {Object.entries(
+                            mobilityInfo,
+                        ).map(([key, value]) => (
                             <YStack key={key}>
-                                <Text opacity={0.6}>{key}</Text>
-                                <Text>{value}</Text>
+                                <Text
+                                    opacity={0.6}
+                                >
+                                    {key}
+                                </Text>
+                                <Text>
+                                    {value}
+                                </Text>
                             </YStack>
                         ))}
                     </YStack>

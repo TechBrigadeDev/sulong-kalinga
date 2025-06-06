@@ -17,10 +17,18 @@ export interface PaginatedResponse<T> {
     meta: PaginationMeta;
 }
 
-export type IBeneficiary = z.infer<typeof beneficiarySchema>;
+export type IBeneficiary = z.infer<
+    typeof beneficiarySchema
+>;
 
-export type ICareManager = z.infer<typeof careManagerSchema>;
+export type ICareManager = z.infer<
+    typeof careManagerSchema
+>;
 
-export type ICareWorker = z.infer<typeof careWorkerSchema>;
+export type ICareWorker = z.infer<
+    typeof careWorkerSchema
+>;
 
-export type IFamilyMember = z.infer<typeof familyMemberSchema>;
+export type IFamilyMember = z.infer<
+    typeof familyMemberSchema
+>;

@@ -1,6 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Button, Card, Checkbox, Input, ScrollView, Text, XStack, YStack } from "tamagui";
+import {
+    Button,
+    Card,
+    Checkbox,
+    Input,
+    ScrollView,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 export interface HouseholdKeepingIntervention {
     id: string;
@@ -9,7 +18,10 @@ export interface HouseholdKeepingIntervention {
     isCustom?: boolean;
 }
 
-const DEFAULT_INTERVENTIONS: Omit<HouseholdKeepingIntervention, "id">[] = [
+const DEFAULT_INTERVENTIONS: Omit<
+    HouseholdKeepingIntervention,
+    "id"
+>[] = [
     {
         name: "Regular Cleaning Daily Tasks: Talk with family members/ Facilitate cleaning surfaces, dusting, and mopping with the family members.",
         minutes: "",
@@ -18,14 +30,26 @@ const DEFAULT_INTERVENTIONS: Omit<HouseholdKeepingIntervention, "id">[] = [
         name: "Regular Cleaning Weekly Tasks: Assist/Facilitate family members in changing bed linens, cleaning bathrooms, and laundry.",
         minutes: "",
     },
-    { name: "Cooking: Preparing meals that are easy to eat and nutritious.", minutes: "" },
+    {
+        name: "Cooking: Preparing meals that are easy to eat and nutritious.",
+        minutes: "",
+    },
     {
         name: "Dishwashing: Assist family members/Facilitate washing dishes and cleaning up after meals.",
         minutes: "",
     },
-    { name: "Laundry: Washing and drying laundry (towels and clothes)", minutes: "" },
-    { name: "Laundry: Folding and ironing clothes if needed", minutes: "" },
-    { name: "Laundry: Organizing clothes in closets or drawers", minutes: "" },
+    {
+        name: "Laundry: Washing and drying laundry (towels and clothes)",
+        minutes: "",
+    },
+    {
+        name: "Laundry: Folding and ironing clothes if needed",
+        minutes: "",
+    },
+    {
+        name: "Laundry: Organizing clothes in closets or drawers",
+        minutes: "",
+    },
 ];
 
 export interface HouseholdKeepingData {
@@ -34,39 +58,73 @@ export interface HouseholdKeepingData {
 
 interface HouseholdKeepingProps {
     data: HouseholdKeepingData;
-    onChange: (data: Partial<HouseholdKeepingData>) => void;
+    onChange: (
+        data: Partial<HouseholdKeepingData>,
+    ) => void;
 }
 
-export const HouseholdKeeping = ({ data, onChange }: HouseholdKeepingProps) => {
-    const [customIntervention, setCustomIntervention] = useState("");
+export const HouseholdKeeping = ({
+    data,
+    onChange,
+}: HouseholdKeepingProps) => {
+    const [
+        customIntervention,
+        setCustomIntervention,
+    ] = useState("");
 
-    const toggleIntervention = (intervention: HouseholdKeepingIntervention) => {
-        const newInterventions = data.interventions.some((i) => i.id === intervention.id)
-            ? data.interventions.filter((i) => i.id !== intervention.id)
-            : [...data.interventions, intervention];
+    const toggleIntervention = (
+        intervention: HouseholdKeepingIntervention,
+    ) => {
+        const newInterventions =
+            data.interventions.some(
+                (i) => i.id === intervention.id,
+            )
+                ? data.interventions.filter(
+                      (i) =>
+                          i.id !==
+                          intervention.id,
+                  )
+                : [
+                      ...data.interventions,
+                      intervention,
+                  ];
 
-        onChange({ interventions: newInterventions });
+        onChange({
+            interventions: newInterventions,
+        });
     };
 
-    const updateMinutes = (id: string, minutes: string) => {
-        const newInterventions = data.interventions.map((i) =>
-            i.id === id ? { ...i, minutes } : i,
-        );
-        onChange({ interventions: newInterventions });
+    const updateMinutes = (
+        id: string,
+        minutes: string,
+    ) => {
+        const newInterventions =
+            data.interventions.map((i) =>
+                i.id === id
+                    ? { ...i, minutes }
+                    : i,
+            );
+        onChange({
+            interventions: newInterventions,
+        });
     };
 
     const addCustomIntervention = () => {
         if (!customIntervention.trim()) return;
 
-        const newIntervention: HouseholdKeepingIntervention = {
-            id: Date.now().toString(),
-            name: customIntervention,
-            minutes: "",
-            isCustom: true,
-        };
+        const newIntervention: HouseholdKeepingIntervention =
+            {
+                id: Date.now().toString(),
+                name: customIntervention,
+                minutes: "",
+                isCustom: true,
+            };
 
         onChange({
-            interventions: [...data.interventions, newIntervention],
+            interventions: [
+                ...data.interventions,
+                newIntervention,
+            ],
         });
 
         setCustomIntervention("");
@@ -74,7 +132,10 @@ export const HouseholdKeeping = ({ data, onChange }: HouseholdKeepingProps) => {
 
     const removeIntervention = (id: string) => {
         onChange({
-            interventions: data.interventions.filter((i) => i.id !== id),
+            interventions:
+                data.interventions.filter(
+                    (i) => i.id !== id,
+                ),
         });
     };
 
@@ -83,113 +144,233 @@ export const HouseholdKeeping = ({ data, onChange }: HouseholdKeepingProps) => {
             <YStack padding="$4" gap="$4">
                 <Card elevate>
                     <Card.Header padded>
-                        <Text size="$6" fontWeight="bold">
-                            Household Keeping Interventions
+                        <Text
+                            size="$6"
+                            fontWeight="bold"
+                        >
+                            Household Keeping
+                            Interventions
                         </Text>
                     </Card.Header>
                     <Card.Footer padded>
                         <YStack gap="$4">
-                            {DEFAULT_INTERVENTIONS.map((intervention, index) => {
-                                const savedIntervention = data.interventions.find(
-                                    (i) => i.name === intervention.name,
-                                );
-                                const checked = Boolean(savedIntervention);
+                            {DEFAULT_INTERVENTIONS.map(
+                                (
+                                    intervention,
+                                    index,
+                                ) => {
+                                    const savedIntervention =
+                                        data.interventions.find(
+                                            (i) =>
+                                                i.name ===
+                                                intervention.name,
+                                        );
+                                    const checked =
+                                        Boolean(
+                                            savedIntervention,
+                                        );
 
-                                return (
-                                    <XStack key={index} gap="$4" alignItems="center">
-                                        <Checkbox
-                                            checked={checked}
-                                            onCheckedChange={() =>
-                                                toggleIntervention({
-                                                    id:
-                                                        savedIntervention?.id ||
-                                                        Date.now().toString(),
-                                                    ...intervention,
-                                                })
+                                    return (
+                                        <XStack
+                                            key={
+                                                index
                                             }
-                                            size="$4"
+                                            gap="$4"
+                                            alignItems="center"
                                         >
-                                            <Checkbox.Indicator>
-                                                <Ionicons name="checkmark" size={16} />
-                                            </Checkbox.Indicator>
-                                        </Checkbox>
+                                            <Checkbox
+                                                checked={
+                                                    checked
+                                                }
+                                                onCheckedChange={() =>
+                                                    toggleIntervention(
+                                                        {
+                                                            id:
+                                                                savedIntervention?.id ||
+                                                                Date.now().toString(),
+                                                            ...intervention,
+                                                        },
+                                                    )
+                                                }
+                                                size="$4"
+                                            >
+                                                <Checkbox.Indicator>
+                                                    <Ionicons
+                                                        name="checkmark"
+                                                        size={
+                                                            16
+                                                        }
+                                                    />
+                                                </Checkbox.Indicator>
+                                            </Checkbox>
 
-                                        <YStack flex={1}>
-                                            <Text>{intervention.name}</Text>
-                                            {checked && (
-                                                <XStack gap="$2" marginTop="$2" alignItems="center">
+                                            <YStack
+                                                flex={
+                                                    1
+                                                }
+                                            >
+                                                <Text>
+                                                    {
+                                                        intervention.name
+                                                    }
+                                                </Text>
+                                                {checked && (
+                                                    <XStack
+                                                        gap="$2"
+                                                        marginTop="$2"
+                                                        alignItems="center"
+                                                    >
+                                                        <Input
+                                                            flex={
+                                                                1
+                                                            }
+                                                            placeholder="Minutes"
+                                                            keyboardType="numeric"
+                                                            value={
+                                                                savedIntervention?.minutes
+                                                            }
+                                                            onChangeText={(
+                                                                text,
+                                                            ) =>
+                                                                updateMinutes(
+                                                                    savedIntervention!
+                                                                        .id,
+                                                                    text,
+                                                                )
+                                                            }
+                                                        />
+                                                        <Text>
+                                                            min
+                                                        </Text>
+                                                    </XStack>
+                                                )}
+                                            </YStack>
+                                        </XStack>
+                                    );
+                                },
+                            )}
+
+                            {data.interventions
+                                .filter(
+                                    (i) =>
+                                        i.isCustom,
+                                )
+                                .map(
+                                    (
+                                        intervention,
+                                    ) => (
+                                        <XStack
+                                            key={
+                                                intervention.id
+                                            }
+                                            gap="$4"
+                                            alignItems="center"
+                                        >
+                                            <Checkbox
+                                                checked={
+                                                    true
+                                                }
+                                                onCheckedChange={() =>
+                                                    removeIntervention(
+                                                        intervention.id,
+                                                    )
+                                                }
+                                                size="$4"
+                                            >
+                                                <Checkbox.Indicator>
+                                                    <Ionicons
+                                                        name="checkmark"
+                                                        size={
+                                                            16
+                                                        }
+                                                    />
+                                                </Checkbox.Indicator>
+                                            </Checkbox>
+
+                                            <YStack
+                                                flex={
+                                                    1
+                                                }
+                                            >
+                                                <Text>
+                                                    {
+                                                        intervention.name
+                                                    }
+                                                </Text>
+                                                <XStack
+                                                    gap="$2"
+                                                    marginTop="$2"
+                                                    alignItems="center"
+                                                >
                                                     <Input
-                                                        flex={1}
+                                                        flex={
+                                                            1
+                                                        }
                                                         placeholder="Minutes"
                                                         keyboardType="numeric"
-                                                        value={savedIntervention?.minutes}
-                                                        onChangeText={(text) =>
+                                                        value={
+                                                            intervention.minutes
+                                                        }
+                                                        onChangeText={(
+                                                            text,
+                                                        ) =>
                                                             updateMinutes(
-                                                                savedIntervention!.id,
+                                                                intervention.id,
                                                                 text,
                                                             )
                                                         }
                                                     />
-                                                    <Text>min</Text>
+                                                    <Text>
+                                                        min
+                                                    </Text>
                                                 </XStack>
-                                            )}
-                                        </YStack>
-                                    </XStack>
-                                );
-                            })}
+                                            </YStack>
 
-                            {data.interventions
-                                .filter((i) => i.isCustom)
-                                .map((intervention) => (
-                                    <XStack key={intervention.id} gap="$4" alignItems="center">
-                                        <Checkbox
-                                            checked={true}
-                                            onCheckedChange={() =>
-                                                removeIntervention(intervention.id)
-                                            }
-                                            size="$4"
-                                        >
-                                            <Checkbox.Indicator>
-                                                <Ionicons name="checkmark" size={16} />
-                                            </Checkbox.Indicator>
-                                        </Checkbox>
-
-                                        <YStack flex={1}>
-                                            <Text>{intervention.name}</Text>
-                                            <XStack gap="$2" marginTop="$2" alignItems="center">
-                                                <Input
-                                                    flex={1}
-                                                    placeholder="Minutes"
-                                                    keyboardType="numeric"
-                                                    value={intervention.minutes}
-                                                    onChangeText={(text) =>
-                                                        updateMinutes(intervention.id, text)
-                                                    }
-                                                />
-                                                <Text>min</Text>
-                                            </XStack>
-                                        </YStack>
-
-                                        <Button
-                                            theme="red"
-                                            onPress={() => removeIntervention(intervention.id)}
-                                            icon={<Ionicons name="trash-outline" size={16} />}
-                                        />
-                                    </XStack>
-                                ))}
+                                            <Button
+                                                theme="red"
+                                                onPress={() =>
+                                                    removeIntervention(
+                                                        intervention.id,
+                                                    )
+                                                }
+                                                icon={
+                                                    <Ionicons
+                                                        name="trash-outline"
+                                                        size={
+                                                            16
+                                                        }
+                                                    />
+                                                }
+                                            />
+                                        </XStack>
+                                    ),
+                                )}
 
                             <YStack gap="$2">
                                 <XStack gap="$2">
                                     <Input
                                         flex={1}
                                         placeholder="Enter custom household keeping task"
-                                        value={customIntervention}
-                                        onChangeText={setCustomIntervention}
+                                        value={
+                                            customIntervention
+                                        }
+                                        onChangeText={
+                                            setCustomIntervention
+                                        }
                                     />
                                     <Button
                                         theme="blue"
-                                        onPress={addCustomIntervention}
-                                        icon={<Ionicons name="add-outline" size={16} />}
+                                        onPress={
+                                            addCustomIntervention
+                                        }
+                                        icon={
+                                            <Ionicons
+                                                name="add-outline"
+                                                size={
+                                                    16
+                                                }
+                                            />
+                                        }
                                     >
                                         Add
                                     </Button>

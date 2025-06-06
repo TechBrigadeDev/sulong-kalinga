@@ -1,5 +1,15 @@
 import { useRouter } from "expo-router";
-import { Button, Card, H3, Input, Label, Switch, Text, XStack, YStack } from "tamagui";
+import {
+    Button,
+    Card,
+    H3,
+    Input,
+    Label,
+    Switch,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 interface IFamilyMember {
     relation_to_beneficiary?: string;
@@ -8,15 +18,25 @@ interface IFamilyMember {
 
 interface Props {
     data: Partial<IFamilyMember>;
-    onChange: (key: keyof IFamilyMember, value: any) => void;
+    onChange: (
+        key: keyof IFamilyMember,
+        value: any,
+    ) => void;
 }
 
-const RelationSection = ({ data, onChange }: Props) => {
+const RelationSection = ({
+    data,
+    onChange,
+}: Props) => {
     const router = useRouter();
 
     const onBeneficiarySelect = () => {
-        console.log("Navigating to Select Beneficiary Modal");
-        router.push("/(modals)/select-beneficiary");
+        console.log(
+            "Navigating to Select Beneficiary Modal",
+        );
+        router.push(
+            "/(modals)/select-beneficiary",
+        );
     };
     return (
         <Card elevate bordered>
@@ -26,17 +46,36 @@ const RelationSection = ({ data, onChange }: Props) => {
             <Card.Footer padded>
                 <YStack gap="$4">
                     <YStack gap="$2">
-                        <Label htmlFor="beneficiary">Beneficiary</Label>
-                        <Button onPress={onBeneficiarySelect} size="$4">
+                        <Label htmlFor="beneficiary">
+                            Beneficiary
+                        </Label>
+                        <Button
+                            onPress={
+                                onBeneficiarySelect
+                            }
+                            size="$4"
+                        >
                             Select Beneficiary
                         </Button>
                     </YStack>
                     <YStack gap="$2">
-                        <Label htmlFor="relation_to_beneficiary">Relation to Beneficiary</Label>
+                        <Label htmlFor="relation_to_beneficiary">
+                            Relation to
+                            Beneficiary
+                        </Label>
                         <Input
                             id="relation_to_beneficiary"
-                            value={data.relation_to_beneficiary}
-                            onChangeText={(value) => onChange("relation_to_beneficiary", value)}
+                            value={
+                                data.relation_to_beneficiary
+                            }
+                            onChangeText={(
+                                value,
+                            ) =>
+                                onChange(
+                                    "relation_to_beneficiary",
+                                    value,
+                                )
+                            }
                             placeholder="e.g. Parent, Sibling, Child"
                             autoCapitalize="words"
                         />
@@ -45,16 +84,29 @@ const RelationSection = ({ data, onChange }: Props) => {
                         <XStack gap="$4">
                             <Switch
                                 id="is_primary_caregiver"
-                                checked={data.is_primary_caregiver}
-                                onCheckedChange={(value) => onChange("is_primary_caregiver", value)}
+                                checked={
+                                    data.is_primary_caregiver
+                                }
+                                onCheckedChange={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        "is_primary_caregiver",
+                                        value,
+                                    )
+                                }
                                 size="$4"
                             >
                                 <Switch.Thumb animation="quick" />
                             </Switch>
-                            <Label htmlFor="is_primary_caregiver">Primary Caregiver</Label>
+                            <Label htmlFor="is_primary_caregiver">
+                                Primary Caregiver
+                            </Label>
                         </XStack>
                         <Text opacity={0.65}>
-                            Toggle this if this family member is the primary caregiver
+                            Toggle this if this
+                            family member is the
+                            primary caregiver
                         </Text>
                     </YStack>
                 </YStack>

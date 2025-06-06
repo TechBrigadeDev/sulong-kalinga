@@ -15,19 +15,38 @@ const PersonalDetails = ({ admin }: Props) => {
     return (
         <Card elevate>
             <Card.Header p="$4">
-                <SectionTitle>Personal Details</SectionTitle>
+                <SectionTitle>
+                    Personal Details
+                </SectionTitle>
             </Card.Header>
             <Card.Footer p="$4">
                 <YStack gap="$3">
                     <DetailRow
                         label="Educational Background"
-                        value={admin.educational_background}
+                        value={
+                            admin.educational_background
+                        }
                     />
-                    <DetailRow label="Birthday" value={admin.birthday} />
-                    <DetailRow label="Gender" value={admin.gender} />
-                    <DetailRow label="Civil Status" value={admin.civil_status} />
-                    <DetailRow label="Religion" value={admin.religion} />
-                    <DetailRow label="Nationality" value={admin.nationality} />
+                    <DetailRow
+                        label="Birthday"
+                        value={admin.birthday}
+                    />
+                    <DetailRow
+                        label="Gender"
+                        value={admin.gender}
+                    />
+                    <DetailRow
+                        label="Civil Status"
+                        value={admin.civil_status}
+                    />
+                    <DetailRow
+                        label="Religion"
+                        value={admin.religion}
+                    />
+                    <DetailRow
+                        label="Nationality"
+                        value={admin.nationality}
+                    />
                 </YStack>
             </Card.Footer>
         </Card>

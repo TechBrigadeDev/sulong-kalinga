@@ -28,13 +28,21 @@ const Image = () => {
             source.uri = user.photo_url;
         } else {
             source.uri = createAvatar(shapes, {
-                seed: user?.id.toString() || "default-avatar",
+                seed:
+                    user?.id.toString() ||
+                    "default-avatar",
             }).toDataUri();
         }
         return source;
     }, [user]);
 
-    return <ExpoImage source={source} style={style.image} contentFit="fill" />;
+    return (
+        <ExpoImage
+            source={source}
+            style={style.image}
+            contentFit="fill"
+        />
+    );
 };
 
 const Svg = () => {
@@ -42,13 +50,18 @@ const Svg = () => {
 
     const xml = useMemo(() => {
         return createAvatar(shapes, {
-            seed: user?.id.toString() ?? "default-avatar",
+            seed:
+                user?.id.toString() ??
+                "default-avatar",
         }).toString(); // returns the raw SVG XML string
     }, [user]);
 
     return (
         <View style={style.container}>
-            <SvgXml xml={xml} style={style.image} />
+            <SvgXml
+                xml={xml}
+                style={style.image}
+            />
         </View>
     );
 };

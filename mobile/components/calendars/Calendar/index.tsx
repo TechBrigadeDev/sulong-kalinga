@@ -1,10 +1,20 @@
-import { StyleProp, ViewStyle } from "react-native";
-import { Calendar as RNCalendar, CalendarProps } from "react-native-calendars";
+import {
+    StyleProp,
+    ViewStyle,
+} from "react-native";
+import {
+    Calendar as RNCalendar,
+    CalendarProps,
+} from "react-native-calendars";
 import { Theme } from "react-native-calendars/src/types";
 
 type CalendarComponentProps = CalendarProps;
 
-const Calendar = ({ style = {}, theme = {}, ...props }: CalendarComponentProps) => {
+const Calendar = ({
+    style = {},
+    theme = {},
+    ...props
+}: CalendarComponentProps) => {
     const styles: StyleProp<ViewStyle> = {
         borderRadius: 12,
         padding: 10,
@@ -27,7 +37,13 @@ const Calendar = ({ style = {}, theme = {}, ...props }: CalendarComponentProps) 
         ...theme,
     };
 
-    return <RNCalendar style={styles} theme={themes} {...props} />;
+    return (
+        <RNCalendar
+            style={styles}
+            theme={themes}
+            {...props}
+        />
+    );
 };
 
 export default Calendar;
