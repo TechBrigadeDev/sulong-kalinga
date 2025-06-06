@@ -822,7 +822,7 @@ class EmergencyAndRequestController extends Controller
         $message .= "\n\n{$update->message}";
         
         // Notify beneficiary if they have portal access
-        if ($beneficiary->portal_account_id) {
+        if ($beneficiary) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -836,7 +836,6 @@ class EmergencyAndRequestController extends Controller
         // Notify family members
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -846,7 +845,6 @@ class EmergencyAndRequestController extends Controller
                     'is_read' => false
                 ]);
             }
-        }
         
         // Notify assigned staff
         if ($assignedStaff && $assignedStaff->id != $actor->id) {
@@ -912,7 +910,7 @@ class EmergencyAndRequestController extends Controller
         }
         
         // Notify beneficiary if they have portal access
-        if ($beneficiary->portal_account_id) {
+        if ($beneficiary) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -926,7 +924,6 @@ class EmergencyAndRequestController extends Controller
         // Notify family members
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -936,7 +933,6 @@ class EmergencyAndRequestController extends Controller
                     'is_read' => false
                 ]);
             }
-        }
         
         // Notify care worker
         if ($careWorker && $careWorker->id != $actor->id) {

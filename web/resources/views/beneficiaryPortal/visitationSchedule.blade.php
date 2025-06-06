@@ -747,7 +747,7 @@
                 
                 // Make AJAX request to get upcoming visits with improved error handling
                 $.ajax({
-                    url: "{{ route('beneficiary.visitation.schedule.upcoming') }}", // Changed from family to beneficiary
+                    url: "{{ secure_url(route('beneficiary.visitation.schedule.upcoming', [], false)) }}", // Changed from family to beneficiary
                     method: 'GET',
                     data: {
                         status: statusFilter,
