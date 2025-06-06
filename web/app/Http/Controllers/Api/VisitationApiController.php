@@ -47,9 +47,15 @@ class VisitationApiController extends Controller
         // Care Manager/Admin: see all
 
         // Optional: filter by date range
-        if ($request->filled('start_date') && $request->filled('end_date')) {
+        if ($request->filled('start_date') || $request->filled('end_date')) {
             $query->whereHas('occurrences', function($q) use ($request) {
-                $q->whereBetween('occurrence_date', [$request->start_date, $request->end_date]);
+                if ($request->filled('start_date') && $request->filled('end_date')) {
+                    $q->whereBetween('occurrence_date', [$request->start_date, $request->end_date]);
+                } elseif ($request->filled('start_date')) {
+                    $q->where('occurrence_date', '>=', $request->start_date);
+                } else {
+                    $q->where('occurrence_date', '<=', $request->end_date);
+                }
             });
         }
 
@@ -135,9 +141,15 @@ class VisitationApiController extends Controller
         }
 
         // Date range filter
-        if ($request->filled('start_date') && $request->filled('end_date')) {
+        if ($request->filled('start_date') || $request->filled('end_date')) {
             $query->whereHas('occurrences', function($q) use ($request) {
-                $q->whereBetween('occurrence_date', [$request->start_date, $request->end_date]);
+                if ($request->filled('start_date') && $request->filled('end_date')) {
+                    $q->whereBetween('occurrence_date', [$request->start_date, $request->end_date]);
+                } elseif ($request->filled('start_date')) {
+                    $q->where('occurrence_date', '>=', $request->start_date);
+                } else {
+                    $q->where('occurrence_date', '<=', $request->end_date);
+                }
             });
         }
 
