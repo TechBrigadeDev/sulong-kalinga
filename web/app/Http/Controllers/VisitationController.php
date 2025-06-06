@@ -194,6 +194,29 @@ class VisitationController extends Controller
                     $title .= ' (' . $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name . ')';
                 }
                 
+                // Find matching weekly care plan for this beneficiary and date
+                $weeklyCarePlan = \App\Models\WeeklyCarePlan::where('beneficiary_id', $visitation->beneficiary_id)
+                    ->whereDate('date', $occurrence->occurrence_date)
+                    ->first();
+                
+                // Check if WCP exists and if it has been confirmed
+                $confirmedByBeneficiary = false;
+                $confirmedByFamily = false;
+                $confirmedOn = null;
+                $acknowledgementSignature = null;
+                
+                if ($weeklyCarePlan) {
+                    $confirmedByBeneficiary = !empty($weeklyCarePlan->acknowledged_by_beneficiary);
+                    $confirmedByFamily = !empty($weeklyCarePlan->acknowledged_by_family);
+                    if ($confirmedByBeneficiary || $confirmedByFamily) {
+                        $acknowledgementSignature = $weeklyCarePlan->acknowledgement_signature;
+                        if (!empty($acknowledgementSignature) && is_string($acknowledgementSignature)) {
+                            $sigData = json_decode($acknowledgementSignature, true);
+                            $confirmedOn = $sigData['date'] ?? null;
+                        }
+                    }
+                }
+                
                 // Build the event object
                 $event = [
                     'id' => 'occ-' . $occurrence->occurrence_id,
@@ -221,11 +244,14 @@ class VisitationController extends Controller
                         'address' => $visitation->beneficiary->street_address,
                         'recurring' => $visitation->recurringPattern ? true : false,
                         'recurring_pattern' => $visitation->recurringPattern ? [
-                            'type' => $visitation->recurringPattern->pattern_type,
-                            'day_of_week' => $visitation->recurringPattern->day_of_week,
-                            'recurrence_end' => $visitation->recurringPattern->recurrence_end ? 
-                                $visitation->recurringPattern->recurrence_end->format('Y-m-d') : null,
                         ] : null,
+                        // Add the weekly care plan acknowledgement data
+                        'has_weekly_care_plan' => $weeklyCarePlan ? true : false,
+                        'weekly_care_plan_id' => $weeklyCarePlan ? $weeklyCarePlan->weekly_care_plan_id : null,
+                        'confirmed_by_beneficiary' => $confirmedByBeneficiary,
+                        'confirmed_by_family' => $confirmedByFamily,
+                        'confirmed_on' => $confirmedOn,
+                        'acknowledgement_signature' => $acknowledgementSignature
                     ]
                 ];
                 
@@ -241,6 +267,29 @@ class VisitationController extends Controller
                 $title = $visitation->beneficiary->first_name . ' ' . $visitation->beneficiary->last_name;
                 if ($user->role_id <= 2) { // Admin or care manager
                     $title .= ' (' . $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name . ')';
+                }
+
+                // Find matching weekly care plan for this beneficiary and date
+                $weeklyCarePlan = \App\Models\WeeklyCarePlan::where('beneficiary_id', $visitation->beneficiary_id)
+                    ->whereDate('date', $visitation->visitation_date)
+                    ->first();
+                
+                // Check if WCP exists and if it has been confirmed
+                $confirmedByBeneficiary = false;
+                $confirmedByFamily = false;
+                $confirmedOn = null;
+                $acknowledgementSignature = null;
+                
+                if ($weeklyCarePlan) {
+                    $confirmedByBeneficiary = !empty($weeklyCarePlan->acknowledged_by_beneficiary);
+                    $confirmedByFamily = !empty($weeklyCarePlan->acknowledged_by_family);
+                    if ($confirmedByBeneficiary || $confirmedByFamily) {
+                        $acknowledgementSignature = $weeklyCarePlan->acknowledgement_signature;
+                        if (!empty($acknowledgementSignature) && is_string($acknowledgementSignature)) {
+                            $sigData = json_decode($acknowledgementSignature, true);
+                            $confirmedOn = $sigData['date'] ?? null;
+                        }
+                    }
                 }
                 
                 $baseEvent = [
@@ -262,6 +311,13 @@ class VisitationController extends Controller
                         'phone' => $visitation->beneficiary->mobile ?? 'Not Available',
                         'address' => $visitation->beneficiary->street_address,
                         'recurring' => $visitation->recurringPattern ? true : false,
+                         // Add the weekly care plan acknowledgement data
+                        'has_weekly_care_plan' => $weeklyCarePlan ? true : false,
+                        'weekly_care_plan_id' => $weeklyCarePlan ? $weeklyCarePlan->weekly_care_plan_id : null,
+                        'confirmed_by_beneficiary' => $confirmedByBeneficiary,
+                        'confirmed_by_family' => $confirmedByFamily,
+                        'confirmed_on' => $confirmedOn,
+                        'acknowledgement_signature' => $acknowledgementSignature
                     ]
                 ];
                 
@@ -1713,8 +1769,8 @@ class VisitationController extends Controller
             ]);
         }
         
-        // Notify beneficiary
-        if ($beneficiary) {
+        // Notify beneficiary if they have portal access
+        if ($beneficiary->portal_account_id) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -1727,6 +1783,7 @@ class VisitationController extends Controller
         
         // Notify all family members
         foreach ($familyMembers as $familyMember) {
+            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -1735,6 +1792,7 @@ class VisitationController extends Controller
                     'date_created' => now(),
                     'is_read' => false
                 ]);
+            }
         }
 
         // Administrator notification code removed
@@ -1835,8 +1893,8 @@ class VisitationController extends Controller
             }
         }
         
-        // Notify beneficiary
-        if ($beneficiary) {
+        // Notify beneficiary if they have portal access
+        if ($beneficiary->portal_account_id) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -1849,6 +1907,7 @@ class VisitationController extends Controller
         
         // Notify family members
         foreach ($familyMembers as $familyMember) {
+            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -1857,6 +1916,7 @@ class VisitationController extends Controller
                     'date_created' => now(),
                     'is_read' => false
                 ]);
+            }
         }
         
         \Log::info("Care worker change notifications sent", [
