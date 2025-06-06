@@ -5,9 +5,15 @@ import { Card, GetThemeValueForKey, Text, View } from "tamagui";
 
 const menuItems: IMenuItem[] = [
     {
-        title: "Scheduling",
-        href: "/scheduling",
+        title: "Medication",
+        href: "/scheduling/medication",
         color: "#0222FF",
+        icon: "Pill",
+    },
+    {
+        title: "Appointments",
+        href: "/scheduling/care-worker",
+        color: "#FF0000",
         icon: "Calendar",
     },
     {
@@ -21,6 +27,12 @@ const menuItems: IMenuItem[] = [
         href: "/care-plan",
         color: "#1B8000",
         icon: "FileText",
+    },
+    {
+        title: "Internal Appointments",
+        href: "/scheduling/internal",
+        color: "#800080",
+        icon: "Users",
     },
 ];
 interface IMenuItem {

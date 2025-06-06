@@ -64,6 +64,13 @@ function RootLayoutNav() {
                                 headerShown: false,
                             }}
                         />
+                        <Stack.Screen
+                            name="scheduling"
+                            options={{
+                                title: "Scheduling",
+                                headerTitle: "Scheduling",
+                            }}
+                        />
                         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
                         <Stack.Screen name="(modals)" options={{ headerShown: false }} />
                     </Stack.Protected>
