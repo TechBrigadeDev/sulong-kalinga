@@ -1988,14 +1988,18 @@ class DatabaseSeeder extends Seeder
             $startDate = $this->faker->dateTimeBetween('-2 weeks', '+2 weeks');
         }
         
+        // Extract the municipality ID from the care worker
+        $municipalityId = $careWorker->assigned_municipality_id;
+        
         // Create the visitation
         $visitation = Visitation::factory()->create([
             'care_worker_id' => $careWorker->id,
             'beneficiary_id' => $beneficiary->beneficiary_id,
             'visit_type' => $type,
             'visitation_date' => $startDate->format('Y-m-d'),
+            'is_flexible_time' => true, // Set to flexible time
             'assigned_by' => User::where('role_id', 2)
-                ->where('assigned_municipality_id', $careWorker->assigned_municipality_id)
+                ->where('assigned_municipality_id', $municipalityId)
                 ->first()->id ?? User::where('role_id', 1)->first()->id
         ]);
         
@@ -2033,6 +2037,7 @@ class DatabaseSeeder extends Seeder
         
         return $visitation;
     }
+
 
     /**
      * Generate occurrences for a recurring visitation
@@ -2113,10 +2118,10 @@ class DatabaseSeeder extends Seeder
                     // Create the occurrence
                     $occurrence = VisitationOccurrence::create([
                         'visitation_id' => $visitation->visitation_id,
-                        'occurrence_date' => $dateIterator->format('Y-m-d'), // Store as string in DB
-                        'start_time' => $visitation->is_flexible_time ? null : $visitation->start_time,
-                        'end_time' => $visitation->is_flexible_time ? null : $visitation->end_time,
-                        'status' => $status ?: 'scheduled', // Make sure status is never empty
+                        'occurrence_date' => $dateIterator->format('Y-m-d'),
+                        'start_time' => null, // For flexible time, set start_time to null
+                        'end_time' => null,   // For flexible time, set end_time to null
+                        'status' => $status ?: 'scheduled',
                         'notes' => $notes
                     ]);
                     
