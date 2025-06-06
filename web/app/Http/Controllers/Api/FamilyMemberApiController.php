@@ -387,60 +387,138 @@ class FamilyMemberApiController extends Controller
         ]);
     }
 
-    // Delete family member (admin only)
-    public function destroy(Request $request, $id)
+    /**
+     * Export family members as CSV (with relationships).
+     */
+    public function export(Request $request)
     {
-        if (!in_array($request->user()->role_id, [1, 2])) {
+        if (!in_array($request->user()->role_id, [1, 2, 3])) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        $familyMember = FamilyMember::findOrFail($id);
+        $fileName = 'family_members_' . now()->format('Ymd_His') . '.csv';
 
-        // Check for acknowledged care plans
-        if (method_exists($familyMember, 'acknowledgedCarePlans') && $familyMember->acknowledgedCarePlans()->exists()) {
-            return response()->json([
-                'errors' => [
-                    'delete' => ['Cannot delete because this family member has acknowledged care plans in weekly_care_plans.']
-                ]
-            ], 422);
-        }
+        $familyMembers = FamilyMember::with([
+            'beneficiary.municipality',
+            'beneficiary.barangay',
+            'beneficiary.category',
+            'beneficiary.status'
+        ])->get();
 
-        // Check if this family member is set as primary_caregiver in beneficiaries
-        $isPrimaryInBeneficiary = \App\Models\Beneficiary::where('primary_caregiver', $familyMember->family_member_id)->exists();
-        if ($isPrimaryInBeneficiary) {
-            return response()->json([
-                'errors' => [
-                    'delete' => ['Cannot delete because this family member is set as the primary caregiver for a beneficiary.']
-                ]
-            ], 422);
-        }
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
 
-        // Attempt delete and catch foreign key constraint errors
-        try {
-            // Delete photo from storage
-            if ($familyMember->photo) {
-                $this->uploadService->delete($familyMember->photo, 'spaces-private');
+        $callback = function() use ($familyMembers) {
+            $file = fopen('php://output', 'w');
+            // CSV header
+            fputcsv($file, [
+                'Family Member ID', 'First Name', 'Last Name', 'Gender', 'Birthday', 'Email', 'Mobile', 'Landline',
+                'Relation to Beneficiary', 'Is Primary Caregiver', 'Address', 'Status',
+                'Beneficiary Name', 'Beneficiary Category', 'Beneficiary Status', 'Beneficiary Municipality', 'Beneficiary Barangay'
+            ]);
+            foreach ($familyMembers as $fm) {
+                // Robustly skip if record is missing or not an object
+                if (
+                    !$fm ||
+                    !is_object($fm) ||
+                    (method_exists($fm, 'trashed') && $fm->trashed()) ||
+                    empty($fm->family_member_id)
+                ) {
+                    continue;
+                }
+
+                $beneficiary = $fm->beneficiary;
+                $beneficiaryName = $beneficiary ? ($beneficiary->first_name . ' ' . $beneficiary->last_name) : '';
+                $beneficiaryCategory = $beneficiary && $beneficiary->category ? $beneficiary->category->category_name : '';
+                $beneficiaryStatus = $beneficiary && $beneficiary->status ? $beneficiary->status->status_name : '';
+                $beneficiaryMunicipality = $beneficiary && $beneficiary->municipality ? $beneficiary->municipality->municipality_name : '';
+                $beneficiaryBarangay = $beneficiary && $beneficiary->barangay ? $beneficiary->barangay->barangay_name : '';
+
+                fputcsv($file, [
+                    $fm->family_member_id,
+                    $fm->first_name,
+                    $fm->last_name,
+                    $fm->gender,
+                    $fm->birthday,
+                    $fm->email,
+                    $fm->mobile,
+                    $fm->landline,
+                    $fm->relation_to_beneficiary,
+                    $fm->is_primary_caregiver ? 'Yes' : 'No',
+                    $fm->street_address,
+                    isset($fm->access) ? ($fm->access ? 'Approved' : 'Denied') : '',
+                    $beneficiaryName,
+                    $beneficiaryCategory,
+                    $beneficiaryStatus,
+                    $beneficiaryMunicipality,
+                    $beneficiaryBarangay
+                ]);
             }
+            fclose($file);
+        };
 
-            $familyMember->delete();
-
-            return response()->json(['success' => true]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Check for foreign key violation
-            if ($e->getCode() === '23503') {
-                return response()->json([
-                    'errors' => [
-                        'delete' => ['Cannot delete because this family member is still referenced in other records (e.g., weekly_care_plans or other related tables).']
-                    ]
-                ], 422);
-            }
-            // Other database errors
-            return response()->json([
-                'errors' => [
-                    'delete' => ['Delete failed due to a database error: ' . $e->getMessage()]
-                ]
-            ], 500);
-        }
+        return response()->stream($callback, 200, $headers);
     }
+
+    // Delete family member (admin only) REMOVED FEATURE
+    // public function destroy(Request $request, $id)
+    // {
+    //     if (!in_array($request->user()->role_id, [1, 2])) {
+    //         return response()->json(['error' => 'Forbidden'], 403);
+    //     }
+
+    //     $familyMember = FamilyMember::findOrFail($id);
+
+    //     // Check for acknowledged care plans
+    //     if (method_exists($familyMember, 'acknowledgedCarePlans') && $familyMember->acknowledgedCarePlans()->exists()) {
+    //         return response()->json([
+    //             'errors' => [
+    //                 'delete' => ['Cannot delete because this family member has acknowledged care plans in weekly_care_plans.']
+    //             ]
+    //         ], 422);
+    //     }
+
+    //     // Check if this family member is set as primary_caregiver in beneficiaries
+    //     $isPrimaryInBeneficiary = \App\Models\Beneficiary::where('primary_caregiver', $familyMember->family_member_id)->exists();
+    //     if ($isPrimaryInBeneficiary) {
+    //         return response()->json([
+    //             'errors' => [
+    //                 'delete' => ['Cannot delete because this family member is set as the primary caregiver for a beneficiary.']
+    //             ]
+    //         ], 422);
+    //     }
+
+    //     // Attempt delete and catch foreign key constraint errors
+    //     try {
+    //         // Delete photo from storage
+    //         if ($familyMember->photo) {
+    //             $this->uploadService->delete($familyMember->photo, 'spaces-private');
+    //         }
+
+    //         $familyMember->delete();
+
+    //         return response()->json(['success' => true]);
+    //     } catch (\Illuminate\Database\QueryException $e) {
+    //         // Check for foreign key violation
+    //         if ($e->getCode() === '23503') {
+    //             return response()->json([
+    //                 'errors' => [
+    //                     'delete' => ['Cannot delete because this family member is still referenced in other records (e.g., weekly_care_plans or other related tables).']
+    //                 ]
+    //             ], 422);
+    //         }
+    //         // Other database errors
+    //         return response()->json([
+    //             'errors' => [
+    //                 'delete' => ['Delete failed due to a database error: ' . $e->getMessage()]
+    //             ]
+    //         ], 500);
+    //     }
+    // }
 
 }

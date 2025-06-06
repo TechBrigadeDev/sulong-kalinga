@@ -46,21 +46,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Beneficiary Management
     Route::get('/beneficiaries', [BeneficiaryApiController::class, 'index']);
+    Route::get('/beneficiaries/export', [BeneficiaryApiController::class, 'export']);
     Route::get('/beneficiaries/{id}', [BeneficiaryApiController::class, 'show']);
     Route::post('/beneficiaries', [BeneficiaryApiController::class, 'store']);
     Route::put('/beneficiaries/{id}', [BeneficiaryApiController::class, 'update']);
     Route::patch('/beneficiaries/{id}/status', [BeneficiaryApiController::class, 'changeStatus']);
-    Route::delete('/beneficiaries/{id}', [BeneficiaryApiController::class, 'destroy']);
-    Route::post('/beneficiaries/{id}/restore', [BeneficiaryApiController::class, 'restore']);
-    Route::get('/beneficiaries/export', [BeneficiaryApiController::class, 'export']);
+    // Route::delete('/beneficiaries/{id}', [BeneficiaryApiController::class, 'destroy']);
+    // Route::post('/beneficiaries/{id}/restore', [BeneficiaryApiController::class, 'restore']);
 
     // Family Member Management
     Route::get('/family-members', [FamilyMemberApiController::class, 'index']);
+    Route::get('/family-members/export', [FamilyMemberApiController::class, 'export']);
     Route::get('/family-members/{id}', [FamilyMemberApiController::class, 'show']);
     Route::post('/family-members', [FamilyMemberApiController::class, 'store']);
     Route::put('/family-members/{id}', [FamilyMemberApiController::class, 'update']);
-    Route::patch('/family-members/{id}/status', [FamilyMemberApiController::class, 'changeStatus']);
-    Route::delete('/family-members/{id}', [FamilyMemberApiController::class, 'destroy']);
+    // Route::delete('/family-members/{id}', [FamilyMemberApiController::class, 'destroy']);
 
     // Admin Management (Full CRUD + status + restore)
     Route::get('/admins', [AdminApiController::class, 'index']);
