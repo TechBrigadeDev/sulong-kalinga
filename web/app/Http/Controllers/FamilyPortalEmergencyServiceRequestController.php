@@ -10,6 +10,11 @@ use App\Models\EmergencyType;
 use App\Models\ServiceRequestType;
 use App\Models\EmergencyUpdate;
 use App\Models\ServiceRequestUpdate;
+use App\Models\FamilyMember;
+use App\Models\User;
+use App\Models\Notification;
+use App\Models\Beneficiary;
+use App\Models\GeneralCarePlan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -126,6 +131,9 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             // Return the created emergency notice with its type
             $emergencyNotice->load('emergencyType');
+
+            // Create notifications for care managers and assigned care workers
+            $this->createRequestNotifications('emergency', $emergencyNotice, $beneficiaryId);
             
             return response()->json([
                 'success' => true,
@@ -192,6 +200,9 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             // Return the created service request with its type
             $serviceRequest->load('serviceType');
+
+            // Create notifications for care managers and assigned care workers
+            $this->createRequestNotifications('service', $serviceRequest, $beneficiaryId);
             
             return response()->json([
                 'success' => true,
@@ -532,6 +543,88 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 'message' => 'Failed to get service request details.',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Create notifications for care managers and assigned care worker
+     * 
+     * @param string $requestType Type of request ('emergency' or 'service')
+     * @param mixed $request The request object (EmergencyNotice or ServiceRequest)
+     * @param int $beneficiaryId ID of the beneficiary
+     * @return void
+     */
+    private function createRequestNotifications($requestType, $request, $beneficiaryId)
+    {
+        try {
+            // Get the beneficiary to access their information
+            $beneficiary = \App\Models\Beneficiary::find($beneficiaryId);
+            if (!$beneficiary) {
+                Log::error("Failed to create notifications: Beneficiary #{$beneficiaryId} not found");
+                return;
+            }
+            
+            $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+            
+            // 1. Get all care managers (role_id = 2)
+            $careManagers = \App\Models\User::where('role_id', 2)->get();
+            
+            // Create notification title and message based on request type
+            if ($requestType === 'emergency') {
+                $title = "🚨 New Emergency Request";
+                $message = "An emergency request has been submitted for beneficiary {$beneficiaryName}. Please review immediately.";
+                $type = $request->emergencyType ? $request->emergencyType->name : 'Unknown Type';
+                $message .= "\n\nEmergency Type: {$type}";
+            } else { // service
+                $title = "New Service Request";
+                $message = "A service request has been submitted for beneficiary {$beneficiaryName}. Please review.";
+                $type = $request->serviceType ? $request->serviceType->name : 'Unknown Type';
+                $message .= "\n\nService Type: {$type}";
+                $message .= "\n\nRequested Date: " . date('Y-m-d', strtotime($request->service_date));
+                $message .= "\nRequested Time: " . $request->service_time;
+            }
+            
+            // Add the message content
+            $message .= "\n\n" . $request->message;
+            
+            // 2. Notify all care managers
+            foreach ($careManagers as $careManager) {
+                \App\Models\Notification::create([
+                    'user_id' => $careManager->id,
+                    'user_type' => 'cose_staff',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+            }
+            
+            // 3. Try to find and notify the assigned care worker
+            if ($beneficiary->general_care_plan_id) {
+                // Get the general care plan
+                $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
+                
+                if ($generalCarePlan && $generalCarePlan->care_worker_id) {
+                    // We found the assigned care worker, create notification
+                    \App\Models\Notification::create([
+                        'user_id' => $generalCarePlan->care_worker_id,
+                        'user_type' => 'cose_staff',
+                        'message_title' => $title . " (For Your Beneficiary)",
+                        'message' => $message,
+                        'date_created' => now(),
+                        'is_read' => false
+                    ]);
+                    
+                    Log::info("Created notification for assigned care worker #{$generalCarePlan->care_worker_id} for beneficiary #{$beneficiaryId}");
+                } else {
+                    Log::info("No assigned care worker found for beneficiary #{$beneficiaryId}");
+                }
+            } else {
+                Log::info("No general care plan found for beneficiary #{$beneficiaryId}");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error("Error creating request notifications: " . $e->getMessage());
         }
     }
 }
