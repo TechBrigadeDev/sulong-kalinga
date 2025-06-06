@@ -53,6 +53,17 @@ export const QK = {
         medication: {
             getSchedules:
                 "user/scheduling/medication/getSchedules",
+            getSchedule: (id: string) => [
+                "user/scheduling/medication/getSchedule",
+                id,
+            ],
         },
     },
+};
+
+export const setDataQK = async (
+    key: string[],
+    data: any,
+) => {
+    queryClient.setQueryData(key, data);
 };

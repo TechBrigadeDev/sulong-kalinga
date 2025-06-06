@@ -11,6 +11,7 @@ const medicationTypeEnum = z.enum([
     "cream",
     "drops",
     "other",
+    "capsule",
 ]);
 
 const medicationStatusEnum = z.enum([
@@ -70,6 +71,14 @@ export const medicationScheduleSchema = z.object({
     }),
 });
 
+export const groupedMedicationScheduleSchema =
+    z.object({
+        beneficiary: beneficiarySchema,
+        medication_schedules: z.array(
+            medicationScheduleSchema,
+        ),
+    });
+
 const paginationLinkSchema = z.object({
     url: z.string().nullable(),
     label: z.string(),
@@ -85,7 +94,7 @@ export const medicationSchedulesResponseSchema =
                 medicationScheduleSchema,
             ),
             first_page_url: z.string(),
-            from: z.number(),
+            from: z.number().nullable(),
             last_page: z.number(),
             last_page_url: z.string(),
             links: z.array(paginationLinkSchema),
@@ -93,7 +102,13 @@ export const medicationSchedulesResponseSchema =
             path: z.string(),
             per_page: z.number(),
             prev_page_url: z.string().nullable(),
-            to: z.number(),
+            to: z.number().nullable(),
             total: z.number(),
         }),
+    });
+
+export const medicationScheduleResponseSchema =
+    z.object({
+        success: z.boolean(),
+        data: medicationScheduleSchema,
     });

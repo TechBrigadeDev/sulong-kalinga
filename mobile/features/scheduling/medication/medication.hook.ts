@@ -1,4 +1,7 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+    useInfiniteQuery,
+    useQuery,
+} from "@tanstack/react-query";
 import { QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
@@ -6,7 +9,7 @@ import { medicationSchedulingController } from "./medication.api";
 
 const api = medicationSchedulingController;
 
-export const useMedicationSchedule = (props?: {
+export const useMedicationSchedules = (props?: {
     search?: string;
     limit?: number;
 }) => {
@@ -23,8 +26,9 @@ export const useMedicationSchedule = (props?: {
                 await api.getSchedules({
                     search: props?.search,
                     page: pageParam,
-                    limit: props?.limit || 15,
+                    limit: props?.limit || 5,
                 });
+
             return {
                 data: response.data.data,
                 meta: {
@@ -46,5 +50,23 @@ export const useMedicationSchedule = (props?: {
                 : undefined,
         initialPageParam: 1,
         enabled: !!token,
+    });
+};
+
+export const useMedicationSchedule = (
+    id: string,
+) => {
+    const { token } = authStore();
+    return useQuery({
+        queryKey:
+            QK.scheduling.medication.getSchedule(
+                id,
+            ),
+        queryFn: async () => {
+            const response =
+                await api.getSchedule(id);
+            return response.data;
+        },
+        enabled: !!token && !!id,
     });
 };

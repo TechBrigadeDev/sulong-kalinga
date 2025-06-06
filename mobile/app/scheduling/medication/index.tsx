@@ -1,18 +1,36 @@
-import { WeekCalendar } from "components/calendars";
-import WeekCalendarButton from "components/calendars/WeekCalendar/button";
+import LoadingScreen from "components/loaders/LoadingScreen";
 import { Stack } from "expo-router";
-import { useMedicationSchedule } from "features/scheduling/medication/medication.hook";
+import MedicationList from "features/scheduling/medication/list";
+import MedicationScheduleSearch from "features/scheduling/medication/list/_components/Search";
+import { medicationScheduleListStore } from "features/scheduling/medication/list/store";
+import { useMedicationSchedules } from "features/scheduling/medication/medication.hook";
 import { YStack } from "tamagui";
 
 const Screen = () => {
-    useMedicationSchedule();
+    const { search } =
+        medicationScheduleListStore();
+    const { isLoading } = useMedicationSchedules({
+        search,
+    });
+
+    const List = () =>
+        isLoading ? (
+            <LoadingScreen />
+        ) : (
+            <MedicationList />
+        );
+
     return (
         <YStack flex={1} bg="$background">
             <YStack>
-                <WeekCalendar />
-                <WeekCalendarButton />
+                <MedicationScheduleSearch
+                    mt="$4"
+                    mx="$4"
+                />
             </YStack>
-            <YStack flex={1} bg="red"></YStack>
+            <YStack flex={1} marginInline="$4">
+                <List />
+            </YStack>
         </YStack>
     );
 };
@@ -21,7 +39,7 @@ const Layout = () => (
     <>
         <Stack.Screen
             options={{
-                title: "Medication Schedule",
+                title: "Medication",
                 headerShown: true,
             }}
         />

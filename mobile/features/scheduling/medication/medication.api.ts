@@ -2,7 +2,7 @@ import { AxiosInstance } from "axios";
 import { axiosClient } from "common/api";
 import { authStore } from "features/auth/auth.store";
 
-import { medicationSchedulesResponseSchema } from "./medication.schema";
+import { medicationScheduleResponseSchema, medicationSchedulesResponseSchema } from "./medication.schema";
 
 class MedicationSchedulingController {
     constructor(
@@ -69,6 +69,37 @@ class MedicationSchedulingController {
         } catch (error) {
             console.error(
                 "Error fetching medications:",
+                error,
+            );
+            throw error;
+        }
+    }
+
+    async getSchedule(id: string) {
+        try {
+            const response = await this.api.get(
+                `/medication-schedules/${id}`,
+            );
+            const data = response.data;
+
+            const validate =
+                await medicationScheduleResponseSchema.safeParseAsync(
+                    data,
+                );
+            if (!validate.success) {
+                console.error(
+                    "Validation failed:",
+                    validate.error,
+                );
+                throw new Error(
+                    "Invalid response data",
+                );
+            }
+
+            return validate.data;
+        } catch (error) {
+            console.error(
+                "Error fetching medication schedule:",
                 error,
             );
             throw error;
