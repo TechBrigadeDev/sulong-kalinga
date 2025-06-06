@@ -19,8 +19,8 @@ const menuItems: IMenuItem[] = [
         icon: "Pill",
     },
     {
-        title: "Appointments",
-        href: "/scheduling/care-worker",
+        title: "Visitations",
+        href: "/scheduling/visitations",
         color: "#FF0000",
         icon: "Calendar",
     },

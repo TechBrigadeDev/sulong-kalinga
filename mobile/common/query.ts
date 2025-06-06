@@ -58,6 +58,14 @@ export const QK = {
                 id,
             ],
         },
+        visitation: {
+            getVisitations:
+                "user/scheduling/visitation/getVisitations",
+            getVisitation: (id: string) => [
+                "user/scheduling/visitation/getVisitation",
+                id,
+            ],
+        },
     },
 };
 

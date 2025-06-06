@@ -1,4 +1,7 @@
-import axios, { AxiosError } from "axios";
+import axios, {
+    AxiosError,
+    AxiosInstance,
+} from "axios";
 import { authStore } from "features/auth/auth.store";
 
 console.log(
@@ -39,3 +42,27 @@ axiosClient.interceptors.response.use(
         return Promise.reject(error);
     },
 );
+
+export class Controller {
+    constructor(
+        public api: AxiosInstance = axiosClient,
+    ) {
+        this.api = api;
+        this.api.defaults.headers.common[
+            "Accept"
+        ] = "application/json";
+        this.api.defaults.headers.common[
+            "Content-Type"
+        ] = "application/json";
+        authStore.subscribe((state) => {
+            if (state.token) {
+                this.api.defaults.headers.common[
+                    "Authorization"
+                ] = `Bearer ${state.token}`;
+            } else {
+                delete this.api.defaults.headers
+                    .common["Authorization"];
+            }
+        });
+    }
+}
