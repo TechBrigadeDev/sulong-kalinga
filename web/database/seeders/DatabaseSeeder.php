@@ -344,12 +344,20 @@ class DatabaseSeeder extends Seeder
             \Log::error('Failed to seed family members', ['exception' => $e]);
         }
 
-        
+        // Create scheduling data first
+        try {
+            $this->command->info('Seeding scheduling data...');
+            // Generate scheduling data (appointments, visitations) FIRST
+            $this->generateSchedulingData($careWorkers, $beneficiaries);
+            $this->command->info('Scheduling data seeded successfully.');
+        } catch (\Throwable $e) {
+            $this->command->error('Failed to seed scheduling data: ' . $e->getMessage());
+            \Log::error('Failed to seed scheduling data', ['exception' => $e]);
+        }
 
-        // Create weekly care plans using the factory
+        // NOW create weekly care plans AFTER visitations exist
         try {
             $this->command->info('Seeding weekly care plans...');
-            
             // Generate initial vital signs
             $vitalSigns = VitalSigns::factory()->count(200)->create();
             
@@ -357,12 +365,29 @@ class DatabaseSeeder extends Seeder
             $interventionCount = 0;
             $this->command->getOutput()->progressStart(count($beneficiaries));
             
-            // Define the date range for care plans
-            $startDate = Carbon::createFromDate(2024, 9, 1); // Start from September 1, 2024
-            $endDate = Carbon::createFromDate(2025, 7, 31); // Until July 31, 2025
+            // Define possible illnesses for weekly care plans
+            $possibleIllnesses = [
+                'Common Cold',
+                'Influenza',
+                'Bronchitis',
+                'Gastroenteritis',
+                'Skin Infection',
+                'Urinary Tract Infection (UTI)',
+                'Pneumonia',
+                'Respiratory Infection',
+                'Allergic Rhinitis',
+                'Diarrhea',
+                'Minor Injuries (e.g., falls, sprains)',
+                'Headache',
+                'Indigestion',
+                'Toothache',
+                'Sore Throat'
+            ];
             
-            // For each beneficiary, create 3-4 weekly care plans per month from Jan 2024 until now
+            // For each beneficiary, create weekly care plans that match visitation dates
             foreach ($beneficiaries as $beneficiary) {
+                $this->command->getOutput()->progressAdvance();
+                
                 // Find care manager for this municipality first thing
                 $careManager = User::where('role_id', 2)
                     ->where('assigned_municipality_id', $beneficiary->municipality_id)
@@ -377,85 +402,61 @@ class DatabaseSeeder extends Seeder
                     }
                 }
                 
-                // Find care workers for this municipality - use filter instead of where
-                $municipalityCareWorkers = $careWorkers->filter(function ($worker) use ($beneficiary) {
-                    // Use strict comparison with == instead of ===
-                    return $worker->assigned_municipality_id == $beneficiary->municipality_id;
-                });
+                // Find completed visitation occurrences for this beneficiary
+                $completedVisits = VisitationOccurrence::join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
+                    ->where('visitations.beneficiary_id', $beneficiary->beneficiary_id)
+                    ->where('visitation_occurrences.status', 'completed')
+                    ->where('visitations.visit_type', 'routine_care_visit')  // Focus on routine visits
+                    ->orderBy('visitation_occurrences.occurrence_date')
+                    ->select('visitation_occurrences.*', 'visitations.care_worker_id')
+                    ->get();
+                
+                // If no completed visits found, create with default dates
+                if ($completedVisits->isEmpty()) {
+                    // Find care worker for this beneficiary's municipality
+                    $municipalityCareWorkers = $careWorkers->filter(function ($worker) use ($beneficiary) {
+                        return $worker->assigned_municipality_id == $beneficiary->municipality_id;
+                    });
 
-                // If no care worker for this municipality, get any care worker
-                if ($municipalityCareWorkers->isEmpty()) {
-                    $this->command->info("No care worker found for municipality {$beneficiary->municipality_id}, using any available care worker");
-                    $careWorker = $careWorkers->first();
-                    
-                    // If still no care workers at all, create one for this municipality
-                    if (!$careWorker) {
-                        $this->command->info("Creating a new care worker for municipality {$beneficiary->municipality_id}");
-                        $careWorker = User::factory()->create([
-                            'role_id' => 3,
-                            'assigned_municipality_id' => $beneficiary->municipality_id,
-                            'assigned_care_manager_id' => $careManager->id
-                        ]);
-                        // Add to our collection of care workers
-                        $careWorkers->push($careWorker);
-                    }
-                } else {
-                    // Use first() if only one result or random() safely if multiple results
-                    $careWorker = $municipalityCareWorkers->count() > 1 ? 
-                        $municipalityCareWorkers->random() : 
-                        $municipalityCareWorkers->first();
-                }
-                
-                // Clone the startDate to avoid modifying the original
-                $currentMonth = $startDate->copy();
-                
-                // Loop through each month
-                while ($currentMonth->lte($endDate)) {
-                    // Determine how many care plans to create this month (3-4)
-                    $plansThisMonth = $this->faker->numberBetween(3, 4);
-                    
-                    // Calculate days in current month
-                    $daysInMonth = $currentMonth->daysInMonth;
-                    
-                    // Create care plans evenly distributed throughout the month
-                    for ($i = 0; $i < $plansThisMonth; $i++) {
-                        // Calculate the target day for this care plan
-                        // This spaces them out evenly across the month
-                        $targetDay = ceil(($i + 1) * $daysInMonth / ($plansThisMonth + 1));
+                    // If no care worker for this municipality, get any care worker
+                    if ($municipalityCareWorkers->isEmpty()) {
+                        $this->command->info("No care worker found for municipality {$beneficiary->municipality_id}, using any available care worker");
+                        $careWorker = $careWorkers->first();
                         
-                        // Create a date for this care plan
-                        $planDate = $currentMonth->copy()->day($targetDay);
-                        
-                        // If this date is in the future, stop generating care plans
-                        if ($planDate->gt($endDate)) {
-                            break;
+                        // If still no care workers at all, create one for this municipality
+                        if (!$careWorker) {
+                            $this->command->info("Creating a new care worker for municipality {$beneficiary->municipality_id}");
+                            $careWorker = User::factory()->create([
+                                'role_id' => 3,
+                                'assigned_municipality_id' => $beneficiary->municipality_id,
+                                'assigned_care_manager_id' => $careManager->id
+                            ]);
+                            // Add to our collection of care workers
+                            $careWorkers->push($careWorker);
                         }
+                    } else {
+                        // Use first() if only one result or random() safely if multiple results
+                        $careWorker = $municipalityCareWorkers->count() > 1 ? 
+                            $municipalityCareWorkers->random() : 
+                            $municipalityCareWorkers->first();
+                    }
+                    
+                    // Create 2-3 care plans with random dates in the past 3 months
+                    $planCount = $this->faker->numberBetween(2, 3);
+                    $startDate = now()->subMonths(3);
+                    $endDate = now();
+                    
+                    for ($i = 0; $i < $planCount; $i++) {
+                        $planDate = $this->faker->dateTimeBetween($startDate, $endDate);
                         
                         // Get a random vital sign
                         $vitalSign = $vitalSigns->random();
-
-                        $possibleIllnesses = [
-                            'Common Cold',
-                            'Influenza',
-                            'Bronchitis',
-                            'Gastroenteritis',
-                            'Skin Infection',
-                            'Urinary Tract Infection (UTI)',
-                            'Pneumonia',
-                            'Respiratory Infection',
-                            'Allergic Rhinitis',
-                            'Diarrhea',
-                            'Minor Injuries (e.g., falls, sprains)',
-                            'Headache',
-                            'Indigestion',
-                            'Toothache',
-                            'Sore Throat'
-                        ];
                         
-                        // Create the weekly care plan without factory method complications
+                        // Create the weekly care plan
                         $weeklyCarePlan = new WeeklyCarePlan();
                         $weeklyCarePlan->beneficiary_id = $beneficiary->beneficiary_id;
                         $weeklyCarePlan->care_worker_id = $careWorker->id;
+                        $weeklyCarePlan->care_manager_id = $careManager->id;
                         $weeklyCarePlan->vital_signs_id = $vitalSign->vital_signs_id;
                         $weeklyCarePlan->date = $planDate->format('Y-m-d');
                         $weeklyCarePlan->assessment = $this->getRandomAssessment();
@@ -463,7 +464,7 @@ class DatabaseSeeder extends Seeder
                         $weeklyCarePlan->created_by = $careWorker->id;
                         $weeklyCarePlan->updated_by = $careWorker->id;
                         $weeklyCarePlan->created_at = $planDate;
-                        $weeklyCarePlan->updated_at = $planDate->copy()->addDay();
+                        $weeklyCarePlan->updated_at = $planDate->copy()->addHours(2);
                         $weeklyCarePlan->photo_path = "uploads/weekly_care_plans/{$planDate->format('Y')}/{$planDate->format('m')}/beneficiary_{$beneficiary->beneficiary_id}_assessment_{$this->faker->randomNumber(8)}.jpg";
                         
                         // Generate random illnesses (0-3) for this weekly care plan
@@ -475,95 +476,109 @@ class DatabaseSeeder extends Seeder
                         // Save the weekly care plan to get an ID
                         $weeklyCarePlan->save();
                         
-                        // Now create interventions - completely safe approach
-                        try {
-                            // Create 2-5 interventions per weekly care plan
-                            $interventionsToCreate = $this->faker->numberBetween(2, 5);
-                            
-                            for ($j = 0; $j < $interventionsToCreate; $j++) {
-                                // Get a random care category first
-                                $careCategory = CareCategory::inRandomOrder()->first();
-                                
-                                // If no care category found, skip this intervention
-                                if (!$careCategory) {
-                                    continue;
-                                }
-                                
-                                // Decide if this will be a custom intervention (30% chance)
-                                $isCustom = $this->faker->boolean(30);
-                                
-                                if ($isCustom) {
-                                    // Create a CUSTOM intervention - only intervention_description, no intervention_id
-                                    $customDescription = $this->getSimpleCustomDescription($careCategory->care_category_id);
-                                    
-                                    WeeklyCarePlanInterventions::create([
-                                        'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
-                                        'intervention_id' => null, // No intervention_id for custom
-                                        'care_category_id' => $careCategory->care_category_id,
-                                        'intervention_description' => $customDescription, // Custom description
-                                        'duration_minutes' => $this->faker->randomFloat(2, 10, 60),
-                                        'implemented' => $planDate->lt(Carbon::now()) ? $this->faker->boolean(80) : false
-                                    ]);
-                                } else {
-                                    // Create a NON-CUSTOM intervention - only intervention_id, no intervention_description
-                                    $intervention = Intervention::where('care_category_id', $careCategory->care_category_id)
-                                        ->inRandomOrder()->first();
-                                    
-                                    // If no intervention found for this category, get any intervention
-                                    if (!$intervention) {
-                                        $intervention = Intervention::inRandomOrder()->first();
-                                        if ($intervention) {
-                                            $careCategory = CareCategory::find($intervention->care_category_id);
-                                        }
-                                    }
-                                    
-                                    // Only create if we have a valid intervention
-                                    if ($intervention && $careCategory) {
-                                        WeeklyCarePlanInterventions::create([
-                                            'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
-                                            'intervention_id' => $intervention->intervention_id, // Database intervention ID
-                                            'care_category_id' => $careCategory->care_category_id,
-                                            'intervention_description' => null, // No custom description for DB interventions
-                                            'duration_minutes' => $this->faker->randomFloat(2, 10, 60),
-                                            'implemented' => $planDate->lt(Carbon::now()) ? $this->faker->boolean(80) : false
-                                        ]);
-                                    }
-                                }
-                                
-                                $interventionCount++;
-                            }
-                        } catch (\Exception $e) {
-                            \Log::error("Failed creating interventions for weekly care plan {$weeklyCarePlan->weekly_care_plan_id}: " . $e->getMessage());
-                            // Don't skip the entire care plan, just continue with the next one
-                            continue;
-                        }
-                        
-                        // Add beneficiary acknowledgement to some past care plans
-                        if ($planDate->lt(Carbon::now()->subWeek()) && $this->faker->boolean(40)) {
-                            if ($this->faker->boolean(70)) {
-                                $weeklyCarePlan->acknowledged_by_beneficiary = $beneficiary->beneficiary_id;
-                                $weeklyCarePlan->save();
-                            } else {
-                                // Try to get a family member for this beneficiary
-                                $familyMember = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)
-                                    ->inRandomOrder()
-                                    ->first();
-                                    
-                                if ($familyMember) {
-                                    $weeklyCarePlan->acknowledged_by_family = $familyMember->family_member_id;
-                                    $weeklyCarePlan->save();
-                                }
-                            }
-                        }
+                        // Now create interventions
+                        $this->createWeeklyCarePlanInterventions($weeklyCarePlan, $planDate, $interventionCount);
                         
                         $wcpCount++;
                     }
                     
-                    // Move to the next month
-                    $currentMonth->addMonth();
+                    continue;
                 }
                 
-                $this->command->getOutput()->progressAdvance();
+                // Create weekly care plans for a selection of the visitation dates (up to 4)
+                $visitsToUse = $completedVisits->count() <= 4 ? 
+                    $completedVisits : 
+                    $completedVisits->random(4);
+                
+                foreach ($visitsToUse as $visit) {
+                    // Get care worker ID from the visitation
+                    $careWorker = User::find($visit->care_worker_id);
+                    if (!$careWorker) {
+                        // If care worker not found, find another care worker in the same municipality
+                        $municipalityCareWorkers = $careWorkers->filter(function ($worker) use ($beneficiary) {
+                            return $worker->assigned_municipality_id == $beneficiary->municipality_id;
+                        });
+                        $careWorker = $municipalityCareWorkers->isEmpty() ? 
+                            $careWorkers->random() : 
+                            $municipalityCareWorkers->random();
+                    }
+                    
+                    // Get visit date
+                    $planDate = Carbon::parse($visit->occurrence_date);
+                    
+                    // Get a random vital sign
+                    $vitalSign = $vitalSigns->random();
+                    
+                    // Create the weekly care plan
+                    $weeklyCarePlan = new WeeklyCarePlan();
+                    $weeklyCarePlan->beneficiary_id = $beneficiary->beneficiary_id;
+                    $weeklyCarePlan->care_worker_id = $careWorker->id;
+                    $weeklyCarePlan->care_manager_id = $careManager->id;
+                    $weeklyCarePlan->vital_signs_id = $vitalSign->vital_signs_id;
+                    $weeklyCarePlan->date = $planDate->format('Y-m-d');
+                    $weeklyCarePlan->assessment = $this->getRandomAssessment();
+                    $weeklyCarePlan->evaluation_recommendations = $this->getRandomEvaluation();
+                    $weeklyCarePlan->created_by = $careWorker->id;
+                    $weeklyCarePlan->updated_by = $careWorker->id;
+                    $weeklyCarePlan->created_at = $planDate;
+                    $weeklyCarePlan->updated_at = $planDate->copy()->addHours(2);
+                    $weeklyCarePlan->photo_path = "uploads/weekly_care_plans/{$planDate->format('Y')}/{$planDate->format('m')}/beneficiary_{$beneficiary->beneficiary_id}_assessment_{$this->faker->randomNumber(8)}.jpg";
+                    
+                    // Generate random illnesses (0-3) for this weekly care plan
+                    $weeklyCarePlan->illnesses = json_encode($this->faker->randomElements(
+                        $possibleIllnesses, 
+                        $this->faker->numberBetween(0, 3)
+                    ));
+
+                    // Save the weekly care plan to get an ID
+                    $weeklyCarePlan->save();
+                    
+                    // Now create interventions
+                    $this->createWeeklyCarePlanInterventions($weeklyCarePlan, $planDate, $interventionCount);
+                    
+                    // Add beneficiary acknowledgement to some care plans
+                    if ($planDate->lt(Carbon::now()->subWeek()) && $this->faker->boolean(40)) {
+                        if ($this->faker->boolean(70)) {
+                            // Beneficiary acknowledgement
+                            $weeklyCarePlan->acknowledged_by_beneficiary = $beneficiary->beneficiary_id;
+                            
+                            // Add acknowledgement signature JSON
+                            $acknowledgementData = [
+                                "acknowledged_by" => "Beneficiary",
+                                "user_id" => $beneficiary->beneficiary_id,
+                                "name" => $beneficiary->name,
+                                "date" => $planDate->copy()->addDays(rand(1, 3))->format('Y-m-d H:i:s'),
+                                "ip_address" => $this->faker->ipv4,
+                                "user_agent" => $this->faker->userAgent
+                            ];
+                            $weeklyCarePlan->acknowledgement_signature = json_encode($acknowledgementData);
+                            $weeklyCarePlan->save();
+                        } else {
+                            // Try to get a family member for this beneficiary
+                            $familyMember = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)
+                                ->inRandomOrder()
+                                ->first();
+                                
+                            if ($familyMember) {
+                                $weeklyCarePlan->acknowledged_by_family = $familyMember->family_member_id;
+                                
+                                // Add acknowledgement signature JSON
+                                $acknowledgementData = [
+                                    "acknowledged_by" => "Family Member",
+                                    "user_id" => $familyMember->family_member_id,
+                                    "name" => $familyMember->name,
+                                    "date" => $planDate->copy()->addDays(rand(1, 3))->format('Y-m-d H:i:s'),
+                                    "ip_address" => $this->faker->ipv4,
+                                    "user_agent" => $this->faker->userAgent
+                                ];
+                                $weeklyCarePlan->acknowledgement_signature = json_encode($acknowledgementData);
+                                $weeklyCarePlan->save();
+                            }
+                        }
+                    }
+                    
+                    $wcpCount++;
+                }
             }
             
             $this->command->getOutput()->progressFinish();
@@ -2430,6 +2445,71 @@ class DatabaseSeeder extends Seeder
         ];
     }
 
+    /**
+     * Helper function to create interventions for a weekly care plan
+     */
+    private function createWeeklyCarePlanInterventions($weeklyCarePlan, $planDate, &$interventionCount)
+    {
+        try {
+            // Create 2-5 interventions per weekly care plan
+            $interventionsToCreate = $this->faker->numberBetween(2, 5);
+            
+            for ($j = 0; $j < $interventionsToCreate; $j++) {
+                // Get a random care category first
+                $careCategory = CareCategory::inRandomOrder()->first();
+                
+                // If no care category found, skip this intervention
+                if (!$careCategory) {
+                    continue;
+                }
+                
+                // Decide if this will be a custom intervention (30% chance)
+                $isCustom = $this->faker->boolean(30);
+                
+                if ($isCustom) {
+                    // Create a CUSTOM intervention - only intervention_description, no intervention_id
+                    $customDescription = $this->getSimpleCustomDescription($careCategory->care_category_id);
+                    
+                    WeeklyCarePlanInterventions::create([
+                        'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
+                        'intervention_id' => null, // No intervention_id for custom
+                        'care_category_id' => $careCategory->care_category_id,
+                        'intervention_description' => $customDescription, // Custom description
+                        'duration_minutes' => $this->faker->randomFloat(2, 10, 60),
+                        'implemented' => $planDate->lt(Carbon::now()) ? $this->faker->boolean(80) : false
+                    ]);
+                } else {
+                    // Create a NON-CUSTOM intervention - only intervention_id, no intervention_description
+                    $intervention = Intervention::where('care_category_id', $careCategory->care_category_id)
+                        ->inRandomOrder()->first();
+                    
+                    // If no intervention found for this category, get any intervention
+                    if (!$intervention) {
+                        $intervention = Intervention::inRandomOrder()->first();
+                        if ($intervention) {
+                            $careCategory = CareCategory::find($intervention->care_category_id);
+                        }
+                    }
+                    
+                    // Only create if we have a valid intervention
+                    if ($intervention && $careCategory) {
+                        WeeklyCarePlanInterventions::create([
+                            'weekly_care_plan_id' => $weeklyCarePlan->weekly_care_plan_id,
+                            'intervention_id' => $intervention->intervention_id, // Database intervention ID
+                            'care_category_id' => $careCategory->care_category_id,
+                            'intervention_description' => null, // No custom description for DB interventions
+                            'duration_minutes' => $this->faker->randomFloat(2, 10, 60),
+                            'implemented' => $planDate->lt(Carbon::now()) ? $this->faker->boolean(80) : false
+                        ]);
+                    }
+                }
+                
+                $interventionCount++;
+            }
+        } catch (\Exception $e) {
+            \Log::error("Failed creating interventions for weekly care plan {$weeklyCarePlan->weekly_care_plan_id}: " . $e->getMessage());
+        }
+    }
 
 }
 
