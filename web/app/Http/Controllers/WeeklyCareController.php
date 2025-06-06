@@ -324,7 +324,7 @@ class WeeklyCareController extends Controller
                 $actorRole = Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Care Manager' : 'Care Worker');
                 
                 // 1. Notify the beneficiary if they have a portal account
-                if ($beneficiary->portal_account_id) {
+                if ($beneficiary) {
                     $beneficiaryTitle = 'New Weekly Care Plan Created';
                     $beneficiaryMessage = $actor . ' (' . $actorRole . ') has created a new weekly care plan for you.';
                     $this->sendNotificationToBeneficiary($beneficiary->beneficiary_id, $beneficiaryTitle, $beneficiaryMessage);
@@ -726,7 +726,7 @@ class WeeklyCareController extends Controller
                 $actorRole = Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Care Manager' : 'Care Worker');
                 
                 // 1. Notify the beneficiary about the update
-                if ($beneficiary->portal_account_id) {
+                if ($beneficiary) {
                     $beneficiaryTitle = 'Weekly Care Plan Updated';
                     $beneficiaryMessage = $actor . ' (' . $actorRole . ') has updated your weekly care plan.';
                     $this->sendNotificationToBeneficiary($beneficiary->beneficiary_id, $beneficiaryTitle, $beneficiaryMessage);
@@ -846,7 +846,7 @@ class WeeklyCareController extends Controller
                     
                     // 1. Notify the beneficiary about the deletion
                     $beneficiary = Beneficiary::find($beneficiaryId);
-                    if ($beneficiary && $beneficiary->portal_account_id) {
+                    if ($beneficiary) {
                         $beneficiaryTitle = 'Weekly Care Plan Deleted';
                         $beneficiaryMessage = 'Your weekly care plan has been deleted by ' . $actor . ' (' . $actorRole . ').';
                         $this->sendNotificationToBeneficiary($beneficiaryId, $beneficiaryTitle, $beneficiaryMessage);
@@ -940,14 +940,14 @@ class WeeklyCareController extends Controller
         try {
             // Check if beneficiary has an associated portal account
             $beneficiary = Beneficiary::find($beneficiaryId);
-            if (!$beneficiary || !$beneficiary->portal_account_id) {
+            if (!$beneficiary) {
                 \Log::warning('Cannot send notification to beneficiary: No portal account found for beneficiary ID ' . $beneficiaryId);
                 return;
             }
             
             // Create notification
             $notification = new Notification();
-            $notification->user_id = $beneficiary->portal_account_id;
+            $notification->user_id = $beneficiary->beneficiary_id;
             $notification->user_type = 'beneficiary';
             $notification->message_title = $title;
             $notification->message = $message;
@@ -974,7 +974,6 @@ class WeeklyCareController extends Controller
         try {
             // Get all family members with portal accounts
             $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)
-                ->whereNotNull('portal_account_id')
                 ->get();
                 
             if ($familyMembers->isEmpty()) {
@@ -985,7 +984,7 @@ class WeeklyCareController extends Controller
             foreach ($familyMembers as $member) {
                 // Create notification for each family member
                 $notification = new Notification();
-                $notification->user_id = $member->portal_account_id;
+                $notification->user_id = $member->family_member_id;
                 $notification->user_type = 'family_member';
                 $notification->message_title = $title;
                 $notification->message = $message;

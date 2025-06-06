@@ -47,16 +47,19 @@ class VisitationOccurrenceFactory extends Factory
             $visitation = Visitation::factory()->create();
         }
         
-        // Get the date and times from the parent visitation
-        $occurrenceDate = Carbon::parse($visitation->visitation_date);
+        // Keep as Carbon object for comparison
+        $occurrenceDateCarbon = Carbon::parse($visitation->visitation_date);
+        // Format as string only when saving to DB
+        $occurrenceDate = $occurrenceDateCarbon->format('Y-m-d');
+        
         $startTime = $visitation->start_time;
         $endTime = $visitation->end_time;
         
-        // Determine status based on date
+        // Determine status based on date - using Carbon object for comparison
         $status = 'scheduled';
-        if ($occurrenceDate->isPast()) {
+        if ($occurrenceDateCarbon->isPast()) {
             $status = $this->faker->randomElement(['completed', 'canceled', 'completed', 'completed']); // weight towards completed
-        } elseif ($occurrenceDate->isToday()) {
+        } elseif ($occurrenceDateCarbon->isToday()) {
             $status = $this->faker->randomElement(['scheduled', 'in_progress', 'completed']);
         }
         
@@ -70,7 +73,7 @@ class VisitationOccurrenceFactory extends Factory
         
         return [
             'visitation_id' => $visitation->visitation_id,
-            'occurrence_date' => $occurrenceDate->format('Y-m-d'),
+            'occurrence_date' => $occurrenceDate, // String format for DB
             'start_time' => $startTime,
             'end_time' => $endTime,
             'status' => $status,

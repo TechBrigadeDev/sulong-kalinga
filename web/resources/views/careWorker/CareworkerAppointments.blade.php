@@ -812,7 +812,7 @@
                 minute: '2-digit',
                 meridiem: false
             },
-            dayMaxEvents: true,
+            dayMaxEvents: false, // Show all events, no matter how many
             firstDay: 0, // Start week on Sunday
             height: 'auto'
         });
@@ -991,29 +991,35 @@
 
                     <!-- Add confirmation status section -->
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-check-circle"></i> Confirmation Status</div>
-                        <div class="detail-item">
-                            <div class="detail-label">Beneficiary: </div>
-                            <div class="detail-value">
-                                <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
-                                    ${event.extendedProps.confirmed_by_beneficiary ? 'Confirmed' : 'Not Confirmed'}
-                                </span>
+                        <div class="section-title"><i class="bi bi-check-circle"></i> Care Plan Status</div>
+                        ${event.extendedProps.has_weekly_care_plan ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Beneficiary: </div>
+                                <div class="detail-value">
+                                    <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
+                                        ${event.extendedProps.confirmed_by_beneficiary ? 'Confirmed' : 'Not Confirmed'}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Family: </div>
-                            <div class="detail-value">
-                                <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
-                                    ${event.extendedProps.confirmed_by_family ? 'Confirmed' : 'Not Confirmed'}
-                                </span>
+                            <div class="detail-item">
+                                <div class="detail-label">Family: </div>
+                                <div class="detail-value">
+                                    <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
+                                        ${event.extendedProps.confirmed_by_family ? 'Confirmed' : 'Not Confirmed'}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Confirmed On: </div>
-                            <div class="detail-value">
-                                ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : 'Not confirmed yet'}
+                            <div class="detail-item">
+                                <div class="detail-label">Confirmed On: </div>
+                                <div class="detail-value">
+                                    ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : 'Not confirmed yet'}
+                                </div>
                             </div>
-                        </div>
+                        ` : `
+                            <div class="detail-value text-muted">
+                                <i class="bi bi-info-circle me-1"></i> No care plan has been created yet for this visit.
+                            </div>
+                        `}
                     </div>
                     
                     ${event.extendedProps.notes ? `

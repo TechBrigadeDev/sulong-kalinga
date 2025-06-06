@@ -65,10 +65,6 @@ class VisitationController extends Controller
     public function getVisitations(Request $request)
     {
 
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Cache-Control: post-check=0, pre-check=0', false);
-        header('Pragma: no-cache');
-
         // Set a reasonable timeout
         set_time_limit(30); 
         
@@ -169,14 +165,15 @@ class VisitationController extends Controller
             }
             
             // Execute queries with limits to prevent timeouts
-            $occurrences = $occurrenceQuery->limit(1000)->get();
-            $visitations = $visitations->limit(500)->get();
+            $occurrences = $occurrenceQuery->get(); // No limit
+            $visitations = $visitations->get(); // No limit
             
             // DEBUG: Log the query counts
-            \Log::info('Visitation queries executed', [
+            \Log::info('Visitation queries executed (UNLIMITED)', [
                 'occurrences_count' => $occurrences->count(),
                 'visitations_count' => $visitations->count(),
-                'date_range' => [$startDate, $endDate]
+                'date_range' => [$startDate, $endDate],
+                'search_term' => $request->has('search') ? $request->search : 'None'
             ]);
 
             $events = [];
@@ -194,14 +191,42 @@ class VisitationController extends Controller
                     $title .= ' (' . $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name . ')';
                 }
                 
+                // Find matching weekly care plan for this beneficiary and date
+                $weeklyCarePlan = \App\Models\WeeklyCarePlan::where('beneficiary_id', $visitation->beneficiary_id)
+                    ->whereDate('date', $occurrence->occurrence_date)
+                    ->first();
+                
+                // Check if WCP exists and if it has been confirmed
+                $confirmedByBeneficiary = false;
+                $confirmedByFamily = false;
+                $confirmedOn = null;
+                $acknowledgementSignature = null;
+                
+                if ($weeklyCarePlan) {
+                    $confirmedByBeneficiary = !empty($weeklyCarePlan->acknowledged_by_beneficiary);
+                    $confirmedByFamily = !empty($weeklyCarePlan->acknowledged_by_family);
+                    if ($confirmedByBeneficiary || $confirmedByFamily) {
+                        $acknowledgementSignature = $weeklyCarePlan->acknowledgement_signature;
+                        if (!empty($acknowledgementSignature) && is_string($acknowledgementSignature)) {
+                            $sigData = json_decode($acknowledgementSignature, true);
+                            $confirmedOn = $sigData['date'] ?? null;
+                        }
+                    }
+                }
+                
                 // Build the event object
                 $event = [
                     'id' => 'occ-' . $occurrence->occurrence_id,
                     'title' => $title,
-                    'start' => $occurrence->occurrence_date . 
-                            ($visitation->is_flexible_time ? '' : 'T' . Carbon::parse($occurrence->start_time)->format('H:i:s')),
-                    'end' => $occurrence->occurrence_date . 
-                            ($visitation->is_flexible_time ? '' : 'T' . Carbon::parse($occurrence->end_time)->format('H:i:s')),
+                    // Extract just the date part to avoid doubled time components
+                    'start' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
+                            ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->start_time)->format('H:i:s')),
+                    'end' => Carbon::parse($occurrence->occurrence_date)->format('Y-m-d') . ' ' . 
+                            ($visitation->is_flexible_time ? '00:00:00' : Carbon::parse($occurrence->end_time)->format('H:i:s')),
+                    'backgroundColor' => $this->getStatusColor($occurrence->status),
+                    'borderColor' => $this->getStatusColor($occurrence->status),
+                    'textColor' => '#fff',
+                    'allDay' => $visitation->is_flexible_time,
                     'backgroundColor' => $this->getStatusColor($occurrence->status),
                     'borderColor' => $this->getStatusColor($occurrence->status),
                     'textColor' => '#fff',
@@ -221,11 +246,14 @@ class VisitationController extends Controller
                         'address' => $visitation->beneficiary->street_address,
                         'recurring' => $visitation->recurringPattern ? true : false,
                         'recurring_pattern' => $visitation->recurringPattern ? [
-                            'type' => $visitation->recurringPattern->pattern_type,
-                            'day_of_week' => $visitation->recurringPattern->day_of_week,
-                            'recurrence_end' => $visitation->recurringPattern->recurrence_end ? 
-                                $visitation->recurringPattern->recurrence_end->format('Y-m-d') : null,
                         ] : null,
+                        // Add the weekly care plan acknowledgement data
+                        'has_weekly_care_plan' => $weeklyCarePlan ? true : false,
+                        'weekly_care_plan_id' => $weeklyCarePlan ? $weeklyCarePlan->weekly_care_plan_id : null,
+                        'confirmed_by_beneficiary' => $confirmedByBeneficiary,
+                        'confirmed_by_family' => $confirmedByFamily,
+                        'confirmed_on' => $confirmedOn,
+                        'acknowledgement_signature' => $acknowledgementSignature
                     ]
                 ];
                 
@@ -241,6 +269,29 @@ class VisitationController extends Controller
                 $title = $visitation->beneficiary->first_name . ' ' . $visitation->beneficiary->last_name;
                 if ($user->role_id <= 2) { // Admin or care manager
                     $title .= ' (' . $visitation->careWorker->first_name . ' ' . $visitation->careWorker->last_name . ')';
+                }
+
+                // Find matching weekly care plan for this beneficiary and date
+                $weeklyCarePlan = \App\Models\WeeklyCarePlan::where('beneficiary_id', $visitation->beneficiary_id)
+                    ->whereDate('date', $visitation->visitation_date)
+                    ->first();
+                
+                // Check if WCP exists and if it has been confirmed
+                $confirmedByBeneficiary = false;
+                $confirmedByFamily = false;
+                $confirmedOn = null;
+                $acknowledgementSignature = null;
+                
+                if ($weeklyCarePlan) {
+                    $confirmedByBeneficiary = !empty($weeklyCarePlan->acknowledged_by_beneficiary);
+                    $confirmedByFamily = !empty($weeklyCarePlan->acknowledged_by_family);
+                    if ($confirmedByBeneficiary || $confirmedByFamily) {
+                        $acknowledgementSignature = $weeklyCarePlan->acknowledgement_signature;
+                        if (!empty($acknowledgementSignature) && is_string($acknowledgementSignature)) {
+                            $sigData = json_decode($acknowledgementSignature, true);
+                            $confirmedOn = $sigData['date'] ?? null;
+                        }
+                    }
                 }
                 
                 $baseEvent = [
@@ -262,6 +313,13 @@ class VisitationController extends Controller
                         'phone' => $visitation->beneficiary->mobile ?? 'Not Available',
                         'address' => $visitation->beneficiary->street_address,
                         'recurring' => $visitation->recurringPattern ? true : false,
+                         // Add the weekly care plan acknowledgement data
+                        'has_weekly_care_plan' => $weeklyCarePlan ? true : false,
+                        'weekly_care_plan_id' => $weeklyCarePlan ? $weeklyCarePlan->weekly_care_plan_id : null,
+                        'confirmed_by_beneficiary' => $confirmedByBeneficiary,
+                        'confirmed_by_family' => $confirmedByFamily,
+                        'confirmed_on' => $confirmedOn,
+                        'acknowledgement_signature' => $acknowledgementSignature
                     ]
                 ];
                 
@@ -276,11 +334,11 @@ class VisitationController extends Controller
                     // Non-recurring event
                     $event = $baseEvent;
                     $event['id'] = $visitation->visitation_id;
-                    $event['start'] = $visitation->visitation_date->format('Y-m-d') . 
-                                    ($visitation->is_flexible_time ? '' : 'T' . $visitation->start_time->format('H:i:s'));
-                    $event['end'] = $visitation->visitation_date->format('Y-m-d') . 
-                                ($visitation->is_flexible_time ? '' : 'T' . $visitation->end_time->format('H:i:s'));
-                    
+                    $event['start'] = $visitation->visitation_date->format('Y-m-d') . ' ' . 
+                                ($visitation->is_flexible_time ? '00:00:00' : $visitation->start_time->format('H:i:s'));
+                    $event['end'] = $visitation->visitation_date->format('Y-m-d') . ' ' . 
+                                ($visitation->is_flexible_time ? '00:00:00' : $visitation->end_time->format('H:i:s'));
+
                     $events[] = $event;
                 }
                 
@@ -290,6 +348,46 @@ class VisitationController extends Controller
                     $visitation->generateOccurrences(3);
                 }
             }
+
+            // Add this right before returning the events in getVisitations method
+            // Count appointments by day for the current week
+            $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
+
+            // Fix the query that calculates all appointments by day of week
+            $dailyCounts = DB::table('visitation_occurrences')
+                ->join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
+                ->join('recurring_patterns', 'visitations.visitation_id', '=', 'recurring_patterns.visitation_id')
+                ->whereBetween('occurrence_date', [$request->start, $request->end])
+                ->where('recurring_patterns.pattern_type', 'weekly')
+                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), 
+                        DB::raw('COUNT(DISTINCT visitation_occurrences.occurrence_id) as count'))
+                ->groupBy(DB::raw('EXTRACT(DOW FROM occurrence_date)'))
+                ->orderBy('day_of_week')
+                ->get();
+
+            // Fix the filtered query with the same COUNT DISTINCT approach
+            $filteredDailyCounts = DB::table('visitation_occurrences')
+                ->join('visitations', 'visitation_occurrences.visitation_id', '=', 'visitations.visitation_id')
+                ->join('recurring_patterns', 'visitations.visitation_id', '=', 'recurring_patterns.visitation_id')
+                ->whereBetween('occurrence_date', [$request->start, $request->end])
+                ->where('recurring_patterns.pattern_type', 'weekly')
+                ->when($request->has('care_worker_id') && !empty($request->care_worker_id), function($query) use ($request) {
+                    return $query->where('visitations.care_worker_id', $request->care_worker_id);
+                })
+                ->select(DB::raw('EXTRACT(DOW FROM occurrence_date) as day_of_week'), 
+                        DB::raw('COUNT(DISTINCT visitation_occurrences.occurrence_id) as count'))
+                ->groupBy(DB::raw('EXTRACT(DOW FROM occurrence_date)'))
+                ->orderBy('day_of_week')
+                ->get();
+
+            \Log::info('Weekly appointment distribution - All vs. Filtered', [
+                'date_range' => [$request->start, $request->end],
+                'care_worker_filter' => $request->has('care_worker_id') ? $request->care_worker_id : 'None',
+                'all_appointments' => $dailyCounts,
+                'filtered_appointments' => $filteredDailyCounts,
+                'total_events_returned' => count($events)
+            ]);
             
             return response()->json($events);
         } catch (\Exception $e) {
@@ -1713,8 +1811,8 @@ class VisitationController extends Controller
             ]);
         }
         
-        // Notify beneficiary if they have portal access
-        if ($beneficiary->portal_account_id) {
+        // Notify beneficiary
+        if ($beneficiary) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -1727,7 +1825,6 @@ class VisitationController extends Controller
         
         // Notify all family members
         foreach ($familyMembers as $familyMember) {
-            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -1736,7 +1833,6 @@ class VisitationController extends Controller
                     'date_created' => now(),
                     'is_read' => false
                 ]);
-            }
         }
 
         // Administrator notification code removed
@@ -1837,8 +1933,8 @@ class VisitationController extends Controller
             }
         }
         
-        // Notify beneficiary if they have portal access
-        if ($beneficiary->portal_account_id) {
+        // Notify beneficiary
+        if ($beneficiary) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -1851,7 +1947,6 @@ class VisitationController extends Controller
         
         // Notify family members
         foreach ($familyMembers as $familyMember) {
-            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -1860,7 +1955,6 @@ class VisitationController extends Controller
                     'date_created' => now(),
                     'is_read' => false
                 ]);
-            }
         }
         
         \Log::info("Care worker change notifications sent", [
@@ -1871,6 +1965,68 @@ class VisitationController extends Controller
         ]);
     }
 
-    
+    /**
+     * Function that transforms visitation occurrences into calendar events
+     * Fixed for proper date/time formatting across all calendar view types
+     */
+    private function transformVisitationsToEvents($visitations, $view_type = null) 
+    {
+        $events = [];
+        
+        foreach ($visitations as $visitation) {
+            // Skip if no occurrences or related data
+            $occurrences = $visitation->occurrences;
+            if (!$occurrences || !$visitation->careWorker || !$visitation->beneficiary) {
+                continue;
+            }
+            
+            // Create title
+            $title = $visitation->beneficiary->first_name . ' ' . $visitation->beneficiary->last_name;
+            
+            foreach ($occurrences as $occurrence) {
+                // IMPORTANT: Always use YYYY-MM-DD format for dates and ensure space separator
+                // Extract just the date part without any time components
+                $occurrenceDate = date('Y-m-d', strtotime($occurrence->occurrence_date));
+                
+                // Format time components consistently with space separator
+                $startTime = $visitation->is_flexible_time ? 
+                    '00:00:00' : 
+                    date('H:i:s', strtotime($occurrence->start_time));
+                    
+                $endTime = $visitation->is_flexible_time ? 
+                    '23:59:59' : 
+                    date('H:i:s', strtotime($occurrence->end_time));
+                
+                // Create event with consistent SPACE separator format
+                $event = [
+                    'id' => 'occ-' . $occurrence->occurrence_id,
+                    'title' => $title,
+                    'start' => $occurrenceDate . ' ' . $startTime, // ALWAYS use space separator
+                    'end' => $occurrenceDate . ' ' . $endTime,     // ALWAYS use space separator
+                    'backgroundColor' => $this->getStatusColor($occurrence->status),
+                    'borderColor' => $this->getStatusColor($occurrence->status),
+                    'textColor' => '#fff',
+                    'allDay' => $visitation->is_flexible_time,
+                    'extendedProps' => [
+                        'visitation_id' => $visitation->visitation_id,
+                        'occurrence_id' => $occurrence->occurrence_id,
+                        'care_worker' => $careWorker->first_name . ' ' . $careWorker->last_name,
+                        'care_worker_id' => $visitation->care_worker_id,
+                        'beneficiary' => $beneficiary->first_name . ' ' . $beneficiary->last_name,
+                        'beneficiary_id' => $visitation->beneficiary_id,
+                        'visit_type' => ucwords(str_replace('_', ' ', $visitation->visit_type)),
+                        'status' => ucfirst($occurrence->status),
+                        'is_flexible_time' => $visitation->is_flexible_time,
+                        'notes' => $occurrence->notes,
+                        'recurring' => $visitation->recurringPattern ? true : false
+                    ]
+                ];
+                
+                $events[] = $event;
+            }
+        }
+        
+        return $events;
+    }
 
 }
