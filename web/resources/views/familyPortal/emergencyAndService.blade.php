@@ -958,7 +958,7 @@
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ route('beneficiary.emergency.service.emergency-details', '') }}/" + noticeId,
+                url: "{{ secure_url(route('family.emergency.service.emergency-details', '', false)) }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {
@@ -984,7 +984,7 @@
             
             // Fetch service request details
             $.ajax({
-                url: "{{ route('beneficiary.emergency.service.service-details', '') }}/" + requestId,
+                url: "{{ secure_url(route('family.emergency.service.service-details', '', false)) }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
                     if (response.success) {

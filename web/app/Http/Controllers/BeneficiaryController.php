@@ -1027,7 +1027,7 @@ class BeneficiaryController extends Controller
 
             try {
                 // 1. Welcome notification for the beneficiary
-                if ($beneficiary->portal_account_id) {
+                if ($beneficiary) {
                     $welcomeTitle = 'Welcome to SULONG KALINGA';
                     $welcomeMessage = 'Welcome ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
                                     '! Your beneficiary account has been created in SULONG KALINGA. You can now access the portal with your credentials.';
@@ -1982,7 +1982,7 @@ class BeneficiaryController extends Controller
         try {
             // Check if beneficiary has an associated portal account
             $beneficiary = Beneficiary::find($beneficiaryId);
-            if (!$beneficiary || !$beneficiary->portal_account_id) {
+            if (!$beneficiary) {
                 \Log::warning('Cannot send notification to beneficiary: No portal account found for beneficiary ID ' . $beneficiaryId);
                 return;
             }
