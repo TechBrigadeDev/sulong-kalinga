@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { beneficiarySchema } from "~/features/user-management/schema/beneficiary";
 
-const medicationTypeEnum = z.enum([
+export const medicationScheduleTypeEnum = z.enum([
     "tablet",
     "inhaler",
     "liquid",
@@ -14,12 +14,13 @@ const medicationTypeEnum = z.enum([
     "capsule",
 ]);
 
-const medicationStatusEnum = z.enum([
-    "active",
-    "completed",
-    "paused",
-    "discontinued",
-]);
+export const medicationScheduleStatusEnum =
+    z.enum([
+        "active",
+        "completed",
+        "paused",
+        "discontinued",
+    ]);
 
 const healthHistorySchema = z.object({
     health_history_id: z.number(),
@@ -48,7 +49,7 @@ export const medicationScheduleSchema = z.object({
     beneficiary_id: z.number(),
     medication_name: z.string(),
     dosage: z.string(),
-    medication_type: medicationTypeEnum,
+    medication_type: medicationScheduleTypeEnum,
     morning_time: z.string().nullable(),
     noon_time: z.string().nullable(),
     evening_time: z.string().nullable(),
@@ -61,7 +62,7 @@ export const medicationScheduleSchema = z.object({
     special_instructions: z.string().nullable(),
     start_date: z.string(),
     end_date: z.string().nullable(),
-    status: medicationStatusEnum,
+    status: medicationScheduleStatusEnum,
     created_by: z.number(),
     updated_by: z.number().nullable(),
     created_at: z.string(),

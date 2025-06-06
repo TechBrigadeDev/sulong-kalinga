@@ -5,6 +5,7 @@ import {
 import { QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
+import { medicationScheduleListStore } from "./list/store";
 import { medicationSchedulingController } from "./medication.api";
 
 const api = medicationSchedulingController;
@@ -14,19 +15,23 @@ export const useMedicationSchedules = (props?: {
     limit?: number;
 }) => {
     const { token } = authStore();
+    const { status } =
+        medicationScheduleListStore();
 
     return useInfiniteQuery({
         queryKey: [
             QK.scheduling.medication.getSchedules,
             token,
             props?.search,
+            status || "",
         ],
         queryFn: async ({ pageParam = 1 }) => {
             const response =
                 await api.getSchedules({
                     search: props?.search,
                     page: pageParam,
-                    limit: props?.limit || 5,
+                    limit: props?.limit || 10,
+                    status: status || undefined,
                 });
 
             return {

@@ -23,7 +23,11 @@ import {
     YStack,
 } from "tamagui";
 
+import { medicationScheduleListStore } from "./store";
+
 const MedicationList = () => {
+    const { search } =
+        medicationScheduleListStore();
     const {
         data,
         isLoading,
@@ -31,7 +35,9 @@ const MedicationList = () => {
         hasNextPage,
         fetchNextPage,
         refetch,
-    } = useMedicationSchedules();
+    } = useMedicationSchedules({
+        search,
+    });
 
     const onLoadMore = () => {
         if (hasNextPage && !isFetchingNextPage) {
@@ -40,13 +46,21 @@ const MedicationList = () => {
     };
 
     const schedules: IMedicationSchedule[] =
-        data?.pages.flatMap(
-            (page) => page.data,
-        ) || [];
+        useMemo(
+            () =>
+                data?.pages.flatMap(
+                    (page) => page.data,
+                ) || [],
+            [data],
+        );
 
     const groupedSchedules: IGroupedMedicationSchedule[] =
-        groupMedicationScheduleByBeneficiary(
-            schedules,
+        useMemo(
+            () =>
+                groupMedicationScheduleByBeneficiary(
+                    schedules,
+                ),
+            [schedules],
         );
     return (
         <FlatList

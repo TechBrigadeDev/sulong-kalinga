@@ -1,11 +1,11 @@
 import ScrollView from "components/ScrollView";
+import { Stack } from "expo-router";
 import { IMedicationSchedule } from "features/scheduling/medication/medication.type";
 
 import DurationCard from "./DurationCard";
 import HeaderCard from "./HeaderCard";
 import ScheduleCard from "./ScheduleCard";
 import SpecialInstructionsCard from "./SpecialInstructionsCard";
-import { Stack } from "expo-router";
 
 interface Props {
     schedule?: IMedicationSchedule;

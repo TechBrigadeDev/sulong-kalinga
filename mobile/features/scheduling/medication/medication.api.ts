@@ -2,7 +2,11 @@ import { AxiosInstance } from "axios";
 import { axiosClient } from "common/api";
 import { authStore } from "features/auth/auth.store";
 
-import { medicationScheduleResponseSchema, medicationSchedulesResponseSchema } from "./medication.schema";
+import {
+    medicationScheduleResponseSchema,
+    medicationSchedulesResponseSchema,
+} from "./medication.schema";
+import { IMedicationScheduleStatus } from "./medication.type";
 
 class MedicationSchedulingController {
     constructor(
@@ -29,6 +33,7 @@ class MedicationSchedulingController {
 
     async getSchedules(params?: {
         search?: string;
+        status?: IMedicationScheduleStatus;
         page?: number;
         limit?: number;
     }) {
@@ -45,6 +50,9 @@ class MedicationSchedulingController {
                         }),
                         ...(params?.limit && {
                             limit: params.limit,
+                        }),
+                        ...(params?.status && {
+                            status: params.status,
                         }),
                     },
                 },

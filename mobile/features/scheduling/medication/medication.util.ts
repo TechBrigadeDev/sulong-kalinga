@@ -29,5 +29,11 @@ export const groupMedicationScheduleByBeneficiary =
             ].medication_schedules.push(schedule);
         });
 
-        return Object.values(grouped);
+        // sort by beneficiary's first name
+        return Object.values(grouped).sort(
+            (a, b) =>
+                a.beneficiary.first_name.localeCompare(
+                    b.beneficiary.first_name,
+                ),
+        );
     };

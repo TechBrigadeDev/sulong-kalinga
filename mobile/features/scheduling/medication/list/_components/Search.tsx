@@ -1,6 +1,9 @@
 import { medicationScheduleListStore } from "features/scheduling/medication/list/store";
-import { useEffect } from "react";
-import { Input, InputProps } from "tamagui";
+import {
+    Input,
+    InputProps,
+    useDebounce,
+} from "tamagui";
 
 const MedicationScheduleSearch = (
     props: InputProps,
@@ -8,19 +11,18 @@ const MedicationScheduleSearch = (
     const { search, setSearch } =
         medicationScheduleListStore();
 
-    useEffect(() => {
-        return () => {
-            setSearch("");
-        };
-    }, [setSearch]);
+    const onSearch = useDebounce(
+        (text: string) => {
+            setSearch(text);
+        },
+        500,
+    );
 
     return (
         <Input
             placeholder="Search Schedule"
-            value={search}
-            onChangeText={(text) =>
-                setSearch(text)
-            }
+            defaultValue={search}
+            onChangeText={onSearch}
             clearButtonMode="while-editing"
             autoCapitalize="none"
             autoCorrect={false}
