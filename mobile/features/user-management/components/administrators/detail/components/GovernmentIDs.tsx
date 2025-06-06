@@ -1,8 +1,9 @@
+import DetailRow from "features/user-management/components/administrators/detail/DetailRow";
+import SectionTitle from "features/user-management/components/administrators/detail/SectionTitle";
 import { Card, YStack } from "tamagui";
 import { type z } from "zod";
+
 import { adminSchema } from "~/features/user-management/schema/admin";
-import DetailRow from "../DetailRow";
-import SectionTitle from "../SectionTitle";
 
 type IAdmin = z.infer<typeof adminSchema>;
 

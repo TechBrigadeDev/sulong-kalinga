@@ -4,38 +4,33 @@ import { axiosClient } from "~/common/api";
 
 import { loginSchema } from "./auth.schema";
 
-
 class AuthController {
-  private jsonApi: AxiosInstance;
+    private jsonApi: AxiosInstance;
 
-  constructor(
-    private api: AxiosInstance = axiosClient
-  ) {
-    this.jsonApi = api;
-    this.jsonApi.defaults.headers.common["Accept"] = "application/json";
-    this.jsonApi.defaults.headers.common["Content-Type"] = "application/json";
-  }
-        
-        
-    private async health(){
-        console.info("test:", this.jsonApi.defaults.baseURL)
-      try {
-        const response = await fetch("https://test.cosemhcs.org.ph/health", {
-          method: "GET",
-        });
-        console.info({response})
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Health check response:", data);
-      } catch (error) {
-        console.error("Error during health check:", error);
-        throw error;
-      }
+    constructor(private api: AxiosInstance = axiosClient) {
+        this.jsonApi = api;
+        this.jsonApi.defaults.headers.common["Accept"] = "application/json";
+        this.jsonApi.defaults.headers.common["Content-Type"] = "application/json";
     }
 
+    private async health() {
+        console.info("test:", this.jsonApi.defaults.baseURL);
+        try {
+            const response = await fetch("https://test.cosemhcs.org.ph/health", {
+                method: "GET",
+            });
+            console.info({ response });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Health check response:", data);
+        } catch (error) {
+            console.error("Error during health check:", error);
+            throw error;
+        }
+    }
 
     async login(email: string, password: string) {
         await this.health();
@@ -56,7 +51,7 @@ class AuthController {
             return {
                 success: validate.data.success,
                 token: validate.data.token,
-            }
+            };
         } catch (error) {
             console.error("Error during login:", error);
             if (error instanceof AxiosError) {
@@ -71,11 +66,15 @@ class AuthController {
     }
 
     async logout(token: string) {
-        const response = await this.jsonApi.post("/logout", {}, {
-            headers: {
-                Authorization: `Bearer ${token}`,
+        const response = await this.jsonApi.post(
+            "/logout",
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             },
-        });
+        );
         return response.data;
     }
 }

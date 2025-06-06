@@ -12,26 +12,22 @@ import { adminListStore } from "./store";
 type IAdmin = z.infer<typeof adminSchema>;
 
 interface AdminCardProps {
-  item: IAdmin;
+    item: IAdmin;
 }
 
 const AdminList = () => {
-    const {
-        search,
-    } = adminListStore();
+    const { search } = adminListStore();
 
     const {
         data = [],
         isLoading,
-        refetch
+        refetch,
     } = useGetAdministrators({
-        search
+        search,
     });
 
     if (data.length === 0 && !isLoading) {
-        return (
-            <Text>No administrators found</Text>
-        )
+        return <Text>No administrators found</Text>;
     }
 
     return (
@@ -39,65 +35,65 @@ const AdminList = () => {
             data={data}
             renderItem={({ item }) => <AdminCard item={item} />}
             contentContainerStyle={{ paddingBottom: 120 }}
-            refreshControl={
-                <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-            }
+            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
         />
     );
-}
+};
 
 const AdminCard = ({ item }: AdminCardProps) => {
-  const router = useRouter();
-  const { id, first_name, last_name, email } = item;
+    const router = useRouter();
+    const { id, first_name, last_name, email } = item;
 
-  const onView = () => {
-    router.push(`/(tabs)/options/user-management/admins/${id}`);
-  };
+    const onView = () => {
+        router.push(`/(tabs)/options/user-management/admins/${id}`);
+    };
 
-  const onEdit = () => {
-    router.push(`/(tabs)/options/user-management/admins/${id}/edit`);
-  };
+    const onEdit = () => {
+        router.push(`/(tabs)/options/user-management/admins/${id}/edit`);
+    };
 
-  return (
-    <Card 
-        theme="light"
-        marginBottom="$2"
-        padding="$3"
-        bg="#F8F9FA"
-        borderRadius={8}
-        borderColor="#E9ECEF"
-        borderWidth={1}
-    >
-        <View>
-            <Text fontSize="$6" fontWeight="500" color="#495057">
-                {first_name} {last_name}
-            </Text>
-            <Text select="text" fontSize="$4" color="gray">{email}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-            <Button
-                size="$3"
-                bg="#E9ECEF"
-                color="#495057"
-                borderColor="#DEE2E6"
-                onPress={onView}
-                variant="outlined"
-            >
-                View
-            </Button>
-            <Button
-                size="$3"
-                bg="#E9ECEF"
-                color="#495057"
-                borderColor="#DEE2E6"
-                onPress={onEdit}
-                variant="outlined"
-            >
-                Edit
-            </Button>
-        </View>
-    </Card>
-  );
+    return (
+        <Card
+            theme="light"
+            marginBottom="$2"
+            padding="$3"
+            bg="#F8F9FA"
+            borderRadius={8}
+            borderColor="#E9ECEF"
+            borderWidth={1}
+        >
+            <View>
+                <Text fontSize="$6" fontWeight="500" color="#495057">
+                    {first_name} {last_name}
+                </Text>
+                <Text select="text" fontSize="$4" color="gray">
+                    {email}
+                </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                <Button
+                    size="$3"
+                    bg="#E9ECEF"
+                    color="#495057"
+                    borderColor="#DEE2E6"
+                    onPress={onView}
+                    variant="outlined"
+                >
+                    View
+                </Button>
+                <Button
+                    size="$3"
+                    bg="#E9ECEF"
+                    color="#495057"
+                    borderColor="#DEE2E6"
+                    onPress={onEdit}
+                    variant="outlined"
+                >
+                    Edit
+                </Button>
+            </View>
+        </Card>
+    );
 };
 
 export default AdminList;

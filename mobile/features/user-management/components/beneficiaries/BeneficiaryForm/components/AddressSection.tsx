@@ -1,4 +1,5 @@
-import { Card, H3, YStack, Input, Select, XStack, Text } from "tamagui";
+import { Card, H3, Input, Select, Text, XStack, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -17,10 +18,7 @@ const BARANGAY_OPTIONS = [
     { label: "Barangay 2", value: "2" },
 ];
 
-export const AddressSection = ({
-    data = {}, 
-    onChange = () => {}
-}: Props) => {
+export const AddressSection = ({ data = {}, onChange = () => {} }: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -45,19 +43,27 @@ export const AddressSection = ({
                             <Text>Municipality *</Text>
                             <Select
                                 value={data.municipality_id?.toString()}
-                                onValueChange={(value) => onChange("municipality_id", parseInt(value))}
+                                onValueChange={(value) =>
+                                    onChange("municipality_id", parseInt(value))
+                                }
                             >
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select municipality" />
                                 </Select.Trigger>
-                                
+
                                 <Select.Content>
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
                                         <Select.Group>
                                             {MUNICIPALITY_OPTIONS.map((option, i) => (
-                                                <Select.Item index={i} key={option.value} value={option.value}>
-                                                    <Select.ItemText>{option.label}</Select.ItemText>
+                                                <Select.Item
+                                                    index={i}
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    <Select.ItemText>
+                                                        {option.label}
+                                                    </Select.ItemText>
                                                 </Select.Item>
                                             ))}
                                         </Select.Group>
@@ -76,14 +82,20 @@ export const AddressSection = ({
                                 <Select.Trigger>
                                     <Select.Value placeholder="Select barangay" />
                                 </Select.Trigger>
-                                
+
                                 <Select.Content>
                                     <Select.ScrollUpButton />
                                     <Select.Viewport>
                                         <Select.Group>
                                             {BARANGAY_OPTIONS.map((option, i) => (
-                                                <Select.Item index={i} key={option.value} value={option.value}>
-                                                    <Select.ItemText>{option.label}</Select.ItemText>
+                                                <Select.Item
+                                                    index={i}
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    <Select.ItemText>
+                                                        {option.label}
+                                                    </Select.ItemText>
                                                 </Select.Item>
                                             ))}
                                         </Select.Group>

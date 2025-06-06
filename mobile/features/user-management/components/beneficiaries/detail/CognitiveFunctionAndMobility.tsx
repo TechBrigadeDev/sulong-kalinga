@@ -1,4 +1,5 @@
 import { Card, H3, Text, XStack, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -7,16 +8,16 @@ interface Props {
 
 const CognitiveFunctionAndMobility = ({ beneficiary }: Props) => {
     const cognitiveInfo = {
-        "Memory": "Rem necessitatibus quia eum.",
+        Memory: "Rem necessitatibus quia eum.",
         "Thinking Skills": "Ratione nobis velit possimus quis.",
-        "Orientation": "Non ut doloribus possimus et repellendus in.",
-        "Behavior": "Eum aspernatur illum aut voluptas laborum perferendis."
+        Orientation: "Non ut doloribus possimus et repellendus in.",
+        Behavior: "Eum aspernatur illum aut voluptas laborum perferendis.",
     };
 
     const mobilityInfo = {
         "Walking Ability": "Quibusdam voluptate aut veritatis velit dicta.",
         "Assistive Devices": "Nihil ipsum similique sequi modi error repudiandae unde.",
-        "Transportation Needs": "Consequatur et in omnis mollitia voluptas eligendi."
+        "Transportation Needs": "Consequatur et in omnis mollitia voluptas eligendi.",
     };
 
     return (

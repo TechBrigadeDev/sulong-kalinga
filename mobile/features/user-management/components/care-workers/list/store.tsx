@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface Store {
     search: string;
@@ -6,6 +6,6 @@ interface Store {
 }
 
 export const careWorkerListStore = create<Store>((set) => ({
-    search: '',
+    search: "",
     setSearch: (search: string) => set({ search }),
 }));

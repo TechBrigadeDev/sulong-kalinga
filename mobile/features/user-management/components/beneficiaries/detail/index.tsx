@@ -15,32 +15,32 @@ import MedicationManagement from "./MedicationManagement";
 import PersonalInformation from "./PersonalInformation";
 
 interface IDetailProps {
-    beneficiary: IBeneficiary
+    beneficiary: IBeneficiary;
 }
 
-const BeneficiaryDetail = ({
-    beneficiary
-}: IDetailProps) => {
+const BeneficiaryDetail = ({ beneficiary }: IDetailProps) => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <Stack.Screen options={{
-                title: "VIEW BENEFICIARY PROFILE DETAILS",
-                headerShown: true,
-            }} />
+            <Stack.Screen
+                options={{
+                    title: "VIEW BENEFICIARY PROFILE DETAILS",
+                    headerShown: true,
+                }}
+            />
             <ScrollView>
                 <YStack gap="$4" style={{ padding: 16 }}>
                     <BeneficiaryHeader beneficiary={beneficiary} />
-                    
+
                     <YStack gap="$4">
                         <PersonalInformation beneficiary={beneficiary} />
                         <MedicalHistory beneficiary={beneficiary} />
                     </YStack>
-                    
+
                     <YStack gap="$4">
                         <EmergencyContact beneficiary={beneficiary} />
                         <MedicationManagement beneficiary={beneficiary} />
                     </YStack>
-                    
+
                     <CareNeeds beneficiary={beneficiary} />
                     <CognitiveFunctionAndMobility beneficiary={beneficiary} />
                     <EmotionalWellbeing beneficiary={beneficiary} />
@@ -48,7 +48,7 @@ const BeneficiaryDetail = ({
                 </YStack>
             </ScrollView>
         </SafeAreaView>
-    )
-}
+    );
+};
 
 export default BeneficiaryDetail;

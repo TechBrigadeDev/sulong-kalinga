@@ -1,4 +1,5 @@
 import { Card, H3, Text, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -11,7 +12,7 @@ const AssignedCareWorker = ({ beneficiary }: Props) => {
         "Explicabo ut numquam hic sit.",
         "Enim molestias autem molestiae doloremque odio rerum.",
         "Rerum minus aliquam quasi tempora quibusdam quae velit.",
-        "Culpa excepturi sed rem suscipit quibusdam."
+        "Culpa excepturi sed rem suscipit quibusdam.",
     ];
 
     return (
@@ -28,7 +29,9 @@ const AssignedCareWorker = ({ beneficiary }: Props) => {
                     <YStack>
                         <Text opacity={0.6}>Tasks and Responsibilities</Text>
                         {tasks.map((task, index) => (
-                            <Text key={index} marginTop="$2">• {task}</Text>
+                            <Text key={index} marginTop="$2">
+                                • {task}
+                            </Text>
                         ))}
                     </YStack>
                 </YStack>

@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import { TouchableOpacity } from "react-native";
 import { Button, Card, H3, Input, Label, Switch, Text, XStack, YStack } from "tamagui";
 
 interface IFamilyMember {
@@ -18,7 +17,7 @@ const RelationSection = ({ data, onChange }: Props) => {
     const onBeneficiarySelect = () => {
         console.log("Navigating to Select Beneficiary Modal");
         router.push("/(modals)/select-beneficiary");
-    }
+    };
     return (
         <Card elevate bordered>
             <Card.Header padded>
@@ -28,12 +27,9 @@ const RelationSection = ({ data, onChange }: Props) => {
                 <YStack gap="$4">
                     <YStack gap="$2">
                         <Label htmlFor="beneficiary">Beneficiary</Label>
-                            <Button
-                                onPress={onBeneficiarySelect}
-                                size="$4"
-                            >
-                                Select Beneficiary
-                            </Button>
+                        <Button onPress={onBeneficiarySelect} size="$4">
+                            Select Beneficiary
+                        </Button>
                     </YStack>
                     <YStack gap="$2">
                         <Label htmlFor="relation_to_beneficiary">Relation to Beneficiary</Label>

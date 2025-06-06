@@ -27,4 +27,4 @@ export const beneficiarySchema = z.object({
     street_address: z.string(),
     updated_at: z.string(),
     updated_by: z.number(),
-})
+});

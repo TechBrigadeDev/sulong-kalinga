@@ -11,15 +11,15 @@ interface IDetailProps {
     familyMember: IFamilyMember;
 }
 
-const FamilyMemberDetail = ({
-    familyMember
-}: IDetailProps) => {
+const FamilyMemberDetail = ({ familyMember }: IDetailProps) => {
     return (
         <SafeAreaView style={styles.container}>
-            <Stack.Screen options={{
-                title: "Family Member",
-                headerShown: true,
-            }} />
+            <Stack.Screen
+                options={{
+                    title: "Family Member",
+                    headerShown: true,
+                }}
+            />
             <TabScroll>
                 <YStack gap="$4" style={{ padding: 16 }}>
                     <FamilyMemberHeader familyMember={familyMember} />
@@ -27,13 +27,13 @@ const FamilyMemberDetail = ({
                 </YStack>
             </TabScroll>
         </SafeAreaView>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    }
-})
+    },
+});
 
 export default FamilyMemberDetail;

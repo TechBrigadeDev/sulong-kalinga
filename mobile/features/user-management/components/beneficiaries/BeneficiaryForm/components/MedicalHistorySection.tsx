@@ -1,4 +1,5 @@
-import { Card, H3, YStack, Input, Text } from "tamagui";
+import { Card, H3, Input, Text, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -6,10 +7,7 @@ interface Props {
     onChange?: (field: string | number | symbol, value: any) => void;
 }
 
-export const MedicalHistorySection = ({ 
-    data = {}, 
-    onChange = () => {} 
-}: Props) => {
+export const MedicalHistorySection = ({ data = {}, onChange = () => {} }: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>

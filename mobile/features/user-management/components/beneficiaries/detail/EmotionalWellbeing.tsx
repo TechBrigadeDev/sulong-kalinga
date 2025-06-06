@@ -1,4 +1,5 @@
-import { Card, H3, Text, XStack, YStack } from "tamagui";
+import { Card, H3, Text, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -7,9 +8,9 @@ interface Props {
 
 const EmotionalWellbeing = ({ beneficiary }: Props) => {
     const emotionalInfo = {
-        "Mood": "Expedita sint nemo quaerat qui dignissimos consequatur consequatur.",
+        Mood: "Expedita sint nemo quaerat qui dignissimos consequatur consequatur.",
         "Social Interactions": "Quas similique est voluptatum est sunt similique.",
-        "Emotional Support Need": "Nam cumque et delectus qui tempore nam."
+        "Emotional Support Need": "Nam cumque et delectus qui tempore nam.",
     };
 
     return (

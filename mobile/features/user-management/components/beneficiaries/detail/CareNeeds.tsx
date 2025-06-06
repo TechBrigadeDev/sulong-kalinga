@@ -1,4 +1,5 @@
-import { Card, H3, Text, XStack, YStack } from "tamagui";
+import { Card, H3, Text, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -10,38 +11,38 @@ const CareNeeds = ({ beneficiary }: Props) => {
         {
             type: "Mobility",
             frequency: "dolore",
-            assistance: "Sit quia dolorum eveniet expedita in repellat adit sunt."
+            assistance: "Sit quia dolorum eveniet expedita in repellat adit sunt.",
         },
         {
             type: "Cognitive / Communication",
             frequency: "magnam",
-            assistance: "Porro consequatur est corrupti expedita et."
+            assistance: "Porro consequatur est corrupti expedita et.",
         },
         {
             type: "Self-sustainability",
             frequency: "saepe",
-            assistance: "Voluptatibus minus et fugit voluptatem."
+            assistance: "Voluptatibus minus et fugit voluptatem.",
         },
         {
             type: "Disease / Therapy Handling",
             frequency: "omnis",
-            assistance: "Voluptate unde quo pariatur quas sit est aut."
+            assistance: "Voluptate unde quo pariatur quas sit est aut.",
         },
         {
             type: "Daily Life / Social Contact",
             frequency: "aliquam",
-            assistance: "Eum hic natus sapiente est voluptatibus eos asperiores."
+            assistance: "Eum hic natus sapiente est voluptatibus eos asperiores.",
         },
         {
             type: "Outdoor Activities",
             frequency: "excepturi",
-            assistance: "At vero reprehenderit quia dolorem est est."
+            assistance: "At vero reprehenderit quia dolorem est est.",
         },
         {
             type: "Household Keeping",
             frequency: "voluptas",
-            assistance: "Suscipit consectetur pariatur porro minus consectetur ipsa."
-        }
+            assistance: "Suscipit consectetur pariatur porro minus consectetur ipsa.",
+        },
     ];
 
     return (

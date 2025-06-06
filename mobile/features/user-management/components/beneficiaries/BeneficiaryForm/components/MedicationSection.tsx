@@ -1,7 +1,8 @@
-import { Card, H3, YStack, Input, Button, XStack, Text } from "tamagui";
-import { IBeneficiary } from "~/features/user-management/management.type";
-import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { Button, Card, H3, Input, Text, XStack, YStack } from "tamagui";
+
+import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
     data: Partial<IBeneficiary>;
@@ -16,9 +17,7 @@ interface Medication {
 }
 
 export const MedicationSection = ({ data, onChange }: Props) => {
-    const [medications, setMedications] = useState<Medication[]>(
-        data.medications_list || []
-    );
+    const [medications, setMedications] = useState<Medication[]>(data.medications_list || []);
     const [currentMedication, setCurrentMedication] = useState<Medication>({
         name: "",
         dosage: "",
@@ -98,14 +97,20 @@ export const MedicationSection = ({ data, onChange }: Props) => {
                                     placeholder="Frequency"
                                     value={currentMedication.frequency}
                                     onChangeText={(value) =>
-                                        setCurrentMedication((prev) => ({ ...prev, frequency: value }))
+                                        setCurrentMedication((prev) => ({
+                                            ...prev,
+                                            frequency: value,
+                                        }))
                                     }
                                 />
                                 <Input
                                     placeholder="Administration Instructions"
                                     value={currentMedication.instructions}
                                     onChangeText={(value) =>
-                                        setCurrentMedication((prev) => ({ ...prev, instructions: value }))
+                                        setCurrentMedication((prev) => ({
+                                            ...prev,
+                                            instructions: value,
+                                        }))
                                     }
                                     multiline
                                     numberOfLines={2}

@@ -1,23 +1,17 @@
 import { Input } from "tamagui";
-import { familyListStore } from "./store"
+
 import { useDebounce } from "~/common/hooks";
 
+import { familyListStore } from "./store";
+
 const FamilySearch = () => {
-    const {
-        setSearch,
-    } = familyListStore();
+    const { setSearch } = familyListStore();
 
     const onSearch = useDebounce((text: string) => {
         setSearch(text);
     }, 500);
- 
-    return (
-        <Input
-            placeholder="Search Family Member"
-            size="$3"
-            onChangeText={onSearch}
-        />
-    )
-}
+
+    return <Input placeholder="Search Family Member" size="$3" onChangeText={onSearch} />;
+};
 
 export default FamilySearch;

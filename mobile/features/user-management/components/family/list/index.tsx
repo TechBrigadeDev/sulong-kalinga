@@ -9,22 +9,18 @@ import FlatList from "~/components/FlatList";
 import { familyListStore } from "./store";
 
 const FamilyList = () => {
-    const {
-        search,
-    } = familyListStore();
+    const { search } = familyListStore();
 
     const {
         data = [],
         isLoading,
-        refetch
+        refetch,
     } = useGetFamilyMembers({
-        search
+        search,
     });
 
     if (data.length === 0 && !isLoading) {
-        return (
-            <Text>No family members found</Text>
-        )
+        return <Text>No family members found</Text>;
     }
 
     return (
@@ -32,42 +28,30 @@ const FamilyList = () => {
             data={data}
             renderItem={({ item }) => <FamilyMemberCard item={item} />}
             contentContainerStyle={{ paddingBottom: 120 }}
-            refreshControl={
-                <RefreshControl
-                    refreshing={isLoading}
-                    onRefresh={refetch}
-                />
-            }
+            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
         />
-    )
-}
+    );
+};
 
 interface FamilyMemberCardProps {
     item: IFamilyMember;
 }
 
-const FamilyMemberCard = ({
-    item
-}: FamilyMemberCardProps) => { 
+const FamilyMemberCard = ({ item }: FamilyMemberCardProps) => {
     const router = useRouter();
 
-    const {
-        family_member_id,
-        first_name,
-        last_name,
-        relation_to_beneficiary
-    } = item;
-    
+    const { family_member_id, first_name, last_name, relation_to_beneficiary } = item;
+
     const onView = () => {
         router.push(`/(tabs)/options/user-management/family/${family_member_id}`);
-    }
+    };
 
     const onEdit = () => {
         router.push(`/(tabs)/options/user-management/family/${family_member_id}/edit`);
-    }
+    };
 
     return (
-        <Card 
+        <Card
             theme="light"
             marginBottom="$2"
             padding="$3"
@@ -77,10 +61,14 @@ const FamilyMemberCard = ({
             borderWidth={1}
         >
             <View>
-                <Text fontSize="$6" fontWeight="500" color="#495057">{first_name} {last_name}</Text>
-                <Text fontSize="$4" color="gray">{relation_to_beneficiary}</Text>
+                <Text fontSize="$6" fontWeight="500" color="#495057">
+                    {first_name} {last_name}
+                </Text>
+                <Text fontSize="$4" color="gray">
+                    {relation_to_beneficiary}
+                </Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
                 <Button
                     size="$3"
                     bg="#E9ECEF"

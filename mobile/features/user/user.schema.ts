@@ -15,5 +15,5 @@ export const userSchema = z.object({
     photo_url: z.string().nullable(),
     role: z.enum(["admin", "care_manager", "care_worker"]),
     // status: userStatusSchema,
-})
+});
 export type IUser = z.infer<typeof userSchema>;

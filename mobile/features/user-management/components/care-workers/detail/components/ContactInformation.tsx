@@ -1,8 +1,9 @@
+import DetailRow from "features/user-management/components/care-workers/detail/DetailRow";
+import SectionTitle from "features/user-management/components/care-workers/detail/SectionTitle";
 import { Card, YStack } from "tamagui";
 import { type z } from "zod";
+
 import { careWorkerSchema } from "~/features/user-management/schema/care-worker";
-import DetailRow from "../DetailRow";
-import SectionTitle from "../SectionTitle";
 
 type ICareWorker = z.infer<typeof careWorkerSchema>;
 

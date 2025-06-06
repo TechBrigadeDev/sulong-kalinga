@@ -1,8 +1,9 @@
+import DetailRow from "features/user-management/components/administrators/detail/DetailRow";
+import SectionTitle from "features/user-management/components/administrators/detail/SectionTitle";
 import { Card, YStack } from "tamagui";
 import { type z } from "zod";
+
 import { adminSchema } from "~/features/user-management/schema/admin";
-import DetailRow from "../DetailRow";
-import SectionTitle from "../SectionTitle";
 
 type IAdmin = z.infer<typeof adminSchema>;
 
@@ -18,7 +19,10 @@ const PersonalDetails = ({ admin }: Props) => {
             </Card.Header>
             <Card.Footer p="$4">
                 <YStack gap="$3">
-                    <DetailRow label="Educational Background" value={admin.educational_background} />
+                    <DetailRow
+                        label="Educational Background"
+                        value={admin.educational_background}
+                    />
                     <DetailRow label="Birthday" value={admin.birthday} />
                     <DetailRow label="Gender" value={admin.gender} />
                     <DetailRow label="Civil Status" value={admin.civil_status} />

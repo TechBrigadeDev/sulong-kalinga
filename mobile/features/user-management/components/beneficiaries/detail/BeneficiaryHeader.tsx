@@ -1,4 +1,5 @@
-import { Avatar, H2, Text, XStack, YStack } from "tamagui";
+import { H2, Text, XStack, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -7,10 +8,10 @@ interface Props {
 
 const BeneficiaryHeader = ({ beneficiary }: Props) => {
     const fullName = `${beneficiary.first_name} ${beneficiary.last_name}`;
-    const sinceDate = new Date(beneficiary.created_at).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
+    const sinceDate = new Date(beneficiary.created_at).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
     });
 
     return (

@@ -1,22 +1,18 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-import { QK } from "~/common/query"
-import { authStore } from "~/features/auth/auth.store"
+import { QK } from "~/common/query";
+import { authStore } from "~/features/auth/auth.store";
 
 import UserManagementController from "./management.api";
 
-
-export const useGetBeneficiaries = (props?: {
-    search?: string;
-    limit?: number;
-}) => {   
+export const useGetBeneficiaries = (props?: { search?: string; limit?: number }) => {
     const { token } = authStore();
     if (!token) {
         throw new Error("No token found");
     }
 
     const api = new UserManagementController(token);
-    
+
     return useInfiniteQuery({
         queryKey: [QK.user.management.getBeneficiaries, token, props?.search],
         queryFn: async ({ pageParam = 1 }) => {
@@ -30,13 +26,13 @@ export const useGetBeneficiaries = (props?: {
                 meta: response.meta,
             };
         },
-        getNextPageParam: (lastPage) => 
+        getNextPageParam: (lastPage) =>
             lastPage.meta.current_page < lastPage.meta.last_page
                 ? lastPage.meta.current_page + 1
                 : undefined,
         initialPageParam: 1,
     });
-}
+};
 
 export const useGetBeneficiary = (id?: string) => {
     const { token } = authStore();
@@ -53,12 +49,10 @@ export const useGetBeneficiary = (id?: string) => {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
-export const useGetFamilyMembers = (props?: {
-    search?: string;
-}) => {
+export const useGetFamilyMembers = (props?: { search?: string }) => {
     const { token } = authStore();
     if (!token) {
         throw new Error("No token found");
@@ -74,8 +68,8 @@ export const useGetFamilyMembers = (props?: {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
 export const useGetFamilyMember = (id?: string) => {
     const { token } = authStore();
@@ -92,12 +86,10 @@ export const useGetFamilyMember = (id?: string) => {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
-export const useGetCareWorkers = (props?: {
-    search?: string;
-}) => {
+export const useGetCareWorkers = (props?: { search?: string }) => {
     const { token } = authStore();
     if (!token) {
         throw new Error("No token found");
@@ -113,8 +105,8 @@ export const useGetCareWorkers = (props?: {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
 export const useGetCareWorker = (id?: string) => {
     const { token } = authStore();
@@ -131,12 +123,10 @@ export const useGetCareWorker = (id?: string) => {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
-export const useGetCareManagers = (props?: {
-    search?: string;
-}) => {
+export const useGetCareManagers = (props?: { search?: string }) => {
     const { token } = authStore();
     if (!token) {
         throw new Error("No token found");
@@ -152,8 +142,8 @@ export const useGetCareManagers = (props?: {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
 export const useGetCareManager = (id?: string) => {
     const { token } = authStore();
@@ -171,12 +161,10 @@ export const useGetCareManager = (id?: string) => {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
-export const useGetAdministrators = (props?: {
-    search?: string;
-}) => {
+export const useGetAdministrators = (props?: { search?: string }) => {
     const { token } = authStore();
     if (!token) {
         throw new Error("No token found");
@@ -192,8 +180,8 @@ export const useGetAdministrators = (props?: {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};
 
 export const useGetAdmin = (id?: string) => {
     const { token } = authStore();
@@ -210,5 +198,5 @@ export const useGetAdmin = (id?: string) => {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};

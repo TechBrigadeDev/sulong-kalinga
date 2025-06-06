@@ -19,16 +19,22 @@ const PersonalDetails = ({ careWorker }: Props) => {
             </Card.Header>
             <Card.Footer p="$4">
                 <YStack gap="$3">
-                    <DetailRow label="Educational Background" value={careWorker.educational_background} />
-                    <DetailRow label="Birthday" value={new Date(careWorker.birthday).toLocaleDateString()} />
+                    <DetailRow
+                        label="Educational Background"
+                        value={careWorker.educational_background}
+                    />
+                    <DetailRow
+                        label="Birthday"
+                        value={new Date(careWorker.birthday).toLocaleDateString()}
+                    />
                     <DetailRow label="Gender" value={careWorker.gender} />
                     <DetailRow label="Civil Status" value={careWorker.civil_status} />
                     <DetailRow label="Religion" value={careWorker.religion} />
                     <DetailRow label="Nationality" value={careWorker.nationality} />
                     <DetailRow label="Volunteer Status" value={careWorker.volunteer_status} />
-                    <DetailRow 
-                        label="Municipality" 
-                        value={careWorker.municipality?.municipality_name || ''} 
+                    <DetailRow
+                        label="Municipality"
+                        value={careWorker.municipality?.municipality_name || ""}
                     />
                 </YStack>
             </Card.Footer>

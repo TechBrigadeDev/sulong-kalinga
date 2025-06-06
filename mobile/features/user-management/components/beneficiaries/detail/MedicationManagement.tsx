@@ -1,4 +1,5 @@
 import { Card, H3, Text, XStack, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -11,20 +12,20 @@ const MedicationManagement = ({ beneficiary }: Props) => {
             name: "sit",
             dosage: "rerum",
             frequency: "voluptatem",
-            instructions: "Et et aut numquam."
+            instructions: "Et et aut numquam.",
         },
         {
             name: "aut",
             dosage: "ut",
             frequency: "autem",
-            instructions: "Natus sint ratione voluptatem error eaque nobis facere atque."
+            instructions: "Natus sint ratione voluptatem error eaque nobis facere atque.",
         },
         {
             name: "recusandae",
             dosage: "dolores",
             frequency: "voluptate",
-            instructions: "Repellat et aut harum aliquam sunt suscipit."
-        }
+            instructions: "Repellat et aut harum aliquam sunt suscipit.",
+        },
     ];
 
     return (

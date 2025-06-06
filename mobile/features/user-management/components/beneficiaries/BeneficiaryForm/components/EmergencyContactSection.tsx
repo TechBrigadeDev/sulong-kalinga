@@ -1,4 +1,5 @@
-import { Card, H3, YStack, Input, XStack, Text } from "tamagui";
+import { Card, H3, Input, Text, XStack, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -6,10 +7,7 @@ interface Props {
     onChange?: (field: string | number | symbol, value: any) => void;
 }
 
-export const EmergencyContactSection = ({ 
-    data = {}, 
-    onChange = () => {} 
-}: Props) => {
+export const EmergencyContactSection = ({ data = {}, onChange = () => {} }: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -31,7 +29,9 @@ export const EmergencyContactSection = ({
                             <Text>Relationship *</Text>
                             <Input
                                 value={data.emergency_contact_relation}
-                                onChangeText={(value) => onChange("emergency_contact_relation", value)}
+                                onChangeText={(value) =>
+                                    onChange("emergency_contact_relation", value)
+                                }
                                 placeholder="Enter relationship"
                                 autoCapitalize="words"
                             />
@@ -44,8 +44,10 @@ export const EmergencyContactSection = ({
                             <XStack gap="$2" alignItems="center">
                                 <Input
                                     flex={1}
-                                    value={data.emergency_contact_mobile?.replace('+63', '')}
-                                    onChangeText={(value) => onChange("emergency_contact_mobile", `+63${value}`)}
+                                    value={data.emergency_contact_mobile?.replace("+63", "")}
+                                    onChangeText={(value) =>
+                                        onChange("emergency_contact_mobile", `+63${value}`)
+                                    }
                                     placeholder="Enter mobile number"
                                     keyboardType="phone-pad"
                                 />

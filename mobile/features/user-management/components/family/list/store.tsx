@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface FamilyListStore {
     search: string;
@@ -6,6 +6,6 @@ interface FamilyListStore {
 }
 
 export const familyListStore = create<FamilyListStore>((set) => ({
-    search: '',
+    search: "",
     setSearch: (search: string) => set({ search }),
 }));

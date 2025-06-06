@@ -1,5 +1,5 @@
+import { IFamilyMember } from "features/user-management/management.type";
 import { Card, H3, Input, Label, YStack } from "tamagui";
-import { IFamilyMember } from "~/user.schema";
 
 interface Props {
     data: Partial<IFamilyMember>;

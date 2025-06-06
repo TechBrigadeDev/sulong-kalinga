@@ -7,8 +7,12 @@ interface DetailRowProps {
 
 const DetailRow = ({ label, value }: DetailRowProps) => (
     <XStack>
-        <Text opacity={0.6} flex={1} fontSize="$4">{label}:</Text>
-        <Text flex={2} fontSize="$4">{value || 'N/A'}</Text>
+        <Text opacity={0.6} flex={1} fontSize="$4">
+            {label}:
+        </Text>
+        <Text flex={2} fontSize="$4">
+            {value || "N/A"}
+        </Text>
     </XStack>
 );
 

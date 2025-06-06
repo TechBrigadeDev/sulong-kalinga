@@ -1,4 +1,5 @@
-import { Card, H3, YStack, Input, Text } from "tamagui";
+import { Card, H3, Input, Text, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -16,44 +17,41 @@ const CARE_NEEDS: CareNeed[] = [
     {
         label: "Mobility",
         frequencyField: "mobility_frequency",
-        assistanceField: "mobility_assistance"
+        assistanceField: "mobility_assistance",
     },
     {
         label: "Cognitive / Communication",
         frequencyField: "cognitive_frequency",
-        assistanceField: "cognitive_assistance"
+        assistanceField: "cognitive_assistance",
     },
     {
         label: "Self-sustainability",
         frequencyField: "self_sustainability_frequency",
-        assistanceField: "self_sustainability_assistance"
+        assistanceField: "self_sustainability_assistance",
     },
     {
         label: "Disease / Therapy Handling",
         frequencyField: "disease_therapy_frequency",
-        assistanceField: "disease_therapy_assistance"
+        assistanceField: "disease_therapy_assistance",
     },
     {
         label: "Daily Life / Social Contact",
         frequencyField: "daily_life_frequency",
-        assistanceField: "daily_life_assistance"
+        assistanceField: "daily_life_assistance",
     },
     {
         label: "Outdoor Activities",
         frequencyField: "outdoor_frequency",
-        assistanceField: "outdoor_assistance"
+        assistanceField: "outdoor_assistance",
     },
     {
         label: "Household Keeping",
         frequencyField: "household_frequency",
-        assistanceField: "household_assistance"
-    }
+        assistanceField: "household_assistance",
+    },
 ];
 
-export const CareNeedsSection = ({ 
-    data = {}, 
-    onChange = () => {} 
-}: Props) => {
+export const CareNeedsSection = ({ data = {}, onChange = () => {} }: Props) => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -63,15 +61,21 @@ export const CareNeedsSection = ({
                 <YStack gap="$4">
                     {CARE_NEEDS.map((need, index) => (
                         <YStack key={index} gap="$2">
-                            <Text size="$5" fontWeight="bold">{need.label}</Text>
+                            <Text size="$5" fontWeight="bold">
+                                {need.label}
+                            </Text>
                             <YStack gap="$2">
                                 <Text>Frequency</Text>
                                 <Input
                                     multiline
                                     numberOfLines={2}
                                     textAlignVertical="top"
-                                    value={data[need.frequencyField as keyof IBeneficiary] as string}
-                                    onChangeText={(value) => onChange(need.frequencyField as keyof IBeneficiary, value)}
+                                    value={
+                                        data[need.frequencyField as keyof IBeneficiary] as string
+                                    }
+                                    onChangeText={(value) =>
+                                        onChange(need.frequencyField as keyof IBeneficiary, value)
+                                    }
                                     placeholder="Enter frequency"
                                 />
                             </YStack>
@@ -81,8 +85,12 @@ export const CareNeedsSection = ({
                                     multiline
                                     numberOfLines={2}
                                     textAlignVertical="top"
-                                    value={data[need.assistanceField as keyof IBeneficiary] as string}
-                                    onChangeText={(value) => onChange(need.assistanceField as keyof IBeneficiary, value)}
+                                    value={
+                                        data[need.assistanceField as keyof IBeneficiary] as string
+                                    }
+                                    onChangeText={(value) =>
+                                        onChange(need.assistanceField as keyof IBeneficiary, value)
+                                    }
                                     placeholder="Enter assistance required"
                                 />
                             </YStack>

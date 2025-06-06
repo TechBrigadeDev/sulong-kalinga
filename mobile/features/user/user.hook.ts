@@ -1,12 +1,14 @@
-import { useQuery } from "@tanstack/react-query"
-import { QK } from "~/common/query"
+import { useQuery } from "@tanstack/react-query";
+import { authStore } from "features/auth/auth.store";
+
+import { QK } from "~/common/query";
+
 import userController from "./user.api";
-import { authStore } from "../auth/auth.store";
 import { userStore } from "./user.store";
 
 export const useUser = () => {
-    const { token } = authStore()
-    const { setUser } = userStore()
+    const { token } = authStore();
+    const { setUser } = userStore();
 
     return useQuery({
         queryKey: QK.user.getUser(token as string),
@@ -21,5 +23,5 @@ export const useUser = () => {
             return response;
         },
         enabled: !!token,
-    })
-}
+    });
+};

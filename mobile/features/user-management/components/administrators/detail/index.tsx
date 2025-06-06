@@ -19,7 +19,9 @@ interface AdminDetailProps {
 function AdminDetail({ admin }: AdminDetailProps) {
     if (!admin) {
         return (
-            <YStack style={{ padding: 16, flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <YStack
+                style={{ padding: 16, flex: 1, alignItems: "center", justifyContent: "center" }}
+            >
                 <Text>Administrator data is not available</Text>
             </YStack>
         );

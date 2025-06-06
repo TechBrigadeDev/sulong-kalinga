@@ -1,6 +1,7 @@
-import { Card, H3, YStack, Input, Select, XStack, Text } from "tamagui";
-import { IBeneficiary } from "~/features/user-management/management.type";
 import { useState } from "react";
+import { Card, H3, Input, Select, Text, XStack, YStack } from "tamagui";
+
+import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
     data?: Partial<IBeneficiary>;
@@ -20,10 +21,7 @@ const GENDER_OPTIONS = [
     { label: "Other", value: "Other" },
 ];
 
-export const PersonalDetailsSection = ({ 
-    data = {}, 
-    onChange = () => {} 
-}: Props) => {
+export const PersonalDetailsSection = ({ data = {}, onChange = () => {} }: Props) => {
     const [birthday, setBirthday] = useState(data.birthday || "");
 
     return (
@@ -72,8 +70,14 @@ export const PersonalDetailsSection = ({
                                     <Select.Viewport>
                                         <Select.Group>
                                             {CIVIL_STATUS_OPTIONS.map((option, i) => (
-                                                <Select.Item index={i} key={option.value} value={option.value}>
-                                                    <Select.ItemText>{option.label}</Select.ItemText>
+                                                <Select.Item
+                                                    index={i}
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    <Select.ItemText>
+                                                        {option.label}
+                                                    </Select.ItemText>
                                                 </Select.Item>
                                             ))}
                                         </Select.Group>
@@ -97,8 +101,14 @@ export const PersonalDetailsSection = ({
                                     <Select.Viewport>
                                         <Select.Group>
                                             {GENDER_OPTIONS.map((option, i) => (
-                                                <Select.Item index={i} key={option.value} value={option.value}>
-                                                    <Select.ItemText>{option.label}</Select.ItemText>
+                                                <Select.Item
+                                                    index={i}
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    <Select.ItemText>
+                                                        {option.label}
+                                                    </Select.ItemText>
                                                 </Select.Item>
                                             ))}
                                         </Select.Group>
@@ -139,7 +149,7 @@ export const PersonalDetailsSection = ({
                             <Text>Mobile Number *</Text>
                             <Input
                                 size="$4"
-                                value={data.mobile?.replace('+63', '')}
+                                value={data.mobile?.replace("+63", "")}
                                 onChangeText={(value) => onChange("mobile", `+63${value}`)}
                                 placeholder="Enter mobile number"
                                 keyboardType="phone-pad"

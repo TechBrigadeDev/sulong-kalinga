@@ -1,11 +1,11 @@
-import axios, { AxiosError, isAxiosError } from "axios";
-import { authStore } from "../features/auth/auth.store";
+import axios, { AxiosError } from "axios";
+import { authStore } from "features/auth/auth.store";
 
 console.log("API URL:", process.env.EXPO_PUBLIC_API_URL);
 
 export const axiosClient = axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_URL,
-})
+});
 
 axiosClient.interceptors.response.use(
     (response) => {
@@ -29,5 +29,5 @@ axiosClient.interceptors.response.use(
         }
         // Handle errors
         return Promise.reject(error);
-    }
+    },
 );

@@ -13,4 +13,4 @@ export const familyMemberSchema = z.object({
     photo: z.string().nullable(),
     photo_url: z.string().nullable(),
     beneficiary: beneficiarySchema,
-})
+});

@@ -1,4 +1,5 @@
 import { Card, H3, Text, XStack, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -16,7 +17,9 @@ const PersonalInformation = ({ beneficiary }: Props) => {
                     <XStack gap="$4">
                         <YStack flex={1}>
                             <Text opacity={0.6}>Full Name</Text>
-                            <Text>{beneficiary.first_name} {beneficiary.last_name}</Text>
+                            <Text>
+                                {beneficiary.first_name} {beneficiary.last_name}
+                            </Text>
                         </YStack>
                         <YStack flex={1}>
                             <Text opacity={0.6}>Civil Status</Text>

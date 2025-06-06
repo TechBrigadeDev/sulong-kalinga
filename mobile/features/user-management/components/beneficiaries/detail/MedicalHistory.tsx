@@ -1,4 +1,5 @@
-import { Card, H3, Text, XStack, YStack } from "tamagui";
+import { Card, H3, Text, YStack } from "tamagui";
+
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface Props {
@@ -8,10 +9,10 @@ interface Props {
 const MedicalHistory = ({ beneficiary }: Props) => {
     const medicalInfo = {
         "Medical Conditions": "Et voluptas repudiandae qui voluptatem quod neque fugiat.",
-        "Medications": "Quos aliquam nulla qui facilis.",
-        "Allergies": "Repellendus cum est eum natus ab.",
-        "Immunizations": "Ea numquam rerum sit rerum consequatur corrupti et.",
-        "Category": "Dementia"
+        Medications: "Quos aliquam nulla qui facilis.",
+        Allergies: "Repellendus cum est eum natus ab.",
+        Immunizations: "Ea numquam rerum sit rerum consequatur corrupti et.",
+        Category: "Dementia",
     };
 
     return (

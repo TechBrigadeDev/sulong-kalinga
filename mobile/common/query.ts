@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 
-export const queryClient = new QueryClient()
+export const queryClient = new QueryClient();
 
 export const QK = {
     auth: {
@@ -12,24 +12,17 @@ export const QK = {
         management: {
             getBeneficiaries: "user/management/getBeneficiaries",
             getBeneficiary: (id: string) => ["user/management/getBeneficiary", id],
-            getFamilyMembers: (
-                params: {
-                    search: string;
-                }
-            ) => [
+            getFamilyMembers: (params: { search: string }) => [
                 "user/management/getFamilyMembers",
                 params.search,
             ],
-            getFamilyMember: (id: string) => [
-                "user/management/getFamilyMember",
-                id,
-            ],
+            getFamilyMember: (id: string) => ["user/management/getFamilyMember", id],
             getCareWorkers: "user/management/getCareWorkers",
             getCareWorker: (id: string) => ["user/management/getCareWorker", id],
             getCareManagers: "user/management/getCareManagers",
             getCareManager: (id: string) => ["user/management/getCareManager", id],
             getAdministrators: "user/management/getAdministrators",
             getAdmin: (id: string) => ["user/management/getAdmin", id],
-        }
-    }
-}
+        },
+    },
+};
