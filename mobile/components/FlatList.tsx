@@ -90,12 +90,12 @@ function FlatList<T>({
                             "transparent",
                         ]}
                         locations={[
-                            0, 0.1, 0.9, 1,
+                            0, 0.05, 0.9, 1,
                         ]}
                         style={
                             StyleSheet.absoluteFill
                         }
-                        start={{ x: 0, y: 0.0 }}
+                        start={{ x: 0, y: 0 }}
                         end={{ x: 0, y: 0.95 }}
                     />
                 </View>

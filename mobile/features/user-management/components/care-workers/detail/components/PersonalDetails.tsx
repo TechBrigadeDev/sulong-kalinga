@@ -65,7 +65,7 @@ const PersonalDetails = ({
                             careWorker.volunteer_status
                         }
                     />
-                    <DetailRow
+                    {/* <DetailRow
                         label="Municipality"
                         value={
                             careWorker
@@ -73,7 +73,7 @@ const PersonalDetails = ({
                                 ?.municipality_name ||
                             ""
                         }
-                    />
+                    /> */}
                 </YStack>
             </Card.Footer>
         </Card>

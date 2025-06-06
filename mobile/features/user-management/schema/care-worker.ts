@@ -33,16 +33,16 @@ export const careWorkerSchema = z.object({
     pagibig_id_number: z.string(),
     cv_resume: z.string().nullable(),
     updated_by: z.number(),
-    municipality: z.object({
-        municipality_id: z.number(),
-        municipality_name: z.string(),
-        province_id: z.number(),
-        created_at: z.string(),
-        updated_at: z.string(),
-    }),
-    photo_url: z.string().nullable(),
-    government_issued_id_url: z
-        .string()
-        .nullable(),
-    cv_resume_url: z.string().nullable(),
+    // municipality: z.object({
+    //     municipality_id: z.number(),
+    //     municipality_name: z.string(),
+    //     province_id: z.number(),
+    //     created_at: z.string(),
+    //     updated_at: z.string(),
+    // }),
+    // photo_url: z.string().nullable(),
+    // government_issued_id_url: z
+    //     .string()
+    //     .nullable(),
+    // cv_resume_url: z.string().nullable(),
 });

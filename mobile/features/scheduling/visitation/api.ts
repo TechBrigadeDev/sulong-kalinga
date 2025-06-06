@@ -3,9 +3,23 @@ import { Controller } from "common/api";
 import { visitationsResponseSchema } from "./schema";
 
 class VisitationController extends Controller {
-    async getSchedules() {
+    async getSchedules(params?: {
+        start_date?: Date;
+        end_date?: Date;
+    }) {
         const response = await this.api.get(
             "/visitations",
+            {
+                params: {
+                    ...(params?.start_date && {
+                        start_date:
+                            params.start_date,
+                    }),
+                    ...(params?.end_date && {
+                        end_date: params.end_date,
+                    }),
+                },
+            },
         );
         const data = response.data;
 
@@ -14,6 +28,10 @@ class VisitationController extends Controller {
                 data,
             );
         if (!validate.success) {
+            console.error(
+                "Error validating visitations data",
+                validate.error,
+            );
             throw new Error(
                 "Invalid data format received from the server",
             );

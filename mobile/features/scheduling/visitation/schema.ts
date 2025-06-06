@@ -2,7 +2,7 @@ import { beneficiarySchema } from "features/user-management/schema/beneficiary";
 import { careWorkerSchema } from "features/user-management/schema/care-worker";
 import { z } from "zod";
 
-export const occurrenceStatusSchema = z.enum([
+export const statusSchema = z.enum([
     "scheduled",
     "completed",
     "canceled",
@@ -12,9 +12,9 @@ export const occurrenceSchema = z.object({
     occurrence_id: z.number(),
     visitation_id: z.number(),
     occurrence_date: z.string().datetime(),
-    start_time: z.string().datetime(),
-    end_time: z.string().datetime(),
-    status: occurrenceStatusSchema,
+    start_time: z.string().datetime().nullable(),
+    end_time: z.string().datetime().nullable(),
+    status: statusSchema,
     is_modified: z.boolean(),
     notes: z.string().nullable(),
     created_at: z.string().datetime(),
@@ -28,12 +28,12 @@ export const visitationSchema = z.object({
     visit_type: z.string(),
     visitation_date: z.string().datetime(),
     is_flexible_time: z.boolean(),
-    start_time: z.string().datetime(),
-    end_time: z.string().datetime(),
+    start_time: z.string().datetime().nullable(),
+    end_time: z.string().datetime().nullable(),
     notes: z.string().nullable(),
     date_assigned: z.string().datetime(),
     assigned_by: z.number(),
-    status: z.string(),
+    status: statusSchema,
     confirmed_by_beneficiary: z
         .number()
         .nullable(),

@@ -32,7 +32,7 @@ const CareWorkerHeader = ({
         <Card elevate>
             <Card.Header p="$4">
                 <XStack gap="$4">
-                    <Avatar circular size="$12">
+                    {/* <Avatar circular size="$12">
                         <AvatarImage
                             uri={
                                 careWorker.photo_url ||
@@ -40,7 +40,7 @@ const CareWorkerHeader = ({
                             }
                             fallback={careWorker.id.toString()}
                         />
-                    </Avatar>
+                    </Avatar> */}
                     <YStack flex={1} gap="$2">
                         <H4>
                             {

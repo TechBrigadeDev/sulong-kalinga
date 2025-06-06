@@ -1,24 +1,33 @@
 import { WeekCalendar } from "components/calendars";
 import WeekCalendarButton from "components/calendars/WeekCalendar/button";
 import LoadingScreen from "components/loaders/LoadingScreen";
-import ScrollView from "components/ScrollView";
 import { Stack } from "expo-router";
 import { useVisitations } from "features/scheduling/visitation/hook";
+import VisitationList from "features/scheduling/visitation/list";
+import { visitationListStore } from "features/scheduling/visitation/list/store";
+import { Calendar } from "lucide-react-native";
+import { TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Text, YStack } from "tamagui";
+import { YStack } from "tamagui";
 
 const Screen = () => {
+    const { setCurrentDate } =
+        visitationListStore();
     const inset = useSafeAreaInsets();
 
-    const { data, isLoading } = useVisitations();
+    const { isLoading } = useVisitations();
 
     const List = () =>
         isLoading ? (
             <LoadingScreen />
         ) : (
-            <ScrollView flex={1}>
-            </ScrollView>
+            <VisitationList />
         );
+
+    const onDateChanged = (date: string) => {
+        const newDate = new Date(date);
+        setCurrentDate(newDate);
+    };
 
     return (
         <YStack
@@ -27,11 +36,32 @@ const Screen = () => {
             marginBlockEnd={inset.bottom}
         >
             <YStack>
-                <WeekCalendar />
+                <WeekCalendar
+                    onDateChanged={onDateChanged}
+                />
                 <WeekCalendarButton />
             </YStack>
-            <List />
+            <YStack flex={1} p="$4">
+                <List />
+            </YStack>
         </YStack>
+    );
+};
+
+const HeaderRight = () => {
+    return (
+        <TouchableOpacity
+            style={{
+                // backgroundColor: "black",
+                flex: 1,
+                alignSelf: "center",
+            }}
+        >
+            <Calendar
+                size={24}
+                style={{ marginRight: 16 }}
+            />
+        </TouchableOpacity>
     );
 };
 
@@ -42,6 +72,9 @@ const Layout = () => {
                 options={{
                     title: "Visitations",
                     headerShown: true,
+                    headerRight: () => (
+                        <HeaderRight />
+                    ),
                 }}
             />
             <Screen />
