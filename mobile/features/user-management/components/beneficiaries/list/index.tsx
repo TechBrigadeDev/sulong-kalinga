@@ -77,6 +77,7 @@ const BeneficiaryList = () => {
     return (
         <View style={{ flex: 1 }}>
             <FlatList
+                tabbed
                 data={allBeneficiaries}
                 renderItem={({ item }) => (
                     <BeneficiaryCard

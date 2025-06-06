@@ -31,6 +31,7 @@ const CareManagerList = () => {
     return (
         <FlatList
             data={data}
+            tabbed
             renderItem={({ item }) => (
                 <CareManagerCard item={item} />
             )}

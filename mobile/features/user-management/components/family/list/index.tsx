@@ -33,6 +33,7 @@ const FamilyList = () => {
     return (
         <FlatList
             data={data}
+            tabbed
             renderItem={({ item }) => (
                 <FamilyMemberCard item={item} />
             )}

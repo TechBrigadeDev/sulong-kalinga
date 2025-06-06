@@ -40,6 +40,7 @@ const AdminList = () => {
     return (
         <FlatList<IAdmin>
             data={data}
+            tabbed
             renderItem={({ item }) => (
                 <AdminCard item={item} />
             )}
