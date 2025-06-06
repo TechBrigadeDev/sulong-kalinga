@@ -2,6 +2,7 @@ import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { ChevronDown } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import {
+    Platform,
     StyleSheet,
     TouchableOpacity,
 } from "react-native";
@@ -19,11 +20,21 @@ const WeekCalendarButton = ({
     disabled,
 }: Props) => {
     const { date, setDate } = weekCalendarStore();
-
     const [
         isDatePickerVisible,
         setDatePickerVisible,
     ] = useState(false);
+
+    const handleDateChange = (
+        _event: any,
+        selectedDate?: Date,
+    ) => {
+        setDatePickerVisible(false);
+        if (selectedDate) {
+            setDate(new Date(selectedDate));
+        }
+    };
+
     const dateString = useMemo(() => {
         if (!date) return "Select Date";
         const options: Intl.DateTimeFormatOptions =
@@ -55,36 +66,28 @@ const WeekCalendarButton = ({
         if (!isDatePickerVisible) return null;
         return (
             <RNDateTimePicker
+                testID="datePicker"
                 value={date || new Date()}
                 mode="date"
-                display="default"
-                onChange={(
-                    event,
-                    selectedDate,
-                ) => {
-                    setDatePickerVisible(false);
-                    if (selectedDate) {
-                        setDate(
-                            new Date(
-                                selectedDate,
-                            ),
-                        );
-                    }
-                }}
+                display={Platform.select({
+                    android: "default",
+                    ios: "inline",
+                })}
+                onChange={handleDateChange}
                 style={{ width: 0, height: 0 }}
             />
         );
     };
 
-    return (
-        <View
-            display="flex"
-            flexDirection="row"
-            justify="center"
-            items="center"
-            rowGap={8}
-        >
-            <Picker />
+    const Button = () => {
+        if (
+            Platform.OS === "ios" &&
+            isDatePickerVisible
+        ) {
+            return null;
+        }
+
+        return (
             <TouchableOpacity
                 style={styles.button}
                 onPressIn={handlePress}
@@ -100,6 +103,19 @@ const WeekCalendarButton = ({
                     <ChevronDown size={16} />
                 </View>
             </TouchableOpacity>
+        );
+    };
+
+    return (
+        <View
+            display="flex"
+            flexDirection="row"
+            justify="center"
+            items="center"
+            rowGap={8}
+        >
+            <Picker />
+            <Button />
         </View>
     );
 };

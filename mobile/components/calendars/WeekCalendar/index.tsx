@@ -71,7 +71,7 @@ const WeekCalendar = ({
     };
 
     return (
-        <View minH={100}>
+        <View minH={80} bg={"black"}>
             <CalendarProvider
                 date={dateString}
                 onDateChanged={onDateChanged}

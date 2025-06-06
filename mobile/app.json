@@ -24,7 +24,7 @@
               "NSIncludesSubdomains": true,
               "NSExceptionAllowsInsecureHTTPLoads": false,
               "NSExceptionRequiresForwardSecrecy": false,
-              "NSExceptionMinimumTLSVersion": "TLSv1.0"
+              "NSExceptionMinimumTLSVersion": "TLSv1.2"
             }
           }
         }
@@ -51,12 +51,6 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos."
-        }
-      ],
-      [
-        "expo-calendar",
-        {
-          "calendarPermission": "The app needs to access your calendar."
         }
       ]
     ],
