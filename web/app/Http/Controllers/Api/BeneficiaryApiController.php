@@ -18,14 +18,17 @@ use App\Models\Mobility;
 use App\Models\HealthHistory;
 use App\Models\CareWorkerResponsibility;
 use App\Services\UploadService;
+use App\Services\UserManagementService;
 
 class BeneficiaryApiController extends Controller
 {
     protected $uploadService;
+    protected $userManagementService;
 
-    public function __construct(UploadService $uploadService)
+    public function __construct(UploadService $uploadService, UserManagementService $userManagementService)
     {
         $this->uploadService = $uploadService;
+        $this->userManagementService = $userManagementService;
     }
 
     /**
@@ -703,6 +706,7 @@ class BeneficiaryApiController extends Controller
      */
     public function update(Request $request, $id)
     {
+        \Log::info('Update request data:', $request->all());
         if (!in_array($request->user()->role_id, [1, 2, 3])) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
@@ -1212,7 +1216,19 @@ class BeneficiaryApiController extends Controller
                     7 => ['frequency' => $request->input('frequency.household'), 'assistance' => $request->input('assistance.household')]
                 ];
                 foreach ($careCategories as $categoryId => $data) {
-                    if (!empty($data['frequency']) || !empty($data['assistance'])) {
+                    $hasFrequency = !empty($data['frequency']);
+                    $hasAssistance = !empty($data['assistance']);
+                    if ($hasFrequency || $hasAssistance) {
+                        if (!$hasFrequency || !$hasAssistance) {
+                            DB::rollBack();
+                            return response()->json([
+                                'errors' => [
+                                    "care_needs_category_$categoryId" => [
+                                        'Both frequency and assistance are required for this care category if one is provided.'
+                                    ]
+                                ]
+                            ], 422);
+                        }
                         CareNeed::create([
                             'general_care_plan_id' => $generalCarePlanId,
                             'care_category_id' => $categoryId,
@@ -1304,72 +1320,62 @@ class BeneficiaryApiController extends Controller
     }
 
     /**
-     * Remove the specified beneficiary.
+     * Remove the specified beneficiary using the service. REMOVED FEATURE
      */
-    public function destroy(Request $request, $id)
-    {
-        if (!in_array($request->user()->role_id, [1, 2, 3])) {
-            return response()->json(['error' => 'Forbidden'], 403);
-        }
+    // public function destroy(Request $request, $id)
+    // {
+    //     if (!in_array($request->user()->role_id, [1, 2, 3])) {
+    //         return response()->json(['error' => 'Forbidden'], 403);
+    //     }
 
-        $beneficiary = Beneficiary::with('generalCarePlan')->findOrFail($id);
+    //     // Only admins and care managers can delete (service will enforce this)
+    //     try {
+    //         $result = $this->userManagementService->deleteBeneficiary(
+    //             $id,
+    //             $request->user() // Pass the User object as $currentUser
+    //         );
 
-        if ($request->user()->role_id == 3) {
-            $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == $request->user()->id;
-            if (!$isAssigned) {
-                return response()->json(['error' => 'Unauthorized. You can only delete beneficiaries assigned to you.'], 403);
-            }
-        }
-
-        // --- DELETE ALL ASSOCIATED FILES ---
-        $filesToDelete = [
-            $beneficiary->photo,
-            $beneficiary->care_service_agreement_doc,
-            $beneficiary->general_care_plan_doc,
-            $beneficiary->beneficiary_signature,
-            $beneficiary->care_worker_signature,
-        ];
-        foreach ($filesToDelete as $file) {
-            if ($file) {
-                $this->uploadService->delete($file, 'spaces-private');
-            }
-        }
-
-        $beneficiary->delete();
-
-        return response()->json(['success' => true]);
-    }
+    //         return response()->json($result);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Error during beneficiary deletion: ' . $e->getMessage(), [
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+    //         return response()->json([
+    //             'message' => 'An error occurred while deleting the beneficiary: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
-     * Restore a soft-deleted beneficiary.
+     * Restore a soft-deleted beneficiary. REMOVED FEATURE
      */
-    public function restore(Request $request, $id)
-    {
-        if (!in_array($request->user()->role_id, [1, 2, 3])) {
-            return response()->json(['error' => 'Forbidden'], 403);
-        }
+    // public function restore(Request $request, $id)
+    // {
+    //     if (!in_array($request->user()->role_id, [1, 2, 3])) {
+    //         return response()->json(['error' => 'Forbidden'], 403);
+    //     }
 
-        $beneficiary = Beneficiary::withTrashed()->with('generalCarePlan')->findOrFail($id);
+    //     $beneficiary = Beneficiary::withTrashed()->with('generalCarePlan')->findOrFail($id);
 
-        // Care worker can only restore assigned beneficiaries
-        if ($request->user()->role_id == 3) {
-            $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == $request->user()->id;
-            if (!$isAssigned) {
-                return response()->json(['error' => 'Unauthorized. You can only restore beneficiaries assigned to you.'], 403);
-            }
-        }
+    //     // Care worker can only restore assigned beneficiaries
+    //     if ($request->user()->role_id == 3) {
+    //         $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == $request->user()->id;
+    //         if (!$isAssigned) {
+    //             return response()->json(['error' => 'Unauthorized. You can only restore beneficiaries assigned to you.'], 403);
+    //         }
+    //     }
 
-        if (!$beneficiary->trashed()) {
-            return response()->json(['error' => 'Beneficiary is not deleted.'], 400);
-        }
+    //     if (!$beneficiary->trashed()) {
+    //         return response()->json(['error' => 'Beneficiary is not deleted.'], 400);
+    //     }
 
-        $beneficiary->restore();
+    //     $beneficiary->restore();
 
-        return response()->json([
-            'success' => true,
-            'beneficiary' => $beneficiary
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'beneficiary' => $beneficiary
+    //     ]);
+    // }
 
     /**
      * Export beneficiaries as CSV (with relationships).
@@ -1410,23 +1416,35 @@ class BeneficiaryApiController extends Controller
                 'Medications', 'Allergies', 'Immunizations', 'Care Needs', 'Family Members'
             ]);
             foreach ($beneficiaries as $b) {
-                $careNeeds = $b->generalCarePlan && $b->generalCarePlan->careNeeds
-                    ? $b->generalCarePlan->careNeeds->map(function($need) {
+                // Robustly skip if beneficiary record is missing, soft-deleted, or not an object
+                if (
+                    !$b ||
+                    !is_object($b) ||
+                    (method_exists($b, 'trashed') && $b->trashed()) ||
+                    empty($b->beneficiary_id)
+                ) {
+                    continue;
+                }
+
+                $careNeeds = (optional($b->generalCarePlan)->careNeeds ?? collect())
+                    ->map(function($need) {
                         return "Cat{$need->care_category_id}:{$need->frequency}/{$need->assistance_required}";
-                    })->implode('; ')
-                    : '';
+                    })->implode('; ');
 
-                $familyMembers = $b->familyMembers
-                    ? $b->familyMembers->map(function($fm) {
+                $familyMembers = ($b->familyMembers ?? collect())
+                    ->map(function($fm) {
                         return $fm->first_name . ' ' . $fm->last_name;
-                    })->implode('; ')
-                    : '';
+                    })->implode('; ');
 
-                $medications = $b->generalCarePlan && $b->generalCarePlan->medications
-                    ? $b->generalCarePlan->medications->map(function($m) {
+                $medications = (optional($b->generalCarePlan)->medications ?? collect())
+                    ->map(function($m) {
                         return "{$m->medication} ({$m->dosage}, {$m->frequency})";
-                    })->implode('; ')
-                    : '';
+                    })->implode('; ');
+
+                $careWorkerId = optional($b->generalCarePlan)->care_worker_id;
+                $reviewDate = optional($b->generalCarePlan)->review_date;
+                $allergies = optional(optional($b->generalCarePlan)->healthHistory)->allergies ?? '';
+                $immunizations = optional(optional($b->generalCarePlan)->healthHistory)->immunizations ?? '';
 
                 fputcsv($file, [
                     $b->beneficiary_id,
@@ -1446,11 +1464,11 @@ class BeneficiaryApiController extends Controller
                     $b->emergency_contact_mobile,
                     $b->emergency_contact_email,
                     $b->primary_caregiver,
-                    optional($b->generalCarePlan)->care_worker_id,
-                    optional($b->generalCarePlan)->review_date,
+                    $careWorkerId,
+                    $reviewDate,
                     $medications,
-                    optional($b->generalCarePlan->healthHistory)->allergies ?? '',
-                    optional($b->generalCarePlan->healthHistory)->immunizations ?? '',
+                    $allergies,
+                    $immunizations,
                     $careNeeds,
                     $familyMembers,
                 ]);
