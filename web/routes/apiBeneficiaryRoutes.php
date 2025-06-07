@@ -14,10 +14,10 @@ use App\Http\Controllers\Api\Portal\FaqApiController;
 use App\Http\Middleware\RoleMiddleware;
 
 // All routes in this group require beneficiary or family member authentication
-Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':beneficiary'])->prefix('portal')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':beneficiary'])->prefix('portal/beneficiary')->group(function () {
     // Profile
     Route::get('/profile', [ProfileApiController::class, 'show']);
-    Route::post('/profile/update-email', [ProfileApiController::class, 'updateEmail']);
+    // Route::post('/profile/update-username', [ProfileApiController::class, 'updateUsername']); // DO NOT IMPLEMNT
     Route::post('/profile/update-password', [ProfileApiController::class, 'updatePassword']);
 
     // Visitation Schedule
