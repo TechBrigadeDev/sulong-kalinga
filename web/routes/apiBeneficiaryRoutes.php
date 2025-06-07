@@ -45,7 +45,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     Route::post('/care-plan/acknowledge/{id}', [CarePlanApiController::class, 'acknowledge']);
 
     // Family Members
-    Route::get('/family-members', [FamilyMembersApiController::class, 'index']);
+    // Route::get('/family-members', [FamilyMembersApiController::class, 'index']); DO NOT IMPLEMENT
+
+    // Benefciaries
+    Route::get('/beneficiary', [PortalBeneficiariesApiController::class, 'index']);
 
     // Notifications
     Route::get('/notifications', [NotificationsApiController::class, 'index']);

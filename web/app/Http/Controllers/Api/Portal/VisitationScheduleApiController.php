@@ -22,7 +22,9 @@ class VisitationScheduleApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
         }
 
-        $events = VisitationOccurrence::where('beneficiary_id', $beneficiary->beneficiary_id)
+        $events = VisitationOccurrence::whereHas('visitation', function($q) use ($beneficiary) {
+                $q->where('beneficiary_id', $beneficiary->beneficiary_id);
+            })
             ->orderBy('start_time')
             ->get();
 

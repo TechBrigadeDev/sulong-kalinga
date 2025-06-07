@@ -7,10 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 
-class FamilyMembersApiController extends Controller
+class PortalBeneficiariesApiController extends Controller
 {
     /**
-     * List family members for the authenticated beneficiary or related beneficiary.
+     * Get the beneficiary profile for the authenticated beneficiary or related beneficiary.
      */
     public function index(Request $request)
     {
@@ -21,13 +21,9 @@ class FamilyMembersApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
         }
 
-        $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)
-            ->orderBy('last_name')
-            ->get();
-
         return response()->json([
             'success' => true,
-            'data' => $familyMembers
+            'data' => $beneficiary
         ]);
     }
 
