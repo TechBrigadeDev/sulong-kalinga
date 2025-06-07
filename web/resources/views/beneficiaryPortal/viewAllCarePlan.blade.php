@@ -168,6 +168,9 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the acknowledgment modal
+            const acknowledgmentModal = new bootstrap.Modal(document.getElementById('acknowledgmentModal'));
+
             // Filter buttons
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -180,8 +183,9 @@
                 });
             });
             
+            // Regular form submission
             document.getElementById('searchFilterForm').addEventListener('submit', function(e) {
-
+                // Default form submission
             });
             
             // AJAX function to load care plans
@@ -231,27 +235,35 @@
                     });
                 });
                 
-                // Acknowledgment button handlers
+                // Setup acknowledge buttons for the loaded content
+                setupAcknowledgeButtons();
+            }
+            
+            // Function to handle acknowledge button setup
+            function setupAcknowledgeButtons() {
                 document.querySelectorAll('.acknowledge-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const careplanId = this.dataset.id;
-                        const modal = new bootstrap.Modal(document.getElementById('acknowledgmentModal'));
                         
-                        // Set the form action
-                        document.getElementById('acknowledgmentForm').action = `{{ url('beneficiary/care-plan/acknowledge') }}/${careplanId}`;
+                        // Set the form action with secure URL
+                        const formEl = document.getElementById('acknowledgmentForm');
+                        formEl.action = `{{ secure_url('beneficiary/care-plan/acknowledge') }}/${careplanId}`;
                         
                         // Show the modal
-                        modal.show();
+                        acknowledgmentModal.show();
                     });
+                });
+                
+                // Add missing text to acknowledge buttons if needed
+                document.querySelectorAll('.acknowledge-btn').forEach(btn => {
+                    if (!btn.innerHTML.trim()) {
+                        btn.innerHTML = '<i class="bi bi-check-circle"></i> Acknowledge';
+                    }
                 });
             }
             
-            // Add missing text to acknowledge buttons
-            document.querySelectorAll('.acknowledge-btn').forEach(btn => {
-                if (!btn.innerHTML.trim()) {
-                    btn.innerHTML = '<i class="bi bi-check-circle"></i> Acknowledge';
-                }
-            });
+            // Initial setup of buttons
+            setupAcknowledgeButtons();
             
             // Confirm acknowledgment button
             document.getElementById('confirmAcknowledgment').addEventListener('click', function() {

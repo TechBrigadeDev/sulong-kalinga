@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\WeeklyCarePlan;
 use App\Models\Beneficiary;
+use App\Models\FamilyMember;
+use App\Models\User;
+use App\Models\Notification;
 use App\Models\CareCategory;
 use App\Models\HealthHistory;
 use App\Models\WeeklyCarePlanInterventions;
@@ -517,9 +520,9 @@ class FamilyPortalCarePlanController extends Controller
             
             // Determine the user type and ID
             $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
-            $userId = Auth::guard('beneficiary')->check() 
-                ? Auth::guard('beneficiary')->user()->beneficiary_id
-                : Auth::guard('family')->user()->family_member_id;
+            $user = Auth::guard($userType === 'beneficiary' ? 'beneficiary' : 'family')->user();
+            $userId = $userType === 'beneficiary' ? $user->beneficiary_id : $user->family_member_id;
+            $userName = $user->first_name . ' ' . $user->last_name;
             
             // Get the weekly care plan
             $weeklyCareplan = WeeklyCarePlan::findOrFail($id);
@@ -528,7 +531,7 @@ class FamilyPortalCarePlanController extends Controller
             if ($userType === 'beneficiary' && $weeklyCareplan->beneficiary_id !== $userId) {
                 abort(403, 'You do not have permission to acknowledge this care plan.');
             } elseif ($userType === 'family' && 
-                     Auth::guard('family')->user()->related_beneficiary_id !== $weeklyCareplan->beneficiary_id) {
+                    Auth::guard('family')->user()->related_beneficiary_id !== $weeklyCareplan->beneficiary_id) {
                 abort(403, 'You do not have permission to acknowledge this care plan.');
             }
             
@@ -543,8 +546,7 @@ class FamilyPortalCarePlanController extends Controller
             $signature = [
                 'acknowledged_by' => $userType === 'beneficiary' ? 'Beneficiary' : 'Family Member',
                 'user_id' => $userId,
-                'name' => Auth::guard($userType === 'beneficiary' ? 'beneficiary' : 'family')->user()->first_name . ' ' . 
-                         Auth::guard($userType === 'beneficiary' ? 'beneficiary' : 'family')->user()->last_name,
+                'name' => $userName,
                 'date' => Carbon::now()->toDateTimeString(),
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent()
@@ -553,6 +555,12 @@ class FamilyPortalCarePlanController extends Controller
             $weeklyCareplan->acknowledgement_signature = json_encode($signature);
             $weeklyCareplan->save();
             
+            // Get the beneficiary
+            $beneficiary = Beneficiary::with(['generalCarePlan'])->findOrFail($weeklyCareplan->beneficiary_id);
+            
+            // Send notifications
+            $this->sendAcknowledgmentNotifications($beneficiary, $weeklyCareplan, $userType, $userId, $userName);
+
             // Redirect back with success message
             $routeName = $userType === 'beneficiary' 
                 ? 'beneficiary.care.plan.view' 
@@ -568,6 +576,72 @@ class FamilyPortalCarePlanController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'An error occurred while processing your acknowledgment. Please try again.');
+        }
+    }
+
+    /**
+     * Send notifications about care plan acknowledgment
+     */
+    private function sendAcknowledgmentNotifications($beneficiary, $weeklyCareplan, $acknowledgerType, $acknowledgerId, $acknowledgerName)
+    {
+        try {
+            // Prepare notification content
+            $title = "Care Plan Acknowledged";
+            $messageTemplate = "The care plan dated %s for %s has been acknowledged by %s.";
+            $planDate = Carbon::parse($weeklyCareplan->date)->format('M d, Y');
+            $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+            $message = sprintf($messageTemplate, $planDate, $beneficiaryName, $acknowledgerName);
+            
+            // 1. Notify care worker (if available)
+            if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+                $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+                
+                \App\Models\Notification::create([
+                    'user_id' => $careWorkerId,
+                    'user_type' => 'cose_staff',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+            }
+            
+            // 2. Notify beneficiary (if not the acknowledger)
+            if ($acknowledgerType !== 'beneficiary' && $beneficiary->beneficiary_id) {
+                \App\Models\Notification::create([
+                    'user_id' => $beneficiary->beneficiary_id,
+                    'user_type' => 'beneficiary',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+            }
+            
+            // 3. Notify other family members (if any)
+            $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)
+                ->where('family_member_id', '!=', $acknowledgerType === 'family' ? $acknowledgerId : 0)
+                ->get();
+                
+            foreach ($familyMembers as $familyMember) {
+                \App\Models\Notification::create([
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+            }
+            
+            \Log::info('Care plan acknowledgment notifications sent', [
+                'care_plan_id' => $weeklyCareplan->weekly_care_plan_id,
+                'acknowledged_by' => $acknowledgerName,
+                'acknowledged_by_type' => $acknowledgerType
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error sending acknowledgment notifications: ' . $e->getMessage());
         }
     }
 }
