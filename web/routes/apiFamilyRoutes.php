@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\Portal\FaqApiController;
 use App\Http\Middleware\RoleMiddleware;
 
 // All routes in this group require family member authentication
-Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':family_member'])->prefix('portal')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':family_member'])->prefix('portal/family')->group(function () {
     // Profile
     Route::get('/profile', [ProfileApiController::class, 'show']);
     Route::post('/profile/update-email', [ProfileApiController::class, 'updateEmail']);
