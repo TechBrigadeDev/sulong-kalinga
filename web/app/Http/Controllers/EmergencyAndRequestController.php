@@ -786,6 +786,9 @@ class EmergencyAndRequestController extends Controller
         // Get beneficiary
         $beneficiary = Beneficiary::find($notice->beneficiary_id);
         if (!$beneficiary) return;
+
+        // If this is a note-type update, don't send notifications to beneficiary or family
+        $isNoteUpdate = $update->update_type === 'note';
         
         // Get assigned staff if present
         $assignedStaff = null;
@@ -822,7 +825,7 @@ class EmergencyAndRequestController extends Controller
         $message .= "\n\n{$update->message}";
         
         // Notify beneficiary if they have portal access
-        if ($beneficiary) {
+        if (!$isNoteUpdate && $beneficiary) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -834,8 +837,9 @@ class EmergencyAndRequestController extends Controller
         }
         
         // Notify family members
-        $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
-        foreach ($familyMembers as $familyMember) {
+        if (!$isNoteUpdate) {
+            $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+            foreach ($familyMembers as $familyMember) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -845,6 +849,7 @@ class EmergencyAndRequestController extends Controller
                     'is_read' => false
                 ]);
             }
+        }
         
         // Notify assigned staff
         if ($assignedStaff && $assignedStaff->id != $actor->id) {
@@ -881,6 +886,9 @@ class EmergencyAndRequestController extends Controller
         // Get beneficiary
         $beneficiary = Beneficiary::find($request->beneficiary_id);
         if (!$beneficiary) return;
+
+        // If this is a note-type update, don't send notifications to beneficiary or family
+        $isNoteUpdate = $update->update_type === 'note';
         
         // Get care worker if assigned
         $careWorker = null;
@@ -910,7 +918,7 @@ class EmergencyAndRequestController extends Controller
         }
         
         // Notify beneficiary if they have portal access
-        if ($beneficiary) {
+        if (!$isNoteUpdate && $beneficiary) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -922,8 +930,9 @@ class EmergencyAndRequestController extends Controller
         }
         
         // Notify family members
-        $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
-        foreach ($familyMembers as $familyMember) {
+        if (!$isNoteUpdate) {
+            $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+            foreach ($familyMembers as $familyMember) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -933,6 +942,7 @@ class EmergencyAndRequestController extends Controller
                     'is_read' => false
                 ]);
             }
+        }
         
         // Notify care worker
         if ($careWorker && $careWorker->id != $actor->id) {

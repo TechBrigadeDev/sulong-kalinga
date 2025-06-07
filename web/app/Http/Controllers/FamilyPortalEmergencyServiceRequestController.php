@@ -460,7 +460,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
     public function getEmergencyDetails($id)
     {
         try {
-            // Determine whether the user is a beneficiary or family member
+            // User type check
             $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
             
             if ($userType === 'beneficiary') {
@@ -472,7 +472,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             }
             
             // Get emergency notice with relationships
-            $emergencyNotice = EmergencyNotice::with(['emergencyType', 'assignedUser', 'updates', 'updates.updatedBy'])
+            $emergencyNotice = EmergencyNotice::with(['emergencyType', 'assignedUser'])
                 ->where('notice_id', $id)
                 ->where('beneficiary_id', $beneficiaryId)
                 ->first();
@@ -484,13 +484,24 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 ], 404);
             }
             
+            // Load updates separately and filter out note-type updates for beneficiary/family view
+            $updates = $emergencyNotice->updates()
+                ->with('updatedBy')
+                ->where('update_type', '!=', 'note') // FILTER OUT NOTE UPDATES
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Replace the updates relation with our filtered collection
+            $emergencyNotice->setRelation('updates', $updates);
+            
             return response()->json([
                 'success' => true,
                 'emergency_notice' => $emergencyNotice
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Error getting emergency details: ' . $e->getMessage());
+            \Log::error('Error getting emergency details: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
@@ -506,7 +517,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
     public function getServiceDetails($id)
     {
         try {
-            // Determine whether the user is a beneficiary or family member
+            // User type check
             $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
             
             if ($userType === 'beneficiary') {
@@ -518,7 +529,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             }
             
             // Get service request with relationships
-            $serviceRequest = ServiceRequest::with(['serviceType', 'careWorker', 'updates', 'updates.updatedBy'])
+            $serviceRequest = ServiceRequest::with(['serviceType', 'careWorker'])
                 ->where('service_request_id', $id)
                 ->where('beneficiary_id', $beneficiaryId)
                 ->first();
@@ -530,13 +541,24 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 ], 404);
             }
             
+            // Load updates separately and filter out note-type updates for beneficiary/family view
+            $updates = $serviceRequest->updates()
+                ->with('updatedBy')
+                ->where('update_type', '!=', 'note') // FILTER OUT NOTE UPDATES
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Replace the updates relation with our filtered collection
+            $serviceRequest->setRelation('updates', $updates);
+            
             return response()->json([
                 'success' => true,
                 'service_request' => $serviceRequest
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Error getting service request details: ' . $e->getMessage());
+            \Log::error('Error getting service request details: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
@@ -625,6 +647,92 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
         } catch (\Exception $e) {
             Log::error("Error creating request notifications: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get a specific emergency notice for modals
+     */
+    public function getEmergencyNotice($id)
+    {
+        try {
+            $emergencyNotice = EmergencyNotice::with([
+                'beneficiary',
+                'beneficiary.barangay',
+                'beneficiary.municipality',
+                'emergencyType', 
+                'sender', 
+                'actionTakenBy',
+                'assignedUser',
+                'updates' => function($query) {
+                    $query->orderBy('created_at', 'desc');
+                },
+                'updates.updatedByUser'
+            ])->findOrFail($id);
+            
+            // Add names for better display
+            foreach ($emergencyNotice->updates as $update) {
+                // Check if updatedByUser exists before accessing properties
+                $user = $update->updatedByUser;
+                $update->updated_by_name = $user ? $user->first_name . ' ' . $user->last_name : 'Unknown';
+            }
+            
+            return response()->json([
+                'success' => true,
+                'emergency_notice' => $emergencyNotice
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching emergency notice: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Emergency notice not found',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Get a specific service request for modals
+     */
+    public function getServiceRequest($id)
+    {
+        try {
+            $serviceRequest = ServiceRequest::with([
+                'beneficiary',
+                'beneficiary.barangay',
+                'beneficiary.municipality',
+                'serviceType', 
+                'sender', 
+                'actionTakenBy',
+                'careWorker',
+                'updates' => function($query) {
+                    $query->orderBy('created_at', 'desc');
+                },
+                'updates.updatedByUser'
+            ])->findOrFail($id);
+            
+            // Add names for better display
+            foreach ($serviceRequest->updates as $update) {
+                // Check if updatedByUser exists before accessing properties
+                $user = $update->updatedByUser;
+                $update->updated_by_name = $user ? $user->first_name . ' ' . $user->last_name : 'Unknown';
+            }
+            
+            return response()->json([
+                'success' => true,
+                'service_request' => $serviceRequest
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching service request: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Service request not found',
+                'error' => $e->getMessage()
+            ], 404);
         }
     }
 }
