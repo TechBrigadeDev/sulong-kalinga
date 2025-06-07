@@ -99,7 +99,37 @@ class FamilyMemberFactory extends Factory
             'birthday' => $birthday,
             'mobile' => $mobile,
             'landline' => $landline,
-            'email' => $this->faker->unique()->safeEmail,
+            'email' => function (array $attributes) {
+                // Get the first and last name from attributes
+                $firstName = strtolower($attributes['first_name']);
+                $lastName = strtolower($attributes['last_name']);
+                
+                // Remove any special characters
+                $firstName = preg_replace('/[^a-z0-9]/', '', $firstName);
+                $lastName = preg_replace('/[^a-z0-9]/', '', $lastName);
+                
+                // Select a random email format pattern
+                $pattern = $this->faker->randomElement([
+                    "{first}{last}{num}@gmail.com",
+                    "{first}.{last}{num}@gmail.com",
+                    "{first}_{last}{num}@yahoo.com",
+                    "{first}{num}@outlook.com",
+                    "{last}.{first}{num}@yahoo.com",
+                    "{first}.{last}{num}@outlook.com"
+                ]);
+                
+                // Generate random numbers (1-4 digits)
+                $numbers = (string) $this->faker->numberBetween(1, 9999);
+                
+                // Replace placeholders with actual values
+                $email = str_replace(
+                    ['{first}', '{last}', '{num}'],
+                    [$firstName, $lastName, $numbers],
+                    $pattern
+                );
+                
+                return $email;
+            },
             'password' => Hash::make('12312312'), // Default password that can be changed later
             'street_address' => $this->faker->address,
             'gender' => $gender,
