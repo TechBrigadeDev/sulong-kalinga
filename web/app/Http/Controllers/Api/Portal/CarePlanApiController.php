@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
-use App\Models\GeneralCarePlan;
+use App\Models\WeeklyCarePlan;
 use App\Services\LogService;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,14 +31,33 @@ class CarePlanApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
         }
 
-        $carePlans = GeneralCarePlan::with(['careNeeds', 'medications', 'healthHistory'])
-            ->where('beneficiary_id', $beneficiary->beneficiary_id)
-            ->orderByDesc('created_at')
+        $carePlans = WeeklyCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)
+            ->orderByDesc('date')
             ->get();
+
+        $result = $carePlans->map(function ($plan) use ($user) {
+            // Get the care worker (author) full name from cose_users table
+            $author = \App\Models\User::find($plan->created_by);
+            $authorName = $author ? trim($author->first_name . ' ' . $author->last_name) : null;
+
+            // Determine status
+            $status = ($plan->acknowledged_by_beneficiary || $plan->acknowledged_by_family)
+                ? 'Acknowledged'
+                : 'Pending Review';
+
+            return [
+                'author_name' => $authorName,
+                'acknowledged' => $user->role_id == 4
+                    ? $plan->acknowledged_by_beneficiary
+                    : ($user->role_id == 5 ? $plan->acknowledged_by_family : null),
+                'date' => $plan->date,
+                'status' => $status,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $carePlans
+            'data' => $result
         ]);
     }
 
@@ -54,8 +73,8 @@ class CarePlanApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
         }
 
-        $totalPlans = GeneralCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)->count();
-        $latestPlan = GeneralCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)
+        $totalPlans = WeeklyCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)->count();
+        $latestPlan = WeeklyCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)
             ->orderByDesc('created_at')->first();
 
         return response()->json([
@@ -75,7 +94,7 @@ class CarePlanApiController extends Controller
         $user = $request->user();
         $beneficiary = $this->getCurrentBeneficiary($user);
 
-        $carePlan = GeneralCarePlan::with(['careNeeds', 'medications', 'healthHistory'])
+        $carePlan = WeeklyCarePlan::with(['beneficiary', 'author', 'careWorker'])
             ->where('beneficiary_id', $beneficiary->beneficiary_id)
             ->find($id);
 
@@ -97,21 +116,38 @@ class CarePlanApiController extends Controller
         $user = $request->user();
         $beneficiary = $this->getCurrentBeneficiary($user);
 
-        $carePlan = GeneralCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)->find($id);
+        $carePlan = WeeklyCarePlan::where('beneficiary_id', $beneficiary->beneficiary_id)->find($id);
 
         if (!$carePlan) {
             return response()->json(['success' => false, 'message' => 'Care plan not found.'], 404);
         }
 
-        // Mark as acknowledged (example: set a flag or create a record)
-        $carePlan->acknowledged_at = now();
+        // If already acknowledged by anyone, block further acknowledgments
+        if ($carePlan->acknowledged_by_beneficiary || $carePlan->acknowledged_by_family) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This care plan has already been acknowledged.'
+            ], 409);
+        }
+
+        // Mark as acknowledged by the correct user type, storing the ID of the acknowledger
+        if ($user->role_id == 4) {
+            $carePlan->acknowledged_by_beneficiary = $user->beneficiary_id;
+        } elseif ($user->role_id == 5) {
+            $carePlan->acknowledged_by_family = $user->family_member_id;
+        } else {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $carePlan->save();
 
         // Log the action
         $this->logService->createLog(
-            $user->id,
+            'WeeklyCarePlan',
+            $carePlan->weekly_care_plan_id,
             'care_plan_acknowledged',
-            "Care plan ID {$carePlan->general_care_plan_id} acknowledged by user {$user->id}"
+            "Care plan ID {$carePlan->weekly_care_plan_id} acknowledged by user {$user->id}",
+            $user->id
         );
 
         return response()->json([
