@@ -1811,8 +1811,8 @@ class VisitationController extends Controller
             ]);
         }
         
-        // Notify beneficiary
-        if ($beneficiary) {
+        // Notify beneficiary if they have portal access
+        if ($beneficiary->portal_account_id) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -1825,6 +1825,7 @@ class VisitationController extends Controller
         
         // Notify all family members
         foreach ($familyMembers as $familyMember) {
+            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -1833,6 +1834,7 @@ class VisitationController extends Controller
                     'date_created' => now(),
                     'is_read' => false
                 ]);
+            }
         }
 
         // Administrator notification code removed
@@ -1933,8 +1935,8 @@ class VisitationController extends Controller
             }
         }
         
-        // Notify beneficiary
-        if ($beneficiary) {
+        // Notify beneficiary if they have portal access
+        if ($beneficiary->portal_account_id) {
             Notification::create([
                 'user_id' => $beneficiary->beneficiary_id,
                 'user_type' => 'beneficiary',
@@ -1947,6 +1949,7 @@ class VisitationController extends Controller
         
         // Notify family members
         foreach ($familyMembers as $familyMember) {
+            if ($familyMember->portal_account_id) {
                 Notification::create([
                     'user_id' => $familyMember->family_member_id,
                     'user_type' => 'family_member',
@@ -1955,6 +1958,7 @@ class VisitationController extends Controller
                     'date_created' => now(),
                     'is_read' => false
                 ]);
+            }
         }
         
         \Log::info("Care worker change notifications sent", [
