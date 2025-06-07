@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\MessagingApiController;
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\ShiftTrackApiController;
 use App\Http\Controllers\Api\RecordsManagementApiController;
+use App\Http\Middleware\RoleMiddleware;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -33,7 +34,7 @@ Route::post('/login', [AuthApiController::class, 'login']);
 
 
 // Protected Routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':admin,care_manager,care_worker')->group(function () {
     // Auth/User Profile
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
@@ -164,4 +165,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'index']);
     Route::post('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'store']);
     Route::post('/shifts/{shift}/tracks/bulk', [ShiftTrackApiController::class, 'bulkStore']);
+
+    
 });
+require __DIR__.'/apiBeneficiaryRoutes.php';
+require __DIR__.'/apiFamilyRoutes.php';
