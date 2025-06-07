@@ -2743,11 +2743,18 @@ class DatabaseSeeder extends Seeder
             // Beneficiary acknowledgement
             $weeklyCarePlan->acknowledged_by_beneficiary = $beneficiary->beneficiary_id;
             
+            // Generate full name from beneficiary's name fields
+            $fullName = $beneficiary->first_name;
+            if (!empty($beneficiary->middle_name)) {
+                $fullName .= ' ' . $beneficiary->middle_name;
+            }
+            $fullName .= ' ' . $beneficiary->last_name;
+            
             // Add acknowledgement signature JSON
             $acknowledgementData = [
                 "acknowledged_by" => "Beneficiary",
                 "user_id" => $beneficiary->beneficiary_id,
-                "name" => $beneficiary->name,
+                "name" => $fullName,
                 "date" => $planDate->copy()->addDays(rand(1, 3))->format('Y-m-d H:i:s'),
                 "ip_address" => $this->faker->ipv4,
                 "user_agent" => $this->faker->userAgent
@@ -2763,11 +2770,14 @@ class DatabaseSeeder extends Seeder
             if ($familyMember) {
                 $weeklyCarePlan->acknowledged_by_family = $familyMember->family_member_id;
                 
+                // Generate full name from family member's name fields
+                $fullName = $familyMember->first_name . ' ' . $familyMember->last_name;
+                
                 // Add acknowledgement signature JSON
                 $acknowledgementData = [
                     "acknowledged_by" => "Family Member",
                     "user_id" => $familyMember->family_member_id,
-                    "name" => $familyMember->name,
+                    "name" => $fullName,
                     "date" => $planDate->copy()->addDays(rand(1, 3))->format('Y-m-d H:i:s'),
                     "ip_address" => $this->faker->ipv4,
                     "user_agent" => $this->faker->userAgent
