@@ -584,6 +584,13 @@
                 <i class="bi bi-exclamation-circle"></i> Resolving will archive this emergency and move it to history.
                 </small>
             </div>
+
+            <div class="mb=3">
+                <small class="text-primary mt-1">
+                    <i class="bi bi-info-circle-fill"></i> Adding notes will only be visible to all COSE Staff Members and will not be seen by beneficiaries and their family members.
+                </small>
+            </div>
+            <br>
             
             <div class="mb-3">
                 <label for="responseMessage" class="form-label">Response Message</label>
@@ -659,6 +666,13 @@
                     <i class="bi bi-exclamation-circle"></i> Cannot re-approve an already approved request.
                 </small>
             </div>
+
+            <div class="mb=3">
+                <small class="text-primary mt-1">
+                    <i class="bi bi-info-circle-fill"></i> Adding notes will only be visible to all COSE Staff Members and will not be seen by beneficiaries and their family members.
+                </small>
+            </div>
+            <br>
             
             <div class="mb-3 care-worker-options">
                 <label for="serviceCareWorkerId" class="form-label">Assign Care Worker</label>
