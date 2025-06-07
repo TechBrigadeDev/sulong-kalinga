@@ -38,24 +38,76 @@ class ProfileApiController extends Controller
     }
 
     /**
-     * Update the authenticated user's email.
+     * Update the authenticated family member's email.
      */
     public function updateEmail(Request $request)
     {
         $user = $request->user();
 
+        if ($user->role_id != 5) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $request->validate([
-            'email' => 'required|email|unique:unified_users,email,' . $user->id . ',id',
+            'email' => 'required|email|unique:family_members,email,' . $user->family_member_id . ',family_member_id',
+            'current_password' => 'required',
         ]);
 
-        $user->email = $request->email;
-        $user->save();
+        if (!\Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password is incorrect.'
+            ], 422);
+        }
+
+        $familyMember = FamilyMember::find($user->family_member_id);
+        if (!$familyMember) {
+            return response()->json(['success' => false, 'message' => 'Family member not found.'], 404);
+        }
+        $familyMember->email = $request->email;
+        $familyMember->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Email updated successfully.'
         ]);
     }
+
+    /**
+     * Update the authenticated beneficiary's username. NOT ALLOWED, DO NOT IMPLEMENT
+     */
+    // public function updateUsername(Request $request)
+    // {
+    //     $user = $request->user();
+
+    //     if ($user->role_id != 4) {
+    //         return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    //     }
+
+    //     $request->validate([
+    //         'username' => 'required|string|unique:beneficiaries,username,' . $user->beneficiary_id . ',beneficiary_id',
+    //         'current_password' => 'required',
+    //     ]);
+
+    //     if (!\Hash::check($request->current_password, $user->password)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Current password is incorrect.'
+    //         ], 422);
+    //     }
+
+    //     $beneficiary = Beneficiary::find($user->beneficiary_id);
+    //     if (!$beneficiary) {
+    //         return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
+    //     }
+    //     $beneficiary->username = $request->username;
+    //     $beneficiary->save();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Username updated successfully.'
+    //     ]);
+    // }
 
     /**
      * Update the authenticated user's password.
@@ -66,7 +118,8 @@ class ProfileApiController extends Controller
 
         $request->validate([
             'current_password' => 'required',
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'new_password' => ['required', 'confirmed', Password::defaults()],
+            'new_password_confirmation' => 'required',
         ]);
 
         if (!Hash::check($request->current_password, $user->password)) {
@@ -76,8 +129,27 @@ class ProfileApiController extends Controller
             ], 422);
         }
 
-        $user->password = Hash::make($request->password);
-        $user->save();
+        $hashed = Hash::make($request->new_password);
+
+        if ($user->role_id == 4) {
+            // Beneficiary
+            $beneficiary = Beneficiary::find($user->beneficiary_id);
+            if (!$beneficiary) {
+                return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
+            }
+            $beneficiary->password = $hashed;
+            $beneficiary->save();
+        } elseif ($user->role_id == 5) {
+            // Family Member
+            $familyMember = FamilyMember::find($user->family_member_id);
+            if (!$familyMember) {
+                return response()->json(['success' => false, 'message' => 'Family member not found.'], 404);
+            }
+            $familyMember->password = $hashed;
+            $familyMember->save();
+        } else {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
 
         return response()->json([
             'success' => true,

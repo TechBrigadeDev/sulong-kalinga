@@ -166,6 +166,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     Route::post('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'store']);
     Route::post('/shifts/{shift}/tracks/bulk', [ShiftTrackApiController::class, 'bulkStore']);
 
-    require __DIR__.'/apiBeneficiaryRoutes.php';
-    require __DIR__.'/apiFamilyRoutes.php';
+    
 });
+require __DIR__.'/apiBeneficiaryRoutes.php';
+require __DIR__.'/apiFamilyRoutes.php';
