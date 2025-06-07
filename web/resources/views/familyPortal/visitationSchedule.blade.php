@@ -608,7 +608,7 @@
                     
                     // Fetch detailed information about this occurrence
                     $.ajax({
-                        url: `{{ route('family.visitation.schedule.details', '') }}/${occurrenceId}`,
+                        url: `{{ secure_url('family/visitation-schedule/details') }}/${visit.occurrence_id}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.success) {
