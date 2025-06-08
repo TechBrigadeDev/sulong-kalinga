@@ -8,6 +8,12 @@ export const statusSchema = z.enum([
     "canceled",
 ]);
 
+export const visitTypeSchema = z.enum([
+    "routine_care_visit",
+    "service_request",
+    "emergency_visit",
+]);
+
 export const occurrenceSchema = z.object({
     occurrence_id: z.number(),
     visitation_id: z.number(),
@@ -25,7 +31,7 @@ export const visitationSchema = z.object({
     visitation_id: z.number(),
     care_worker_id: z.number(),
     beneficiary_id: z.number(),
-    visit_type: z.string(),
+    visit_type: visitTypeSchema,
     visitation_date: z.string().datetime(),
     is_flexible_time: z.boolean(),
     start_time: z.string().datetime().nullable(),
@@ -57,3 +63,8 @@ export const visitationsResponseSchema = z.object(
         data: z.array(visitationSchema),
     },
 );
+
+export const visitationResponseSchema = z.object({
+    success: z.boolean(),
+    data: visitationSchema,
+});

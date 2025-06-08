@@ -31,8 +31,14 @@ export const useVisitations = () => {
                 );
 
             // filter with occurrences date each
-            return response.data.filter(
-                (item) => {
+            return response.data
+                .filter((item) => {
+                    // return isSameDay(
+                    //     new Date(
+                    //         item.visitation_date,
+                    //     ),
+                    //     currentDate,
+                    // );
                     const occurenceDates =
                         item.occurrences.map(
                             (occurrence) =>
@@ -45,8 +51,18 @@ export const useVisitations = () => {
                                 currentDate,
                             ),
                     );
-                },
-            );
+                })
+                .sort(
+                    (a, b) =>
+                        a.beneficiary.first_name.localeCompare(
+                            b.beneficiary
+                                .first_name,
+                        ) ||
+                        a.beneficiary.last_name.localeCompare(
+                            b.beneficiary
+                                .last_name,
+                        ),
+                );
         },
         // getNextPageParam: (lastPage) => {
         //     if (
@@ -61,5 +77,27 @@ export const useVisitations = () => {
         // },
         // initialPageParam: 1,
         enabled: !!token,
+    });
+};
+
+export const useVisitation = (
+    visitationId: string,
+) => {
+    const { token } = authStore();
+
+    return useQuery({
+        queryKey: [
+            QK.scheduling.visitation
+                .getVisitation,
+            visitationId,
+        ],
+        queryFn: async () => {
+            const response =
+                await visitationController.getSchedule(
+                    visitationId,
+                );
+            return response.data;
+        },
+        enabled: !!visitationId && !!token,
     });
 };

@@ -1,6 +1,6 @@
 import { Controller } from "common/api";
 
-import { visitationsResponseSchema } from "./schema";
+import { visitationResponseSchema, visitationsResponseSchema } from "./schema";
 
 class VisitationController extends Controller {
     async getSchedules(params?: {
@@ -42,7 +42,26 @@ class VisitationController extends Controller {
 
     // Define methods for handling care worker schedules
     async getSchedule(workerId: string) {
-        // Logic to fetch the schedule for a specific care worker
+        const response = await this.api.get(
+            `/visitations/${workerId}`,
+        );
+        const data = response.data;
+
+        const validate =
+            await visitationResponseSchema.safeParseAsync(
+                data,
+            );
+        if (!validate.success) {
+            console.error(
+                "Error validating visitation data",
+                validate.error,
+            );
+            throw new Error(
+                "Invalid data format received from the server",
+            );
+        }
+
+        return validate.data;
     }
 }
 
