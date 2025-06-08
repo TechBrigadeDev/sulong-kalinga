@@ -707,6 +707,7 @@
         }
         
         // Confirm cancel button click
+        // Update the confirmation button click handler
         $('#confirmCancelBtn').on('click', function() {
             const requestId = $('#cancelRequestId').val();
             const requestType = $('#cancelRequestType').val();
@@ -719,11 +720,11 @@
                     request_type: requestType
                 },
                 success: function(response) {
-                    // Hide confirmation modal
-                    bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+                    // Use the new function to properly close the modal
+                    closeModalProperly('confirmationModal');
                     
                     // Show success alert
-                    alert('Request cancelled successfully.');
+                    setTimeout(() => alert('Request cancelled successfully.'), 300);
                     
                     // Refresh active requests and history
                     refreshActiveRequests();
@@ -735,11 +736,11 @@
                         errorMsg = xhr.responseJSON.message;
                     }
                     
-                    // Hide confirmation modal
-                    bootstrap.Modal.getInstance(document.getElementById('confirmationModal')).hide();
+                    // Use the new function to properly close the modal
+                    closeModalProperly('confirmationModal');
                     
                     // Show error alert
-                    alert('Error: ' + errorMsg);
+                    setTimeout(() => alert('Error: ' + errorMsg), 300);
                 }
             });
         });
@@ -1399,7 +1400,15 @@
                         // Populate the edit form
                         $('#edit_service_request_id').val(service.service_request_id);
                         $('#edit_service_type_id').val(service.service_type_id);
-                        $('#edit_service_date').val(service.service_date);
+                        
+                        // Fix for PostgreSQL date format - ensure YYYY-MM-DD format
+                        const serviceDate = service.service_date ? new Date(service.service_date) : null;
+                        if (serviceDate) {
+                            // Format as YYYY-MM-DD
+                            const formattedDate = serviceDate.toISOString().split('T')[0];
+                            $('#edit_service_date').val(formattedDate);
+                        }
+                        
                         $('#edit_service_time').val(service.service_time);
                         $('#edit_service_message').val(service.message);
                         
@@ -1424,6 +1433,7 @@
         }
 
         // Save emergency changes
+        // Update the save emergency changes handler
         $('#saveEmergencyChanges').on('click', function() {
             const form = document.getElementById('editEmergencyForm');
             const formData = new FormData(form);
@@ -1439,11 +1449,11 @@
                 contentType: false,
                 success: function(response) {
                     if (response.success) {
-                        // Hide modal
-                        bootstrap.Modal.getInstance(document.getElementById('editEmergencyModal')).hide();
+                        // Use the new function to properly close the modal
+                        closeModalProperly('editEmergencyModal');
                         
                         // Show success message
-                        alert('Emergency request updated successfully.');
+                        setTimeout(() => alert('Emergency request updated successfully.'), 300);
                         
                         // Refresh the active requests list
                         refreshActiveRequests();
@@ -1486,11 +1496,11 @@
                 contentType: false,
                 success: function(response) {
                     if (response.success) {
-                        // Hide modal
-                        bootstrap.Modal.getInstance(document.getElementById('editServiceModal')).hide();
+                        // Use the new function to properly close the modal
+                        closeModalProperly('editServiceModal');
                         
                         // Show success message
-                        alert('Service request updated successfully.');
+                        setTimeout(() => alert('Service request updated successfully.'), 300);
                         
                         // Refresh the active requests list
                         refreshActiveRequests();
@@ -1521,6 +1531,42 @@
         $(document).ready(function() {
             attachActionEventHandlers();
         });
+
+        /**
+         * Properly close a Bootstrap modal and clean up the backdrop
+         * @param {string} modalId - The ID of the modal element
+         */
+        function closeModalProperly(modalId) {
+            // Get the modal element
+            const modalEl = document.getElementById(modalId);
+            
+            // Get the Bootstrap modal instance
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            
+            if (modalInstance) {
+                // First hide the modal
+                modalInstance.hide();
+                
+                // Then add an event listener for when the hiding animation completes
+                modalEl.addEventListener('hidden.bs.modal', function cleanup() {
+                    // Remove the backdrop manually if it exists
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    
+                    // Remove the modal-open class from body if no other modals are open
+                    if (!document.querySelector('.modal.show')) {
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                    }
+                    
+                    // Remove this event listener
+                    modalEl.removeEventListener('hidden.bs.modal', cleanup);
+                });
+            }
+        }
 
     </script>
 </body>
