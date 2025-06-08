@@ -79,6 +79,8 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         Route::post('/cancel', [FamilyPortalEmergencyServiceRequestController::class, 'cancelRequest'])->name('cancel');
         Route::get('/emergency/{id}', [FamilyPortalEmergencyServiceRequestController::class, 'getEmergencyDetails'])->name('emergency-details');
         Route::get('/service/{id}', [FamilyPortalEmergencyServiceRequestController::class, 'getServiceDetails'])->name('service-details');
+        Route::post('/emergency/update', [FamilyPortalEmergencyServiceRequestController::class, 'updateEmergencyRequest'])->name('update-emergency');
+        Route::post('/service/update', [FamilyPortalEmergencyServiceRequestController::class, 'updateServiceRequest'])->name('update-service');
     });
     
     // Messages
