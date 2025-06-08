@@ -3738,7 +3738,10 @@
             
             // Ensure search input has event listeners
             ensureSearchInputWorks();
-            
+
+            // Add this line after ensureSearchInputWorks()
+            initializeSearchNavigation();
+                        
             console.log('Search button initialization complete');
         };
 
@@ -3872,6 +3875,11 @@
         // At the end of your loadConversation function, right before the final curly brace:
             setTimeout(() => {
                 initializeMessageActions();
+            }, 500);
+
+            setTimeout(() => {
+                window.initializeSearchButton();
+                initializeSearchNavigation(); // Add direct call for extra safety
             }, 500);
 
         function addMessageActionHandlers() {
@@ -4426,6 +4434,39 @@
                 modal.show();
             });
         });
+
+     // Function to ensure search navigation buttons work properly
+        function initializeSearchNavigation() {
+            const prevBtn = document.getElementById('searchPrevBtn');
+            const nextBtn = document.getElementById('searchNextBtn');
+            const searchInput = document.getElementById('messageSearchInput');
+            
+            if (!prevBtn || !nextBtn || !searchInput) return;
+            
+            // Remove any existing event listeners by cloning the buttons
+            const newPrevBtn = prevBtn.cloneNode(true);
+            const newNextBtn = nextBtn.cloneNode(true);
+            
+            prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+            nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+            
+            // Add click event listeners with direct function calls
+            newPrevBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Previous button clicked');
+                navigateSearch('prev');
+            });
+            
+            newNextBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Next button clicked'); 
+                navigateSearch('next');
+            });
+            
+            console.log('Search navigation buttons initialized');
+        }
 
         
     </script>
