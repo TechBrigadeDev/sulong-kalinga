@@ -19,6 +19,7 @@ function getFileIconClass($fileType) {
 }
 @endphp
 
+
 <!-- Conversation Header -->
 <div class="conversation-title-area">
     <div class="d-flex justify-content-between align-items-center">
