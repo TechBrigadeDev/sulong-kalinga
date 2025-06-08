@@ -211,11 +211,18 @@
                                                     </td>
                                                     <td>
                                                         @if($emergency->status == 'new')
-                                                            <button class="btn btn-sm btn-outline-danger cancel-request" 
-                                                                    data-request-id="{{ $emergency->notice_id }}" 
-                                                                    data-request-type="emergency">
-                                                                Cancel
-                                                            </button>
+                                                            <div class="d-flex">
+                                                                <button class="btn btn-sm btn-outline-primary edit-request me-2" 
+                                                                        data-request-id="{{ $emergency->notice_id }}" 
+                                                                        data-request-type="emergency">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-danger cancel-request" 
+                                                                        data-request-id="{{ $emergency->notice_id }}" 
+                                                                        data-request-type="emergency">
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
                                                         @else
                                                             <span class="text-muted">Processing</span>
                                                         @endif
@@ -242,11 +249,18 @@
                                                     </td>
                                                     <td>
                                                         @if($service->status == 'new')
-                                                            <button class="btn btn-sm btn-outline-danger cancel-request" 
-                                                                    data-request-id="{{ $service->service_request_id }}" 
-                                                                    data-request-type="service">
-                                                                Cancel
-                                                            </button>
+                                                            <div class="d-flex">
+                                                                <button class="btn btn-sm btn-outline-primary edit-request me-2" 
+                                                                        data-request-id="{{ $service->service_request_id }}" 
+                                                                        data-request-type="service">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-danger cancel-request" 
+                                                                        data-request-id="{{ $service->service_request_id }}" 
+                                                                        data-request-type="service">
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
                                                         @else
                                                             <span class="text-muted">Processing</span>
                                                         @endif
@@ -478,6 +492,89 @@
         </div>
     </div>
 
+    <!-- Edit Emergency Modal -->
+    <div class="modal fade" id="editEmergencyModal" tabindex="-1" aria-labelledby="editEmergencyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="editEmergencyModalLabel">Edit Emergency Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEmergencyForm">
+                        @csrf
+                        <input type="hidden" id="edit_emergency_notice_id" name="notice_id">
+                        
+                        <div class="mb-3">
+                            <label for="edit_emergency_type_id" class="form-label">Emergency Type</label>
+                            <select class="form-select" id="edit_emergency_type_id" name="emergency_type_id" required>
+                                @foreach($emergencyTypes as $type)
+                                    <option value="{{ $type->emergency_type_id }}">{{ $type->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_emergency_message" class="form-label">Message</label>
+                            <textarea class="form-control" id="edit_emergency_message" name="message" rows="4" placeholder="Describe the emergency situation" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="saveEmergencyChanges">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Service Request Modal -->
+    <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editServiceModalLabel">Edit Service Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editServiceForm">
+                        @csrf
+                        <input type="hidden" id="edit_service_request_id" name="service_request_id">
+                        
+                        <div class="mb-3">
+                            <label for="edit_service_type_id" class="form-label">Service Type</label>
+                            <select class="form-select" id="edit_service_type_id" name="service_type_id" required>
+                                @foreach($serviceTypes as $type)
+                                    <option value="{{ $type->service_type_id }}">{{ $type->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_service_date" class="form-label">Preferred Date</label>
+                                <input type="date" class="form-control" id="edit_service_date" name="service_date" required min="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_service_time" class="form-label">Preferred Time</label>
+                                <input type="time" class="form-control" id="edit_service_time" name="service_time" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_service_message" class="form-label">Details</label>
+                            <textarea class="form-control" id="edit_service_message" name="message" rows="4" placeholder="Describe what you need help with" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveServiceChanges">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
@@ -689,7 +786,7 @@
                         // Add emergencies
                         response.emergencies.forEach(function(emergency) {
                             tableContent += `
-                                 <tr class="clickable-row" data-request-id="${emergency.notice_id}" data-request-type="emergency">
+                                <tr class="clickable-row" data-request-id="${emergency.notice_id}" data-request-type="emergency">
                                     <td>
                                         <span class="badge bg-danger">
                                             ${emergency.emergency_type ? emergency.emergency_type.name : 'Emergency'}
@@ -707,11 +804,18 @@
                                     </td>
                                     <td>
                                         ${emergency.status === 'new' ? 
-                                            `<button class="btn btn-sm btn-outline-danger cancel-request" 
-                                                data-request-id="${emergency.notice_id}" 
-                                                data-request-type="emergency">
-                                                Cancel
-                                            </button>` : 
+                                            `<div class="d-flex">
+                                                <button class="btn btn-sm btn-outline-primary edit-request me-2" 
+                                                    data-request-id="${emergency.notice_id}" 
+                                                    data-request-type="emergency">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger cancel-request" 
+                                                    data-request-id="${emergency.notice_id}" 
+                                                    data-request-type="emergency">
+                                                    Cancel
+                                                </button>
+                                            </div>` : 
                                             `<span class="text-muted">Processing</span>`}
                                     </td>
                                 </tr>
@@ -721,7 +825,7 @@
                         // Add service requests
                         response.serviceRequests.forEach(function(service) {
                             tableContent += `
-                               <tr class="clickable-row" data-request-id="${service.service_request_id}" data-request-type="service">
+                                <tr class="clickable-row" data-request-id="${service.service_request_id}" data-request-type="service">
                                     <td>
                                         <span class="badge bg-primary">
                                             ${service.service_type ? service.service_type.name : 'Service'}
@@ -739,11 +843,18 @@
                                     </td>
                                     <td>
                                         ${service.status === 'new' ? 
-                                            `<button class="btn btn-sm btn-outline-danger cancel-request" 
-                                                data-request-id="${service.service_request_id}" 
-                                                data-request-type="service">
-                                                Cancel
-                                            </button>` : 
+                                            `<div class="d-flex">
+                                                <button class="btn btn-sm btn-outline-primary edit-request me-2" 
+                                                    data-request-id="${service.service_request_id}" 
+                                                    data-request-type="service">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger cancel-request" 
+                                                    data-request-id="${service.service_request_id}" 
+                                                    data-request-type="service">
+                                                    Cancel
+                                                </button>
+                                            </div>` : 
                                             `<span class="text-muted">Processing</span>`}
                                     </td>
                                 </tr>
@@ -754,8 +865,8 @@
                     // Update the table
                     $('#activeRequestsTable tbody').html(tableContent);
                     
-                    // Re-attach event handlers
-                    attachCancelEventHandlers();
+                     // Re-attach event handlers
+                    attachActionEventHandlers();
                 },
                 error: function(xhr) {
                     console.error('Error fetching active requests:', xhr);
@@ -1196,6 +1307,221 @@
                 default: return updateType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
             }
         }
+
+        // Function to attach edit and cancel event handlers
+        function attachActionEventHandlers() {
+            $('.cancel-request').on('click', function(e) {
+                // Stop event propagation to prevent row click from triggering
+                e.stopPropagation();
+                
+                const requestId = $(this).data('request-id');
+                const requestType = $(this).data('request-type');
+                
+                // Set values in the confirmation modal
+                $('#cancelRequestId').val(requestId);
+                $('#cancelRequestType').val(requestType);
+                
+                // Show confirmation modal
+                const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                confirmationModal.show();
+            });
+            
+            $('.edit-request').on('click', function(e) {
+                // Stop event propagation to prevent row click from triggering
+                e.stopPropagation();
+                
+                const requestId = $(this).data('request-id');
+                const requestType = $(this).data('request-type');
+                
+                // Load request details for editing
+                if (requestType === 'emergency') {
+                    loadEmergencyForEdit(requestId);
+                } else {
+                    loadServiceForEdit(requestId);
+                }
+            });
+        }
+
+        // Update attachCancelEventHandlers to call the new function
+        function attachCancelEventHandlers() {
+            attachActionEventHandlers();
+        }
+
+        // Load emergency details for editing
+        function loadEmergencyForEdit(noticeId) {
+            // Show loading state in button
+            $(`button.edit-request[data-request-id="${noticeId}"]`).html('<span class="spinner-border spinner-border-sm" role="status"></span>');
+            
+            $.ajax({
+                url: "{{ secure_url(route(Auth::guard('beneficiary')->check() ? 'beneficiary.emergency.service.emergency-details' : 'family.emergency.service.emergency-details', '', false)) }}/" + noticeId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success && response.emergency_notice) {
+                        const emergency = response.emergency_notice;
+                        
+                        // Populate the edit form
+                        $('#edit_emergency_notice_id').val(emergency.notice_id);
+                        $('#edit_emergency_type_id').val(emergency.emergency_type_id);
+                        $('#edit_emergency_message').val(emergency.message);
+                        
+                        // Show the modal
+                        const editModal = new bootstrap.Modal(document.getElementById('editEmergencyModal'));
+                        editModal.show();
+                    } else {
+                        alert('Could not load emergency details. Please try again.');
+                    }
+                    
+                    // Reset button
+                    $(`button.edit-request[data-request-id="${noticeId}"]`).html('<i class="bi bi-pencil"></i>');
+                },
+                error: function(xhr) {
+                    alert('Failed to load emergency details. Please try again.');
+                    console.error('Error loading emergency details:', xhr.responseText);
+                    
+                    // Reset button
+                    $(`button.edit-request[data-request-id="${noticeId}"]`).html('<i class="bi bi-pencil"></i>');
+                }
+            });
+        }
+
+        // Load service request details for editing
+        function loadServiceForEdit(requestId) {
+            // Show loading state in button
+            $(`button.edit-request[data-request-id="${requestId}"]`).html('<span class="spinner-border spinner-border-sm" role="status"></span>');
+            
+            $.ajax({
+                url: "{{ secure_url(route(Auth::guard('beneficiary')->check() ? 'beneficiary.emergency.service.service-details' : 'family.emergency.service.service-details', '', false)) }}/" + requestId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success && response.service_request) {
+                        const service = response.service_request;
+                        
+                        // Populate the edit form
+                        $('#edit_service_request_id').val(service.service_request_id);
+                        $('#edit_service_type_id').val(service.service_type_id);
+                        $('#edit_service_date').val(service.service_date);
+                        $('#edit_service_time').val(service.service_time);
+                        $('#edit_service_message').val(service.message);
+                        
+                        // Show the modal
+                        const editModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
+                        editModal.show();
+                    } else {
+                        alert('Could not load service request details. Please try again.');
+                    }
+                    
+                    // Reset button
+                    $(`button.edit-request[data-request-id="${requestId}"]`).html('<i class="bi bi-pencil"></i>');
+                },
+                error: function(xhr) {
+                    alert('Failed to load service request details. Please try again.');
+                    console.error('Error loading service request details:', xhr.responseText);
+                    
+                    // Reset button
+                    $(`button.edit-request[data-request-id="${requestId}"]`).html('<i class="bi bi-pencil"></i>');
+                }
+            });
+        }
+
+        // Save emergency changes
+        $('#saveEmergencyChanges').on('click', function() {
+            const form = document.getElementById('editEmergencyForm');
+            const formData = new FormData(form);
+            
+            // Show loading state
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
+            
+            $.ajax({
+                url: "{{ secure_url(route(Auth::guard('beneficiary')->check() ? 'beneficiary.emergency.service.update-emergency' : 'family.emergency.service.update-emergency', '', false)) }}",
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Hide modal
+                        bootstrap.Modal.getInstance(document.getElementById('editEmergencyModal')).hide();
+                        
+                        // Show success message
+                        alert('Emergency request updated successfully.');
+                        
+                        // Refresh the active requests list
+                        refreshActiveRequests();
+                    } else {
+                        alert('Error updating emergency request: ' + response.message);
+                    }
+                    
+                    // Reset button
+                    $('#saveEmergencyChanges').prop('disabled', false).text('Save Changes');
+                },
+                error: function(xhr) {
+                    let message = 'Failed to update emergency request.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        message = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                    }
+                    
+                    alert(message);
+                    console.error('Error updating emergency request:', xhr.responseText);
+                    
+                    // Reset button
+                    $('#saveEmergencyChanges').prop('disabled', false).text('Save Changes');
+                }
+            });
+        });
+
+        // Save service request changes
+        $('#saveServiceChanges').on('click', function() {
+            const form = document.getElementById('editServiceForm');
+            const formData = new FormData(form);
+            
+            // Show loading state
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
+            
+            $.ajax({
+                url: "{{ secure_url(route(Auth::guard('beneficiary')->check() ? 'beneficiary.emergency.service.update-service' : 'family.emergency.service.update-service', '', false)) }}",
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Hide modal
+                        bootstrap.Modal.getInstance(document.getElementById('editServiceModal')).hide();
+                        
+                        // Show success message
+                        alert('Service request updated successfully.');
+                        
+                        // Refresh the active requests list
+                        refreshActiveRequests();
+                    } else {
+                        alert('Error updating service request: ' + response.message);
+                    }
+                    
+                    // Reset button
+                    $('#saveServiceChanges').prop('disabled', false).text('Save Changes');
+                },
+                error: function(xhr) {
+                    let message = 'Failed to update service request.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        message = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                    }
+                    
+                    alert(message);
+                    console.error('Error updating service request:', xhr.responseText);
+                    
+                    // Reset button
+                    $('#saveServiceChanges').prop('disabled', false).text('Save Changes');
+                }
+            });
+        });
+
+        // Initialize event handlers
+        $(document).ready(function() {
+            attachActionEventHandlers();
+        });
+
     </script>
 </body>
 </html>

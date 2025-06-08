@@ -909,4 +909,340 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             Log::error("Error creating cancellation notifications: " . $e->getMessage());
         }
     }
+
+    /**
+     * Update an existing emergency request
+     */
+    public function updateEmergencyRequest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'notice_id' => 'required|exists:emergency_notices,notice_id',
+            'emergency_type_id' => 'required|exists:emergency_types,emergency_type_id',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Determine whether the user is a beneficiary or family member
+        $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+        
+        if ($userType === 'beneficiary') {
+            $user = Auth::guard('beneficiary')->user();
+            $editorId = $user->beneficiary_id;
+            $beneficiaryId = $user->beneficiary_id;
+        } else {
+            $user = Auth::guard('family')->user();
+            $editorId = $user->family_member_id;
+            $beneficiaryId = $user->related_beneficiary_id;
+        }
+        
+        try {
+            // Get the emergency notice
+            $emergencyNotice = EmergencyNotice::where('notice_id', $request->notice_id)
+                ->where('beneficiary_id', $beneficiaryId)
+                ->where('status', 'new') // Can only edit new requests
+                ->first();
+                
+            if (!$emergencyNotice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Emergency notice not found or cannot be edited.'
+                ], 404);
+            }
+            
+            // Store original values for notification
+            $originalType = $emergencyNotice->emergencyType ? $emergencyNotice->emergencyType->name : 'Unknown';
+            $originalMessage = $emergencyNotice->message;
+            
+            // Update the emergency notice
+            $emergencyNotice->emergency_type_id = $request->emergency_type_id;
+            $emergencyNotice->message = $request->message;
+            $emergencyNotice->read_status = false; // Reset read status
+            $emergencyNotice->read_at = null;      // Reset read timestamp
+            $emergencyNotice->save();
+            
+            // Reload relationships
+            $emergencyNotice->load('emergencyType');
+            
+            // Create notifications
+            $this->createUpdateNotifications(
+                'emergency', 
+                $emergencyNotice, 
+                $beneficiaryId, 
+                $userType, 
+                $editorId, 
+                $originalType, 
+                $originalMessage
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Emergency assistance request updated successfully.',
+                'data' => $emergencyNotice
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error updating emergency request: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update emergency request.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update an existing service request
+     */
+    public function updateServiceRequest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'service_request_id' => 'required|exists:service_requests,service_request_id',
+            'service_type_id' => 'required|exists:service_request_types,service_type_id',
+            'service_date' => 'required|date|after_or_equal:today',
+            'service_time' => 'required',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Determine whether the user is a beneficiary or family member
+        $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+        
+        if ($userType === 'beneficiary') {
+            $user = Auth::guard('beneficiary')->user();
+            $editorId = $user->beneficiary_id;
+            $beneficiaryId = $user->beneficiary_id;
+        } else {
+            $user = Auth::guard('family')->user();
+            $editorId = $user->family_member_id;
+            $beneficiaryId = $user->related_beneficiary_id;
+        }
+        
+        try {
+            // Get the service request
+            $serviceRequest = ServiceRequest::where('service_request_id', $request->service_request_id)
+                ->where('beneficiary_id', $beneficiaryId)
+                ->where('status', 'new') // Can only edit new requests
+                ->first();
+                
+            if (!$serviceRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Service request not found or cannot be edited.'
+                ], 404);
+            }
+            
+            // Store original values for notification
+            $originalType = $serviceRequest->serviceType ? $serviceRequest->serviceType->name : 'Unknown';
+            $originalDate = $serviceRequest->service_date;
+            $originalTime = $serviceRequest->service_time;
+            $originalMessage = $serviceRequest->message;
+            
+            // Update the service request
+            $serviceRequest->service_type_id = $request->service_type_id;
+            $serviceRequest->service_date = $request->service_date;
+            $serviceRequest->service_time = $request->service_time;
+            $serviceRequest->message = $request->message;
+            $serviceRequest->read_status = false; // Reset read status
+            $serviceRequest->read_at = null;      // Reset read timestamp
+            $serviceRequest->save();
+            
+            // Reload relationships
+            $serviceRequest->load('serviceType');
+            
+            // Create notifications
+            $this->createUpdateNotifications(
+                'service', 
+                $serviceRequest, 
+                $beneficiaryId, 
+                $userType, 
+                $editorId, 
+                $originalType, 
+                $originalMessage,
+                $originalDate,
+                $originalTime
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Service request updated successfully.',
+                'data' => $serviceRequest
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error updating service request: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update service request.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create notifications about request updates
+     * 
+     * @param string $requestType Type of request ('emergency' or 'service')
+     * @param mixed $request The request object (EmergencyNotice or ServiceRequest)
+     * @param int $beneficiaryId ID of the beneficiary
+     * @param string $editorType Type of editor ('beneficiary' or 'family')
+     * @param int $editorId ID of the editor
+     * @param string $originalType Original type of request
+     * @param string $originalMessage Original message
+     * @param string|null $originalDate Original service date (for service requests only)
+     * @param string|null $originalTime Original service time (for service requests only)
+     * @return void
+     */
+    private function createUpdateNotifications(
+        $requestType, 
+        $request, 
+        $beneficiaryId, 
+        $editorType, 
+        $editorId, 
+        $originalType, 
+        $originalMessage, 
+        $originalDate = null, 
+        $originalTime = null
+    ) {
+        try {
+            // Get the beneficiary info
+            $beneficiary = \App\Models\Beneficiary::find($beneficiaryId);
+            if (!$beneficiary) {
+                Log::error("Failed to create update notifications: Beneficiary #{$beneficiaryId} not found");
+                return;
+            }
+            
+            $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+            
+            // Get editor name based on type
+            $editorName = "Unknown user";
+            if ($editorType === 'beneficiary') {
+                $editorUser = \App\Models\Beneficiary::find($editorId);
+                $editorName = $editorUser ? $editorUser->first_name . ' ' . $editorUser->last_name : "the beneficiary";
+            } elseif ($editorType === 'family') {
+                $editorUser = \App\Models\FamilyMember::find($editorId);
+                $editorName = $editorUser ? $editorUser->first_name . ' ' . $editorUser->last_name : "a family member";
+            }
+            
+            // Create notification title and message based on request type
+            if ($requestType === 'emergency') {
+                $title = "Emergency Request Updated";
+                $message = "An emergency request for {$beneficiaryName} has been updated by {$editorName}.";
+                $newType = $request->emergencyType ? $request->emergencyType->name : 'Unknown Type';
+                
+                // Include changes in the notification
+                $message .= "\n\nChanges:";
+                if ($originalType != $newType) {
+                    $message .= "\nType: {$originalType} → {$newType}";
+                }
+                if ($originalMessage != $request->message) {
+                    $message .= "\nMessage has been updated";
+                }
+            } else { // service
+                $title = "Service Request Updated";
+                $message = "A service request for {$beneficiaryName} has been updated by {$editorName}.";
+                $newType = $request->serviceType ? $request->serviceType->name : 'Unknown Type';
+                
+                // Include changes in the notification
+                $message .= "\n\nChanges:";
+                if ($originalType != $newType) {
+                    $message .= "\nType: {$originalType} → {$newType}";
+                }
+                if ($originalDate != $request->service_date) {
+                    $message .= "\nDate: " . date('Y-m-d', strtotime($originalDate)) . " → " . date('Y-m-d', strtotime($request->service_date));
+                }
+                if ($originalTime != $request->service_time) {
+                    $message .= "\nTime: " . $originalTime . " → " . $request->service_time;
+                }
+                if ($originalMessage != $request->message) {
+                    $message .= "\nMessage has been updated";
+                }
+            }
+            
+            // Add the updated message content
+            $message .= "\n\nUpdated request: " . $request->message;
+            
+            // 1. Notify the beneficiary if they're not the editor
+            if ($editorType !== 'beneficiary' || $editorId != $beneficiaryId) {
+                \App\Models\Notification::create([
+                    'user_id' => $beneficiaryId,
+                    'user_type' => 'beneficiary',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created update notification for beneficiary #{$beneficiaryId}");
+            }
+            
+            // 2. Notify all family members (except the editor if they're a family member)
+            $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
+            foreach ($familyMembers as $familyMember) {
+                // Skip if this family member is the editor
+                if ($editorType === 'family' && $editorId == $familyMember->family_member_id) {
+                    continue;
+                }
+                
+                \App\Models\Notification::create([
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created update notification for family member #{$familyMember->family_member_id}");
+            }
+            
+            // 3. Notify all care managers
+            $careManagers = \App\Models\User::where('role_id', 2)->get();
+            foreach ($careManagers as $careManager) {
+                \App\Models\Notification::create([
+                    'user_id' => $careManager->id,
+                    'user_type' => 'cose_staff',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created update notification for care manager #{$careManager->id}");
+            }
+            
+            // 4. Notify the assigned care worker if any
+            if ($beneficiary->general_care_plan_id) {
+                $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
+                
+                if ($generalCarePlan && $generalCarePlan->care_worker_id) {
+                    \App\Models\Notification::create([
+                        'user_id' => $generalCarePlan->care_worker_id,
+                        'user_type' => 'cose_staff',
+                        'message_title' => $title . " (For Your Beneficiary)",
+                        'message' => $message,
+                        'date_created' => now(),
+                        'is_read' => false
+                    ]);
+                    
+                    Log::info("Created update notification for care worker #{$generalCarePlan->care_worker_id}");
+                }
+            }
+            
+        } catch (\Exception $e) {
+            Log::error("Error creating update notifications: " . $e->getMessage());
+        }
+    }
 }
