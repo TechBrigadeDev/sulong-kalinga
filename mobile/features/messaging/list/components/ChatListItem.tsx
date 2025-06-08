@@ -1,8 +1,20 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import { Avatar, AvatarImage, Text, XStack, YStack } from 'tamagui';
-import { ChatListItemProps } from '../list.types';
+import { ChatListItemProps } from "features/messaging/list/list.types";
+import {
+    StyleSheet,
+    TouchableOpacity,
+} from "react-native";
+import {
+    Avatar,
+    AvatarImage,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
-export const ChatListItem = ({ chat, onPress }: ChatListItemProps) => (
+export const ChatListItem = ({
+    chat,
+    onPress,
+}: ChatListItemProps) => (
     <TouchableOpacity onPress={onPress}>
         <XStack style={styles.chatItem}>
             <Avatar circular size="$6">
@@ -25,8 +37,18 @@ export const ChatListItem = ({ chat, onPress }: ChatListItemProps) => (
                         {chat.lastMessage}
                     </Text>
                     {chat.hasUnread && (
-                        <YStack style={styles.unreadBadge}>
-                            <Text style={styles.unreadText}>•</Text>
+                        <YStack
+                            style={
+                                styles.unreadBadge
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.unreadText
+                                }
+                            >
+                                •
+                            </Text>
                         </YStack>
                     )}
                 </XStack>
@@ -39,8 +61,8 @@ const styles = StyleSheet.create({
     chatItem: {
         paddingVertical: 12,
         paddingHorizontal: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         gap: 12,
     },
     chatContent: {
@@ -48,26 +70,26 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     chatHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
     },
     chatFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
     },
     chatName: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: "600",
     },
     chatTime: {
         fontSize: 12,
-        color: '#666',
+        color: "#666",
     },
     chatMessage: {
         fontSize: 14,
-        color: '#666',
+        color: "#666",
         flex: 1,
         marginRight: 8,
     },
@@ -75,12 +97,12 @@ const styles = StyleSheet.create({
         width: 16,
         height: 16,
         borderRadius: 8,
-        backgroundColor: '#ff6b00',
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: "#ff6b00",
+        alignItems: "center",
+        justifyContent: "center",
     },
     unreadText: {
-        color: '#fff',
+        color: "#fff",
         fontSize: 12,
     },
 });

@@ -1,5 +1,5 @@
 import { IVisitation } from "features/scheduling/visitation/type";
-import { H3, YStackProps } from "tamagui";
+import { YStackProps } from "tamagui";
 
 import BeneficiaryCard from "./components/BeneficiaryCard";
 import CareWorkerCard from "./components/CareWorkerCard";

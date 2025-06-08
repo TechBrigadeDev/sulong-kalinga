@@ -1,5 +1,4 @@
 import {
-    Avatar,
     Card,
     H4,
     Paragraph,
@@ -8,7 +7,6 @@ import {
 } from "tamagui";
 import { type z } from "zod";
 
-import AvatarImage from "~/components/Avatar";
 import Badge from "~/components/Bagde";
 import { careWorkerSchema } from "~/features/user-management/schema/care-worker";
 

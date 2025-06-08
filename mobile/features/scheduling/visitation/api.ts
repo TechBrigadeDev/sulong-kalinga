@@ -1,6 +1,9 @@
 import { Controller } from "common/api";
 
-import { visitationResponseSchema, visitationsResponseSchema } from "./schema";
+import {
+    visitationResponseSchema,
+    visitationsResponseSchema,
+} from "./schema";
 
 class VisitationController extends Controller {
     async getSchedules(params?: {
