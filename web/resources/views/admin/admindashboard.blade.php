@@ -6,7 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard2.css') }}">
 </head>
 <body>
 
@@ -34,97 +35,283 @@
     </div>
 
     <div class="home-section">
-      <div class="text-left">ADMIN DASHBOARD</div>
+        <div class="text-left">ADMIN DASHBOARD</div>
         <div class="container-fluid">
-            <div class="row boxbox">
-              <!-- Statistics Row -->
-              <div class="col-12 col-lg-8">
-                  <div class="row" id="statistics">
-                      <div class="col-6" id="caregiverStats" >
-                        <div class="row" style="padding:5px; height: 100%;">
-                            <div class="col-12 caregiverStatsBox" style="background-color: green;">
-                                <h6 class="mt-1">Caregiver Statistics</h6>
+            <div class="row g-3" id="home-content">
+                <!-- First Row -->
+                <div class="col-sm-6 col-md-3">
+                    <div class="card stat-card stat-card-beneficiaries">
+                        <div class="card-body">
+                            <div class="label">Total Beneficiaries</div>
+                            <div class="value">1,248</div>
+                            <div class="sub-stats">
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--teal-600)">892</div>
+                                    <div class="sub-label">Active</div>
+                                </div>
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--slate-500)">356</div>
+                                    <div class="sub-label">Inactive</div>
+                                </div>
                             </div>
                         </div>
-                      </div>
-                      <div class="col-6" id="beneficiaryStats" >
-                        <div class="row" style="padding:5px; height: 100%; padding-left: 0;">
-                            <div class="col-12 beneficiaryStatsBox" style="background-color: blue;">
-                                <h6 class="mt-1">Beneficiary Statistics</h6>
-                            </div>
-                        </div>                          
-                      </div>
-                  </div>
-                  <div class="row" id="recentReports" style="background-color: white;">
-                      <div class="col-12 recentReportBox">
-                            <div class="row">
-                                <div class="col-md-4 col-sm-12">
-                                    <h6 class="mt-1">Recent Reports</h6>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-md-3">
+                    <div class="card stat-card stat-card-workers">
+                        <div class="card-body">
+                            <div class="label">Total Care Workers</div>
+                            <div class="value">84</div>
+                            <div class="sub-stats">
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--indigo-600)">72</div>
+                                    <div class="sub-label">Active</div>
                                 </div>
-                                <div class="col-md-5 col-sm-7 pe-1">
-                                    <form action="" method="GET" id="filterForm">
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="bi bi-search"></i>
-                                            </span>
-                                            <input type="text" class="form-control" name="search" placeholder="Search report.." id="searchBar" value="{{ request('search') }}">
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--slate-500)">12</div>
+                                    <div class="sub-label">Inactive</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-md-3">
+                    <div class="card stat-card stat-card-municipalities">
+                        <div class="card-body">
+                            <div class="label">Municipalities</div>
+                            <div class="value">12</div>
+                            <div class="sub-stats">
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--blue-600)">142</div>
+                                    <div class="sub-label">Total Barangays</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-md-3">
+                    <div class="card stat-card stat-card-requests">
+                        <div class="card-body">
+                            <div class="label">Requests Today</div>
+                            <div class="value">24</div>
+                            <div class="sub-stats">
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--rose-600)">5</div>
+                                    <div class="sub-label">Emergency</div>
+                                </div>
+                                <div class="sub-stat">
+                                    <div class="sub-value" style="color: var(--amber-600)">19</div>
+                                    <div class="sub-label">Service</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Second Row -->
+                <div class="col-12 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Recent Reports</span>
+                            <a href="#" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Submitted By</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Monthly Report</td>
+                                            <td>Sarah Johnson</td>
+                                            <td>May 28, 2023</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Incident Report</td>
+                                            <td>Michael Chen</td>
+                                            <td>May 27, 2023</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Weekly Report</td>
+                                            <td>Emma Williams</td>
+                                            <td>May 26, 2023</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Monthly Report</td>
+                                            <td>David Brown</td>
+                                            <td>May 25, 2023</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Upcoming Schedules</span>
+                            <a href="#" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                        </div>
+                        <div class="card-body">
+                            <div class="schedule-item">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="schedule-time">Today, 2:00 PM</div>
+                                    <span class="badge badge-status badge-active">Confirmed</span>
+                                </div>
+                                <div class="schedule-details">Home visit for beneficiary #B-02415 (Mrs. Anderson)</div>
+                                <div class="schedule-details">Assigned to: Sarah Johnson</div>
+                            </div>
+                            
+                            <div class="schedule-item">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="schedule-time">Today, 4:30 PM</div>
+                                    <span class="badge badge-status badge-active">Confirmed</span>
+                                </div>
+                                <div class="schedule-details">Medical appointment for beneficiary #B-01822 (Mr. Thompson)</div>
+                                <div class="schedule-details">Assigned to: Michael Chen</div>
+                            </div>
+                            
+                            <div class="schedule-item">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="schedule-time">Tomorrow, 9:00 AM</div>
+                                    <span class="badge badge-status badge-inactive">Pending</span>
+                                </div>
+                                <div class="schedule-details">Weekly checkup for beneficiary #B-01567 (Mrs. Rodriguez)</div>
+                                <div class="schedule-details">Assigned to: Emma Williams</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Third Row -->
+                <div class="col-12 col-lg-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Care Worker Performance</span>
+                            <a href="#" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                        </div>
+                        <div class="card-body">
+                            <div class="user-item">
+                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Avatar" class="avatar">
+                                <div class="user-info">
+                                    <div class="user-name">Sarah Johnson</div>
+                                    <div class="user-title">Senior Care Worker</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="work-hours">142 hrs</div>
+                                    <div class="work-hours-label">This month</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-item">
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Avatar" class="avatar">
+                                <div class="user-info">
+                                    <div class="user-name">Michael Chen</div>
+                                    <div class="user-title">Care Worker</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="work-hours">138 hrs</div>
+                                    <div class="work-hours-label">This month</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-item">
+                                <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Avatar" class="avatar">
+                                <div class="user-info">
+                                    <div class="user-name">Emma Williams</div>
+                                    <div class="user-title">Care Worker</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="work-hours">127 hrs</div>
+                                    <div class="work-hours-label">This month</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-item">
+                                <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Avatar" class="avatar">
+                                <div class="user-info">
+                                    <div class="user-name">David Brown</div>
+                                    <div class="user-title">Junior Care Worker</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="work-hours">118 hrs</div>
+                                    <div class="work-hours-label">This month</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-lg-7">
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Care Workers On-Shift</span>
+                            <a href="#" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <div class="user-item">
+                                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Avatar" class="avatar">
+                                        <div class="user-info">
+                                            <div class="user-name">Sarah Johnson</div>
+                                            <div class="user-title">On duty since 8:00 AM</div>
                                         </div>
-                                    </form>
+                                        <span class="badge badge-status badge-active">Active</span>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 col-sm-5 ps-0">
-                                    <div class="input-group" id="filterGroup">
-                                        <span class="input-group-text">
-                                            <i class="bi bi-funnel"></i>
-                                        </span>
-                                        <select class="form-select" name="filter" id="filterDropdown" form="filterForm" onchange="document.getElementById('filterForm').submit();">
-                                            <option value="" selected>Filter by</option>
-                                            <option value="access" {{ request('filter') == 'access' ? 'selected' : '' }}>Access</option>
-                                        </select>
+                                
+                                <div class="col-12 col-sm-6">
+                                    <div class="user-item">
+                                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Avatar" class="avatar">
+                                        <div class="user-info">
+                                            <div class="user-name">Michael Chen</div>
+                                            <div class="user-title">On duty since 10:00 AM</div>
+                                        </div>
+                                        <span class="badge badge-status badge-active">Active</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 col-sm-6">
+                                    <div class="user-item">
+                                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Avatar" class="avatar">
+                                        <div class="user-info">
+                                            <div class="user-name">Emma Williams</div>
+                                            <div class="user-title">On break until 2:30 PM</div>
+                                        </div>
+                                        <span class="badge badge-status badge-inactive">On Break</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 col-sm-6">
+                                    <div class="user-item">
+                                        <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Avatar" class="avatar">
+                                        <div class="user-info">
+                                            <div class="user-name">David Brown</div>
+                                            <div class="user-title">On duty since 12:00 PM</div>
+                                        </div>
+                                        <span class="badge badge-status badge-active">Active</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <th style="width: 300px">Author</th>
-                                                <th style="width: 150px">Report Type</th>
-                                                <th style="width: 120px">Date Uploaded</th>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>FIRST NAME LAST NAME</td>
-                                                    <td>Weekly Careplan</td>
-                                                    <td>03-25-2025</td>
-                                                </tr>
-                                                
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                      </div>
-                  </div>
-              </div>
-              <!-- Events and Performance Column -->
-              <div class="col-12 col-lg-4 mt-3 mt-lg-0">
-                  <div class="row" id="events">
-                      <div class="col-12 eventsBox" style="background-color: orange;">
-                          <h6 class="mt-1">Upcoming Events</h6>
-                      </div>
-                  </div>
-                  <div class="row" id="performance">
-                      <div class="col-12 performanceBox" style="background-color: pink;">
-                          <h6 class="mt-1">Caregiver Performance</h6>
-                      </div>
-                  </div>
-              </div>
-          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
    
-    <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
+    <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
     <script>

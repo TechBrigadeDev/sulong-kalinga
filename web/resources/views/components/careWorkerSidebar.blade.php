@@ -16,20 +16,11 @@
       </ul>
     </li>
     <li>
-      <a href="" class="">
-        <i class='bi bi-file-earmark-text'></i>
-        <span class="link_name">Reports Management</span>
-      </a>
-      <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('care-worker.reports') }}">Reports Management</a></li>
-      </ul>
-    </li>
-    <li>
       <div class="icon-link">
         <a class="{{ Request::is('care-worker/beneficiaries*') || Request::is('care-worker/family-members*') ? 'active' : '' }}">
           <i class='bi bi-people'></i>
-          <span class="link_name" onclick="toggleDropdown(this)">User Management</span>
-          <i class='bi bi-chevron-down arrow dropdown-arrow' onclick="toggleDropdown(this)"></i>
+          <span class="link_name">User Management</span>
+          <i class='bi bi-chevron-down arrow dropdown-arrow'></i>
         </a>
       </div>
       <ul class="sub-menu">
@@ -46,7 +37,7 @@
         </a>
           <i class='bi bi-chevron-down arrow dropdown-arrow'></i>
       </div>
-      <ul class="sub-menu m-auto">
+      <ul class="sub-menu">
         <li><a class="link_name">Care Records</a></li>
         <li><a href="{{ route('care-worker.reports') }}" class="{{ Request::routeIs('care-worker.reports') ? 'active' : '' }}">Records Management</a></li>
         <li><a href="{{ route('care-worker.weeklycareplans.create') }}" class="{{ Request::routeIs('care-worker.weeklycareplans.*') ? 'active' : '' }}">Weekly Care Plan</a></li>
