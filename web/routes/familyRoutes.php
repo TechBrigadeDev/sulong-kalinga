@@ -78,6 +78,7 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
     Route::prefix('messaging')->name('messaging.')->group(function () {
         Route::get('/', [PortalMessagingController::class, 'index'])->name('index');
         Route::get('/get-conversation', [PortalMessagingController::class, 'getConversation'])->name('get-conversation');
+        Route::get('/get-conversations', [PortalMessagingController::class, 'getConversations'])->name('get-conversations');
         Route::get('/conversation/{id}', [PortalMessagingController::class, 'viewConversation'])->name('conversation');
         Route::post('/send', [PortalMessagingController::class, 'sendMessage'])->name('send');
         Route::post('/create', [PortalMessagingController::class, 'createConversation'])->name('create');

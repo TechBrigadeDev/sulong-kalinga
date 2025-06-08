@@ -73,56 +73,71 @@
                         
                         @if(!$convo->is_group_chat)
                             @php
-                                // FIXED: Use proper guard and user type checks
+                                // Get current user details based on portal type
                                 $currentUserType = $rolePrefix == 'beneficiary' ? 'beneficiary' : 'family';
                                 $currentUserId = Auth::guard($currentUserType)->id();
                                 
-                                $participantType = '';
-                                $otherParticipant = null;
-                                
                                 // Find the other participant (not the current user)
+                                $otherParticipant = null;
+                                $participantType = '';
+                                $typeBadgeClass = 'bg-secondary';
+                                
+                                // IMPROVED: Better detection of other participant by explicitly checking BOTH type and ID
                                 foreach ($convo->participants as $participant) {
-                                    if ($participant->participant_type != $currentUserType || 
-                                        $participant->participant_id != $currentUserId) {
-                                        $participantType = $participant->participant_type;
+                                    // If this is NOT the current user (check both type AND id)
+                                    if (!($participant->participant_type == $currentUserType && 
+                                        $participant->participant_id == $currentUserId)) {
                                         $otherParticipant = $participant;
+                                        $participantType = $participant->participant_type;
                                         break;
                                     }
                                 }
                                 
-                                // Convert type to readable name
-                                $typeBadgeClass = 'bg-secondary';
-                                
-                                switch($participantType) {
-                                    case 'cose_staff':
-                                        // Get staff role for proper display
-                                        $staffUser = \App\Models\User::find($otherParticipant->participant_id);
-                                        $userRole = $staffUser->role_id ?? 0;
-                                        
-                                        if ($userRole == 1) {
-                                            $participantType = 'Administrator';
-                                            $typeBadgeClass = 'bg-danger';
-                                        } elseif ($userRole == 2) {
-                                            $participantType = 'Care Manager';
-                                            $typeBadgeClass = 'bg-primary';
-                                        } elseif ($userRole == 3) {
-                                            $participantType = 'Care Worker';
-                                            $typeBadgeClass = 'bg-info';
-                                        } else {
-                                            $participantType = 'Staff';
-                                        }
-                                        break;
-                                    case 'beneficiary':
-                                        $participantType = 'Beneficiary';
-                                        $typeBadgeClass = 'bg-success';
-                                        break;
-                                    case 'family_member':
-                                    case 'family':
-                                        $participantType = 'Family Member';
-                                        $typeBadgeClass = 'bg-warning text-dark';
-                                        break;
-                                    default:
-                                        $participantType = 'Unknown';
+                                // Make sure we found another participant
+                                if ($otherParticipant) {
+                                    // Determine participant type and badge
+                                    switch($participantType) {
+                                        case 'cose_staff':
+                                            // Use try-catch to handle potential staff lookup errors
+                                            try {
+                                                $staffUser = \App\Models\User::find($otherParticipant->participant_id);
+                                                $userRole = $staffUser ? $staffUser->role_id : 0;
+                                                
+                                                if ($userRole == 1) {
+                                                    $participantType = 'Administrator';
+                                                    $typeBadgeClass = 'bg-danger';
+                                                } elseif ($userRole == 2) {
+                                                    $participantType = 'Care Manager';
+                                                    $typeBadgeClass = 'bg-primary';
+                                                } elseif ($userRole == 3) {
+                                                    $participantType = 'Care Worker';
+                                                    $typeBadgeClass = 'bg-info';
+                                                } else {
+                                                    $participantType = 'Staff';
+                                                    $typeBadgeClass = 'bg-secondary';
+                                                }
+                                            } catch (\Exception $e) {
+                                                $participantType = 'Staff';
+                                                $typeBadgeClass = 'bg-secondary';
+                                            }
+                                            break;
+                                        case 'beneficiary':
+                                            $participantType = 'Beneficiary';
+                                            $typeBadgeClass = 'bg-success';
+                                            break;
+                                        case 'family_member':
+                                        case 'family':
+                                            $participantType = 'Family Member';
+                                            $typeBadgeClass = 'bg-warning text-dark';
+                                            break;
+                                        default:
+                                            $participantType = 'Unknown';
+                                            $typeBadgeClass = 'bg-secondary';
+                                    }
+                                } else {
+                                    // Fallback if no other participant is found
+                                    $participantType = 'Unknown';
+                                    $typeBadgeClass = 'bg-secondary';
                                 }
                             @endphp
                             <span class="user-type-badge {{ $typeBadgeClass }}">{{ $participantType }}</span>

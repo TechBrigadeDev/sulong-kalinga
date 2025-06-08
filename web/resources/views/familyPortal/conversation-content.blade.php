@@ -103,152 +103,211 @@
                     </div>
                 </div>
             @else
-                <div class="message {{ $message->sender_id == Auth::id() && $message->sender_type == 'cose_staff' ? 'outgoing' : 'incoming' }}" data-message-id="{{ $message->message_id }}">
-                    @if($message->sender_id != Auth::id() || $message->sender_type != 'cose_staff')
+                <div class="message {{ $message->sender_id == Auth::guard($rolePrefix)->id() && $message->sender_type == $rolePrefix ? 'outgoing' : 'incoming' }}" data-message-id="{{ $message->message_id }}">
+                    @if(!($message->sender_id == Auth::guard($rolePrefix)->id() && $message->sender_type == $rolePrefix))
+                        <!-- INCOMING MESSAGE - with profile image -->
                         <div class="d-flex">
                             <div class="flex-shrink-0">
                                 <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle" width="30" height="30" alt="User">
                             </div>
                             <div class="flex-grow-1 ms-2">
-                                <!-- Only show sender name in group chats -->
                                 @if($conversation->is_group_chat)
                                     <div class="message-sender">
                                         <small class="text-muted fw-bold">
                                             {{ $message->sender_name ?? 'Unknown' }}
                                             @php
-                                                $senderRole = '';
-                                                $senderType = $message->sender_type;
-                                                
-                                                if ($senderType === 'cose_staff') {
-                                                    // Find COSE staff role
-                                                    $sender = \App\Models\User::find($message->sender_id);
-                                                    if ($sender) {
-                                                        if ($sender->role_id == 1) {
-                                                            $senderRole = 'Administrator';
-                                                        } elseif ($sender->role_id == 2) {
-                                                            $senderRole = 'Care Manager';
-                                                        } elseif ($sender->role_id == 3) {
-                                                            $senderRole = 'Care Worker';
-                                                        } else {
-                                                            $senderRole = 'Staff';
-                                                        }
-                                                    }
-                                                } else if ($senderType === 'beneficiary') {
-                                                    $senderRole = 'Beneficiary';
-                                                } else if ($senderType === 'family_member') {
-                                                    $senderRole = 'Family Member';
-                                                } else if ($senderType === 'system') {
-                                                    $senderRole = 'System';
-                                                }
+                                                // Sender role code
                                             @endphp
                                             <span class="sender-role">({{ $senderRole }})</span>
                                         </small>
                                     </div>
                                 @endif
-                    @endif
-
-                    <!-- Message content -->
-                    @if(isset($message->is_unsent) && $message->is_unsent)
-                        <div class="message-content unsent">
-                            <em>This message was unsent</em>
-                        </div>
-                    @else
-                        @if($message->content)
-                            <div class="message-content">
-                                {{ $message->content }}
-                            </div>
-                        @endif
-                    
-
-                        <!-- Message attachments - FIXED -->
-                        @if($message->attachments && $message->attachments->count() > 0)
-                            <div class="message-attachments">
-                                @foreach($message->attachments as $attachment)
-                                    <div class="attachment-container">
-                                        @php
-                                            // Ensure path doesn't have public/ prefix for storage URLs
-                                            $filePath = str_replace('public/', '', $attachment->file_path);
-                                            
-                                            // Determine if this is an image
-                                            $isImage = false;
-                                            if (isset($attachment->is_image)) {
-                                                $isImage = $attachment->is_image === true || 
-                                                        $attachment->is_image === 1 || 
-                                                        $attachment->is_image === '1';
-                                            } else {
-                                                // Check by file extension
-                                                $fileExtension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
-                                                $isImage = in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                            }
-                                        @endphp
-                                        
-                                        <a href="/storage/{{ $filePath }}" target="_blank" 
-                                        class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
-                                            
-                                                @if($isImage)
-                                                    <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
-                                                        <div class="spinner-border text-primary loading-pulse"></div>
-                                                    </div>
-                                                    <img src="/storage/{{ $filePath }}" 
-                                                        class="attachment-img" 
-                                                        alt="{{ $attachment->file_name }}"
-                                                        style="display: none;" 
-                                                        id="img-{{$attachment->attachment_id}}"
-                                                        onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
-                                                        onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
-                                                @else
-                                                <div class="file-icon">
+                                
+                                <!-- Message content for incoming messages -->
+                                @if(isset($message->is_unsent) && $message->is_unsent)
+                                    <div class="message-content unsent">
+                                        <em>This message was unsent</em>
+                                    </div>
+                                @else
+                                    @if($message->content)
+                                        <div class="message-content">
+                                            {{ $message->content }}
+                                        </div>
+                                    @endif
+                                    
+                                    <!-- Attachments -->
+                                    <!-- Message attachments - FIXED -->
+                                    @if($message->attachments && $message->attachments->count() > 0)
+                                        <div class="message-attachments">
+                                            @foreach($message->attachments as $attachment)
+                                                <div class="attachment-container">
                                                     @php
-                                                        $fileName = strtolower($attachment->file_name);
-                                                        $iconClass = 'bi-file-earmark';
+                                                        // Ensure path doesn't have public/ prefix for storage URLs
+                                                        $filePath = str_replace('public/', '', $attachment->file_path);
                                                         
-                                                        if(strpos($attachment->file_type ?? '', 'pdf') !== false || Str::endsWith($fileName, '.pdf')) {
-                                                            $iconClass = 'bi-file-earmark-pdf';
-                                                        } elseif(Str::endsWith($fileName, '.doc') || Str::endsWith($fileName, '.docx')) {
-                                                            $iconClass = 'bi-file-earmark-word';
-                                                        } elseif(Str::endsWith($fileName, '.xls') || Str::endsWith($fileName, '.xlsx')) {
-                                                            $iconClass = 'bi-file-earmark-excel';
-                                                        } elseif(Str::endsWith($fileName, '.txt')) {
-                                                            $iconClass = 'bi-file-earmark-text';
+                                                        // Determine if this is an image
+                                                        $isImage = false;
+                                                        if (isset($attachment->is_image)) {
+                                                            $isImage = $attachment->is_image === true || 
+                                                                    $attachment->is_image === 1 || 
+                                                                    $attachment->is_image === '1';
+                                                        } else {
+                                                            // Check by file extension
+                                                            $fileExtension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
+                                                            $isImage = in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
                                                         }
                                                     @endphp
-                                                    <i class="bi {{ $iconClass }}"></i>
+                                                    
+                                                    <a href="/storage/{{ $filePath }}" target="_blank" 
+                                                    class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
+                                                        
+                                                            @if($isImage)
+                                                                <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
+                                                                    <div class="spinner-border text-primary loading-pulse"></div>
+                                                                </div>
+                                                                <img src="/storage/{{ $filePath }}" 
+                                                                    class="attachment-img" 
+                                                                    alt="{{ $attachment->file_name }}"
+                                                                    style="display: none;" 
+                                                                    id="img-{{$attachment->attachment_id}}"
+                                                                    onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
+                                                                    onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
+                                                            @else
+                                                            <div class="file-icon">
+                                                                @php
+                                                                    $fileName = strtolower($attachment->file_name);
+                                                                    $iconClass = 'bi-file-earmark';
+                                                                    
+                                                                    if(strpos($attachment->file_type ?? '', 'pdf') !== false || Str::endsWith($fileName, '.pdf')) {
+                                                                        $iconClass = 'bi-file-earmark-pdf';
+                                                                    } elseif(Str::endsWith($fileName, '.doc') || Str::endsWith($fileName, '.docx')) {
+                                                                        $iconClass = 'bi-file-earmark-word';
+                                                                    } elseif(Str::endsWith($fileName, '.xls') || Str::endsWith($fileName, '.xlsx')) {
+                                                                        $iconClass = 'bi-file-earmark-excel';
+                                                                    } elseif(Str::endsWith($fileName, '.txt')) {
+                                                                        $iconClass = 'bi-file-earmark-text';
+                                                                    }
+                                                                @endphp
+                                                                <i class="bi {{ $iconClass }}"></i>
+                                                            </div>
+                                                        @endif
+                                                    </a>
+                                                    
+                                                    <div class="attachment-filename">
+                                                        {{ $attachment->file_name }}
+                                                    </div>
                                                 </div>
-                                            @endif
-                                        </a>
-                                        
-                                        <div class="attachment-filename">
-                                            {{ $attachment->file_name }}
+                                            @endforeach
                                         </div>
+                                    @endif
+                                    
+                                    <!-- Message Time -->
+                                    <div class="message-time">
+                                        <small>{{ \Carbon\Carbon::parse($message->message_timestamp)->format('g:i A') }}</small>
                                     </div>
-                                @endforeach
+                                @endif
                             </div>
-                        @endif
-
-                        <!-- Message Time -->
-                        <div class="message-time">
-                            <small>{{ \Carbon\Carbon::parse($message->message_timestamp)->format('g:i A') }}</small>
                         </div>
-
-                        <!-- Add message actions dropdown for user's own messages -->
-                        @if($message->sender_id == Auth::id() && $message->sender_type == 'cose_staff')
-                            <div class="message-actions">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item unsend-message" href="#" data-message-id="{{$message->message_id}}">
-                                            <i class="bi bi-arrow-counterclockwise me-2"></i> Unsend Message
-                                        </a></li>
-                                    </ul>
+                    @else
+                        <!-- OUTGOING MESSAGE - no profile image -->
+                        <div class="outgoing-message-wrapper">
+                            <!-- Message content for outgoing messages -->
+                            @if(isset($message->is_unsent) && $message->is_unsent)
+                                <div class="message-content unsent">
+                                    <em>This message was unsent</em>
                                 </div>
-                            </div>
-                        @endif
-                    @endif
-
-                    @if($message->sender_id != Auth::id() || $message->sender_type != 'cose_staff')
-                            </div>
+                            @else
+                                @if($message->content)
+                                    <div class="message-content">
+                                        {{ $message->content }}
+                                    </div>
+                                @endif
+                                
+                                <!-- Attachments -->
+                                <!-- Message attachments - FIXED -->
+                                @if($message->attachments && $message->attachments->count() > 0)
+                                    <div class="message-attachments">
+                                        @foreach($message->attachments as $attachment)
+                                            <div class="attachment-container">
+                                                @php
+                                                    // Ensure path doesn't have public/ prefix for storage URLs
+                                                    $filePath = str_replace('public/', '', $attachment->file_path);
+                                                    
+                                                    // Determine if this is an image
+                                                    $isImage = false;
+                                                    if (isset($attachment->is_image)) {
+                                                        $isImage = $attachment->is_image === true || 
+                                                                $attachment->is_image === 1 || 
+                                                                $attachment->is_image === '1';
+                                                    } else {
+                                                        // Check by file extension
+                                                        $fileExtension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
+                                                        $isImage = in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                    }
+                                                @endphp
+                                                
+                                                <a href="/storage/{{ $filePath }}" target="_blank" 
+                                                class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
+                                                    
+                                                        @if($isImage)
+                                                            <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
+                                                                <div class="spinner-border text-primary loading-pulse"></div>
+                                                            </div>
+                                                            <img src="/storage/{{ $filePath }}" 
+                                                                class="attachment-img" 
+                                                                alt="{{ $attachment->file_name }}"
+                                                                style="display: none;" 
+                                                                id="img-{{$attachment->attachment_id}}"
+                                                                onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
+                                                                onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
+                                                        @else
+                                                        <div class="file-icon">
+                                                            @php
+                                                                $fileName = strtolower($attachment->file_name);
+                                                                $iconClass = 'bi-file-earmark';
+                                                                
+                                                                if(strpos($attachment->file_type ?? '', 'pdf') !== false || Str::endsWith($fileName, '.pdf')) {
+                                                                    $iconClass = 'bi-file-earmark-pdf';
+                                                                } elseif(Str::endsWith($fileName, '.doc') || Str::endsWith($fileName, '.docx')) {
+                                                                    $iconClass = 'bi-file-earmark-word';
+                                                                } elseif(Str::endsWith($fileName, '.xls') || Str::endsWith($fileName, '.xlsx')) {
+                                                                    $iconClass = 'bi-file-earmark-excel';
+                                                                } elseif(Str::endsWith($fileName, '.txt')) {
+                                                                    $iconClass = 'bi-file-earmark-text';
+                                                                }
+                                                            @endphp
+                                                            <i class="bi {{ $iconClass }}"></i>
+                                                        </div>
+                                                    @endif
+                                                </a>
+                                                
+                                                <div class="attachment-filename">
+                                                    {{ $attachment->file_name }}
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                
+                                <!-- Message Time -->
+                                <div class="message-time">
+                                    <small>{{ \Carbon\Carbon::parse($message->message_timestamp)->format('g:i A') }}</small>
+                                </div>
+                                
+                                <!-- Message actions dropdown for outgoing messages -->
+                                <div class="message-actions">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item unsend-message" href="#" data-message-id="{{$message->message_id}}">
+                                                <i class="bi bi-arrow-counterclockwise me-2"></i> Unsend Message
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>

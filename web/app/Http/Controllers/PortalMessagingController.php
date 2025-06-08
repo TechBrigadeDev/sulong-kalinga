@@ -1123,4 +1123,121 @@ class PortalMessagingController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get conversations for the conversation list
+     */
+    public function getConversations(Request $request)
+    {
+        // Determine if user is a beneficiary or family member
+        $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+        $user = Auth::guard($userType)->user();
+        $rolePrefix = $userType;
+        
+        try {
+            // Get user's conversations
+            $conversations = $this->getUserConversations($user, $userType);
+            
+            // Process participant names for private conversations
+            foreach ($conversations as $conversation) {
+                if (!$conversation->is_group_chat) {
+                    // For private conversations, get the other participant's name
+                    foreach ($conversation->participants as $participant) {
+                        if (!($participant->participant_id == $user->getKey() && $participant->participant_type == $userType)) {
+                            $conversation->other_participant_name = $this->getParticipantName($participant);
+                            $conversation->other_participant_type = $participant->participant_type;
+                            break;
+                        }
+                    }
+                }
+                
+                // Check for unread messages
+                if ($conversation->lastMessage) {
+                    $conversation->has_unread = !$conversation->lastMessage->isReadBy($user->getKey(), $userType);
+                } else {
+                    $conversation->has_unread = false;
+                }
+                
+                // Get current user type for message preview
+                $conversation->current_user_id = $user->getKey();
+                $conversation->current_user_type = $userType;
+            }
+            
+            // Return the rendered HTML for the conversation list
+            $html = view($rolePrefix . 'Portal.conversation-list', [
+                'conversations' => $conversations,
+                'rolePrefix' => $rolePrefix,
+                'currentUserId' => $user->getKey(),
+                'currentUserType' => $userType
+            ])->render();
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting portal conversations: ' . $e->getMessage(), [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading conversations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Download a message attachment
+     */
+    public function downloadAttachment($id)
+    {
+        try {
+            // Get attachment
+            $attachment = MessageAttachment::findOrFail($id);
+            
+            // Get the message
+            $message = Message::findOrFail($attachment->message_id);
+            $conversation = Conversation::findOrFail($message->conversation_id);
+            
+            // Check if user can access this attachment
+            $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+            $user = Auth::guard($userType)->user();
+            
+            // Security check: Make sure user is a participant
+            $isParticipant = $conversation->participants->where('participant_id', $user->getKey())
+                                                ->where('participant_type', $userType)
+                                                ->where('left_at', null)
+                                                ->isNotEmpty();
+            
+            if (!$isParticipant) {
+                abort(403, 'You do not have access to this attachment');
+            }
+            
+            // Get the file path
+            $filePath = storage_path('app/public/attachments/' . $attachment->filename);
+            
+            // Check if file exists
+            if (!file_exists($filePath)) {
+                abort(404, 'File not found');
+            }
+            
+            // Return the file for download
+            return response()->download(
+                $filePath, 
+                $attachment->original_filename,
+                ['Content-Type' => $attachment->mime_type]
+            );
+            
+        } catch (\Exception $e) {
+            Log::error('Error downloading attachment: ' . $e->getMessage(), [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            abort(500, 'Error downloading attachment: ' . $e->getMessage());
+        }
+    }
 }

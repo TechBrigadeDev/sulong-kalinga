@@ -83,6 +83,44 @@
         .remove-file-btn:hover {
             background-color: rgba(0,0,0,0.7);
         }
+
+        .message.outgoing {
+            display: flex;
+            justify-content: flex-end;
+            padding-left: 20%;
+        }
+
+        .message.incoming {
+            padding-right: 20%;
+        }
+
+        .outgoing-message-wrapper {
+            max-width: 100%;
+            position: relative;
+        }
+
+        .outgoing .message-content {
+            background-color: #dcf8c6;
+            border-radius: 0.75rem 0 0.75rem 0.75rem;
+        }
+
+        .incoming .message-content {
+            background-color: #f1f0f0;
+            border-radius: 0 0.75rem 0.75rem 0.75rem;
+        }
+
+        .message-time {
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        .message-actions {
+            position: absolute;
+            right: -10px;
+            top: 0;
+        }
+
+        
     </style>
     
 </head>
@@ -3860,7 +3898,7 @@
                 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
-                fetch(`/${rolePrefix}/messaging/unsend-message/${currentMessageToUnsend}`, {
+                fetch(`/${rolePrefix}/messaging/unsend/${currentMessageToUnsend}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
