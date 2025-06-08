@@ -67,6 +67,16 @@ export const QK = {
             ],
         },
     },
+    messaging: {
+        threads: {
+            getThreads:
+                "messaging/threads/getThreads",
+            getThread: (id: string) => [
+                "messaging/threads/getThread",
+                id,
+            ],
+        },
+    },
 };
 
 export const setDataQK = async (

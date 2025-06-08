@@ -1,5 +1,5 @@
-import { Plus } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
+import { Plus } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -9,12 +9,17 @@ import {
     YStack,
 } from "tamagui";
 
-import { ChatListItem } from "./components/ChatListItem";
-import { SearchBar } from "./components/SearchBar";
-import { useChatList } from "./list.hook";
+import {
+    useChatList,
+    useChatThreads,
+} from "~/features/messaging/hook";
+
+import { ChatListItem } from "./ChatListItem";
+import { SearchBar } from "./SearchBar";
 
 export const ChatList = () => {
     const router = useRouter();
+    useChatThreads();
     const {
         chats,
         pinnedChats,

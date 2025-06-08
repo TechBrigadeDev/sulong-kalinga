@@ -1,6 +1,6 @@
-import { Search } from "@tamagui/lucide-icons";
+import { Search } from "lucide-react-native";
 import { StyleSheet } from "react-native";
-import { TextInput, XStack } from "tamagui";
+import { Input, XStack } from "tamagui";
 
 interface SearchBarProps {
     value: string;
@@ -17,7 +17,7 @@ export const SearchBar = ({
             color="#999"
             style={styles.searchIcon}
         />
-        <TextInput
+        <Input
             style={styles.searchInput}
             placeholder="Search"
             placeholderTextColor="#999"

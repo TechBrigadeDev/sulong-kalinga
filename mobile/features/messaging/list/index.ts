@@ -1,3 +1,3 @@
 export * from "./components/ChatList";
-export * from "./list.hook";
-export * from "./list.types";
+export * from "../hook";
+export * from "../type";

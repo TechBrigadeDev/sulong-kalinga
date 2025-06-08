@@ -1,15 +1,16 @@
-import { ChatListItemProps } from "features/messaging/list/list.types";
+import AvatarImage from "components/Avatar";
 import {
     StyleSheet,
     TouchableOpacity,
 } from "react-native";
 import {
     Avatar,
-    AvatarImage,
     Text,
     XStack,
     YStack,
 } from "tamagui";
+
+import { ChatListItemProps } from "~/features/messaging/type";
 
 export const ChatListItem = ({
     chat,
@@ -18,7 +19,10 @@ export const ChatListItem = ({
     <TouchableOpacity onPress={onPress}>
         <XStack style={styles.chatItem}>
             <Avatar circular size="$6">
-                <AvatarImage uri={chat.avatar} />
+                <AvatarImage
+                    uri={chat.avatar}
+                    fallback={chat.id}
+                />
             </Avatar>
             <YStack style={styles.chatContent}>
                 <XStack style={styles.chatHeader}>
