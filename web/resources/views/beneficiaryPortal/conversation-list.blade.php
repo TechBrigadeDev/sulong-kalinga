@@ -22,15 +22,19 @@
         $hasUnread = false;
         $unreadCount = 0;
         
-        // Count all unread messages regardless of last message status
+        // Get current user details based on portal type
+        $currentUserType = $rolePrefix == 'beneficiary' ? 'beneficiary' : 'family';
+        $currentUserId = Auth::guard($currentUserType)->id();
+        
+        // Count all unread messages 
         $unreadCount = \App\Models\Message::where('conversation_id', $convo->conversation_id)
-            ->where(function($query) {
-                $query->where('sender_id', '!=', Auth::id())
-                    ->orWhere('sender_type', '!=', 'cose_staff');
+            ->where(function($query) use ($currentUserId, $currentUserType) {
+                $query->where('sender_id', '!=', $currentUserId)
+                    ->orWhere('sender_type', '!=', $currentUserType);
             })
-            ->whereDoesntHave('readStatuses', function($query) {
-                $query->where('reader_id', Auth::id())
-                    ->where('reader_type', 'cose_staff');
+            ->whereDoesntHave('readStatuses', function($query) use ($currentUserId, $currentUserType) {
+                $query->where('reader_id', $currentUserId)
+                    ->where('reader_type', $currentUserType);
             })
             ->count();
         
@@ -57,7 +61,7 @@
                 @endif
             </div>
             <div class="flex-grow-1 ms-3">
-            <div class="conversation-title {{ $hasUnread ? 'fw-bold' : '' }}">
+                <div class="conversation-title {{ $hasUnread ? 'fw-bold' : '' }}">
                     <div class="name-container">
                         <span class="participant-name">
                             @if($convo->is_group_chat)
@@ -69,21 +73,29 @@
                         
                         @if(!$convo->is_group_chat)
                             @php
+                                // FIXED: Use proper guard and user type checks
+                                $currentUserType = $rolePrefix == 'beneficiary' ? 'beneficiary' : 'family';
+                                $currentUserId = Auth::guard($currentUserType)->id();
+                                
                                 $participantType = '';
                                 $otherParticipant = null;
-                                // Find the other participant's type
+                                
+                                // Find the other participant (not the current user)
                                 foreach ($convo->participants as $participant) {
-                                    if (!($participant->participant_id == Auth::id() && $participant->participant_type == 'cose_staff')) {
+                                    if ($participant->participant_type != $currentUserType || 
+                                        $participant->participant_id != $currentUserId) {
                                         $participantType = $participant->participant_type;
                                         $otherParticipant = $participant;
                                         break;
                                     }
                                 }
+                                
                                 // Convert type to readable name
                                 $typeBadgeClass = 'bg-secondary';
+                                
                                 switch($participantType) {
                                     case 'cose_staff':
-                                        // Get the user directly from database instead of relying on other_participant
+                                        // Get staff role for proper display
                                         $staffUser = \App\Models\User::find($otherParticipant->participant_id);
                                         $userRole = $staffUser->role_id ?? 0;
                                         
@@ -105,9 +117,12 @@
                                         $typeBadgeClass = 'bg-success';
                                         break;
                                     case 'family_member':
+                                    case 'family':
                                         $participantType = 'Family Member';
                                         $typeBadgeClass = 'bg-warning text-dark';
                                         break;
+                                    default:
+                                        $participantType = 'Unknown';
                                 }
                             @endphp
                             <span class="user-type-badge {{ $typeBadgeClass }}">{{ $participantType }}</span>
@@ -125,8 +140,9 @@
                             <span class="text-muted fst-italic">{{ $convo->lastMessage->content }}</span>
                         @elseif(isset($convo->lastMessage->is_unsent) && $convo->lastMessage->is_unsent)
                             <span class="text-muted fst-italic">This message was unsent</span>
-                        @elseif($convo->lastMessage->sender_id == Auth::id() && $convo->lastMessage->sender_type == 'cose_staff')
-                            <span class="text-muted">You: </span>{{ $convo->lastMessage->content }}
+                        <!-- CORRECTED: This is the key fix - check current user correctly -->
+                        @elseif($convo->lastMessage->sender_id == $currentUserId && $convo->lastMessage->sender_type == $currentUserType)
+                            <span class="text-muted">You: </span>{{ \Illuminate\Support\Str::limit($convo->lastMessage->content, 30) }}
                         @else
                             @if($convo->is_group_chat)
                                 @php
@@ -137,14 +153,14 @@
                                     } elseif ($convo->lastMessage->sender_type === 'beneficiary') {
                                         $beneficiary = \App\Models\Beneficiary::find($convo->lastMessage->sender_id);
                                         $senderName = $beneficiary ? $beneficiary->first_name : 'Unknown';
-                                    } elseif ($convo->lastMessage->sender_type === 'family_member') {
+                                    } elseif ($convo->lastMessage->sender_type === 'family_member' || $convo->lastMessage->sender_type === 'family') {
                                         $familyMember = \App\Models\FamilyMember::find($convo->lastMessage->sender_id);
                                         $senderName = $familyMember ? $familyMember->first_name : 'Unknown';
                                     }
                                 @endphp
                                 <span class="text-muted">{{ $senderName }}: </span>
                             @endif
-                            {{ $convo->lastMessage->content }}
+                            {{ \Illuminate\Support\Str::limit($convo->lastMessage->content, 30) }}
                         @endif
                     @else
                         <span class="text-muted">No messages yet</span>
@@ -153,4 +169,5 @@
             </div>
         </div>
     </div>
+    
 @endforeach
