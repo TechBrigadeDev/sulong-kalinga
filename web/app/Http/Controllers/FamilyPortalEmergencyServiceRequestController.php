@@ -121,7 +121,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             // Create the emergency notice
             $emergencyNotice = EmergencyNotice::create([
                 'sender_id' => $senderId,
-                'sender_type' => $userType,
+                'sender_type' => $userType === 'family' ? 'family_member' : 'beneficiary',
                 'beneficiary_id' => $beneficiaryId,
                 'emergency_type_id' => $request->emergency_type_id,
                 'message' => $request->message,
@@ -188,7 +188,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             // Create the service request
             $serviceRequest = ServiceRequest::create([
                 'sender_id' => $senderId,
-                'sender_type' => $userType,
+                'sender_type' => $userType === 'family' ? 'family_member' : 'beneficiary',
                 'beneficiary_id' => $beneficiaryId,
                 'service_type_id' => $request->service_type_id,
                 'service_date' => $request->service_date,
