@@ -21,23 +21,20 @@
             
             <!-- Group actions dropdown -->
             @if($conversation->is_group_chat)
-            <div class="dropdown">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="groupActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-gear"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupActionsDropdown">
-                    <li><a class="dropdown-item view-members-btn" href="#" data-conversation-id="{{ $conversation->conversation_id }}">
-                        <i class="bi bi-people-fill text-primary me-2"></i> View Members
-                    </a></li>
-                    <li><a class="dropdown-item add-member-btn" href="#" data-conversation-id="{{ $conversation->conversation_id }}">
-                        <i class="bi bi-person-plus-fill text-success me-2"></i> Add Member
-                    </a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item leave-group-btn" href="#" data-conversation-id="{{ $conversation->conversation_id }}">
-                        <i class="bi bi-box-arrow-right text-danger me-2"></i> Leave Group
-                    </a></li>
-                </ul>
-            </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="groupActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupActionsDropdown">
+                        <li><a class="dropdown-item view-members-btn" href="#" data-conversation-id="{{ $conversation->conversation_id }}">
+                            <i class="bi bi-people-fill text-primary me-2"></i> View Members
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item leave-group-btn" href="#" data-conversation-id="{{ $conversation->conversation_id }}">
+                            <i class="bi bi-box-arrow-right text-danger me-2"></i> Leave Group
+                        </a></li>
+                    </ul>
+                </div>
             @endif
         </div>
     </div>
@@ -262,7 +259,7 @@
 
 <!-- Message Input Area -->
 <div class="message-input-container">
-    <form id="messageForm" action="/{{$rolePrefix}}/messaging/send-message" method="POST" enctype="multipart/form-data">
+    <form id="messageForm" action="/{{$rolePrefix}}/messaging/send" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="conversation_id" value="{{ $conversation->conversation_id }}">
 

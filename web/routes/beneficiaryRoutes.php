@@ -84,9 +84,16 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
     // Messages
     Route::prefix('messaging')->name('messaging.')->group(function () {
         Route::get('/', [PortalMessagingController::class, 'index'])->name('index');
+        Route::get('/get-conversation', [PortalMessagingController::class, 'getConversation'])->name('get-conversation');
+        Route::get('/conversation/{id}', [PortalMessagingController::class, 'viewConversation'])->name('conversation');
+        Route::post('/send', [PortalMessagingController::class, 'sendMessage'])->name('send');
+        Route::post('/create', [PortalMessagingController::class, 'createConversation'])->name('create');
+        Route::post('/leave-group', [PortalMessagingController::class, 'leaveGroupConversation'])->name('leave-group');
+        Route::post('/unsend/{id}', [PortalMessagingController::class, 'unsendMessage'])->name('unsend');
         Route::get('/unread-count', [PortalMessagingController::class, 'getUnreadCount'])->name('unread-count');
         Route::get('/recent-messages', [PortalMessagingController::class, 'getRecentMessages'])->name('recent-messages');
         Route::post('/read-all', [PortalMessagingController::class, 'markAllAsRead'])->name('read-all');
+         Route::post('/mark-as-read', [PortalMessagingController::class, 'markAsRead'])->name('mark-as-read');
     });
     
     // Profile Routes

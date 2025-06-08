@@ -12,10 +12,12 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/userNavbar.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/messaging.css') }}">
 
     <style>
+
         .file-preview-container {
             display: flex;
             flex-wrap: wrap;
@@ -87,16 +89,8 @@
 <body class="messaging-page">
 
     <!-- Navigation based on user role -->
-    @if(auth()->user()->role_id == 1)
-        @include('components.adminNavbar')
-        @include('components.adminSidebar')
-    @elseif(auth()->user()->role_id == 2)
-        @include('components.careManagerNavbar')
-        @include('components.careManagerSidebar')
-    @elseif(auth()->user()->role_id == 3)
-        @include('components.careWorkerNavbar')
-        @include('components.careWorkerSidebar')
-    @endif
+    @include('components.familyPortalNavbar')
+    @include('components.familyPortalSidebar')
 
     <!-- Main Content -->
     <main class="main-content">
@@ -105,21 +99,16 @@
             <div class="conversation-list">
                 <!-- Search and New Chat Button -->
                 <div class="conversation-search">
-                    <div class="search-container">
-                        <div class="search-input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-search"></i>
-                            </span>
-                            <input type="text" class="form-control" id="conversationSearch" placeholder="Search conversations...">
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="newChatDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-plus-lg"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="newChatDropdown">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#newConversationModal">Private Message</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#newGroupModal">New Group</a></li>
-                            </ul>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Conversations</h5>
+                        <button class="btn btn-sm btn-primary" id="newConversationBtn" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                    </div>
+                    <div class="search-container mt-2">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" id="conversationSearch" class="form-control form-control-sm" placeholder="Search conversations...">
                         </div>
                     </div>
                 </div>
@@ -135,20 +124,12 @@
                 <div id="conversationContent">
                     <!-- Empty State / Select Conversation -->
                     <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="bi bi-chat-dots"></i>
-                        </div>
-                        <h4>Select a conversation</h4>
-                        <p class="mb-4">Choose a conversation from the list or start a new one.</p>
-                        <div class="dropdown">
-                            <button class="btn btn-primary dropdown-toggle" type="button" id="newChatDropdownEmpty" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-plus-lg"></i> New Chat
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="newChatDropdownEmpty">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#newConversationModal">Private Message</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#newGroupModal">New Group</a></li>
-                            </ul>
-                        </div>
+                        <i class="bi bi-chat-dots"></i>
+                        <h5>Select a conversation to start messaging</h5>
+                        <p class="text-muted">Or start a new conversation with your care worker</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                            <i class="bi bi-pencil-square me-1"></i> New Conversation
+                        </button>
                     </div>
                 </div>
             </div>
@@ -163,115 +144,47 @@
         <div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="newConversationModalLabel">New Private Conversation</h5>
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="newConversationModalLabel">Message Your Care Worker</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form id="newConversationForm">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="userType" class="form-label">Recipient Type</label>
-                                <select class="form-select" id="userType" name="participant_type" required>
-                                    <option value="" selected disabled>Select recipient type</option>
-                                    <option value="cose_staff">Staff Member</option>
-                                    <!--<option value="beneficiary">Beneficiary</option>
-                                    <option value="family_member">Family Member</option>-->
-                                </select>
-                                <small class="form-text text-muted">Administrators can only message Care Managers and other Admins.</small>
+                    <div class="modal-body">
+                        @if(!empty($assignedCareWorkerId))
+                            <p>Start a conversation with your assigned care worker:</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle me-2" width="40" height="40" alt="Care Worker">
+                                <span class="fw-bold">{{ $assignedCareWorkerName }}</span>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="userSearch" class="form-label">Search for recipient</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="userSearch" placeholder="Type to search...">
+                            <form id="newConversationForm" method="POST" action="{{ route($rolePrefix . '.messaging.create') }}">
+                                @csrf
+                                <!-- Add these hidden fields -->
+                                <input type="hidden" name="user_type" value="cose_staff">
+                                <input type="hidden" name="recipient_id" value="{{ $assignedCareWorkerId }}">
+                                
+                                <!-- Optional message field -->
+                                <div class="mb-3">
+                                    <label for="initialMessage" class="form-label">Initial message (optional)</label>
+                                    <textarea class="form-control" id="initialMessage" name="initial_message" rows="3" placeholder="Start your conversation..."></textarea>
                                 </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" id="startConversationBtn" class="btn btn-primary">Start Conversation</button>
+                                </div>
+                            </form>
+                        @else
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                You currently don't have an assigned care worker. Please contact COSE for assistance.
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="recipientSelect" class="form-label">Select Recipient</label>
-                                <select class="form-select" id="recipientSelect" name="participant_id" required disabled>
-                                    <option value="" selected disabled>First select a user type</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="initialMessage" class="form-label">Initial Message (Optional)</label>
-                                <textarea class="form-control" id="initialMessage" name="initial_message" rows="3" placeholder="Write an initial message..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="startConversationBtn">Start Conversation</button>
-                        </div>
-                    </form>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- New Group Conversation Modal -->
         <div class="modal fade" id="newGroupModal" tabindex="-1" aria-labelledby="newGroupModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="newGroupModalLabel">Create Group Chat</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="newGroupForm">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="groupName" class="form-label">Group Name</label>
-                                <input type="text" class="form-control" id="groupName" name="name" required placeholder="Enter a name for this group">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Add Participants</label>
-                                
-                                <div class="participant-section mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="m-0">Staff Members</h6>
-                                        <button type="button" class="btn btn-sm btn-outline-primary toggle-section" data-section="staff">
-                                            <i class="bi bi-plus"></i> Add
-                                        </button>
-                                    </div>
-                                    <div class="participant-list staff-list" style="display: none;">
-                                        <div class="input-group mb-2">
-                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                            <input type="text" class="form-control user-search" data-type="cose_staff" placeholder="Search staff...">
-                                        </div>
-                                        <div class="user-checkboxes cose_staff-users scrollable-checklist">
-                                            <!-- Staff checkboxes will be added here -->
-                                            <div class="text-center p-2">
-                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                    <span class="visually-hidden">Loading...</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="selectedParticipants" class="form-label">Selected Participants <span class="badge bg-primary" id="participant-count">0</span></label>
-                                <div id="selectedParticipants" class="selected-participants p-2 border rounded">
-                                    <div class="text-muted text-center no-participants">No participants selected</div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="groupInitialMessage" class="form-label">Initial Message (Optional)</label>
-                                <textarea class="form-control" id="groupInitialMessage" name="initial_message" rows="3" placeholder="Write an initial message..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="createGroupBtn">Create Group</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <!-- Intentionally left empty - portal users can't create group chats -->
         </div>
     </main>
 
@@ -279,7 +192,7 @@
     <div class="modal fade" id="leaveGroupModal" tabindex="-1" aria-labelledby="leaveGroupModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="leaveGroupModalLabel">Leave Group</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -302,7 +215,7 @@
     <div class="modal fade" id="viewMembersModal" tabindex="-1" aria-labelledby="viewMembersModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="viewMembersModalLabel">Group Members</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -319,50 +232,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Group Member Modal -->
-    <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addMemberModalLabel">Add Member to Group</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="addMemberForm">
-                    <div class="modal-body">
-                        <input type="hidden" id="groupConversationId" name="conversation_id" value="">
-                        
-                        <div class="mb-3">
-                            <label for="memberUserType" class="form-label">Member Type</label>
-                            <select class="form-select" id="memberUserType" name="participant_type" required>
-                                <option value="" selected disabled>Select member type</option>
-                                <option value="cose_staff">Staff Member</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="memberSearch" class="form-label">Search for member</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                <input type="text" class="form-control" id="memberSearch" placeholder="Type to search...">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="memberSelect" class="form-label">Select Member</label>
-                            <select class="form-select" id="memberSelect" name="participant_id" required disabled>
-                                <option value="" selected disabled>First select a user type</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="addMemberBtn">Add to Group</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -479,6 +348,55 @@
 
         // Make sure this is run after page load
         document.addEventListener('DOMContentLoaded', function() {
+
+            // Safely initialize modals
+            function safeInitializeModal(modalId) {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    try {
+                        return new bootstrap.Modal(modalElement);
+                    } catch (e) {
+                        console.error(`Error initializing modal #${modalId}:`, e);
+                        return null;
+                    }
+                }
+                return null;
+            }
+            
+            // Initialize all required modals
+            const newConversationModal = safeInitializeModal('newConversationModal');
+            const confirmUnsendModal = safeInitializeModal('confirmUnsendModal');
+            const leaveGroupModal = safeInitializeModal('leaveGroupModal');
+            const viewMembersModal = safeInitializeModal('viewMembersModal');
+            const errorModal = safeInitializeModal('errorModal');
+            
+            // Fix for newConversationBtn
+            const newConversationBtn = document.getElementById('newConversationBtn');
+            if (newConversationBtn && newConversationModal) {
+                // Remove data-bs-toggle and data-bs-target attributes
+                newConversationBtn.removeAttribute('data-bs-toggle');
+                newConversationBtn.removeAttribute('data-bs-target');
+                
+                // Add click event listener
+                newConversationBtn.addEventListener('click', function() {
+                    newConversationModal.show();
+                });
+            }
+            
+            // Fix for modal backdrop cleanup
+            document.querySelectorAll('.modal').forEach(modalEl => {
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    // Remove any lingering backdrops
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => backdrop.remove());
+                    
+                    // Reset body styles
+                    document.body.classList.remove('modal-open');
+                    document.body.style.paddingRight = '';
+                    document.body.style.overflow = '';
+                });
+            });
+
             // Modify any navbar message loading functions (after page loads)
             const originalMessageLoad = window.loadRecentMessages;
             if (typeof originalMessageLoad === 'function') {
@@ -943,29 +861,33 @@
         function markConversationAsRead(conversationId) {
             if (!conversationId) return;
             
+            console.log('Marking conversation as read:', conversationId);
+            
             fetch(getRouteUrl(route_prefix + '.mark-as-read'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ conversation_id: conversationId })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    // Update the UI to remove unread indicators
-                    const conversationItem = document.querySelector(`.conversation-item[data-conversation-id="${conversationId}"]`);
-                    if (conversationItem) {
-                        conversationItem.classList.remove('unread');
-                        const unreadBadge = conversationItem.querySelector('.unread-badge');
-                        if (unreadBadge) {
-                            unreadBadge.remove();
-                        }
+                console.log('Conversation marked as read:', data);
+                
+                // Update UI - remove unread indicators
+                const conversationItem = document.querySelector(`.conversation-item[data-conversation-id="${conversationId}"]`);
+                if (conversationItem) {
+                    conversationItem.classList.remove('unread');
+                    const unreadBadge = conversationItem.querySelector('.unread-badge');
+                    if (unreadBadge) {
+                        unreadBadge.style.display = 'none';
                     }
-                    // Update navbar count
-                    updateNavbarUnreadCount();
                 }
+                
+                // Update navbar unread count
+                updateNavbarUnreadCount();
             })
             .catch(error => {
                 console.error('Error marking conversation as read:', error);
@@ -1312,7 +1234,7 @@
                 e.preventDefault();
                 
                 // Force the URL to be relative and using the same protocol
-                const actionURL = '/' + rolePrefix + '/messaging/send-message';
+                const actionURL = '/' + rolePrefix + '/messaging/send';
                 
                 // Validation
                 const hasText = textarea && textarea.value.trim() !== '';
@@ -2452,7 +2374,57 @@
             const userTypeSelect = document.getElementById('userType');
             const userSearch = document.getElementById('userSearch');
             const recipientSelect = document.getElementById('recipientSelect');
+            // Direct modal display handling
+            document.getElementById('newConversationBtn')?.addEventListener('click', function() {
+                const conversationModal = new bootstrap.Modal(document.getElementById('newConversationModal'));
+                conversationModal.show();
+            });
+
+            // Simplified form submission for portal users
             const newConversationForm = document.getElementById('newConversationForm');
+            if (newConversationForm) {
+                newConversationForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                    
+                    // Get recipient_id directly from hidden input
+                    const recipientId = this.querySelector('input[name="recipient_id"]').value;
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new URLSearchParams(new FormData(this))
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Close modal and redirect to conversation
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('newConversationModal'));
+                            if (modal) modal.hide();
+                            
+                            // Redirect to the conversation
+                            window.location.href = `${window.location.pathname}?conversation=${data.conversation_id}`;
+                        } else {
+                            throw new Error(data.message || 'Error creating conversation');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error creating conversation:', error);
+                        alert('Error: ' + (error.message || 'Failed to create conversation'));
+                        
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Start Conversation';
+                    });
+                });
+            }
             
             // Handle user type selection
             userTypeSelect?.addEventListener('change', function() {
@@ -2532,50 +2504,6 @@
 
 
             });
-            
-            // Function to update options based on search text
-            function updateRecipientOptions(searchTerm) {
-                if (!recipientSelect || !window.userOptions) return;
-                
-                // Clear existing options
-                recipientSelect.innerHTML = '';
-                
-                // Add default option
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.disabled = true;
-                defaultOption.selected = true;
-                defaultOption.textContent = searchTerm ? 'Search results' : 'Select a recipient';
-                recipientSelect.appendChild(defaultOption);
-                
-                // Filter users based on search term
-                const filteredUsers = window.userOptions.filter(user => {
-                    return searchTerm === '' || 
-                        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                        (user.mobile && user.mobile.includes(searchTerm));
-                });
-                
-                // Add filtered users to dropdown
-                filteredUsers.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user.id;
-                    option.textContent = user.name;
-                    recipientSelect.appendChild(option);
-                });
-                
-                // Update dropdown visibility
-                if (searchTerm && filteredUsers.length > 0) {
-                    // Make dropdown visible by setting size, but don't change focus
-                    recipientSelect.size = Math.min(10, filteredUsers.length + 1);
-                    recipientSelect.classList.add('active-dropdown');
-                    recipientSelect.setAttribute('data-dropdown-visible', 'true');
-                } else {
-                    recipientSelect.size = 1;
-                    recipientSelect.classList.remove('active-dropdown');
-                    recipientSelect.removeAttribute('data-dropdown-visible');
-                }
-            }
 
             // Add this new code directly after the updateRecipientOptions function:
 
@@ -2880,60 +2808,6 @@
                 .catch(error => {
                     console.error(`Error loading ${userType} users:`, error);
                     container.innerHTML = '<div class="text-danger text-center p-3">Error loading users</div>';
-                });
-            }
-            
-            // Render filtered users
-            function renderFilteredUsers(userType, users, container, searchTerm = '') {
-                // Clear container
-                container.innerHTML = '';
-                
-                // Filter users if search term provided
-                const filteredUsers = searchTerm ? 
-                    users.filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase())) :
-                    users;
-                
-                if (filteredUsers.length === 0) {
-                    container.innerHTML = `<div class="text-muted text-center p-3">No ${userType.replace('_', ' ')} match "${searchTerm}"</div>`;
-                    return;
-                }
-                
-                // Skip the current user for staff section
-                filteredUsers.forEach(user => {
-                    // Skip the current user for staff section
-                    if (userType === 'cose_staff' && user.id === {{ Auth::id() }}) {
-                        return;
-                    }
-                    
-                    const checkbox = document.createElement('div');
-                    checkbox.className = 'form-check user-checkbox';
-                    
-                    // Check if user is already selected
-                    const isSelected = selectedParticipants.some(p => p.id === user.id && p.type === userType);
-                    
-                    checkbox.innerHTML = `
-                        <input class="form-check-input" type="checkbox" 
-                            id="${userType}_${user.id}" 
-                            data-id="${user.id}" 
-                            data-type="${userType}" 
-                            data-name="${user.name}"
-                            ${isSelected ? 'checked' : ''}>
-                        <label class="form-check-label" for="${userType}_${user.id}">
-                            ${user.name}
-                        </label>
-                    `;
-                    
-                    container.appendChild(checkbox);
-                    
-                    // Add event listener to checkbox
-                    const input = checkbox.querySelector('input');
-                    input.addEventListener('change', function() {
-                        if (this.checked) {
-                            addParticipant(this.dataset.id, this.dataset.type, this.dataset.name);
-                        } else {
-                            removeParticipant(this.dataset.id, this.dataset.type);
-                        }
-                    });
                 });
             }
             
@@ -3355,165 +3229,11 @@
             });
             
             // Set up add member form functionality similar to new conversation
-            const memberUserTypeSelect = document.getElementById('memberUserType');
             const memberSearch = document.getElementById('memberSearch');
-            const memberSelect = document.getElementById('memberSelect');
-            
-            // Handle user type selection
-            memberUserTypeSelect?.addEventListener('change', function() {
-                const userType = this.value;
-                console.log('Selected member type:', userType);
-                
-                // Show loading state
-                if (memberSelect) {
-                    memberSelect.innerHTML = '<option value="" selected disabled>Loading users...</option>';
-                    memberSelect.disabled = true;
-                }
-                
-                // Fetch users of selected type
-                fetch(`${window.location.origin}/${rolePrefix}/messaging/get-users?type=${userType}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received users data:', data);
-                    
-                    if (memberSelect) {
-                        let usersArray = null;
-                        
-                        if (data.users && Array.isArray(data.users)) {
-                            usersArray = data.users;
-                        } else if (Array.isArray(data)) {
-                            usersArray = data;
-                        } else if (data.data && Array.isArray(data.data)) {
-                            usersArray = data.data;
-                        }
-                        
-                        if (usersArray && usersArray.length > 0) {
-                            console.log('Found', usersArray.length, 'users');
-                            
-                            // Store users for filtering
-                            window.memberOptions = usersArray;
-                            
-                            // Enable select and update options
-                            memberSelect.disabled = false;
-                            
-                            // Initial rendering of all options
-                            updateMemberOptions('');
-                        } else {
-                            console.warn('No users found');
-                            memberSelect.innerHTML = '<option value="" selected disabled>No users found</option>';
-                            memberSelect.disabled = true;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching users:', error);
-                    if (memberSelect) {
-                        memberSelect.innerHTML = '<option value="" selected disabled>Error loading users: ' + error.message + '</option>';
-                        memberSelect.disabled = true;
-                    }
-                });
-            });
             
             // Handle search input
             memberSearch?.addEventListener('input', function() {
                 updateMemberOptions(this.value);
-            });
-            
-            // Handle form submission
-            document.getElementById('addMemberForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const conversationId = document.getElementById('groupConversationId').value;
-                const participantId = memberSelect.value;
-                const participantType = memberUserTypeSelect.value;
-                
-                if (!conversationId || !participantId || !participantType) {
-                    alert('Please select a member to add to the group');
-                    return;
-                }
-                
-                const submitBtn = document.getElementById('addMemberBtn');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
-                
-                // Send request to add member
-                fetch(`${window.location.origin}/${rolePrefix}/messaging/add-group-member`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        conversation_id: conversationId,
-                        participant_id: participantId,
-                        participant_type: participantType
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Close modal and reset form
-                        addMemberModal.hide();
-                        this.reset();
-                        
-                        // Reset memberSelect
-                        if (memberSelect) {
-                            memberSelect.innerHTML = '<option value="" selected disabled>First select a user type</option>';
-                            memberSelect.disabled = true;
-                            memberSelect.size = 1;
-                            memberSelect.classList.remove('active-dropdown');
-                            memberSelect.removeAttribute('data-dropdown-visible');
-                        }
-                        
-                        if (memberSearch) {
-                            memberSearch.value = '';
-                        }
-                        
-                        // Create success notification that stays visible during reload
-                        const notificationDiv = document.createElement('div');
-                        notificationDiv.className = 'alert alert-success position-fixed top-0 end-0 m-3';
-                        notificationDiv.style.zIndex = "9999";
-                        notificationDiv.innerHTML = `
-                            <strong>Success!</strong> New member has been added to the group. Refreshing...
-                        `;
-                        document.body.appendChild(notificationDiv);
-                        
-                        // Store success flag in sessionStorage to show notification after reload
-                        sessionStorage.setItem('memberAdded', 'true');
-                        sessionStorage.setItem('memberAddedTime', Date.now());
-                        
-                        // Always force a hard page reload with the conversation ID
-                        // This is the most reliable way to ensure the conversation area shows the latest content
-                        const cacheBuster = Date.now();
-                        window.location.href = `${window.location.origin}/${rolePrefix}/messaging?conversation=${conversationId}&refresh=${cacheBuster}`;
-                    } else {
-                        throw new Error(data.message || 'Failed to add member');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error adding member:', error);
-                    alert('Failed to add member: ' + error.message);
-                })
-                .finally(() => {
-                    // Reset button (this will only run if there's an error)
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Add to Group';
-                });
             });
 
             // Add this to the document.addEventListener('DOMContentLoaded', function() {...}) section
@@ -4639,6 +4359,34 @@
                     });
                 });
             }
+
+            // Fix for stuck modal backdrops
+            const newConversationModal = document.getElementById('newConversationModal');
+            
+            // Add event listener for when the modal is hidden
+            newConversationModal.addEventListener('hidden.bs.modal', function() {
+                // Remove any lingering modal backdrops
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    backdrop.remove();
+                });
+                
+                // Make sure body is not still marked as modal-open
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+            
+            // Ensure modal shows correctly
+            document.getElementById('newConversationBtn').addEventListener('click', function() {
+                // First, ensure no backddrops exist
+                const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+                existingBackdrops.forEach(backdrop => backdrop.remove());
+                
+                // Then show modal using bootstrap API
+                const modal = new bootstrap.Modal(newConversationModal);
+                modal.show();
+            });
         });
 
         
