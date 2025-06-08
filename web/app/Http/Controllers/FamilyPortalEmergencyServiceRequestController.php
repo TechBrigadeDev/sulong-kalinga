@@ -121,7 +121,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             // Create the emergency notice
             $emergencyNotice = EmergencyNotice::create([
                 'sender_id' => $senderId,
-                'sender_type' => $userType,
+                'sender_type' => $userType === 'family' ? 'family_member' : 'beneficiary',
                 'beneficiary_id' => $beneficiaryId,
                 'emergency_type_id' => $request->emergency_type_id,
                 'message' => $request->message,
@@ -188,7 +188,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             // Create the service request
             $serviceRequest = ServiceRequest::create([
                 'sender_id' => $senderId,
-                'sender_type' => $userType,
+                'sender_type' => $userType === 'family' ? 'family_member' : 'beneficiary',
                 'beneficiary_id' => $beneficiaryId,
                 'service_type_id' => $request->service_type_id,
                 'service_date' => $request->service_date,
@@ -569,7 +569,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
     }
 
     /**
-     * Create notifications for care managers and assigned care worker
+     * Create notifications for care managers, assigned care worker, beneficiary and family members
      * 
      * @param string $requestType Type of request ('emergency' or 'service')
      * @param mixed $request The request object (EmergencyNotice or ServiceRequest)
@@ -587,19 +587,18 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             }
             
             $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
-            
-            // 1. Get all care managers (role_id = 2)
-            $careManagers = \App\Models\User::where('role_id', 2)->get();
+            $senderType = $request->sender_type;
+            $senderId = $request->sender_id;
             
             // Create notification title and message based on request type
             if ($requestType === 'emergency') {
                 $title = "🚨 New Emergency Request";
-                $message = "An emergency request has been submitted for beneficiary {$beneficiaryName}. Please review immediately.";
+                $message = "An emergency request has been submitted for beneficiary {$beneficiaryName}.";
                 $type = $request->emergencyType ? $request->emergencyType->name : 'Unknown Type';
                 $message .= "\n\nEmergency Type: {$type}";
             } else { // service
                 $title = "New Service Request";
-                $message = "A service request has been submitted for beneficiary {$beneficiaryName}. Please review.";
+                $message = "A service request has been submitted for beneficiary {$beneficiaryName}.";
                 $type = $request->serviceType ? $request->serviceType->name : 'Unknown Type';
                 $message .= "\n\nService Type: {$type}";
                 $message .= "\n\nRequested Date: " . date('Y-m-d', strtotime($request->service_date));
@@ -609,7 +608,40 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             // Add the message content
             $message .= "\n\n" . $request->message;
             
-            // 2. Notify all care managers
+            // 1. Notify the beneficiary if they're not the sender
+            if ($senderType !== 'beneficiary') {
+                \App\Models\Notification::create([
+                    'user_id' => $beneficiaryId,
+                    'user_type' => 'beneficiary',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created notification for beneficiary #{$beneficiaryId}");
+            }
+            
+            // 2. Notify all family members (except the sender if they're a family member)
+            $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
+            foreach ($familyMembers as $familyMember) {
+                // Skip if this family member is the sender
+                if ($senderType === 'family' && $senderId == $familyMember->family_member_id) {
+                    continue;
+                }
+                
+                \App\Models\Notification::create([
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created notification for family member #{$familyMember->family_member_id}");
+            }
+            
+            // 3. Notify all care managers (existing code)
+            $careManagers = \App\Models\User::where('role_id', 2)->get();
             foreach ($careManagers as $careManager) {
                 \App\Models\Notification::create([
                     'user_id' => $careManager->id,
@@ -621,7 +653,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 ]);
             }
             
-            // 3. Try to find and notify the assigned care worker
+            // 4. Try to find and notify the assigned care worker (existing code)
             if ($beneficiary->general_care_plan_id) {
                 // Get the general care plan
                 $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
