@@ -42,8 +42,10 @@ class VisitationScheduleApiController extends Controller
         $user = $request->user();
         $beneficiary = $this->getCurrentBeneficiary($user);
 
-        $occurrence = VisitationOccurrence::where('beneficiary_id', $beneficiary->beneficiary_id)
-            ->where('id', $id)
+        $occurrence = VisitationOccurrence::where('occurrence_id', $id)
+            ->whereHas('visitation', function($q) use ($beneficiary) {
+                $q->where('beneficiary_id', $beneficiary->beneficiary_id);
+            })
             ->first();
 
         if (!$occurrence) {
@@ -69,8 +71,25 @@ class VisitationScheduleApiController extends Controller
         }
 
         $now = now();
-        $upcoming = VisitationOccurrence::where('beneficiary_id', $beneficiary->beneficiary_id)
-            ->where('start_time', '>=', $now)
+
+        $upcoming = VisitationOccurrence::whereHas('visitation', function($q) use ($beneficiary) {
+                $q->where('beneficiary_id', $beneficiary->beneficiary_id);
+            })
+            ->where('status', 'scheduled') // Only include scheduled occurrences
+            ->where(function($query) use ($now) {
+                $query
+                    // If start_time is set, use it for filtering
+                    ->where(function($q) use ($now) {
+                        $q->whereNotNull('start_time')
+                          ->where('start_time', '>=', $now);
+                    })
+                    // If start_time is null, fall back to occurrence_date
+                    ->orWhere(function($q) use ($now) {
+                        $q->whereNull('start_time')
+                          ->where('occurrence_date', '>=', $now->toDateString());
+                    });
+            })
+            ->orderBy('occurrence_date')
             ->orderBy('start_time')
             ->get();
 

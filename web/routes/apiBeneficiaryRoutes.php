@@ -7,13 +7,13 @@ use App\Http\Controllers\Api\Portal\VisitationScheduleApiController;
 use App\Http\Controllers\Api\Portal\MedicationScheduleApiController;
 use App\Http\Controllers\Api\Portal\EmergencyServiceRequestApiController;
 use App\Http\Controllers\Api\Portal\CarePlanApiController;
-use App\Http\Controllers\Api\Portal\FamilyMembersApiController;
-use App\Http\Controllers\Api\Portal\NotificationsApiController;
+use App\Http\Controllers\Api\Portal\PortalBeneficiariesApiController;
+use App\Http\Controllers\Api\NotificationsApiController;
 use App\Http\Controllers\Api\Portal\MessagingApiController;
 use App\Http\Controllers\Api\Portal\FaqApiController;
 use App\Http\Middleware\RoleMiddleware;
 
-// All routes in this group require beneficiary or family member authentication
+// All routes in this group require beneficiary authentication
 Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':beneficiary'])->prefix('portal/beneficiary')->group(function () {
     // Profile
     Route::get('/profile', [ProfileApiController::class, 'show']);
@@ -34,6 +34,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     Route::post('/emergency-service/history', [EmergencyServiceRequestApiController::class, 'history']);
     Route::post('/emergency-service/emergency/submit', [EmergencyServiceRequestApiController::class, 'submitEmergency']);
     Route::post('/emergency-service/service/submit', [EmergencyServiceRequestApiController::class, 'submitService']);
+    Route::put('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'updateEmergency']); // NEW
+    Route::put('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'updateService']);     // NEW
+    Route::delete('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'deleteEmergency']); // NEW
+    Route::delete('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'deleteService']);     // NEW
     Route::post('/emergency-service/cancel', [EmergencyServiceRequestApiController::class, 'cancel']);
     Route::get('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'emergencyDetails']);
     Route::get('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'serviceDetails']);
@@ -48,7 +52,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     // Route::get('/family-members', [FamilyMembersApiController::class, 'index']); DO NOT IMPLEMENT
 
     // Benefciaries
-    Route::get('/beneficiary', [PortalBeneficiariesApiController::class, 'index']);
+    Route::get('/index', [PortalBeneficiariesApiController::class, 'index']);
 
     // Notifications
     Route::get('/notifications', [NotificationsApiController::class, 'index']);
