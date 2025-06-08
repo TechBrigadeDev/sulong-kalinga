@@ -75,6 +75,7 @@ class VisitationScheduleApiController extends Controller
         $upcoming = VisitationOccurrence::whereHas('visitation', function($q) use ($beneficiary) {
                 $q->where('beneficiary_id', $beneficiary->beneficiary_id);
             })
+            ->where('status', 'scheduled') // Only include scheduled occurrences
             ->where(function($query) use ($now) {
                 $query
                     // If start_time is set, use it for filtering
