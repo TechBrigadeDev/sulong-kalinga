@@ -10,14 +10,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Services\UploadService;
+use App\Services\NotificationService;
+use App\Services\LogService;
 
 class WeeklyCarePlanApiController extends Controller
 {
     protected $uploadService;
+    protected $notificationService;
+    protected $logService;
 
-    public function __construct(UploadService $uploadService)
+    public function __construct(UploadService $uploadService, NotificationService $notificationService, LogService $logService)
     {
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
+        $this->logService = $logService;
     }
 
     public function store(Request $request)
@@ -200,6 +206,48 @@ class WeeklyCarePlanApiController extends Controller
             }
 
             DB::commit();
+
+            // --- Notification Service Implementation ---
+            // Notify the beneficiary
+            if ($beneficiary) {
+                $this->notificationService->notifyBeneficiary(
+                    $beneficiary->beneficiary_id,
+                    'New Weekly Care Plan',
+                    'A new weekly care plan has been created for you.'
+                );
+            }
+
+            // Notify all related family members
+            if ($beneficiary && $beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'New Weekly Care Plan',
+                        'A new weekly care plan has been created for your beneficiary.'
+                    );
+                }
+            }
+
+            // Notify care manager if available
+            if ($beneficiary && $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+                $careWorker = \App\Models\User::find($beneficiary->generalCarePlan->care_worker_id);
+                if ($careWorker && $careWorker->care_manager_id) {
+                    $this->notificationService->notifyStaff(
+                        $careWorker->care_manager_id,
+                        'Beneficiary Weekly Care Plan Updated',
+                        'The weekly care plan for your beneficiary has been updated.'
+                    );
+                }
+            }
+
+            // Log the creation
+            $this->logService->createLog(
+                'weekly_care_plan',
+                $wcp->weekly_care_plan_id,
+                'weekly_care_plan_created',
+                "Weekly Care Plan ID {$wcp->weekly_care_plan_id} created by user {$request->user()->id}",
+                $request->user()->id
+            );
 
             return response()->json([
                 'success' => true,

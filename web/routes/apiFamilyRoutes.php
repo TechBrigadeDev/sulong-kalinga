@@ -7,8 +7,8 @@ use App\Http\Controllers\Api\Portal\VisitationScheduleApiController;
 use App\Http\Controllers\Api\Portal\MedicationScheduleApiController;
 use App\Http\Controllers\Api\Portal\EmergencyServiceRequestApiController;
 use App\Http\Controllers\Api\Portal\CarePlanApiController;
-use App\Http\Controllers\Api\Portal\FamilyMembersApiController;
-use App\Http\Controllers\Api\Portal\NotificationsApiController;
+use App\Http\Controllers\Api\Portal\PortalFamilyMembersApiController;
+use App\Http\Controllers\Api\NotificationsApiController;
 use App\Http\Controllers\Api\Portal\MessagingApiController;
 use App\Http\Controllers\Api\Portal\FaqApiController;
 use App\Http\Middleware\RoleMiddleware;
@@ -49,7 +49,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     Route::post('/care-plan/acknowledge/{id}', [CarePlanApiController::class, 'acknowledge']);
 
     // Family Members
-    Route::get('/family-members', [PortalFamilyMembersApiController::class, 'index']);
+    Route::get('/index', [PortalFamilyMembersApiController::class, 'index']);
 
     // Notifications
     Route::get('/notifications', [NotificationsApiController::class, 'index']);
