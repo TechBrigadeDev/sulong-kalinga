@@ -408,7 +408,7 @@
     <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title" id="confirmationModalLabel">Confirm Cancellation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -952,24 +952,25 @@
         function viewEmergencyDetails(noticeId) {
             // Show loading state
             $('#emergencyDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            $('#emergencyUpdatesTimeline').html('');
             
             // Open the modal
             $('#emergencyDetailsModal').modal('show');
             
             // Fetch emergency details
             $.ajax({
-                url: "{{ secure_url(route('family.emergency.service.emergency-details', '', false)) }}/" + noticeId,
+                url: "{{ secure_url(route(Auth::guard('beneficiary')->check() ? 'beneficiary.emergency.service.emergency-details' : 'family.emergency.service.emergency-details', '', false)) }}/" + noticeId,
                 method: 'GET',
                 success: function(response) {
-                    if (response.success) {
-                        // Render emergency details
+                    if (response.success && response.emergency_notice) {
                         renderEmergencyDetails(response.emergency_notice);
                     } else {
-                        $('#emergencyDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                        $('#emergencyDetailsContent').html('<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Emergency details could not be loaded.</div>');
                     }
                 },
-                error: function() {
-                    $('#emergencyDetailsContent').html('<div class="alert alert-danger">Failed to load emergency details. Please try again.</div>');
+                error: function(xhr) {
+                    $('#emergencyDetailsContent').html('<div class="alert alert-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Failed to load emergency details. Please try again.</div>');
+                    console.error('Error loading emergency details:', xhr.responseText);
                 }
             });
         }
@@ -978,51 +979,60 @@
         function viewServiceRequestDetails(requestId) {
             // Show loading state
             $('#serviceRequestDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            $('#serviceUpdatesTimeline').html('');
             
             // Open the modal
             $('#serviceRequestDetailsModal').modal('show');
             
             // Fetch service request details
             $.ajax({
-                url: "{{ secure_url(route('family.emergency.service.service-details', '', false)) }}/" + requestId,
+                url: "{{ secure_url(route(Auth::guard('beneficiary')->check() ? 'beneficiary.emergency.service.service-details' : 'family.emergency.service.service-details', '', false)) }}/" + requestId,
                 method: 'GET',
                 success: function(response) {
-                    if (response.success) {
-                        // Render service request details
+                    if (response.success && response.service_request) {
                         renderServiceRequestDetails(response.service_request);
                     } else {
-                        $('#serviceRequestDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                        $('#serviceRequestDetailsContent').html('<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Service request details could not be loaded.</div>');
                     }
                 },
-                error: function() {
-                    $('#serviceRequestDetailsContent').html('<div class="alert alert-danger">Failed to load service request details. Please try again.</div>');
+                error: function(xhr) {
+                    $('#serviceRequestDetailsContent').html('<div class="alert alert-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Failed to load service request details. Please try again.</div>');
+                    console.error('Error loading service request details:', xhr.responseText);
                 }
             });
         }
 
         // Render emergency details in view modal
         function renderEmergencyDetails(emergency) {
+            // Get formatted status and type
+            const status = formatStatus(emergency.status || 'unknown');
+            const type = emergency.emergency_type ? emergency.emergency_type.name : 'Unknown Type';
+            const statusClass = getStatusBadgeClass(emergency.status);
+            const assignedTo = emergency.assigned_user ? emergency.assigned_user.name : 'Not assigned';
+            
             let content = `
                 <div class="mb-4">
-                    <h5 class="border-bottom pb-2">Emergency Information</h5>
+                    <h5 class="mb-3">Emergency Request Details</h5>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Type:</div>
-                        <div class="col-md-8"><span class="badge bg-danger me-2">${emergency.emergency_type ? emergency.emergency_type.name : 'Emergency'}</span></div>
+                        <div class="col-md-4 text-muted">Status:</div>
+                        <div class="col-md-8">
+                            <span class="badge ${statusClass}">${status}</span>
+                        </div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Status:</div>
-                        <div class="col-md-8">${formatStatus(emergency.status)}</div>
+                        <div class="col-md-4 text-muted">Type:</div>
+                        <div class="col-md-8">${type}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-4 text-muted">Submitted On:</div>
                         <div class="col-md-8">${formatDateTime(emergency.created_at)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Assigned To:</div>
-                        <div class="col-md-8">${emergency.assigned_user ? emergency.assigned_user.name : 'Not assigned'}</div>
+                        <div class="col-md-4 text-muted">Assigned To:</div>
+                        <div class="col-md-8">${assignedTo}</div>
                     </div>
-                    <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Message:</div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Message:</div>
                         <div class="col-md-8">${emergency.message}</div>
                     </div>
                 </div>
@@ -1035,20 +1045,25 @@
                 let updatesHtml = '';
                 
                 emergency.updates.forEach(update => {
+                    const updateTime = formatDateTime(update.created_at);
+                    const updateType = formatUpdateType(update.update_type);
+                    const badgeClass = getUpdateTypeBadgeClass(update.update_type);
+                    const staffName = update.staff_name || 'Unknown Staff';
+                    
                     updatesHtml += `
-                        <div class="timeline-item mb-3">
-                            <div class="d-flex">
-                                <div class="timeline-indicator">
-                                    <div class="timeline-badge ${getUpdateTypeBadgeClass(update.update_type)}"></div>
-                                </div>
-                                <div class="timeline-content ms-2">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="fw-bold">${formatUpdateType(update.update_type)}</span>
-                                        <small class="text-muted">${formatDateTime(update.created_at)}</small>
+                        <div class="timeline-item d-flex">
+                            <div class="timeline-indicator">
+                                <div class="timeline-badge ${badgeClass}"></div>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <span class="badge ${badgeClass} me-2">${updateType}</span>
+                                        <span class="text-muted">by ${staffName}</span>
                                     </div>
-                                    <p class="mb-1">${update.message}</p>
-                                    <small class="text-muted">By: ${update.updated_by_name || 'System'}</small>
+                                    <small class="text-muted">${updateTime}</small>
                                 </div>
+                                <div>${update.message}</div>
                             </div>
                         </div>
                     `;
@@ -1062,35 +1077,39 @@
 
         // Render service request details in view modal
         function renderServiceRequestDetails(request) {
+            // Get formatted status and type
+            const status = formatStatus(request.status || 'unknown');
+            const type = request.service_type ? request.service_type.name : 'Unknown Type';
+            const statusClass = getStatusBadgeClass(request.status);
+            const careWorker = request.care_worker ? request.care_worker.first_name + ' ' + request.care_worker.last_name : 'Not assigned';
+            
             let content = `
                 <div class="mb-4">
-                    <h5 class="border-bottom pb-2">Service Request Information</h5>
+                    <h5 class="mb-3">Service Request Details</h5>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Service Type:</div>
-                        <div class="col-md-8"><span class="badge bg-primary">${request.service_type ? request.service_type.name : 'Service'}</span></div>
+                        <div class="col-md-4 text-muted">Status:</div>
+                        <div class="col-md-8">
+                            <span class="badge ${statusClass}">${status}</span>
+                        </div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Status:</div>
-                        <div class="col-md-8">${formatStatus(request.status)}</div>
+                        <div class="col-md-4 text-muted">Type:</div>
+                        <div class="col-md-8">${type}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Requested Date:</div>
-                        <div class="col-md-8">${formatDate(request.service_date)}</div>
+                        <div class="col-md-4 text-muted">Requested For:</div>
+                        <div class="col-md-8">${formatDate(request.service_date)} at ${formatTime(request.service_time)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Requested Time:</div>
-                        <div class="col-md-8">${request.service_time ? formatTime(request.service_time) : 'Not specified'}</div>
+                        <div class="col-md-4 text-muted">Care Worker:</div>
+                        <div class="col-md-8">${careWorker}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-4 text-muted">Submitted On:</div>
                         <div class="col-md-8">${formatDateTime(request.created_at)}</div>
                     </div>
-                    <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Assigned To:</div>
-                        <div class="col-md-8">${request.care_worker ? request.care_worker.name : 'Not assigned'}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Message:</div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Message:</div>
                         <div class="col-md-8">${request.message}</div>
                     </div>
                 </div>
@@ -1103,20 +1122,25 @@
                 let updatesHtml = '';
                 
                 request.updates.forEach(update => {
+                    const updateTime = formatDateTime(update.created_at);
+                    const updateType = formatUpdateType(update.update_type);
+                    const badgeClass = getUpdateTypeBadgeClass(update.update_type);
+                    const staffName = update.staff_name || 'Unknown Staff';
+                    
                     updatesHtml += `
-                        <div class="timeline-item mb-3">
-                            <div class="d-flex">
-                                <div class="timeline-indicator">
-                                    <div class="timeline-badge ${getUpdateTypeBadgeClass(update.update_type)}"></div>
-                                </div>
-                                <div class="timeline-content ms-2">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="fw-bold">${formatUpdateType(update.update_type)}</span>
-                                        <small class="text-muted">${formatDateTime(update.created_at)}</small>
+                        <div class="timeline-item d-flex">
+                            <div class="timeline-indicator">
+                                <div class="timeline-badge ${badgeClass}"></div>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <span class="badge ${badgeClass} me-2">${updateType}</span>
+                                        <span class="text-muted">by ${staffName}</span>
                                     </div>
-                                    <p class="mb-1">${update.message}</p>
-                                    <small class="text-muted">By: ${update.updated_by_name || 'System'}</small>
+                                    <small class="text-muted">${updateTime}</small>
                                 </div>
+                                <div>${update.message}</div>
                             </div>
                         </div>
                     `;
@@ -1125,6 +1149,19 @@
                 $('#serviceUpdatesTimeline').html(updatesHtml);
             } else {
                 $('#serviceUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+            }
+        }
+
+        // Helper function to get badge class based on status
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'new': return 'bg-warning';
+                case 'in_progress': return 'bg-info';
+                case 'resolved': return 'bg-success';
+                case 'approved': return 'bg-success';
+                case 'rejected': return 'bg-danger';
+                case 'completed': return 'bg-success';
+                default: return 'bg-secondary';
             }
         }
 

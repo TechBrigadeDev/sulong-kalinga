@@ -476,23 +476,32 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 ->where('notice_id', $id)
                 ->where('beneficiary_id', $beneficiaryId)
                 ->first();
-                
+            
             if (!$emergencyNotice) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Emergency notice not found or you do not have access.'
+                    'message' => 'Emergency notice not found or not accessible'
                 ], 404);
             }
             
             // Load updates separately and filter out note-type updates for beneficiary/family view
             $updates = $emergencyNotice->updates()
-                ->with('updatedBy')
-                ->where('update_type', '!=', 'note') // FILTER OUT NOTE UPDATES
+                ->where('update_type', '!=', 'note')
+                ->with('updatedByUser')
                 ->orderBy('created_at', 'desc')
                 ->get();
             
             // Replace the updates relation with our filtered collection
             $emergencyNotice->setRelation('updates', $updates);
+            
+            // Add staff names to updates for better display
+            foreach ($emergencyNotice->updates as $update) {
+                if ($update->updatedByUser) {
+                    $update->staff_name = $update->updatedByUser->first_name . ' ' . $update->updatedByUser->last_name;
+                } else {
+                    $update->staff_name = 'Unknown Staff';
+                }
+            }
             
             return response()->json([
                 'success' => true,
@@ -505,7 +514,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get emergency details.',
+                'message' => 'Failed to load emergency details. Please try again.',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -533,23 +542,32 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 ->where('service_request_id', $id)
                 ->where('beneficiary_id', $beneficiaryId)
                 ->first();
-                
+            
             if (!$serviceRequest) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Service request not found or you do not have access.'
+                    'message' => 'Service request not found or not accessible'
                 ], 404);
             }
             
             // Load updates separately and filter out note-type updates for beneficiary/family view
             $updates = $serviceRequest->updates()
-                ->with('updatedBy')
-                ->where('update_type', '!=', 'note') // FILTER OUT NOTE UPDATES
+                ->where('update_type', '!=', 'note')
+                ->with('updatedByUser')
                 ->orderBy('created_at', 'desc')
                 ->get();
             
             // Replace the updates relation with our filtered collection
             $serviceRequest->setRelation('updates', $updates);
+            
+            // Add staff names to updates for better display
+            foreach ($serviceRequest->updates as $update) {
+                if ($update->updatedByUser) {
+                    $update->staff_name = $update->updatedByUser->first_name . ' ' . $update->updatedByUser->last_name;
+                } else {
+                    $update->staff_name = 'Unknown Staff';
+                }
+            }
             
             return response()->json([
                 'success' => true,
@@ -562,7 +580,7 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get service request details.',
+                'message' => 'Failed to load service request details. Please try again.',
                 'error' => $e->getMessage()
             ], 500);
         }
