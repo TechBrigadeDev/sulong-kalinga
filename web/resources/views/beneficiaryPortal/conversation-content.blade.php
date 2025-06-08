@@ -1,3 +1,24 @@
+@php
+function getFileIconClass($fileType) {
+    // Check by MIME type
+    $fileType = strtolower($fileType);
+    
+    if (str_contains($fileType, 'pdf')) {
+        return 'bi-file-earmark-pdf';
+    } elseif (str_contains($fileType, 'word') || str_contains($fileType, 'doc')) {
+        return 'bi-file-earmark-word';
+    } elseif (str_contains($fileType, 'excel') || str_contains($fileType, 'spreadsheet')) {
+        return 'bi-file-earmark-excel';
+    } elseif (str_contains($fileType, 'text')) {
+        return 'bi-file-earmark-text';
+    } elseif (str_contains($fileType, 'image')) {
+        return 'bi-file-earmark-image';
+    } else {
+        return 'bi-file-earmark';
+    }
+}
+@endphp
+
 <!-- Conversation Header -->
 <div class="conversation-title-area">
     <div class="d-flex justify-content-between align-items-center">
@@ -138,68 +159,52 @@
                                     <!-- Attachments -->
                                     <!-- Message attachments - FIXED -->
                                 @if($message->attachments && $message->attachments->count() > 0)
-                                    <div class="message-attachments">
-                                        @foreach($message->attachments as $attachment)
-                                            <div class="attachment-container">
-                                                @php
-                                                    // Ensure path doesn't have public/ prefix for storage URLs
-                                                    $filePath = str_replace('public/', '', $attachment->file_path);
-                                                    
-                                                    // Determine if this is an image
-                                                    $isImage = false;
-                                                    if (isset($attachment->is_image)) {
-                                                        $isImage = $attachment->is_image === true || 
-                                                                $attachment->is_image === 1 || 
-                                                                $attachment->is_image === '1';
-                                                    } else {
-                                                        // Check by file extension
-                                                        $fileExtension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
-                                                        $isImage = in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                                    }
-                                                @endphp
+                                <div class="message-attachments">
+                                    @foreach($message->attachments as $attachment)
+                                        <div class="attachment-container">
+                                            @php
+                                                // Ensure path doesn't have public/ prefix for storage URLs
+                                                $filePath = str_replace('public/', '', $attachment->file_path);
                                                 
-                                                <a href="/storage/{{ $filePath }}" target="_blank" 
-                                                class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
-                                                    
-                                                        @if($isImage)
-                                                            <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
-                                                                <div class="spinner-border text-primary loading-pulse"></div>
-                                                            </div>
-                                                            <img src="/storage/{{ $filePath }}" 
-                                                                class="attachment-img" 
-                                                                alt="{{ $attachment->file_name }}"
-                                                                style="display: none;" 
-                                                                id="img-{{$attachment->attachment_id}}"
-                                                                onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
-                                                                onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
-                                                        @else
-                                                        <div class="file-icon">
-                                                            @php
-                                                                $fileName = strtolower($attachment->file_name);
-                                                                $iconClass = 'bi-file-earmark';
-                                                                
-                                                                if(strpos($attachment->file_type ?? '', 'pdf') !== false || Str::endsWith($fileName, '.pdf')) {
-                                                                    $iconClass = 'bi-file-earmark-pdf';
-                                                                } elseif(Str::endsWith($fileName, '.doc') || Str::endsWith($fileName, '.docx')) {
-                                                                    $iconClass = 'bi-file-earmark-word';
-                                                                } elseif(Str::endsWith($fileName, '.xls') || Str::endsWith($fileName, '.xlsx')) {
-                                                                    $iconClass = 'bi-file-earmark-excel';
-                                                                } elseif(Str::endsWith($fileName, '.txt')) {
-                                                                    $iconClass = 'bi-file-earmark-text';
-                                                                }
-                                                            @endphp
-                                                            <i class="bi {{ $iconClass }}"></i>
-                                                        </div>
-                                                    @endif
-                                                </a>
-                                                
-                                                <div class="attachment-filename">
-                                                    {{ $attachment->file_name }}
-                                                </div>
+                                                // Determine if this is an image
+                                                $isImage = false;
+                                                if (isset($attachment->is_image)) {
+                                                    $isImage = $attachment->is_image === true || 
+                                                            $attachment->is_image === 1 || 
+                                                            $attachment->is_image === '1';
+                                                } else {
+                                                    // Check by file extension
+                                                    $fileExtension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
+                                                    $isImage = in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                }
+                                            @endphp
+                                            
+                                            <a href="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                            target="_blank" 
+                                            class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
+                                                @if($isImage)
+                                                    <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
+                                                        <div class="spinner-border text-primary loading-pulse"></div>
+                                                    </div>
+                                                    <img src="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                        class="attachment-img" 
+                                                        alt="{{ $attachment->file_name }}"
+                                                        onload="document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
+                                                        onerror="this.onerror=null; this.src='{{ asset('images/file-icon.png') }}';">
+                                                @else
+                                                    <div class="file-icon">
+                                                        <i class="bi {{ getFileIconClass($attachment->file_type) }}"></i>
+                                                    </div>
+                                                @endif
+                                            </a>
+                                            
+                                            <div class="attachment-filename">
+                                                {{ \Illuminate\Support\Str::limit($attachment->file_name, 15) }}
                                             </div>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                                     
                                     <!-- Message Time -->
                                     <div class="message-time">
@@ -246,43 +251,27 @@
                                                     }
                                                 @endphp
                                                 
-                                                <a href="/storage/{{ $filePath }}" target="_blank" 
+                                                <a href="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                target="_blank" 
                                                 class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
-                                                    
-                                                        @if($isImage)
-                                                            <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
-                                                                <div class="spinner-border text-primary loading-pulse"></div>
-                                                            </div>
-                                                            <img src="/storage/{{ $filePath }}" 
-                                                                class="attachment-img" 
-                                                                alt="{{ $attachment->file_name }}"
-                                                                style="display: none;" 
-                                                                id="img-{{$attachment->attachment_id}}"
-                                                                onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
-                                                                onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
-                                                        @else
+                                                    @if($isImage)
+                                                        <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
+                                                            <div class="spinner-border text-primary loading-pulse"></div>
+                                                        </div>
+                                                        <img src="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                            class="attachment-img" 
+                                                            alt="{{ $attachment->file_name }}"
+                                                            onload="document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
+                                                            onerror="this.onerror=null; this.src='{{ asset('images/file-icon.png') }}';">
+                                                    @else
                                                         <div class="file-icon">
-                                                            @php
-                                                                $fileName = strtolower($attachment->file_name);
-                                                                $iconClass = 'bi-file-earmark';
-                                                                
-                                                                if(strpos($attachment->file_type ?? '', 'pdf') !== false || Str::endsWith($fileName, '.pdf')) {
-                                                                    $iconClass = 'bi-file-earmark-pdf';
-                                                                } elseif(Str::endsWith($fileName, '.doc') || Str::endsWith($fileName, '.docx')) {
-                                                                    $iconClass = 'bi-file-earmark-word';
-                                                                } elseif(Str::endsWith($fileName, '.xls') || Str::endsWith($fileName, '.xlsx')) {
-                                                                    $iconClass = 'bi-file-earmark-excel';
-                                                                } elseif(Str::endsWith($fileName, '.txt')) {
-                                                                    $iconClass = 'bi-file-earmark-text';
-                                                                }
-                                                            @endphp
-                                                            <i class="bi {{ $iconClass }}"></i>
+                                                            <i class="bi {{ getFileIconClass($attachment->file_type) }}"></i>
                                                         </div>
                                                     @endif
                                                 </a>
                                                 
                                                 <div class="attachment-filename">
-                                                    {{ $attachment->file_name }}
+                                                    {{ \Illuminate\Support\Str::limit($attachment->file_name, 15) }}
                                                 </div>
                                             </div>
                                         @endforeach

@@ -282,8 +282,8 @@ class PortalMessagingController extends Controller
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Validation failed',
-                        'errors' => $validator->errors()
+                        'errors' => $validator->errors(),
+                        'file_error' => $validator->errors()->has('attachments.*') ? 'One or more files exceed the maximum allowed size (5MB)' : null
                     ], 422);
                 }
                 
@@ -294,7 +294,8 @@ class PortalMessagingController extends Controller
             $conversation = Conversation::findOrFail($conversationId);
             
             // Check if user is participant
-            $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            $participantType = $userType === 'beneficiary' ? 'beneficiary' : 'family_member';
+            $isParticipant = $conversation->hasParticipant($user->getKey(), $participantType);
             if (!$isParticipant) {
                 return $this->jsonResponse(false, 'You are not a participant in this conversation', 403);
             }
@@ -303,7 +304,7 @@ class PortalMessagingController extends Controller
             $message = new Message([
                 'conversation_id' => $conversationId,
                 'sender_id' => $user->getKey(),
-                'sender_type' => $userType,
+                'sender_type' => $participantType,
                 'content' => $request->content,
                 'message_timestamp' => now(),
             ]);
@@ -317,17 +318,27 @@ class PortalMessagingController extends Controller
                     $fileSize = $file->getSize();
                     $isImage = strpos($fileType, 'image/') === 0;
                     
-                    // Store file
-                    $path = $file->store('public/message_attachments');
+                    // Generate a unique filename to prevent overwriting
+                    $uniqueFileName = Str::uuid() . '_' . $fileName;
+                    
+                    // Store the file in the attachments directory
+                    $filePath = $file->storeAs('attachments', $uniqueFileName, 'public');
                     
                     // Create attachment record
-                    MessageAttachment::create([
+                    $attachment = new MessageAttachment([
                         'message_id' => $message->message_id,
                         'file_name' => $fileName,
-                        'file_path' => $path,
+                        'file_path' => $filePath,
                         'file_type' => $fileType,
                         'file_size' => $fileSize,
                         'is_image' => $isImage
+                    ]);
+                    $attachment->save();
+                    
+                    Log::info("File attachment created", [
+                        'message_id' => $message->message_id,
+                        'file_name' => $fileName,
+                        'file_path' => $filePath
                     ]);
                 }
             }
@@ -339,19 +350,21 @@ class PortalMessagingController extends Controller
             
             // Return success response
             if ($request->ajax() || $request->wantsJson()) {
+                // Load the message with attachments
+                $message->load('attachments');
+                
                 return response()->json([
                     'success' => true,
                     'message' => 'Message sent successfully',
-                    'message_id' => $message->message_id
+                    'data' => $message
                 ]);
             }
             
             return redirect()->route($rolePrefix . '.messaging.index', ['conversation' => $conversationId])
-                ->with('success', 'Message sent successfully');
+                ->with('success', 'Message sent successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Error sending portal message: ' . $e->getMessage(), [
-                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
@@ -1190,54 +1203,56 @@ class PortalMessagingController extends Controller
     }
 
     /**
-     * Download a message attachment
+     * Download a message attachment with security checks
      */
     public function downloadAttachment($id)
     {
         try {
-            // Get attachment
-            $attachment = MessageAttachment::findOrFail($id);
-            
-            // Get the message
-            $message = Message::findOrFail($attachment->message_id);
-            $conversation = Conversation::findOrFail($message->conversation_id);
-            
-            // Check if user can access this attachment
+            // Get current user type and ID
             $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
             $user = Auth::guard($userType)->user();
             
-            // Security check: Make sure user is a participant
-            $isParticipant = $conversation->participants->where('participant_id', $user->getKey())
-                                                ->where('participant_type', $userType)
-                                                ->where('left_at', null)
-                                                ->isNotEmpty();
+            // Get the attachment
+            $attachment = MessageAttachment::findOrFail($id);
             
+            // Security check - make sure user has access to this conversation
+            $message = Message::findOrFail($attachment->message_id);
+            $conversation = Conversation::findOrFail($message->conversation_id);
+            
+            // Check if user is a participant
+            $isParticipant = $conversation->hasParticipant($user->getKey(), $userType === 'beneficiary' ? 'beneficiary' : 'family_member');
             if (!$isParticipant) {
-                abort(403, 'You do not have access to this attachment');
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'You do not have access to this attachment'
+                ], 403);
             }
             
             // Get the file path
-            $filePath = storage_path('app/public/attachments/' . $attachment->filename);
+            $filePath = storage_path('app/public/' . $attachment->file_path);
             
-            // Check if file exists
             if (!file_exists($filePath)) {
-                abort(404, 'File not found');
+                Log::error('Attachment file not found', [
+                    'attachment_id' => $id,
+                    'file_path' => $filePath
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attachment file not found'
+                ], 404);
             }
             
-            // Return the file for download
-            return response()->download(
-                $filePath, 
-                $attachment->original_filename,
-                ['Content-Type' => $attachment->mime_type]
-            );
+            return response()->download($filePath, $attachment->file_name);
             
         } catch (\Exception $e) {
             Log::error('Error downloading attachment: ' . $e->getMessage(), [
-                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
-            abort(500, 'Error downloading attachment: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error downloading attachment: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

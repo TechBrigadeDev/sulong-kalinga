@@ -97,6 +97,7 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         Route::get('/recent-messages', [PortalMessagingController::class, 'getRecentMessages'])->name('recent-messages');
         Route::post('/read-all', [PortalMessagingController::class, 'markAllAsRead'])->name('read-all');
         Route::post('/mark-as-read', [PortalMessagingController::class, 'markAsRead'])->name('mark-as-read');
+        Route::get('/attachment/{id}', [PortalMessagingController::class, 'downloadAttachment'])->name('attachment');
     });
     
     // Profile Routes
