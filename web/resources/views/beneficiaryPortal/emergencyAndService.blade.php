@@ -592,7 +592,10 @@
         
         // Function to attach cancel event handlers
         function attachCancelEventHandlers() {
-            $('.cancel-request').on('click', function() {
+            $('.cancel-request').on('click', function(e) {
+                // Stop event propagation to prevent row click from triggering
+                e.stopPropagation();
+                
                 const requestId = $(this).data('request-id');
                 const requestType = $(this).data('request-type');
                 

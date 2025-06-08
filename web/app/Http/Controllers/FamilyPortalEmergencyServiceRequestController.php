@@ -394,9 +394,11 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             if ($userType === 'beneficiary') {
                 $user = Auth::guard('beneficiary')->user();
+                $senderId = $user->beneficiary_id;
                 $beneficiaryId = $user->beneficiary_id;
             } else {
                 $user = Auth::guard('family')->user();
+                $senderId = $user->family_member_id;
                 $beneficiaryId = $user->related_beneficiary_id;
             }
             
@@ -420,6 +422,9 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 $emergencyRequest->status = 'archived';
                 $emergencyRequest->save();
                 
+                // Send cancellation notifications
+                $this->createCancellationNotifications('emergency', $emergencyRequest, $beneficiaryId, $userType, $senderId);
+                
             } else { // service
                 $serviceRequest = ServiceRequest::where('service_request_id', $requestId)
                     ->where('beneficiary_id', $beneficiaryId)
@@ -436,6 +441,9 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 // Mark as rejected (cancelled)
                 $serviceRequest->status = 'rejected';
                 $serviceRequest->save();
+                
+                // Send cancellation notifications
+                $this->createCancellationNotifications('service', $serviceRequest, $beneficiaryId, $userType, $senderId);
             }
             
             return response()->json([
@@ -783,6 +791,122 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 'message' => 'Service request not found',
                 'error' => $e->getMessage()
             ], 404);
+        }
+    }
+
+    /**
+     * Create notifications about request cancellation
+     */
+    private function createCancellationNotifications($requestType, $request, $beneficiaryId, $cancellerType, $cancellerId)
+    {
+        try {
+            // Get the beneficiary info
+            $beneficiary = \App\Models\Beneficiary::find($beneficiaryId);
+            if (!$beneficiary) {
+                Log::error("Failed to create cancellation notifications: Beneficiary #{$beneficiaryId} not found");
+                return;
+            }
+            
+            $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+            
+            // Get canceller name based on type
+            $cancellerName = "Unknown user";
+            if ($cancellerType === 'beneficiary') {
+                $cancellerUser = \App\Models\Beneficiary::find($cancellerId);
+                $cancellerName = $cancellerUser ? $cancellerUser->first_name . ' ' . $cancellerUser->last_name : "the beneficiary";
+            } elseif ($cancellerType === 'family') {
+                $cancellerUser = \App\Models\FamilyMember::find($cancellerId);
+                $cancellerName = $cancellerUser ? $cancellerUser->first_name . ' ' . $cancellerUser->last_name : "a family member";
+            }
+            
+            // Create notification title and message based on request type
+            if ($requestType === 'emergency') {
+                $title = "Emergency Request Cancelled";
+                $message = "An emergency request for {$beneficiaryName} has been cancelled by {$cancellerName}.";
+                $type = $request->emergencyType ? $request->emergencyType->name : 'Unknown Type';
+                $message .= "\n\nEmergency Type: {$type}";
+            } else { // service
+                $title = "Service Request Cancelled";
+                $message = "A service request for {$beneficiaryName} has been cancelled by {$cancellerName}.";
+                $type = $request->serviceType ? $request->serviceType->name : 'Unknown Type';
+                $message .= "\n\nService Type: {$type}";
+                if ($request->service_date) {
+                    $message .= "\nRequested Date: " . date('Y-m-d', strtotime($request->service_date));
+                }
+                if ($request->service_time) {
+                    $message .= "\nRequested Time: " . $request->service_time;
+                }
+            }
+            
+            // Add the original message content
+            $message .= "\n\nOriginal request: " . $request->message;
+            
+            // 1. Notify the beneficiary if they're not the canceller
+            if ($cancellerType !== 'beneficiary' || $cancellerId != $beneficiaryId) {
+                \App\Models\Notification::create([
+                    'user_id' => $beneficiaryId,
+                    'user_type' => 'beneficiary',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created cancellation notification for beneficiary #{$beneficiaryId}");
+            }
+            
+            // 2. Notify all family members (except the canceller if they're a family member)
+            $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
+            foreach ($familyMembers as $familyMember) {
+                // Skip if this family member is the canceller
+                if ($cancellerType === 'family' && $cancellerId == $familyMember->family_member_id) {
+                    continue;
+                }
+                
+                \App\Models\Notification::create([
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created cancellation notification for family member #{$familyMember->family_member_id}");
+            }
+            
+            // 3. Notify all care managers
+            $careManagers = \App\Models\User::where('role_id', 2)->get();
+            foreach ($careManagers as $careManager) {
+                \App\Models\Notification::create([
+                    'user_id' => $careManager->id,
+                    'user_type' => 'cose_staff',
+                    'message_title' => $title,
+                    'message' => $message,
+                    'date_created' => now(),
+                    'is_read' => false
+                ]);
+                Log::info("Created cancellation notification for care manager #{$careManager->id}");
+            }
+            
+            // 4. Notify the assigned care worker if any
+            if ($beneficiary->general_care_plan_id) {
+                $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
+                
+                if ($generalCarePlan && $generalCarePlan->care_worker_id) {
+                    \App\Models\Notification::create([
+                        'user_id' => $generalCarePlan->care_worker_id,
+                        'user_type' => 'cose_staff',
+                        'message_title' => $title . " (For Your Beneficiary)",
+                        'message' => $message,
+                        'date_created' => now(),
+                        'is_read' => false
+                    ]);
+                    
+                    Log::info("Created cancellation notification for care worker #{$generalCarePlan->care_worker_id}");
+                }
+            }
+            
+        } catch (\Exception $e) {
+            Log::error("Error creating cancellation notifications: " . $e->getMessage());
         }
     }
 }
