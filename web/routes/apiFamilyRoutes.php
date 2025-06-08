@@ -34,6 +34,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     Route::post('/emergency-service/history', [EmergencyServiceRequestApiController::class, 'history']);
     Route::post('/emergency-service/emergency/submit', [EmergencyServiceRequestApiController::class, 'submitEmergency']);
     Route::post('/emergency-service/service/submit', [EmergencyServiceRequestApiController::class, 'submitService']);
+    Route::put('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'updateEmergency']);
+    Route::put('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'updateService']);
+    Route::delete('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'deleteEmergency']);
+    Route::delete('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'deleteService']);
     Route::post('/emergency-service/cancel', [EmergencyServiceRequestApiController::class, 'cancel']);
     Route::get('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'emergencyDetails']);
     Route::get('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'serviceDetails']);
