@@ -687,7 +687,7 @@
                         // Add emergencies
                         response.emergencies.forEach(function(emergency) {
                             tableContent += `
-                                <tr>
+                                 <tr class="clickable-row" data-request-id="${emergency.notice_id}" data-request-type="emergency">
                                     <td>
                                         <span class="badge bg-danger">
                                             ${emergency.emergency_type ? emergency.emergency_type.name : 'Emergency'}
@@ -719,7 +719,7 @@
                         // Add service requests
                         response.serviceRequests.forEach(function(service) {
                             tableContent += `
-                                <tr>
+                                <tr class="clickable-row" data-request-id="${service.service_request_id}" data-request-type="service">
                                     <td>
                                         <span class="badge bg-primary">
                                             ${service.service_type ? service.service_type.name : 'Service'}
