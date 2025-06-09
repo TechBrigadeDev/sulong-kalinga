@@ -30,70 +30,147 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Setting up notification and messaging system for {{ $roleName }}');
     
+    let refreshPaused = false;    
     // =============================================
     // MESSAGING SYSTEM
     // =============================================
     
-    // Helper function to update unread message count display
+   // Helper function to update unread message count display
     function updateUnreadMessageCount(count) {
         const messageCount = document.querySelector('.message-count');
         if (messageCount) {
             if (count > 0) {
+                messageCount.style.display = 'inline-block';
                 messageCount.textContent = count;
-                messageCount.style.display = 'block';
+                console.log(`Message badge updated: ${count} unread messages`); // Debug logging
             } else {
                 messageCount.style.display = 'none';
+                console.log('No unread messages, hiding badge');
             }
+        } else {
+            console.error('Message count badge element not found in DOM');
         }
     }
     
     // Load unread message count from server
     function loadUnreadMessageCount() {
+        // CRITICAL FIX: Don't refresh if dropdown is open
+        if (refreshPaused) {
+            console.log('Count refresh paused because dropdown is open');
+            return;
+        }
+        
+        console.log('Fetching unread message count from:', '{{ $messageUnreadCountUrl }}');
+        
         fetch('{{ $messageUnreadCountUrl }}')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            updateUnreadMessageCount(data.count);
-        })
-        .catch(error => {
-            console.error('Error loading unread message count:', error);
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Unread message count response:', data);
+                updateUnreadMessageCount(data.count);
+            })
+            .catch(error => {
+                console.error('Error loading unread message count:', error);
+            });
     }
     
     // Load recent messages for message dropdown
     function loadRecentMessages() {
         const container = document.getElementById('message-preview-container');
         if (!container) return;
+
+        console.log('Fetching recent messages from server...');
         
         // Show loading indicator
         container.innerHTML = `
-            <li class="text-center py-3">
+            <div class="dropdown-item text-center py-3">
                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-            </li>
+            </div>
         `;
         
         fetch('{{ $messageRecentUrl }}')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                fixMessagePreviews();
+                // Clear the container
+                container.innerHTML = '';
+                
+                console.log('Messages loaded:', data);
+                
+                // CRITICAL FIX: DON'T update badge with dropdown data - let the scheduled refreshes handle it
+                // This prevents the count from changing when dropdown opens
+                // updateUnreadMessageCount(data.unread_count || 0);
+                
+                // Check if we have any messages
+                if (data.success && data.messages && data.messages.length > 0) {
+                    console.log(`Rendering ${data.messages.length} message previews`);
+                    
+                    // Add each message
+                    data.messages.forEach(message => {
+                        // Create container element
+                        const messageItem = document.createElement('div');
+                        messageItem.className = `dropdown-item message-preview-item ${message.unread ? 'unread' : ''}`;
+                        messageItem.onclick = function() {
+                            window.location.href = `{{ $messagingUrl }}?conversation=${message.conversation_id}`;
+                        };
+                        
+                        // Format the message preview - use conversation_name for display
+                        const displayName = message.conversation_name || 'Unknown';
+                        
+                        // Build the HTML content
+                        messageItem.innerHTML = `
+                            <div class="d-flex align-items-start py-2">
+                                <div class="flex-shrink-0 me-2">
+                                    <img src="/images/defaultProfile.png" 
+                                        class="rounded-circle" width="40" height="40" alt="User">
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">${displayName}</span>
+                                        <small class="text-muted ms-2">${message.time_ago || '-'}</small>
+                                    </div>
+                                    <div class="text-truncate ${message.unread ? 'fw-semibold' : 'text-muted'}" style="max-width: 250px;">
+                                        ${message.is_unsent ? 'This message was unsent' : (message.content || 'No message')}
+                                    </div>
+                                </div>
+                                ${message.unread ? '<div class="unread-message-indicator bg-primary rounded-circle ms-2" style="width: 8px; height: 8px;"></div>' : ''}
+                            </div>
+                        `;
+                        
+                        container.appendChild(messageItem);
+                    });
+                } else {
+                    // Show no messages message
+                    container.innerHTML = `
+                        <div class="dropdown-item text-center py-3">
+                            <span class="text-muted">No messages</span>
+                        </div>
+                    `;
+                }
             })
             .catch(error => {
+                console.error('Error fetching recent messages:', error);
                 container.innerHTML = `
-                    <li class="text-center py-3">
-                        <small class="text-muted">Could not load messages</small>
-                    </li>
+                    <div class="dropdown-item text-center py-3">
+                        <span class="text-danger">Failed to load messages</span>
+                    </div>
                 `;
             });
     }
     
     // Mark all messages as read
     function markAllMessagesAsRead() {
+        console.log('Marking all messages as read...'); // Added log
         const markAllReadButtons = document.querySelectorAll('.mark-all-read');
         markAllReadButtons.forEach(btn => {
             if (btn.dataset.type === 'message') {
@@ -116,17 +193,25 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            // Update UI to show all messages as read
-            document.querySelectorAll('.message-preview.unread').forEach(el => {
+            console.log('Mark all messages as read - server response:', data);
+            
+            // Update UI immediately to reflect changes
+            document.querySelectorAll('.message-preview-item.unread').forEach(el => {
                 el.classList.remove('unread');
             });
             
-            // Remove all unread indicators and badges
-            document.querySelectorAll('.unread-indicator, .message-badge').forEach(el => {
+            // Remove all unread indicators from messages
+            document.querySelectorAll('.unread-message-indicator').forEach(el => {
                 el.remove();
             });
-
-            // Update message count
+            
+            // Reset text styling on messages that were unread
+            document.querySelectorAll('.message-preview-item .fw-semibold').forEach(el => {
+                el.classList.remove('fw-semibold');
+                el.classList.add('text-muted');
+            });
+            
+            // Update message count badge
             updateUnreadMessageCount(0);
             
             // Reset button state
@@ -144,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.prepend(successEl);
                 setTimeout(() => successEl.remove(), 3000);
             }
+            
+            // Most important: Reload message list to completely refresh content
+            loadRecentMessages();
         })
         .catch(error => {
             console.error('Error marking messages as read:', error);
@@ -716,8 +804,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up click handler for message dropdown
     const messagesDropdown = document.getElementById('messagesDropdown');
     if (messagesDropdown) {
-        messagesDropdown.addEventListener('click', function() {
+        // Pause refreshes when dropdown is opened
+        messagesDropdown.addEventListener('show.bs.dropdown', function() {
+            console.log('Messages dropdown opened - pausing refresh');
+            refreshPaused = true;
+            // Force load messages when dropdown opens
             loadRecentMessages();
+        });
+        
+        // Resume refreshes when dropdown is closed
+        messagesDropdown.addEventListener('hidden.bs.dropdown', function() {
+            console.log('Messages dropdown closed - resuming refresh');
+            refreshPaused = false;
+            // Update count after dropdown closes
+            setTimeout(loadUnreadMessageCount, 500);
         });
     }
     
@@ -726,32 +826,20 @@ document.addEventListener('DOMContentLoaded', function() {
     loadNotifications();
     
     // Set up periodic refresh
-    setInterval(loadUnreadMessageCount, 8000); // Every 8 seconds
-    setInterval(loadNotifications, 8000); // Every 8 seconds
-    
-    // Add data-type attribute to mark-all-read buttons when DOM is loaded
-    document.querySelectorAll('.message-dropdown .mark-all-read').forEach(btn => {
-        btn.setAttribute('data-type', 'message');
-    });
-    
-    document.querySelectorAll('.dropdown-notifications .mark-all-read').forEach(btn => {
-        btn.setAttribute('data-type', 'notification');
-    });
+    setInterval(() => {
+        if (!refreshPaused) {
+            console.log('Periodic refresh: Updating unread message count');
+            loadUnreadMessageCount();
+        } else {
+            console.log('Skipping message count refresh: dropdown is open');
+            // No longer calling loadUnreadMessageCount() when paused
+        }
+    }, 8000); // Every 8 seconds
 
-    // Initialize
-    loadUnreadMessageCount();
-    loadNotifications();
-    
-    // Set up periodic refresh with console logging
-    setInterval(function() {
-        console.log('Refreshing unread message count...');
-        loadUnreadMessageCount();
-    }, 30000); // Every 30 seconds
-    
-    setInterval(function() {
-        console.log('Refreshing notifications...');
+    setInterval(() => {
+        console.log('Periodic refresh: Updating notifications');
         loadNotifications();
-    }, 60000); // Every 60 seconds
+    }, 8000); // Every 8 seconds
     
     // Add data-type attribute to mark-all-read buttons when DOM is loaded
     document.querySelectorAll('.message-dropdown .mark-all-read').forEach(btn => {
