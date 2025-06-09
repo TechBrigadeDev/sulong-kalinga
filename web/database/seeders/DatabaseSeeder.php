@@ -920,9 +920,8 @@ class DatabaseSeeder extends Seeder
         $careManagers = User::where('role_id', 2)->get();
         $careWorkers = User::where('role_id', 3)->get();
         
-        // Get a subset of beneficiaries and family members for conversations
-        // We don't need all 100 beneficiaries having conversations
-        $beneficiaries = Beneficiary::inRandomOrder()->take(20)->get();
+        // INCREASE NUMBER: Use more beneficiaries for conversations (50 instead of 20)
+        $beneficiaries = Beneficiary::inRandomOrder()->take(50)->get();
         
         // ================ PRIVATE CONVERSATIONS ================
         $conversationCount = 0;
@@ -964,6 +963,10 @@ class DatabaseSeeder extends Seeder
                 // NEW: Create conversations between care worker and this beneficiary's family members
                 // FIX: Use related_beneficiary_id instead of beneficiary_id
                 $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+                
+                // NEW: Add logging to track family member query results
+                \Log::info("Found {$familyMembers->count()} family members for beneficiary {$beneficiary->beneficiary_id}");
+                
                 foreach ($familyMembers as $familyMember) {
                     // Create a conversation between care worker and family member
                     $this->createPrivateConversation($careWorkers[$i], $familyMember, 'family_member');
@@ -992,33 +995,72 @@ class DatabaseSeeder extends Seeder
             $groupCount++;
         }
         
-        // 3. NEW: Create family-centered group chats with beneficiaries and their family members
+        // 3. MODIFIED: Create family-centered group chats with beneficiaries and their family members
         // Create specific groups for beneficiary + family + care worker
-        for ($i = 0; $i < $careWorkersCount; $i++) {
-            $start = $i * $beneficiariesPerWorker;
-            $length = min($beneficiariesPerWorker, count($beneficiaries) - $start);
+        $familyGroupCount = 0;
+        
+        // IMPROVED APPROACH: Loop through beneficiaries directly instead of via care workers
+        foreach ($beneficiaries as $beneficiary) {
+            // Get this beneficiary's family members
+            $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
             
-            if ($length <= 0) break;
+            // Find a care worker for this beneficiary (based on municipality)
+            $careWorker = $careWorkers->random();
             
-            $assignedBeneficiaries = $beneficiaries->slice($start, $length);
-            
-            foreach ($assignedBeneficiaries as $beneficiary) {
-                // Get this beneficiary's family members
-                // FIX: Use related_beneficiary_id instead of beneficiary_id
-                $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+            // MODIFIED: Create group chat if there's at least one family member OR with 80% probability anyway
+            if ($familyMembers->count() > 0 || rand(1, 10) <= 8) {
+                // Create a group name specific to this beneficiary's care
+                $groupName = "Support Group: " . $beneficiary->first_name . " " . $beneficiary->last_name;
                 
-                // Only create group if there are family members
-                if ($familyMembers->count() > 0) {
-                    // Create a group name specific to this beneficiary's care
-                    $groupName = "Support Group: " . $beneficiary->first_name . " " . $beneficiary->last_name;
-                    
-                    // Create group chat logic...
-                    // Generating group chat code remains the same...
+                // Create a group chat
+                $groupChat = Conversation::factory()->groupChat()->create([
+                    'name' => $groupName,
+                ]);
+                
+                // Add the care worker as the first participant (creator)
+                ConversationParticipant::create([
+                    'conversation_id' => $groupChat->conversation_id,
+                    'participant_id' => $careWorker->id,
+                    'participant_type' => 'cose_staff',
+                    'joined_at' => now()->subDays(rand(1, 30)),
+                ]);
+                
+                // Add the beneficiary
+                ConversationParticipant::create([
+                    'conversation_id' => $groupChat->conversation_id,
+                    'participant_id' => $beneficiary->beneficiary_id,
+                    'participant_type' => 'beneficiary',
+                    'joined_at' => now()->subDays(rand(1, 30)),
+                ]);
+                
+                // Add all family members if any exist
+                foreach ($familyMembers as $familyMember) {
+                    ConversationParticipant::create([
+                        'conversation_id' => $groupChat->conversation_id,
+                        'participant_id' => $familyMember->family_member_id,
+                        'participant_type' => 'family_member',
+                        'joined_at' => now()->subDays(rand(1, 30)),
+                    ]);
                 }
+                
+                // MODIFIED: Always include a care manager (100% instead of 33% chance)
+                if ($careManagers->count() > 0) {
+                    ConversationParticipant::create([
+                        'conversation_id' => $groupChat->conversation_id,
+                        'participant_id' => $careManagers->random()->id,
+                        'participant_type' => 'cose_staff',
+                        'joined_at' => now()->subDays(rand(1, 30)),
+                    ]);
+                }
+                
+                // Generate messages in this group conversation
+                $this->generateFamilyGroupMessages($groupChat, $careWorker, $beneficiary, $familyMembers);
+                $groupCount++;
+                $familyGroupCount++;
             }
         }
         
-        \Log::info("Created {$groupCount} group conversations");
+        \Log::info("Created {$groupCount} group conversations including {$familyGroupCount} family group chats");
         
         // Log overall messaging stats
         $totalConversations = Conversation::count();
