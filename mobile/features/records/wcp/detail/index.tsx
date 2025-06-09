@@ -15,7 +15,7 @@ interface Props {
 const WCPRecordDetail = ({ record }: Props) => {
     return (
         <YStack
-            space="$0"
+            rowGap="$4"
             style={{ padding: 16 }}
         >
             <PersonalDetails

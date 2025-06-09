@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react-native";
-import { Card, H4, Text, XStack } from "tamagui";
+import { Card, H4, Text, XStack, YStack } from "tamagui";
 
 interface SpecialInstructionsCardProps {
     special_instructions?: string;

@@ -23,7 +23,7 @@ const GovernmentIDs = ({
                     Government ID Numbers
                 </SectionTitle>
             </Card.Header>
-            <YStack>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <DetailRow
                         label="SSS ID Number"

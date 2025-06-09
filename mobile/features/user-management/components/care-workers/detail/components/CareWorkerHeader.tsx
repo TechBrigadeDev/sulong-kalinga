@@ -39,7 +39,7 @@ const CareWorkerHeader = ({
                             fallback={careWorker.id.toString()}
                         />
                     </Avatar> */}
-                    <YStack flex={1} gap="$2">
+                    <YStack flex={1} gap="$2" p="$4">
                         <H4>
                             {
                                 careWorker.first_name

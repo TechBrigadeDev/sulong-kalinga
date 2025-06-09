@@ -23,7 +23,7 @@ const PersonalDetails = ({
                     Personal Details
                 </SectionTitle>
             </Card.Header>
-            <YStack>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <DetailRow
                         label="Educational Background"

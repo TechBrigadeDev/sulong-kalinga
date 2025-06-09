@@ -42,7 +42,7 @@ const PersonalInformation = ({
                     Personal Information
                 </H3>
             </Card.Header>
-            <YStack>
+            <YStack p="$4" gap="$3">
                 <YStack gap="$4">
                     <InfoItem
                         label="Full Name"

@@ -21,7 +21,7 @@ const Documents = ({ careManager }: Props) => {
                     Documents
                 </SectionTitle>
             </Card.Header>
-            <YStack>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <DetailRow
                         label="Government Issued ID"

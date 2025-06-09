@@ -23,7 +23,7 @@ const WorkInformation = ({
                     Work Information
                 </SectionTitle>
             </Card.Header>
-            <YStack>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <DetailRow
                         label="Status Period"

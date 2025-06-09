@@ -1,13 +1,13 @@
 import AvatarImage from "components/Avatar";
 import TabScroll from "components/tabs/TabScroll";
-import { Link } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
     Avatar,
     Button,
     Card,
     H4,
-    Stack,
     Text,
     XStack,
     YStack,
@@ -128,7 +128,7 @@ const Screen = () => {
 
     return (
         <TabScroll style={{ flex: 1 }}>
-            <Stack style={{ padding: 16 }}>
+            <YStack style={{ padding: 16 }}>
                 <Card
                     elevate
                     style={{
@@ -264,9 +264,22 @@ const Screen = () => {
                     time="02:00 PM"
                     type="Service Request"
                 />
-            </Stack>
+            </YStack>
         </TabScroll>
     );
 };
 
-export default Screen;
+const Layout = () => (
+    <>
+    <Stack.Screen
+        options={{
+            headerShown: false,
+        }}
+    />
+        <SafeAreaView style={{ flex: 1 }}>
+            <Screen />
+        </SafeAreaView>
+    </>
+)
+
+export default Layout;
