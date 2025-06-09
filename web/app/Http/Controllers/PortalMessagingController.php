@@ -168,10 +168,16 @@ class PortalMessagingController extends Controller
     
     private function getUserConversations($user, $userType)
     {
+        // CRITICAL FIX: Handle family vs family_member type mismatch
+        $participantTypes = [$userType];
+        if ($userType === 'family') {
+            $participantTypes[] = 'family_member';
+        }
+
         // First, get the conversation IDs to avoid eager loading errors
-        $conversationIds = Conversation::whereHas('participants', function($query) use ($user, $userType) {
+        $conversationIds = Conversation::whereHas('participants', function($query) use ($user, $participantTypes) {
             $query->where('participant_id', $user->getKey())
-                ->where('participant_type', $userType)
+                ->whereIn('participant_type', $participantTypes)
                 ->whereNull('left_at');
         })->pluck('conversation_id');
         
@@ -883,7 +889,14 @@ class PortalMessagingController extends Controller
         $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
         $user = Auth::guard($userType)->user();
         
-        try {
+       try {
+
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+
             // Get conversations with the user as participant
             $conversationIds = ConversationParticipant::where('participant_id', $user->getKey())
                 ->where('participant_type', $userType)
@@ -924,14 +937,27 @@ class PortalMessagingController extends Controller
         $user = Auth::guard($userType)->user();
         
         try {
-            // Get conversations with the user as participant
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+            
+            // Get conversations with the user as participant - FIXED to use whereIn
             $conversationIds = ConversationParticipant::where('participant_id', $user->getKey())
-                ->where('participant_type', $userType)
+                ->whereIn('participant_type', $participantTypes)  // FIXED: use whereIn with array
                 ->whereNull('left_at')
                 ->pluck('conversation_id');
                 
+            // Log count of conversations found for debugging
+            \Log::info('Recent messages query for ' . $userType, [
+                'user_id' => $user->getKey(),
+                'conversation_count' => count($conversationIds),
+                'conversation_ids' => $conversationIds
+            ]);
+            
             // Get conversations with their last messages
-            $conversations = Conversation::whereIn('conversation_id', $conversationIds)
+            $conversations = Conversation::whereIn('conversation_id', $conversationIds->all())
                 ->with(['lastMessage', 'participants'])
                 ->orderBy('updated_at', 'desc')
                 ->limit(5)
@@ -947,69 +973,42 @@ class PortalMessagingController extends Controller
                 // Get message details
                 $message = $conversation->lastMessage;
                 
-                // Check if unread
+                // FIXED: Check if message is read using correct participant types
                 $isRead = $message->readStatuses()
                     ->where('reader_id', $user->getKey())
-                    ->where('reader_type', $userType)
+                    ->whereIn('reader_type', $participantTypes)
                     ->exists();
+                
+                // FIXED: Check for unread status correctly
+                $isUnread = !$isRead && 
+                    !($message->sender_id == $user->getKey() && 
+                    (in_array($message->sender_type, $participantTypes)));
                     
-                if (!$isRead && $message->sender_id != $user->getKey() && $message->sender_type != $userType) {
+                if ($isUnread) {
                     $unreadCount++;
                 }
                 
-                // Get sender info
-                $senderName = '';
-                if ($message->sender_type === 'cose_staff') {
-                    $staff = User::find($message->sender_id);
-                    $senderName = $staff ? $staff->first_name . ' ' . $staff->last_name : 'Staff';
-                } elseif ($message->sender_type === 'beneficiary') {
-                    $beneficiary = Beneficiary::find($message->sender_id);
-                    $senderName = $beneficiary ? $beneficiary->first_name . ' ' . $beneficiary->last_name : 'Beneficiary';
-                } elseif ($message->sender_type === 'family_member') {
-                    $familyMember = FamilyMember::find($message->sender_id);
-                    $senderName = $familyMember ? $familyMember->first_name . ' ' . $familyMember->last_name : 'Family Member';
-                }
+                // Set display name for the conversation
+                $conversationName = $conversation->is_group_chat ? 
+                    $conversation->name : 
+                    $this->getConversationName($conversation, $user, $userType);
                 
-                // Get other participant name for non-group conversations
-                $otherParticipantName = '';
-                if (!$conversation->is_group_chat) {
-                    // Find the other participant
-                    foreach ($conversation->participants as $participant) {
-                        if (!($participant->participant_id == $user->getKey() && 
-                            ($participant->participant_type == $userType ||
-                            ($participant->participant_type == 'family_member' && $userType == 'family')))) {
-                            
-                            // Get name based on participant type
-                            if ($participant->participant_type === 'cose_staff') {
-                                $staff = User::find($participant->participant_id);
-                                $otherParticipantName = $staff ? $staff->first_name . ' ' . $staff->last_name : 'Staff';
-                            } elseif ($participant->participant_type === 'beneficiary') {
-                                $beneficiary = Beneficiary::find($participant->participant_id);
-                                $otherParticipantName = $beneficiary ? $beneficiary->first_name . ' ' . $beneficiary->last_name : 'Beneficiary';
-                            } elseif ($participant->participant_type === 'family_member') {
-                                $familyMember = FamilyMember::find($participant->participant_id);
-                                $otherParticipantName = $familyMember ? $familyMember->first_name . ' ' . $familyMember->last_name : 'Family Member';
-                            }
-                            break;
-                        }
-                    }
-                }
-                
-                // Format content
-                $content = $message->is_unsent ? 'This message was unsent' : $message->content;
-                
-                // Add to results with correctly named fields matching the JS expectations
+                // Add to results
                 $recentMessages[] = [
                     'conversation_id' => $conversation->conversation_id,
-                    'conversation_name' => $conversation->is_group_chat ? $conversation->name : $otherParticipantName,
-                    'sender_name' => $senderName,
-                    'content' => $content,
+                    'conversation_name' => $conversationName,
+                    'content' => $message->is_unsent ? 'This message was unsent' : $message->content,
                     'is_unsent' => $message->is_unsent,
-                    'time_ago' => $message->message_timestamp->diffForHumans(),
-                    'unread' => !$isRead && $message->sender_id != $user->getKey() && $message->sender_type != $userType,
+                    'time_ago' => \Carbon\Carbon::parse($message->message_timestamp)->diffForHumans(),
+                    'unread' => $isUnread,
                     'is_group' => $conversation->is_group_chat
                 ];
             }
+            
+            \Log::info('Formatted recent messages', [
+                'message_count' => count($recentMessages),
+                'unread_count' => $unreadCount
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -1018,16 +1017,41 @@ class PortalMessagingController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Error getting recent messages: ' . $e->getMessage(), [
-                'error' => $e->getMessage(),
+            \Log::error('Error getting recent messages: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
                 'success' => false,
                 'messages' => [],
-                'unread_count' => 0
+                'unread_count' => 0,
+                'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Helper method to get a conversation name for display
+     */
+    private function getConversationName($conversation, $user, $userType)
+    {
+        if ($conversation->is_group_chat) {
+            return $conversation->name ?: 'Group Chat';
+        } else {
+            // For private conversations, get the other participant's name
+            $otherParticipantName = 'Unknown User';
+            
+            foreach ($conversation->participants as $participant) {
+                if (!($participant->participant_id == $user->getKey() && 
+                    ($participant->participant_type == $userType || 
+                    ($userType == 'family' && $participant->participant_type == 'family_member')))) {
+                    
+                    $otherParticipantName = $this->getParticipantName($participant);
+                    break;
+                }
+            }
+            
+            return $otherParticipantName;
         }
     }
 
@@ -1091,27 +1115,42 @@ class PortalMessagingController extends Controller
         $user = Auth::guard($userType)->user();
         
         try {
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+            
             // Get conversations with the user as participant
+            // FIX: Use whereIn with participantTypes instead of where with userType
             $conversationIds = ConversationParticipant::where('participant_id', $user->getKey())
-                ->where('participant_type', $userType)
+                ->whereIn('participant_type', $participantTypes) // FIXED: use whereIn with the array
                 ->whereNull('left_at')
                 ->pluck('conversation_id');
                 
             // Get unread messages
             $messages = Message::whereIn('conversation_id', $conversationIds)
-                ->where(function($query) use ($user, $userType) {
-                    $query->where('sender_id', '!=', $user->getKey())
-                        ->orWhere('sender_type', '!=', $userType);
+                ->where(function($query) use ($user, $userType, $participantTypes) {
+                    // Only count messages not sent by current user
+                    $query->where(function($q) use ($user, $participantTypes) {
+                        $q->where('sender_id', '!=', $user->getKey())
+                        ->orWhereNotIn('sender_type', $participantTypes);
+                    });
                 })
-                ->whereDoesntHave('readStatuses', function($query) use ($user, $userType) {
+                ->whereDoesntHave('readStatuses', function($query) use ($user, $userType, $participantTypes) {
                     $query->where('reader_id', $user->getKey())
-                        ->where('reader_type', $userType);
+                        ->whereIn('reader_type', $participantTypes); // FIXED: use whereIn here too
                 })
                 ->get();
                 
             // Mark all as read
             foreach ($messages as $message) {
-                $this->markMessageAsRead($message->message_id, $user->getKey(), $userType);
+                MessageReadStatus::firstOrCreate([
+                    'message_id' => $message->message_id,
+                    'reader_id' => $user->getKey(),
+                    'reader_type' => $userType,
+                    'read_at' => now()
+                ]);
             }
             
             return response()->json([
@@ -1150,10 +1189,7 @@ class PortalMessagingController extends Controller
     {
         $id = $request->query('id');
         if (!$id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Missing conversation ID'
-            ], 400);
+            return response()->json(['error' => 'No conversation ID provided'], 400);
         }
         
         try {
@@ -1162,24 +1198,32 @@ class PortalMessagingController extends Controller
             $user = Auth::guard($userType)->user();
             $rolePrefix = $userType;
             
-            // Get the conversation with all related data
-            $conversation = Conversation::with([
-                'participants',
-                'messages.attachments',
-                'messages.readStatuses'
-            ])->findOrFail($id);
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+            
+            // Get the conversation
+            $conversation = Conversation::findOrFail($id);
             
             // Security check: Make sure user is a participant
-            $isParticipant = $conversation->participants->where('participant_id', $user->getKey())
-                                                    ->where('participant_type', $userType)
-                                                    ->where('left_at', null)
-                                                    ->isNotEmpty();
+            $isParticipant = false;
+            
+            if ($userType === 'family') {
+                // Check for both family and family_member types
+                $isParticipant = $conversation->participants()
+                    ->where('participant_id', $user->getKey())
+                    ->whereIn('participant_type', $participantTypes)
+                    ->whereNull('left_at')
+                    ->exists();
+            } else {
+                // For beneficiary, use standard check
+                $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            }
             
             if (!$isParticipant) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have access to this conversation'
-                ], 403);
+                return response()->json(['error' => 'You are not a participant in this conversation'], 403);
             }
             
             // Get messages for this conversation
@@ -1253,9 +1297,6 @@ class PortalMessagingController extends Controller
         }
     }
 
-    /**
-     * Mark messages in a conversation as read
-     */
     public function markAsRead(Request $request)
     {
         try {
@@ -1275,12 +1316,31 @@ class PortalMessagingController extends Controller
             $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
             $user = Auth::guard($userType)->user();
             
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+            
             // Get conversation
             $conversationId = $request->conversation_id;
             $conversation = Conversation::findOrFail($conversationId);
             
-            // Check if user is a participant
-            $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            // Check if user is a participant with the correct participant type handling
+            $isParticipant = false;
+            
+            if ($userType === 'family') {
+                // Check for both family and family_member types
+                $isParticipant = $conversation->participants()
+                    ->where('participant_id', $user->getKey())
+                    ->whereIn('participant_type', $participantTypes)
+                    ->whereNull('left_at')
+                    ->exists();
+            } else {
+                // For beneficiary, use standard check
+                $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            }
+            
             if (!$isParticipant) {
                 return response()->json([
                     'success' => false,
@@ -1291,6 +1351,7 @@ class PortalMessagingController extends Controller
             // Get unread messages in the conversation
             $messages = Message::where('conversation_id', $conversationId)
                 ->where(function($query) use ($user, $userType) {
+                    // Only count messages not sent by current user
                     $query->where('sender_id', '!=', $user->getKey())
                         ->orWhere('sender_type', '!=', $userType);
                 })
