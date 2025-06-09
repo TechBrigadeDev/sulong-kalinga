@@ -2,6 +2,7 @@ import TabScroll from "components/tabs/TabScroll";
 import {
     ArrowLeft,
     ArrowRight,
+    Check,
 } from "lucide-react-native";
 import { useState } from "react";
 import { Button, XStack, YStack } from "tamagui";
@@ -255,6 +256,23 @@ const WCPForm = () => {
         }
     };
 
+    const handleNext = () => {
+        if (currentStep < FORM_STEPS.length - 1) {
+            setCurrentStep(currentStep + 1);
+        }
+    };
+
+    const handleSubmit = () => {
+        // Handle form submission logic here
+        console.log(
+            "Form submitted with data:",
+            formData,
+        );
+        // Reset form or navigate to another screen if needed
+        setCurrentStep(0);
+        setFormData(INITIAL_FORM_DATA);
+    };
+
     return (
         <YStack style={{ flex: 1 }}>
             <FormProgress
@@ -281,58 +299,47 @@ const WCPForm = () => {
                 }}
             >
                 <XStack style={{ gap: 16 }}>
-                    <Button
-                        style={{ flex: 1 }}
-                        onPress={handlePrevious}
-                        icon={
-                            <ArrowLeft
-                                size={16}
-                            />
-                        }
-                        disabled={
-                            currentStep === 0
-                        }
-                        opacity={
-                            currentStep === 0
-                                ? 0
-                                : 1
-                        }
-                    >
-                        Previous
-                    </Button>
-
-                    {/* {currentStep === FORM_STEPS.length - 1 ? (
-            <Button
-              style={{ flex: 1 }}
-              onPress={handleSubmit}
-              themeInverse
-              icon={<Check size={16} />}
-            >
-              Submit
-            </Button>
-          ) : (
-            <Button
-              style={{ flex: 1 }}
-              onPress={handleNext}
-              icon={<ArrowRight size={16} />}
-              iconAfter
-            >
-              Next
-            </Button>
-          )} */}
-
-                    <Button
-                        style={{ flex: 1 }}
-                        // onPress={handleNext}
-                        icon={
+                    {currentStep > 0 && (
+                        <Button
+                            style={{ flex: 1 }}
+                            onPress={
+                                handlePrevious
+                            }
+                            icon={
+                                <ArrowLeft
+                                    size={16}
+                                />
+                            }
+                            disabled={
+                                currentStep === 0
+                            }
+                        >
+                            Previous
+                        </Button>
+                    )}
+                    {currentStep ===
+                    FORM_STEPS.length - 1 ? (
+                        <Button
+                            style={{ flex: 1 }}
+                            onPress={handleSubmit}
+                            themeInverse
+                        >
+                            <Check size={16} />
+                            Submit
+                        </Button>
+                    ) : (
+                        <Button
+                            style={{ flex: 1 }}
+                            onPress={handleNext}
+                        >
+                            {currentStep === 0
+                                ? "Start"
+                                : "Next"}
                             <ArrowRight
                                 size={16}
                             />
-                        }
-                        // iconAfter
-                    >
-                        Next
-                    </Button>
+                        </Button>
+                    )}
                 </XStack>
             </YStack>
         </YStack>
