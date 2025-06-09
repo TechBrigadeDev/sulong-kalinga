@@ -90,6 +90,7 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         Route::post('/read-all', [PortalMessagingController::class, 'markAllAsRead'])->name('read-all');
         Route::post('/mark-as-read', [PortalMessagingController::class, 'markAsRead'])->name('mark-as-read');
         Route::get('/attachment/{id}', [PortalMessagingController::class, 'downloadAttachment'])->name('attachment');
+        Route::get('/check-conversation', [PortalMessagingController::class, 'getConversationsWithRecipient'])->name('check-conversation');
     });
 
     // Profile Routes

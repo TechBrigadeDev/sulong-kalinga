@@ -6,77 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="role-prefix" content="{{ $rolePrefix }}">
-
-    <script>
-        // UNIVERSAL Care Worker Badge Fix (works for all conversations)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Function to fix all care worker badges
-            function fixCareWorkerBadges() {
-                // Find all conversation items 
-                const conversations = document.querySelectorAll('.conversation-item');
-                
-                conversations.forEach(conversation => {
-                    // For each conversation, check if it contains a participant badge with incorrect type
-                    const badges = conversation.querySelectorAll('.user-type-badge, .participant-badge');
-                    
-                    badges.forEach(badge => {
-                        // Get the participant type from data attribute
-                        const participantType = badge.getAttribute('data-participant-type');
-                        
-                        // If this is a COSE staff but showing as "Beneficiary", fix it
-                        if (participantType === 'cose_staff' && badge.textContent.trim() === 'Beneficiary') {
-                            console.log('Fixed care worker badge in conversation:', conversation.dataset.conversationId);
-                            badge.textContent = 'Care Worker';
-                            badge.classList.remove('bg-success');
-                            badge.classList.add('bg-info');
-                        }
-                    });
-                });
-            }
-            
-            // Run the fix multiple times to ensure it catches all badges
-            setTimeout(fixCareWorkerBadges, 100);
-            setTimeout(fixCareWorkerBadges, 500);
-            setTimeout(fixCareWorkerBadges, 1000);
-            
-            // Also run whenever the conversation list is updated
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.addedNodes.length > 0) {
-                        setTimeout(fixCareWorkerBadges, 100);
-                    }
-                });
-            });
-            
-            // Start observing the document body
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
-        </script>
-
-        <style>
-        /* Universal fix for care worker badges via CSS */
-        .participant-badge[data-participant-type="cose_staff"],
-        .user-type-badge[data-participant-type="cose_staff"] {
-            background-color: #0dcaf0 !important; /* Bootstrap .bg-info color */
-            color: #fff !important;
-        }
-
-        /* Force Care Worker text for COSE staff */
-        .participant-badge[data-participant-type="cose_staff"]::after,
-        .user-type-badge[data-participant-type="cose_staff"]::after {
-            content: "Care Worker";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: inherit;
-        }
-        </style>
-
     <script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
     <title>Messaging - SulongKalinga</title>
     
@@ -259,6 +188,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <div id="existingConversationWarning" class="alert alert-info d-none">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            You already have a conversation with this care worker. Please use your existing conversation.
+                        </div>
                         @if(!empty($assignedCareWorkerId))
                             <p>Start a conversation with your assigned care worker:</p>
                             <div class="d-flex align-items-center mb-3">
@@ -4472,7 +4405,63 @@
 
             // Fix for stuck modal backdrops
             const newConversationModal = document.getElementById('newConversationModal');
-            
+            if (newConversationModal) {
+                newConversationModal.addEventListener('show.bs.modal', function() {
+                    const careWorkerId = document.querySelector('input[name="recipient_id"]')?.value;
+                    const submitBtn = document.getElementById('startConversationBtn');
+                    const warningNote = document.getElementById('existingConversationWarning');
+                    
+                    if (careWorkerId) {
+                        // Show loading state
+                        if (submitBtn) submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Checking...';
+                        
+                        // Check if conversation already exists
+                        fetch(`/${rolePrefix}/messaging/check-conversation?recipient_id=${careWorkerId}&recipient_type=cose_staff`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.exists) {
+                                    // Disable button and show warning
+                                    if (submitBtn) {
+                                        submitBtn.disabled = true;
+                                        submitBtn.innerHTML = 'Start Conversation';
+                                    }
+                                    
+                                    if (warningNote) {
+                                        warningNote.classList.remove('d-none');
+                                        
+                                        // If conversation ID is returned, add a link to it
+                                        if (data.conversation_id) {
+                                            warningNote.innerHTML = `
+                                                <i class="bi bi-info-circle-fill me-2"></i>
+                                                You already have a conversation with this care worker. 
+                                                <a href="/${rolePrefix}/messaging?conversation=${data.conversation_id}" class="alert-link">
+                                                    Click here to open your existing conversation
+                                                </a>.
+                                            `;
+                                        }
+                                    }
+                                } else {
+                                    // Enable button and hide warning
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = 'Start Conversation';
+                                    }
+                                    if (warningNote) warningNote.classList.add('d-none');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error checking existing conversation:', error);
+                                // Reset button on error
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = 'Start Conversation';
+                                }
+                            });
+                    }
+                });
+            }
+
+
             // Add event listener for when the modal is hidden
             newConversationModal.addEventListener('hidden.bs.modal', function() {
                 // Remove any lingering modal backdrops

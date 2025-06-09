@@ -1430,4 +1430,36 @@ class PortalMessagingController extends Controller
             return response()->json(['success' => false, 'message' => 'Error fetching unread count'], 500);
         }
     }
+
+    /**
+     * Check if conversation exists with a specific recipient
+     */
+    public function getConversationsWithRecipient(Request $request)
+    {
+        $recipientId = $request->query('recipient_id');
+        $recipientType = $request->query('recipient_type', 'cose_staff');
+        
+        try {
+            // Determine if user is a beneficiary or family member
+            $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+            $user = Auth::guard($userType)->user();
+            
+            // Find existing conversation
+            $existingConvo = $this->findExistingPrivateConversation($user->getKey(), $userType, $recipientId);
+            
+            return response()->json([
+                'exists' => $existingConvo !== null,
+                'conversation_id' => $existingConvo ? $existingConvo->conversation_id : null
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error checking conversations with recipient: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'exists' => false,
+                'error' => 'Error checking conversations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
