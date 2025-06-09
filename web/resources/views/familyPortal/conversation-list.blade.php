@@ -140,7 +140,20 @@
                                     $typeBadgeClass = 'bg-secondary';
                                 }
                             @endphp
-                            <span class="user-type-badge {{ $typeBadgeClass }}">{{ $participantType }}</span>
+                            @php
+                            // Ensure we display the correct participant type, prioritizing the display value
+                            $displayParticipantType = $convo->participant_type_display ?? 
+                                                    $convo->staff_role ?? 
+                                                    ($otherParticipant->participant_type === 'cose_staff' ? 'Care Worker' : 
+                                                    ($otherParticipant->participant_type === 'beneficiary' ? 'Beneficiary' : 
+                                                        ($otherParticipant->participant_type === 'family_member' ? 'Family Member' : 
+                                                        'Unknown')));
+                            @endphp
+
+                            <span class="participant-badge user-type-badge {{ $typeBadgeClass }}" 
+                                data-participant-type="{{ $otherParticipant->participant_type ?? 'unknown' }}">
+                                {{ $displayParticipantType }}
+                            </span>
                         @endif
                     </div>
                     <small class="conversation-time">

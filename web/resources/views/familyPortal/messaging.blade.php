@@ -1,11 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script>
+// Immediate badge fixer that runs as early as possible
+(function() {
+    // Run on DOMContentLoaded and also on any dynamic content change
+    function fixBadges() {
+        // Get all participant badges by multiple potential classes
+        const badges = document.querySelectorAll('.participant-badge, .user-type-badge, [data-participant-type="cose_staff"]');
+        
+        badges.forEach(badge => {
+            // Check for badges that are incorrectly displaying "Beneficiary" but are for care workers
+            if ((badge.textContent.trim() === 'Beneficiary' || badge.textContent.trim() === 'beneficiary') && 
+                badge.getAttribute('data-participant-type') === 'cose_staff') {
+                    
+                // Fix the badge text and style
+                badge.textContent = 'Care Worker';
+                badge.className = badge.className.replace(/bg-\w+/g, 'bg-info');
+                badge.className += ' bg-info';
+                
+                console.log('Fixed a care worker badge that was showing as Beneficiary');
+            }
+            
+            // Also check for any care worker badges that should be blue
+            if (badge.getAttribute('data-participant-type') === 'cose_staff') {
+                badge.className = badge.className.replace(/bg-\w+/g, 'bg-info');
+                badge.className += ' bg-info';
+            }
+        });
+    }
+    
+    // Run immediately and observe for changes
+    document.addEventListener('DOMContentLoaded', function() {
+        fixBadges();
+        
+        // Use MutationObserver to watch for dynamically added badges
+        const observer = new MutationObserver(function(mutations) {
+            fixBadges();
+        });
+        
+        // Start observing once the DOM is loaded
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+    
+    // Also attempt to run before DOM is fully loaded
+    if (document.body) {
+        fixBadges();
+    } else {
+        // If body doesn't exist yet, wait for it with an interval
+        const earlyCheck = setInterval(function() {
+            if (document.body) {
+                fixBadges();
+                clearInterval(earlyCheck);
+            }
+        }, 10);
+    }
+})();
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="role-prefix" content="{{ $rolePrefix }}">
-<script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
+
+    <script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
     <title>Messaging - SulongKalinga</title>
     
     <!-- Styles -->
@@ -3244,7 +3303,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize modals
             viewMembersModal = new bootstrap.Modal(document.getElementById('viewMembersModal'));
-            addMemberModal = new bootstrap.Modal(document.getElementById('addMemberModal'));
+            //addMemberModal = new bootstrap.Modal(document.getElementById('addMemberModal'));
             
             // Event delegation for dynamic elements
             document.addEventListener('click', function(e) {
@@ -3256,14 +3315,6 @@
                     loadGroupMembers(conversationId);
                 }
                 
-                // Add member button
-                if (e.target.closest('.add-member-btn')) {
-                    e.preventDefault();
-                    const btn = e.target.closest('.add-member-btn');
-                    const conversationId = btn.getAttribute('data-conversation-id');
-                    document.getElementById('groupConversationId').value = conversationId;
-                    addMemberModal.show();
-                }
             });
             
             // Set up add member form functionality similar to new conversation
@@ -4468,6 +4519,58 @@
             console.log('Search navigation buttons initialized');
         }
 
+        // Fix conversation display on initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                // Process all conversation items to ensure correct display
+                document.querySelectorAll('.conversation-item').forEach(item => {
+                    // Fix participant badge for staff
+                    const badge = item.querySelector('.participant-badge');
+                    if (badge && badge.textContent.trim() === 'beneficiary' && badge.dataset.participantType === 'cose_staff') {
+                        badge.textContent = 'Care Worker';
+                        badge.classList.remove('bg-success');
+                        badge.classList.add('bg-info');
+                    }
+                    
+                    // Fix message preview to add "You:" for current user messages
+                    const preview = item.querySelector('.conversation-preview');
+                    const senderId = preview ? preview.dataset.senderId : null;
+                    const senderType = preview ? preview.dataset.senderType : null;
+                    
+                    if (preview && senderId == '{{ Auth::guard($rolePrefix)->id() }}' && 
+                        (senderType == '{{ $rolePrefix }}' || (senderType == 'family_member' && '{{ $rolePrefix }}' == 'family'))) {
+                        if (!preview.innerHTML.startsWith('You: ') && !preview.textContent.includes('This message was unsent')) {
+                            preview.innerHTML = 'You: ' + preview.innerHTML;
+                        }
+                    }
+                    
+                    // Refresh unread counts to ensure they're accurate
+                    const unreadBadge = item.querySelector('.unread-badge');
+                    if (unreadBadge) {
+                        // Make AJAX call to get correct unread count for this conversation
+                        const conversationId = item.dataset.conversationId;
+                        if (conversationId) {
+                            fetch(`/{{ $rolePrefix }}/messaging/conversation-unread-count?id=${conversationId}`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.count > 0) {
+                                    unreadBadge.textContent = data.count;
+                                    item.classList.add('unread');
+                                } else {
+                                    unreadBadge.style.display = 'none';
+                                    item.classList.remove('unread');
+                                }
+                            })
+                            .catch(err => console.error('Error fetching unread count:', err));
+                        }
+                    }
+                });
+            }, 500);
+        });
         
     </script>
 
