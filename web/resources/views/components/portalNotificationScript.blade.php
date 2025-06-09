@@ -41,8 +41,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (count > 0) {
                 messageCount.textContent = count;
                 messageCount.style.display = 'block';
+                console.log(`Message badge updated: ${count} unread messages`); // Added log
             } else {
                 messageCount.style.display = 'none';
+                console.log('No unread messages, hiding badge'); // Added log
             }
         }
     }
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadRecentMessages() {
         const container = document.getElementById('message-preview-container');
         if (!container) return;
+
+        console.log('Fetching recent messages from server...'); // Added log
         
         // Show loading indicator
         container.innerHTML = `
@@ -83,12 +87,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 // Clear the container
                 container.innerHTML = '';
+
+                console.log('Messages loaded:', data); // Added log
                 
                 // Update the unread count badge
                 updateUnreadMessageCount(data.unread_count || 0);
                 
                 // Check if we have any messages
                 if (data.success && data.messages && data.messages.length > 0) {
+                    console.log(`Rendering ${data.messages.length} message previews`); // Added log
+
                     // Add each message
                     data.messages.forEach(message => {
                         // Create container element
@@ -144,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mark all messages as read
     function markAllMessagesAsRead() {
+        console.log('Marking all messages as read...'); // Added log
         const markAllReadButtons = document.querySelectorAll('.mark-all-read');
         markAllReadButtons.forEach(btn => {
             if (btn.dataset.type === 'message') {
@@ -166,17 +175,25 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            // Update UI to show all messages as read
-            document.querySelectorAll('.message-preview.unread').forEach(el => {
+            console.log('Mark all messages as read - server response:', data);
+            
+            // Update UI immediately to reflect changes
+            document.querySelectorAll('.message-preview-item.unread').forEach(el => {
                 el.classList.remove('unread');
             });
             
-            // Remove all unread indicators and badges
-            document.querySelectorAll('.unread-indicator, .message-badge').forEach(el => {
+            // Remove all unread indicators from messages
+            document.querySelectorAll('.unread-message-indicator').forEach(el => {
                 el.remove();
             });
-
-            // Update message count
+            
+            // Reset text styling on messages that were unread
+            document.querySelectorAll('.message-preview-item .fw-semibold').forEach(el => {
+                el.classList.remove('fw-semibold');
+                el.classList.add('text-muted');
+            });
+            
+            // Update message count badge
             updateUnreadMessageCount(0);
             
             // Reset button state
@@ -194,6 +211,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.prepend(successEl);
                 setTimeout(() => successEl.remove(), 3000);
             }
+            
+            // Most important: Reload message list to completely refresh content
+            loadRecentMessages();
         })
         .catch(error => {
             console.error('Error marking messages as read:', error);
@@ -776,32 +796,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadNotifications();
     
     // Set up periodic refresh
-    setInterval(loadUnreadMessageCount, 8000); // Every 8 seconds
-    setInterval(loadNotifications, 8000); // Every 8 seconds
-    
-    // Add data-type attribute to mark-all-read buttons when DOM is loaded
-    document.querySelectorAll('.message-dropdown .mark-all-read').forEach(btn => {
-        btn.setAttribute('data-type', 'message');
-    });
-    
-    document.querySelectorAll('.dropdown-notifications .mark-all-read').forEach(btn => {
-        btn.setAttribute('data-type', 'notification');
-    });
-
-    // Initialize
-    loadUnreadMessageCount();
-    loadNotifications();
-    
-    // Set up periodic refresh with console logging
-    setInterval(function() {
-        console.log('Refreshing unread message count...');
+    setInterval(() => {
+        console.log('Periodic refresh: Updating unread message count');
         loadUnreadMessageCount();
-    }, 30000); // Every 30 seconds
-    
-    setInterval(function() {
-        console.log('Refreshing notifications...');
+    }, 8000); // Every 8 seconds
+
+    setInterval(() => {
+        console.log('Periodic refresh: Updating notifications');
         loadNotifications();
-    }, 60000); // Every 60 seconds
+    }, 8000); // Every 8 seconds
     
     // Add data-type attribute to mark-all-read buttons when DOM is loaded
     document.querySelectorAll('.message-dropdown .mark-all-read').forEach(btn => {
