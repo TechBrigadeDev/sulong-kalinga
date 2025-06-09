@@ -1,40 +1,181 @@
-@media (max-width: 700px) {
-    #profilePic {
-        text-align: center; /* Center-align all content inside #profilePic */
-    }
+:root {
+            --primary-color: #4a6fa5;
+            --primary-light: #e8f0fe;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #e53935;
+            --light-gray: #f5f7fa;
+            --medium-gray: #e0e5ec;
+            --dark-gray: #607d8b;
+            --text-color: #263238;
+            --text-light: #546e7a;
+            --border-radius: 0.375rem;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --transition: all 0.2s ease-in-out;
+        }
+        
+        body {
+            color: var(--text-color);
+            background-color: var(--light-gray);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.3;
+        }
+        
+        h2 {
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+        }
+        
+        h5 {
+            font-size: clamp(1.1rem, 1.5vw, 1.25rem);
+        }
+        
+        .profile-header {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: clamp(1rem, 3vw, 1.5rem);
+            margin-bottom: clamp(1.5rem, 3vw, 2rem);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .profile-img {
+            width: clamp(120px, 15vw, 150px);
+            height: clamp(120px, 15vw, 150px);
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        
+        .profile-img:hover {
+            transform: scale(1.03);
+        }
+        
+        .detail-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: clamp(1rem, 2vw, 1.5rem);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: var(--transition);
+        }
+        
+        .detail-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .detail-card-header {
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
+        }
+        
+        .detail-item {
+            padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
+            border-bottom: 1px solid var(--medium-gray);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        @media (min-width: 768px) {
+            .detail-item {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            min-width: 180px;
+            font-size: clamp(0.9rem, 1.1vw, 1rem);
+        }
+        
+        .beneficiary-card {
+            transition: var(--transition);
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        
+        .beneficiary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .beneficiary-img {
+            width: clamp(80px, 10vw, 100px);
+            height: clamp(80px, 10vw, 100px);
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        
+        .beneficiary-img:hover {
+            transform: scale(1.05);
+        }
+        
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-    #profilePic .row {
-        flex-direction: column; /* Stack the profile picture and details vertically */
-        align-items: center; /* Center-align the content */
-    }
+        .header-buttons .btn {
+            padding: 0.5rem 1rem;
+            
+        }
 
-    #profilePic .col-lg-4 {
-        display: flex;
-        justify-content: center; /* Center the profile picture horizontally */
-        margin-bottom: 15px; /* Add spacing below the profile picture */
-    }
-
-    #profilePic img {
-        width: 120px; /* Adjust the image size for smaller screens */
-        height: 120px;
-        border: 1px solid #ced4da;
-        margin: 0 auto; /* Ensure the image is centered */
-    }
-
-    #profilePic .col-lg-8 {
-        text-align: center; /* Center-align the name and dropdown */
-    }
-
-    #profilePic h4 {
-        font-size: 18px; /* Adjust font size for smaller screens */
-        margin-bottom: 10px; /* Add spacing below the name */
-        text-align: center; /* Ensure the text is centered */
-        width: 100%; /* Ensure it spans the full width for proper centering */
-    }
-
-    #profilePic .form-group {
-        width: 100%; /* Make the dropdown take full width */
-        max-width: 200px; /* Limit the dropdown width */
-        margin: 0 auto; /* Center the dropdown */
-    }
-}
+        /* Hide text on small screens, show only icon */
+        @media (max-width: 767.98px) {
+            .header-buttons .btn {
+                padding: 0.5rem;
+            }
+            
+            .header-buttons .btn i {
+                margin: 0;
+            }
+            
+            .header-buttons .btn-secondary span {
+                display: none;
+            }
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+            font-size: clamp(0.75rem, 1vw, 0.85rem);
+        }
+        
+        .text-muted {
+            color: var(--text-light) !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            .profile-header {
+                text-align: center;
+            }
+                        
+            .detail-label {
+                min-width: 100%;
+                margin-bottom: 0.25rem;
+            }
+        }

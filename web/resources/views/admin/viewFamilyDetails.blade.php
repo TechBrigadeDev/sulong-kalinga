@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>{{ $family_member->first_name }} {{ $family_member->last_name }} | Family Profile</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/viewProfileDetails.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewFamilyDetails.css') }}">
 </head>
 <body>
@@ -14,120 +16,134 @@
     @include('components.adminSidebar')
     @include('components.modals.deleteFamilyMember')
 
-    
     <div class="home-section">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <!-- Original Back Button -->
-                <a href="{{ route('admin.families.index') }}" class="btn btn-secondary original-back-btn">
-                    <i class="bi bi-arrow-bar-left"></i> Back
+            <!-- Header with buttons -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <!-- Back button for large screens -->
+                <a href="{{ route('admin.families.index') }}" class="btn btn-secondary d-none d-md-inline-flex">
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
-
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">VIEW FAMILY PROFILE DETAILS</div>
-
-                <!-- Edit and Delete Buttons -->
-                <div>
-                    <!-- Hidden Back Button 
-                    <a href="familyProfile" class="btn btn-secondary hidden-back-btn">
-                        <i class="bi bi-arrow-bar-left"></i> Back
-                    </a>-->
-                    <!-- Edit Button with Routing -->
-                    <a href="{{ route('admin.families.edit', $family_member->family_member_id) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-square"></i> Edit
+                
+                <h4 class="text-center mb-0" style="font-size: 20px; font-weight: bold; padding: 10px;">Family Member Profile</h4>
+                
+                <div class="d-flex gap-2 header-buttons">
+                    <!-- Back button for small screens -->
+                    <a href="{{ route('admin.families.index') }}" class="btn btn-secondary d-inline-flex d-md-none" style="margin-bottom: 8px;">
+                        <i class="bi bi-arrow-left"></i> Back
                     </a>
-                    <!-- Delete button to call the delete function -->
+                    <a href="{{ route('admin.families.edit', $family_member->family_member_id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-square me-1"></i> Edit
+                    </a>
                     <button type="button" class="btn btn-danger" onclick="openDeleteFamilyMemberModal('{{ $family_member->family_member_id }}', '{{ $family_member->first_name }} {{ $family_member->last_name }}')">
-                        <i class="bi bi-trash-fill"></i> Delete
+                        <i class="bi bi-trash-fill me-1"></i> Delete
                     </button>
                 </div>
             </div>
-            <div class="row justify-content-center" id="profileDetails">
-                <div class="row mb-3 mt-3 justify-content-center">
-                    <div class="col-lg-8 col-md-12 col-sm-12" id="profilePic">
-                        <div class="row justify-content-center align-items-center text-center text-md-start">
-                            <!-- Profile Picture Column -->
-                            <div class="col-lg-3 col-md-4 col-sm-12 mb-3 mb-md-0">
-                                <img src="{{ $family_member->photo ? asset('storage/' . $family_member->photo) : asset('images/defaultProfile.png') }}" 
-                                    alt="Profile Picture" 
-                                    class="img-fluid rounded-circle mx-auto d-block d-md-inline" 
-                                    style="width: 150px; height: 150px; border: 1px solid #ced4da;">
+            
+            <div class="row" id="home-content">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-4 mb-md-0">
+                            <img src="{{ $family_member->photo ? asset('storage/' . $family_member->photo) : asset('images/defaultProfile.png') }}" 
+                                alt="Profile Picture" 
+                                class="img-fluid rounded-circle profile-img">
+                        </div>
+                        <div class="col-md-9">
+                            <h2 class="mb-2" style="color: var(--secondary-color);">
+                                {{ $family_member->first_name }} {{ $family_member->last_name }}
+                            </h2>
+                            <div class="d-flex flex-wrap gap-2 mb-3 justify-content-center justify-content-md-start">
+                                <span class="badge rounded-pill" style="background-color: var(--primary-light); color: var(--secondary-color);">
+                                    <i class="bi bi-person-badge me-1"></i> Family Member
+                                </span>
                             </div>
-                            <!-- Name and Details Column -->
-                            <div class="col-lg-8 col-md-8 col-sm-12">
-                                <div class="d-flex flex-column align-items-start">
-                                    <!-- Complete Name -->
-                                    <h4 class="mb-2 mt-1">{{ $family_member->first_name }} {{ $family_member->last_name }}</h4>
-                                    <!-- Dropdown for Status 
-                                    <div class="form-group">
-                                        <select class="form-select text-center" name="status" id="statusSelect{{ $family_member->family_member_id }}" data-id="{{ $family_member->family_member_id }}" onchange="openFamilyStatusChangeModal(this, 'Family')">
-                                            <option value="Approved" {{ $family_member->status == 'Approved' ? 'selected' : '' }} >Access Approved</option>
-                                            <option value="Denied" {{ $family_member->status == 'Denied' ? 'selected' : '' }} >Access Denied</option>
-                                        </select>
-                                    </div>-->
+                            <div class="d-flex flex-wrap gap-4 justify-content-center justify-content-md-start">
+                                <div>
+                                    <span class="text-muted"><i class="bi bi-telephone me-1"></i></span>
+                                    <span>{{ $family_member->mobile ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-muted"><i class="bi bi-envelope me-1"></i></span>
+                                    <span>{{ $family_member->email ?? 'N/A' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-muted"><i class="bi bi-house me-1"></i></span>
+                                    <span>{{ $family_member->street_address }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="row mb-1">
-                    <!-- Personal Details Column -->
-                    <div class="col-lg-12 col-md-12 col-sm-12">
-                        <h5 class="text-center">Personal Details</h5>
-                        <table class="table table-striped personal-details">                            
-                            <tbody>
-                                <tr>
-                                    <td style="width:30%;"><strong>Gender:</strong></td>
-                                    <td>{{ $family_member->gender }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Birthday:</strong></td>
-                                    <td>{{ \Carbon\Carbon::parse($family_member->birthday)->format('F j, Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Mobile Number:</strong></td>
-                                    <td>{{ $family_member->mobile ?? 'N/A'}}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Landline Number:</strong></td>
-                                    <td>{{ $family_member->landline ?? 'N/A' }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Email:</strong></td>
-                                    <td>{{ $family_member->email ?? 'N/A' }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Current Address:</strong></td>
-                                    <td>{{ $family_member->street_address }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Relation to Beneficiary:</strong></td>
-                                    <td>{{ $family_member->relation_to_beneficiary }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>    
-                <div class="row justify-content-center">
-                    <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center">
-                        <h5 class="text-center">Related Beneficiary</h5>
-                    </div>
-                    <div class="col-lg-12 col-md-12 col-sm-12 d-flex justify-content-center flex-wrap">
-                        <div class="card text-center p-1 m-1" style="max-width: 160px;">
-                            <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
-                                <img src=" {{ $family_member->beneficiary->photo ? asset('storage/' . $family_member->beneficiary->photo) : asset('images/defaultProfile.png') }}" class="img-fluid" alt="..." style="max-width: 100px; max-height: 100px;">
+                <!-- Personal Details Section -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="detail-card">
+                            <div class="card-header detail-card-header">
+                                <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Personal Details</h5>
                             </div>
-                            <div class="card-body p-1">
-                                <p class="card-text" style="font-size:14px;">{{ $family_member->beneficiary->first_name }} {{ $family_member->beneficiary->last_name }}</p>
+                            <div class="card-body p-0">
+                                <div class="detail-item">
+                                    <span class="detail-label">Gender</span>
+                                    <span>{{ $family_member->gender }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Birthday</span>
+                                    <span>{{ \Carbon\Carbon::parse($family_member->birthday)->format('F j, Y') }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Mobile Number</span>
+                                    <span>{{ $family_member->mobile ?? 'N/A' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Landline Number</span>
+                                    <span>{{ $family_member->landline ?? 'N/A' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Email Address</span>
+                                    <span>{{ $family_member->email ?? 'N/A' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Current Address</span>
+                                    <span>{{ $family_member->street_address }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Relation to Beneficiary</span>
+                                    <span>{{ $family_member->relation_to_beneficiary }}</span>
+                                </div>
                             </div>
-                        </div>                           
+                        </div>
+                    </div>
+                    
+                    <!-- Related Beneficiary Section -->
+                    <div class="col-lg-4">
+                        <div class="detail-card beneficiary-card">
+                            <div class="card-header detail-card-header">
+                                <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Related Beneficiary</h5>
+                            </div>
+                            <div class="card-body text-center p-3">
+                                <div class="d-flex flex-column align-items-center">
+                                    <img src="{{ $family_member->beneficiary->photo ? asset('storage/' . $family_member->beneficiary->photo) : asset('images/defaultProfile.png') }}" 
+                                        class="rounded-circle beneficiary-img mb-3" 
+                                        alt="Beneficiary Photo">
+                                    <h5 class="mb-2">{{ $family_member->beneficiary->first_name }} {{ $family_member->beneficiary->last_name }}</h5>
+                                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                                        <span class="badge rounded-pill" style="background-color: var(--primary-light); color: var(--secondary-color);">
+                                            <i class="bi bi-heart-pulse me-1"></i> Beneficiary
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
+    <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
    
 </body>
