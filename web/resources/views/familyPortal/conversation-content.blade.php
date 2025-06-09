@@ -115,6 +115,7 @@ function getFileIconClass($fileType) {
             return \Carbon\Carbon::parse($msg->message_timestamp)->format('Y-m-d') === $date;
         }) as $message)
             @if($message->sender_type === 'system')
+                <!-- System message, unchanged -->
                 <div class="message system">
                     <div class="message-content {{ strpos($message->content, 'left the group') !== false ? 'leave-message' : (strpos($message->content, 'joined the group') !== false ? 'join-message' : '') }}">
                         {{ $message->content }}
@@ -124,8 +125,14 @@ function getFileIconClass($fileType) {
                     </div>
                 </div>
             @else
-                <div class="message {{ $message->sender_id == Auth::guard($rolePrefix)->id() && $message->sender_type == $rolePrefix ? 'outgoing' : 'incoming' }}" data-message-id="{{ $message->message_id }}">
-                    @if(!($message->sender_id == Auth::guard($rolePrefix)->id() && $message->sender_type == $rolePrefix))
+                @php
+                    // CRITICAL FIX: Better check for current user, considering both 'family' and 'family_member' types
+                    $isCurrentUserSender = $message->sender_id == Auth::guard($rolePrefix)->id() && 
+                        ($message->sender_type == $rolePrefix || 
+                        ($rolePrefix == 'family' && $message->sender_type == 'family_member'));
+                @endphp
+                <div class="message {{ $isCurrentUserSender ? 'outgoing' : 'incoming' }}" data-message-id="{{ $message->message_id }}">
+                    @if(!$isCurrentUserSender)
                         <!-- INCOMING MESSAGE - with profile image -->
                         <div class="d-flex">
                             <div class="flex-shrink-0">

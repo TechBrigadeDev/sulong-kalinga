@@ -289,16 +289,39 @@ class PortalMessagingController extends Controller
             
             // Get the conversation
             $conversation = Conversation::with([
-                'participants',
                 'messages.attachments',
                 'messages.readStatuses'
             ])->findOrFail($id);
             
             // Security check: Make sure user is a participant
-            $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            // CRITICAL FIX: For family users, check both 'family' and 'family_member' types
+            $isParticipant = false;
+            
+            if ($userType === 'family') {
+                // Check for both family and family_member types
+                $isParticipant = $conversation->participants()
+                    ->where('participant_id', $user->getKey())
+                    ->whereIn('participant_type', ['family', 'family_member'])
+                    ->whereNull('left_at')
+                    ->exists();
+            } else {
+                // For beneficiary, use standard check
+                $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            }
+            
             if (!$isParticipant) {
+                Log::warning('Unauthorized conversation view attempt', [
+                    'user_id' => $user->getKey(),
+                    'user_type' => $userType,
+                    'conversation_id' => $id
+                ]);
+                
+                if (request()->ajax()) {
+                    return response()->json(['error' => 'You are not a participant in this conversation'], 403);
+                }
+                
                 return redirect()->route($rolePrefix . '.messaging.index')
-                    ->with('error', 'You do not have access to this conversation.');
+                    ->with('error', 'You are not a participant in this conversation.');
             }
             
             // Add other_participant_name to conversation object for display
@@ -398,52 +421,60 @@ class PortalMessagingController extends Controller
         // Determine if user is a beneficiary or family member
         $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
         $user = Auth::guard($userType)->user();
-        $rolePrefix = $userType;
-
-        Log::info('Portal send message request', [
-            'has_file_attachments' => $request->hasFile('attachments'),
-            'all_files' => $request->allFiles(),
-            'request_keys' => array_keys($request->all())
-        ]);
-
+        
+        // ADDED: Initialize participant type variable to prevent undefined variable error
+        $participantType = $userType;
+        
         try {
             // Validate the request
             $validator = Validator::make($request->all(), [
-                'conversation_id' => 'required|exists:conversations,conversation_id',
                 'content' => 'nullable|string|max:10000',
-                'attachments.*' => 'sometimes|file|max:5120|mimes:jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt', // 5MB max
+                'conversation_id' => 'required|integer|exists:conversations,conversation_id',
+                'attachments.*' => 'sometimes|file|max:5120|mimes:jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,txt',
             ]);
             
             if ($validator->fails()) {
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'errors' => $validator->errors(),
-                        'file_error' => $validator->errors()->has('attachments.*') ? 'One or more files exceed the maximum allowed size (5MB)' : null
-                    ], 422);
-                }
-                
-                return back()->withErrors($validator)->withInput();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             $conversationId = $request->conversation_id;
             $conversation = Conversation::findOrFail($conversationId);
             
-            // Check if user is participant
-            $participantType = $userType === 'beneficiary' ? 'beneficiary' : 'family_member';
-            $isParticipant = $conversation->hasParticipant($user->getKey(), $participantType);
-            if (!$isParticipant) {
-                return $this->jsonResponse(false, 'You are not a participant in this conversation', 403);
+            // Security check: Make sure user is a participant
+            // CRITICAL FIX: For family users, check both 'family' and 'family_member' types
+            $isParticipant = false;
+            
+            if ($userType === 'family') {
+                // Check for both family and family_member types
+                $isParticipant = $conversation->participants()
+                    ->where('participant_id', $user->getKey())
+                    ->whereIn('participant_type', ['family', 'family_member'])
+                    ->whereNull('left_at')
+                    ->exists();
+                    
+                // ADDED: Make sure to consistently use 'family_member' as the participant type
+                $participantType = 'family_member';
+            } else {
+                // For beneficiary, use standard check
+                $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
             }
             
-            // Create message
-            $message = new Message([
-                'conversation_id' => $conversationId,
-                'sender_id' => $user->getKey(),
-                'sender_type' => $participantType,
-                'content' => $request->content,
-                'message_timestamp' => now(),
-            ]);
+            if (!$isParticipant) {
+                return response()->json(['message' => 'You are not a participant in this conversation'], 403);
+            }
+            
+            // Now create the message
+            $message = new Message();
+            $message->conversation_id = $conversationId;
+            $message->sender_id = $user->getKey();
+            $message->sender_type = $participantType; // Now safely uses the defined variable
+            $message->content = $request->content;
+            $message->message_timestamp = now();
+            $message->is_unsent = false;
             $message->save();
             
             // Handle attachments
@@ -773,27 +804,45 @@ class PortalMessagingController extends Controller
         $user = Auth::guard($userType)->user();
         
         try {
-            // Find the message
             $message = Message::findOrFail($id);
             
-            // Check if user is the sender
-            if ($message->sender_id != $user->getKey() || $message->sender_type != $userType) {
-                return $this->jsonResponse(false, 'You can only unsend your own messages', 403);
+            // Security check: Only allow unsending your own messages
+            // FIXED: For family members, check both possible types
+            $canUnsend = false;
+            
+            if ($userType === 'family') {
+                // Check if sender is the current user (allowing both 'family' and 'family_member' types)
+                $canUnsend = $message->sender_id == $user->getKey() && 
+                            ($message->sender_type == 'family' || $message->sender_type == 'family_member');
+            } else {
+                // For beneficiaries, use standard check
+                $canUnsend = $message->sender_id == $user->getKey() && $message->sender_type == $userType;
+            }
+            
+            if (!$canUnsend) {
+                return response()->json(['message' => 'You can only unsend your own messages'], 403);
+            }
+            
+            // Only allow unsending recent messages (e.g., less than 1 hour old)
+            $messageTime = $message->message_timestamp;
+            $now = now();
+            
+            if ($now->diffInMinutes($messageTime) > 60) {
+                return response()->json(['message' => 'Messages can only be unsent within 1 hour of sending'], 403);
             }
             
             // Mark as unsent
             $message->is_unsent = true;
             $message->save();
             
-            return $this->jsonResponse(true, 'Message unsent successfully');
+            return response()->json(['success' => true, 'message' => 'Message unsent successfully']);
             
         } catch (\Exception $e) {
-            Log::error('Error unsending portal message: ' . $e->getMessage(), [
-                'error' => $e->getMessage(),
+            Log::error('Error unsending message: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return $this->jsonResponse(false, 'Error unsending message: ' . $e->getMessage(), 500);
+            return response()->json(['message' => 'Failed to unsend message'], 500);
         }
     }
 
