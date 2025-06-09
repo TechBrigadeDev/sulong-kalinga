@@ -26,6 +26,7 @@ const Screen = () => {
             <TabScroll style={style.scroll}>
                 <Profile />
                 <UserManagement />
+                <Reports />
                 <LogoutButton />
             </TabScroll>
         </View>
@@ -76,6 +77,21 @@ const UserManagement = () => {
                     label="Administrators"
                     href="/options/user-management/admins"
                     icon="ShieldUser"
+                />
+            </Card>
+        </Section>
+    );
+};
+
+const Reports = () => {
+    return (
+        <Section>
+            <Title name="Reports" />
+            <Card>
+                <Link
+                    label="Care Records"
+                    href="/options/reports/care-records"
+                    icon="FileText"
                 />
             </Card>
         </Section>

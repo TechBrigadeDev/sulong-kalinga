@@ -77,6 +77,9 @@ export const QK = {
             ],
         },
     },
+    report: {
+        getReports: "reports/getReports",
+    },
 };
 
 export const setDataQK = async (
