@@ -1,3 +1,12 @@
+import { useForm } from "@tanstack/react-form";
+import { log } from "common/debug";
+import { useRouter } from "expo-router";
+import { useUpdateEmail } from "features/user/user.hook";
+import { updateEmailSchema } from "features/user/user.schema";
+import {
+    Eye,
+    EyeClosed,
+} from "lucide-react-native";
 import { useState } from "react";
 import {
     Button,
@@ -8,14 +17,6 @@ import {
     XStack,
     YStack,
 } from "tamagui";
-import {
-    useForm
-} from "@tanstack/react-form";
-import { updateEmailSchema } from "../../user.schema";
-import { Eye, EyeClosed } from "lucide-react-native";
-import { useUpdateEmail } from "../../user.hook";
-import { log } from "../../../../common/debug";
-import { useRouter } from "expo-router";
 
 const UpdateEmail = () => {
     const router = useRouter();
@@ -28,24 +29,26 @@ const UpdateEmail = () => {
     } = useUpdateEmail({
         onSuccess: async () => {
             log("Email updated successfully");
-            router.push("/(tabs)/options/profile");
+            router.push(
+                "/(tabs)/options/profile",
+            );
         },
-
     });
 
     const form = useForm({
         defaultValues: {
             new_email: "",
-            password: ""
+            password: "",
         },
         validators: {
-            onChange: updateEmailSchema
+            onChange: updateEmailSchema,
         },
         onSubmit: async (values) => {
-            log(
-                values.value,
-            )
-            const validate = await updateEmailSchema.safeParseAsync(values.value);
+            log(values.value);
+            const validate =
+                await updateEmailSchema.safeParseAsync(
+                    values.value,
+                );
             if (!validate.success) {
                 console.error(
                     "Validation failed:",
@@ -54,8 +57,8 @@ const UpdateEmail = () => {
                 return;
             }
             await updateEmail(validate.data);
-        }
-    })
+        },
+    });
 
     return (
         <YStack gap="$4" style={{ padding: 20 }}>
@@ -64,21 +67,27 @@ const UpdateEmail = () => {
             </Label>
             <form.Field
                 name="new_email"
-                children={
-                    (field) => (
-                        <Input
-                            id="new-email-update"
-                            borderColor={field.state.meta.errors.length > 0 ? "red" : "$borderColor"}
-                            placeholder="Enter new email address"
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChangeText={(value) => {
-                                field.handleChange(value);
-                            }}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
-                    )}
+                children={(field) => (
+                    <Input
+                        id="new-email-update"
+                        borderColor={
+                            field.state.meta
+                                .errors.length > 0
+                                ? "red"
+                                : "$borderColor"
+                        }
+                        placeholder="Enter new email address"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                            field.handleChange(
+                                value,
+                            );
+                        }}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                    />
+                )}
             />
             <Label htmlFor="current-password-update">
                 Current Password
@@ -88,22 +97,35 @@ const UpdateEmail = () => {
             >
                 <form.Field
                     name="password"
-                    children={
-                        (field) => (
-                    <Input
-                        id="current-password-update"
-                        borderColor={field.state.meta.errors.length > 0 ? "red" : "$borderColor"}
-                        placeholder="Enter current password"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                            field.handleChange(value);
-                        }}
-                        secureTextEntry={
-                            !showPassword
-                        }
-                        style={{ flex: 1 }}
-                    />
+                    children={(field) => (
+                        <Input
+                            id="current-password-update"
+                            borderColor={
+                                field.state.meta
+                                    .errors
+                                    .length > 0
+                                    ? "red"
+                                    : "$borderColor"
+                            }
+                            placeholder="Enter current password"
+                            value={
+                                field.state.value
+                            }
+                            onBlur={
+                                field.handleBlur
+                            }
+                            onChangeText={(
+                                value,
+                            ) => {
+                                field.handleChange(
+                                    value,
+                                );
+                            }}
+                            secureTextEntry={
+                                !showPassword
+                            }
+                            style={{ flex: 1 }}
+                        />
                     )}
                 />
                 <Button
@@ -118,7 +140,11 @@ const UpdateEmail = () => {
                             : "Show password"
                     }
                 >
-                    {showPassword ? <Eye size={16} /> : <EyeClosed size={16} />}
+                    {showPassword ? (
+                        <Eye size={16} />
+                    ) : (
+                        <EyeClosed size={16} />
+                    )}
                 </Button>
             </XStack>
             <Text fontSize={13} color="#64748b">
@@ -132,14 +158,15 @@ const UpdateEmail = () => {
                     marginTop: 8,
                 }}
             >
-                <Button theme="dark_green" onPress={() => form.handleSubmit()}>
-                    {
-                        isPending && (
-                            <Spinner
-                                size="small"
-                             />
-                        )
+                <Button
+                    theme="dark_green"
+                    onPress={() =>
+                        form.handleSubmit()
                     }
+                >
+                    {isPending && (
+                        <Spinner size="small" />
+                    )}
                     Save Email
                 </Button>
             </XStack>

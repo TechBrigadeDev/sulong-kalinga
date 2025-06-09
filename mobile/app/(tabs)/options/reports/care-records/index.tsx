@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { View, YStack } from "tamagui";
 
 import WCPRecordsList from "~/features/records/wcp/list";

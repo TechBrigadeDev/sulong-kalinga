@@ -100,4 +100,4 @@ export const invalidateQK = async (
     await queryClient.invalidateQueries({
         queryKey: key,
     });
-}
+};

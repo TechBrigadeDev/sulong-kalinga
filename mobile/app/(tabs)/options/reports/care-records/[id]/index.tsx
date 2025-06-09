@@ -1,9 +1,14 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+} from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View } from "tamagui";
 
 const Screen = () => {
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const { id } = useLocalSearchParams<{
+        id: string;
+    }>();
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -13,7 +18,7 @@ const Screen = () => {
             </View>
         </SafeAreaView>
     );
-}
+};
 
 const Layout = () => (
     <>

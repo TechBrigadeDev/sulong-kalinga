@@ -5,7 +5,9 @@ interface WCPRecordsListState {
     setSearch: (search: string) => void;
 }
 
-export const wcpRecordsListStore = create<WCPRecordsListState>((set) => ({
-    search: "",
-    setSearch: (search) => set(() => ({ search })),
-}));
+export const wcpRecordsListStore =
+    create<WCPRecordsListState>((set) => ({
+        search: "",
+        setSearch: (search) =>
+            set(() => ({ search })),
+    }));

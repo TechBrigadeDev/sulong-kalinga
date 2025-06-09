@@ -1,6 +1,9 @@
 import { Controller } from "common/api";
 
-import { reportsResponseSchema, wcpRecordsResponseSchema } from "./schema";
+import {
+    reportsResponseSchema,
+    wcpRecordsResponseSchema,
+} from "./schema";
 
 class ReportController extends Controller {
     async getReports(params?: {
@@ -9,15 +12,24 @@ class ReportController extends Controller {
         limit?: number;
     }) {
         const queryParams = new URLSearchParams();
-        
+
         if (params?.search) {
-            queryParams.append("search", params.search);
+            queryParams.append(
+                "search",
+                params.search,
+            );
         }
         if (params?.page) {
-            queryParams.append("page", params.page.toString());
+            queryParams.append(
+                "page",
+                params.page.toString(),
+            );
         }
         if (params?.limit) {
-            queryParams.append("limit", params.limit.toString());
+            queryParams.append(
+                "limit",
+                params.limit.toString(),
+            );
         }
 
         const url = `/reports${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
@@ -48,21 +60,32 @@ class ReportController extends Controller {
         limit?: number;
     }) {
         const queryParams = new URLSearchParams();
-        
+
         if (params?.search) {
-            queryParams.append("search", params.search);
+            queryParams.append(
+                "search",
+                params.search,
+            );
         }
         if (params?.page) {
-            queryParams.append("page", params.page.toString());
+            queryParams.append(
+                "page",
+                params.page.toString(),
+            );
         }
         if (params?.limit) {
-            queryParams.append("limit", params.limit.toString());
+            queryParams.append(
+                "limit",
+                params.limit.toString(),
+            );
         }
 
         const response = await this.api.get(
             "/records/weekly-care-plans",
             {
-                params: queryParams.toString() ? queryParams : undefined,
+                params: queryParams.toString()
+                    ? queryParams
+                    : undefined,
             },
         );
         const data = await response.data;
@@ -74,7 +97,7 @@ class ReportController extends Controller {
         console.log(
             JSON.stringify(data, null, 2),
             "\n\nWCP Records Response",
-        )
+        );
 
         if (!validate.success) {
             console.error(

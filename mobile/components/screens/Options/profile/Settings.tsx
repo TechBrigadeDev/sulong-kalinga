@@ -5,7 +5,7 @@ import { Avatar, Text, YStack } from "tamagui";
 
 import Badge from "~/components/Bagde";
 import UserAvatar from "~/features/user/components/UserAvatar";
-import { useUser, useUserProfile } from "~/features/user/user.hook";
+import { useUserProfile } from "~/features/user/user.hook";
 
 const ProfileSettings = () => {
     const { data: userData } = useUserProfile();
@@ -41,15 +41,24 @@ const ProfileSettings = () => {
             <OptionCard style={styles.card}>
                 <OptionRow
                     label="SSS ID Number"
-                    value={userData?.sss_id || "Not set"}
+                    value={
+                        userData?.sss_id ||
+                        "Not set"
+                    }
                 />
                 <OptionRow
                     label="PhilHealth ID Number"
-                    value={userData?.philhealth_id || "Not set"}
+                    value={
+                        userData?.philhealth_id ||
+                        "Not set"
+                    }
                 />
                 <OptionRow
                     label="Pag-IBIG ID Number"
-                    value={userData?.pagibig_id || "Not set"}
+                    value={
+                        userData?.pagibig_id ||
+                        "Not set"
+                    }
                 />
             </OptionCard>
         </YStack>
@@ -88,7 +97,8 @@ const Header = () => {
             </Text>
             <Badge
                 variant={
-                    user?.volunteer_status === "Active"
+                    user?.volunteer_status ===
+                    "Active"
                         ? "success"
                         : "warning"
                 }

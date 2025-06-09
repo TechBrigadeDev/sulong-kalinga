@@ -2,12 +2,15 @@ import {
     AxiosInstance,
     isAxiosError,
 } from "axios";
+import { log } from "common/debug";
 
 import { axiosClient } from "~/common/api";
 
-import { userProfileSchema, userSchema } from "./user.schema";
-import { log } from "../../common/debug";
 import { IEmailUpdate } from "./user.interface";
+import {
+    userProfileSchema,
+    userSchema,
+} from "./user.schema";
 
 class UserController {
     private jsonApi: AxiosInstance;
@@ -100,11 +103,14 @@ class UserController {
     async getUserProfile(token: string) {
         try {
             const response =
-                await this.jsonApi.get("/account-profile", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
+                await this.jsonApi.get(
+                    "/account-profile",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
                     },
-                });
+                );
 
             const validate =
                 await userProfileSchema.safeParseAsync(
@@ -130,7 +136,10 @@ class UserController {
         }
     }
 
-    async updateEmail(data: IEmailUpdate, token: string) {
+    async updateEmail(
+        data: IEmailUpdate,
+        token: string,
+    ) {
         try {
             const response =
                 await this.jsonApi.patch(
@@ -146,7 +155,7 @@ class UserController {
             log(
                 "Email update response:",
                 response.data,
-            )
+            );
 
             return data.new_email;
         } catch (error) {

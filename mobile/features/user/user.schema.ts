@@ -66,9 +66,8 @@ export const userProfileSchema = z.object({
     organization_role_id: z.number().nullable(),
     photo_url: z.string().nullable(),
     username: z.string().nullable(),
-    email: z.string().email().nullable()
+    email: z.string().email().nullable(),
 });
-
 
 export const updateEmailSchema = z.object({
     new_email: z.string().email(),

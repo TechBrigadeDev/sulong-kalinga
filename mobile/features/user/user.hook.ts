@@ -1,11 +1,14 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+    useMutation,
+    useQuery,
+} from "@tanstack/react-query";
 import { authStore } from "features/auth/auth.store";
 
 import { invalidateQK, QK } from "~/common/query";
 
 import userController from "./user.api";
-import { userStore } from "./user.store";
 import { IEmailUpdate } from "./user.interface";
+import { userStore } from "./user.store";
 
 export const useUser = () => {
     const { token } = authStore();
@@ -37,7 +40,6 @@ export const useUser = () => {
     });
 };
 
-
 export const useUserProfile = () => {
     const { token } = authStore();
 
@@ -64,7 +66,7 @@ export const useUserProfile = () => {
         },
         enabled: !!token,
     });
-}
+};
 
 export const useUpdateEmail = (params?: {
     onSuccess: () => Promise<void>;
@@ -73,7 +75,9 @@ export const useUpdateEmail = (params?: {
     const { token } = authStore();
 
     return useMutation({
-        mutationFn: async (data: IEmailUpdate) => {
+        mutationFn: async (
+            data: IEmailUpdate,
+        ) => {
             if (!token) {
                 throw new Error(
                     "Token is required",
@@ -98,7 +102,7 @@ export const useUpdateEmail = (params?: {
                     email: data,
                 });
             }
-            
+
             if (params?.onSuccess) {
                 await params.onSuccess();
             }
@@ -116,6 +120,6 @@ export const useUpdateEmail = (params?: {
                     ),
                 ),
             ]);
-        }
+        },
     });
 };

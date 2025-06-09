@@ -1,13 +1,11 @@
 import { formatDate } from "common/date";
 import Badge from "components/Bagde";
 import FlatList from "components/FlatList";
-import LoadingScreen from "components/loaders/LoadingScreen";
-import { IWCPRecord } from "~/features/records/type";
+import { useRouter } from "expo-router";
 import {
     Eye,
     SquarePen,
 } from "lucide-react-native";
-import { useCallback } from "react";
 import { RefreshControl } from "react-native";
 import {
     Button,
@@ -21,9 +19,9 @@ import {
 } from "tamagui";
 
 import { useWCPRecords } from "~/features/records/hook";
+import { IWCPRecord } from "~/features/records/type";
 
 import { wcpRecordsListStore } from "./store";
-import { useRouter } from "expo-router";
 
 const WCPRecordsList = () => {
     const { search } = wcpRecordsListStore();
@@ -54,7 +52,10 @@ const WCPRecordsList = () => {
         );
     }
 
-    const allRecords = data?.pages.flatMap((page) => page.data) || [];
+    const allRecords =
+        data?.pages.flatMap(
+            (page) => page.data,
+        ) || [];
 
     if (allRecords.length === 0 && !isLoading) {
         return (
@@ -111,7 +112,9 @@ const WCPRecordsList = () => {
             }
             ListEmptyComponent={
                 <View>
-                    <Text>No WCP records found.</Text>
+                    <Text>
+                        No WCP records found.
+                    </Text>
                 </View>
             }
         />
@@ -130,7 +133,9 @@ const WCPRecordCard = ({
     );
 
     const onViewDetails = () => {
-        router.push(`/options/reports/care-records/${record.id}`);
+        router.push(
+            `/options/reports/care-records/${record.id}`,
+        );
     };
 
     return (
@@ -153,7 +158,9 @@ const WCPRecordCard = ({
                 paddingBlock="$2"
             >
                 <YStack>
-                    <H5>WCP Record #{record.id}</H5>
+                    <H5>
+                        WCP Record #{record.id}
+                    </H5>
                     <Badge borderRadius={4}>
                         Weekly Care Plan
                     </Badge>
@@ -196,8 +203,13 @@ const WCPRecordCard = ({
                         flexDirection="column"
                         paddingBlock="$2"
                     >
-                        <Text fontWeight="bold">Assessment</Text>
-                        <Text numberOfLines={3} ellipsizeMode="tail">
+                        <Text fontWeight="bold">
+                            Assessment
+                        </Text>
+                        <Text
+                            numberOfLines={3}
+                            ellipsizeMode="tail"
+                        >
                             {record.assessment}
                         </Text>
                     </XStack>
