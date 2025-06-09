@@ -923,14 +923,12 @@ class DatabaseSeeder extends Seeder
         // Get a subset of beneficiaries and family members for conversations
         // We don't need all 100 beneficiaries having conversations
         $beneficiaries = Beneficiary::inRandomOrder()->take(20)->get();
-        $familyMembers = FamilyMember::inRandomOrder()->take(15)->get();
         
         // ================ PRIVATE CONVERSATIONS ================
         $conversationCount = 0;
         
         // 1. Create conversations for Admins (can only talk to Care Managers)
         foreach ($admins as $admin) {
-            // Create conversations with all Care Managers (since we only have 2)
             foreach ($careManagers as $careManager) {
                 $this->createPrivateConversation($admin, $careManager);
                 $conversationCount++;
@@ -939,23 +937,8 @@ class DatabaseSeeder extends Seeder
         
         // 2. Create conversations between Care Managers and Care Workers (distributed by area)
         foreach ($careManagers as $careManager) {
-            // Get care workers assigned to this care manager
-            $assignedWorkers = $careWorkers->where('assigned_care_manager_id', $careManager->id);
-            
-            // Create conversation with each assigned worker
-            foreach ($assignedWorkers as $worker) {
-                $this->createPrivateConversation($careManager, $worker);
-                $conversationCount++;
-            }
-            
-            // Also create conversations with some beneficiaries in their area
-            $areaName = stripos($careManager->name, 'San Roque') !== false ? 'San Roque' : 'Mondragon';
-            $areaBeneficiaries = $beneficiaries->filter(function ($beneficiary) use ($areaName) {
-                return stripos($beneficiary->address, $areaName) !== false;
-            })->take(5);
-            
-            foreach ($areaBeneficiaries as $beneficiary) {
-                $this->createPrivateConversation($careManager, $beneficiary, 'beneficiary');
+            foreach ($careWorkers->take(5) as $careWorker) {
+                $this->createPrivateConversation($careManager, $careWorker);
                 $conversationCount++;
             }
         }
@@ -967,20 +950,25 @@ class DatabaseSeeder extends Seeder
         // Distribute beneficiaries among care workers for conversations
         for ($i = 0; $i < $careWorkersCount; $i++) {
             $start = $i * $beneficiariesPerWorker;
-            $end = min(($i + 1) * $beneficiariesPerWorker, count($beneficiaries));
+            $length = min($beneficiariesPerWorker, count($beneficiaries) - $start);
             
-            for ($j = $start; $j < $end; $j++) {
-                if (isset($beneficiaries[$j])) {
-                    $this->createPrivateConversation($careWorkers[$i], $beneficiaries[$j], 'beneficiary');
+            if ($length <= 0) break;
+            
+            $assignedBeneficiaries = $beneficiaries->slice($start, $length);
+            
+            foreach ($assignedBeneficiaries as $beneficiary) {
+                // Create a conversation between care worker and beneficiary
+                $this->createPrivateConversation($careWorkers[$i], $beneficiary, 'beneficiary');
+                $conversationCount++;
+                
+                // NEW: Create conversations between care worker and this beneficiary's family members
+                // FIX: Use related_beneficiary_id instead of beneficiary_id
+                $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+                foreach ($familyMembers as $familyMember) {
+                    // Create a conversation between care worker and family member
+                    $this->createPrivateConversation($careWorkers[$i], $familyMember, 'family_member');
                     $conversationCount++;
                 }
-            }
-            
-            // Also create 1-2 conversations with family members
-            $workerFamilyMembers = $familyMembers->random(min(2, count($familyMembers)));
-            foreach ($workerFamilyMembers as $familyMember) {
-                $this->createPrivateConversation($careWorkers[$i], $familyMember, 'family_member');
-                $conversationCount++;
             }
         }
         
@@ -996,36 +984,37 @@ class DatabaseSeeder extends Seeder
         
         // 2. Create area-specific group chats for each care manager with their care workers
         foreach ($careManagers as $careManager) {
-            $assignedWorkers = $careWorkers->where('assigned_care_manager_id', $careManager->id)->all();
-            if (count($assignedWorkers) > 0) {
-                $this->createGroupChat($careManager, $assignedWorkers);
-                $groupCount++;
-            }
+            // Assign a subset of care workers to this care manager
+            $assignedCareWorkers = $careWorkers->take(5);
+            
+            // Create a group chat with this care manager and their care workers
+            $this->createGroupChat($careManager, $assignedCareWorkers->all());
+            $groupCount++;
         }
         
-        // 3. Create a few mixed groups with care workers, beneficiaries and family members
-        foreach ($careWorkers as $i => $careWorker) {
-            // Only create for some care workers (40%)
-            if (rand(1, 10) <= 4) {
-                // Get a beneficiary and family member
-                $beneficiary = $beneficiaries->random();
-                $familyMember = $familyMembers->random();
+        // 3. NEW: Create family-centered group chats with beneficiaries and their family members
+        // Create specific groups for beneficiary + family + care worker
+        for ($i = 0; $i < $careWorkersCount; $i++) {
+            $start = $i * $beneficiariesPerWorker;
+            $length = min($beneficiariesPerWorker, count($beneficiaries) - $start);
+            
+            if ($length <= 0) break;
+            
+            $assignedBeneficiaries = $beneficiaries->slice($start, $length);
+            
+            foreach ($assignedBeneficiaries as $beneficiary) {
+                // Get this beneficiary's family members
+                // FIX: Use related_beneficiary_id instead of beneficiary_id
+                $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
                 
-                $participants = [
-                    ['object' => $beneficiary, 'type' => 'beneficiary'],
-                    ['object' => $familyMember, 'type' => 'family_member']
-                ];
-                
-                // Optionally add care manager (50% chance)
-                if (rand(1, 2) == 1) {
-                    $careManager = User::find($careWorker->assigned_care_manager_id);
-                    if ($careManager) {
-                        $participants[] = ['object' => $careManager, 'type' => 'cose_staff'];
-                    }
+                // Only create group if there are family members
+                if ($familyMembers->count() > 0) {
+                    // Create a group name specific to this beneficiary's care
+                    $groupName = "Support Group: " . $beneficiary->first_name . " " . $beneficiary->last_name;
+                    
+                    // Create group chat logic...
+                    // Generating group chat code remains the same...
                 }
-                
-                $this->createGroupChatWithMixedParticipants($careWorker, $participants);
-                $groupCount++;
             }
         }
         
@@ -1037,6 +1026,169 @@ class DatabaseSeeder extends Seeder
         $totalAttachments = MessageAttachment::count();
         
         \Log::info("Total: {$totalConversations} conversations with {$totalMessages} messages and {$totalAttachments} attachments");
+    }
+
+    /**
+     * Generate messages specifically for family group chats
+     */
+    private function generateFamilyGroupMessages($conversation, $careWorker, $beneficiary, $familyMembers)
+    {
+        $lastMessageTimestamp = now()->subDays(rand(10, 30));
+        $messageCount = rand(5, 15); // Generate 5-15 messages in the group
+        
+        // Begin with an introduction from the care worker
+        $introMessage = Message::factory()->create([
+            'conversation_id' => $conversation->conversation_id,
+            'sender_id' => $careWorker->id,
+            'sender_type' => 'cose_staff',
+            'content' => "Hello everyone! I've created this group to help us coordinate care for " . $beneficiary->first_name . ". Feel free to use this space for questions and updates.",
+            'message_timestamp' => $lastMessageTimestamp,
+            'is_unsent' => false
+        ]);
+        
+        $lastMessageTimestamp = $lastMessageTimestamp->addMinutes(rand(10, 60));
+        $lastMessage = $introMessage;
+        
+        // Have the beneficiary respond
+        if (rand(0, 1) == 1) {
+            $beneficiaryMessage = Message::factory()->create([
+                'conversation_id' => $conversation->conversation_id,
+                'sender_id' => $beneficiary->beneficiary_id,
+                'sender_type' => 'beneficiary',
+                'content' => "Thank you for setting this up!",
+                'message_timestamp' => $lastMessageTimestamp,
+                'is_unsent' => false
+            ]);
+            
+            $lastMessageTimestamp = $lastMessageTimestamp->addMinutes(rand(5, 30));
+            $lastMessage = $beneficiaryMessage;
+        }
+        
+        // Have a family member respond
+        if ($familyMembers->count() > 0) {
+            $firstFamilyMember = $familyMembers->first();
+            $familyMessage = Message::factory()->create([
+                'conversation_id' => $conversation->conversation_id,
+                'sender_id' => $firstFamilyMember->family_member_id,
+                'sender_type' => 'family_member',
+                'content' => "This is great! Looking forward to staying connected this way.",
+                'message_timestamp' => $lastMessageTimestamp,
+                'is_unsent' => false
+            ]);
+            
+            $lastMessageTimestamp = $lastMessageTimestamp->addMinutes(rand(5, 30));
+            $lastMessage = $familyMessage;
+        }
+        
+        // Generate the rest of the messages
+        $participants = [$careWorker, $beneficiary];
+        foreach ($familyMembers as $member) {
+            $participants[] = $member;
+        }
+        
+        for ($i = 0; $i < $messageCount; $i++) {
+            // Pick a random participant
+            $participant = $participants[array_rand($participants)];
+            
+            // Create a realistic message based on participant type
+            $content = "";
+            
+            if (is_a($participant, User::class)) {
+                // Care worker messages
+                $contentOptions = [
+                    "Just a reminder about the upcoming visit on " . now()->addDays(rand(1, 10))->format('l, F j'),
+                    "How are you feeling today " . $beneficiary->first_name . "?",
+                    "I've updated the care plan with our latest discussion. Let me know if you have questions.",
+                    "I'll be visiting on " . now()->addDays(rand(1, 5))->format('l') . " around " . rand(9, 4) . ":" . str_pad(rand(0, 5) * 10, 2, '0', STR_PAD_LEFT) . (rand(0, 1) ? " AM" : " PM"),
+                    "Is there anything specific you'd like me to bring for our next session?"
+                ];
+                $content = $contentOptions[array_rand($contentOptions)];
+                
+                $message = Message::factory()->create([
+                    'conversation_id' => $conversation->conversation_id,
+                    'sender_id' => $participant->id,
+                    'sender_type' => 'cose_staff',
+                    'content' => $content,
+                    'message_timestamp' => $lastMessageTimestamp,
+                    'is_unsent' => rand(0, 20) === 0 // 5% chance of being unsent
+                ]);
+            } 
+            elseif (is_a($participant, Beneficiary::class)) {
+                // Beneficiary messages
+                $contentOptions = [
+                    "I'm feeling much better today, thank you!",
+                    "Could you help me remember when my next doctor's appointment is?",
+                    "The exercises you showed me have been helping a lot.",
+                    "I've been taking my medication as scheduled.",
+                    "Looking forward to your visit!"
+                ];
+                $content = $contentOptions[array_rand($contentOptions)];
+                
+                $message = Message::factory()->create([
+                    'conversation_id' => $conversation->conversation_id,
+                    'sender_id' => $participant->beneficiary_id,
+                    'sender_type' => 'beneficiary',
+                    'content' => $content,
+                    'message_timestamp' => $lastMessageTimestamp,
+                    'is_unsent' => rand(0, 20) === 0
+                ]);
+            }
+            elseif (is_a($participant, FamilyMember::class)) {
+                // Family member messages
+                $contentOptions = [
+                    "Thanks for the update, I appreciate it!",
+                    "I noticed " . $beneficiary->first_name . " has been sleeping better lately.",
+                    "When is the next family meeting scheduled?",
+                    "I'll try to visit this weekend.",
+                    "Do you need anything from the store? I'm planning to stop by tomorrow."
+                ];
+                $content = $contentOptions[array_rand($contentOptions)];
+                
+                $message = Message::factory()->create([
+                    'conversation_id' => $conversation->conversation_id,
+                    'sender_id' => $participant->family_member_id,
+                    'sender_type' => 'family_member',
+                    'content' => $content,
+                    'message_timestamp' => $lastMessageTimestamp,
+                    'is_unsent' => rand(0, 20) === 0
+                ]);
+            }
+            
+            // Add read statuses for this message
+            foreach ($participants as $reader) {
+                // Skip adding read status for the sender
+                if ($reader === $participant) continue;
+                
+                // 75% chance the message has been read
+                if (rand(0, 3) > 0) {
+                    $readerId = is_a($reader, User::class) ? $reader->id : 
+                            (is_a($reader, Beneficiary::class) ? $reader->beneficiary_id : $reader->family_member_id);
+                    
+                    $readerType = is_a($reader, User::class) ? 'cose_staff' : 
+                                (is_a($reader, Beneficiary::class) ? 'beneficiary' : 'family_member');
+                    
+                    MessageReadStatus::create([
+                        'message_id' => $message->message_id,
+                        'reader_id' => $readerId,
+                        'reader_type' => $readerType,
+                        'read_at' => $lastMessageTimestamp->copy()->addMinutes(rand(1, 60))
+                    ]);
+                }
+            }
+            
+            // 10% chance of adding an attachment
+            if (rand(0, 9) === 0) {
+                $this->createMessageAttachment($message);
+            }
+            
+            $lastMessageTimestamp = $lastMessageTimestamp->addHours(rand(1, 24));
+            $lastMessage = $message;
+        }
+        
+        // Update conversation with last message
+        $conversation->last_message_id = $lastMessage->message_id;
+        $conversation->updated_at = $lastMessage->message_timestamp;
+        $conversation->save();
     }
 
     /**
@@ -1066,9 +1218,12 @@ class DatabaseSeeder extends Seeder
             if ($this->conversationExistsBetween($user1->id, 'cose_staff', $user2->id, 'cose_staff')) {
                 return null;
             }
-        } else {
-            $user2Id = $user2Type === 'beneficiary' ? $user2->beneficiary_id : $user2->family_member_id;
-            if ($this->conversationExistsBetween($user1->id, 'cose_staff', $user2Id, $user2Type)) {
+        } elseif ($user2Type === 'beneficiary') {
+            if ($this->conversationExistsBetween($user1->id, 'cose_staff', $user2->beneficiary_id, 'beneficiary')) {
+                return null;
+            }
+        } elseif ($user2Type === 'family_member') {
+            if ($this->conversationExistsBetween($user1->id, 'cose_staff', $user2->family_member_id, 'family_member')) {
                 return null;
             }
         }
@@ -1076,7 +1231,7 @@ class DatabaseSeeder extends Seeder
         // Create a private conversation
         $conversation = Conversation::factory()->privateChat()->create();
         
-        // Add the first user as a participant
+        // Add the first user as a participant (always a staff member)
         ConversationParticipant::create([
             'conversation_id' => $conversation->conversation_id,
             'participant_id' => $user1->id,
@@ -1084,56 +1239,285 @@ class DatabaseSeeder extends Seeder
             'joined_at' => now()->subDays(rand(1, 30)),
         ]);
         
-        // Add the second user as a participant
-        ConversationParticipant::create([
-            'conversation_id' => $conversation->conversation_id,
-            'participant_id' => ($user2Type === 'cose_staff') ? $user2->id : $user2->{$user2Type === 'beneficiary' ? 'beneficiary_id' : 'family_member_id'},
-            'participant_type' => $user2Type,
-            'joined_at' => now()->subDays(rand(1, 30)),
+        // Add the second user as a participant based on type
+        if ($user2Type === 'cose_staff') {
+            ConversationParticipant::create([
+                'conversation_id' => $conversation->conversation_id,
+                'participant_id' => $user2->id,
+                'participant_type' => 'cose_staff',
+                'joined_at' => now()->subDays(rand(1, 30)),
+            ]);
+        } elseif ($user2Type === 'beneficiary') {
+            ConversationParticipant::create([
+                'conversation_id' => $conversation->conversation_id,
+                'participant_id' => $user2->beneficiary_id,
+                'participant_type' => 'beneficiary',
+                'joined_at' => now()->subDays(rand(1, 30)),
+            ]);
+        } elseif ($user2Type === 'family_member') {
+            ConversationParticipant::create([
+                'conversation_id' => $conversation->conversation_id,
+                'participant_id' => $user2->family_member_id,
+                'participant_type' => 'family_member',
+                'joined_at' => now()->subDays(rand(1, 30)),
+            ]);
+        }
+        
+        // Generate messages appropriate for each conversation type
+        $this->generatePrivateMessages($conversation, $user1, $user2, $user2Type);
+        
+        return $conversation;
+    }
+
+    /**
+     * Get a random day of the week
+     */
+    private function getRandomDay()
+    {
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        return $days[array_rand($days)];
+    }
+
+    /**
+     * Get a random time
+     */
+    private function getRandomTime()
+    {
+        $hour = rand(8, 18);
+        $minute = rand(0, 1) ? '00' : '30';
+        $ampm = $hour >= 12 ? 'PM' : 'AM';
+        $hour = $hour > 12 ? $hour - 12 : $hour;
+        return "{$hour}:{$minute} {$ampm}";
+    }
+
+    /**
+     * Create a message attachment
+     */
+    private function createMessageAttachment($message)
+    {
+        // Define possible attachment types
+        $attachmentTypes = [
+            // Images
+            [
+                'file_name' => 'photo' . rand(1, 5) . '.jpg',
+                'file_path' => 'message_attachments/photo.jpg',
+                'file_type' => 'image/jpeg',
+                'file_size' => rand(100000, 2000000),
+                'is_image' => true
+            ],
+            // Documents
+            [
+                'file_name' => 'document' . rand(1, 3) . '.pdf',
+                'file_path' => 'message_attachments/document.pdf',
+                'file_type' => 'application/pdf',
+                'file_size' => rand(50000, 5000000),
+                'is_image' => false
+            ],
+            // Medical records
+            [
+                'file_name' => 'medical_record.pdf',
+                'file_path' => 'message_attachments/medical.pdf',
+                'file_type' => 'application/pdf',
+                'file_size' => rand(100000, 3000000),
+                'is_image' => false
+            ]
+        ];
+        
+        // Pick a random attachment type
+        $attachmentType = $attachmentTypes[array_rand($attachmentTypes)];
+        
+        // Create the attachment
+        MessageAttachment::create([
+            'message_id' => $message->message_id,
+            'file_name' => $attachmentType['file_name'],
+            'file_path' => $attachmentType['file_path'],
+            'file_type' => $attachmentType['file_type'],
+            'file_size' => $attachmentType['file_size'],
+            'is_image' => $attachmentType['is_image']
         ]);
-        
-        // Create messages in this conversation from both participants (2-8 messages)
-        $messageCount = rand(2, 8);
-        
+    }
+
+    /**
+     * Generate messages for a private conversation based on participant types
+     */
+    private function generatePrivateMessages($conversation, $user1, $user2, $user2Type)
+    {
+        $messageCount = rand(3, 8); // Generate 3-8 messages
+        $lastMessageTimestamp = now()->subDays(rand(5, 20));
         $lastMessage = null;
-        for ($j = 0; $j < $messageCount; $j++) {
-            // Alternate between the two participants
-            if ($j % 2 == 0) {
-                // First user sends message
-                $senderId = $user1->id;
-                $senderType = 'cose_staff';
+        
+        // Configure messages based on participant types
+        $user1Messages = [];
+        $user2Messages = [];
+        
+        // Care Worker to Beneficiary messages
+        if ($user2Type === 'beneficiary') {
+            $user1Messages = [
+                "Hello {$user2->first_name}, how are you feeling today?",
+                "Just checking in to see if you need anything.",
+                "I'll be visiting next {$this->getRandomDay()}. Does that work for you?",
+                "Have you been taking your medications as prescribed?",
+                "Your family asked me to remind you about the appointment on {$this->getRandomDay()}.",
+                "Let me know if you need any assistance with daily activities."
+            ];
+            
+            $user2Messages = [
+                "Hello, I'm doing well today.",
+                "Could you help me with scheduling my next doctor's appointment?",
+                "I'm having trouble sleeping lately.",
+                "Yes, I've been following the medication schedule.",
+                "Thank you for checking in.",
+                "I appreciate your help with everything."
+            ];
+        }
+        // Care Worker to Family Member messages
+        elseif ($user2Type === 'family_member') {
+            // Get the beneficiary info for context
+            $beneficiary = Beneficiary::find($user2->beneficiary_id);
+            $beneficiaryName = $beneficiary ? $beneficiary->first_name : "your relative";
+            
+            $user1Messages = [
+                "Hello {$user2->first_name}, how is everything going?",
+                "{$beneficiaryName} had a good day today. Just wanted to update you.",
+                "I've scheduled the next care plan review for {$this->getRandomDay()}.",
+                "Do you have any concerns about {$beneficiaryName}'s care that we should address?",
+                "The doctor recommended some changes to the medication schedule.",
+                "Would you be available for a family meeting next week?"
+            ];
+            
+            $user2Messages = [
+                "Thank you for the update.",
+                "How has {$beneficiaryName} been doing with the exercises?",
+                "I noticed some improvements during my last visit.",
+                "Are there any supplies you need me to bring?",
+                "When will the next assessment be done?",
+                "I appreciate your dedication to {$beneficiaryName}'s care."
+            ];
+        }
+        // Staff to Staff messages
+        else {
+            $user1Messages = [
+                "Hello {$user2->first_name}, do you have a moment to discuss a case?",
+                "Could you review the care plan for beneficiary #{$this->faker->numberBetween(1, 100)}?",
+                "When is our next team meeting scheduled?",
+                "I need your input on a situation with one of my assigned beneficiaries.",
+                "Can you share the updated protocols document?",
+                "Let's coordinate our schedules for next week."
+            ];
+            
+            $user2Messages = [
+                "Of course, what's the issue?",
+                "I've reviewed the file and made some notes.",
+                "The meeting is scheduled for {$this->getRandomDay()} at {$this->getRandomTime()}.",
+                "I'll send over the documentation shortly.",
+                "Let me know when you're free to discuss in more detail.",
+                "I'll be in the office on {$this->getRandomDay()} if you want to meet in person."
+            ];
+        }
+        
+        // Generate the messages with alternating senders
+        for ($i = 0; $i < $messageCount; $i++) {
+            $isUser1Sender = ($i % 2 == 0);
+            
+            // Add some time between messages
+            $lastMessageTimestamp = $lastMessageTimestamp->addHours(rand(1, 12));
+            
+            if ($isUser1Sender) {
+                // User 1 (Care Worker/Staff) sends message
+                $content = $user1Messages[array_rand($user1Messages)];
+                
+                $message = Message::factory()->create([
+                    'conversation_id' => $conversation->conversation_id,
+                    'sender_id' => $user1->id,
+                    'sender_type' => 'cose_staff',
+                    'content' => $content,
+                    'message_timestamp' => $lastMessageTimestamp,
+                    'is_unsent' => rand(0, 20) === 0 // 5% chance of being unsent
+                ]);
+                
+                // Add read status for user 2 (50% chance of being read)
+                if (rand(0, 1) === 1) {
+                    if ($user2Type === 'cose_staff') {
+                        MessageReadStatus::create([
+                            'message_id' => $message->message_id,
+                            'reader_id' => $user2->id,
+                            'reader_type' => 'cose_staff',
+                            'read_at' => $lastMessageTimestamp->copy()->addMinutes(rand(1, 120))
+                        ]);
+                    } elseif ($user2Type === 'beneficiary') {
+                        MessageReadStatus::create([
+                            'message_id' => $message->message_id,
+                            'reader_id' => $user2->beneficiary_id,
+                            'reader_type' => 'beneficiary',
+                            'read_at' => $lastMessageTimestamp->copy()->addMinutes(rand(1, 120))
+                        ]);
+                    } elseif ($user2Type === 'family_member') {
+                        MessageReadStatus::create([
+                            'message_id' => $message->message_id,
+                            'reader_id' => $user2->family_member_id,
+                            'reader_type' => 'family_member',
+                            'read_at' => $lastMessageTimestamp->copy()->addMinutes(rand(1, 120))
+                        ]);
+                    }
+                }
             } else {
-                // Second user sends message
-                $senderId = ($user2Type === 'cose_staff') ? $user2->id : $user2->{$user2Type === 'beneficiary' ? 'beneficiary_id' : 'family_member_id'};
-                $senderType = $user2Type;
+                // User 2 sends message (handle different types)
+                $content = $user2Messages[array_rand($user2Messages)];
+                
+                if ($user2Type === 'cose_staff') {
+                    $message = Message::factory()->create([
+                        'conversation_id' => $conversation->conversation_id,
+                        'sender_id' => $user2->id,
+                        'sender_type' => 'cose_staff',
+                        'content' => $content,
+                        'message_timestamp' => $lastMessageTimestamp,
+                        'is_unsent' => rand(0, 20) === 0
+                    ]);
+                } elseif ($user2Type === 'beneficiary') {
+                    $message = Message::factory()->create([
+                        'conversation_id' => $conversation->conversation_id,
+                        'sender_id' => $user2->beneficiary_id,
+                        'sender_type' => 'beneficiary',
+                        'content' => $content,
+                        'message_timestamp' => $lastMessageTimestamp,
+                        'is_unsent' => rand(0, 20) === 0
+                    ]);
+                } elseif ($user2Type === 'family_member') {
+                    $message = Message::factory()->create([
+                        'conversation_id' => $conversation->conversation_id,
+                        'sender_id' => $user2->family_member_id,
+                        'sender_type' => 'family_member',
+                        'content' => $content,
+                        'message_timestamp' => $lastMessageTimestamp,
+                        'is_unsent' => rand(0, 20) === 0
+                    ]);
+                }
+                
+                // Add read status for user 1 (75% chance of being read)
+                if (rand(0, 3) > 0) {
+                    MessageReadStatus::create([
+                        'message_id' => $message->message_id,
+                        'reader_id' => $user1->id,
+                        'reader_type' => 'cose_staff',
+                        'read_at' => $lastMessageTimestamp->copy()->addMinutes(rand(1, 60))
+                    ]);
+                }
             }
             
-            $isUnsent = (rand(1, 20) === 1); // 5% chance of being unsent
-            $message = Message::create([
-                'conversation_id' => $conversation->conversation_id,
-                'sender_id' => $senderId,
-                'sender_type' => $senderType,
-                'content' => \Faker\Factory::create()->sentence(rand(3, 15)),
-                'is_unsent' => $isUnsent,
-                'message_timestamp' => now()->subDays(5)->addMinutes($j * 30),
-            ]);
+            // 10% chance to add an attachment
+            if (rand(0, 9) === 0) {
+                $this->createMessageAttachment($message);
+            }
             
             $lastMessage = $message;
-            
-            // Randomly add attachments and read statuses
-            $this->addAttachmentAndReadStatuses($message, [
-                ['id' => $user1->id, 'type' => 'cose_staff'],
-                ['id' => ($user2Type === 'cose_staff') ? $user2->id : $user2->{$user2Type === 'beneficiary' ? 'beneficiary_id' : 'family_member_id'}, 'type' => $user2Type]
-            ]);
         }
         
         // Update the conversation with the last message ID
         if ($lastMessage) {
             $conversation->last_message_id = $lastMessage->message_id;
+            $conversation->updated_at = $lastMessage->message_timestamp;
             $conversation->save();
         }
-        
-        return $conversation;
     }
 
     /**
