@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Services\UploadService;
+use App\Models\Beneficiary;
+use App\Models\User;
 
 class RecordsManagementApiController extends Controller
 {
@@ -26,14 +28,12 @@ class RecordsManagementApiController extends Controller
     public function listWeekly(Request $request)
     {
         $user = $request->user();
-        $query = WeeklyCarePlan::with(['beneficiary', 'author', 'vitalSigns']);
+        $query = WeeklyCarePlan::query();
 
-        // Role-based filtering
         if ($user->role_id == 3) { // Care Worker
             $query->where('care_worker_id', $user->id);
         }
 
-        // Search
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->whereHas('beneficiary', function ($q) use ($search) {
@@ -42,19 +42,30 @@ class RecordsManagementApiController extends Controller
             });
         }
 
-        // Pagination
         $perPage = $request->input('per_page', 15);
         $plans = $query->orderBy('date', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'data' => $plans->map(function ($plan) {
+                // Fetch beneficiary
+                $beneficiary = Beneficiary::find($plan->beneficiary_id);
+                $beneficiaryFullName = $beneficiary
+                    ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+                    : null;
+
+                // Fetch care worker (author)
+                $careWorker = User::find($plan->care_worker_id);
+                $careWorkerFullName = $careWorker
+                    ? trim("{$careWorker->first_name} {$careWorker->last_name}")
+                    : null;
+
                 return [
                     'id' => $plan->weekly_care_plan_id,
                     'date' => $plan->date,
-                    'beneficiary' => $plan->beneficiary ? $plan->beneficiary->full_name : null,
-                    'care_worker' => $plan->author ? $plan->author->full_name : null,
-                    'assessment' => $plan->assessment,
+                    'beneficiary' => $beneficiaryFullName,
+                    'care_worker' => $careWorkerFullName,
+                    // 'assessment' => $plan->assessment,
                     'photo_url' => $plan->photo_path
                         ? $this->uploadService->getTemporaryPrivateUrl($plan->photo_path, 30)
                         : null,
@@ -74,24 +85,33 @@ class RecordsManagementApiController extends Controller
     {
         $user = $request->user();
         $plan = WeeklyCarePlan::with([
-            'beneficiary',
-            'author',
             'vitalSigns',
             'interventions'
         ])->findOrFail($id);
 
-        // Role-based access
         if ($user->role_id == 3 && $plan->care_worker_id != $user->id) {
             return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
         }
+
+        // Fetch beneficiary
+        $beneficiary = Beneficiary::find($plan->beneficiary_id);
+        $beneficiaryFullName = $beneficiary
+            ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+            : null;
+
+        // Fetch care worker (author)
+        $careWorker = User::find($plan->care_worker_id);
+        $careWorkerFullName = $careWorker
+            ? trim("{$careWorker->first_name} {$careWorker->last_name}")
+            : null;
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $plan->weekly_care_plan_id,
                 'date' => $plan->date,
-                'beneficiary' => $plan->beneficiary,
-                'care_worker' => $plan->author,
+                'beneficiary' => $beneficiaryFullName,
+                'care_worker' => $careWorkerFullName,
                 'assessment' => $plan->assessment,
                 'evaluation_recommendations' => $plan->evaluation_recommendations,
                 'illnesses' => $plan->illnesses ? json_decode($plan->illnesses) : [],
