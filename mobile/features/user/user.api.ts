@@ -5,7 +5,8 @@ import {
 
 import { axiosClient } from "~/common/api";
 
-import { userSchema } from "./user.schema";
+import { userProfileSchema, userSchema } from "./user.schema";
+import { log } from "../../common/debug";
 
 class UserController {
     private jsonApi: AxiosInstance;
@@ -22,41 +23,7 @@ class UserController {
         ] = "application/json";
     }
 
-    private async health() {
-        try {
-            const response = await fetch(
-                "https://test.cosemhcs.org.ph/health",
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                    },
-                },
-            );
-            if (!response.ok) {
-                throw new Error(
-                    `HTTP error! status: ${response.status}`,
-                );
-            }
-
-            const data = await response.json();
-            console.log(
-                "Health check response:",
-                data,
-            );
-        } catch (error) {
-            console.error(
-                "Error during health check:",
-                error,
-            );
-            throw error;
-        }
-    }
-
     async getUser(token: string) {
-        await this.health();
-
         try {
             const response =
                 await this.jsonApi.get("/user", {
@@ -125,6 +92,39 @@ class UserController {
                 error,
             );
 
+            throw error;
+        }
+    }
+
+    async getUserProfile(token: string) {
+        try {
+            const response =
+                await this.jsonApi.get("/account-profile", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+            const validate =
+                await userProfileSchema.safeParseAsync(
+                    response.data.data,
+                );
+            if (!validate.success) {
+                console.error(
+                    "User profile validation failed:",
+                    validate.error,
+                );
+                throw new Error(
+                    "User profile validation failed",
+                );
+            }
+
+            return validate.data;
+        } catch (error) {
+            console.error(
+                "Error fetching user profile:",
+                error,
+            );
             throw error;
         }
     }

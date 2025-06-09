@@ -12,6 +12,10 @@ export const QK = {
             "user/getUser",
             token,
         ],
+        getUserProfile: (token: string) => [
+            "user/getUserProfile",
+            token,
+        ],
         management: {
             getBeneficiaries:
                 "user/management/getBeneficiaries",
@@ -79,6 +83,7 @@ export const QK = {
     },
     report: {
         getReports: "reports/getReports",
+        getWCPRecords: "reports/getWCPRecords",
     },
 };
 

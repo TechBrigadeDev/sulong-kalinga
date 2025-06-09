@@ -35,3 +35,32 @@ export const useUser = () => {
         enabled: !!token,
     });
 };
+
+
+export const useUserProfile = () => {
+    const { token } = authStore();
+
+    return useQuery({
+        queryKey: QK.user.getUserProfile(
+            token as string,
+        ),
+        queryFn: async () => {
+            if (!token) {
+                throw new Error(
+                    "Token is required",
+                );
+            }
+            const response =
+                await userController.getUserProfile(
+                    token,
+                );
+
+            console.log(
+                "User profile fetched:",
+                response,
+            );
+            return response;
+        },
+        enabled: !!token,
+    });
+}

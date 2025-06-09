@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
-interface ReportsListState {
+interface WCPRecordsListState {
     search: string;
     setSearch: (search: string) => void;
 }
 
-export const reportsListStore = create<ReportsListState>((set) => ({
+export const wcpRecordsListStore = create<WCPRecordsListState>((set) => ({
     search: "",
     setSearch: (search) => set(() => ({ search })),
 }));

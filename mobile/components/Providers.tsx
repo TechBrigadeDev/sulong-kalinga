@@ -20,23 +20,21 @@ const Providers = ({
     const colorScheme = useColorScheme();
     return (
         <TamaguiProvider config={config}>
-            <QueryClientProvider
-                client={queryClient}
-            >
-                <ThemeProvider
-                    value={
-                        colorScheme === "dark"
-                            ? DarkTheme
-                            : DefaultTheme
-                    }
+            <PortalProvider shouldAddRootHost>
+                <QueryClientProvider
+                    client={queryClient}
                 >
-                    <PortalProvider
-                        shouldAddRootHost
+                    <ThemeProvider
+                        value={
+                            colorScheme === "dark"
+                                ? DarkTheme
+                                : DefaultTheme
+                        }
                     >
                         {children}
-                    </PortalProvider>
-                </ThemeProvider>
-            </QueryClientProvider>
+                    </ThemeProvider>
+                </QueryClientProvider>
+            </PortalProvider>
         </TamaguiProvider>
     );
 };

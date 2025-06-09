@@ -3,18 +3,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";
 import { View, YStack } from "tamagui";
 
-import ReportsList from "~/features/reports/list";
-import ReportsSearch from "~/features/reports/list/search";
+import WCPRecordsList from "~/features/records/wcp/list";
+import WCPRecordsSearch from "~/features/records/wcp/list/search";
 
 const Screen = () => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <YStack py="$4" gap="$4">
-                    <ReportsSearch />
+                    <WCPRecordsSearch />
                 </YStack>
                 <View style={{ flex: 1 }}>
-                    <ReportsList />
+                    <WCPRecordsList />
                 </View>
             </View>
         </SafeAreaView>
@@ -32,7 +32,7 @@ const Layout = () => (
     <>
         <Stack.Screen
             options={{
-                title: "Care Records",
+                title: "WCP Records",
                 headerShown: true,
             }}
         />

@@ -5,8 +5,10 @@ import {
 } from "react-native";
 
 import ProfileSettings from "~/components/screens/Options/profile/Settings";
+import { useUserProfile } from "../../../../features/user/user.hook";
 
 const ProfileScreen = () => {
+    useUserProfile();
     return (
         <SafeAreaView style={style.container}>
             <Stack.Screen

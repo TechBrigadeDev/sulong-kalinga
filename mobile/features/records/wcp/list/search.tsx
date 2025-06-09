@@ -2,10 +2,10 @@ import { Input } from "tamagui";
 
 import { useDebounce } from "~/common/hooks";
 
-import { reportsListStore } from "./store";
+import { wcpRecordsListStore } from "./store";
 
-const ReportsSearch = () => {
-    const { setSearch } = reportsListStore();
+const WCPRecordsSearch = () => {
+    const { setSearch } = wcpRecordsListStore();
 
     const onSearch = useDebounce(
         (text: string) => {
@@ -16,11 +16,11 @@ const ReportsSearch = () => {
 
     return (
         <Input
-            placeholder="Search Reports"
+            placeholder="Search WCP Records"
             size="$3"
             onChangeText={onSearch}
         />
     );
 };
 
-export default ReportsSearch;
+export default WCPRecordsSearch;

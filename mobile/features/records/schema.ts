@@ -30,3 +30,24 @@ export const reportsResponseSchema = z.object({
         last_page: z.number(),
     }),
 });
+
+// WCP Records Schema based on the provided JSON data
+export const wcpRecordSchema = z.object({
+    id: z.number(),
+    date: z.string(),
+    beneficiary: z.any().nullable(), // Can be expanded if beneficiary structure is known
+    care_worker: z.any().nullable(), // Can be expanded if care_worker structure is known
+    assessment: z.string().optional(),
+    photo_url: z.string(),
+});
+
+export const wcpRecordsResponseSchema = z.object({
+    success: z.boolean(),
+    data: z.array(wcpRecordSchema),
+    meta: z.object({
+        current_page: z.number(),
+        last_page: z.number(),
+        per_page: z.number(),
+        total: z.number(),
+    }),
+});

@@ -2,7 +2,7 @@ import { formatDate } from "common/date";
 import Badge from "components/Bagde";
 import FlatList from "components/FlatList";
 import LoadingScreen from "components/loaders/LoadingScreen";
-import { IReport } from "features/reports/type";
+import { IWCPRecord } from "~/features/records/type";
 import {
     Eye,
     SquarePen,
@@ -20,12 +20,13 @@ import {
     YStack,
 } from "tamagui";
 
-import { useCarePlans } from "~/features/reports/hook";
+import { useWCPRecords } from "~/features/records/hook";
 
-import { reportsListStore } from "./store";
+import { wcpRecordsListStore } from "./store";
+import { useRouter } from "expo-router";
 
-const ReportsList = () => {
-    const { search } = reportsListStore();
+const WCPRecordsList = () => {
+    const { search } = wcpRecordsListStore();
 
     const {
         data,
@@ -34,7 +35,7 @@ const ReportsList = () => {
         hasNextPage,
         fetchNextPage,
         refetch,
-    } = useCarePlans({
+    } = useWCPRecords({
         search,
         limit: 10,
     });
@@ -53,9 +54,9 @@ const ReportsList = () => {
         );
     }
 
-    const allReports = data?.pages.flatMap((page) => page.data) || [];
+    const allRecords = data?.pages.flatMap((page) => page.data) || [];
 
-    if (allReports.length === 0 && !isLoading) {
+    if (allRecords.length === 0 && !isLoading) {
         return (
             <YStack
                 flex={1}
@@ -64,7 +65,7 @@ const ReportsList = () => {
                     alignItems: "center",
                 }}
             >
-                <Text>No reports found</Text>
+                <Text>No WCP records found</Text>
             </YStack>
         );
     }
@@ -77,13 +78,13 @@ const ReportsList = () => {
 
     return (
         <FlatList
-            data={allReports}
+            data={allRecords}
             tabbed
             renderItem={({ item }) => (
-                <ReportCard report={item} />
+                <WCPRecordCard record={item} />
             )}
             keyExtractor={(item, index) =>
-                `${item.beneficiary_id}-${index}`
+                `${item.id}-${index}`
             }
             contentContainerStyle={{
                 padding: 16,
@@ -110,32 +111,27 @@ const ReportsList = () => {
             }
             ListEmptyComponent={
                 <View>
-                    <Text>No reports found.</Text>
+                    <Text>No WCP records found.</Text>
                 </View>
             }
         />
     );
 };
 
-const ReportCard = ({
-    report,
+const WCPRecordCard = ({
+    record,
 }: {
-    report: IReport;
+    record: IWCPRecord;
 }) => {
-    const author = `${report.author_first_name} ${report.author_last_name}`;
-    const beneficiary = `${report.beneficiary_first_name} ${report.beneficiary_last_name}`;
-    const uploadedAt = formatDate(
-        report.created_at,
+    const router = useRouter();
+    const recordDate = formatDate(
+        record.date,
         "MMM dd, yyyy",
     );
 
-    const Status = useCallback(() => {
-        return (
-            <Badge borderRadius={4}>
-                {report.report_type}
-            </Badge>
-        );
-    }, [report.report_type]);
+    const onViewDetails = () => {
+        router.push(`/options/reports/care-records/${record.id}`);
+    };
 
     return (
         <Card
@@ -157,8 +153,10 @@ const ReportCard = ({
                 paddingBlock="$2"
             >
                 <YStack>
-                    <H5>{author}</H5>
-                    <Status />
+                    <H5>WCP Record #{record.id}</H5>
+                    <Badge borderRadius={4}>
+                        Weekly Care Plan
+                    </Badge>
                 </YStack>
                 <XStack>
                     <Button
@@ -167,6 +165,7 @@ const ReportCard = ({
                         color="#495057"
                         borderColor="#DEE2E6"
                         variant="outlined"
+                        onPressIn={onViewDetails}
                     >
                         <Eye size={16} />
                     </Button>
@@ -188,21 +187,24 @@ const ReportCard = ({
                     justify="space-between"
                     paddingBlock="$2"
                 >
-                    <Text>Beneficiary</Text>
-                    <Text>{beneficiary}</Text>
+                    <Text>Date</Text>
+                    <Text>{recordDate}</Text>
                 </XStack>
-                <XStack
-                    display="flex"
-                    flexDirection="row"
-                    justify="space-between"
-                    paddingBlock="$2"
-                >
-                    <Text>Uploaded At</Text>
-                    <Text>{uploadedAt}</Text>
-                </XStack>
+                {record.assessment && (
+                    <XStack
+                        display="flex"
+                        flexDirection="column"
+                        paddingBlock="$2"
+                    >
+                        <Text fontWeight="bold">Assessment</Text>
+                        <Text numberOfLines={3} ellipsizeMode="tail">
+                            {record.assessment}
+                        </Text>
+                    </XStack>
+                )}
             </YStack>
         </Card>
     );
 };
 
-export default ReportsList;
+export default WCPRecordsList;

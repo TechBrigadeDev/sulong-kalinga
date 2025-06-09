@@ -5,10 +5,10 @@ import { Avatar, Text, YStack } from "tamagui";
 
 import Badge from "~/components/Bagde";
 import UserAvatar from "~/features/user/components/UserAvatar";
-import { useUser } from "~/features/user/user.hook";
+import { useUser, useUserProfile } from "~/features/user/user.hook";
 
 const ProfileSettings = () => {
-    const { data: userData } = useUser();
+    const { data: userData } = useUserProfile();
 
     return (
         <YStack style={styles.container}>
@@ -41,51 +41,17 @@ const ProfileSettings = () => {
             <OptionCard style={styles.card}>
                 <OptionRow
                     label="SSS ID Number"
-                    value={"1234567890"}
+                    value={userData?.sss_id || "Not set"}
                 />
                 <OptionRow
                     label="PhilHealth ID Number"
-                    value={"1234567890"}
+                    value={userData?.philhealth_id || "Not set"}
                 />
                 <OptionRow
                     label="Pag-IBIG ID Number"
-                    value={"1234567890"}
+                    value={userData?.pagibig_id || "Not set"}
                 />
             </OptionCard>
-            {/* <YStack gap="$3">
-          <XStack gap="$2">
-            <Text 
-            value={"1234567890"}
-ontWeight="bold">Email:</Text>
-            <Text>{userData?.email}</Text>
-          </XStack>
-          <XStack gap="$2" style={{ alignItems: 'center' }}>
-            <Text 
-            value={"1234567890"}
-ontWeight="bold">Account Status:</Text>
-            <Text style={{ background: '#22c55e', color: 'white', padding: '2px 8px', borderRadius: 4, fontSize: 13 }}>
-              <Badge variant={userData?.status === 'Active' ? 'success' : 'warning'}>
-                {userData?.status}
-              </Badge>
-            </Text>
-          </XStack>
-          <XStack gap="$2">
-            <Text fontWeight="bold">SSS ID Number:</Text>
-            <Text>1234567890</Text>
-          </XStack>
-          <XStack gap="$2">
-            <Text fontWeight="bold">PhilHealth ID Number:</Text>
-            <Text>123456789011</Text>
-          </XStack>
-          <XStack gap="$2">
-            <Text fontWeight="bold">Pag-IBIG ID Number:</Text>
-            <Text>123456789000</Text>
-          </XStack>
-        </YStack>
-        <XStack gap="$3" style={{ marginTop: 32, justifyContent: 'flex-end' }}>
-          <Button theme="blue" onPress={handleUpdateEmail}>Update Email</Button>
-          <Button theme="blue" onPress={handleUpdatePassword}>Update Password</Button>
-        </XStack> */}
         </YStack>
     );
 };
