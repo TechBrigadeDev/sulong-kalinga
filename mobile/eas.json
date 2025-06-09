@@ -1,7 +1,6 @@
 {
   "build": {
     "development": {
-      "bun": "1.0.0",
       "android": {
         "gradleCommand": ":app:assembleDebug"
       },
