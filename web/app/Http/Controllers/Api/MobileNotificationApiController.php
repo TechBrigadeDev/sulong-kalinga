@@ -1,9 +1,13 @@
 <?php
 namespace App\Http\Controllers;
-
+// UNUSED // This controller is not used in the current application structure.
 use App\Models\SupabaseNotification;
 use Illuminate\Http\Request;
-
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
 class NotificationController extends Controller
 {
     public function store(Request $request)

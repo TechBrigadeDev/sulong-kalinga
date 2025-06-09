@@ -8,14 +8,17 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Services\UploadService;
 use Illuminate\Support\Facades\Storage;
+use App\Services\NotificationService;
 
 class FamilyMemberApiController extends Controller
 {
     protected $uploadService;
+    protected $notificationService;
 
-    public function __construct(UploadService $uploadService)
+    public function __construct(UploadService $uploadService, NotificationService $notificationService)
     {
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
     }
 
     // List all family members
@@ -247,7 +250,7 @@ class FamilyMemberApiController extends Controller
         ]);
     }
 
-    // Edit family member (admin only)
+    // Edit family member
     public function update(Request $request, $id)
     {
         if (!in_array($request->user()->role_id, [1, 2, 3])) {
@@ -362,7 +365,47 @@ class FamilyMemberApiController extends Controller
                 $beneficiary->primary_caregiver = null;
             }
             $beneficiary->save();
+        } else {
+            $beneficiary = $familyMember->beneficiary;
         }
+
+        // --- NOTIFICATIONS (after successful update) ---
+        $familyMemberName = $familyMember ? trim($familyMember->first_name . ' ' . $familyMember->last_name) : null;
+
+        // Notify the updated family member
+        $this->notificationService->notifyFamilyMember(
+            $familyMember->family_member_id,
+            'Family Member Profile Updated',
+            "{$familyMemberName}'s family member profile was updated."
+        );
+
+        // Notify assigned care worker if available and not the actor
+        $assignedCareWorkerId = $beneficiary && $beneficiary->generalCarePlan ? $beneficiary->generalCarePlan->care_worker_id : null;
+        $actor = $request->user();
+
+        if (
+            $assignedCareWorkerId &&
+            (
+                // If actor is NOT the assigned care worker, OR
+                // If actor is care manager (role_id == 2)
+                ($actor->id != $assignedCareWorkerId || $actor->role_id == 2)
+            )
+        ) {
+            // Only notify the assigned care worker if the actor is not the assigned care worker,
+            // or if the actor is the care manager (role_id == 2)
+            $this->notificationService->notifyStaff(
+                $assignedCareWorkerId,
+                'Family Member Profile Updated',
+                "{$familyMemberName}'s family member profile was updated."
+            );
+        }
+
+        // Notify the actor (admin/care manager/care worker)
+        $this->notificationService->notifyStaff(
+            $actor->id,
+            'Family Member Profile Updated',
+            'You have successfully updated a family member profile.'
+        );
 
         return response()->json([
             'success' => true,

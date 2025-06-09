@@ -11,14 +11,17 @@ use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\UnifiedUser;
 use App\Services\UploadService;
+use App\Services\NotificationService;
 
 class ViewAccountProfileApiController extends Controller
 {
     protected $uploadService;
+    protected $notificationService;
 
-    public function __construct(UploadService $uploadService)
+    public function __construct(UploadService $uploadService, NotificationService $notificationService)
     {
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
     }
 
     public function show(Request $request)
@@ -143,7 +146,6 @@ class ViewAccountProfileApiController extends Controller
                     ? $this->uploadService->getTemporaryPrivateUrl($user->photo, 30)
                     : null,
                 'username' => $unifiedUser->username,
-                'email' => $user->email,
             ];
         }
 
@@ -173,7 +175,7 @@ class ViewAccountProfileApiController extends Controller
         // Check password and update the correct table
         if ($role == 4) { // beneficiary
             $beneficiary = Beneficiary::find($unifiedUser->beneficiary_id);
-            if (!$beneficiary || !Hash::check($request->password, $beneficiary->password)) {
+            if (!$beneficiary || !\Hash::check($request->password, $beneficiary->password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Incorrect password.'
@@ -181,9 +183,16 @@ class ViewAccountProfileApiController extends Controller
             }
             $beneficiary->username = $request->new_email; // For beneficiaries, username is used for login
             $beneficiary->save();
+
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Email Updated',
+                'Your email was updated successfully.'
+            );
         } elseif ($role == 5) { // family_member
             $family = FamilyMember::find($unifiedUser->family_member_id);
-            if (!$family || !Hash::check($request->password, $family->password)) {
+            if (!$family || !\Hash::check($request->password, $family->password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Incorrect password.'
@@ -191,9 +200,16 @@ class ViewAccountProfileApiController extends Controller
             }
             $family->email = $request->new_email;
             $family->save();
+
+            // Notify family member
+            $this->notificationService->notifyFamilyMember(
+                $family->family_member_id,
+                'Email Updated',
+                'Your email was updated successfully.'
+            );
         } else { // cose_users (admin, care_manager, care_worker)
             $user = User::find($unifiedUser->cose_user_id);
-            if (!$user || !Hash::check($request->password, $user->password)) {
+            if (!$user || !\Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Incorrect password.'
@@ -201,20 +217,27 @@ class ViewAccountProfileApiController extends Controller
             }
             $user->email = $request->new_email;
             $user->save();
+
+            // Notify staff
+            $this->notificationService->notifyStaff(
+                $user->id,
+                'Email Updated',
+                'Your email was updated successfully.'
+            );
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Email updated successfully.',
             'data' => [
-                'work_email' => $user->email
+                'work_email' => $request->new_email
             ]
         ]);
     }
 
     public function updatePassword(Request $request)
     {
-        $user = $request->user();
+        $unifiedUser = $request->user();
 
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string',
@@ -228,15 +251,60 @@ class ViewAccountProfileApiController extends Controller
             ], 422);
         }
 
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Current password is incorrect.'
-            ], 403);
-        }
+        $role = $unifiedUser->role_id;
 
-        $user->password = Hash::make($request->new_password);
-        $user->save();
+        if ($role == 4) { // beneficiary
+            $beneficiary = Beneficiary::find($unifiedUser->beneficiary_id);
+            if (!$beneficiary || !\Hash::check($request->current_password, $beneficiary->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect.'
+                ], 403);
+            }
+            $beneficiary->password = \Hash::make($request->new_password);
+            $beneficiary->save();
+
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
+        } elseif ($role == 5) { // family_member
+            $family = FamilyMember::find($unifiedUser->family_member_id);
+            if (!$family || !\Hash::check($request->current_password, $family->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect.'
+                ], 403);
+            }
+            $family->password = \Hash::make($request->new_password);
+            $family->save();
+
+            // Notify family member
+            $this->notificationService->notifyFamilyMember(
+                $family->family_member_id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
+        } else { // cose_users (admin, care_manager, care_worker)
+            $user = User::find($unifiedUser->cose_user_id);
+            if (!$user || !\Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect.'
+                ], 403);
+            }
+            $user->password = \Hash::make($request->new_password);
+            $user->save();
+
+            // Notify staff
+            $this->notificationService->notifyStaff(
+                $user->id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
+        }
 
         return response()->json([
             'success' => true,

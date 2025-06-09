@@ -1,11 +1,14 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
+// UNUSED // This controller is not used in the current application structure.
 use App\Http\Controllers\Controller;
 use App\Models\Municipality;
 use Illuminate\Http\Request;
-
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
 class MunicipalityApiController extends Controller
 {
     /**

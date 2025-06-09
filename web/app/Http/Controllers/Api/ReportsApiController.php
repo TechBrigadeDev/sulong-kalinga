@@ -1,7 +1,10 @@
 <?php
-// UNUSED
+// UNUSED // This controller is not used in the current application structure.
 namespace App\Http\Controllers\Api;
-
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
+// UNUSED // This controller is not used in the current application structure.
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WeeklyCarePlan;

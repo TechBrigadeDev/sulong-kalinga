@@ -12,14 +12,17 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\UploadService;
 use App\Models\Beneficiary;
 use App\Models\User;
+use App\Services\NotificationService;
 
 class RecordsManagementApiController extends Controller
 {
     protected $uploadService;
+    protected $notificationService;
 
-    public function __construct(UploadService $uploadService)
+    public function __construct(UploadService $uploadService, NotificationService $notificationService)
     {
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
     }
 
     // --- WEEKLY CARE PLANS ONLY ---
@@ -240,8 +243,54 @@ class RecordsManagementApiController extends Controller
                 }
             }
 
+            // Reset acknowledgments
+            $plan->acknowledged_by_beneficiary = null;
+            $plan->acknowledged_by_family = null;
+
             $plan->save();
             DB::commit();
+
+            // --- NOTIFICATIONS (after successful update) ---
+            $beneficiary = Beneficiary::find($plan->beneficiary_id);
+            $beneficiaryName = $beneficiary
+                ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+                : null;
+
+            // Notify beneficiary
+            if ($beneficiary) {
+                $this->notificationService->notifyBeneficiary(
+                    $beneficiary->beneficiary_id,
+                    'Weekly Care Plan Updated',
+                    'Your weekly care plan was updated.'
+                );
+            }
+
+            // Notify all related family members
+            if ($beneficiary && $beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Weekly Care Plan Updated',
+                        "The weekly care plan for {$beneficiaryName} was updated."
+                    );
+                }
+            }
+
+            // Notify assigned care worker (if not the actor)
+            if ($plan->care_worker_id && $plan->care_worker_id != $user->id) {
+                $this->notificationService->notifyStaff(
+                    $plan->care_worker_id,
+                    'Weekly Care Plan Updated',
+                    "The weekly care plan for {$beneficiaryName} was updated."
+                );
+            }
+
+            // Notify the actor
+            $this->notificationService->notifyStaff(
+                $user->id,
+                'Weekly Care Plan Updated',
+                'Your weekly care plan update was successful.'
+            );
 
             return response()->json([
                 'success' => true,
