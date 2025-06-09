@@ -8,10 +8,12 @@ import {
     SquarePen,
 } from "lucide-react-native";
 import { useCallback } from "react";
+import { RefreshControl } from "react-native";
 import {
     Button,
     Card,
     H5,
+    Spinner,
     Text,
     View,
     XStack,
@@ -20,24 +22,62 @@ import {
 
 import { useCarePlans } from "~/features/reports/hook";
 
+import { reportsListStore } from "./store";
+
 const ReportsList = () => {
-    const { data, isLoading } = useCarePlans();
+    const { search } = reportsListStore();
 
-    if (isLoading) {
-        return <LoadingScreen />;
-    }
+    const {
+        data,
+        isLoading,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+        refetch,
+    } = useCarePlans({
+        search,
+        limit: 10,
+    });
 
-    if (!data || data.reports.length === 0) {
+    if (!data?.pages && isLoading) {
         return (
-            <View>
-                <Text>No reports found.</Text>
-            </View>
+            <YStack
+                flex={1}
+                style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <Spinner size="large" />
+            </YStack>
         );
     }
 
+    const allReports = data?.pages.flatMap((page) => page.data) || [];
+
+    if (allReports.length === 0 && !isLoading) {
+        return (
+            <YStack
+                flex={1}
+                style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <Text>No reports found</Text>
+            </YStack>
+        );
+    }
+
+    const onLoadMore = () => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    };
+
     return (
         <FlatList
-            data={data.reports}
+            data={allReports}
             tabbed
             renderItem={({ item }) => (
                 <ReportCard report={item} />
@@ -48,6 +88,26 @@ const ReportsList = () => {
             contentContainerStyle={{
                 padding: 16,
             }}
+            onEndReached={onLoadMore}
+            onEndReachedThreshold={0.5}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                />
+            }
+            ListFooterComponent={
+                isFetchingNextPage ? (
+                    <YStack
+                        style={{
+                            padding: 16,
+                            alignItems: "center",
+                        }}
+                    >
+                        <Spinner />
+                    </YStack>
+                ) : null
+            }
             ListEmptyComponent={
                 <View>
                     <Text>No reports found.</Text>
