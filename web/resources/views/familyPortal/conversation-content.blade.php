@@ -144,7 +144,31 @@ function getFileIconClass($fileType) {
                                         <small class="text-muted fw-bold">
                                             {{ $message->sender_name ?? 'Unknown' }}
                                             @php
-                                                // Sender role code
+                                                // Set the sender role correctly based on sender type
+                                                $senderRole = "Unknown";
+                                                if ($message->sender_type === 'cose_staff') {
+                                                    // Try to get more specific staff role
+                                                    try {
+                                                        $staffUser = \App\Models\User::find($message->sender_id);
+                                                        $roleId = $staffUser ? $staffUser->role_id : 0;
+                                                        
+                                                        if ($roleId == 1) {
+                                                            $senderRole = "Administrator";
+                                                        } elseif ($roleId == 2) {
+                                                            $senderRole = "Care Manager";
+                                                        } elseif ($roleId == 3) {
+                                                            $senderRole = "Care Worker";
+                                                        } else {
+                                                            $senderRole = "Staff";
+                                                        }
+                                                    } catch (\Exception $e) {
+                                                        $senderRole = "Staff";
+                                                    }
+                                                } elseif ($message->sender_type === 'beneficiary') {
+                                                    $senderRole = "Beneficiary";
+                                                } elseif ($message->sender_type === 'family_member' || $message->sender_type === 'family') {
+                                                    $senderRole = "Family Member";
+                                                }
                                             @endphp
                                             <span class="sender-role">({{ $senderRole }})</span>
                                         </small>

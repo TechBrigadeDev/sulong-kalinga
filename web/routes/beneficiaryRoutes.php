@@ -100,6 +100,7 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         Route::post('/mark-as-read', [PortalMessagingController::class, 'markAsRead'])->name('mark-as-read');
         Route::get('/attachment/{id}', [PortalMessagingController::class, 'downloadAttachment'])->name('attachment');
         Route::get('/check-conversation', [PortalMessagingController::class, 'getConversationsWithRecipient'])->name('check-conversation');
+        Route::get('/group-members/{id}', [PortalMessagingController::class, 'getGroupMembers'])->name('group-members');
     });
     
     // Profile Routes

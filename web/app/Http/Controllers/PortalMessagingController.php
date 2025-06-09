@@ -758,10 +758,16 @@ class PortalMessagingController extends Controller
                 return $this->jsonResponse(false, 'Cannot leave a private conversation', 422);
             }
             
-            // Check if user is participant
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+            
+            // Check if user is participant - FIXED to use whereIn with participantTypes
             $participant = ConversationParticipant::where('conversation_id', $conversationId)
                 ->where('participant_id', $user->getKey())
-                ->where('participant_type', $userType)
+                ->whereIn('participant_type', $participantTypes)
                 ->whereNull('left_at')
                 ->first();
                 
@@ -1577,6 +1583,133 @@ class PortalMessagingController extends Controller
             return response()->json([
                 'exists' => false,
                 'error' => 'Error checking conversations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get members of a group conversation for portal users (beneficiary/family)
+     */
+    public function getGroupMembers($id)
+    {
+        try {
+            // Determine if user is a beneficiary or family member
+            $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+            $user = Auth::guard($userType)->user();
+            
+            // CRITICAL FIX: Handle family vs family_member type mismatch
+            $participantTypes = [$userType];
+            if ($userType === 'family') {
+                $participantTypes[] = 'family_member';
+            }
+            
+            // Get the conversation
+            $conversation = Conversation::findOrFail($id);
+            
+            // Security check: Make sure user is a participant
+            $isParticipant = false;
+            
+            if ($userType === 'family') {
+                // Check for both family and family_member types
+                $isParticipant = $conversation->participants()
+                    ->where('participant_id', $user->getKey())
+                    ->whereIn('participant_type', $participantTypes)
+                    ->whereNull('left_at')
+                    ->exists();
+            } else {
+                // For beneficiary, use standard check
+                $isParticipant = $conversation->hasParticipant($user->getKey(), $userType);
+            }
+            
+            if (!$isParticipant || !$conversation->is_group_chat) {
+                return response()->json(['error' => 'Not authorized or not a group conversation'], 403);
+            }
+            
+            // Get all participants with their details
+            $participants = $conversation->participants()
+                ->whereNull('left_at')
+                ->get();
+            
+            $members = [];
+            
+            foreach ($participants as $participant) {
+                $member = [
+                    'id' => $participant->participant_id,
+                    'type' => $participant->participant_type,
+                    'name' => 'Unknown User',
+                    'role' => 'Unknown',
+                    'isCurrentUser' => false,
+                    'joined_at' => $participant->joined_at ? $participant->joined_at->format('M j, Y') : 'Unknown',
+                ];
+                
+                // Determine if this is the current user
+                if ($participant->participant_id == $user->getKey() && 
+                    (($userType === 'family' && ($participant->participant_type === 'family' || $participant->participant_type === 'family_member')) ||
+                    ($userType === 'beneficiary' && $participant->participant_type === 'beneficiary'))) {
+                    $member['isCurrentUser'] = true;
+                }
+                
+                // Get name and role based on participant type
+                if ($participant->participant_type === 'cose_staff') {
+                    $staff = \App\Models\User::find($participant->participant_id);
+                    if ($staff) {
+                        $member['name'] = $staff->first_name . ' ' . $staff->last_name;
+                        
+                        // Determine staff role
+                        if ($staff->role_id == 1) {
+                            $member['role'] = 'Administrator';
+                        } elseif ($staff->role_id == 2) {
+                            $member['role'] = 'Care Manager';
+                        } elseif ($staff->role_id == 3) {
+                            $member['role'] = 'Care Worker';
+                        } else {
+                            $member['role'] = 'Staff';
+                        }
+                    }
+                } elseif ($participant->participant_type === 'beneficiary') {
+                    $beneficiary = \App\Models\Beneficiary::find($participant->participant_id);
+                    if ($beneficiary) {
+                        $member['name'] = $beneficiary->first_name . ' ' . $beneficiary->last_name;
+                        $member['role'] = 'Beneficiary';
+                    }
+                } elseif ($participant->participant_type === 'family_member' || $participant->participant_type === 'family') {
+                    $familyMember = \App\Models\FamilyMember::find($participant->participant_id);
+                    if ($familyMember) {
+                        $member['name'] = $familyMember->first_name . ' ' . $familyMember->last_name;
+                        $member['role'] = 'Family Member';
+                        
+                        // If primary caregiver, note that
+                        if ($familyMember->is_primary_caregiver) {
+                            $member['role'] = 'Primary Caregiver';
+                        }
+                    }
+                }
+                
+                $members[] = $member;
+            }
+            
+            // Sort members: current user first, then by name
+            usort($members, function($a, $b) {
+                if ($a['isCurrentUser'] && !$b['isCurrentUser']) return -1;
+                if (!$a['isCurrentUser'] && $b['isCurrentUser']) return 1;
+                return $a['name'] <=> $b['name'];
+            });
+            
+            return response()->json([
+                'success' => true, 
+                'members' => $members,
+                'total' => count($members)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting group members: ' . $e->getMessage(), [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load group members: ' . $e->getMessage()
             ], 500);
         }
     }

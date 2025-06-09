@@ -3181,7 +3181,7 @@
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
             
-            fetch(`${window.location.origin}/${rolePrefix}/messaging/leave-conversation`, {
+            fetch(`${window.location.origin}/${rolePrefix}/messaging/leave-group`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -3321,98 +3321,115 @@
                     sessionStorage.removeItem('memberAddedTime');
                 }
             });
+
         });
 
-        // Function to load group members
+       // Function to load group members
         function loadGroupMembers(conversationId) {
-            const membersList = document.getElementById('groupMembersList');
+            const modalBody = document.querySelector('#viewMembersModal .modal-body');
+            if (!modalBody) return;
             
-            // Show loading state
-            membersList.innerHTML = `
-                <div class="text-center py-3">
+            // Show loading indicator
+            modalBody.innerHTML = `
+                <div class="text-center p-4">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                        <span class="visually-hidden">Loading members...</span>
                     </div>
                 </div>
             `;
             
-            // Show modal while loading
-            viewMembersModal.show();
-            
-            // Fetch members from server
-            fetch(`${window.location.origin}/${rolePrefix}/messaging/group-members/${conversationId}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.members || data.members.length === 0) {
-                    membersList.innerHTML = '<div class="text-center py-3">No members found</div>';
-                    return;
-                }
-                
-                // Clear loading state
-                membersList.innerHTML = '';
-                
-                // Add members to list
-                data.members.forEach(member => {
-                    // Determine badge color based on member type
-                    let badgeClass = 'bg-secondary';
-                    let userType = 'Unknown';
-                    
-                    if (member.participant_type === 'cose_staff') {
-                        switch(member.role_id) {
-                            case 1:
-                                badgeClass = 'bg-danger';
-                                userType = 'Administrator';
-                                break;
-                            case 2:
-                                badgeClass = 'bg-primary';
-                                userType = 'Care Manager';
-                                break;
-                            case 3:
-                                badgeClass = 'bg-info';
-                                userType = 'Care Worker';
-                                break;
-                        }
-                    } else if (member.participant_type === 'beneficiary') {
-                        badgeClass = 'bg-success';
-                        userType = 'Beneficiary';
-                    } else if (member.participant_type === 'family_member') {
-                        badgeClass = 'bg-warning text-dark';
-                        userType = 'Family Member';
+            // Fetch members data from the server
+            fetch(`/${rolePrefix}/messaging/group-members/${conversationId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
                     }
-                    
-                    const memberItem = document.createElement('div');
-                    memberItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                    memberItem.innerHTML = `
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <img src="/images/defaultProfile.png" class="rounded-circle" width="40" height="40" alt="${member.name}">
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.members && data.members.length > 0) {
+                        // Clear loading indicator
+                        modalBody.innerHTML = '';
+                        
+                        // Create members list
+                        const membersList = document.createElement('ul');
+                        membersList.className = 'list-group';
+                        
+                        // Add members to the list
+                        data.members.forEach(member => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            
+                            // Create name and role display with badge
+                            let badgeClass = 'bg-secondary';
+                            if (member.role === 'Administrator') badgeClass = 'bg-danger';
+                            else if (member.role === 'Care Manager') badgeClass = 'bg-primary';
+                            else if (member.role === 'Care Worker') badgeClass = 'bg-info';
+                            else if (member.role === 'Beneficiary') badgeClass = 'bg-success';
+                            else if (member.role === 'Family Member' || member.role === 'Primary Caregiver') 
+                                badgeClass = 'bg-warning text-dark';
+                            
+                            // FIXED: Use complete image path instead of asset() helper
+                            const profileImageUrl = '/images/defaultProfile.png';
+                            
+                            // Build HTML content
+                            listItem.innerHTML = `
+                                <div>
+                                    <div class="d-flex align-items-center">
+                                        <img src="${profileImageUrl}" class="rounded-circle me-2" width="40" height="40" alt="User">
+                                        <div>
+                                            <div class="fw-bold">${member.name}</div>
+                                            <div class="small text-muted">Joined: ${member.joined_at}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="badge ${badgeClass}">${member.role}</span>
+                            `;
+                            
+                            // Add to the list
+                            membersList.appendChild(listItem);
+                        });
+                        
+                        // Add to modal
+                        modalBody.appendChild(membersList);
+                        
+                    } else {
+                        // No members or error
+                        modalBody.innerHTML = `
+                            <div class="alert alert-info text-center">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No members found
                             </div>
-                            <div>
-                                <div class="fw-bold">${member.name}</div>
-                                <div class="small text-muted">${member.email || 'No email'}</div>
-                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading group members:', error);
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error loading members: ${error.message}
                         </div>
-                        <span class="badge ${badgeClass}">${userType}</span>
                     `;
-                    
-                    membersList.appendChild(memberItem);
                 });
-            })
-            .catch(error => {
-                console.error('Error loading group members:', error);
-                membersList.innerHTML = `
-                    <div class="alert alert-danger">
-                        Error loading members: ${error.message}
-                    </div>
-                `;
-            });
         }
+
+        // Initialize view members modal when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            viewMembersModal = new bootstrap.Modal(document.getElementById('viewMembersModal'));
+            
+            // Add event listener to view members buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.view-members-btn')) {
+                    const btn = e.target.closest('.view-members-btn');
+                    const conversationId = btn.dataset.conversationId;
+                    if (conversationId) {
+                        loadGroupMembers(conversationId);
+                        viewMembersModal.show();
+                    }
+                }
+            });
+        });
 
         // ============= IMPROVED MESSAGE SEARCH FUNCTIONALITY =============
         // Global search variables
