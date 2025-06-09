@@ -264,7 +264,7 @@
                     <a class="nav-link nav-message-link {{ Request::routeIs('care-worker.messaging.*') ? 'active' : '' }}" href="#" id="messagesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-chat-dots-fill"></i>
                         <span class="d-none d-md-inline">Chat with COSE</span>
-                        <span class="badge bg-danger rounded-pill message-count" style="display: none;"></span>
+                        <span class="badge bg-danger rounded-pill message-count" style="display: none;" title="Total unread messages"></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end message-dropdown p-0" aria-labelledby="messagesDropdown">
                         <li class="dropdown-header">

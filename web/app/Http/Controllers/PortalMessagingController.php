@@ -895,37 +895,47 @@ class PortalMessagingController extends Controller
         $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
         $user = Auth::guard($userType)->user();
         
-       try {
-
+        try {
             // CRITICAL FIX: Handle family vs family_member type mismatch
             $participantTypes = [$userType];
             if ($userType === 'family') {
                 $participantTypes[] = 'family_member';
             }
-
+            
             // Get conversations with the user as participant
             $conversationIds = ConversationParticipant::where('participant_id', $user->getKey())
-                ->where('participant_type', $userType)
+                ->whereIn('participant_type', $participantTypes)
                 ->whereNull('left_at')
                 ->pluck('conversation_id');
+            
+            // For debugging
+            \Log::info('Unread count query for ' . $userType, [
+                'user_id' => $user->getKey(),
+                'conversation_count' => count($conversationIds)
+            ]);
                 
-            // Count unread messages
+            // Count unread messages correctly - SYNCHRONIZED WITH getRecentMessages() method
             $unreadCount = Message::whereIn('conversation_id', $conversationIds)
-                ->where(function($query) use ($user, $userType) {
-                    $query->where('sender_id', '!=', $user->getKey())
-                        ->orWhere('sender_type', '!=', $userType);
+                ->where(function($query) use ($user, $participantTypes) {
+                    // Only count messages not sent by current user
+                    $query->whereNot(function($q) use ($user, $participantTypes) {
+                        $q->where('sender_id', $user->getKey())
+                        ->whereIn('sender_type', $participantTypes);
+                    });
                 })
-                ->whereDoesntHave('readStatuses', function($query) use ($user, $userType) {
+                ->whereDoesntHave('readStatuses', function($query) use ($user, $participantTypes) {
                     $query->where('reader_id', $user->getKey())
-                        ->where('reader_type', $userType);
+                        ->whereIn('reader_type', $participantTypes);
                 })
+                ->where('is_unsent', false)
                 ->count();
                 
+            \Log::info('Unread count result: ' . $unreadCount);
+                    
             return response()->json(['count' => $unreadCount]);
             
         } catch (\Exception $e) {
             Log::error('Error getting portal unread message count: ' . $e->getMessage(), [
-                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
@@ -949,27 +959,21 @@ class PortalMessagingController extends Controller
                 $participantTypes[] = 'family_member';
             }
             
-            // Get conversations with the user as participant - FIXED to use whereIn
+            // Get conversations with the user as participant
             $conversationIds = ConversationParticipant::where('participant_id', $user->getKey())
-                ->whereIn('participant_type', $participantTypes)  // FIXED: use whereIn with array
+                ->whereIn('participant_type', $participantTypes)
                 ->whereNull('left_at')
                 ->pluck('conversation_id');
                 
-            // Log count of conversations found for debugging
-            \Log::info('Recent messages query for ' . $userType, [
-                'user_id' => $user->getKey(),
-                'conversation_count' => count($conversationIds),
-                'conversation_ids' => $conversationIds
-            ]);
-            
             // Get conversations with their last messages
-            $conversations = Conversation::whereIn('conversation_id', $conversationIds->all())
+            $conversations = Conversation::whereIn('conversation_id', $conversationIds)
                 ->with(['lastMessage', 'participants'])
                 ->orderBy('updated_at', 'desc')
                 ->limit(5)
                 ->get();
             
-            $unreadCount = 0;
+            // IMPORTANT: Now we count TOTAL unread messages instead of just conversations
+            $totalUnreadCount = 0;
             $recentMessages = [];
             
             foreach ($conversations as $conversation) {
@@ -979,19 +983,35 @@ class PortalMessagingController extends Controller
                 // Get message details
                 $message = $conversation->lastMessage;
                 
-                // FIXED: Check if message is read using correct participant types
+                // Check if message is read using correct participant types
                 $isRead = $message->readStatuses()
                     ->where('reader_id', $user->getKey())
                     ->whereIn('reader_type', $participantTypes)
                     ->exists();
                 
-                // FIXED: Check for unread status correctly
+                // Check for unread status correctly
                 $isUnread = !$isRead && 
                     !($message->sender_id == $user->getKey() && 
-                    (in_array($message->sender_type, $participantTypes)));
+                    in_array($message->sender_type, $participantTypes));
                     
-                if ($isUnread) {
-                    $unreadCount++;
+                // Count all unread messages in this conversation, not just the last one
+                $conversationUnreadCount = 0;
+                if ($isUnread || true) { // Check all conversations
+                    $conversationUnreadCount = Message::where('conversation_id', $conversation->conversation_id)
+                        ->where(function($query) use ($user, $participantTypes) {
+                            $query->whereNot(function($q) use ($user, $participantTypes) {
+                                $q->where('sender_id', $user->getKey())
+                                ->whereIn('sender_type', $participantTypes);
+                            });
+                        })
+                        ->whereDoesntHave('readStatuses', function($query) use ($user, $participantTypes) {
+                            $query->where('reader_id', $user->getKey())
+                                ->whereIn('reader_type', $participantTypes);
+                        })
+                        ->where('is_unsent', false)
+                        ->count();
+                        
+                    $totalUnreadCount += $conversationUnreadCount;
                 }
                 
                 // Set display name for the conversation
@@ -1007,23 +1027,19 @@ class PortalMessagingController extends Controller
                     'is_unsent' => $message->is_unsent,
                     'time_ago' => \Carbon\Carbon::parse($message->message_timestamp)->diffForHumans(),
                     'unread' => $isUnread,
+                    'unread_count' => $conversationUnreadCount, // Add the count per conversation
                     'is_group' => $conversation->is_group_chat
                 ];
             }
             
-            \Log::info('Formatted recent messages', [
-                'message_count' => count($recentMessages),
-                'unread_count' => $unreadCount
-            ]);
-            
             return response()->json([
                 'success' => true,
                 'messages' => $recentMessages,
-                'unread_count' => $unreadCount
+                'unread_count' => $totalUnreadCount
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error getting recent messages: ' . $e->getMessage(), [
+            Log::error('Error getting recent messages: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             

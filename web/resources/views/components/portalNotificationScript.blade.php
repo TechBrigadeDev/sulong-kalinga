@@ -30,40 +30,52 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Setting up notification and messaging system for {{ $roleName }}');
     
+    let refreshPaused = false;    
     // =============================================
     // MESSAGING SYSTEM
     // =============================================
     
-    // Helper function to update unread message count display
+   // Helper function to update unread message count display
     function updateUnreadMessageCount(count) {
         const messageCount = document.querySelector('.message-count');
         if (messageCount) {
             if (count > 0) {
+                messageCount.style.display = 'inline-block';
                 messageCount.textContent = count;
-                messageCount.style.display = 'block';
-                console.log(`Message badge updated: ${count} unread messages`); // Added log
+                console.log(`Message badge updated: ${count} unread messages`); // Debug logging
             } else {
                 messageCount.style.display = 'none';
-                console.log('No unread messages, hiding badge'); // Added log
+                console.log('No unread messages, hiding badge');
             }
+        } else {
+            console.error('Message count badge element not found in DOM');
         }
     }
     
     // Load unread message count from server
     function loadUnreadMessageCount() {
+        // CRITICAL FIX: Don't refresh if dropdown is open
+        if (refreshPaused) {
+            console.log('Count refresh paused because dropdown is open');
+            return;
+        }
+        
+        console.log('Fetching unread message count from:', '{{ $messageUnreadCountUrl }}');
+        
         fetch('{{ $messageUnreadCountUrl }}')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            updateUnreadMessageCount(data.count);
-        })
-        .catch(error => {
-            console.error('Error loading unread message count:', error);
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Unread message count response:', data);
+                updateUnreadMessageCount(data.count);
+            })
+            .catch(error => {
+                console.error('Error loading unread message count:', error);
+            });
     }
     
     // Load recent messages for message dropdown
@@ -71,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('message-preview-container');
         if (!container) return;
 
-        console.log('Fetching recent messages from server...'); // Added log
+        console.log('Fetching recent messages from server...');
         
         // Show loading indicator
         container.innerHTML = `
@@ -83,20 +95,26 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         fetch('{{ $messageRecentUrl }}')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 // Clear the container
                 container.innerHTML = '';
-
-                console.log('Messages loaded:', data); // Added log
                 
-                // Update the unread count badge
-                updateUnreadMessageCount(data.unread_count || 0);
+                console.log('Messages loaded:', data);
+                
+                // CRITICAL FIX: DON'T update badge with dropdown data - let the scheduled refreshes handle it
+                // This prevents the count from changing when dropdown opens
+                // updateUnreadMessageCount(data.unread_count || 0);
                 
                 // Check if we have any messages
                 if (data.success && data.messages && data.messages.length > 0) {
-                    console.log(`Rendering ${data.messages.length} message previews`); // Added log
-
+                    console.log(`Rendering ${data.messages.length} message previews`);
+                    
                     // Add each message
                     data.messages.forEach(message => {
                         // Create container element
@@ -786,8 +804,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up click handler for message dropdown
     const messagesDropdown = document.getElementById('messagesDropdown');
     if (messagesDropdown) {
-        messagesDropdown.addEventListener('click', function() {
+        // Pause refreshes when dropdown is opened
+        messagesDropdown.addEventListener('show.bs.dropdown', function() {
+            console.log('Messages dropdown opened - pausing refresh');
+            refreshPaused = true;
+            // Force load messages when dropdown opens
             loadRecentMessages();
+        });
+        
+        // Resume refreshes when dropdown is closed
+        messagesDropdown.addEventListener('hidden.bs.dropdown', function() {
+            console.log('Messages dropdown closed - resuming refresh');
+            refreshPaused = false;
+            // Update count after dropdown closes
+            setTimeout(loadUnreadMessageCount, 500);
         });
     }
     
@@ -797,8 +827,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up periodic refresh
     setInterval(() => {
-        console.log('Periodic refresh: Updating unread message count');
-        loadUnreadMessageCount();
+        if (!refreshPaused) {
+            console.log('Periodic refresh: Updating unread message count');
+            loadUnreadMessageCount();
+        } else {
+            console.log('Skipping message count refresh: dropdown is open');
+            // No longer calling loadUnreadMessageCount() when paused
+        }
     }, 8000); // Every 8 seconds
 
     setInterval(() => {
