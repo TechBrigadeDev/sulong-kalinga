@@ -36,7 +36,7 @@ export const MedicalHistorySection = ({
                             numberOfLines={3}
                             textAlignVertical="top"
                             value={
-                                data.medical_conditions
+                                data?.medical_conditions
                             }
                             onChangeText={(
                                 value,
@@ -61,7 +61,7 @@ export const MedicalHistorySection = ({
                             numberOfLines={3}
                             textAlignVertical="top"
                             value={
-                                data.medications
+                                data?.medications
                             }
                             onChangeText={(
                                 value,
@@ -86,7 +86,9 @@ export const MedicalHistorySection = ({
                             multiline
                             numberOfLines={3}
                             textAlignVertical="top"
-                            value={data.allergies}
+                            value={
+                                data?.allergies
+                            }
                             onChangeText={(
                                 value,
                             ) =>
@@ -110,7 +112,7 @@ export const MedicalHistorySection = ({
                             numberOfLines={3}
                             textAlignVertical="top"
                             value={
-                                data.immunizations
+                                data?.immunizations
                             }
                             onChangeText={(
                                 value,

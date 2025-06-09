@@ -1,13 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import ScrollView from "components/ScrollView";
 import { Stack } from "expo-router";
 import { useState } from "react";
-import { SafeAreaView } from "react-native";
-import {
-    Button,
-    Form,
-    ScrollView,
-    YStack,
-} from "tamagui";
+import { Button, Form, YStack } from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
@@ -19,6 +14,7 @@ import { EmergencyContactSection } from "./components/EmergencyContactSection";
 import { MedicalHistorySection } from "./components/MedicalHistorySection";
 import { MedicationSection } from "./components/MedicationSection";
 import { PersonalDetailsSection } from "./components/PersonalDetailsSection";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
     beneficiary?: IBeneficiary;

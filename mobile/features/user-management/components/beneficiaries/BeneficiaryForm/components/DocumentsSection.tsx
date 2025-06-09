@@ -99,10 +99,7 @@ export const DocumentsSection = ({
 
                     <YStack>
                         <Text>Review Date</Text>
-                        <Input
-                            value={reviewDate}
-                            editable={false}
-                        />
+                        <Input editable={false} />
                     </YStack>
 
                     <YStack>
