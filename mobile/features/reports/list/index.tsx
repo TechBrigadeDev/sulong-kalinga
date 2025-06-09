@@ -1,4 +1,5 @@
 import { formatDate } from "common/date";
+import Badge from "components/Bagde";
 import FlatList from "components/FlatList";
 import LoadingScreen from "components/loaders/LoadingScreen";
 import { IReport } from "features/reports/type";
@@ -6,10 +7,10 @@ import {
     Eye,
     SquarePen,
 } from "lucide-react-native";
+import { useCallback } from "react";
 import {
     Button,
     Card,
-    H3,
     H5,
     Text,
     View,
@@ -37,6 +38,7 @@ const ReportsList = () => {
     return (
         <FlatList
             data={data.reports}
+            tabbed
             renderItem={({ item }) => (
                 <ReportCard report={item} />
             )}
@@ -67,6 +69,14 @@ const ReportCard = ({
         "MMM dd, yyyy",
     );
 
+    const Status = useCallback(() => {
+        return (
+            <Badge borderRadius={4}>
+                {report.report_type}
+            </Badge>
+        );
+    }, [report.report_type]);
+
     return (
         <Card
             theme="light"
@@ -88,6 +98,7 @@ const ReportCard = ({
             >
                 <YStack>
                     <H5>{author}</H5>
+                    <Status />
                 </YStack>
                 <XStack>
                     <Button

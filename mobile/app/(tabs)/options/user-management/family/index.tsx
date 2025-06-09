@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
 
 import FamilyList from "~/features/user-management/components/family/list";
@@ -15,7 +16,12 @@ const Family = () => {
     };
 
     return (
-        <View flex={1} bg="#FFCC80">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#BBDEFB",
+            }}
+        >
             <Stack.Screen
                 options={{
                     title: "Family Members",
@@ -38,7 +44,7 @@ const Family = () => {
                     <FamilyList />
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 

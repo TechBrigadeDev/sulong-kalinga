@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
 
 import CareManagerList from "~/features/user-management/components/care-managers/list";
@@ -15,7 +16,12 @@ const CareManagers = () => {
     };
 
     return (
-        <View flex={1} bg="#E1BEE7">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#BBDEFB",
+            }}
+        >
             <Stack.Screen
                 options={{
                     title: "Care Managers",
@@ -38,7 +44,7 @@ const CareManagers = () => {
                     <CareManagerList />
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 

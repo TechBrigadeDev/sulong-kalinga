@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
 
 import BeneficiaryList from "~/features/user-management/components/beneficiaries/list";
@@ -15,7 +16,12 @@ const Beneficiaries = () => {
     };
 
     return (
-        <View flex={1} bg="#BBDEFB">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#BBDEFB",
+            }}
+        >
             <Stack.Screen
                 options={{
                     title: "Beneficiaries",
@@ -38,7 +44,7 @@ const Beneficiaries = () => {
                     <BeneficiaryList />
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 

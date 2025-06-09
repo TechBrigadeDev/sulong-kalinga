@@ -123,10 +123,7 @@ function FlatList<T>({
                 style={[
                     styles.scrollUpButton,
                     {
-                        bottom:
-                            insets.bottom +
-                            20 +
-                            (tabbed ? 60 : 0),
+                        bottom: tabbed ? 75 : 0,
                         opacity: scrollUpOpacity,
                     },
                 ]}
