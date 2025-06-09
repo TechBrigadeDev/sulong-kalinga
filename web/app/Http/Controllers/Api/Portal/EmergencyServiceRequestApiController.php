@@ -164,32 +164,75 @@ class EmergencyServiceRequestApiController extends Controller
             'sender_type' => $user->role_id == 4 ? 'beneficiary' : 'family_member',
         ]);
 
-        // Notify assigned care worker and care manager only
-        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
-            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
-            $this->notificationService->notifyStaff(
-                $careWorkerId,
-                'New service request submitted',
-                'A new service request has been submitted by a beneficiary or family member.'
-            );
-
-            $careWorker = User::find($careWorkerId);
-            if ($careWorker && $careWorker->care_manager_id) {
-                $this->notificationService->notifyStaff(
-                    $careWorker->care_manager_id,
-                    'New service request submitted',
-                    'A new service request has been submitted by a beneficiary or family member.'
-                );
-            }
-        }
-
         $this->logService->createLog(
             'service_request',
             $service->service_request_id,
             'service_request_submitted',
-            "Service request ID {$service->service_request_id} submitted by user {$user->id}",
+            "Service request for {$beneficiary->first_name} {$beneficiary->last_name} submitted by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'New Service Request',
+                "A new service request for {$beneficiaryName} was submitted."
+            );
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    'New Service Request',
+                    "A new service request for {$beneficiaryName} was submitted."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Service Request Submitted',
+                'Your service request was submitted successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Service Request Submitted',
+                        "A new service request for {$beneficiaryName} was submitted by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Service Request Submitted',
+                'Your service request was submitted successfully.'
+            );
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Service Request Submitted',
+                "A new service request for you was submitted by a family member."
+            );
+            // Notify other family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            'Service Request Submitted',
+                            "A new service request for {$beneficiaryName} was submitted by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -236,9 +279,71 @@ class EmergencyServiceRequestApiController extends Controller
             'service_request',
             $service->service_request_id,
             'service_request_updated',
-            "Service request ID {$service->service_request_id} updated by user {$user->id}",
+            "Service request for {$beneficiary->first_name} {$beneficiary->last_name} updated by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'Service Request Updated',
+                "The service request for {$beneficiaryName} was updated."
+            );
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    'Service Request Updated',
+                    "The service request for {$beneficiaryName} was updated."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Service Request Updated',
+                'Your service request was updated successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Service Request Updated',
+                        "The service request for {$beneficiaryName} was updated by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Service Request Updated',
+                'Your service request was updated successfully.'
+            );
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Service Request Updated',
+                "The service request for you was updated by a family member."
+            );
+            // Notify other family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            'Service Request Updated',
+                            "The service request for {$beneficiaryName} was updated by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -275,33 +380,75 @@ class EmergencyServiceRequestApiController extends Controller
             'sender_type' => $user->role_id == 4 ? 'beneficiary' : 'family_member',
         ]);
 
-        // Notify assigned care worker and care manager only
-        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
-            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
-            $this->notificationService->notifyStaff(
-                $careWorkerId,
-                'New emergency notice submitted',
-                'A new emergency notice has been submitted by a beneficiary or family member.'
-            );
-
-            // Notify assigned care manager if available
-            $careWorker = User::find($careWorkerId);
-            if ($careWorker && $careWorker->care_manager_id) {
-                $this->notificationService->notifyStaff(
-                    $careWorker->care_manager_id,
-                    'New emergency notice submitted',
-                    'A new emergency notice has been submitted by a beneficiary or family member.'
-                );
-            }
-        }
-
         $this->logService->createLog(
             'emergency_notice',
             $emergency->notice_id,
             'emergency_notice_submitted',
-            "Emergency notice ID {$emergency->notice_id} submitted by user {$user->id}",
+            "Emergency notice submitted for {$beneficiary->first_name} {$beneficiary->last_name} by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'New Emergency Notice',
+                "A new emergency notice for {$beneficiaryName} was submitted."
+            );
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    'New Emergency Notice',
+                    "A new emergency notice for {$beneficiaryName} was submitted."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Emergency Notice Submitted',
+                'Your emergency notice was submitted successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Emergency Notice Submitted',
+                        "A new emergency notice for {$beneficiaryName} was submitted by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Emergency Notice Submitted',
+                'Your emergency notice was submitted successfully.'
+            );
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Emergency Notice Submitted',
+                "A new emergency notice for you was submitted by a family member."
+            );
+            // Notify other family members except the actor
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            'Emergency Notice Submitted',
+                            "A new emergency notice for {$beneficiaryName} was submitted by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -342,9 +489,73 @@ class EmergencyServiceRequestApiController extends Controller
             'emergency_notice',
             $emergency->notice_id,
             'emergency_notice_updated',
-            "Emergency notice ID {$emergency->notice_id} updated by user {$user->id}",
+            "Emergency notice submitted for {$beneficiary->first_name} {$beneficiary->last_name} by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'Emergency Notice Updated',
+                "The emergency notice for {$beneficiaryName} was updated."
+            );
+            // Notify assigned care manager if available
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    'Emergency Notice Updated',
+                    "The emergency notice for {$beneficiaryName} was updated."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Emergency Notice Updated',
+                'Your emergency notice was updated successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Emergency Notice Updated',
+                        "The emergency notice for {$beneficiaryName} was updated by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Emergency Notice Updated',
+                'Your emergency notice was updated successfully.'
+            );
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Emergency Notice Updated',
+                "The emergency notice for you was updated by a family member."
+            );
+            // Notify other family members except the actor
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            'Emergency Notice Updated',
+                            "The emergency notice for {$beneficiaryName} was updated by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -376,9 +587,72 @@ class EmergencyServiceRequestApiController extends Controller
             'emergency_notice',
             $id,
             'emergency_notice_deleted',
-            "Emergency notice ID {$id} deleted by user {$user->id}",
+            "Emergency notice deleted for {$beneficiary->first_name} {$beneficiary->last_name} by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'Emergency Notice Deleted',
+                "An emergency notice for {$beneficiaryName} was deleted."
+            );
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    'Emergency Notice Deleted',
+                    "An emergency notice for {$beneficiaryName} was deleted."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Emergency Notice Deleted',
+                'Your emergency notice was deleted successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Emergency Notice Deleted',
+                        "An emergency notice for {$beneficiaryName} was deleted by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Emergency Notice Deleted',
+                'Your emergency notice was deleted successfully.'
+            );
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Emergency Notice Deleted',
+                "An emergency notice for you was deleted by a family member."
+            );
+            // Notify other family members except the actor
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            'Emergency Notice Deleted',
+                            "An emergency notice for {$beneficiaryName} was deleted by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -409,9 +683,72 @@ class EmergencyServiceRequestApiController extends Controller
             'service_request',
             $id,
             'service_request_deleted',
-            "Service request ID {$id} deleted by user {$user->id}",
+            "Service request deleted for {$beneficiary->first_name} {$beneficiary->last_name} by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'Service Request Deleted',
+                "A service request for {$beneficiaryName} was deleted."
+            );
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    'Service Request Deleted',
+                    "A service request for {$beneficiaryName} was deleted."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Service Request Deleted',
+                'Your service request was deleted successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Service Request Deleted',
+                        "A service request for {$beneficiaryName} was deleted by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Service Request Deleted',
+                'Your service request was deleted successfully.'
+            );
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Service Request Deleted',
+                "A service request for you was deleted by a family member."
+            );
+            // Notify other family members except the actor
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            'Service Request Deleted',
+                            "A service request for {$beneficiaryName} was deleted by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -438,23 +775,25 @@ class EmergencyServiceRequestApiController extends Controller
                 ->where('status', 'new')
                 ->first();
             $entityType = 'emergency_notice';
+            $cancelledType = 'archived';
+            $notificationTitle = 'Emergency Notice Cancelled';
+            $notificationMessage = 'An emergency notice';
         } else {
             $record = ServiceRequest::where('beneficiary_id', $beneficiary->beneficiary_id)
                 ->where('service_request_id', $request->id)
                 ->where('status', 'new')
                 ->first();
             $entityType = 'service_request';
+            $cancelledType = 'rejected';
+            $notificationTitle = 'Service Request Cancelled';
+            $notificationMessage = 'A service request';
         }
 
         if (!$record) {
             return response()->json(['success' => false, 'message' => 'You can only cancel a request with status new.'], 404);
         }
 
-        if ($request->type === 'emergency') {
-            $record->status = 'archived';
-        } else {
-            $record->status = 'rejected';
-        }
+        $record->status = $cancelledType;
         $record->read_status = false;
         $record->read_at = null;
         $record->updated_at = now();
@@ -464,9 +803,72 @@ class EmergencyServiceRequestApiController extends Controller
             $entityType,
             $request->id,
             'request_cancelled',
-            ucfirst($request->type) . " request ID {$request->id} cancelled by user {$user->id}",
+            ucfirst($request->type) . " request cancelled for {$beneficiary->first_name} {$beneficiary->last_name} by user {$user->id}",
             $user->id
         );
+
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        // Notify assigned care worker and care manager
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                $notificationTitle,
+                "{$notificationMessage} for {$beneficiaryName} was cancelled."
+            );
+            $careWorker = User::find($careWorkerId);
+            if ($careWorker && $careWorker->care_manager_id) {
+                $this->notificationService->notifyStaff(
+                    $careWorker->care_manager_id,
+                    $notificationTitle,
+                    "{$notificationMessage} for {$beneficiaryName} was cancelled."
+                );
+            }
+        }
+
+        // Notify the actor and all related parties
+        if ($user->role_id == 4) {
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                $notificationTitle,
+                'Your request was cancelled successfully.'
+            );
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        $notificationTitle,
+                        "{$notificationMessage} for {$beneficiaryName} was cancelled by the beneficiary."
+                    );
+                }
+            }
+        } elseif ($user->role_id == 5) {
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                $notificationTitle,
+                'Your request was cancelled successfully.'
+            );
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                $notificationTitle,
+                "{$notificationMessage} for you was cancelled by a family member."
+            );
+            // Notify other family members except the actor
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    if ($familyMember->family_member_id != $user->family_member_id) {
+                        $this->notificationService->notifyFamilyMember(
+                            $familyMember->family_member_id,
+                            $notificationTitle,
+                            "{$notificationMessage} for {$beneficiaryName} was cancelled by a family member."
+                        );
+                    }
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,
