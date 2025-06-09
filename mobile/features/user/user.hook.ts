@@ -7,7 +7,10 @@ import { authStore } from "features/auth/auth.store";
 import { invalidateQK, QK } from "~/common/query";
 
 import userController from "./user.api";
-import { IEmailUpdate } from "./user.interface";
+import {
+    dtoEmailUpdate,
+    dtoUpdatePassword,
+} from "./user.interface";
 import { userStore } from "./user.store";
 
 export const useUser = () => {
@@ -76,7 +79,7 @@ export const useUpdateEmail = (params?: {
 
     return useMutation({
         mutationFn: async (
-            data: IEmailUpdate,
+            data: dtoEmailUpdate,
         ) => {
             if (!token) {
                 throw new Error(
@@ -120,6 +123,40 @@ export const useUpdateEmail = (params?: {
                     ),
                 ),
             ]);
+        },
+    });
+};
+
+export const useUpdatePassword = (params?: {
+    onSuccess: () => Promise<void>;
+}) => {
+    const { token } = authStore();
+
+    return useMutation({
+        mutationFn: async (
+            data: dtoUpdatePassword,
+        ) => {
+            if (!token) {
+                throw new Error(
+                    "Token is required",
+                );
+            }
+
+            const response =
+                await userController.updatePassword(
+                    data,
+                    token,
+                );
+            console.log(
+                "Password updated successfully:",
+                response,
+            );
+            return response;
+        },
+        onSuccess: async () => {
+            if (params?.onSuccess) {
+                await params.onSuccess();
+            }
         },
     });
 };

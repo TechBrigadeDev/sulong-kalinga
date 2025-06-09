@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
     updateEmailSchema,
+    updatePasswordSchema,
     userProfileSchema,
 } from "./user.schema";
 
@@ -9,6 +10,10 @@ export type IUserProfile = z.infer<
     typeof userProfileSchema
 >;
 
-export type IEmailUpdate = z.infer<
+export type dtoEmailUpdate = z.infer<
     typeof updateEmailSchema
+>;
+
+export type dtoUpdatePassword = z.infer<
+    typeof updatePasswordSchema
 >;

@@ -73,3 +73,31 @@ export const updateEmailSchema = z.object({
     new_email: z.string().email(),
     password: z.string(),
 });
+
+export const updatePasswordSchema = z
+    .object({
+        current_password: z.string(),
+        new_password: z.string().min(8, {
+            message:
+                "New password must be at least 8 characters long",
+        }),
+        confirm_password: z.string(),
+    })
+    .refine(
+        (data) =>
+            data.new_password ===
+            data.confirm_password,
+        {
+            message:
+                "New password and confirm password must match",
+        },
+    )
+    .refine(
+        (data) =>
+            data.current_password !==
+            data.new_password,
+        {
+            message:
+                "New password must be different from current password",
+        },
+    );

@@ -1,4 +1,5 @@
 import {
+    AxiosError,
     AxiosInstance,
     isAxiosError,
 } from "axios";
@@ -6,7 +7,10 @@ import { log } from "common/debug";
 
 import { axiosClient } from "~/common/api";
 
-import { IEmailUpdate } from "./user.interface";
+import {
+    dtoEmailUpdate,
+    dtoUpdatePassword,
+} from "./user.interface";
 import {
     userProfileSchema,
     userSchema,
@@ -137,7 +141,7 @@ class UserController {
     }
 
     async updateEmail(
-        data: IEmailUpdate,
+        data: dtoEmailUpdate,
         token: string,
     ) {
         try {
@@ -163,6 +167,48 @@ class UserController {
                 "Error updating email:",
                 error,
             );
+            throw error;
+        }
+    }
+
+    async updatePassword(
+        data: dtoUpdatePassword,
+        token: string,
+    ) {
+        try {
+            const response =
+                await this.jsonApi.patch(
+                    "/account-profile/password",
+                    {
+                        current_password:
+                            data.current_password,
+                        new_password:
+                            data.new_password,
+                        new_password_confirmation:
+                            data.confirm_password,
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+
+            log(
+                "Password update response:",
+                response.data,
+            );
+
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                if (error.status === 422) {
+                    console.error(
+                        "Validation error:",
+                        error.response?.data,
+                    );
+                }
+            }
             throw error;
         }
     }

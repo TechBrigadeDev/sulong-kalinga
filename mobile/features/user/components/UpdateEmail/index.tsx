@@ -29,9 +29,7 @@ const UpdateEmail = () => {
     } = useUpdateEmail({
         onSuccess: async () => {
             log("Email updated successfully");
-            router.push(
-                "/(tabs)/options/profile",
-            );
+            router.back();
         },
     });
 
@@ -65,9 +63,8 @@ const UpdateEmail = () => {
             <Label htmlFor="new-email-update">
                 New Email
             </Label>
-            <form.Field
-                name="new_email"
-                children={(field) => (
+            <form.Field name="new_email">
+                {(field) => (
                     <Input
                         id="new-email-update"
                         borderColor={
@@ -88,16 +85,15 @@ const UpdateEmail = () => {
                         keyboardType="email-address"
                     />
                 )}
-            />
+            </form.Field>
             <Label htmlFor="current-password-update">
                 Current Password
             </Label>
             <XStack
                 style={{ alignItems: "center" }}
             >
-                <form.Field
-                    name="password"
-                    children={(field) => (
+                <form.Field name="password">
+                    {(field) => (
                         <Input
                             id="current-password-update"
                             borderColor={
@@ -127,7 +123,7 @@ const UpdateEmail = () => {
                             style={{ flex: 1 }}
                         />
                     )}
-                />
+                </form.Field>
                 <Button
                     size="$2"
                     variant="outlined"
