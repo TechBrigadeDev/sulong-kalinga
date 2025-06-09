@@ -1,7 +1,13 @@
 import TabScroll from "components/tabs/TabScroll";
 import * as ImagePicker from "expo-image-picker";
 import { Image as LucideImage } from "lucide-react-native";
-import { Button, Card, Input, Text, YStack } from "tamagui";
+import {
+    Button,
+    Card,
+    Input,
+    Text,
+    YStack,
+} from "tamagui";
 
 export interface EvaluationData {
     pictureUri: string | null;
@@ -10,7 +16,9 @@ export interface EvaluationData {
 
 interface EvaluationProps {
     data: EvaluationData;
-    onChange: (data: Partial<EvaluationData>) => void;
+    onChange: (
+        data: Partial<EvaluationData>,
+    ) => void;
 }
 
 export const Evaluation = ({
@@ -21,15 +29,26 @@ export const Evaluation = ({
     onChange,
 }: EvaluationProps) => {
     const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
+        const result =
+            await ImagePicker.launchImageLibraryAsync(
+                {
+                    mediaTypes:
+                        ImagePicker
+                            .MediaTypeOptions
+                            .Images,
+                    allowsEditing: true,
+                    aspect: [4, 3],
+                    quality: 1,
+                },
+            );
 
-        if (!result.canceled && result.assets[0]) {
-            onChange({ pictureUri: result.assets[0].uri });
+        if (
+            !result.canceled &&
+            result.assets[0]
+        ) {
+            onChange({
+                pictureUri: result.assets[0].uri,
+            });
         }
     };
 
@@ -38,12 +57,23 @@ export const Evaluation = ({
             <YStack gap="$4">
                 <Card elevate>
                     <Card.Header padded>
-                        <Text size="$6" fontWeight="bold">
+                        <Text
+                            size="$6"
+                            fontWeight="bold"
+                        >
                             Upload Picture
                         </Text>
                     </Card.Header>
                     <YStack gap="$4">
-                        <Button onPress={pickImage} theme="blue" icon={<LucideImage size={16} />}>
+                        <Button
+                            onPress={pickImage}
+                            theme="blue"
+                            icon={
+                                <LucideImage
+                                    size={16}
+                                />
+                            }
+                        >
                             Choose Picture
                         </Button>
                         {/* {data.pictureUri ? (
@@ -61,8 +91,12 @@ export const Evaluation = ({
 
                 <Card elevate>
                     <Card.Header padded>
-                        <Text size="$6" fontWeight="bold">
-                            Recommendations and Evaluations
+                        <Text
+                            size="$6"
+                            fontWeight="bold"
+                        >
+                            Recommendations and
+                            Evaluations
                         </Text>
                     </Card.Header>
                     <Card.Footer padded>
@@ -70,8 +104,17 @@ export const Evaluation = ({
                             multiline
                             numberOfLines={6}
                             textAlignVertical="top"
-                            value={data.recommendations}
-                            onChangeText={(text) => onChange({ recommendations: text })}
+                            value={
+                                data.recommendations
+                            }
+                            onChangeText={(
+                                text,
+                            ) =>
+                                onChange({
+                                    recommendations:
+                                        text,
+                                })
+                            }
                             placeholder="Enter your recommendations and evaluations here..."
                         />
                     </Card.Footer>

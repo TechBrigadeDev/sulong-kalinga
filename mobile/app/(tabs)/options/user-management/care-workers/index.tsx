@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
 
 import CareWorkerList from "~/features/user-management/components/care-workers/list";
@@ -9,10 +10,17 @@ const CareWorkers = () => {
     const router = useRouter();
 
     const handleAddCareWorker = () => {
-        router.push(`/(tabs)/options/user-management/care-workers/add`);
+        router.push(
+            `/(tabs)/options/user-management/care-workers/add`,
+        );
     };
     return (
-        <View flex={1} bg="#C8E6C9">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#BBDEFB",
+            }}
+        >
             <Stack.Screen
                 options={{
                     title: "Care Workers",
@@ -20,7 +28,13 @@ const CareWorkers = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddCareWorker}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddCareWorker
+                        }
+                    >
                         Add Care Worker
                     </Button>
                     <CareWorkerSearch />
@@ -29,7 +43,7 @@ const CareWorkers = () => {
                     <CareWorkerList />
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 

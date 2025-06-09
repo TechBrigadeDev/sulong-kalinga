@@ -121,7 +121,9 @@ export const careManagerSchema = z.object({
     status: z.enum(["Active", "Inactive"]),
     organization_role_id: z.number().nullable(),
     assigned_municipality_id: z.number(),
-    assigned_care_manager_id: z.number().nullable(),
+    assigned_care_manager_id: z
+        .number()
+        .nullable(),
     photo: z.string().nullable(),
     government_issued_id: z.string().nullable(),
     sss_id_number: z.string(),
@@ -137,6 +139,8 @@ export const careManagerSchema = z.object({
         updated_at: z.string(),
     }),
     photo_url: z.string().nullable(),
-    government_issued_id_url: z.string().nullable(),
+    government_issued_id_url: z
+        .string()
+        .nullable(),
     cv_resume_url: z.string().nullable(),
 });

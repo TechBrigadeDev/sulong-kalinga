@@ -2,7 +2,12 @@ import { useRouter } from "expo-router";
 import { useGetFamilyMembers } from "features/user-management/management.hook";
 import { IFamilyMember } from "features/user-management/management.type";
 import { RefreshControl } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
+import {
+    Button,
+    Card,
+    Text,
+    View,
+} from "tamagui";
 
 import FlatList from "~/components/FlatList";
 
@@ -20,15 +25,27 @@ const FamilyList = () => {
     });
 
     if (data.length === 0 && !isLoading) {
-        return <Text>No family members found</Text>;
+        return (
+            <Text>No family members found</Text>
+        );
     }
 
     return (
         <FlatList
             data={data}
-            renderItem={({ item }) => <FamilyMemberCard item={item} />}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+            tabbed
+            renderItem={({ item }) => (
+                <FamilyMemberCard item={item} />
+            )}
+            contentContainerStyle={{
+                paddingBottom: 120,
+            }}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                />
+            }
         />
     );
 };
@@ -37,17 +54,28 @@ interface FamilyMemberCardProps {
     item: IFamilyMember;
 }
 
-const FamilyMemberCard = ({ item }: FamilyMemberCardProps) => {
+const FamilyMemberCard = ({
+    item,
+}: FamilyMemberCardProps) => {
     const router = useRouter();
 
-    const { family_member_id, first_name, last_name, relation_to_beneficiary } = item;
+    const {
+        family_member_id,
+        first_name,
+        last_name,
+        relation_to_beneficiary,
+    } = item;
 
     const onView = () => {
-        router.push(`/(tabs)/options/user-management/family/${family_member_id}`);
+        router.push(
+            `/(tabs)/options/user-management/family/${family_member_id}`,
+        );
     };
 
     const onEdit = () => {
-        router.push(`/(tabs)/options/user-management/family/${family_member_id}/edit`);
+        router.push(
+            `/(tabs)/options/user-management/family/${family_member_id}/edit`,
+        );
     };
 
     return (
@@ -61,14 +89,24 @@ const FamilyMemberCard = ({ item }: FamilyMemberCardProps) => {
             borderWidth={1}
         >
             <View>
-                <Text fontSize="$6" fontWeight="500" color="#495057">
+                <Text
+                    fontSize="$6"
+                    fontWeight="500"
+                    color="#495057"
+                >
                     {first_name} {last_name}
                 </Text>
                 <Text fontSize="$4" color="gray">
                     {relation_to_beneficiary}
                 </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginTop: 12,
+                }}
+            >
                 <Button
                     size="$3"
                     bg="#E9ECEF"

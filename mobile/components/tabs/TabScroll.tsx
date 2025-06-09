@@ -1,20 +1,43 @@
 import { useRef, useState } from "react";
-import { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import {
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+} from "react-native";
 import { GetProps, ScrollView } from "tamagui";
 
-const TabScroll = ({ children, contentContainerStyle, ...props }: GetProps<typeof ScrollView>) => {
+const TabScroll = ({
+    children,
+    contentContainerStyle,
+    ...props
+}: GetProps<typeof ScrollView>) => {
     const scrollViewRef = useRef<any>(null);
-    const [lastOffset, setLastOffset] = useState(0);
+    const [lastOffset, setLastOffset] =
+        useState(0);
 
-    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-        const scrollPercentage = (contentOffset.y + layoutMeasurement.height) / contentSize.height;
-        const isScrollingDown = contentOffset.y > lastOffset;
+    const handleScroll = (
+        event: NativeSyntheticEvent<NativeScrollEvent>,
+    ) => {
+        const {
+            layoutMeasurement,
+            contentOffset,
+            contentSize,
+        } = event.nativeEvent;
+        const scrollPercentage =
+            (contentOffset.y +
+                layoutMeasurement.height) /
+            contentSize.height;
+        const isScrollingDown =
+            contentOffset.y > lastOffset;
 
         setLastOffset(contentOffset.y);
 
-        if (scrollPercentage >= 0.95 && isScrollingDown) {
-            scrollViewRef.current?.scrollToEnd({ animated: false });
+        if (
+            scrollPercentage >= 0.95 &&
+            isScrollingDown
+        ) {
+            scrollViewRef.current?.scrollToEnd({
+                animated: false,
+            });
         }
     };
 

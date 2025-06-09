@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
 
 import BeneficiaryList from "~/features/user-management/components/beneficiaries/list";
@@ -9,11 +10,18 @@ const Beneficiaries = () => {
     const router = useRouter();
 
     const handleAddBeneficiary = () => {
-        router.push("/(tabs)/options/user-management/beneficiaries/add");
+        router.push(
+            "/(tabs)/options/user-management/beneficiaries/add",
+        );
     };
 
     return (
-        <View flex={1} bg="#BBDEFB">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#BBDEFB",
+            }}
+        >
             <Stack.Screen
                 options={{
                     title: "Beneficiaries",
@@ -21,7 +29,13 @@ const Beneficiaries = () => {
             />
             <View style={styles.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddBeneficiary}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddBeneficiary
+                        }
+                    >
                         Add Beneficiary
                     </Button>
                     <BeneficiariesSearch />
@@ -30,7 +44,7 @@ const Beneficiaries = () => {
                     <BeneficiaryList />
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 

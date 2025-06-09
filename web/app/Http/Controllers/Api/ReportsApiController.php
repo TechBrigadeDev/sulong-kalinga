@@ -35,11 +35,11 @@ class ReportsApiController extends Controller
             $weeklyQuery = WeeklyCarePlan::with(['author', 'beneficiary'])
                 ->when($search, function ($q) use ($search) {
                     $q->whereHas('author', function ($q2) use ($search) {
-                        $q2->where('first_name', 'like', "%$search%")
-                           ->orWhere('last_name', 'like', "%$search%");
+                        $q2->whereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                           ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%']);
                     })->orWhereHas('beneficiary', function ($q2) use ($search) {
-                        $q2->where('first_name', 'like', "%$search%")
-                           ->orWhere('last_name', 'like', "%$search%");
+                        $q2->whereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                           ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%']);
                     });
                 })
                 ->when($authorId, fn($q) => $q->where('created_by', $authorId))
@@ -54,8 +54,8 @@ class ReportsApiController extends Controller
             $generalQuery = GeneralCarePlan::with(['beneficiary'])
                 ->when($search, function ($q) use ($search) {
                     $q->orWhereHas('beneficiary', function ($q2) use ($search) {
-                        $q2->where('first_name', 'like', "%$search%")
-                           ->orWhere('last_name', 'like', "%$search%");
+                        $q2->whereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                           ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%']);
                     });
                 })
                 ->when($beneficiaryId, fn($q) => $q->where('beneficiary_id', $beneficiaryId));

@@ -1,6 +1,11 @@
 import TabButton from "components/screens/Home/_components/button";
 import { useRouter } from "expo-router";
-import { TabList, Tabs, TabSlot, TabTrigger } from "expo-router/ui";
+import {
+    TabList,
+    Tabs,
+    TabSlot,
+    TabTrigger,
+} from "expo-router/ui";
 import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View } from "tamagui";
@@ -22,14 +27,28 @@ export default function Layout() {
                 <View
                     style={{
                         ...styles.tabList,
-                        marginBottom: insets.bottom,
+                        marginBottom:
+                            insets.bottom,
                     }}
                 >
-                    <TabButton icon="MessageCircle" onPressIn={() => router.push("/messaging")}>
+                    <TabButton
+                        icon="MessageCircle"
+                        onPressIn={() =>
+                            router.push(
+                                "/messaging",
+                            )
+                        }
+                    >
                         Messaging
                     </TabButton>
-                    <TabTrigger name="(tabs)/index" href="/(tabs)" asChild>
-                        <TabButton icon="House">Home</TabButton>
+                    <TabTrigger
+                        name="(tabs)/index"
+                        href="/(tabs)"
+                        asChild
+                    >
+                        <TabButton icon="House">
+                            Home
+                        </TabButton>
                     </TabTrigger>
                     <TabTrigger
                         name="/(tabs)/options/index"
@@ -37,12 +56,16 @@ export default function Layout() {
                         reset="always"
                         asChild
                     >
-                        <TabButton icon="EllipsisVertical">Options</TabButton>
+                        <TabButton icon="EllipsisVertical">
+                            Options
+                        </TabButton>
                     </TabTrigger>
                     <TabTrigger
                         name="/(tabs)/shifts/index"
                         href="/(tabs)/shifts"
-                        style={{ display: "none" }}
+                        style={{
+                            display: "none",
+                        }}
                     />
                 </View>
             </TabList>

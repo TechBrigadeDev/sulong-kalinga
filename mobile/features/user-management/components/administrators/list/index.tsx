@@ -2,7 +2,12 @@ import { useRouter } from "expo-router";
 import { useGetAdministrators } from "features/user-management/management.hook";
 import { adminSchema } from "features/user-management/schema/admin";
 import { RefreshControl } from "react-native";
-import { Button, Card, Text, View } from "tamagui";
+import {
+    Button,
+    Card,
+    Text,
+    View,
+} from "tamagui";
 import { type z } from "zod";
 
 import FlatList from "~/components/FlatList";
@@ -27,29 +32,46 @@ const AdminList = () => {
     });
 
     if (data.length === 0 && !isLoading) {
-        return <Text>No administrators found</Text>;
+        return (
+            <Text>No administrators found</Text>
+        );
     }
 
     return (
         <FlatList<IAdmin>
             data={data}
-            renderItem={({ item }) => <AdminCard item={item} />}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+            tabbed
+            renderItem={({ item }) => (
+                <AdminCard item={item} />
+            )}
+            contentContainerStyle={{
+                paddingBottom: 120,
+            }}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                />
+            }
         />
     );
 };
 
 const AdminCard = ({ item }: AdminCardProps) => {
     const router = useRouter();
-    const { id, first_name, last_name, email } = item;
+    const { id, first_name, last_name, email } =
+        item;
 
     const onView = () => {
-        router.push(`/(tabs)/options/user-management/admins/${id}`);
+        router.push(
+            `/(tabs)/options/user-management/admins/${id}`,
+        );
     };
 
     const onEdit = () => {
-        router.push(`/(tabs)/options/user-management/admins/${id}/edit`);
+        router.push(
+            `/(tabs)/options/user-management/admins/${id}/edit`,
+        );
     };
 
     return (
@@ -63,14 +85,28 @@ const AdminCard = ({ item }: AdminCardProps) => {
             borderWidth={1}
         >
             <View>
-                <Text fontSize="$6" fontWeight="500" color="#495057">
+                <Text
+                    fontSize="$6"
+                    fontWeight="500"
+                    color="#495057"
+                >
                     {first_name} {last_name}
                 </Text>
-                <Text select="text" fontSize="$4" color="gray">
+                <Text
+                    select="text"
+                    fontSize="$4"
+                    color="gray"
+                >
                     {email}
                 </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginTop: 12,
+                }}
+            >
                 <Button
                     size="$3"
                     bg="#E9ECEF"

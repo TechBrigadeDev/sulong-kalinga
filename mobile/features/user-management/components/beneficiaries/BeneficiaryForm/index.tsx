@@ -2,7 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useState } from "react";
 import { SafeAreaView } from "react-native";
-import { Button, Form, ScrollView, YStack } from "tamagui";
+import {
+    Button,
+    Form,
+    ScrollView,
+    YStack,
+} from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
@@ -17,7 +22,9 @@ import { PersonalDetailsSection } from "./components/PersonalDetailsSection";
 
 interface Props {
     beneficiary?: IBeneficiary;
-    onSubmit?: (data: Partial<IBeneficiary>) => void;
+    onSubmit?: (
+        data: Partial<IBeneficiary>,
+    ) => void;
 }
 
 const initialFormData: Partial<IBeneficiary> = {
@@ -75,48 +82,109 @@ const initialFormData: Partial<IBeneficiary> = {
     household_assistance: "",
 };
 
-const BeneficiaryForm = ({ beneficiary, onSubmit }: Props) => {
-    const [formData, setFormData] = useState<Partial<IBeneficiary>>(beneficiary || initialFormData);
+const BeneficiaryForm = ({
+    beneficiary,
+    onSubmit,
+}: Props) => {
+    const [formData, setFormData] = useState<
+        Partial<IBeneficiary>
+    >(beneficiary || initialFormData);
 
     const handleSubmit = () => {
         console.log("Form data:", formData);
         onSubmit?.(formData);
     };
 
-    const handleChange = (field: keyof IBeneficiary, value: any) => {
-        setFormData((prev: Partial<IBeneficiary>) => ({
-            ...prev,
-            [field]: value,
-        }));
+    const handleChange = (
+        field: keyof IBeneficiary,
+        value: any,
+    ) => {
+        setFormData(
+            (prev: Partial<IBeneficiary>) => ({
+                ...prev,
+                [field]: value,
+            }),
+        );
     };
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <Stack.Screen
                 options={{
-                    title: beneficiary ? "EDIT BENEFICIARY" : "ADD BENEFICIARY",
+                    title: beneficiary
+                        ? "EDIT BENEFICIARY"
+                        : "ADD BENEFICIARY",
                     headerShown: true,
                 }}
             />
             <ScrollView>
                 <Form onSubmit={handleSubmit}>
                     <YStack gap="$4" p="$4">
-                        <PersonalDetailsSection data={formData} onChange={handleChange} />
-                        <AddressSection data={formData} onChange={handleChange} />
-                        <MedicalHistorySection data={formData} onChange={handleChange} />
-                        <CareNeedsSection data={formData} onChange={handleChange} />
-                        <MedicationSection data={formData} onChange={handleChange} />
-                        <CognitiveFunctionSection data={formData} onChange={handleChange} />
-                        <EmergencyContactSection data={formData} onChange={handleChange} />
-                        <DocumentsSection data={formData} onChange={handleChange} />
+                        <PersonalDetailsSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <AddressSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <MedicalHistorySection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <CareNeedsSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <MedicationSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <CognitiveFunctionSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <EmergencyContactSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
+                        <DocumentsSection
+                            data={formData}
+                            onChange={
+                                handleChange
+                            }
+                        />
 
                         <Button
                             theme="green"
                             size="$5"
-                            icon={<Ionicons name="save-outline" size={20} color="white" />}
+                            icon={
+                                <Ionicons
+                                    name="save-outline"
+                                    size={20}
+                                    color="white"
+                                />
+                            }
                             onPress={handleSubmit}
                         >
-                            {beneficiary ? "Update" : "Save"} Beneficiary
+                            {beneficiary
+                                ? "Update"
+                                : "Save"}{" "}
+                            Beneficiary
                         </Button>
                     </YStack>
                 </Form>

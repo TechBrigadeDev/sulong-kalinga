@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
 
 import FamilyList from "~/features/user-management/components/family/list";
@@ -9,11 +10,18 @@ const Family = () => {
     const router = useRouter();
 
     const handleAddFamilyMember = () => {
-        router.push("/(tabs)/options/user-management/family/add");
+        router.push(
+            "/(tabs)/options/user-management/family/add",
+        );
     };
 
     return (
-        <View flex={1} bg="#FFCC80">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#BBDEFB",
+            }}
+        >
             <Stack.Screen
                 options={{
                     title: "Family Members",
@@ -21,7 +29,13 @@ const Family = () => {
             />
             <View style={style.container}>
                 <YStack py="$4" gap="$4">
-                    <Button size="$3" theme="dark_blue" onPressIn={handleAddFamilyMember}>
+                    <Button
+                        size="$3"
+                        theme="dark_blue"
+                        onPressIn={
+                            handleAddFamilyMember
+                        }
+                    >
                         Add Family Member
                     </Button>
                     <FamilySearch />
@@ -30,7 +44,7 @@ const Family = () => {
                     <FamilyList />
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 

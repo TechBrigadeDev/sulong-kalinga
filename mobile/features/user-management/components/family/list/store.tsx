@@ -5,7 +5,9 @@ interface FamilyListStore {
     setSearch: (search: string) => void;
 }
 
-export const familyListStore = create<FamilyListStore>((set) => ({
-    search: "",
-    setSearch: (search: string) => set({ search }),
-}));
+export const familyListStore =
+    create<FamilyListStore>((set) => ({
+        search: "",
+        setSearch: (search: string) =>
+            set({ search }),
+    }));

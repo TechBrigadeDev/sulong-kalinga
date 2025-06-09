@@ -1,4 +1,7 @@
-import { SafeAreaView, StyleSheet } from "react-native";
+import {
+    SafeAreaView,
+    StyleSheet,
+} from "react-native";
 import { Spinner } from "tamagui";
 
 const LoadingScreen = () => (
@@ -12,7 +15,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#f0f0f0",
     },
 });
 

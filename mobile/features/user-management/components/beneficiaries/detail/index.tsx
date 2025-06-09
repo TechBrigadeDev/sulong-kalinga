@@ -19,7 +19,9 @@ interface IDetailProps {
     beneficiary: IBeneficiary;
 }
 
-const BeneficiaryDetail = ({ beneficiary }: IDetailProps) => {
+const BeneficiaryDetail = ({
+    beneficiary,
+}: IDetailProps) => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <Stack.Screen
@@ -29,23 +31,52 @@ const BeneficiaryDetail = ({ beneficiary }: IDetailProps) => {
                 }}
             />
             <TabScroll>
-                <YStack gap="$4" style={{ padding: 16 }}>
-                    <BeneficiaryHeader beneficiary={beneficiary} />
+                <YStack
+                    gap="$4"
+                    style={{ padding: 16 }}
+                >
+                    <BeneficiaryHeader
+                        beneficiary={beneficiary}
+                    />
 
                     <YStack gap="$4">
-                        <PersonalInformation beneficiary={beneficiary} />
-                        <MedicalHistory beneficiary={beneficiary} />
+                        <PersonalInformation
+                            beneficiary={
+                                beneficiary
+                            }
+                        />
+                        <MedicalHistory
+                            beneficiary={
+                                beneficiary
+                            }
+                        />
                     </YStack>
 
                     <YStack gap="$4">
-                        <EmergencyContact beneficiary={beneficiary} />
-                        <MedicationManagement beneficiary={beneficiary} />
+                        <EmergencyContact
+                            beneficiary={
+                                beneficiary
+                            }
+                        />
+                        <MedicationManagement
+                            beneficiary={
+                                beneficiary
+                            }
+                        />
                     </YStack>
 
-                    <CareNeeds beneficiary={beneficiary} />
-                    <CognitiveFunctionAndMobility beneficiary={beneficiary} />
-                    <EmotionalWellbeing beneficiary={beneficiary} />
-                    <AssignedCareWorker beneficiary={beneficiary} />
+                    <CareNeeds
+                        beneficiary={beneficiary}
+                    />
+                    <CognitiveFunctionAndMobility
+                        beneficiary={beneficiary}
+                    />
+                    <EmotionalWellbeing
+                        beneficiary={beneficiary}
+                    />
+                    <AssignedCareWorker
+                        beneficiary={beneficiary}
+                    />
                 </YStack>
             </TabScroll>
         </SafeAreaView>

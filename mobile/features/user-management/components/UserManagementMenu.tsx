@@ -1,4 +1,7 @@
-import { LinkProps, useRouter } from "expo-router";
+import {
+    LinkProps,
+    useRouter,
+} from "expo-router";
 import { Card, H3, XStack } from "tamagui";
 
 const UserManagementMenu = () => {
@@ -35,9 +38,17 @@ const UserManagementMenu = () => {
     ];
 
     return (
-        <XStack $maxMd={{ flexDirection: "column" }} gap={20}>
+        <XStack
+            $maxMd={{ flexDirection: "column" }}
+            gap={20}
+        >
             {links.map((link, index) => (
-                <MenuCard key={index} title={link.title} icon={link.icon} link={link.link} />
+                <MenuCard
+                    key={index}
+                    title={link.title}
+                    icon={link.icon}
+                    link={link.link}
+                />
             ))}
         </XStack>
     );
@@ -48,7 +59,10 @@ interface MenuCardProps {
     icon: string;
     link: LinkProps["href"];
 }
-const MenuCard = ({ title, link }: MenuCardProps) => {
+const MenuCard = ({
+    title,
+    link,
+}: MenuCardProps) => {
     const router = useRouter();
     const handlePress = () => {
         router.push(link);

@@ -11,15 +11,25 @@ export const useUser = () => {
     const { setUser } = userStore();
 
     return useQuery({
-        queryKey: QK.user.getUser(token as string),
+        queryKey: QK.user.getUser(
+            token as string,
+        ),
         queryFn: async () => {
             if (!token) {
-                throw new Error("Token is required");
+                throw new Error(
+                    "Token is required",
+                );
             }
-            const response = await userController.getUser(token);
+            const response =
+                await userController.getUser(
+                    token,
+                );
 
             setUser(response);
-            console.log("User data fetched:", response);
+            console.log(
+                "User data fetched:",
+                response,
+            );
             return response;
         },
         enabled: !!token,

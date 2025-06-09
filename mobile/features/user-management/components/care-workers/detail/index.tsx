@@ -11,22 +11,38 @@ import GovernmentIDs from "./components/GovernmentIDs";
 import PersonalDetails from "./components/PersonalDetails";
 import WorkInformation from "./components/WorkInformation";
 
-type ICareWorker = z.infer<typeof careWorkerSchema>;
+type ICareWorker = z.infer<
+    typeof careWorkerSchema
+>;
 
 interface CareWorkerDetailProps {
     careWorker: ICareWorker;
 }
 
-function CareWorkerDetail({ careWorker }: CareWorkerDetailProps) {
+function CareWorkerDetail({
+    careWorker,
+}: CareWorkerDetailProps) {
     return (
         <TabScroll>
             <YStack p="$4" gap="$4">
-                <CareWorkerHeader careWorker={careWorker} />
-                <PersonalDetails careWorker={careWorker} />
-                <ContactInformation careWorker={careWorker} />
-                <WorkInformation careWorker={careWorker} />
-                <Documents careWorker={careWorker} />
-                <GovernmentIDs careWorker={careWorker} />
+                <CareWorkerHeader
+                    careWorker={careWorker}
+                />
+                <PersonalDetails
+                    careWorker={careWorker}
+                />
+                <ContactInformation
+                    careWorker={careWorker}
+                />
+                <WorkInformation
+                    careWorker={careWorker}
+                />
+                <Documents
+                    careWorker={careWorker}
+                />
+                <GovernmentIDs
+                    careWorker={careWorker}
+                />
             </YStack>
         </TabScroll>
     );

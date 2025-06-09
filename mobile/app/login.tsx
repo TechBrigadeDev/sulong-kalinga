@@ -12,7 +12,11 @@ const Screen = () => {
                 }}
             />
             <GradientBackground
-                colors={["#ff6ec7", "#ffa100", "#00d2ff"]}
+                colors={[
+                    "#ff6ec7",
+                    "#ffa100",
+                    "#00d2ff",
+                ]}
                 animationDuration={10000}
                 style={styles.gradientContainer}
             >

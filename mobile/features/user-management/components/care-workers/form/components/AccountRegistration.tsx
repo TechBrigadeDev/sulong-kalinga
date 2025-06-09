@@ -1,7 +1,16 @@
 import { FormSectionProps } from "features/user-management/components/care-workers/form/types";
-import { Input, Label, Select, XStack, YStack } from "tamagui";
+import {
+    Input,
+    Label,
+    Select,
+    XStack,
+    YStack,
+} from "tamagui";
 
-export function AccountRegistration({ formData, setFormData }: FormSectionProps) {
+export function AccountRegistration({
+    formData,
+    setFormData,
+}: FormSectionProps) {
     return (
         <YStack gap="$4">
             <Label size="$6" fontWeight="bold">
@@ -9,7 +18,10 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
             </Label>
 
             <YStack gap="$3">
-                <Label htmlFor="workEmail" color="$red10">
+                <Label
+                    htmlFor="workEmail"
+                    color="$red10"
+                >
                     Work Email Address *
                 </Label>
                 <Input
@@ -17,13 +29,21 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
                     placeholder="Enter work email"
                     keyboardType="email-address"
                     value={formData.workEmail}
-                    onChangeText={(text) => setFormData({ ...formData, workEmail: text })}
+                    onChangeText={(text) =>
+                        setFormData({
+                            ...formData,
+                            workEmail: text,
+                        })
+                    }
                 />
             </YStack>
 
             <XStack gap="$3">
                 <YStack flex={1}>
-                    <Label htmlFor="password" color="$red10">
+                    <Label
+                        htmlFor="password"
+                        color="$red10"
+                    >
                         Password *
                     </Label>
                     <Input
@@ -31,33 +51,60 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
                         placeholder="Enter password"
                         secureTextEntry
                         value={formData.password}
-                        onChangeText={(text) => setFormData({ ...formData, password: text })}
+                        onChangeText={(text) =>
+                            setFormData({
+                                ...formData,
+                                password: text,
+                            })
+                        }
                     />
                 </YStack>
 
                 <YStack flex={1}>
-                    <Label htmlFor="confirmPassword" color="$red10">
+                    <Label
+                        htmlFor="confirmPassword"
+                        color="$red10"
+                    >
                         Confirm Password *
                     </Label>
                     <Input
                         id="confirmPassword"
                         placeholder="Confirm password"
                         secureTextEntry
-                        value={formData.confirmPassword}
-                        onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                        value={
+                            formData.confirmPassword
+                        }
+                        onChangeText={(text) =>
+                            setFormData({
+                                ...formData,
+                                confirmPassword:
+                                    text,
+                            })
+                        }
                     />
                 </YStack>
             </XStack>
 
             <XStack gap="$3">
                 <YStack flex={1}>
-                    <Label htmlFor="municipality" color="$red10">
+                    <Label
+                        htmlFor="municipality"
+                        color="$red10"
+                    >
                         Municipality *
                     </Label>
                     <Select
                         id="municipality"
-                        value={formData.municipality}
-                        onValueChange={(value) => setFormData({ ...formData, municipality: value })}
+                        value={
+                            formData.municipality
+                        }
+                        onValueChange={(value) =>
+                            setFormData({
+                                ...formData,
+                                municipality:
+                                    value,
+                            })
+                        }
                     >
                         <Select.Trigger>
                             <Select.Value placeholder="Select municipality" />
@@ -65,8 +112,14 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
                         <Select.Content>
                             <Select.ScrollUpButton />
                             <Select.Viewport>
-                                <Select.Item value="none" index={0}>
-                                    <Select.ItemText>Select municipality</Select.ItemText>
+                                <Select.Item
+                                    value="none"
+                                    index={0}
+                                >
+                                    <Select.ItemText>
+                                        Select
+                                        municipality
+                                    </Select.ItemText>
                                 </Select.Item>
                             </Select.Viewport>
                             <Select.ScrollDownButton />
@@ -75,13 +128,24 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
                 </YStack>
 
                 <YStack flex={1}>
-                    <Label htmlFor="careManager" color="$red10">
+                    <Label
+                        htmlFor="careManager"
+                        color="$red10"
+                    >
                         Assigned Care Manager *
                     </Label>
                     <Select
                         id="careManager"
-                        value={formData.careManager}
-                        onValueChange={(value) => setFormData({ ...formData, careManager: value })}
+                        value={
+                            formData.careManager
+                        }
+                        onValueChange={(value) =>
+                            setFormData({
+                                ...formData,
+                                careManager:
+                                    value,
+                            })
+                        }
                     >
                         <Select.Trigger>
                             <Select.Value placeholder="None (Unassigned)" />
@@ -89,8 +153,14 @@ export function AccountRegistration({ formData, setFormData }: FormSectionProps)
                         <Select.Content>
                             <Select.ScrollUpButton />
                             <Select.Viewport>
-                                <Select.Item value="none" index={0}>
-                                    <Select.ItemText>None (Unassigned)</Select.ItemText>
+                                <Select.Item
+                                    value="none"
+                                    index={0}
+                                >
+                                    <Select.ItemText>
+                                        None
+                                        (Unassigned)
+                                    </Select.ItemText>
                                 </Select.Item>
                             </Select.Viewport>
                             <Select.ScrollDownButton />

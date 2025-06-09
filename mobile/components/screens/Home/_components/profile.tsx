@@ -11,11 +11,16 @@ const Profile = () => {
     return (
         <GradientBackground>
             <YStack style={style.container}>
-                <Avatar circular size="$10" marginBottom={10}>
+                <Avatar
+                    circular
+                    size="$10"
+                    marginBottom={10}
+                >
                     <UserAvatar />
                 </Avatar>
                 <H3 style={style.name}>
-                    {user?.first_name} {user?.last_name}
+                    {user?.first_name}{" "}
+                    {user?.last_name}
                 </H3>
             </YStack>
         </GradientBackground>

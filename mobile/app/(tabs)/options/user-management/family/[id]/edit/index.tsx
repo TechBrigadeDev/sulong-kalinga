@@ -1,4 +1,8 @@
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+    useRouter,
+} from "expo-router";
 import { Text, View } from "tamagui";
 
 import FamilyMemberForm from "~/features/user-management/components/family/FamilyMemberForm";
@@ -8,7 +12,8 @@ const Screen = () => {
     const { id } = useLocalSearchParams();
     const router = useRouter();
 
-    const { data, isLoading } = useGetFamilyMember(id as string);
+    const { data, isLoading } =
+        useGetFamilyMember(id as string);
 
     if (isLoading) {
         return (
@@ -21,14 +26,19 @@ const Screen = () => {
     if (!data) {
         return (
             <View>
-                <Text>No family member found</Text>
+                <Text>
+                    No family member found
+                </Text>
             </View>
         );
     }
 
     const handleSubmit = (formData: FormData) => {
         // TODO: Add API call to update family member
-        console.log("Updating family member:", formData);
+        console.log(
+            "Updating family member:",
+            formData,
+        );
         router.back();
     };
 
@@ -39,7 +49,10 @@ const Screen = () => {
                     title: "Edit Family Member",
                 }}
             />
-            <FamilyMemberForm familyMember={data} onSubmit={handleSubmit} />
+            <FamilyMemberForm
+                familyMember={data}
+                onSubmit={handleSubmit}
+            />
         </>
     );
 };

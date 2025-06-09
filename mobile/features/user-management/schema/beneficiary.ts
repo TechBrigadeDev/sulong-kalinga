@@ -8,7 +8,9 @@ export const beneficiarySchema = z.object({
     beneficiary_status_id: z.number(),
     birthday: z.string(),
     beneficiary_signature: z.string().nullable(),
-    care_service_agreement_doc: z.string().nullable(),
+    care_service_agreement_doc: z
+        .string()
+        .nullable(),
     care_worker_signature: z.string().nullable(),
     category_id: z.number(),
     civil_status: z.string(),

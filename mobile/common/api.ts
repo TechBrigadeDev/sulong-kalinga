@@ -1,7 +1,13 @@
-import axios, { AxiosError } from "axios";
+import axios, {
+    AxiosError,
+    AxiosInstance,
+} from "axios";
 import { authStore } from "features/auth/auth.store";
 
-console.log("API URL:", process.env.EXPO_PUBLIC_API_URL);
+console.log(
+    "API URL:",
+    process.env.EXPO_PUBLIC_API_URL,
+);
 
 export const axiosClient = axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -14,15 +20,20 @@ axiosClient.interceptors.response.use(
     (error) => {
         if (error instanceof AxiosError) {
             if (error.status === 401) {
-                const setToken = authStore.getState().setToken;
-                const message = error.response?.data?.message;
+                const setToken =
+                    authStore.getState().setToken;
+                const message =
+                    error.response?.data?.message;
 
                 switch (message) {
                     case "Unauthenticated.":
                         setToken(null);
                         break;
                     default:
-                        console.error("An error occurred:", message);
+                        console.error(
+                            "An error occurred:",
+                            message,
+                        );
                         break;
                 }
             }
@@ -31,3 +42,27 @@ axiosClient.interceptors.response.use(
         return Promise.reject(error);
     },
 );
+
+export class Controller {
+    constructor(
+        public api: AxiosInstance = axiosClient,
+    ) {
+        this.api = api;
+        this.api.defaults.headers.common[
+            "Accept"
+        ] = "application/json";
+        this.api.defaults.headers.common[
+            "Content-Type"
+        ] = "application/json";
+        authStore.subscribe((state) => {
+            if (state.token) {
+                this.api.defaults.headers.common[
+                    "Authorization"
+                ] = `Bearer ${state.token}`;
+            } else {
+                delete this.api.defaults.headers
+                    .common["Authorization"];
+            }
+        });
+    }
+}

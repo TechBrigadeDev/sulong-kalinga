@@ -6,7 +6,9 @@ interface Props {
     beneficiary: IBeneficiary;
 }
 
-const AssignedCareWorker = ({ beneficiary: _beneficiary }: Props) => {
+const AssignedCareWorker = ({
+    beneficiary: _beneficiary,
+}: Props) => {
     const tasks = [
         "Ut voluptas earum non.",
         "Explicabo ut numquam hic sit.",
@@ -23,16 +25,26 @@ const AssignedCareWorker = ({ beneficiary: _beneficiary }: Props) => {
             <Card.Footer padded>
                 <YStack gap="$3">
                     <YStack>
-                        <Text opacity={0.6}>Name</Text>
+                        <Text opacity={0.6}>
+                            Name
+                        </Text>
                         <Text>Leta Nolan</Text>
                     </YStack>
                     <YStack>
-                        <Text opacity={0.6}>Tasks and Responsibilities</Text>
-                        {tasks.map((task, index) => (
-                            <Text key={index} marginTop="$2">
-                                • {task}
-                            </Text>
-                        ))}
+                        <Text opacity={0.6}>
+                            Tasks and
+                            Responsibilities
+                        </Text>
+                        {tasks.map(
+                            (task, index) => (
+                                <Text
+                                    key={index}
+                                    marginTop="$2"
+                                >
+                                    • {task}
+                                </Text>
+                            ),
+                        )}
                     </YStack>
                 </YStack>
             </Card.Footer>

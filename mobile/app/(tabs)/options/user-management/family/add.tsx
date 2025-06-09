@@ -6,7 +6,10 @@ const FamilyMemberAdd = () => {
     const router = useRouter();
 
     const handleSubmit = (data: any) => {
-        console.log("Submitting family member data:", data);
+        console.log(
+            "Submitting family member data:",
+            data,
+        );
         // TODO: Add API call to create family member
         router.back();
     };
@@ -19,7 +22,9 @@ const FamilyMemberAdd = () => {
                     title: "Add Family Member",
                 }}
             />
-            <FamilyMemberForm onSubmit={handleSubmit} />
+            <FamilyMemberForm
+                onSubmit={handleSubmit}
+            />
         </>
     );
 };

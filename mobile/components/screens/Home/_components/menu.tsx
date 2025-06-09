@@ -1,7 +1,15 @@
 import { Href, Link } from "expo-router";
 import { icons } from "lucide-react-native";
-import { StyleSheet, TouchableNativeFeedback } from "react-native";
-import { Card, GetThemeValueForKey, Text, View } from "tamagui";
+import {
+    StyleSheet,
+    TouchableNativeFeedback,
+} from "react-native";
+import {
+    Card,
+    GetThemeValueForKey,
+    Text,
+    View,
+} from "tamagui";
 
 const menuItems: IMenuItem[] = [
     {
@@ -11,8 +19,8 @@ const menuItems: IMenuItem[] = [
         icon: "Pill",
     },
     {
-        title: "Appointments",
-        href: "/scheduling/care-worker",
+        title: "Visitations",
+        href: "/scheduling/visitations",
         color: "#FF0000",
         icon: "Calendar",
     },
@@ -46,7 +54,10 @@ const HomeMenu = () => {
     return (
         <View style={menuStyle.container}>
             {menuItems.map((item, index) => (
-                <MenuCard key={index} item={item} />
+                <MenuCard
+                    key={index}
+                    item={item}
+                />
             ))}
         </View>
     );
@@ -62,15 +73,28 @@ const menuStyle = StyleSheet.create({
     },
 });
 
-const MenuCard = ({ item }: { item: IMenuItem }) => {
+const MenuCard = ({
+    item,
+}: {
+    item: IMenuItem;
+}) => {
     const Icon = icons[item.icon];
 
     return (
         <Link href={item.href} asChild>
             <TouchableNativeFeedback>
-                <Card style={cardStyle.card} backgroundColor={item.color}>
-                    <Icon size={32} color="#fff" style={cardStyle.icon} />
-                    <Text style={cardStyle.title}>{item.title}</Text>
+                <Card
+                    style={cardStyle.card}
+                    backgroundColor={item.color}
+                >
+                    <Icon
+                        size={32}
+                        color="#fff"
+                        style={cardStyle.icon}
+                    />
+                    <Text style={cardStyle.title}>
+                        {item.title}
+                    </Text>
                 </Card>
             </TouchableNativeFeedback>
         </Link>

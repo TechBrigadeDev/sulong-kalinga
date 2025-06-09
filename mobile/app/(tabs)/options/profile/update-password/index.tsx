@@ -8,7 +8,8 @@ const Screen = () => {
         <SafeAreaView style={style.container}>
             <Stack.Screen
                 options={{
-                    headerTitle: "Update Password",
+                    headerTitle:
+                        "Update Password",
                     headerShown: true,
                 }}
             />

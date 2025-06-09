@@ -17,13 +17,14 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sulongkalinga.app",
       "infoPlist": {
+        "NSCalendarsUsageDescription": "Allows this app to access your calendar to schedule and display events.",
         "NSAppTransportSecurity": {
           "NSExceptionDomains": {
             "test.cosemhcs.org.ph": {
               "NSIncludesSubdomains": true,
               "NSExceptionAllowsInsecureHTTPLoads": false,
               "NSExceptionRequiresForwardSecrecy": false,
-              "NSExceptionMinimumTLSVersion": "TLSv1.0"
+              "NSExceptionMinimumTLSVersion": "TLSv1.2"
             }
           }
         }

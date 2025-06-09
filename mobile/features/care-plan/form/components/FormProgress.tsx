@@ -1,5 +1,10 @@
 import { TouchableOpacity } from "react-native";
-import { styled, Text, XStack, YStack } from "tamagui";
+import {
+    styled,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 const StepIndicator = styled(YStack, {
     name: "StepIndicator",
@@ -34,13 +39,21 @@ interface FormProgressProps {
     steps?: { label: string }[];
 }
 
-export const FormProgress = ({ currentStep = 0, steps = [], setStep }: FormProgressProps) => {
+export const FormProgress = ({
+    currentStep = 0,
+    steps = [],
+    setStep,
+}: FormProgressProps) => {
     if (!steps || steps.length === 0) {
         return null;
     }
 
     const onStepClick = (index: number) => {
-        if (setStep && currentStep !== index && steps[index]) {
+        if (
+            setStep &&
+            currentStep !== index &&
+            steps[index]
+        ) {
             setStep(index);
         }
     };
@@ -60,25 +73,39 @@ export const FormProgress = ({ currentStep = 0, steps = [], setStep }: FormProgr
                         }}
                     >
                         <TouchableOpacity
-                            onPress={() => onStepClick(index)}
+                            onPress={() =>
+                                onStepClick(index)
+                            }
                             style={{
                                 flex: 1,
-                                alignItems: "center",
-                                justifyContent: "center",
+                                alignItems:
+                                    "center",
+                                justifyContent:
+                                    "center",
                             }}
                         >
                             <StepIndicator
-                                active={currentStep === index}
-                                completed={currentStep > index}
+                                active={
+                                    currentStep ===
+                                    index
+                                }
+                                completed={
+                                    currentStep >
+                                    index
+                                }
                                 style={{
                                     width: 30,
                                     height: 30,
                                     borderRadius: 15,
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    alignItems:
+                                        "center",
+                                    justifyContent:
+                                        "center",
                                     backgroundColor:
-                                        currentStep >= index
-                                            ? currentStep === index
+                                        currentStep >=
+                                        index
+                                            ? currentStep ===
+                                              index
                                                 ? "#0077ff"
                                                 : "#00a651"
                                             : "#e0e0e0",
@@ -86,21 +113,34 @@ export const FormProgress = ({ currentStep = 0, steps = [], setStep }: FormProgr
                             >
                                 <Text
                                     style={{
-                                        color: currentStep >= index ? "#ffffff" : "#666666",
-                                        fontWeight: "bold",
+                                        color:
+                                            currentStep >=
+                                            index
+                                                ? "#ffffff"
+                                                : "#666666",
+                                        fontWeight:
+                                            "bold",
                                     }}
                                 >
                                     {index + 1}
                                 </Text>
                             </StepIndicator>
                         </TouchableOpacity>
-                        {index < steps.length - 1 && (
+                        {index <
+                            steps.length - 1 && (
                             <StepConnector
-                                completed={currentStep > index}
+                                completed={
+                                    currentStep >
+                                    index
+                                }
                                 style={{
                                     flex: 1,
                                     height: 2,
-                                    backgroundColor: currentStep > index ? "#00a651" : "#e0e0e0",
+                                    backgroundColor:
+                                        currentStep >
+                                        index
+                                            ? "#00a651"
+                                            : "#e0e0e0",
                                     marginHorizontal: 4,
                                 }}
                             />

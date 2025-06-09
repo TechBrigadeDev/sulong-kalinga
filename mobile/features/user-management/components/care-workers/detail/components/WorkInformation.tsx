@@ -5,17 +5,23 @@ import { type z } from "zod";
 
 import { careWorkerSchema } from "~/features/user-management/schema/care-worker";
 
-type ICareWorker = z.infer<typeof careWorkerSchema>;
+type ICareWorker = z.infer<
+    typeof careWorkerSchema
+>;
 
 interface Props {
     careWorker: ICareWorker;
 }
 
-const WorkInformation = ({ careWorker }: Props) => {
+const WorkInformation = ({
+    careWorker,
+}: Props) => {
     return (
         <Card elevate>
             <Card.Header p="$4">
-                <SectionTitle>Work Information</SectionTitle>
+                <SectionTitle>
+                    Work Information
+                </SectionTitle>
             </Card.Header>
             <Card.Footer p="$4">
                 <YStack gap="$3">
