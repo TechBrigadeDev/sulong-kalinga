@@ -2426,45 +2426,62 @@
             // Simplified form submission for portal users
             const newConversationForm = document.getElementById('newConversationForm');
             if (newConversationForm) {
-                newConversationForm.addEventListener('submit', function(e) {
+                // Clear any existing event handlers by cloning
+                const newForm = newConversationForm.cloneNode(true);
+                if (newConversationForm.parentNode) {
+                    newConversationForm.parentNode.replaceChild(newForm, newConversationForm);
+                }
+                
+                // Add direct submit handler without validation
+                newForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                    // Show loading state
+                    const submitBtn = document.getElementById('startConversationBtn');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Starting...';
+                    }
                     
-                    // Get recipient_id directly from hidden input
-                    const recipientId = this.querySelector('input[name="recipient_id"]').value;
-                    
+                    // Submit form via AJAX
+                    const formData = new FormData(this);
                     fetch(this.action, {
                         method: 'POST',
+                        body: formData,
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: new URLSearchParams(new FormData(this))
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Close modal and redirect to conversation
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('newConversationModal'));
-                            if (modal) modal.hide();
-                            
                             // Redirect to the conversation
-                            window.location.href = `${window.location.pathname}?conversation=${data.conversation_id}`;
+                            window.location.href = `/${rolePrefix}/messaging?conversation=${data.conversation_id}`;
                         } else {
-                            throw new Error(data.message || 'Error creating conversation');
+                            // Show error
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = 'Start Conversation';
+                            }
+                            
+                            // Show feedback in the modal
+                            const feedbackContainer = document.getElementById('conversationFormFeedback');
+                            if (feedbackContainer) {
+                                feedbackContainer.classList.remove('d-none');
+                                feedbackContainer.querySelector('.alert').textContent = data.message || 'An error occurred';
+                                feedbackContainer.querySelector('.alert').className = 'alert alert-danger mb-0';
+                            }
                         }
                     })
                     .catch(error => {
                         console.error('Error creating conversation:', error);
-                        alert('Error: ' + (error.message || 'Failed to create conversation'));
                         
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Start Conversation';
+                        // Reset button
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Start Conversation';
+                        }
                     });
                 });
             }
