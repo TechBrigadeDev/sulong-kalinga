@@ -19,16 +19,22 @@ use App\Models\HealthHistory;
 use App\Models\CareWorkerResponsibility;
 use App\Services\UploadService;
 use App\Services\UserManagementService;
+use App\Services\NotificationService;
 
 class BeneficiaryApiController extends Controller
 {
     protected $uploadService;
     protected $userManagementService;
+    protected $notificationService;
 
-    public function __construct(UploadService $uploadService, UserManagementService $userManagementService)
-    {
+    public function __construct(
+        UploadService $uploadService,
+        UserManagementService $userManagementService,
+        NotificationService $notificationService
+    ) {
         $this->uploadService = $uploadService;
         $this->userManagementService = $userManagementService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -1261,6 +1267,46 @@ class BeneficiaryApiController extends Controller
                 }
             }
 
+            // --- NOTIFICATIONS (after successful update) ---
+            $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+            // Notify beneficiary
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                'Profile Updated',
+                'Your beneficiary profile was updated.'
+            );
+
+            // Notify all family members
+            if ($beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Profile Updated',
+                        "The profile for {$beneficiaryName} was updated."
+                    );
+                }
+            }
+
+            // Notify assigned care worker if available
+            if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+                $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+                $this->notificationService->notifyStaff(
+                    $careWorkerId,
+                    'Profile Updated',
+                    "The profile for {$beneficiaryName} was updated."
+                );
+            }
+
+            // Notify the actor
+            $actor = $request->user();
+            $actorMessage = 'Your beneficiary update was successful.';
+            $this->notificationService->notifyStaff(
+                $actor->id,
+                'Profile Updated',
+                $actorMessage
+            );
+
             return response()->json([
                 'success' => true,
                 'beneficiary' => $beneficiary->fresh([
@@ -1289,29 +1335,61 @@ class BeneficiaryApiController extends Controller
         $beneficiary = Beneficiary::findOrFail($id);
 
         $validator = \Validator::make($request->all(), [
-            'status_id' => 'nullable|integer|exists:beneficiary_status,beneficiary_status_id',
-            'status_name' => 'nullable|string|max:50|exists:beneficiary_status,status_name',
+            'status_id' => 'required|integer|exists:beneficiary_status,beneficiary_status_id',
+            'status_reason' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        if ($request->filled('status_id')) {
-            $beneficiary->beneficiary_status_id = $request->status_id;
-        } elseif ($request->filled('status_name')) {
-            $statusId = \DB::table('beneficiary_status')
-                ->where('status_name', $request->status_name)
-                ->value('beneficiary_status_id');
-            if (!$statusId) {
-                return response()->json(['error' => 'Invalid status name.'], 422);
+        $beneficiary->beneficiary_status_id = $request->status_id;
+        $beneficiary->status_reason = $request->status_reason;
+        $beneficiary->save();
+        
+        // Update related family members' UnifiedUser status
+        \App\Observers\FamilyMemberObserver::beneficiaryStatusChanged($beneficiary);
+
+        // --- NOTIFICATIONS (after successful status change) ---
+        $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+        $newStatus = optional($beneficiary->status)->status_reason ?? 'updated';
+
+        // Notify beneficiary
+        $this->notificationService->notifyBeneficiary(
+            $beneficiary->beneficiary_id,
+            'Status Changed',
+            "Your beneficiary status was changed to {$newStatus}."
+        );
+
+        // Notify all family members
+        if ($beneficiary->familyMembers) {
+            foreach ($beneficiary->familyMembers as $familyMember) {
+                $this->notificationService->notifyFamilyMember(
+                    $familyMember->family_member_id,
+                    'Status Changed',
+                    "The status for {$beneficiaryName} was changed to {$newStatus}."
+                );
             }
-            $beneficiary->beneficiary_status_id = $statusId;
-        } else {
-            return response()->json(['error' => 'Please provide status_id or status_name.'], 422);
         }
 
-        $beneficiary->save();
+        // Notify assigned care worker if available
+        if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
+            $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
+            $this->notificationService->notifyStaff(
+                $careWorkerId,
+                'Status Changed',
+                "The status for {$beneficiaryName} was changed to {$newStatus}."
+            );
+        }
+
+        // Notify the actor
+        $actor = $request->user();
+        $actorMessage = 'You have successfully changed the beneficiary status.';
+        $this->notificationService->notifyStaff(
+            $actor->id,
+            'Status Changed',
+            $actorMessage
+        );
 
         return response()->json([
             'success' => true,
@@ -1454,7 +1532,7 @@ class BeneficiaryApiController extends Controller
                     $b->gender,
                     $b->civil_status,
                     optional($b->category)->category_name,
-                    optional($b->status)->status_name,
+                    optional($b->status)->status_reason,
                     optional($b->municipality)->municipality_name,
                     optional($b->barangay)->barangay_name,
                     $b->mobile,
