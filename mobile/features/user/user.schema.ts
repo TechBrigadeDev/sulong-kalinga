@@ -68,3 +68,9 @@ export const userProfileSchema = z.object({
     username: z.string().nullable(),
     email: z.string().email().nullable()
 });
+
+
+export const updateEmailSchema = z.object({
+    new_email: z.string().email(),
+    password: z.string(),
+});

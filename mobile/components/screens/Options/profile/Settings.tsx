@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
 });
 
 const Header = () => {
-    const { data: user } = useUser();
+    const { data: user } = useUserProfile();
 
     const fullName = user
         ? `${user.first_name} ${user.last_name}`
@@ -88,14 +88,14 @@ const Header = () => {
             </Text>
             <Badge
                 variant={
-                    user?.status === "Active"
+                    user?.volunteer_status === "Active"
                         ? "success"
                         : "warning"
                 }
                 style={headerStyle.shadow}
                 size={15}
             >
-                {user?.status}
+                {user?.volunteer_status}
             </Badge>
         </YStack>
     );

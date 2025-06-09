@@ -93,3 +93,11 @@ export const setDataQK = async (
 ) => {
     queryClient.setQueryData(key, data);
 };
+
+export const invalidateQK = async (
+    key: string[],
+) => {
+    await queryClient.invalidateQueries({
+        queryKey: key,
+    });
+}

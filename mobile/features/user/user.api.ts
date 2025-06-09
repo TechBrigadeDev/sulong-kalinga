@@ -7,6 +7,7 @@ import { axiosClient } from "~/common/api";
 
 import { userProfileSchema, userSchema } from "./user.schema";
 import { log } from "../../common/debug";
+import { IEmailUpdate } from "./user.interface";
 
 class UserController {
     private jsonApi: AxiosInstance;
@@ -123,6 +124,34 @@ class UserController {
         } catch (error) {
             console.error(
                 "Error fetching user profile:",
+                error,
+            );
+            throw error;
+        }
+    }
+
+    async updateEmail(data: IEmailUpdate, token: string) {
+        try {
+            const response =
+                await this.jsonApi.patch(
+                    "/account-profile/email",
+                    data,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+
+            log(
+                "Email update response:",
+                response.data,
+            )
+
+            return data.new_email;
+        } catch (error) {
+            console.error(
+                "Error updating email:",
                 error,
             );
             throw error;
