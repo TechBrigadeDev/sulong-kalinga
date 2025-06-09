@@ -32,7 +32,7 @@ const menuItems: IMenuItem[] = [
     },
     {
         title: "Care Plan",
-        href: "/care-plan",
+        href: "/options/reports/care-records",
         color: "#1B8000",
         icon: "FileText",
     },

@@ -1,7 +1,9 @@
 import { Controller } from "common/api";
+import { log } from "common/debug";
 
 import {
     reportsResponseSchema,
+    wcpRecordResponseSchema,
     wcpRecordsResponseSchema,
 } from "./schema";
 
@@ -94,10 +96,6 @@ class ReportController extends Controller {
             await wcpRecordsResponseSchema.safeParseAsync(
                 data,
             );
-        console.log(
-            JSON.stringify(data, null, 2),
-            "\n\nWCP Records Response",
-        );
 
         if (!validate.success) {
             console.error(
@@ -109,6 +107,34 @@ class ReportController extends Controller {
             );
         }
 
+        return validate.data;
+    }
+
+    async getWCPRecord(id: string) {
+        const response = await this.api.get(
+            `/records/weekly-care-plans/${id}`,
+        );
+        const data = await response.data;
+
+        const validate =
+            await wcpRecordResponseSchema.safeParseAsync(
+                data,
+            );
+
+        if (!validate.success) {
+            console.error(
+                "Invalid WCP record data:",
+                validate.error,
+            );
+            throw new Error(
+                "Invalid WCP record data",
+            );
+        }
+
+        log(
+            "WCP Records fetched successfully",
+            validate.data,
+        );
         return validate.data;
     }
 }

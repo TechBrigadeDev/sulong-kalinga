@@ -1,5 +1,4 @@
 import { formatDate } from "common/date";
-import Badge from "components/Bagde";
 import FlatList from "components/FlatList";
 import { useRouter } from "expo-router";
 import {
@@ -19,7 +18,7 @@ import {
 } from "tamagui";
 
 import { useWCPRecords } from "~/features/records/hook";
-import { IWCPRecord } from "~/features/records/type";
+import { IWCPRecords } from "~/features/records/type";
 
 import { wcpRecordsListStore } from "./store";
 
@@ -124,7 +123,7 @@ const WCPRecordsList = () => {
 const WCPRecordCard = ({
     record,
 }: {
-    record: IWCPRecord;
+    record: IWCPRecords;
 }) => {
     const router = useRouter();
     const recordDate = formatDate(
@@ -148,24 +147,26 @@ const WCPRecordCard = ({
             borderColor="#E9ECEF"
             borderWidth={1}
         >
-            <YStack
-                display="flex"
-                flexDirection="row"
+            <XStack
                 justify="space-between"
-                items="center"
+                style={{
+                    alignItems: "center",
+                }}
                 borderBlockEndColor="$accentColor"
                 borderBlockEndWidth="$0.5"
                 paddingBlock="$2"
             >
-                <YStack>
-                    <H5>
-                        WCP Record #{record.id}
+                <YStack
+                    flex={1}
+                    style={{
+                        marginRight: 8,
+                    }}
+                >
+                    <H5 flexWrap="wrap">
+                        {record.beneficiary}
                     </H5>
-                    <Badge borderRadius={4}>
-                        Weekly Care Plan
-                    </Badge>
                 </YStack>
-                <XStack>
+                <XStack space="$2">
                     <Button
                         size="$3"
                         bg="#E9ECEF"
@@ -186,7 +187,7 @@ const WCPRecordCard = ({
                         <SquarePen size={16} />
                     </Button>
                 </XStack>
-            </YStack>
+            </XStack>
             <YStack>
                 <XStack
                     display="flex"
@@ -194,7 +195,18 @@ const WCPRecordCard = ({
                     justify="space-between"
                     paddingBlock="$2"
                 >
-                    <Text>Date</Text>
+                    <Text>Author</Text>
+                    <Text>
+                        {record.care_worker}
+                    </Text>
+                </XStack>
+                <XStack
+                    display="flex"
+                    flexDirection="row"
+                    justify="space-between"
+                    paddingBlock="$2"
+                >
+                    <Text>Date Uploaded</Text>
                     <Text>{recordDate}</Text>
                 </XStack>
                 {record.assessment && (

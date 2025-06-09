@@ -32,7 +32,7 @@ const Layout = () => (
     <>
         <Stack.Screen
             options={{
-                title: "WCP Records",
+                title: "Weekly Care Plan",
                 headerShown: true,
             }}
         />

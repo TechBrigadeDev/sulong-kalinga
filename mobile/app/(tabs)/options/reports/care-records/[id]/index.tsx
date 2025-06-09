@@ -1,23 +1,29 @@
+import LoadingScreen from "components/loaders/LoadingScreen";
+import ScrollView from "components/ScrollView";
 import {
     Stack,
     useLocalSearchParams,
 } from "expo-router";
+import { useWCPRecord } from "features/records/hook";
+import WCPRecordDetail from "features/records/wcp/detail";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, View } from "tamagui";
 
 const Screen = () => {
     const { id } = useLocalSearchParams<{
         id: string;
     }>();
 
-    return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <View>
-                <Text>Care Record Details</Text>
-                <Text>ID: {id}</Text>
-            </View>
-        </SafeAreaView>
-    );
+    const { data, isLoading } = useWCPRecord(id);
+
+    if (isLoading) {
+        return <LoadingScreen />;
+    }
+
+    if (!data) {
+        return <LoadingScreen />;
+    }
+
+    return <WCPRecordDetail record={data.data} />;
 };
 
 const Layout = () => (
@@ -28,7 +34,14 @@ const Layout = () => (
                 headerShown: true,
             }}
         />
-        <Screen />
+        <SafeAreaView style={{ flex: 1 }}>
+            <ScrollView
+                flex={1}
+                paddingBlockEnd={75}
+            >
+                <Screen />
+            </ScrollView>
+        </SafeAreaView>
     </>
 );
 

@@ -1,4 +1,7 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+    useInfiniteQuery,
+    useQuery,
+} from "@tanstack/react-query";
 import { QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
@@ -82,5 +85,17 @@ export const useWCPRecords = (props?: {
                 : undefined,
         initialPageParam: 1,
         enabled: !!token,
+    });
+};
+
+export const useWCPRecord = (id: string) => {
+    return useQuery({
+        queryKey: QK.report.getWCPRecord(id),
+        queryFn: async () => {
+            const response =
+                await api.getWCPRecord(id);
+            return response;
+        },
+        enabled: !!id,
     });
 };

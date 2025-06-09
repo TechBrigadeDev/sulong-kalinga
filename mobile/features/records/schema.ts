@@ -31,23 +31,67 @@ export const reportsResponseSchema = z.object({
     }),
 });
 
-// WCP Records Schema based on the provided JSON data
-export const wcpRecordSchema = z.object({
+export const wcpRecordsSchema = z.object({
     id: z.number(),
     date: z.string(),
-    beneficiary: z.any().nullable(), // Can be expanded if beneficiary structure is known
-    care_worker: z.any().nullable(), // Can be expanded if care_worker structure is known
+    beneficiary: z.string(),
+    care_worker: z.string(),
     assessment: z.string().optional(),
     photo_url: z.string(),
 });
 
 export const wcpRecordsResponseSchema = z.object({
     success: z.boolean(),
-    data: z.array(wcpRecordSchema),
+    data: z.array(wcpRecordsSchema),
     meta: z.object({
         current_page: z.number(),
         last_page: z.number(),
         per_page: z.number(),
         total: z.number(),
     }),
+});
+
+export const wcpRecordSchema = z.object({
+    id: z.number(),
+    date: z.string(),
+    beneficiary: z.string(),
+    care_worker: z.string(),
+    assessment: z.string().optional(),
+    evaluation_recommendations: z
+        .string()
+        .optional(),
+    illnesses: z.array(z.string()).optional(),
+    vital_signs: z.object({
+        vital_signs_id: z.number(),
+        blood_pressure: z.string(),
+        body_temperature: z.string(),
+        pulse_rate: z.number(),
+        respiratory_rate: z.number(),
+        created_by: z.number(),
+        created_at: z.string(),
+        updated_at: z.string(),
+    }),
+    interventions: z.array(
+        z.object({
+            wcp_intervention_id: z.number(),
+            weekly_care_plan_id: z.number(),
+            intervention_id: z
+                .number()
+                .nullable(),
+            care_category_id: z.number(),
+            intervention_description: z
+                .string()
+                .nullable(),
+            duration_minutes: z.string(),
+            implemented: z.boolean(),
+        }),
+    ),
+    photo_url: z.string(),
+    created_at: z.string(),
+    updated_at: z.string(),
+});
+
+export const wcpRecordResponseSchema = z.object({
+    success: z.boolean(),
+    data: wcpRecordSchema,
 });

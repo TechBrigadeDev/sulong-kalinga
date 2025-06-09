@@ -84,6 +84,10 @@ export const QK = {
     report: {
         getReports: "reports/getReports",
         getWCPRecords: "reports/getWCPRecords",
+        getWCPRecord: (id: string) => [
+            "reports/getWCPRecord",
+            id,
+        ],
     },
 };
 
