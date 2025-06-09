@@ -85,6 +85,7 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         Route::post('/leave-group', [PortalMessagingController::class, 'leaveGroupConversation'])->name('leave-group');
         Route::post('/unsend/{id}', [PortalMessagingController::class, 'unsendMessage'])->name('unsend');
         Route::get('/unread-count', [PortalMessagingController::class, 'getUnreadCount'])->name('unread-count');
+        Route::get('/conversation-unread-count', [PortalMessagingController::class, 'getConversationUnreadCount'])->name('conversation-unread-count');
         Route::get('/recent-messages', [PortalMessagingController::class, 'getRecentMessages'])->name('recent-messages');
         Route::post('/read-all', [PortalMessagingController::class, 'markAllAsRead'])->name('read-all');
         Route::post('/mark-as-read', [PortalMessagingController::class, 'markAsRead'])->name('mark-as-read');

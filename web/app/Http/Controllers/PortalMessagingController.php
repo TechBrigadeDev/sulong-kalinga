@@ -152,11 +152,20 @@ class PortalMessagingController extends Controller
                 'error' => 'Unable to load conversations. Please try again later.'
             ]);
         }
+
+        // DEBUG: Log conversation badge details
+        foreach ($conversations as $conversation) {
+            if (!$conversation->is_group_chat) {
+                Log::debug('Conversation Badge Info', [
+                    'conversation_id' => $conversation->conversation_id,
+                    'other_participant_type' => $conversation->other_participant_type ?? 'not set',
+                    'staff_role' => $conversation->staff_role ?? 'not set',
+                    'participant_type_display' => $conversation->participant_type_display ?? 'not set'
+                ]);
+            }
+        }
     }
     
-    /**
-     * Get user's conversations
-     */
     private function getUserConversations($user, $userType)
     {
         // First, get the conversation IDs to avoid eager loading errors
@@ -178,59 +187,59 @@ class PortalMessagingController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
         
-        // Manually load participants to avoid eager loading issues
+        // Process each conversation immediately after loading
         foreach ($conversations as $conversation) {
-            // Force proper participant type and message preview format on initial load
-            if ($conversation->lastMessage) {
-                $conversation->lastMessage->message_timestamp = $conversation->lastMessage->message_timestamp ?? $conversation->lastMessage->created_at;
-                
-                // Check if the last message was sent by current user
-                $isSentByCurrentUser = ($conversation->lastMessage->sender_id == $user->getKey() && 
-                                ($conversation->lastMessage->sender_type == $userType || 
-                                ($conversation->lastMessage->sender_type == 'family_member' && $userType == 'family')));
-                
-                $conversation->sent_by_current_user = $isSentByCurrentUser;
-            }
-            
-            // For non-group conversations, get other participant info manually
+            // For non-group conversations, explicitly check participant types
             if (!$conversation->is_group_chat) {
+                // Find the other participant (not the current user)
+                $otherParticipant = null;
+                
                 foreach ($conversation->participants as $participant) {
+                    // If this is NOT the current user
                     if (!($participant->participant_id == $user->getKey() && 
-                        ($participant->participant_type == $userType || 
+                        ($participant->participant_type == $userType ||
                         ($participant->participant_type == 'family_member' && $userType == 'family')))) {
                         
-                        // Set the other_participant_type property explicitly
+                        $otherParticipant = $participant;
                         $conversation->other_participant_type = $participant->participant_type;
                         
-                        // Get participant name safely
+                        // CRITICAL FIX: For COSE staff, always explicitly set the display value first
                         if ($participant->participant_type === 'cose_staff') {
-                            $staff = User::find($participant->participant_id);
-                            if ($staff) {
-                                $conversation->other_participant_name = $staff->first_name . ' ' . $staff->last_name;
-                                
-                                // Set staff role based on role_id
-                                if ($staff->role_id == 1) {
-                                    $conversation->staff_role = 'Administrator';
-                                    // Add this critical line to override the participant_type for display
-                                    $conversation->participant_type_display = 'Administrator';
-                                } elseif ($staff->role_id == 2) {
-                                    $conversation->staff_role = 'Care Manager';
-                                    $conversation->participant_type_display = 'Care Manager';
-                                } elseif ($staff->role_id == 3) {
-                                    $conversation->staff_role = 'Care Worker';
-                                    $conversation->participant_type_display = 'Care Worker';
-                                } else {
-                                    $conversation->staff_role = 'Staff';
-                                    $conversation->participant_type_display = 'Staff';
+                            // Default to Care Worker first for immediate display
+                            $conversation->participant_type_display = 'Care Worker';
+                            
+                            try {
+                                $staff = User::find($participant->participant_id);
+                                if ($staff) {
+                                    // Set display name
+                                    $conversation->other_participant_name = $staff->first_name . ' ' . $staff->last_name;
+                                    
+                                    // Set staff role based on role_id
+                                    if ($staff->role_id == 1) {
+                                        $conversation->staff_role = 'Administrator';
+                                        $conversation->participant_type_display = 'Administrator';
+                                    } elseif ($staff->role_id == 2) {
+                                        $conversation->staff_role = 'Care Manager';
+                                        $conversation->participant_type_display = 'Care Manager';
+                                    } else {
+                                        // Keep as Care Worker for other role IDs
+                                        $conversation->staff_role = 'Care Worker';
+                                        $conversation->participant_type_display = 'Care Worker';
+                                    }
                                 }
+                            } catch (\Exception $e) {
+                                // Fall back to Care Worker if there's any error
+                                Log::error('Error fetching staff details: ' . $e->getMessage());
                             }
                         } elseif ($participant->participant_type === 'beneficiary') {
+                            // For beneficiary participants
                             $beneficiary = Beneficiary::find($participant->participant_id);
                             if ($beneficiary) {
                                 $conversation->other_participant_name = $beneficiary->first_name . ' ' . $beneficiary->last_name;
                                 $conversation->participant_type_display = 'Beneficiary';
                             }
                         } elseif ($participant->participant_type === 'family_member') {
+                            // For family member participants
                             $familyMember = FamilyMember::find($participant->participant_id);
                             if ($familyMember) {
                                 $conversation->other_participant_name = $familyMember->first_name . ' ' . $familyMember->last_name;
@@ -238,12 +247,13 @@ class PortalMessagingController extends Controller
                             }
                         }
                         
+                        // Once we find the other participant, break the loop
                         break;
                     }
                 }
             }
             
-            // Force unread count calculation directly
+            // Calculate unread count correctly
             $unreadCount = Message::where('conversation_id', $conversation->conversation_id)
                 ->where(function($query) use ($user, $userType) {
                     // Only count messages not sent by current user
@@ -265,6 +275,7 @@ class PortalMessagingController extends Controller
         
         return $conversations;
     }
+
     /**
      * View a specific conversation
      */
@@ -1379,6 +1390,44 @@ class PortalMessagingController extends Controller
                 'success' => false,
                 'message' => 'Error downloading attachment: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Get unread count for a specific conversation
+     */
+    public function getConversationUnreadCount(Request $request)
+    {
+        try {
+            $conversationId = $request->query('id');
+            if (!$conversationId) {
+                return response()->json(['success' => false, 'message' => 'Conversation ID required'], 400);
+            }
+            
+            // Get current user
+            $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
+            $user = Auth::guard($userType)->user();
+            
+            // Count unread messages
+            $unreadCount = Message::where('conversation_id', $conversationId)
+                ->where(function($query) use ($user, $userType) {
+                    // Only count messages not sent by current user
+                    $query->where(function($q) use ($user, $userType) {
+                        $q->where('sender_id', '!=', $user->getKey())
+                        ->orWhere('sender_type', '!=', $userType);
+                    });
+                })
+                ->whereDoesntHave('readStatuses', function($query) use ($user, $userType) {
+                    $query->where('reader_id', $user->getKey())
+                        ->where('reader_type', $userType);
+                })
+                ->where('is_unsent', false)
+                ->count();
+                
+            return response()->json(['success' => true, 'count' => $unreadCount]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting conversation unread count: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error fetching unread count'], 500);
         }
     }
 }

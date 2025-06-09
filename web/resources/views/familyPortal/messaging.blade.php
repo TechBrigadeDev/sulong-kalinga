@@ -2,67 +2,80 @@
 <html lang="en">
 <head>
 
-<script>
-// Immediate badge fixer that runs as early as possible
-(function() {
-    // Run on DOMContentLoaded and also on any dynamic content change
-    function fixBadges() {
-        // Get all participant badges by multiple potential classes
-        const badges = document.querySelectorAll('.participant-badge, .user-type-badge, [data-participant-type="cose_staff"]');
-        
-        badges.forEach(badge => {
-            // Check for badges that are incorrectly displaying "Beneficiary" but are for care workers
-            if ((badge.textContent.trim() === 'Beneficiary' || badge.textContent.trim() === 'beneficiary') && 
-                badge.getAttribute('data-participant-type') === 'cose_staff') {
-                    
-                // Fix the badge text and style
-                badge.textContent = 'Care Worker';
-                badge.className = badge.className.replace(/bg-\w+/g, 'bg-info');
-                badge.className += ' bg-info';
-                
-                console.log('Fixed a care worker badge that was showing as Beneficiary');
-            }
-            
-            // Also check for any care worker badges that should be blue
-            if (badge.getAttribute('data-participant-type') === 'cose_staff') {
-                badge.className = badge.className.replace(/bg-\w+/g, 'bg-info');
-                badge.className += ' bg-info';
-            }
-        });
-    }
-    
-    // Run immediately and observe for changes
-    document.addEventListener('DOMContentLoaded', function() {
-        fixBadges();
-        
-        // Use MutationObserver to watch for dynamically added badges
-        const observer = new MutationObserver(function(mutations) {
-            fixBadges();
-        });
-        
-        // Start observing once the DOM is loaded
-        observer.observe(document.body, { childList: true, subtree: true });
-    });
-    
-    // Also attempt to run before DOM is fully loaded
-    if (document.body) {
-        fixBadges();
-    } else {
-        // If body doesn't exist yet, wait for it with an interval
-        const earlyCheck = setInterval(function() {
-            if (document.body) {
-                fixBadges();
-                clearInterval(earlyCheck);
-            }
-        }, 10);
-    }
-})();
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="role-prefix" content="{{ $rolePrefix }}">
+
+    <script>
+        // UNIVERSAL Care Worker Badge Fix (works for all conversations)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to fix all care worker badges
+            function fixCareWorkerBadges() {
+                // Find all conversation items 
+                const conversations = document.querySelectorAll('.conversation-item');
+                
+                conversations.forEach(conversation => {
+                    // For each conversation, check if it contains a participant badge with incorrect type
+                    const badges = conversation.querySelectorAll('.user-type-badge, .participant-badge');
+                    
+                    badges.forEach(badge => {
+                        // Get the participant type from data attribute
+                        const participantType = badge.getAttribute('data-participant-type');
+                        
+                        // If this is a COSE staff but showing as "Beneficiary", fix it
+                        if (participantType === 'cose_staff' && badge.textContent.trim() === 'Beneficiary') {
+                            console.log('Fixed care worker badge in conversation:', conversation.dataset.conversationId);
+                            badge.textContent = 'Care Worker';
+                            badge.classList.remove('bg-success');
+                            badge.classList.add('bg-info');
+                        }
+                    });
+                });
+            }
+            
+            // Run the fix multiple times to ensure it catches all badges
+            setTimeout(fixCareWorkerBadges, 100);
+            setTimeout(fixCareWorkerBadges, 500);
+            setTimeout(fixCareWorkerBadges, 1000);
+            
+            // Also run whenever the conversation list is updated
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length > 0) {
+                        setTimeout(fixCareWorkerBadges, 100);
+                    }
+                });
+            });
+            
+            // Start observing the document body
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+        </script>
+
+        <style>
+        /* Universal fix for care worker badges via CSS */
+        .participant-badge[data-participant-type="cose_staff"],
+        .user-type-badge[data-participant-type="cose_staff"] {
+            background-color: #0dcaf0 !important; /* Bootstrap .bg-info color */
+            color: #fff !important;
+        }
+
+        /* Force Care Worker text for COSE staff */
+        .participant-badge[data-participant-type="cose_staff"]::after,
+        .user-type-badge[data-participant-type="cose_staff"]::after {
+            content: "Care Worker";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: inherit;
+        }
+        </style>
 
     <script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
     <title>Messaging - SulongKalinga</title>
@@ -212,7 +225,7 @@
                 
                 <!-- Conversation List Items -->
                 <div class="conversation-list-items">
-                    @include('admin.conversation-list', ['conversations' => $conversations])
+                    @include('familyPortal.conversation-list', ['conversations' => $conversations])
                 </div>
             </div>
             

@@ -152,7 +152,7 @@
                                                         'Unknown')));
                             @endphp
 
-                            <span class="participant-badge {{ $typeBadgeClass }}" 
+                            <span class="participant-badge user-type-badge {{ $typeBadgeClass }}" 
                                 data-participant-type="{{ $otherParticipant->participant_type ?? 'unknown' }}">
                                 {{ $displayParticipantType }}
                             </span>

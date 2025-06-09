@@ -8,6 +8,23 @@
     <meta name="role-prefix" content="{{ $rolePrefix }}">
 
     <script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
+    
+    <style>
+        /* Universal fix for care worker badges that works regardless of controller data */
+        .conversation-item .user-type-badge[data-participant-type="cose_staff"],
+        .conversation-item .participant-badge[data-participant-type="cose_staff"] {
+            background-color: #0dcaf0 !important; /* bg-info */
+            color: white !important;
+        }
+
+        /* Target any badges with cose_staff data attribute */
+        [data-participant-type="cose_staff"] {
+            background-color: #0dcaf0 !important;
+            color: white !important;
+        }
+    </style>
+    
+    
     <title>Messaging - SulongKalinga</title>
     
     <!-- Styles -->
@@ -153,7 +170,7 @@
                 
                 <!-- Conversation List Items -->
                 <div class="conversation-list-items">
-                    @include('admin.conversation-list', ['conversations' => $conversations])
+                    @include('beneficiaryPortal.conversation-list', ['conversations' => $conversations])
                 </div>
             </div>
             
