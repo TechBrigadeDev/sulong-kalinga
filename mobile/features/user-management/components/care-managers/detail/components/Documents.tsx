@@ -21,7 +21,7 @@ const Documents = ({ careManager }: Props) => {
                     Documents
                 </SectionTitle>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$3">
                     <DetailRow
                         label="Government Issued ID"
@@ -40,7 +40,7 @@ const Documents = ({ careManager }: Props) => {
                         }
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

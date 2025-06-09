@@ -42,7 +42,7 @@ const PersonalInformation = ({
                     Personal Information
                 </H3>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$4">
                     <InfoItem
                         label="Full Name"
@@ -75,7 +75,7 @@ const PersonalInformation = ({
                         value={`${familyMember.beneficiary.first_name} ${familyMember.beneficiary.last_name}`}
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

@@ -55,7 +55,7 @@ const ScheduleCard = (
                     <H4>Schedule</H4>
                 </XStack>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     {as_needed ? (
                         <XStack
@@ -167,7 +167,7 @@ const ScheduleCard = (
                         </>
                     )}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

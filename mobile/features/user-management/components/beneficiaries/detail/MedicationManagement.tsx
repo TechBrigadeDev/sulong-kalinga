@@ -43,7 +43,7 @@ const MedicationManagement = ({
             <Card.Header padded>
                 <H3>Medication Management</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     {medications.map(
                         (med, index) => (
@@ -58,7 +58,7 @@ const MedicationManagement = ({
                                         {med.name}
                                     </Text>
                                 </Card.Header>
-                                <Card.Footer
+                                <YStack
                                     padded
                                 >
                                     <YStack gap="$2">
@@ -115,12 +115,12 @@ const MedicationManagement = ({
                                             </Text>
                                         </YStack>
                                     </YStack>
-                                </Card.Footer>
+                                </YStack>
                             </Card>
                         ),
                     )}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

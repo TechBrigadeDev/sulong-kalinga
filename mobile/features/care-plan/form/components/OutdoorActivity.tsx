@@ -126,7 +126,7 @@ export const OutdoorActivity = ({
 
     return (
         <ScrollView>
-            <YStack padding="$4" gap="$4">
+            <YStack p="$4" gap="$4">
                 <Card elevate>
                     <Card.Header padded>
                         <Text
@@ -137,7 +137,7 @@ export const OutdoorActivity = ({
                             Interventions
                         </Text>
                     </Card.Header>
-                    <Card.Footer padded>
+                    <YStack p="$4">
                         <YStack gap="$4">
                             {DEFAULT_INTERVENTIONS.map(
                                 (
@@ -362,7 +362,7 @@ export const OutdoorActivity = ({
                                 </XStack>
                             </YStack>
                         </YStack>
-                    </Card.Footer>
+                    </YStack>
                 </Card>
             </YStack>
         </ScrollView>

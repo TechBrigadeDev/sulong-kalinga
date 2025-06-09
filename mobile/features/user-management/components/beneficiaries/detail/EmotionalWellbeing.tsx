@@ -22,7 +22,7 @@ const EmotionalWellbeing = ({
             <Card.Header padded>
                 <H3>Emotional Well-being</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     {Object.entries(
                         emotionalInfo,
@@ -35,7 +35,7 @@ const EmotionalWellbeing = ({
                         </YStack>
                     ))}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

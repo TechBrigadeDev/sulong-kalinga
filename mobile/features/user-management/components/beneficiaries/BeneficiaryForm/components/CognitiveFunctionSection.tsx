@@ -128,33 +128,33 @@ export const CognitiveFunctionSection = ({
                 <Card.Header padded>
                     <H3>Mobility</H3>
                 </Card.Header>
-                <Card.Footer padded>
+                <YStack p="$4">
                     {renderFields(
                         MOBILITY_FIELDS,
                     )}
-                </Card.Footer>
+                </YStack>
             </Card>
 
             <Card elevate>
                 <Card.Header padded>
                     <H3>Cognitive Function</H3>
                 </Card.Header>
-                <Card.Footer padded>
+                <YStack p="$4">
                     {renderFields(
                         COGNITIVE_FIELDS,
                     )}
-                </Card.Footer>
+                </YStack>
             </Card>
 
             <Card elevate>
                 <Card.Header padded>
                     <H3>Emotional Well-being</H3>
                 </Card.Header>
-                <Card.Footer padded>
+                <YStack p="$4">
                     {renderFields(
                         EMOTIONAL_FIELDS,
                     )}
-                </Card.Footer>
+                </YStack>
             </Card>
         </YStack>
     );

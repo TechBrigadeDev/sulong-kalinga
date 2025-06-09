@@ -31,7 +31,7 @@ const DurationCard = (
                     <H4>Duration</H4>
                 </XStack>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$2">
                     <XStack gap="$2">
                         <Text opacity={0.6}>
@@ -56,7 +56,7 @@ const DurationCard = (
                         </XStack>
                     )}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

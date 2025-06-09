@@ -25,7 +25,7 @@ export const MedicalHistorySection = ({
             <Card.Header padded>
                 <H3>Medical History</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <YStack>
                         <Text>
@@ -129,7 +129,7 @@ export const MedicalHistorySection = ({
                         </Text>
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

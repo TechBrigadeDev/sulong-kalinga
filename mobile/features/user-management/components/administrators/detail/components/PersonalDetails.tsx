@@ -19,7 +19,7 @@ const PersonalDetails = ({ admin }: Props) => {
                     Personal Details
                 </SectionTitle>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$3">
                     <DetailRow
                         label="Educational Background"
@@ -48,7 +48,7 @@ const PersonalDetails = ({ admin }: Props) => {
                         value={admin.nationality}
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

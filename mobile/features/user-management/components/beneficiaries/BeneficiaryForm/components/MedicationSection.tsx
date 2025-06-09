@@ -86,7 +86,7 @@ export const MedicationSection = ({
             <Card.Header padded>
                 <H3>Medication Management</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     {medications.map(
                         (med, index) => (
@@ -94,8 +94,10 @@ export const MedicationSection = ({
                                 key={index}
                                 bordered
                             >
-                                <Card.Footer
-                                    padded
+                                <YStack
+                                    p="$4"
+                                    gap="$2"
+                                    flex={1}
                                 >
                                     <XStack
                                         space
@@ -152,13 +154,13 @@ export const MedicationSection = ({
                                             />
                                         </Button>
                                     </XStack>
-                                </Card.Footer>
+                                </YStack>
                             </Card>
                         ),
                     )}
 
                     <Card bordered theme="gray">
-                        <Card.Footer padded>
+                        <YStack p="$4">
                             <YStack gap="$4">
                                 <Input
                                     placeholder="Medication Name"
@@ -257,10 +259,10 @@ export const MedicationSection = ({
                                     Add Medication
                                 </Button>
                             </YStack>
-                        </Card.Footer>
+                        </YStack>
                     </Card>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

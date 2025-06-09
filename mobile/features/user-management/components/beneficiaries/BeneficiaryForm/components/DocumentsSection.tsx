@@ -73,7 +73,7 @@ export const DocumentsSection = ({
             <Card.Header padded>
                 <H3>Documents and Signatures</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <YStack>
                         <Text>
@@ -194,7 +194,7 @@ export const DocumentsSection = ({
                         </YStack>
                     </XStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

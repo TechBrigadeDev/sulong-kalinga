@@ -48,7 +48,7 @@ export const PersonalDetailsSection = ({
             <Card.Header>
                 <H3>Personal Details</H3>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$4">
                     <XStack gap="$4">
                         <YStack flex={1} gap="$2">
@@ -276,7 +276,7 @@ export const PersonalDetailsSection = ({
                         </YStack>
                     </XStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

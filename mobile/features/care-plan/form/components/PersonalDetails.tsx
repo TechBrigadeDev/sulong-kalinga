@@ -78,7 +78,7 @@ export const PersonalDetails = ({
                             Select Beneficiary
                         </Text>
                     </Card.Header>
-                    <Card.Footer padded>
+                    <YStack p="$4">
                         <YStack
                             style={{ gap: 16 }}
                         >
@@ -159,7 +159,7 @@ export const PersonalDetails = ({
                                 </YStack>
                             )}
                         </YStack>
-                    </Card.Footer>
+                    </YStack>
                 </Card>
 
                 <Card elevate>
@@ -174,7 +174,7 @@ export const PersonalDetails = ({
                             Vital Signs
                         </Text>
                     </Card.Header>
-                    <Card.Footer padded>
+                    <YStack p="$4">
                         <YStack gap="$4">
                             <XStack gap="$4">
                                 <YStack flex={1}>
@@ -272,7 +272,7 @@ export const PersonalDetails = ({
                                 </YStack>
                             </XStack>
                         </YStack>
-                    </Card.Footer>
+                    </YStack>
                 </Card>
 
                 <Card elevate>
@@ -287,7 +287,7 @@ export const PersonalDetails = ({
                             Assessment
                         </Text>
                     </Card.Header>
-                    <Card.Footer padded>
+                    <YStack p="$4">
                         <Input
                             multiline
                             numberOfLines={4}
@@ -305,7 +305,7 @@ export const PersonalDetails = ({
                             }
                             placeholder="Enter your assessment here..."
                         />
-                    </Card.Footer>
+                    </YStack>
                 </Card>
             </YStack>
         </ScrollView>

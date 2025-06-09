@@ -22,7 +22,7 @@ const AssignedCareWorker = ({
             <Card.Header padded>
                 <H3>Assigned Care Worker</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <YStack>
                         <Text opacity={0.6}>
@@ -47,7 +47,7 @@ const AssignedCareWorker = ({
                         )}
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

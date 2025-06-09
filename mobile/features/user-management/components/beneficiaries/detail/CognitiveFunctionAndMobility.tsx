@@ -40,7 +40,7 @@ const CognitiveFunctionAndMobility = ({
                 <Card.Header padded>
                     <H3>Cognitive Function</H3>
                 </Card.Header>
-                <Card.Footer padded>
+                <YStack p="$4">
                     <YStack gap="$3">
                         {Object.entries(
                             cognitiveInfo,
@@ -57,14 +57,14 @@ const CognitiveFunctionAndMobility = ({
                             </YStack>
                         ))}
                     </YStack>
-                </Card.Footer>
+                </YStack>
             </Card>
 
             <Card elevate flex={1} minWidth={300}>
                 <Card.Header padded>
                     <H3>Mobility</H3>
                 </Card.Header>
-                <Card.Footer padded>
+                <YStack p="$4">
                     <YStack gap="$3">
                         {Object.entries(
                             mobilityInfo,
@@ -81,7 +81,7 @@ const CognitiveFunctionAndMobility = ({
                             </YStack>
                         ))}
                     </YStack>
-                </Card.Footer>
+                </YStack>
             </Card>
         </XStack>
     );

@@ -26,7 +26,7 @@ export const EmergencyContactSection = ({
             <Card.Header padded>
                 <H3>Emergency Contact</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <XStack gap="$4">
                         <YStack flex={1}>
@@ -125,7 +125,7 @@ export const EmergencyContactSection = ({
                         />
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

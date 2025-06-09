@@ -23,7 +23,7 @@ const ContactInformation = ({
                     Contact Information
                 </SectionTitle>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$3">
                     <DetailRow
                         label="Email Address"
@@ -52,7 +52,7 @@ const ContactInformation = ({
                         }
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

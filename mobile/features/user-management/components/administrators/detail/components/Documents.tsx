@@ -19,7 +19,7 @@ const Documents = ({ admin }: Props) => {
                     Documents
                 </SectionTitle>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$3">
                     <DetailRow
                         label="Government Issued ID"
@@ -34,7 +34,7 @@ const Documents = ({ admin }: Props) => {
                         value={"Not Available"}
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

@@ -59,7 +59,7 @@ const CareNeeds = ({
             <Card.Header padded>
                 <H3>Care Needs</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     {careNeeds.map(
                         (need, index) => (
@@ -76,7 +76,7 @@ const CareNeeds = ({
                                         }
                                     </Text>
                                 </Card.Header>
-                                <Card.Footer
+                                <YStack
                                     padded
                                 >
                                     <YStack gap="$2">
@@ -96,12 +96,12 @@ const CareNeeds = ({
                                             }
                                         </Text>
                                     </YStack>
-                                </Card.Footer>
+                                </YStack>
                             </Card>
                         ),
                     )}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

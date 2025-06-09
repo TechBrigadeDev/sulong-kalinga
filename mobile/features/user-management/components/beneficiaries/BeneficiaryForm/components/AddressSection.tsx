@@ -38,7 +38,7 @@ export const AddressSection = ({
             <Card.Header padded>
                 <H3>Current Address</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <YStack>
                         <Text>
@@ -179,7 +179,7 @@ export const AddressSection = ({
                         </YStack>
                     </XStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

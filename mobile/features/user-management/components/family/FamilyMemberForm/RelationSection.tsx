@@ -43,7 +43,7 @@ const RelationSection = ({
             <Card.Header padded>
                 <H3>Relationship Information</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <YStack gap="$2">
                         <Label htmlFor="beneficiary">
@@ -110,7 +110,7 @@ const RelationSection = ({
                         </Text>
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

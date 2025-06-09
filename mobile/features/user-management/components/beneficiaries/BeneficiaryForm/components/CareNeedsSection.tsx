@@ -73,7 +73,7 @@ export const CareNeedsSection = ({
             <Card.Header padded>
                 <H3>Care Needs</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     {CARE_NEEDS.map(
                         (need, index) => (
@@ -144,7 +144,7 @@ export const CareNeedsSection = ({
                         ),
                     )}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

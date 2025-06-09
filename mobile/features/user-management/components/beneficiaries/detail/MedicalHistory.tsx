@@ -26,7 +26,7 @@ const MedicalHistory = ({
             <Card.Header padded>
                 <H3>Medical History</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     {Object.entries(
                         medicalInfo,
@@ -39,7 +39,7 @@ const MedicalHistory = ({
                         </YStack>
                     ))}
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

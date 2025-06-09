@@ -19,7 +19,7 @@ const GovernmentIDs = ({ admin }: Props) => {
                     Government ID Numbers
                 </SectionTitle>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$3">
                     <DetailRow
                         label="SSS ID Number"
@@ -36,7 +36,7 @@ const GovernmentIDs = ({ admin }: Props) => {
                         value={admin.pagibig_id}
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

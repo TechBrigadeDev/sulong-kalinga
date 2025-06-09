@@ -20,7 +20,7 @@ const PersonalInformation = ({
             <Card.Header padded>
                 <H3>Personal Information</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <XStack gap="$4">
                         <YStack flex={1}>
@@ -92,7 +92,7 @@ const PersonalInformation = ({
                         </YStack>
                     </XStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

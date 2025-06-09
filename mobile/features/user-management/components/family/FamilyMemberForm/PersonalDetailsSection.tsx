@@ -24,7 +24,7 @@ const PersonalDetailsSection = ({
             <Card.Header padded>
                 <H3>Personal Information</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <YStack gap="$2">
                         <Label htmlFor="first_name">
@@ -162,7 +162,7 @@ const PersonalDetailsSection = ({
                         />
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

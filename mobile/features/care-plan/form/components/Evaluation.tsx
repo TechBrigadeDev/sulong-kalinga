@@ -99,7 +99,7 @@ export const Evaluation = ({
                             Evaluations
                         </Text>
                     </Card.Header>
-                    <Card.Footer padded>
+                    <YStack p="$4">
                         <Input
                             multiline
                             numberOfLines={6}
@@ -117,7 +117,7 @@ export const Evaluation = ({
                             }
                             placeholder="Enter your recommendations and evaluations here..."
                         />
-                    </Card.Footer>
+                    </YStack>
                 </Card>
             </YStack>
         </TabScroll>

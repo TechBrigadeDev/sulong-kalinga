@@ -19,7 +19,7 @@ const ContactInformation = ({ admin }: Props) => {
                     Contact Information
                 </SectionTitle>
             </Card.Header>
-            <Card.Footer p="$4">
+            <YStack>
                 <YStack gap="$3">
                     <DetailRow
                         label="Email Address"
@@ -38,7 +38,7 @@ const ContactInformation = ({ admin }: Props) => {
                         value={admin.address}
                     />
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

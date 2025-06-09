@@ -24,7 +24,7 @@ const AddressSection = ({
             <Card.Header padded>
                 <H3>Address Information</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <YStack gap="$2">
                         <Label htmlFor="street_address">
@@ -109,7 +109,7 @@ const AddressSection = ({
                         />
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

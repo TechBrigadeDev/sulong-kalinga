@@ -14,7 +14,7 @@ const CareInformation = ({
             <Card.Header padded>
                 <H3>Care Information</H3>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <YStack gap="$3">
                     <YStack>
                         <Text opacity={0.6}>
@@ -45,7 +45,7 @@ const CareInformation = ({
                         </Text>
                     </YStack>
                 </YStack>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };

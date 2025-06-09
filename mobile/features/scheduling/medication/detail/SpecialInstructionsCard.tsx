@@ -19,11 +19,11 @@ const SpecialInstructionsCard = (
                     <H4>Special Instructions</H4>
                 </XStack>
             </Card.Header>
-            <Card.Footer padded>
+            <YStack p="$4">
                 <Text>
                     {special_instructions}
                 </Text>
-            </Card.Footer>
+            </YStack>
         </Card>
     );
 };
