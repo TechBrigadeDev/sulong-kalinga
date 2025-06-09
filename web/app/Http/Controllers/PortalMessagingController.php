@@ -873,7 +873,6 @@ class PortalMessagingController extends Controller
         // Determine if user is a beneficiary or family member
         $userType = Auth::guard('beneficiary')->check() ? 'beneficiary' : 'family';
         $user = Auth::guard($userType)->user();
-        $rolePrefix = $userType;
         
         try {
             // Get conversations with the user as participant
@@ -882,94 +881,103 @@ class PortalMessagingController extends Controller
                 ->whereNull('left_at')
                 ->pluck('conversation_id');
                 
-            // Get recent messages from these conversations
-            $messages = Message::whereIn('conversation_id', $conversationIds)
-                ->with(['conversation', 'readStatuses'])
-                ->orderBy('message_timestamp', 'desc')
+            // Get conversations with their last messages
+            $conversations = Conversation::whereIn('conversation_id', $conversationIds)
+                ->with(['lastMessage', 'participants'])
+                ->orderBy('updated_at', 'desc')
                 ->limit(5)
                 ->get();
-                
+            
+            $unreadCount = 0;
             $recentMessages = [];
             
-            foreach ($messages as $message) {
-                $conversation = $message->conversation;
+            foreach ($conversations as $conversation) {
+                // Skip conversations with no messages
+                if (!$conversation->lastMessage) continue;
                 
-                // Skip system messages for preview
-                if ($message->sender_type === 'system') {
-                    continue;
-                }
+                // Get message details
+                $message = $conversation->lastMessage;
                 
-                // Determine if message is read
-                $isRead = $message->readStatuses->where('reader_id', $user->getKey())
+                // Check if unread
+                $isRead = $message->readStatuses()
+                    ->where('reader_id', $user->getKey())
                     ->where('reader_type', $userType)
-                    ->isNotEmpty();
+                    ->exists();
                     
-                // Get conversation name
-                $conversationName = 'Unknown';
+                if (!$isRead && $message->sender_id != $user->getKey() && $message->sender_type != $userType) {
+                    $unreadCount++;
+                }
                 
-                if ($conversation->is_group_chat) {
-                    $conversationName = $conversation->name;
-                } else {
+                // Get sender info
+                $senderName = '';
+                if ($message->sender_type === 'cose_staff') {
+                    $staff = User::find($message->sender_id);
+                    $senderName = $staff ? $staff->first_name . ' ' . $staff->last_name : 'Staff';
+                } elseif ($message->sender_type === 'beneficiary') {
+                    $beneficiary = Beneficiary::find($message->sender_id);
+                    $senderName = $beneficiary ? $beneficiary->first_name . ' ' . $beneficiary->last_name : 'Beneficiary';
+                } elseif ($message->sender_type === 'family_member') {
+                    $familyMember = FamilyMember::find($message->sender_id);
+                    $senderName = $familyMember ? $familyMember->first_name . ' ' . $familyMember->last_name : 'Family Member';
+                }
+                
+                // Get other participant name for non-group conversations
+                $otherParticipantName = '';
+                if (!$conversation->is_group_chat) {
                     // Find the other participant
-                    $otherParticipant = ConversationParticipant::where('conversation_id', $conversation->conversation_id)
-                        ->where(function($query) use ($user, $userType) {
-                            $query->where('participant_id', '!=', $user->getKey())
-                                ->orWhere('participant_type', '!=', $userType);
-                        })
-                        ->first();
-                        
-                    if ($otherParticipant) {
-                        $conversationName = $this->getParticipantName($otherParticipant);
+                    foreach ($conversation->participants as $participant) {
+                        if (!($participant->participant_id == $user->getKey() && 
+                            ($participant->participant_type == $userType ||
+                            ($participant->participant_type == 'family_member' && $userType == 'family')))) {
+                            
+                            // Get name based on participant type
+                            if ($participant->participant_type === 'cose_staff') {
+                                $staff = User::find($participant->participant_id);
+                                $otherParticipantName = $staff ? $staff->first_name . ' ' . $staff->last_name : 'Staff';
+                            } elseif ($participant->participant_type === 'beneficiary') {
+                                $beneficiary = Beneficiary::find($participant->participant_id);
+                                $otherParticipantName = $beneficiary ? $beneficiary->first_name . ' ' . $beneficiary->last_name : 'Beneficiary';
+                            } elseif ($participant->participant_type === 'family_member') {
+                                $familyMember = FamilyMember::find($participant->participant_id);
+                                $otherParticipantName = $familyMember ? $familyMember->first_name . ' ' . $familyMember->last_name : 'Family Member';
+                            }
+                            break;
+                        }
                     }
                 }
                 
-                // Format message preview
-                $messagePreview = '';
+                // Format content
+                $content = $message->is_unsent ? 'This message was unsent' : $message->content;
                 
-                if ($message->is_unsent) {
-                    $messagePreview = 'This message was unsent';
-                } else {
-                    $senderPrefix = '';
-                    
-                    if ($message->sender_id == $user->getKey() && $message->sender_type == $userType) {
-                        $senderPrefix = 'You: ';
-                    } elseif ($conversation->is_group_chat) {
-                        $senderName = $this->getSenderName($message);
-                        $senderPrefix = $senderName ? $senderName . ': ' : '';
-                    }
-                    
-                    $messagePreview = $senderPrefix . Str::limit($message->content, 30);
-                }
-                
+                // Add to results with correctly named fields matching the JS expectations
                 $recentMessages[] = [
                     'conversation_id' => $conversation->conversation_id,
-                    'name' => $conversationName,
-                    'message' => $messagePreview,
-                    'timestamp' => $message->message_timestamp->diffForHumans(),
-                    'is_read' => $isRead,
+                    'conversation_name' => $conversation->is_group_chat ? $conversation->name : $otherParticipantName,
+                    'sender_name' => $senderName,
+                    'content' => $content,
+                    'is_unsent' => $message->is_unsent,
+                    'time_ago' => $message->message_timestamp->diffForHumans(),
+                    'unread' => !$isRead && $message->sender_id != $user->getKey() && $message->sender_type != $userType,
                     'is_group' => $conversation->is_group_chat
                 ];
-                
-                // Limit to 5 unique conversations
-                if (count($recentMessages) >= 5) {
-                    break;
-                }
             }
             
             return response()->json([
                 'success' => true,
-                'messages' => $recentMessages
+                'messages' => $recentMessages,
+                'unread_count' => $unreadCount
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Error getting portal recent messages: ' . $e->getMessage(), [
+            Log::error('Error getting recent messages: ' . $e->getMessage(), [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
                 'success' => false,
-                'messages' => []
+                'messages' => [],
+                'unread_count' => 0
             ]);
         }
     }

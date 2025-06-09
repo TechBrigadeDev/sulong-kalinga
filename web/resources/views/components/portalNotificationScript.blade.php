@@ -71,23 +71,73 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show loading indicator
         container.innerHTML = `
-            <li class="text-center py-3">
+            <div class="dropdown-item text-center py-3">
                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-            </li>
+            </div>
         `;
         
         fetch('{{ $messageRecentUrl }}')
             .then(response => response.json())
             .then(data => {
-                fixMessagePreviews();
+                // Clear the container
+                container.innerHTML = '';
+                
+                // Update the unread count badge
+                updateUnreadMessageCount(data.unread_count || 0);
+                
+                // Check if we have any messages
+                if (data.success && data.messages && data.messages.length > 0) {
+                    // Add each message
+                    data.messages.forEach(message => {
+                        // Create container element
+                        const messageItem = document.createElement('div');
+                        messageItem.className = `dropdown-item message-preview-item ${message.unread ? 'unread' : ''}`;
+                        messageItem.onclick = function() {
+                            window.location.href = `{{ $messagingUrl }}?conversation=${message.conversation_id}`;
+                        };
+                        
+                        // Format the message preview - use conversation_name for display
+                        const displayName = message.conversation_name || 'Unknown';
+                        
+                        // Build the HTML content
+                        messageItem.innerHTML = `
+                            <div class="d-flex align-items-start py-2">
+                                <div class="flex-shrink-0 me-2">
+                                    <img src="/images/defaultProfile.png" 
+                                        class="rounded-circle" width="40" height="40" alt="User">
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">${displayName}</span>
+                                        <small class="text-muted ms-2">${message.time_ago || '-'}</small>
+                                    </div>
+                                    <div class="text-truncate ${message.unread ? 'fw-semibold' : 'text-muted'}" style="max-width: 250px;">
+                                        ${message.is_unsent ? 'This message was unsent' : (message.content || 'No message')}
+                                    </div>
+                                </div>
+                                ${message.unread ? '<div class="unread-message-indicator bg-primary rounded-circle ms-2" style="width: 8px; height: 8px;"></div>' : ''}
+                            </div>
+                        `;
+                        
+                        container.appendChild(messageItem);
+                    });
+                } else {
+                    // Show no messages message
+                    container.innerHTML = `
+                        <div class="dropdown-item text-center py-3">
+                            <span class="text-muted">No messages</span>
+                        </div>
+                    `;
+                }
             })
             .catch(error => {
+                console.error('Error fetching recent messages:', error);
                 container.innerHTML = `
-                    <li class="text-center py-3">
-                        <small class="text-muted">Could not load messages</small>
-                    </li>
+                    <div class="dropdown-item text-center py-3">
+                        <span class="text-danger">Failed to load messages</span>
+                    </div>
                 `;
             });
     }
