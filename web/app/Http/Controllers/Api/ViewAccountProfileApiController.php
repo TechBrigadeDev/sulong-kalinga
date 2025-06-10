@@ -146,6 +146,7 @@ class ViewAccountProfileApiController extends Controller
                     ? $this->uploadService->getTemporaryPrivateUrl($user->photo, 30)
                     : null,
                 'username' => $unifiedUser->username,
+                'email' => $user->email,
             ];
         }
 
