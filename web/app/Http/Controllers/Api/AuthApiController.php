@@ -197,21 +197,21 @@ class AuthApiController extends Controller
             $responseUser['photo'] = $photo;
             $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
             $responseUser['username'] = $user->username;
-            $familyMembers = FamilyMember::where('related_beneficiary_id', $user->beneficiary_id)
-                ->get()
-                ->map(function ($fm) {
-                    return [
-                        'id' => $fm->family_member_id,
-                        'first_name' => $fm->first_name,
-                        'last_name' => $fm->last_name,
-                        'mobile' => $fm->mobile,
-                        'photo' => $fm->photo,
-                        'photo_url' => $fm->photo
-                            ? app(UploadService::class)->getTemporaryPrivateUrl($fm->photo, 30)
-                            : null,
-                    ];
-                })
-                ->values();
+            // $familyMembers = FamilyMember::where('related_beneficiary_id', $user->beneficiary_id)
+            //     ->get()
+            //     ->map(function ($fm) {
+            //         return [
+            //             'id' => $fm->family_member_id,
+            //             'first_name' => $fm->first_name,
+            //             'last_name' => $fm->last_name,
+            //             'mobile' => $fm->mobile,
+            //             'photo' => $fm->photo,
+            //             'photo_url' => $fm->photo
+            //                 ? app(UploadService::class)->getTemporaryPrivateUrl($fm->photo, 30)
+            //                 : null,
+            //         ];
+            //     })
+            //     ->values();
             $responseUser['family_members'] = $familyMembers;
         } elseif ($role === 'family_member') {
             $familyMember = FamilyMember::find($user->family_member_id);
@@ -219,7 +219,7 @@ class AuthApiController extends Controller
             $responseUser['photo'] = $photo;
             $responseUser['photo_url'] = $photo ? $this->uploadService->getTemporaryPrivateUrl($photo, 30) : null;
             $responseUser['email'] = $familyMember?->email;
-            $responseUser['related_beneficiary_id'] = $familyMember?->related_beneficiary_id;
+            // $responseUser['related_beneficiary_id'] = $familyMember?->related_beneficiary_id;
         } elseif ($role === 'admin') {
             $admin = User::find($user->cose_user_id);
             $photo = $admin?->photo;
