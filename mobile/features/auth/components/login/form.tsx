@@ -2,11 +2,16 @@ import { useRouter } from "expo-router";
 import { useLogin } from "features/auth/auth.hook";
 import { useState } from "react";
 import { StyleSheet } from "react-native";
-import { Button, Input, View } from "tamagui";
+import {
+    Button,
+    Input,
+    Spinner,
+    View,
+} from "tamagui";
 
 const LoginForm = () => {
     const router = useRouter();
-    const { login } = useLogin();
+    const { login, isPending } = useLogin();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -33,8 +38,15 @@ const LoginForm = () => {
                 onChangeText={setPassword}
                 style={styles.input}
             />
-            <Button onPress={onLogin}>
-                Login
+            <Button
+                onPress={onLogin}
+                disabled={isPending}
+            >
+                {isPending ? (
+                    <Spinner size="small" />
+                ) : (
+                    "Login"
+                )}
             </Button>
         </View>
     );

@@ -5,11 +5,13 @@ import {
 } from "@react-navigation/native";
 import { TamaguiProvider } from "@tamagui/core";
 import { PortalProvider } from "@tamagui/portal";
+import { ToastProvider } from "@tamagui/toast";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { queryClient } from "~/common/query";
 import config from "~/tamagui.config";
 
+import { GlobalToast } from "./Toast";
 import { useColorScheme } from "./useColorScheme.web";
 
 const Providers = ({
@@ -21,19 +23,30 @@ const Providers = ({
     return (
         <TamaguiProvider config={config}>
             <PortalProvider shouldAddRootHost>
-                <QueryClientProvider
-                    client={queryClient}
+                <ToastProvider
+                    duration={3000}
+                    swipeDirection="horizontal"
+                    native
+                    burntOptions={{
+                        from: "top",
+                    }}
                 >
-                    <ThemeProvider
-                        value={
-                            colorScheme === "dark"
-                                ? DarkTheme
-                                : DefaultTheme
-                        }
+                    <QueryClientProvider
+                        client={queryClient}
                     >
-                        {children}
-                    </ThemeProvider>
-                </QueryClientProvider>
+                        <ThemeProvider
+                            value={
+                                colorScheme ===
+                                "dark"
+                                    ? DarkTheme
+                                    : DefaultTheme
+                            }
+                        >
+                            {children}
+                            <GlobalToast />
+                        </ThemeProvider>
+                    </QueryClientProvider>
+                </ToastProvider>
             </PortalProvider>
         </TamaguiProvider>
     );

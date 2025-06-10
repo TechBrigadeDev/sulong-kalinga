@@ -1,4 +1,6 @@
+import { useToastController } from "@tamagui/toast";
 import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 
 import { QK } from "~/common/query";
@@ -8,6 +10,7 @@ import { authStore } from "./auth.store";
 
 export const useLogin = () => {
     const { setToken } = authStore();
+    const toast = useToastController();
 
     const { mutateAsync: login, isPending } =
         useMutation({
@@ -26,11 +29,24 @@ export const useLogin = () => {
             onSuccess: (data) => {
                 setToken(data.token);
             },
-            onError: (error) => {
-                console.error(
-                    "Login failed",
-                    error,
-                );
+            throwOnError: (error) => {
+                if (error instanceof AxiosError) {
+                    switch (
+                        error.response?.status
+                    ) {
+                        case 401:
+                            toast.show(
+                                error.response
+                                    ?.data
+                                    ?.message ||
+                                    "Invalid credentials",
+                            );
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                return false;
             },
         });
 

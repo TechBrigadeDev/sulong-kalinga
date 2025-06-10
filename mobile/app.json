@@ -52,6 +52,14 @@
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
       ]
     ],
     "experiments": {
