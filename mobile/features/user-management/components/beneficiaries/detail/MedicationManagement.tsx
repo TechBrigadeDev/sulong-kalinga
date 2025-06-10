@@ -58,9 +58,7 @@ const MedicationManagement = ({
                                         {med.name}
                                     </Text>
                                 </Card.Header>
-                                <YStack
-                                    padded
-                                >
+                                <YStack padded>
                                     <YStack gap="$2">
                                         <XStack gap="$4">
                                             <YStack

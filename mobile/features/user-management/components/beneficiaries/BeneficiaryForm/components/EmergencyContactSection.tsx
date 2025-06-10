@@ -26,104 +26,89 @@ export const EmergencyContactSection = ({
             <Card.Header padded>
                 <H3>Emergency Contact</H3>
             </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$4">
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text>
-                                Contact Person
-                                Name *
-                            </Text>
-                            <Input
-                                value={
-                                    data.emergency_contact_name
-                                }
-                                onChangeText={(
-                                    value,
-                                ) =>
-                                    onChange(
-                                        "emergency_contact_name",
-                                        value,
-                                    )
-                                }
-                                placeholder="Enter contact name"
-                                autoCapitalize="words"
-                            />
-                        </YStack>
-                        <YStack flex={1}>
-                            <Text>
-                                Relationship *
-                            </Text>
-                            <Input
-                                value={
-                                    data.emergency_contact_relation
-                                }
-                                onChangeText={(
-                                    value,
-                                ) =>
-                                    onChange(
-                                        "emergency_contact_relation",
-                                        value,
-                                    )
-                                }
-                                placeholder="Enter relationship"
-                                autoCapitalize="words"
-                            />
-                        </YStack>
-                    </XStack>
-
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text>
-                                Mobile Number *
-                            </Text>
-                            <XStack
-                                gap="$2"
-                                alignItems="center"
-                            >
-                                <Input
-                                    flex={1}
-                                    value={data.emergency_contact_mobile?.replace(
-                                        "+63",
-                                        "",
-                                    )}
-                                    onChangeText={(
-                                        value,
-                                    ) =>
-                                        onChange(
-                                            "emergency_contact_mobile",
-                                            `+63${value}`,
-                                        )
-                                    }
-                                    placeholder="Enter mobile number"
-                                    keyboardType="phone-pad"
-                                />
-                            </XStack>
-                        </YStack>
-                    </XStack>
-
-                    <YStack>
-                        <Text>
-                            Emergency Procedure
+            <YStack p="$4" gap="$4">
+                <XStack gap="$4">
+                    <YStack flex={1} gap="$2">
+                        <Text fontWeight="600">
+                            Contact Person Name *
                         </Text>
                         <Input
                             value={
-                                data.emergency_procedure
+                                data.emergency_contact_name
                             }
                             onChangeText={(
                                 value,
                             ) =>
                                 onChange(
-                                    "emergency_procedure",
+                                    "emergency_contact_name",
                                     value,
                                 )
                             }
-                            placeholder="Enter emergency procedure"
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
+                            placeholder="Enter contact name"
+                            autoCapitalize="words"
                         />
                     </YStack>
+                    <YStack flex={1} gap="$2">
+                        <Text fontWeight="600">
+                            Relationship *
+                        </Text>
+                        <Input
+                            value={
+                                data.emergency_contact_relation
+                            }
+                            onChangeText={(
+                                value,
+                            ) =>
+                                onChange(
+                                    "emergency_contact_relation",
+                                    value,
+                                )
+                            }
+                            placeholder="Enter relationship"
+                            autoCapitalize="words"
+                        />
+                    </YStack>
+                </XStack>
+
+                <YStack gap="$2">
+                    <Text fontWeight="600">
+                        Mobile Number *
+                    </Text>
+                    <Input
+                        value={data.emergency_contact_mobile?.replace(
+                            "+63",
+                            "",
+                        )}
+                        onChangeText={(value) =>
+                            onChange(
+                                "emergency_contact_mobile",
+                                `+63${value}`,
+                            )
+                        }
+                        placeholder="Enter mobile number"
+                        keyboardType="phone-pad"
+                    />
+                </YStack>
+
+                <YStack gap="$2">
+                    <Text fontWeight="600">
+                        Emergency Procedure
+                    </Text>
+                    <Input
+                        value={
+                            data.emergency_procedure
+                        }
+                        onChangeText={(value) =>
+                            onChange(
+                                "emergency_procedure",
+                                value,
+                            )
+                        }
+                        placeholder="Enter emergency procedure"
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                    />
                 </YStack>
             </YStack>
         </Card>

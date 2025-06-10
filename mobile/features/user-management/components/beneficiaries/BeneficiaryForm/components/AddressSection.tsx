@@ -2,8 +2,8 @@ import {
     Card,
     H3,
     Input,
+    Label,
     Select,
-    Text,
     XStack,
     YStack,
 } from "tamagui";
@@ -38,147 +38,142 @@ export const AddressSection = ({
             <Card.Header padded>
                 <H3>Current Address</H3>
             </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$4">
-                    <YStack>
-                        <Text>
-                            House No., Street,
-                            Subdivision, Barangay,
-                            City, Province *
-                        </Text>
-                        <Input
-                            value={
-                                data.street_address
-                            }
-                            onChangeText={(
+            <YStack p="$4" gap="$4">
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        House No., Street,
+                        Subdivision, Barangay,
+                        City, Province *
+                    </Label>
+                    <Input
+                        size="$4"
+                        value={
+                            data.street_address
+                        }
+                        onChangeText={(value) =>
+                            onChange(
+                                "street_address",
+                                value,
+                            )
+                        }
+                        placeholder="Enter complete current address"
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                    />
+                </YStack>
+
+                <XStack gap="$4">
+                    <YStack flex={1} gap="$2">
+                        <Label fontWeight="600">
+                            Municipality *
+                        </Label>
+                        <Select
+                            value={data.municipality_id?.toString()}
+                            onValueChange={(
                                 value,
                             ) =>
                                 onChange(
-                                    "street_address",
-                                    value,
+                                    "municipality_id",
+                                    parseInt(
+                                        value,
+                                    ),
                                 )
                             }
-                            placeholder="Enter complete current address"
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                        />
+                        >
+                            <Select.Trigger>
+                                <Select.Value placeholder="Select municipality" />
+                            </Select.Trigger>
+                            <Select.Content>
+                                <Select.ScrollUpButton />
+                                <Select.Viewport>
+                                    <Select.Group>
+                                        {MUNICIPALITY_OPTIONS.map(
+                                            (
+                                                option,
+                                                i,
+                                            ) => (
+                                                <Select.Item
+                                                    index={
+                                                        i
+                                                    }
+                                                    key={
+                                                        option.value
+                                                    }
+                                                    value={
+                                                        option.value
+                                                    }
+                                                >
+                                                    <Select.ItemText>
+                                                        {
+                                                            option.label
+                                                        }
+                                                    </Select.ItemText>
+                                                </Select.Item>
+                                            ),
+                                        )}
+                                    </Select.Group>
+                                </Select.Viewport>
+                                <Select.ScrollDownButton />
+                            </Select.Content>
+                        </Select>
                     </YStack>
 
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text>
-                                Municipality *
-                            </Text>
-                            <Select
-                                value={data.municipality_id?.toString()}
-                                onValueChange={(
-                                    value,
-                                ) =>
-                                    onChange(
-                                        "municipality_id",
-                                        parseInt(
-                                            value,
-                                        ),
-                                    )
-                                }
-                            >
-                                <Select.Trigger>
-                                    <Select.Value placeholder="Select municipality" />
-                                </Select.Trigger>
-
-                                <Select.Content>
-                                    <Select.ScrollUpButton />
-                                    <Select.Viewport>
-                                        <Select.Group>
-                                            {MUNICIPALITY_OPTIONS.map(
-                                                (
-                                                    option,
-                                                    i,
-                                                ) => (
-                                                    <Select.Item
-                                                        index={
-                                                            i
+                    <YStack flex={1} gap="$2">
+                        <Label fontWeight="600">
+                            Barangay *
+                        </Label>
+                        <Select
+                            value={data.barangay_id?.toString()}
+                            onValueChange={(
+                                value,
+                            ) =>
+                                onChange(
+                                    "barangay_id",
+                                    parseInt(
+                                        value,
+                                    ),
+                                )
+                            }
+                        >
+                            <Select.Trigger>
+                                <Select.Value placeholder="Select barangay" />
+                            </Select.Trigger>
+                            <Select.Content>
+                                <Select.ScrollUpButton />
+                                <Select.Viewport>
+                                    <Select.Group>
+                                        {BARANGAY_OPTIONS.map(
+                                            (
+                                                option,
+                                                i,
+                                            ) => (
+                                                <Select.Item
+                                                    index={
+                                                        i
+                                                    }
+                                                    key={
+                                                        option.value
+                                                    }
+                                                    value={
+                                                        option.value
+                                                    }
+                                                >
+                                                    <Select.ItemText>
+                                                        {
+                                                            option.label
                                                         }
-                                                        key={
-                                                            option.value
-                                                        }
-                                                        value={
-                                                            option.value
-                                                        }
-                                                    >
-                                                        <Select.ItemText>
-                                                            {
-                                                                option.label
-                                                            }
-                                                        </Select.ItemText>
-                                                    </Select.Item>
-                                                ),
-                                            )}
-                                        </Select.Group>
-                                    </Select.Viewport>
-                                    <Select.ScrollDownButton />
-                                </Select.Content>
-                            </Select>
-                        </YStack>
-
-                        <YStack flex={1}>
-                            <Text>
-                                Barangay *
-                            </Text>
-                            <Select
-                                value={data.barangay_id?.toString()}
-                                onValueChange={(
-                                    value,
-                                ) =>
-                                    onChange(
-                                        "barangay_id",
-                                        parseInt(
-                                            value,
-                                        ),
-                                    )
-                                }
-                            >
-                                <Select.Trigger>
-                                    <Select.Value placeholder="Select barangay" />
-                                </Select.Trigger>
-
-                                <Select.Content>
-                                    <Select.ScrollUpButton />
-                                    <Select.Viewport>
-                                        <Select.Group>
-                                            {BARANGAY_OPTIONS.map(
-                                                (
-                                                    option,
-                                                    i,
-                                                ) => (
-                                                    <Select.Item
-                                                        index={
-                                                            i
-                                                        }
-                                                        key={
-                                                            option.value
-                                                        }
-                                                        value={
-                                                            option.value
-                                                        }
-                                                    >
-                                                        <Select.ItemText>
-                                                            {
-                                                                option.label
-                                                            }
-                                                        </Select.ItemText>
-                                                    </Select.Item>
-                                                ),
-                                            )}
-                                        </Select.Group>
-                                    </Select.Viewport>
-                                    <Select.ScrollDownButton />
-                                </Select.Content>
-                            </Select>
-                        </YStack>
-                    </XStack>
-                </YStack>
+                                                    </Select.ItemText>
+                                                </Select.Item>
+                                            ),
+                                        )}
+                                    </Select.Group>
+                                </Select.Viewport>
+                                <Select.ScrollDownButton />
+                            </Select.Content>
+                        </Select>
+                    </YStack>
+                </XStack>
             </YStack>
         </Card>
     );

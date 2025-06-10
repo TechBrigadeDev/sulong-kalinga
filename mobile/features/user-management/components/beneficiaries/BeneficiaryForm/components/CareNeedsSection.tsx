@@ -2,7 +2,7 @@ import {
     Card,
     H3,
     Input,
-    Text,
+    Label,
     YStack,
 } from "tamagui";
 
@@ -73,77 +73,68 @@ export const CareNeedsSection = ({
             <Card.Header padded>
                 <H3>Care Needs</H3>
             </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$4">
-                    {CARE_NEEDS.map(
-                        (need, index) => (
-                            <YStack
-                                key={index}
-                                gap="$2"
-                            >
-                                <Text
-                                    size="$5"
-                                    fontWeight="bold"
-                                >
-                                    {need.label}
-                                </Text>
-                                <YStack gap="$2">
-                                    <Text>
-                                        Frequency
-                                    </Text>
-                                    <Input
-                                        multiline
-                                        numberOfLines={
-                                            2
-                                        }
-                                        textAlignVertical="top"
-                                        value={
-                                            data[
-                                                need.frequencyField as keyof IBeneficiary
-                                            ] as string
-                                        }
-                                        onChangeText={(
-                                            value,
-                                        ) =>
-                                            onChange(
-                                                need.frequencyField as keyof IBeneficiary,
-                                                value,
-                                            )
-                                        }
-                                        placeholder="Enter frequency"
-                                    />
-                                </YStack>
-                                <YStack gap="$2">
-                                    <Text>
-                                        Assistance
-                                        Required
-                                    </Text>
-                                    <Input
-                                        multiline
-                                        numberOfLines={
-                                            2
-                                        }
-                                        textAlignVertical="top"
-                                        value={
-                                            data[
-                                                need.assistanceField as keyof IBeneficiary
-                                            ] as string
-                                        }
-                                        onChangeText={(
-                                            value,
-                                        ) =>
-                                            onChange(
-                                                need.assistanceField as keyof IBeneficiary,
-                                                value,
-                                            )
-                                        }
-                                        placeholder="Enter assistance required"
-                                    />
-                                </YStack>
-                            </YStack>
-                        ),
-                    )}
-                </YStack>
+            <YStack p="$4" gap="$4">
+                {CARE_NEEDS.map((need, index) => (
+                    <YStack key={index} gap="$3">
+                        <Label
+                            fontSize="$5"
+                            fontWeight="600"
+                        >
+                            {need.label}
+                        </Label>
+                        <YStack gap="$2">
+                            <Label fontWeight="500">
+                                Frequency
+                            </Label>
+                            <Input
+                                size="$4"
+                                multiline
+                                numberOfLines={2}
+                                textAlignVertical="top"
+                                value={
+                                    data[
+                                        need.frequencyField as keyof IBeneficiary
+                                    ] as string
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        need.frequencyField as keyof IBeneficiary,
+                                        value,
+                                    )
+                                }
+                                placeholder="Enter frequency"
+                            />
+                        </YStack>
+                        <YStack gap="$2">
+                            <Label fontWeight="500">
+                                Assistance
+                                Required
+                            </Label>
+                            <Input
+                                size="$4"
+                                multiline
+                                numberOfLines={2}
+                                textAlignVertical="top"
+                                value={
+                                    data[
+                                        need.assistanceField as keyof IBeneficiary
+                                    ] as string
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    onChange(
+                                        need.assistanceField as keyof IBeneficiary,
+                                        value,
+                                    )
+                                }
+                                placeholder="Enter assistance required"
+                            />
+                        </YStack>
+                    </YStack>
+                ))}
             </YStack>
         </Card>
     );

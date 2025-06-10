@@ -2,7 +2,7 @@ import {
     Card,
     H3,
     Input,
-    Text,
+    Label,
     YStack,
 } from "tamagui";
 
@@ -97,8 +97,11 @@ export const CognitiveFunctionSection = ({
         <YStack gap="$4">
             {fields.map((field, index) => (
                 <YStack key={index} gap="$2">
-                    <Text>{field.label}</Text>
+                    <Label fontWeight="600">
+                        {field.label}
+                    </Label>
                     <Input
+                        size="$4"
                         value={
                             data[
                                 field.field
@@ -128,7 +131,7 @@ export const CognitiveFunctionSection = ({
                 <Card.Header padded>
                     <H3>Mobility</H3>
                 </Card.Header>
-                <YStack p="$4">
+                <YStack p="$4" gap="$4">
                     {renderFields(
                         MOBILITY_FIELDS,
                     )}
@@ -139,7 +142,7 @@ export const CognitiveFunctionSection = ({
                 <Card.Header padded>
                     <H3>Cognitive Function</H3>
                 </Card.Header>
-                <YStack p="$4">
+                <YStack p="$4" gap="$4">
                     {renderFields(
                         COGNITIVE_FIELDS,
                     )}
@@ -150,7 +153,7 @@ export const CognitiveFunctionSection = ({
                 <Card.Header padded>
                     <H3>Emotional Well-being</H3>
                 </Card.Header>
-                <YStack p="$4">
+                <YStack p="$4" gap="$4">
                     {renderFields(
                         EMOTIONAL_FIELDS,
                     )}

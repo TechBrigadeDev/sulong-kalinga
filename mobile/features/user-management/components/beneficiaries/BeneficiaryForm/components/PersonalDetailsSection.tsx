@@ -41,14 +41,11 @@ export const PersonalDetailsSection = ({
     );
 
     return (
-        <Card
-            bordered
-            backgroundColor="$background"
-        >
-            <Card.Header>
+        <Card elevate>
+            <Card.Header padded>
                 <H3>Personal Details</H3>
             </Card.Header>
-            <YStack>
+            <YStack p="$4">
                 <YStack gap="$4">
                     <XStack gap="$4">
                         <YStack flex={1} gap="$2">

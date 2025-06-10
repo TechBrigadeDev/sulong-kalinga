@@ -25,111 +25,113 @@ export const MedicalHistorySection = ({
             <Card.Header padded>
                 <H3>Medical History</H3>
             </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$4">
-                    <YStack>
-                        <Text>
-                            Medical Conditions
-                        </Text>
-                        <Input
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            value={
-                                data?.medical_conditions
-                            }
-                            onChangeText={(
+            <YStack p="$4" gap="$4">
+                <YStack gap="$2">
+                    <Text fontWeight="600">
+                        Medical Conditions
+                    </Text>
+                    <Input
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                        value={
+                            data?.medical_conditions
+                        }
+                        onChangeText={(value) =>
+                            onChange(
+                                "medical_conditions",
                                 value,
-                            ) =>
-                                onChange(
-                                    "medical_conditions",
-                                    value,
-                                )
-                            }
-                            placeholder="List all medical conditions"
-                        />
-                        <Text opacity={0.6}>
-                            Separate multiple
-                            conditions with commas
-                        </Text>
-                    </YStack>
+                            )
+                        }
+                        placeholder="List all medical conditions"
+                    />
+                    <Text
+                        opacity={0.6}
+                        fontSize="$2"
+                    >
+                        Separate multiple
+                        conditions with commas
+                    </Text>
+                </YStack>
 
-                    <YStack>
-                        <Text>Medications</Text>
-                        <Input
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            value={
-                                data?.medications
-                            }
-                            onChangeText={(
+                <YStack gap="$2">
+                    <Text fontWeight="600">
+                        Medications
+                    </Text>
+                    <Input
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                        value={data?.medications}
+                        onChangeText={(value) =>
+                            onChange(
+                                "medications",
                                 value,
-                            ) =>
-                                onChange(
-                                    "medications",
-                                    value,
-                                )
-                            }
-                            placeholder="List all medications"
-                        />
-                        <Text opacity={0.6}>
-                            Separate multiple
-                            medications with
-                            commas
-                        </Text>
-                    </YStack>
+                            )
+                        }
+                        placeholder="List all medications"
+                    />
+                    <Text
+                        opacity={0.6}
+                        fontSize="$2"
+                    >
+                        Separate multiple
+                        medications with commas
+                    </Text>
+                </YStack>
 
-                    <YStack>
-                        <Text>Allergies</Text>
-                        <Input
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            value={
-                                data?.allergies
-                            }
-                            onChangeText={(
+                <YStack gap="$2">
+                    <Text fontWeight="600">
+                        Allergies
+                    </Text>
+                    <Input
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                        value={data?.allergies}
+                        onChangeText={(value) =>
+                            onChange(
+                                "allergies",
                                 value,
-                            ) =>
-                                onChange(
-                                    "allergies",
-                                    value,
-                                )
-                            }
-                            placeholder="List all allergies"
-                        />
-                        <Text opacity={0.6}>
-                            Separate multiple
-                            allergies with commas
-                        </Text>
-                    </YStack>
+                            )
+                        }
+                        placeholder="List all allergies"
+                    />
+                    <Text
+                        opacity={0.6}
+                        fontSize="$2"
+                    >
+                        Separate multiple
+                        allergies with commas
+                    </Text>
+                </YStack>
 
-                    <YStack>
-                        <Text>Immunizations</Text>
-                        <Input
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            value={
-                                data?.immunizations
-                            }
-                            onChangeText={(
+                <YStack gap="$2">
+                    <Text fontWeight="600">
+                        Immunizations
+                    </Text>
+                    <Input
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                        value={
+                            data?.immunizations
+                        }
+                        onChangeText={(value) =>
+                            onChange(
+                                "immunizations",
                                 value,
-                            ) =>
-                                onChange(
-                                    "immunizations",
-                                    value,
-                                )
-                            }
-                            placeholder="List all immunizations"
-                        />
-                        <Text opacity={0.6}>
-                            Separate multiple
-                            immunizations with
-                            commas
-                        </Text>
-                    </YStack>
+                            )
+                        }
+                        placeholder="List all immunizations"
+                    />
+                    <Text
+                        opacity={0.6}
+                        fontSize="$2"
+                    >
+                        Separate multiple
+                        immunizations with commas
+                    </Text>
                 </YStack>
             </YStack>
         </Card>

@@ -5,6 +5,7 @@ import {
     Card,
     H3,
     Input,
+    Label,
     Text,
     XStack,
     YStack,
@@ -86,182 +87,192 @@ export const MedicationSection = ({
             <Card.Header padded>
                 <H3>Medication Management</H3>
             </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$4">
-                    {medications.map(
-                        (med, index) => (
-                            <Card
-                                key={index}
-                                bordered
-                            >
+            <YStack p="$4" gap="$4">
+                {medications.map((med, index) => (
+                    <Card key={index} bordered>
+                        <YStack p="$4" gap="$2">
+                            <XStack gap="$4">
                                 <YStack
-                                    p="$4"
                                     gap="$2"
                                     flex={1}
                                 >
-                                    <XStack
-                                        space
-                                        justifyContent="space-between"
-                                        alignItems="center"
-                                    >
-                                        <YStack
-                                            gap="$2"
-                                            flex={
-                                                1
+                                    <Text fontWeight="600">
+                                        {med.name}
+                                    </Text>
+                                    <Text>
+                                        Dosage:{" "}
+                                        {
+                                            med.dosage
+                                        }
+                                    </Text>
+                                    <Text>
+                                        Frequency:{" "}
+                                        {
+                                            med.frequency
+                                        }
+                                    </Text>
+                                    {med.instructions && (
+                                        <Text>
+                                            Instructions:{" "}
+                                            {
+                                                med.instructions
                                             }
-                                        >
-                                            <Text fontWeight="bold">
-                                                {
-                                                    med.name
-                                                }
-                                            </Text>
-                                            <Text>
-                                                Dosage:{" "}
-                                                {
-                                                    med.dosage
-                                                }
-                                            </Text>
-                                            <Text>
-                                                Frequency:{" "}
-                                                {
-                                                    med.frequency
-                                                }
-                                            </Text>
-                                            {med.instructions && (
-                                                <Text>
-                                                    Instructions:{" "}
-                                                    {
-                                                        med.instructions
-                                                    }
-                                                </Text>
-                                            )}
-                                        </YStack>
-                                        <Button
-                                            theme="red"
-                                            size="$3"
-                                            onPress={() =>
-                                                handleRemoveMedication(
-                                                    index,
-                                                )
-                                            }
-                                        >
-                                            <Ionicons
-                                                name="trash-outline"
-                                                size={
-                                                    20
-                                                }
-                                                color="white"
-                                            />
-                                        </Button>
-                                    </XStack>
+                                        </Text>
+                                    )}
                                 </YStack>
-                            </Card>
-                        ),
-                    )}
-
-                    <Card bordered theme="gray">
-                        <YStack p="$4">
-                            <YStack gap="$4">
-                                <Input
-                                    placeholder="Medication Name"
-                                    value={
-                                        currentMedication.name
-                                    }
-                                    onChangeText={(
-                                        value,
-                                    ) =>
-                                        setCurrentMedication(
-                                            (
-                                                prev,
-                                            ) => ({
-                                                ...prev,
-                                                name: value,
-                                            }),
-                                        )
-                                    }
-                                />
-                                <Input
-                                    placeholder="Dosage"
-                                    value={
-                                        currentMedication.dosage
-                                    }
-                                    onChangeText={(
-                                        value,
-                                    ) =>
-                                        setCurrentMedication(
-                                            (
-                                                prev,
-                                            ) => ({
-                                                ...prev,
-                                                dosage: value,
-                                            }),
-                                        )
-                                    }
-                                />
-                                <Input
-                                    placeholder="Frequency"
-                                    value={
-                                        currentMedication.frequency
-                                    }
-                                    onChangeText={(
-                                        value,
-                                    ) =>
-                                        setCurrentMedication(
-                                            (
-                                                prev,
-                                            ) => ({
-                                                ...prev,
-                                                frequency:
-                                                    value,
-                                            }),
-                                        )
-                                    }
-                                />
-                                <Input
-                                    placeholder="Administration Instructions"
-                                    value={
-                                        currentMedication.instructions
-                                    }
-                                    onChangeText={(
-                                        value,
-                                    ) =>
-                                        setCurrentMedication(
-                                            (
-                                                prev,
-                                            ) => ({
-                                                ...prev,
-                                                instructions:
-                                                    value,
-                                            }),
-                                        )
-                                    }
-                                    multiline
-                                    numberOfLines={
-                                        2
-                                    }
-                                    textAlignVertical="top"
-                                />
                                 <Button
-                                    theme="blue"
-                                    onPress={
-                                        handleAddMedication
-                                    }
-                                    icon={
-                                        <Ionicons
-                                            name="add-outline"
-                                            size={
-                                                20
-                                            }
-                                            color="white"
-                                        />
+                                    theme="red"
+                                    size="$3"
+                                    onPress={() =>
+                                        handleRemoveMedication(
+                                            index,
+                                        )
                                     }
                                 >
-                                    Add Medication
+                                    <Ionicons
+                                        name="trash-outline"
+                                        size={20}
+                                        color="white"
+                                    />
                                 </Button>
-                            </YStack>
+                            </XStack>
                         </YStack>
                     </Card>
-                </YStack>
+                ))}
+
+                <Card bordered>
+                    <YStack p="$4" gap="$4">
+                        <Label fontWeight="600">
+                            Add New Medication
+                        </Label>
+
+                        <YStack gap="$2">
+                            <Label>
+                                Medication Name *
+                            </Label>
+                            <Input
+                                size="$4"
+                                placeholder="Enter medication name"
+                                value={
+                                    currentMedication.name
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    setCurrentMedication(
+                                        (
+                                            prev,
+                                        ) => ({
+                                            ...prev,
+                                            name: value,
+                                        }),
+                                    )
+                                }
+                            />
+                        </YStack>
+
+                        <YStack gap="$2">
+                            <Label>
+                                Dosage *
+                            </Label>
+                            <Input
+                                size="$4"
+                                placeholder="Enter dosage (e.g., 500mg)"
+                                value={
+                                    currentMedication.dosage
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    setCurrentMedication(
+                                        (
+                                            prev,
+                                        ) => ({
+                                            ...prev,
+                                            dosage: value,
+                                        }),
+                                    )
+                                }
+                            />
+                        </YStack>
+
+                        <YStack gap="$2">
+                            <Label>
+                                Frequency
+                            </Label>
+                            <Input
+                                size="$4"
+                                placeholder="Enter frequency (e.g., 2x daily)"
+                                value={
+                                    currentMedication.frequency
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    setCurrentMedication(
+                                        (
+                                            prev,
+                                        ) => ({
+                                            ...prev,
+                                            frequency:
+                                                value,
+                                        }),
+                                    )
+                                }
+                            />
+                        </YStack>
+
+                        <YStack gap="$2">
+                            <Label>
+                                Instructions
+                            </Label>
+                            <Input
+                                size="$4"
+                                placeholder="Enter special instructions"
+                                value={
+                                    currentMedication.instructions
+                                }
+                                onChangeText={(
+                                    value,
+                                ) =>
+                                    setCurrentMedication(
+                                        (
+                                            prev,
+                                        ) => ({
+                                            ...prev,
+                                            instructions:
+                                                value,
+                                        }),
+                                    )
+                                }
+                                multiline
+                                numberOfLines={2}
+                                textAlignVertical="top"
+                            />
+                        </YStack>
+
+                        <Button
+                            theme="blue"
+                            size="$4"
+                            onPress={
+                                handleAddMedication
+                            }
+                            disabled={
+                                !currentMedication.name ||
+                                !currentMedication.dosage
+                            }
+                            icon={
+                                <Ionicons
+                                    name="add-outline"
+                                    size={20}
+                                    color="white"
+                                />
+                            }
+                        >
+                            Add Medication
+                        </Button>
+                    </YStack>
+                </Card>
             </YStack>
         </Card>
     );

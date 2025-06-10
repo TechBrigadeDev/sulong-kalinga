@@ -271,15 +271,15 @@ const Screen = () => {
 
 const Layout = () => (
     <>
-    <Stack.Screen
-        options={{
-            headerShown: false,
-        }}
-    />
+        <Stack.Screen
+            options={{
+                headerShown: false,
+            }}
+        />
         <SafeAreaView style={{ flex: 1 }}>
             <Screen />
         </SafeAreaView>
     </>
-)
+);
 
 export default Layout;

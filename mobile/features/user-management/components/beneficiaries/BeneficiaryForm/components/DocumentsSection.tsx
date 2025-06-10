@@ -4,6 +4,7 @@ import {
     Card,
     H3,
     Input,
+    Label,
     Text,
     XStack,
     YStack,
@@ -43,8 +44,14 @@ export const DocumentsSection = ({
                     },
                 );
 
-            if (result.type === "success") {
-                onChange(field, result.uri);
+            if (
+                !result.canceled &&
+                result.assets?.[0]
+            ) {
+                onChange(
+                    field,
+                    result.assets[0].uri,
+                );
             }
         } catch (err) {
             console.error(
@@ -73,124 +80,136 @@ export const DocumentsSection = ({
             <Card.Header padded>
                 <H3>Documents and Signatures</H3>
             </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$4">
-                    <YStack>
-                        <Text>
-                            Upload Beneficiary
-                            Picture
-                        </Text>
-                        <Button
-                            onPress={() =>
-                                handleFilePick(
-                                    "photo",
-                                )
-                            }
-                            theme="gray"
+            <YStack p="$4" gap="$4">
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        Upload Beneficiary Picture
+                    </Label>
+                    <Button
+                        onPress={() =>
+                            handleFilePick(
+                                "photo",
+                            )
+                        }
+                        variant="outlined"
+                    >
+                        Choose File
+                    </Button>
+                    {data.photo && (
+                        <Text
+                            fontSize="$2"
+                            color="$green10"
                         >
-                            Choose File
-                        </Button>
-                        {data.photo && (
-                            <Text size="$2">
-                                File selected
-                            </Text>
-                        )}
-                    </YStack>
-
-                    <YStack>
-                        <Text>Review Date</Text>
-                        <Input editable={false} />
-                    </YStack>
-
-                    <YStack>
-                        <Text>
-                            Care Service Agreement
+                            File selected
                         </Text>
-                        <Button
-                            onPress={() =>
-                                handleFilePick(
-                                    "care_service_agreement_doc",
-                                )
-                            }
-                            theme="gray"
-                        >
-                            Choose File
-                        </Button>
-                        {data.care_service_agreement_doc && (
-                            <Text size="$2">
-                                File selected
-                            </Text>
-                        )}
-                    </YStack>
-
-                    <YStack>
-                        <Text>
-                            General Careplan
-                        </Text>
-                        <Button
-                            onPress={() =>
-                                handleFilePick(
-                                    "general_care_plan_doc",
-                                )
-                            }
-                            theme="gray"
-                        >
-                            Choose File
-                        </Button>
-                        {data.general_care_plan_doc && (
-                            <Text size="$2">
-                                File selected
-                            </Text>
-                        )}
-                    </YStack>
-
-                    <XStack gap="$4">
-                        <YStack flex={1}>
-                            <Text>
-                                Beneficiary
-                                Signature
-                            </Text>
-                            <Button
-                                onPress={() =>
-                                    handleSignature(
-                                        "beneficiary_signature",
-                                    )
-                                }
-                                theme={
-                                    data.beneficiary_signature
-                                        ? "green"
-                                        : "gray"
-                                }
-                            >
-                                {data.beneficiary_signature
-                                    ? "Change Signature"
-                                    : "Add Signature"}
-                            </Button>
-                        </YStack>
-                        <YStack flex={1}>
-                            <Text>
-                                Care Worker
-                                Signature
-                            </Text>
-                            <Button
-                                onPress={() =>
-                                    handleSignature(
-                                        "care_worker_signature",
-                                    )
-                                }
-                                theme={
-                                    data.care_worker_signature
-                                        ? "green"
-                                        : "gray"
-                                }
-                            >
-                                {data.care_worker_signature
-                                    ? "Change Signature"
-                                    : "Add Signature"}
-                            </Button>
-                        </YStack>
-                    </XStack>
+                    )}
                 </YStack>
+
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        Review Date
+                    </Label>
+                    <Input
+                        size="$4"
+                        editable={false}
+                    />
+                </YStack>
+
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        Care Service Agreement
+                    </Label>
+                    <Button
+                        onPress={() =>
+                            handleFilePick(
+                                "care_service_agreement_doc",
+                            )
+                        }
+                        variant="outlined"
+                    >
+                        Choose File
+                    </Button>
+                    {data.care_service_agreement_doc && (
+                        <Text
+                            fontSize="$2"
+                            color="$green10"
+                        >
+                            File selected
+                        </Text>
+                    )}
+                </YStack>
+
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        General Care Plan
+                    </Label>
+                    <Button
+                        onPress={() =>
+                            handleFilePick(
+                                "general_care_plan_doc",
+                            )
+                        }
+                        variant="outlined"
+                    >
+                        Choose File
+                    </Button>
+                    {data.general_care_plan_doc && (
+                        <Text
+                            fontSize="$2"
+                            color="$green10"
+                        >
+                            File selected
+                        </Text>
+                    )}
+                </YStack>
+
+                <XStack gap="$4">
+                    <YStack flex={1} gap="$2">
+                        <Label fontWeight="600">
+                            Beneficiary Signature
+                        </Label>
+                        <Button
+                            onPress={() =>
+                                handleSignature(
+                                    "beneficiary_signature",
+                                )
+                            }
+                            theme={
+                                data.beneficiary_signature
+                                    ? "green"
+                                    : undefined
+                            }
+                            variant="outlined"
+                        >
+                            {data.beneficiary_signature
+                                ? "Signed"
+                                : "Sign"}
+                        </Button>
+                    </YStack>
+
+                    <YStack flex={1} gap="$2">
+                        <Label fontWeight="600">
+                            Care Worker Signature
+                        </Label>
+                        <Button
+                            onPress={() =>
+                                handleSignature(
+                                    "care_worker_signature",
+                                )
+                            }
+                            theme={
+                                data.care_worker_signature
+                                    ? "green"
+                                    : undefined
+                            }
+                            variant="outlined"
+                        >
+                            {data.care_worker_signature
+                                ? "Signed"
+                                : "Sign"}
+                        </Button>
+                    </YStack>
+                </XStack>
             </YStack>
         </Card>
     );

@@ -76,9 +76,7 @@ const CareNeeds = ({
                                         }
                                     </Text>
                                 </Card.Header>
-                                <YStack
-                                    padded
-                                >
+                                <YStack padded>
                                     <YStack gap="$2">
                                         <Text
                                             opacity={
