@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Portal\PortalBeneficiariesApiController;
 use App\Http\Controllers\Api\NotificationsApiController;
 use App\Http\Controllers\Api\Portal\MessagingApiController;
 use App\Http\Controllers\Api\Portal\FaqApiController;
+use App\Http\Controllers\Api\Portal\RelativesApiController;
 use App\Http\Middleware\RoleMiddleware;
 
 // All routes in this group require beneficiary authentication
@@ -66,4 +67,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
 
     // FAQ
     Route::get('/faq', [FaqApiController::class, 'index']);
+
+    // Relatives (beneficiary/family member relationships)
+    Route::get('/relatives', [RelativesApiController::class, 'index']);
 });
