@@ -40,6 +40,12 @@ export const useLogin = () => {
                                     ?.data
                                     ?.message ||
                                     "Invalid credentials",
+                                {
+                                    burntOptions:
+                                        {
+                                            preset: "error",
+                                        },
+                                },
                             );
                             break;
                         default:
