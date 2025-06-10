@@ -15,6 +15,11 @@ import { EmergencyContactSection } from "./components/EmergencyContactSection";
 import { MedicalHistorySection } from "./components/MedicalHistorySection";
 import { MedicationSection } from "./components/MedicationSection";
 import { PersonalDetailsSection } from "./components/PersonalDetailsSection";
+import {
+    beneficiaryFormContext,
+    useBeneficiaryForm,
+} from "./form";
+import { beneficiaryFormDefaults } from "./schema";
 
 interface Props {
     beneficiary?: IBeneficiary;
@@ -367,6 +372,27 @@ const BeneficiaryForm = ({
                 </YStack>
             </ScrollView>
         </SafeAreaView>
+    );
+};
+
+const Form = ({ beneficiary }: Props) => {
+    const form = useBeneficiaryForm({
+        defaultValues: beneficiaryFormDefaults,
+        onSubmit: async (data) => {
+            // Handle form submission logic here
+            console.log(
+                "Form submitted with data:",
+                data,
+            );
+        },
+    });
+    return (
+        <beneficiaryFormContext.Provider
+            value={form}
+        >
+            <Form />
+            <BeneficiaryForm />
+        </beneficiaryFormContext.Provider>
     );
 };
 
