@@ -70,6 +70,14 @@ export const QK = {
                 id,
             ],
         },
+        internal: {
+            getSchedules:
+                "user/scheduling/internal/getSchedules",
+            getSchedule: (id: string) => [
+                "user/scheduling/internal/getSchedule",
+                id,
+            ],
+        },
     },
     messaging: {
         threads: {
