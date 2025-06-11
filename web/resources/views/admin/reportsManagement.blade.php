@@ -16,7 +16,7 @@
     @include('components.modals.editGcpRedirect')
     
     <div class="home-section">
-        <div class="text-left">REPORTS MANAGEMENT</div>
+        <div class="text-left">RECORDS MANAGEMENT</div>
         <div class="container-fluid">
         <div class="row" id="home-content">
         
