@@ -577,8 +577,6 @@
     }});
 </script>
 
-    <script src="{{ asset('js/toggleSideBar.js') }}"></script>
-    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
