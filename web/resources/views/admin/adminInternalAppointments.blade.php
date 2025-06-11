@@ -434,7 +434,6 @@
         }
 
         .dropdown-header {
-            font-weight: 600;
             padding: 8px 12px;
             color: #4e73df;
             font-size: 0.85rem;
