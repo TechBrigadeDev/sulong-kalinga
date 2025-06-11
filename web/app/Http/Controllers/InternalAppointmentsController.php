@@ -299,7 +299,12 @@ class InternalAppointmentsController extends Controller
             'title' => 'required|string|max:100|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
             'appointment_type_id' => 'required|exists:appointment_types,appointment_type_id',
             'date' => 'required|date|after_or_equal:today',
-            'meeting_location' => 'required|string|max:200|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
+            'meeting_location' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"#\/]+$/u', // Allows letters, numbers, spaces, common punctuation, #, and /
+            ],
             'is_flexible_time' => 'sometimes|boolean',
             'start_time' => 'nullable|required_unless:is_flexible_time,1|date_format:H:i',
             'end_time' => 'nullable|required_unless:is_flexible_time,1|date_format:H:i|after:start_time',
@@ -518,7 +523,12 @@ class InternalAppointmentsController extends Controller
             'title' => 'required|string|max:100|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
             'appointment_type_id' => 'required|exists:appointment_types,appointment_type_id',
             'date' => 'required|date',
-            'meeting_location' => 'required|string|max:200|regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"]+$/u',
+            'meeting_location' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[\pL\pN\s\-\_\.\,\:\;\!\?\(\)\'\"#\/]+$/u', // Allows letters, numbers, spaces, common punctuation, #, and /
+            ],
             'is_flexible_time' => 'sometimes|boolean',
             'is_recurring' => 'sometimes|boolean',
             'pattern_type' => 'required_if:is_recurring,true|in:daily,weekly,monthly',
