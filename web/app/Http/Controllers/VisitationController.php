@@ -537,7 +537,7 @@ class VisitationController extends Controller
         } elseif ($user->isCareManager()) {
             return 'careManager.careManagerCareworkerAppointments';
         } elseif ($user->isCareWorker()) {
-            return 'careWorker.careWorkerAppointments';
+            return 'careWorker.CareworkerAppointments';
         }
         
         // Default fallback
