@@ -231,11 +231,21 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
-                                <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter password" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter password" required>
+                                    <span class="input-group-text password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
-                                <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm password" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm password" required>
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -642,50 +652,26 @@
     });
     </script>
     <script>
-        // Fix navbar functionality
+        // Password toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Fix dropdowns in navbar
-            const navbarDropdowns = document.querySelectorAll('.navbar .dropdown-toggle');
-            navbarDropdowns.forEach(dropdown => {
-                dropdown.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Prevent other handlers from capturing this
-                });
-            });
-            
-            // 2. Fix navbar links - ensure they can navigate
-            const navbarLinks = document.querySelectorAll('.navbar a:not(.dropdown-toggle)');
-            navbarLinks.forEach(link => {
-                // Remove any existing listeners by cloning and replacing
-                const newLink = link.cloneNode(true);
-                if (link.parentNode) {
-                    link.parentNode.replaceChild(newLink, link);
-                }
-                
-                // Add direct navigation handling
-                newLink.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href && href !== '#' && !href.startsWith('javascript:')) {
-                        // For normal links, let the browser handle navigation
-                        // Don't prevent default behavior
+            // Password toggle functionality
+            document.querySelectorAll('.password-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
                     }
                 });
             });
-            
-            // 3. Ensure logout form works
-            const logoutForm = document.querySelector('form[action$="/logout"]');
-            if (logoutForm) {
-                const newForm = logoutForm.cloneNode(true);
-                logoutForm.parentNode.replaceChild(newForm, logoutForm);
-                
-                // Ensure the logout button works
-                const logoutButton = newForm.querySelector('button[type="submit"]');
-                if (logoutButton) {
-                    logoutButton.addEventListener('click', function(e) {
-                        // Don't prevent default - let the form submit
-                        newForm.submit();
-                    });
-                }
-            }
         });
     </script>
 </body>

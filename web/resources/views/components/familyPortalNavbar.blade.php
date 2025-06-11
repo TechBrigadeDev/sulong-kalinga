@@ -267,11 +267,9 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end message-dropdown p-0" aria-labelledby="messagesDropdown">
                         <li class="dropdown-header">
-                            <div class="d-flex justify-content-between align-items-center">
                             <h6 class="m-0">Messages</h6>
-                                <a href="javascript:void(0)" class="mark-all-read text-decoration-none">
-                                <small class="mark-all-read">Mark all as read</small>
-                                </a>
+                            <div class="mt-2">
+                                <small class="mark-all-read text-primary">Mark all as read</small>
                             </div>
                         </li>
                         

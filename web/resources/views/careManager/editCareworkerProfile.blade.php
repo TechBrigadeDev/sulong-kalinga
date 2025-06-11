@@ -253,11 +253,21 @@
                                 <input type="email" class="form-control" id="accountEmail" name="account[email]" placeholder="Enter email" value="{{ old('account.email', $careworker->email) }}">                            </div>
                             <div class="col-md-4">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="account[password]" placeholder="Leave blank to keep current password">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Leave blank to keep current password">
+                                    <span class="input-group-text password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirmPassword" name="account[confirm_password]" placeholder="Confirm password">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[confirm_password]" placeholder="Confirm password">
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -521,6 +531,27 @@
         });
     });
     </script>
-
+    <script>
+        // Password toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.password-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

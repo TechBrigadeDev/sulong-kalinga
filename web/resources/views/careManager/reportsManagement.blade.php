@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager | Reports Management</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Care Manager | Records Management</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/careRecords.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
@@ -18,7 +19,7 @@
     <div class="home-section">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
-                <div class="text-left">Reports Management</div>
+                <div class="text-left">RECORDS MANAGEMENT</div>
             </div>
             
             @if(session('success'))
