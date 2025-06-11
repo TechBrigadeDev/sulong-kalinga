@@ -31,9 +31,7 @@ class AppServiceProvider extends ServiceProvider
         Beneficiary::observe(BeneficiaryObserver::class);
         FamilyMember::observe(FamilyMemberObserver::class);
 
-        // Force HTTPS in production
-        if(env('APP_ENV') !== 'local') {
-            URL::forceScheme('https');
-        }
+        // Force HTTPS
+        URL::forceScheme('https');
     }
 }
