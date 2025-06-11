@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const beneficiaryFormSchema = z.object({
-    // Personal Details Section
+export const personalDetailsSchema = z.object({
     first_name: z
         .string()
         .min(1, "First name is required")
@@ -79,8 +78,9 @@ export const beneficiaryFormSchema = z.object({
             /^\+63\d{10}$/,
             "Mobile number must be in +63XXXXXXXXXX format",
         ),
+});
 
-    // Address Section
+export const addressSchema = z.object({
     street_address: z
         .string()
         .min(1, "Street address is required")
@@ -100,54 +100,41 @@ export const beneficiaryFormSchema = z.object({
         .min(1, "Barangay is required")
         .optional()
         .nullable(),
+});
 
-    // Medical History Section
+export const medicalHistorySchema = z.object({
     medical_conditions: z.string().optional(),
-
     medications: z.string().optional(),
-
     allergies: z.string().optional(),
-
     immunizations: z.string().optional(),
+});
 
-    // Care Needs Section
+export const careNeedsSchema = z.object({
     mobility_frequency: z.string().optional(),
-
     mobility_assistance: z.string().optional(),
-
     cognitive_frequency: z.string().optional(),
-
     cognitive_assistance: z.string().optional(),
-
     self_sustainability_frequency: z
         .string()
         .optional(),
-
     self_sustainability_assistance: z
         .string()
         .optional(),
-
     disease_therapy_frequency: z
         .string()
         .optional(),
-
     disease_therapy_assistance: z
         .string()
         .optional(),
-
     daily_life_frequency: z.string().optional(),
-
     daily_life_assistance: z.string().optional(),
-
     outdoor_frequency: z.string().optional(),
-
     outdoor_assistance: z.string().optional(),
-
     household_frequency: z.string().optional(),
-
     household_assistance: z.string().optional(),
+});
 
-    // Medication Section
+export const medicationSchema = z.object({
     medications_list: z
         .array(
             z.object({
@@ -173,35 +160,26 @@ export const beneficiaryFormSchema = z.object({
         )
         .optional()
         .default([]),
+});
 
-    // Cognitive Function Section
+export const cognitiveFunctionSchema = z.object({
     walking_ability: z.string().optional(),
-
     assistive_devices: z.string().optional(),
-
     transportation_needs: z.string().optional(),
-
     memory: z.string().optional(),
-
     thinking_skills: z.string().optional(),
-
     orientation: z.string().optional(),
-
     behavior: z.string().optional(),
-
     mood: z.string().optional(),
-
     social_interactions: z.string().optional(),
-
     emotional_support_need: z.string().optional(),
+});
 
-    // Emergency Contact Section
+export const emergencyContactSchema = z.object({
     emergency_contact_name: z.string().optional(),
-
     emergency_contact_relation: z
         .string()
         .optional(),
-
     emergency_contact_mobile: z
         .string()
         .optional()
@@ -213,30 +191,35 @@ export const beneficiaryFormSchema = z.object({
                     "Emergency contact mobile must be in +63XXXXXXXXXX format",
             },
         ),
-
     emergency_procedure: z.string().optional(),
+});
 
-    // Documents Section
+export const documentsSchema = z.object({
     photo: z.string().optional(),
-
     care_service_agreement_doc: z
         .string()
         .optional(),
-
     general_care_plan_doc: z.string().optional(),
-
     beneficiary_signature: z.string().optional(),
-
     care_worker_signature: z.string().optional(),
 });
+
+export const beneficiaryFormSchema =
+    personalDetailsSchema
+        .merge(addressSchema)
+        .merge(medicalHistorySchema)
+        .merge(careNeedsSchema)
+        .merge(medicationSchema)
+        .merge(cognitiveFunctionSchema)
+        .merge(emergencyContactSchema)
+        .merge(documentsSchema);
 
 export type IBeneficiaryForm = z.infer<
     typeof beneficiaryFormSchema
 >;
 
-export const beneficiaryFormDefaults: IBeneficiaryForm =
+export const beneficiaryFormDefaults: BeneficiaryFormValues =
     {
-        // Personal Details
         first_name: "",
         last_name: "",
         birthday: "",
@@ -244,19 +227,13 @@ export const beneficiaryFormDefaults: IBeneficiaryForm =
         civil_status: "",
         primary_caregiver: "",
         mobile: "",
-
-        // Address
         street_address: "",
         municipality_id: undefined,
         barangay_id: undefined,
-
-        // Medical History
         medical_conditions: "",
         medications: "",
         allergies: "",
         immunizations: "",
-
-        // Care Needs
         mobility_frequency: "",
         mobility_assistance: "",
         cognitive_frequency: "",
@@ -271,11 +248,7 @@ export const beneficiaryFormDefaults: IBeneficiaryForm =
         outdoor_assistance: "",
         household_frequency: "",
         household_assistance: "",
-
-        // Medications
         medications_list: [],
-
-        // Cognitive Function
         walking_ability: "",
         assistive_devices: "",
         transportation_needs: "",
@@ -286,14 +259,10 @@ export const beneficiaryFormDefaults: IBeneficiaryForm =
         mood: "",
         social_interactions: "",
         emotional_support_need: "",
-
-        // Emergency Contact
         emergency_contact_name: "",
         emergency_contact_relation: "",
         emergency_contact_mobile: "",
         emergency_procedure: "",
-
-        // Documents
         photo: "",
         care_service_agreement_doc: "",
         general_care_plan_doc: "",

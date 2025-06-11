@@ -1,19 +1,34 @@
 import {
     createFormHook,
     createFormHookContexts,
+    formOptions,
 } from "@tanstack/react-form";
+
+import {
+    beneficiaryFormDefaults,
+    beneficiaryFormSchema,
+} from "./schema";
 
 export const {
     fieldContext: beneficiaryFieldContext,
     formContext: beneficiaryFormContext,
-    useFieldContext: beneficiaryUseFieldContext,
+    useFieldContext: useBeneficiaryFieldContext,
+    useFormContext: useBeneficiaryFormContext,
 } = createFormHookContexts();
 
-const { useAppForm } = createFormHook({
+export const {
+    useAppForm: useBeneficiaryForm,
+    withForm: withBeneficiaryForm,
+} = createFormHook({
     fieldContext: beneficiaryFieldContext,
     formContext: beneficiaryFormContext,
     fieldComponents: {},
     formComponents: {},
 });
 
-export const useBeneficiaryForm = useAppForm;
+export const beneficiaryFormOpts = formOptions({
+    defaultValues: beneficiaryFormDefaults,
+    validators: {
+        onChange: beneficiaryFormSchema,
+    },
+});

@@ -11,25 +11,29 @@ import {
 
 const LoginForm = () => {
     const router = useRouter();
-    const { login, isPending } = useLogin();
+    const { login: handleLogin, isPending } =
+        useLogin({
+            onSuccess: () => {
+                router.replace("/(tabs)");
+            },
+        });
 
-    const [email, setEmail] = useState("");
+    const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
 
     const onLogin = async () => {
-        await login({
-            email,
+        await handleLogin({
+            login,
             password,
         });
-        router.replace("/(tabs)");
     };
 
     return (
         <View style={styles.container}>
             <Input
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
+                placeholder="Email or Username"
+                value={login}
+                onChangeText={setLogin}
                 style={styles.input}
             />
             <Input
@@ -41,6 +45,7 @@ const LoginForm = () => {
             <Button
                 onPress={onLogin}
                 disabled={isPending}
+                theme="accent"
             >
                 {isPending ? (
                     <Spinner size="small" />

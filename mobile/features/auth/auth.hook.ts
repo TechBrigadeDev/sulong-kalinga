@@ -8,7 +8,10 @@ import { QK } from "~/common/query";
 import authController from "./auth.api";
 import { authStore } from "./auth.store";
 
-export const useLogin = () => {
+export const useLogin = (params?: {
+    onSuccess?: () => void;
+}) => {
+    const router = useRouter();
     const { setToken } = authStore();
     const toast = useToastController();
 
@@ -16,20 +19,30 @@ export const useLogin = () => {
         useMutation({
             mutationKey: [QK.auth.login],
             mutationFn: async (data: {
-                email: string;
+                login: string;
                 password: string;
             }) => {
                 const response =
                     await authController.login(
-                        data.email,
+                        data.login,
                         data.password,
                     );
+
+                if (!response.success) {
+                    throw new Error(
+                        "Login failed",
+                    );
+                }
+
                 return response;
             },
             onSuccess: (data) => {
                 setToken(data.token);
+                if (params?.onSuccess) {
+                    params.onSuccess();
+                }
             },
-            throwOnError: (error) => {
+            onError: (error) => {
                 if (error instanceof AxiosError) {
                     switch (
                         error.response?.status
@@ -52,7 +65,8 @@ export const useLogin = () => {
                             break;
                     }
                 }
-                return false;
+                setToken(null);
+                return;
             },
         });
 

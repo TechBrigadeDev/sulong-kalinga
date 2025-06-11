@@ -1,4 +1,5 @@
 import { AxiosInstance } from "axios";
+import { isEmail } from "common/validate";
 
 import { axiosClient } from "~/common/api";
 
@@ -19,9 +20,13 @@ class AuthController {
         ] = "application/json";
     }
 
-    async login(email: string, password: string) {
+    async login(login: string, password: string) {
         const formData = new FormData();
-        formData.append("email", email);
+        if (isEmail(login)) {
+            formData.append("email", login);
+        } else {
+            formData.append("username", login);
+        }
         formData.append("password", password);
 
         const response = await this.api.post(

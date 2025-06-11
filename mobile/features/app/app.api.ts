@@ -5,10 +5,6 @@ class AppController {
     private api: AxiosInstance = axiosClient;
 
     public async health() {
-        console.info(
-            "test:",
-            this.api.defaults.baseURL,
-        );
         try {
             const response = await fetch(
                 "https://test.cosemhcs.org.ph/health",

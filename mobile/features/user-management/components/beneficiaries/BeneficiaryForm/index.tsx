@@ -1,25 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
 import ScrollView from "components/ScrollView";
 import { Stack } from "expo-router";
-import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Spinner, YStack } from "tamagui";
+import { Button, YStack } from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
-import { AddressSection } from "./components/AddressSection";
-import { CareNeedsSection } from "./components/CareNeedsSection";
-import { CognitiveFunctionSection } from "./components/CognitiveFunctionSection";
-import { DocumentsSection } from "./components/DocumentsSection";
-import { EmergencyContactSection } from "./components/EmergencyContactSection";
-import { MedicalHistorySection } from "./components/MedicalHistorySection";
-import { MedicationSection } from "./components/MedicationSection";
 import { PersonalDetailsSection } from "./components/PersonalDetailsSection";
 import {
-    beneficiaryFormContext,
+    beneficiaryFormOpts,
     useBeneficiaryForm,
 } from "./form";
-import { beneficiaryFormDefaults } from "./schema";
 
 interface Props {
     beneficiary?: IBeneficiary;
@@ -32,148 +22,15 @@ const BeneficiaryForm = ({
     beneficiary,
     onSubmit,
 }: Props) => {
-    const [formData, setFormData] = useState<
-        Partial<IBeneficiary>
-    >({
-        first_name: beneficiary?.first_name || "",
-        last_name: beneficiary?.last_name || "",
-        birthday: beneficiary?.birthday || "",
-        gender: beneficiary?.gender || "",
-        civil_status:
-            beneficiary?.civil_status || "",
-        primary_caregiver:
-            beneficiary?.primary_caregiver || "",
-        mobile: beneficiary?.mobile || "",
-        street_address:
-            beneficiary?.street_address || "",
-        municipality_id:
-            beneficiary?.municipality_id ||
-            undefined,
-        barangay_id:
-            beneficiary?.barangay_id || undefined,
-        medical_conditions:
-            beneficiary?.medical_conditions || "",
-        medications:
-            beneficiary?.medications || "",
-        allergies: beneficiary?.allergies || "",
-        immunizations:
-            beneficiary?.immunizations || "",
-        emergency_contact_name:
-            beneficiary?.emergency_contact_name ||
-            "",
-        emergency_contact_relation:
-            beneficiary?.emergency_contact_relation ||
-            "",
-        emergency_contact_mobile:
-            beneficiary?.emergency_contact_mobile ||
-            "",
-        emergency_procedure:
-            beneficiary?.emergency_procedure ||
-            "",
-        medications_list:
-            beneficiary?.medications_list || [],
-        walking_ability:
-            beneficiary?.walking_ability || "",
-        assistive_devices:
-            beneficiary?.assistive_devices || "",
-        transportation_needs:
-            beneficiary?.transportation_needs ||
-            "",
-        memory: beneficiary?.memory || "",
-        thinking_skills:
-            beneficiary?.thinking_skills || "",
-        orientation:
-            beneficiary?.orientation || "",
-        behavior: beneficiary?.behavior || "",
-        mood: beneficiary?.mood || "",
-        social_interactions:
-            beneficiary?.social_interactions ||
-            "",
-        emotional_support_need:
-            beneficiary?.emotional_support_need ||
-            "",
-        mobility_frequency:
-            beneficiary?.mobility_frequency || "",
-        mobility_assistance:
-            beneficiary?.mobility_assistance ||
-            "",
-        cognitive_frequency:
-            beneficiary?.cognitive_frequency ||
-            "",
-        cognitive_assistance:
-            beneficiary?.cognitive_assistance ||
-            "",
-        self_sustainability_frequency:
-            beneficiary?.self_sustainability_frequency ||
-            "",
-        self_sustainability_assistance:
-            beneficiary?.self_sustainability_assistance ||
-            "",
-        disease_therapy_frequency:
-            beneficiary?.disease_therapy_frequency ||
-            "",
-        disease_therapy_assistance:
-            beneficiary?.disease_therapy_assistance ||
-            "",
-        daily_life_frequency:
-            beneficiary?.daily_life_frequency ||
-            "",
-        daily_life_assistance:
-            beneficiary?.daily_life_assistance ||
-            "",
-        outdoor_frequency:
-            beneficiary?.outdoor_frequency || "",
-        outdoor_assistance:
-            beneficiary?.outdoor_assistance || "",
-        household_frequency:
-            beneficiary?.household_frequency ||
-            "",
-        household_assistance:
-            beneficiary?.household_assistance ||
-            "",
-        photo: beneficiary?.photo || "",
-        care_service_agreement_doc:
-            beneficiary?.care_service_agreement_doc ||
-            "",
-        general_care_plan_doc:
-            beneficiary?.general_care_plan_doc ||
-            "",
-        beneficiary_signature:
-            beneficiary?.beneficiary_signature ||
-            "",
-        care_worker_signature:
-            beneficiary?.care_worker_signature ||
-            "",
+    const form = useBeneficiaryForm({
+        ...beneficiaryFormOpts,
+        onSubmit: async (data) => {
+            console.log(
+                "Submitting beneficiary data:",
+                data,
+            );
+        },
     });
-
-    const [isPending, setIsPending] =
-        useState(false);
-
-    const handleFieldChange = (
-        field: string | number | symbol,
-        value: any,
-    ) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    const handleSubmit = async () => {
-        if (onSubmit) {
-            setIsPending(true);
-            try {
-                await onSubmit(formData);
-            } catch (error) {
-                console.error(
-                    "Error submitting form:",
-                    error,
-                );
-            } finally {
-                setIsPending(false);
-            }
-        }
-    };
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -187,29 +44,30 @@ const BeneficiaryForm = ({
             />
             <ScrollView>
                 <YStack gap="$4" p="$4">
-                    {/* Personal Details Section */}
                     <PersonalDetailsSection
-                        data={{
-                            first_name:
-                                formData.first_name,
-                            last_name:
-                                formData.last_name,
-                            birthday:
-                                formData.birthday,
-                            gender: formData.gender,
-                            civil_status:
-                                formData.civil_status,
-                            primary_caregiver:
-                                formData.primary_caregiver,
-                            mobile: formData.mobile,
-                        }}
-                        onChange={
-                            handleFieldChange
-                        }
+                        form={form}
                     />
+                    <form.AppForm>
+                        <form.Subscribe
+                            selector={(state) =>
+                                state.isSubmitting
+                            }
+                        >
+                            {(isSubmitting) => (
+                                <Button
+                                    disabled={
+                                        isSubmitting
+                                    }
+                                    size="$4"
+                                    mt="$4"
+                                >
+                                    Submit
+                                </Button>
+                            )}
+                        </form.Subscribe>
+                    </form.AppForm>
 
-                    {/* Other sections using the existing components */}
-                    <AddressSection
+                    {/* <AddressSection
                         data={{
                             street_address:
                                 formData.street_address,
@@ -343,56 +201,10 @@ const BeneficiaryForm = ({
                         onChange={
                             handleFieldChange
                         }
-                    />
-
-                    <Button
-                        theme="green"
-                        size="$5"
-                        icon={
-                            isPending ? (
-                                <Spinner size="small" />
-                            ) : (
-                                <Ionicons
-                                    name="save-outline"
-                                    size={20}
-                                    color="white"
-                                />
-                            )
-                        }
-                        onPress={handleSubmit}
-                        disabled={isPending}
-                    >
-                        {isPending
-                            ? "Saving..."
-                            : beneficiary
-                              ? "Update"
-                              : "Save"}{" "}
-                        Beneficiary
-                    </Button>
+                    /> */}
                 </YStack>
             </ScrollView>
         </SafeAreaView>
-    );
-};
-
-const Form = ({ beneficiary }: Props) => {
-    const form = useBeneficiaryForm({
-        defaultValues: beneficiaryFormDefaults,
-        onSubmit: async (data) => {
-            // Handle form submission logic here
-            console.log(
-                "Form submitted with data:",
-                data,
-            );
-        },
-    });
-    return (
-        <beneficiaryFormContext.Provider
-            value={form}
-        >
-            <Form />
-            <BeneficiaryForm />
-        </beneficiaryFormContext.Provider>
     );
 };
 

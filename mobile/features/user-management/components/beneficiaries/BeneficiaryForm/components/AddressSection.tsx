@@ -29,10 +29,7 @@ const BARANGAY_OPTIONS = [
     { label: "Barangay 2", value: "2" },
 ];
 
-export const AddressSection = ({
-    data = {},
-    onChange = () => {},
-}: Props) => {
+export const AddressSection = () => {
     return (
         <Card elevate>
             <Card.Header padded>
