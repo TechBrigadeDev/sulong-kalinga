@@ -42,14 +42,6 @@ class InternalSchedulingController extends Controller {
             },
         );
 
-        log(
-            JSON.stringify(
-                response.data,
-                null,
-                2,
-            ),
-        );
-
         const valid =
             await internalAppointmentsResponseSchema.safeParseAsync(
                 response.data,
