@@ -110,17 +110,6 @@ const Schedule = ({
         );
     };
 
-    const participantNames = useMemo(() => {
-        return appointment.participants
-            .map((participant) => {
-                if (participant.user) {
-                    return `${participant.user.first_name} ${participant.user.last_name}`;
-                }
-                return participant.participant_type;
-            })
-            .join(", ");
-    }, [appointment.participants]);
-
     const Time = useCallback(() => {
         if (appointment.is_flexible_time) {
             return (
