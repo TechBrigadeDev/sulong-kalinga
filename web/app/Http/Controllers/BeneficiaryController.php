@@ -387,8 +387,7 @@ class BeneficiaryController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'max:255',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/', // Allows alphanumeric characters, spaces, commas, periods, and hyphens
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
             'municipality' => [
                 'required',
@@ -588,7 +587,7 @@ class BeneficiaryController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/', // Allows alphanumeric characters, spaces, commas, periods, and hyphens
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
 
             // Emergency Contact
@@ -1218,8 +1217,7 @@ class BeneficiaryController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'max:255',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/',
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
             'email' => [
                 'nullable',
