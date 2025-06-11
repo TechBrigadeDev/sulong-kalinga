@@ -107,7 +107,7 @@
     opacity: 0;
     display: none;
     pointer-events: none;
-    background-color: #fff;
+    background-color: #f1f0fe;
     box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
     z-index: 9999999 !important; /* Extreme z-index */
     transition: none;
