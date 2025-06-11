@@ -32,8 +32,8 @@ class AppServiceProvider extends ServiceProvider
         FamilyMember::observe(FamilyMemberObserver::class);
 
         // Force HTTPS in production
-        if (config('app.env') === 'production' || config('app.env') === 'staging') {
-            \URL::forceScheme('https');
+        if(env('APP_ENV') !== 'local') {
+            URL::forceScheme('https');
         }
     }
 }
