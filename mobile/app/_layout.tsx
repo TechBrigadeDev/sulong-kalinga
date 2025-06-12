@@ -2,6 +2,7 @@ import "react-native-reanimated";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Dialogs from "components/dialogs/Dialogs";
+import { Toast } from "components/Toast";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -104,6 +105,7 @@ function RootLayoutNav() {
                 </Stack>
             </GestureHandlerRootView>
             <Dialogs />
+            <Toast />
         </Providers>
     );
 }

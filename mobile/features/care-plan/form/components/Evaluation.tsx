@@ -1,3 +1,4 @@
+import { log } from "common/debug";
 import TabScroll from "components/tabs/TabScroll";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -86,7 +87,7 @@ const PictureUpload = () => {
                         fontWeight="600"
                         fontSize="$5"
                     >
-                        Picture Upload
+                        Upload Picture
                     </Text>
 
                     <Button

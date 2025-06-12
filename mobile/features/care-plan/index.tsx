@@ -1,25 +1,65 @@
+import {
+    AxiosError,
+    HttpStatusCode,
+} from "axios";
 import { Controller } from "common/api";
-import { log } from "common/debug";
+import { toastServerError } from "common/toast";
+import { showToastable } from "react-native-toastable";
 
+import { mapCarePlanFormToApiData } from "./form/mapper";
 import { CarePlanFormData } from "./form/type";
 
 class CarePlanController extends Controller {
     async postCarePlan(data: CarePlanFormData) {
-        const response = await this.api.post(
-            "/weekly-care-plans",
-            data,
-        );
+        try {
+            // Map form data to API format
+            const apiData =
+                await mapCarePlanFormToApiData(
+                    data,
+                );
 
-        log(
-            JSON.stringify(
-                response.data,
-                null,
-                2,
-            ),
-            "CarePlanController.postCarePlan",
-        );
+            // For FormData uploads in React Native, we should not set Content-Type
+            // React Native will handle this automatically with the correct boundary
+            const response = await this.api.post(
+                "/weekly-care-plans",
+                apiData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data",
+                    },
+                },
+            );
 
-        return response.data;
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.response?.status) {
+                    case HttpStatusCode.Forbidden:
+                        showToastable({
+                            message:
+                                error.response
+                                    .data
+                                    .message ||
+                                "You are not authorized to perform this action.",
+                            status: "danger",
+                            duration: 4000,
+                        });
+
+                    default:
+                        toastServerError(error);
+
+                        break;
+                }
+                return;
+            }
+            console.error(
+                "Error submitting care plan form:",
+                error,
+            );
+
+            throw error;
+        }
     }
 }
 

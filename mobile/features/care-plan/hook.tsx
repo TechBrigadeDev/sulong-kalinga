@@ -4,7 +4,9 @@ import { authStore } from "features/auth/auth.store";
 import { carePlanController } from ".";
 import { CarePlanFormData } from "./form/type";
 
-export const useSubmitCarePlanForm = () => {
+export const useSubmitCarePlanForm = (props: {
+    onError?: (error: Error) => Promise<void>;
+}) => {
     const { token } = authStore();
 
     if (!token) {
@@ -24,10 +26,9 @@ export const useSubmitCarePlanForm = () => {
             return response;
         },
         onError: (error) => {
-            console.error(
-                "Error submitting care plan form:",
-                error,
-            );
+            if (props.onError) {
+                props.onError(error);
+            }
         },
     });
 };
