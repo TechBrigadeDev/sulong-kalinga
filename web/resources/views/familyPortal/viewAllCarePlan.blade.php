@@ -154,7 +154,9 @@
                             <div class="pagination-info text-muted mb-2 mb-md-0">
                                 Showing {{ $carePlans->firstItem() }} to {{ $carePlans->lastItem() }} of {{ $carePlans->total() }} entries
                             </div>
-                            {{ $carePlans->appends(['search' => $search ?? '', 'filter' => $filter ?? 'all'])->links('pagination::bootstrap-5') }}
+                            <div class="main-pagination-container">
+                                {{ $carePlans->appends(['search' => $search ?? '', 'filter' => $filter ?? 'all'])->links('pagination::bootstrap-5') }}
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -193,12 +195,10 @@
                 const search = document.querySelector('input[name="search"]').value;
                 const filter = document.getElementById('filterInput').value;
                 
-                // Target the table container specifically - this is the key fix
-                const tableContainer = document.querySelector('.card:not(.mb-3) .card-body p-0');
-                
+                // Get the table container
+                let tableContainer = document.querySelector('.card:not(.mb-3) .card-body.p-0');
                 if (!tableContainer) {
-                    // Fallback if the specific selector doesn't match
-                    const tableContainer = document.querySelector('.card:not(.mb-3) .card-body');
+                    tableContainer = document.querySelector('.card:not(.mb-3) .card-body');
                     if (!tableContainer) {
                         console.error('Could not find table container');
                         return;
@@ -213,11 +213,11 @@
                     ? '{{ secure_url(route("family.care.plan.index")) }}'
                     : '{{ secure_url(route("beneficiary.care.plan.index")) }}';
                 
-                // Make the AJAX request with proper headers
+                // Make the AJAX request
                 fetch(`${baseUrl}?search=${encodeURIComponent(search)}&filter=${filter}&page=${page}&ajax=1`, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
@@ -225,19 +225,28 @@
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
-                    return response.text();
+                    return response.json();
                 })
-                .then(html => {
+                .then(data => {
                     // Insert the HTML into the table container
-                    tableContainer.innerHTML = html;
+                    tableContainer.innerHTML = data.html;
                     
-                    // Re-attach event listeners to the new content
+                    // Update the main pagination (outside of the table container)
+                    const mainPaginationContainer = document.querySelector('.main-pagination-container');
+                    if (mainPaginationContainer && data.pagination) {
+                        mainPaginationContainer.innerHTML = data.pagination;
+                    }
+                    
+                    // Update pagination info text
+                    const paginationInfo = document.querySelector('.pagination-info');
+                    if (paginationInfo && data.meta) {
+                        paginationInfo.textContent = `Showing ${data.meta.firstItem} to ${data.meta.lastItem} of ${data.meta.total} entries`;
+                    }
+                    
+                    // Re-attach event listeners
                     attachEventListeners();
                     
-                    // Update pagination info
-                    updatePaginationInfo();
-                    
-                    // Update URL without refreshing - using secure URL
+                    // Update URL without refreshing
                     window.history.pushState(
                         {search: search, filter: filter, page: page},
                         '',
@@ -278,10 +287,10 @@
                     });
                 });
                 
-                // Setup acknowledge buttons for the loaded content
+                // Setup acknowledge buttons
                 setupAcknowledgeButtons();
             }
-            
+                        
             // Function to handle acknowledge button setup with HTTPS support
             function setupAcknowledgeButtons() {
                 document.querySelectorAll('.acknowledge-btn').forEach(btn => {

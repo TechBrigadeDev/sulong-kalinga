@@ -91,15 +91,27 @@ class FamilyPortalCarePlanController extends Controller
                 $view = $userType === 'beneficiary' 
                     ? 'beneficiaryPortal.partials.carePlansTable' 
                     : 'familyPortal.partials.carePlansTable';
-                    
-                return view($view, [
-                    'carePlans' => $carePlans, 
-                    'search' => $search, 
-                    'filter' => $filter,
-                    'userType' => $userType,
-                    'userId' => $userId,
-                    'isSecure' => $request->secure() // Pass this to the view for secure URL generation
-                ])->render();
+                
+                // Generate pagination links HTML
+                $paginationLinks = $carePlans->appends(['search' => $search ?? '', 'filter' => $filter ?? 'all'])->links('pagination::bootstrap-5')->toHtml();
+                
+                return response()->json([
+                    'html' => view($view, [
+                        'carePlans' => $carePlans, 
+                        'search' => $search, 
+                        'filter' => $filter,
+                        'userType' => $userType,
+                        'userId' => $userId
+                    ])->render(),
+                    'pagination' => $paginationLinks,
+                    'meta' => [
+                        'firstItem' => $carePlans->firstItem(),
+                        'lastItem' => $carePlans->lastItem(),
+                        'total' => $carePlans->total(),
+                        'currentPage' => $carePlans->currentPage(),
+                        'lastPage' => $carePlans->lastPage()
+                    ]
+                ]);
             }
             
             // For regular requests, return the full view
