@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // Weekly Care Plan (WCP) API
     // Create only with store
     Route::post('/weekly-care-plans', [WeeklyCarePlanApiController::class, 'store']);
+    Route::get('/interventions/by-category', [WeeklyCarePlanApiController::class, 'getInterventionsByCategory']);
 
     // Uploads (move back inside middleware after testing)
     // Moved backed inside middleware in sk-74/family-api-fix
