@@ -108,6 +108,25 @@ class RecordsManagementApiController extends Controller
             ? trim("{$careWorker->first_name} {$careWorker->last_name}")
             : null;
 
+        // --- Acknowledgement logic ---
+        $acknowledgeStatus = 'Not Acknowledged';
+        $whoAcknowledged = null;
+
+        if ($plan->acknowledged_by_beneficiary) {
+            $ackBeneficiary = Beneficiary::find($plan->acknowledged_by_beneficiary);
+            if ($ackBeneficiary) {
+                $middle = $ackBeneficiary->middle_name ? $ackBeneficiary->middle_name : '';
+                $whoAcknowledged = trim("{$ackBeneficiary->first_name} {$middle} {$ackBeneficiary->last_name}");
+                $acknowledgeStatus = 'Acknowledged';
+            }
+        } elseif ($plan->acknowledged_by_family) {
+            $ackFamily = \App\Models\FamilyMember::find($plan->acknowledged_by_family);
+            if ($ackFamily) {
+                $whoAcknowledged = trim("{$ackFamily->first_name} {$ackFamily->last_name}");
+                $acknowledgeStatus = 'Acknowledged';
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -125,6 +144,8 @@ class RecordsManagementApiController extends Controller
                     : null,
                 'created_at' => $plan->created_at,
                 'updated_at' => $plan->updated_at,
+                'acknowledge_status' => $acknowledgeStatus,
+                'acknowledged_by' => $whoAcknowledged,
             ]
         ]);
     }

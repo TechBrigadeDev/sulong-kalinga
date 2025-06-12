@@ -257,4 +257,34 @@ class WeeklyCarePlanApiController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get all interventions grouped by care category.
+     */
+    public function getInterventionsByCategory()
+    {
+        $categories = \App\Models\CareCategory::with(['interventions' => function($query) {
+            $query->select('intervention_id', 'care_category_id', 'intervention_description');
+        }])->get(['care_category_id', 'care_category_name']);
+
+        // Format as array grouped by care_category_id
+        $result = [];
+        foreach ($categories as $category) {
+            $result[] = [
+                'care_category_id' => $category->care_category_id,
+                'care_category_name' => $category->care_category_name,
+                'interventions' => $category->interventions->map(function($intervention) {
+                    return [
+                        'intervention_id' => $intervention->intervention_id,
+                        'intervention_description' => $intervention->intervention_description,
+                    ];
+                })->toArray()
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $result
+        ]);
+    }
 }

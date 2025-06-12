@@ -306,6 +306,7 @@ class BeneficiaryController extends Controller
 
     public function create()
     {
+        $googleMapsApiKey = env('GOOGLE_MAPS_API_KEY');
         // Fetch all municipalities from the database
         $municipalities = Municipality::all();
         $barangays = Barangay::all();
@@ -317,7 +318,13 @@ class BeneficiaryController extends Controller
         
         // Return appropriate view based on user role
         if (Auth::user()->role_id == 1) { // Admin
-            return view('admin.addBeneficiary', compact('municipalities', 'barangays', 'careWorkers', 'categories'));
+            return view('admin.addBeneficiary', [
+                'municipalities' => $municipalities, 
+                'barangays' => $barangays, 
+                'careWorkers' => $careWorkers, 
+                'categories' => $categories,
+                'googleMapsApiKey' => $googleMapsApiKey,
+            ]);
         } elseif (Auth::user()->role_id == 2) { // Care Manager
             return view('careManager.addBeneficiary', compact('municipalities', 'barangays', 'careWorkers', 'categories'));
         } else { // Care Worker - now allowed to add beneficiaries
@@ -1146,9 +1153,19 @@ class BeneficiaryController extends Controller
         
         // Return view based on user role
         if (Auth::user()->role_id == 1) { // Admin
-            return view('admin.editBeneficiary', compact('beneficiary', 'municipalities', 'barangays', 
-                'categories', 'careWorkers', 'birth_date', 'review_date', 'currentCareWorker',  
-                'currentCareWorkerTasks', 'careNeeds'));
+            return view('admin.editBeneficiary', [
+                'beneficiary' => $beneficiary, 
+                'municipalities' => $municipalities, 
+                'barangays' => $barangays, 
+                'categories' => $categories, 
+                'careWorkers' => $careWorkers, 
+                'birth_date' => $birth_date, 
+                'review_date' => $review_date, 
+                'currentCareWorker' => $currentCareWorker,  
+                'currentCareWorkerTasks' => $currentCareWorkerTasks, 
+                'careNeeds' => $careNeeds,
+                'googleMapsApiKey' => $googleMapsApiKey,
+            ]);
         } elseif (Auth::user()->role_id == 2) { // Care Manager
             return view('careManager.editBeneficiary', compact('beneficiary', 'municipalities', 'barangays', 
                 'categories', 'careWorkers', 'birth_date', 'review_date', 'currentCareWorker', 
