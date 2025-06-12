@@ -32,7 +32,7 @@
                                     Acknowledge
                                 </button>
                             @endif
-                            <a href="{{ secure_url(route('beneficiary.care.plan.view', $plan->weekly_care_plan_id)) }}" 
+                            <a href="{{ secure_url(route($userType === 'beneficiary' ? 'beneficiary.care.plan.view' : 'family.care.plan.view', $plan->weekly_care_plan_id)) }}" 
                                 class="btn btn-sm btn-info" title="View Details">
                                 <i class="bi bi-eye"></i> View
                             </a>
@@ -42,18 +42,10 @@
             </tbody>
         </table>
     </div>
-    
-    <div class="pagination-wrapper mt-3">
-        @if(isset($isSecure) && $isSecure)
-            {{ $carePlans->appends(['search' => $search ?? '', 'filter' => $filter ?? 'all'])->links('pagination::bootstrap-5') }}
-        @else
-            {{ $carePlans->setPath(secure_url(request()->path()))->appends(['search' => $search ?? '', 'filter' => $filter ?? 'all'])->links('pagination::bootstrap-5') }}
-        @endif
-    </div>
 @else
     <div class="empty-state p-4 text-center">
         <i class="bi bi-file-earmark-text display-4 text-muted"></i>
         <h4 class="mt-3">No Care Plans Found</h4>
-        <p class="text-muted">There are currently no care plan records available.</p>
+        <p class="text-muted">There are currently no care plan records available{{ $userType === 'family' ? ' for your family member' : '' }}.</p>
     </div>
 @endif
