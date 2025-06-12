@@ -51,20 +51,71 @@ class FamilyPortalCarePlanController extends Controller
                 ->where('beneficiary_id', $beneficiaryId)
                 ->orderBy('created_at', 'desc');
             
-            // Apply search filter if provided - IMPROVED
+            // Apply search filter if provided - ENHANCED DATE SEARCH
             if ($search) {
                 $query->where(function($q) use ($search) {
+                    // Search in author names (case insensitive)
                     $q->whereHas('author', function($authorQuery) use ($search) {
-                        $authorQuery->where('first_name', 'LIKE', "%{$search}%")
-                                ->orWhere('last_name', 'LIKE', "%{$search}%")
-                                ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
-                    })
-                    // Use PostgreSQL's TO_CHAR instead of MySQL's DATE_FORMAT
-                    ->orWhereRaw("TO_CHAR(created_at, 'Month') ILIKE ?", ["%{$search}%"])
-                    ->orWhereRaw("TO_CHAR(created_at, 'DD') ILIKE ?", ["%{$search}%"])
-                    ->orWhereRaw("TO_CHAR(created_at, 'YYYY') ILIKE ?", ["%{$search}%"])
-                    ->orWhereRaw("TO_CHAR(created_at, 'MM/DD/YYYY') ILIKE ?", ["%{$search}%"])
+                        $authorQuery->whereRaw("LOWER(first_name) LIKE LOWER(?)", ["%{$search}%"])
+                            ->orWhereRaw("LOWER(last_name) LIKE LOWER(?)", ["%{$search}%"])
+                            ->orWhereRaw("LOWER(CONCAT(first_name, ' ', last_name)) LIKE LOWER(?)", ["%{$search}%"]);
+                    });
+                    
+                    // Advanced date searches for PostgreSQL
+                    
+                    // Month name (full and abbreviated)
+                    $q->orWhereRaw("TO_CHAR(created_at, 'Month') ILIKE ?", ["%{$search}%"])
                     ->orWhereRaw("TO_CHAR(created_at, 'Mon') ILIKE ?", ["%{$search}%"]);
+                    
+                    // Day of month (with or without leading zero)
+                    $q->orWhereRaw("TO_CHAR(created_at, 'DD') = ?", [$search])
+                    ->orWhereRaw("TO_CHAR(created_at, 'FMDD') = ?", [$search]);
+                    
+                    // Year
+                    $q->orWhereRaw("TO_CHAR(created_at, 'YYYY') = ?", [$search]);
+                    
+                    // ENHANCED: Handle month + day combinations (e.g., "mar 19", "march 19")
+                    if (preg_match('/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* ?(\d{1,2})$/i', $search, $matches)) {
+                        $monthName = $matches[1];
+                        $day = $matches[2];
+                        
+                        // Search for this month abbreviation + day combination
+                        $q->orWhereRaw("(TO_CHAR(created_at, 'Mon') ILIKE ? AND (TO_CHAR(created_at, 'DD') = ? OR TO_CHAR(created_at, 'FMDD') = ?))",
+                            ["{$monthName}%", $day, $day]);
+                    }
+                    
+                    // ENHANCED: Handle month + year combinations (e.g., "mar 2025", "march 2025")
+                    if (preg_match('/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* ?(\d{4})$/i', $search, $matches)) {
+                        $monthName = $matches[1];
+                        $year = $matches[2];
+                        
+                        // Search for this month abbreviation + year combination
+                        $q->orWhereRaw("(TO_CHAR(created_at, 'Mon') ILIKE ? AND TO_CHAR(created_at, 'YYYY') = ?)",
+                            ["{$monthName}%", $year]);
+                    }
+                    
+                    // ENHANCED: Handle full date (e.g., "march 19 2025", "mar 19 2025")
+                    if (preg_match('/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* ?(\d{1,2}) ?,? ?(\d{4})$/i', $search, $matches)) {
+                        $monthName = $matches[1];
+                        $day = $matches[2];
+                        $year = $matches[3];
+                        
+                        // Search for this month abbreviation + day + year combination
+                        $q->orWhereRaw("(TO_CHAR(created_at, 'Mon') ILIKE ? AND (TO_CHAR(created_at, 'DD') = ? OR TO_CHAR(created_at, 'FMDD') = ?) AND TO_CHAR(created_at, 'YYYY') = ?)",
+                            ["{$monthName}%", $day, $day, $year]);
+                    }
+                    
+                    // Additional date formats
+                    $q->orWhereRaw("TO_CHAR(created_at, 'YYYY-MM-DD') ILIKE ?", ["%{$search}%"])
+                    ->orWhereRaw("TO_CHAR(created_at, 'MM/DD/YYYY') ILIKE ?", ["%{$search}%"])
+                    ->orWhereRaw("TO_CHAR(created_at, 'DD/MM/YYYY') ILIKE ?", ["%{$search}%"]);
+                    
+                    // If search is numeric, also try as day, month, or year
+                    if (is_numeric($search)) {
+                        $q->orWhereRaw("EXTRACT(DAY FROM created_at) = ?", [$search])
+                        ->orWhereRaw("EXTRACT(MONTH FROM created_at) = ?", [$search])
+                        ->orWhereRaw("EXTRACT(YEAR FROM created_at) = ?", [$search]);
+                    }
                 });
             }
             
@@ -128,9 +179,18 @@ class FamilyPortalCarePlanController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error in care plan index: ' . $e->getMessage());
+            Log::error('Search query: ' . ($search ?? 'none'));
             
             if ($request->ajax() || $request->input('ajax') == 1) {
-                return '<div class="alert alert-danger">Error loading care plans. Please refresh the page.</div>';
+                return response()->json([
+                    'html' => '<div class="alert alert-danger">Error searching care plans: ' . $e->getMessage() . '</div>',
+                    'pagination' => '',
+                    'meta' => [
+                        'firstItem' => 0,
+                        'lastItem' => 0,
+                        'total' => 0
+                    ]
+                ]);
             }
             
             // Determine which view to use based on the user type for the error page
