@@ -155,7 +155,22 @@
                         </div>
                         <div class="card-body">
                             <div class="card-content">
-                                You have 2 unread messages from your care worker
+                                @if ($unreadMessageCount > 0)
+                                    <div>
+                                        You have <span class="unread-message-count">{{ $unreadMessageCount }}</span> unread 
+                                        {{ Str::plural('message', $unreadMessageCount) }} from COSE staff
+                                    </div>
+                                    <div class="mt-2 small text-muted">
+                                        Click below to view your conversations
+                                    </div>
+                                @else
+                                    <div>
+                                        No unread messages at this time
+                                    </div>
+                                    <div class="mt-2 small text-muted">
+                                        You can start a conversation with your care worker
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="card-footer">

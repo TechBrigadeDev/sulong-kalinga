@@ -41,12 +41,18 @@ Route::middleware(['auth:family'])->prefix('family')->name('family.')->group(fun
         $nextMedication = app()->make(\App\Http\Controllers\PortalMedicationScheduleController::class)
             ->getNextMedication($beneficiary->beneficiary_id);
         
+        // Get unread message count
+        $messagingController = app()->make(\App\Http\Controllers\PortalMessagingController::class);
+        $unreadMessagesResponse = $messagingController->getUnreadCount();
+        $unreadMessageCount = json_decode($unreadMessagesResponse->getContent())->count ?? 0;
+        
         return view('familyPortal.homePage', [
             'showWelcome' => $showWelcome,
             'familyMember' => $familyMember,
             'beneficiary' => $beneficiary,
             'nextVisit' => $nextVisit,
-            'nextMedication' => $nextMedication
+            'nextMedication' => $nextMedication,
+            'unreadMessageCount' => $unreadMessageCount
         ]);
     })->name('dashboard');
     
