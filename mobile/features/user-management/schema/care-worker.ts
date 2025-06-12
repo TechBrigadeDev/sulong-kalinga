@@ -20,7 +20,7 @@ export const careWorkerSchema = z.object({
     nationality: z.string(),
     volunteer_status: z.string(),
     status_start_date: z.string(),
-    status_end_date: z.string(),
+    // status_end_date: z.string(),
     role_id: z.number(),
     status: z.enum(["Active", "Inactive"]),
     organization_role_id: z.number().nullable(),
@@ -32,7 +32,7 @@ export const careWorkerSchema = z.object({
     philhealth_id_number: z.string(),
     pagibig_id_number: z.string(),
     cv_resume: z.string().nullable(),
-    updated_by: z.number(),
+    // updated_by: z.number()
     // municipality: z.object({
     //     municipality_id: z.number(),
     //     municipality_name: z.string(),

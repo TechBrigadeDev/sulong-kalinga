@@ -1,4 +1,4 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";

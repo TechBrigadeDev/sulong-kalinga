@@ -12,7 +12,13 @@ import {
 import FlatList from "~/components/FlatList";
 import { useGetCareWorkers } from "~/features/user-management/management.hook";
 
-const CareWorkerList = () => {
+interface Props {
+    search?: string;
+}
+
+const CareWorkerList = ({
+    search: searchQuery = "",
+}: Props) => {
     const { search } = careManagerListStore();
 
     const {
@@ -20,7 +26,7 @@ const CareWorkerList = () => {
         isLoading,
         refetch,
     } = useGetCareWorkers({
-        search,
+        search: searchQuery || search,
     });
 
     if (data.length === 0 && !isLoading) {

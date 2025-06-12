@@ -1,4 +1,8 @@
-import { Stack, useRouter } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+    useRouter,
+} from "expo-router";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, View, YStack } from "tamagui";
@@ -8,6 +12,9 @@ import CareWorkerSearch from "~/features/user-management/components/care-workers
 
 const CareWorkers = () => {
     const router = useRouter();
+    const params = useLocalSearchParams<{
+        search?: string;
+    }>();
 
     const handleAddCareWorker = () => {
         router.push(
@@ -37,7 +44,9 @@ const CareWorkers = () => {
                     >
                         Add Care Worker
                     </Button>
-                    <CareWorkerSearch />
+                    <CareWorkerSearch
+                        search={params.search}
+                    />
                 </YStack>
                 <View style={{ flex: 1 }}>
                     <CareWorkerList />

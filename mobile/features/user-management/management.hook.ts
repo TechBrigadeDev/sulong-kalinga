@@ -137,7 +137,6 @@ export const useGetCareWorkers = (props?: {
     return useQuery({
         queryKey: [
             QK.user.management.getCareWorkers,
-            token,
             props?.search,
         ],
         queryFn: async () => {
