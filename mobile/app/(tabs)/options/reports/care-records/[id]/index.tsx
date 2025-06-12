@@ -38,6 +38,7 @@ const Layout = () => (
             <ScrollView
                 flex={1}
                 paddingBlockEnd={75}
+                nestedScrollEnabled
             >
                 <Screen />
             </ScrollView>

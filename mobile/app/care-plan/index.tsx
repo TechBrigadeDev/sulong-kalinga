@@ -1,4 +1,3 @@
-import { Stack } from "expo-router";
 import WCPForm from "features/care-plan/form";
 import {
     SafeAreaProvider,

@@ -1,8 +1,9 @@
-import { ScrollView } from "react-native";
 import {
     Card,
-    H4,
     Paragraph,
+    ScrollView,
+    Text,
+    View,
     YStack,
 } from "tamagui";
 
@@ -14,23 +15,37 @@ const Assessment = ({
     assessment,
 }: AssessmentProps) => {
     return (
-        <Card elevate bordered p="$4" mb="$3">
-            <YStack space="$3">
-                <H4
-                    color="#2c3e50"
-                    fontWeight="600"
+        <Card bg="white" overflow="hidden">
+            <Card.Header
+                padded
+                paddingBlock="$2"
+                bg="#2d3748"
+            >
+                <View
+                    display="flex"
+                    flexDirection="row"
+                    gap="$2"
+                    items="center"
+                    justify="center"
                 >
-                    🔍 Assessment
-                </H4>
+                    <Text
+                        color="white"
+                        fontSize="$8"
+                        fontWeight="bold"
+                    >
+                        Assessment
+                    </Text>
+                </View>
+            </Card.Header>
+            <YStack p="$4" gap="$4">
                 <Card
                     bg="#f8f9fa"
                     p="$3"
                     maxHeight={300}
                 >
                     <ScrollView
-                        showsVerticalScrollIndicator={
-                            true
-                        }
+                        showsVerticalScrollIndicator
+                        nestedScrollEnabled
                     >
                         <Paragraph
                             fontSize="$4"

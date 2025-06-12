@@ -396,10 +396,7 @@ const CustomInterventionItem = ({
                         }
                         size="$3"
                     />
-                    <Text
-                        fontSize="$3"
-                        
-                    >
+                    <Text fontSize="$3">
                         minutes
                     </Text>
                 </XStack>

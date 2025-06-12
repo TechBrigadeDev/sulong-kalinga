@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { userSchema } from "features/user/user.schema";
+import { z } from "zod";
 
 // Participant type enum
 export const participantTypeSchema = z.enum([

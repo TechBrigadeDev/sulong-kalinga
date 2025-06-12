@@ -197,7 +197,9 @@ const InternalAppointmentDetail = ({
                             gap="$2"
                             items="center"
                         >
-                            <StickyNote size={16} />
+                            <StickyNote
+                                size={16}
+                            />
                             <H6>Notes</H6>
                         </XStack>
                         <Text>

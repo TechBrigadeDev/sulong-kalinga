@@ -1,8 +1,9 @@
 import { ScrollView } from "react-native";
 import {
     Card,
-    H4,
     Paragraph,
+    Text,
+    View,
     YStack,
 } from "tamagui";
 
@@ -14,24 +15,38 @@ export function EvaluationRecommendations({
     evaluationRecommendations,
 }: EvaluationRecommendationsProps) {
     return (
-        <Card bg="white" p="$4" space="$3">
-            <YStack space="$3">
-                <H4
-                    color="#2c3e50"
-                    fontWeight="600"
+        <Card bg="white" overflow="hidden">
+            <Card.Header
+                padded
+                paddingBlock="$2"
+                bg="#2d3748"
+            >
+                <View
+                    display="flex"
+                    flexDirection="row"
+                    gap="$2"
+                    items="center"
+                    justify="center"
                 >
-                    💡 Evaluation and
-                    Recommendations
-                </H4>
+                    <Text
+                        color="white"
+                        fontSize="$8"
+                        fontWeight="bold"
+                    >
+                        Evaluation and
+                        Recommendations
+                    </Text>
+                </View>
+            </Card.Header>
+            <YStack p="$4" gap="$4">
                 <Card
                     bg="#f8f9fa"
                     p="$3"
                     height={300}
                 >
                     <ScrollView
-                        showsVerticalScrollIndicator={
-                            true
-                        }
+                        showsVerticalScrollIndicator
+                        nestedScrollEnabled
                     >
                         <Paragraph
                             fontSize="$4"

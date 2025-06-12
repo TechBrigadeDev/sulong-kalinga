@@ -1,5 +1,4 @@
 import { Controller } from "common/api";
-import { log } from "common/debug";
 
 import {
     internalAppointmentResponseSchema,

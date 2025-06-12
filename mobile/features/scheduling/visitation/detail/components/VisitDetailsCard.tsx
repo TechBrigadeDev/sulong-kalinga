@@ -29,19 +29,13 @@ const VisitDetailsCard = ({
             <YStack space="$4">
                 <H6>Visit Details</H6>
                 <YStack space="$2">
-                    <XStack
-                        space="$2"
-                        
-                    >
+                    <XStack space="$2">
                         <Calendar size="$1" />
                         <Paragraph>
                             Date: {date}
                         </Paragraph>
                     </XStack>
-                    <XStack
-                        space="$2"
-                        
-                    >
+                    <XStack space="$2">
                         <Clock size="$1" />
                         <Paragraph>
                             Time: {time}

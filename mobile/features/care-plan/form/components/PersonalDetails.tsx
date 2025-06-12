@@ -14,7 +14,6 @@ import {
     YStack,
 } from "tamagui";
 
-import SubmitCarePlanForm from "./Submit";
 export interface PersonalDetailsData {
     beneficiaryId: string;
     assessment: string;

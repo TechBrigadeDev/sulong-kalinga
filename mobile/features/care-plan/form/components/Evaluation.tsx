@@ -1,4 +1,3 @@
-import { log } from "common/debug";
 import TabScroll from "components/tabs/TabScroll";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";

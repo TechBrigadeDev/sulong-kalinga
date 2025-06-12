@@ -58,6 +58,7 @@ const ScrollView = ({
         ) {
             scrollViewRef.current?.scrollToEnd({
                 animated: true,
+                smooth: true,
             });
         }
     };

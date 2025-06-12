@@ -17,6 +17,7 @@ const WCPRecordDetail = ({ record }: Props) => {
         <YStack
             rowGap="$4"
             style={{ padding: 16 }}
+            marginBlockEnd={75}
         >
             <PersonalDetails
                 data={{

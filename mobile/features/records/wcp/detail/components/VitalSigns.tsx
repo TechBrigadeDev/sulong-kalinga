@@ -1,9 +1,17 @@
+import {
+    Activity,
+    Camera,
+    Droplet,
+    Heart,
+    Stethoscope,
+    Thermometer,
+} from "lucide-react-native";
 import { Image } from "react-native";
 import {
     Card,
-    H4,
     H6,
     Text,
+    View,
     XStack,
     YStack,
 } from "tamagui";
@@ -22,48 +30,59 @@ export function VitalSigns({
     vitalSigns,
     photoUrl,
 }: VitalSignsProps) {
-    const getVitalStatus = (
-        type: string,
-        value: string,
-    ) => {
-        // Simple status logic
-        return {
-            color: "#28a745", // Default to green (normal)
-            status: "Normal",
-        };
-    };
-
     return (
-        <Card bg="white" p="$4" space="$3">
-            <YStack space="$2">
-                <H4
-                    color="#2c3e50"
-                    fontWeight="600"
+        <Card bg="white" overflow="hidden">
+            <Card.Header
+                padded
+                paddingBlock="$2"
+                bg="#2d3748"
+            >
+                <View
+                    display="flex"
+                    flexDirection="row"
+                    gap="$2"
+                    items="center"
+                    justify="center"
                 >
-                    💓 Vital Signs & Photo
-                    Documentation
-                </H4>
-            </YStack>
-
-            <XStack space="$3">
-                <YStack space="$3" flex={1}>
-                    <H6 color="#495057">
-                        📊 Vital Signs
-                    </H6>
+                    <Text
+                        color="white"
+                        fontSize="$8"
+                        fontWeight="bold"
+                    >
+                        Vital Signs & Photo
+                        Documentation
+                    </Text>
+                </View>
+            </Card.Header>
+            <YStack p="$4" gap="$4">
+                <YStack gap="$3">
+                    <XStack
+                        items="center"
+                        gap="$2"
+                    >
+                        <Stethoscope
+                            size={16}
+                            color="#495057"
+                        />
+                        <H6 color="#495057">
+                            Vital Signs
+                        </H6>
+                    </XStack>
 
                     <Card bg="#f8f9fa" p="$3">
-                        <YStack space="$3">
+                        <YStack gap="$3">
                             <XStack
-                                jc="space-between"
-                                ai="center"
+                                content="space-between"
+                                items="center"
                             >
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
-                                    <Text fontSize="$2">
-                                        🩸
-                                    </Text>
+                                    <Droplet
+                                        size={16}
+                                        color="#6c757d"
+                                    />
                                     <Text
                                         fontSize="$3"
                                         color="#6c757d"
@@ -73,8 +92,8 @@ export function VitalSigns({
                                     </Text>
                                 </XStack>
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
                                     <Text
                                         fontSize="$5"
@@ -95,16 +114,17 @@ export function VitalSigns({
                             </XStack>
 
                             <XStack
-                                jc="space-between"
-                                ai="center"
+                                content="space-between"
+                                items="center"
                             >
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
-                                    <Text fontSize="$2">
-                                        🌡️
-                                    </Text>
+                                    <Thermometer
+                                        size={16}
+                                        color="#6c757d"
+                                    />
                                     <Text
                                         fontSize="$3"
                                         color="#6c757d"
@@ -113,8 +133,8 @@ export function VitalSigns({
                                     </Text>
                                 </XStack>
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
                                     <Text
                                         fontSize="$5"
@@ -135,16 +155,17 @@ export function VitalSigns({
                             </XStack>
 
                             <XStack
-                                jc="space-between"
-                                ai="center"
+                                content="space-between"
+                                items="center"
                             >
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
-                                    <Text fontSize="$2">
-                                        💓
-                                    </Text>
+                                    <Heart
+                                        size={16}
+                                        color="#6c757d"
+                                    />
                                     <Text
                                         fontSize="$3"
                                         color="#6c757d"
@@ -153,8 +174,8 @@ export function VitalSigns({
                                     </Text>
                                 </XStack>
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
                                     <Text
                                         fontSize="$5"
@@ -175,16 +196,17 @@ export function VitalSigns({
                             </XStack>
 
                             <XStack
-                                jc="space-between"
-                                ai="center"
+                                content="space-between"
+                                items="center"
                             >
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
-                                    <Text fontSize="$2">
-                                        🫁
-                                    </Text>
+                                    <Activity
+                                        size={16}
+                                        color="#6c757d"
+                                    />
                                     <Text
                                         fontSize="$3"
                                         color="#6c757d"
@@ -194,8 +216,8 @@ export function VitalSigns({
                                     </Text>
                                 </XStack>
                                 <XStack
-                                    space="$2"
-                                    ai="center"
+                                    gap="$2"
+                                    items="center"
                                 >
                                     <Text
                                         fontSize="$5"
@@ -218,15 +240,24 @@ export function VitalSigns({
                     </Card>
                 </YStack>
 
-                <YStack space="$3" flex={1}>
-                    <H6 color="#495057">
-                        📸 Photo Documentation
-                    </H6>
+                <YStack gap="$3">
+                    <XStack
+                        items="center"
+                        gap="$2"
+                    >
+                        <Camera
+                            size={16}
+                            color="#495057"
+                        />
+                        <H6 color="#495057">
+                            Photo Documentation
+                        </H6>
+                    </XStack>
                     <Card
                         bg="#f8f9fa"
                         p="$3"
-                        ai="center"
-                        jc="center"
+                        items="center"
+                        content="center"
                         minHeight={250}
                     >
                         {photoUrl ? (
@@ -243,16 +274,16 @@ export function VitalSigns({
                             />
                         ) : (
                             <YStack
-                                ai="center"
-                                space="$2"
+                                items="center"
+                                gap="$2"
                             >
-                                <Text fontSize="$6">
-                                    📷
-                                </Text>
+                                <Camera
+                                    size={48}
+                                    color="#6c757d"
+                                />
                                 <Text
                                     fontSize="$3"
                                     color="#6c757d"
-                                    ta="center"
                                 >
                                     No photo
                                     available
@@ -261,7 +292,7 @@ export function VitalSigns({
                         )}
                     </Card>
                 </YStack>
-            </XStack>
+            </YStack>
         </Card>
     );
 }
