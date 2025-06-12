@@ -17,6 +17,43 @@
 
     <style>
 
+        /* Fix for conversation list scrolling issue */
+        .messaging-container {
+            height: calc(100vh - 60px); /* Adjust based on your navbar height */
+            max-height: calc(100vh - 60px);
+        }
+
+        .conversation-list {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-height: 100%; /* Use full height of container */
+            overflow: hidden; /* Hide overflow at container level */
+        }
+
+        .conversation-search, 
+        .conversation-list > .search-container {
+            flex: 0 0 auto; /* Don't allow search to shrink */
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #fff;
+        }
+
+        .conversation-list-items {
+            flex: 1; /* Take remaining space */
+            overflow-y: auto; /* Only enable scroll here */
+            overflow-x: hidden;
+            max-height: calc(100% - 70px); /* Adjust based on search height */
+            padding-bottom: 20px; /* Add space at bottom of scrolling area */
+        }
+
+        /* Fix for dark mode if needed */
+        .dark-mode .conversation-search,
+        .dark-mode .conversation-list > .search-container {
+            background-color: #343a40;
+        }
+
         .sidebar .logo-details .logo_name {
             font-size: 14px;
         }

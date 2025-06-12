@@ -27,11 +27,6 @@
             overflow-y: visible;
         }
         
-        /* Prevent content clipping */
-        .container-fluid {
-            padding-bottom: 60px;
-        }
-        
         /* Responsive adjustment when sidebar is closed */
         .sidebar.close ~ .home-section {
             left: 78px;
