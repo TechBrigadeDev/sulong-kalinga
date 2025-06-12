@@ -192,35 +192,78 @@
             function loadCarePlans(page = 1) {
                 const search = document.querySelector('input[name="search"]').value;
                 const filter = document.getElementById('filterInput').value;
-                const container = document.querySelector('.card-body');
-                const loadingHtml = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+                
+                // Target the table container specifically - this is the key fix
+                const tableContainer = document.querySelector('.card:not(.mb-3) .card-body p-0');
+                
+                if (!tableContainer) {
+                    // Fallback if the specific selector doesn't match
+                    const tableContainer = document.querySelector('.card:not(.mb-3) .card-body');
+                    if (!tableContainer) {
+                        console.error('Could not find table container');
+                        return;
+                    }
+                }
                 
                 // Show loading indicator
-                container.innerHTML = loadingHtml;
+                tableContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
                 
-                fetch(`{{ route('family.care.plan.index') }}?search=${encodeURIComponent(search)}&filter=${filter}&page=${page}&ajax=1`, {
+                // Get the secure URL for the route
+                const baseUrl = window.location.pathname.includes('/family/') 
+                    ? '{{ secure_url(route("family.care.plan.index")) }}'
+                    : '{{ secure_url(route("beneficiary.care.plan.index")) }}';
+                
+                // Make the AJAX request with proper headers
+                fetch(`${baseUrl}?search=${encodeURIComponent(search)}&filter=${filter}&page=${page}&ajax=1`, {
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
                 .then(html => {
-                    container.innerHTML = html;
+                    // Insert the HTML into the table container
+                    tableContainer.innerHTML = html;
                     
                     // Re-attach event listeners to the new content
                     attachEventListeners();
                     
-                    // Update URL without refreshing
+                    // Update pagination info
+                    updatePaginationInfo();
+                    
+                    // Update URL without refreshing - using secure URL
                     window.history.pushState(
                         {search: search, filter: filter, page: page},
                         '',
-                        `{{ route('family.care.plan.index') }}?search=${encodeURIComponent(search)}&filter=${filter}&page=${page}`
+                        `${baseUrl}?search=${encodeURIComponent(search)}&filter=${filter}&page=${page}`
                     );
                 })
                 .catch(error => {
                     console.error('Error loading care plans:', error);
-                    container.innerHTML = '<div class="alert alert-danger">Error loading care plans. Please try again.</div>';
+                    tableContainer.innerHTML = '<div class="alert alert-danger">Error loading care plans. Please refresh the page.</div>';
                 });
+            }
+
+            // Add this new function to update pagination info
+            function updatePaginationInfo() {
+                // Get pagination data from the response
+                const firstItem = document.querySelector('[data-first-item]')?.getAttribute('data-first-item');
+                const lastItem = document.querySelector('[data-last-item]')?.getAttribute('data-last-item');
+                const totalItems = document.querySelector('[data-total-items]')?.getAttribute('data-total-items');
+                
+                // Update pagination info if available
+                if (firstItem && lastItem && totalItems) {
+                    const paginationInfo = document.querySelector('.pagination-info');
+                    if (paginationInfo) {
+                        paginationInfo.textContent = `Showing ${firstItem} to ${lastItem} of ${totalItems} entries`;
+                    }
+                }
             }
             
             // Attach event listeners to dynamic content
@@ -239,7 +282,7 @@
                 setupAcknowledgeButtons();
             }
             
-            // Function to handle acknowledge button setup
+            // Function to handle acknowledge button setup with HTTPS support
             function setupAcknowledgeButtons() {
                 document.querySelectorAll('.acknowledge-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
@@ -247,7 +290,12 @@
                         
                         // Set the form action with secure URL
                         const formEl = document.getElementById('acknowledgmentForm');
-                        formEl.action = `{{ secure_url('family/care-plan/acknowledge') }}/${careplanId}`;
+                        // Use the proper route based on user type
+                        const secureUrl = window.location.pathname.includes('/family/') 
+                            ? `{{ secure_url('family/care-plan/acknowledge') }}/${careplanId}`
+                            : `{{ secure_url('beneficiary/care-plan/acknowledge') }}/${careplanId}`;
+                            
+                        formEl.action = secureUrl;
                         
                         // Show the modal
                         acknowledgmentModal.show();
