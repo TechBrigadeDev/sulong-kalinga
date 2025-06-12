@@ -22,17 +22,6 @@ const StepIndicator = styled(YStack, {
     } as const,
 });
 
-const StepConnector = styled(YStack, {
-    name: "StepConnector",
-    variants: {
-        completed: {
-            true: {
-                background: "$green10",
-            },
-        },
-    } as const,
-});
-
 interface FormProgressProps {
     currentStep?: number;
     setStep?: (step: number) => void;
@@ -126,25 +115,6 @@ export const FormProgress = ({
                                 </Text>
                             </StepIndicator>
                         </TouchableOpacity>
-                        {index <
-                            steps.length - 1 && (
-                            <StepConnector
-                                completed={
-                                    currentStep >
-                                    index
-                                }
-                                style={{
-                                    flex: 1,
-                                    height: 2,
-                                    backgroundColor:
-                                        currentStep >
-                                        index
-                                            ? "#00a651"
-                                            : "#e0e0e0",
-                                    marginHorizontal: 4,
-                                }}
-                            />
-                        )}
                     </XStack>
                 ))}
             </XStack>

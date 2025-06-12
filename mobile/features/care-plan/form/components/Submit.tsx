@@ -1,20 +1,31 @@
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { CarePlanFormData } from "features/care-plan/form/type";
+import { useSubmitCarePlanForm } from "features/care-plan/hook";
 import { SubmitHandler } from "react-hook-form";
 import { Button } from "tamagui";
 
 const SubmitCarePlanForm = () => {
+    const { mutateAsync, isPending } =
+        useSubmitCarePlanForm();
     const { handleSubmit, formState } =
         useCarePlanForm();
 
     const onSubmit: SubmitHandler<
         CarePlanFormData
-    > = (data) => {
+    > = async (data) => {
         console.log(
             "Form submitted with data:",
             data,
         );
-        // TODO: handle API call
+
+        try {
+            await mutateAsync(data);
+        } catch (error) {
+            console.error(
+                "Error submitting form:",
+                error,
+            );
+        }
     };
 
     const onError = (errors: any) => {
@@ -24,15 +35,30 @@ const SubmitCarePlanForm = () => {
         );
     };
 
+    const onPress = async () => {
+        if (formState.isSubmitting) {
+            return;
+        }
+
+        try {
+            await handleSubmit(
+                onSubmit,
+                onError,
+            )();
+        } catch (error) {
+            console.error(
+                "Error handling form submission:",
+                error,
+            );
+        }
+    }
+
     return (
         <Button
             style={{
                 flex: 1,
             }}
-            onPress={handleSubmit(
-                onSubmit,
-                onError,
-            )}
+            onPress={onPress}
             themeInverse
             disabled={formState.isSubmitting}
         >

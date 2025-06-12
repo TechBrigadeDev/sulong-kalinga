@@ -31,7 +31,7 @@ const VisitDetailsCard = ({
                 <YStack space="$2">
                     <XStack
                         space="$2"
-                        alignItems="center"
+                        
                     >
                         <Calendar size="$1" />
                         <Paragraph>
@@ -40,7 +40,7 @@ const VisitDetailsCard = ({
                     </XStack>
                     <XStack
                         space="$2"
-                        alignItems="center"
+                        
                     >
                         <Clock size="$1" />
                         <Paragraph>

@@ -100,7 +100,6 @@ export const PersonalDetails = ({
                         <Assessment />
                     </YStack>
                 </Card>
-                <SubmitCarePlanForm />
             </YStack>
         </ScrollView>
     );

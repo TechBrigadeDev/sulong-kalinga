@@ -14,12 +14,6 @@ const Screen = () => {
                 marginBottom: insets.bottom,
             }}
         >
-            <Stack.Screen
-                options={{
-                    headerTitle:
-                        "Weekly Care Plan",
-                }}
-            />
             <WCPForm />
         </SafeAreaProvider>
     );
