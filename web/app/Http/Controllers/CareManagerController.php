@@ -129,7 +129,7 @@ class CareManagerController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/', // Allows alphanumeric characters, spaces, commas, periods, and hyphens
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
         
             
@@ -368,7 +368,7 @@ class CareManagerController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/',
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
             'personal_email' => [
                 'required',

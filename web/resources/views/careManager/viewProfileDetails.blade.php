@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dashboard</title>
+    <title>{{ $beneficiary->first_name }} {{ $beneficiary->last_name }} | Profile Details</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="{{ asset('css/viewProfileDetails.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/profileDetails.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
 </head>
 <body>
 
@@ -19,461 +18,568 @@
     
     <div class="home-section">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                    <!-- Original Back Button -->
-                <a href="{{ route('care-manager.beneficiaries.index') }}" class="btn btn-secondary original-back-btn">
-                    <i class="bx bx-arrow-back"></i> Back
+            <!-- Header Section -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-2 gap-2">
+                <a href="{{ route('care-manager.beneficiaries.index') }}" class="btn btn-secondary desktop-back-btn align-self-start align-self-md-center">
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">VIEW BENEFICIARY PROFILE DETAILS</div>
-
-                <!-- Edit and Delete Buttons -->
-                <div>
-                    <!-- Hidden Back Button 
-                    <a href="{{ route('care-manager.beneficiaries.index') }} class="btn btn-secondary hidden-back-btn">
-                        <i class="bx bx-arrow-back"></i> Back
-                    </a>-->
-                    <!-- Edit Button with Routing -->
+                <h4 class="mb-0 text-center" style="font-weight: bold;">
+                    Beneficiary Profile Details
+                </h4>
+                <div class="d-flex gap-2 align-self-end align-self-md-center header-buttons">
+                    <a href="{{ route('care-manager.beneficiaries.index') }}" class="btn btn-secondary mobile-back-btn" style="height: 33px;">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
                     <a href="{{ route('care-manager.beneficiaries.edit', $beneficiary->beneficiary_id) }}" class="btn btn-primary">
-                        <i class="bx bxs-edit"></i> Edit
+                        <i class="bi bi-pencil-square me-1"></i> Edit
                     </a>
                     <button type="button" class="btn btn-danger" onclick="openDeleteBeneficiaryModal('{{ $beneficiary->beneficiary_id }}', '{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}')">
-                        <i class="bx bxs-trash"></i> Delete
+                        <i class="bi bi-trash me-1"></i> Delete
                     </button>
                 </div>
             </div>
-            <div class="row justify-content-center" id="profileDetails">
-                <div class="row mb-3 mt-3 justify-content-center">
-                    <div class="col-lg-8 col-md-12 col-sm-12" id="profilePic">
-                        <div class="row justify-content-center align-items-center text-center text-md-start">
-                            <!-- Profile Picture Column -->
-                            <div class="col-lg-3 col-md-4 col-sm-12 mb-3 mb-md-0">
+            <div class="row" id="home-content">
+                <!-- Profile Header Card -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center mb-4 mb-md-0">
                                 <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}"
                                     alt="Profile Picture" 
-                                    class="img-fluid rounded-circle mx-auto d-block d-md-inline" 
-                                    style="width: 150px; height: 150px; border: 1px solid #ced4da;">
+                                    class="img-fluid rounded-circle profile-img">
                             </div>
-                            <!-- Name and Details Column -->
-                            <div class="col-lg-9 col-md-8 col-sm-12">
-                                <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start">
-                                    <!-- Complete Name -->
-                                    <h4 class="me-md-3 mb-2 mb-md-0 mt-2">{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}</h4>
-                                    <!-- Dropdown for Status -->
-                                    <div class="form-group mb-0 ms-md-auto">
-                                        <select class="form-select d-inline-block w-auto" id="statusSelect{{ $beneficiary->beneficiary_id }}" 
+                            <div class="col-md-9">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-start profile-header-content">
+                                    <div class="text-center text-md-start mb-3 mb-md-0">
+                                        <h3 class="mb-1" style="color: var(--secondary-color);">
+                                            {{ $beneficiary->first_name }} {{ $beneficiary->last_name }}
+                                        </h3>
+                                        <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                            <span class="badge rounded-pill bg-light text-dark">
+                                                <i class="bi bi-tag me-1"></i> {{ $beneficiary->category->category_name }}
+                                            </span>
+                                            <span class="badge rounded-pill {{ $beneficiary->status->status_name == 'Active' ? 'badge-active' : 'badge-inactive' }}">
+                                                {{ $beneficiary->status->status_name }}
+                                            </span>
+                                        </div>
+                                        <p class="text-muted mt-2 mb-0">
+                                            <i class="bi bi-calendar3 me-1"></i> Beneficiary since {{ $beneficiary->created_at->format('F j, Y') }}
+                                        </p>
+                                    </div>
+                                    <div class="mt-2 mt-md-0 status-select-container">
+                                        <select class="form-select status-select px-5 text-center" 
+                                                id="statusSelect{{ $beneficiary->beneficiary_id }}" 
                                                 name="status" 
                                                 onchange="openStatusChangeModal(this, 'Beneficiary', {{ $beneficiary->beneficiary_id }}, '{{ $beneficiary->status->status_name }}')">
-                                            <option value="Active" {{ $beneficiary->status->status_name == 'Active' ? 'selected' : '' }}>Active Beneficiary</option>
-                                            <option value="Inactive" {{ $beneficiary->status->status_name == 'Inactive' ? 'selected' : '' }}>Inactive Beneficiary</option>
+                                            <option value="Active" {{ $beneficiary->status->status_name == 'Active' ? 'selected' : '' }}>Active</option>
+                                            <option value="Inactive" {{ $beneficiary->status->status_name == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                         </select>
                                     </div>
                                 </div>
-                                <p class="text-muted mt-2 text-center text-md-start">A Beneficiary since {{ $beneficiary->created_at->format('F j, Y') }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="row">
-                    <!-- Personal Details Column -->
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                        <h5 class="text-center">Personal Details</h5>
-                        <table class="table table-striped personal-details">                            
-                            <tbody>
-                                <tr>
-                                    <td style="width:30%;"><strong>Age:</strong></td>
-                                    <td>{{ \Carbon\Carbon::parse($beneficiary->birthday)->age }} years old</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Birthday:</strong></td>
-                                    <td>{{ \Carbon\Carbon::parse($beneficiary->birthday)->format('F j, Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Gender:</strong></td>
-                                    <td>{{ $beneficiary->gender }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Civil Status:</strong></td>
-                                    <td>{{ $beneficiary->civil_status }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Username:</strong></td>
-                                    <td>{{ $beneficiary->username }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Mobile Number:</strong></td>
-                                    <td>{{ $beneficiary->mobile }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Landline Number:</strong></td>
-                                    <td>{{ $beneficiary->landline ?? 'N/A' }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Current Address:</strong></td>
-                                    <td><p>{{ $beneficiary->street_address }}</p></td>
-                                </tr>
-                                <tr>
-                                    <td style="width:30%;"><strong>Primary Caregiver:</strong></td>
-                                    <td><p>{{ $beneficiary->primary_caregiver ?? 'N/A' }}</p></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Medical History Column -->
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                        <h5 class="text-center">Medical History</h5>
-                        <table class="table table-striped medical-history">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Medical Conditions:</strong></td>
-                                    <td>
-                                        <p>
-                                            @php
-                                                $medicalConditions = is_string($beneficiary->generalCarePlan->healthHistory->medical_conditions) 
-                                                    ? json_decode($beneficiary->generalCarePlan->healthHistory->medical_conditions, true) 
-                                                    : $beneficiary->generalCarePlan->healthHistory->medical_conditions;
-                                                    
-                                                echo is_array($medicalConditions) ? implode(', ', $medicalConditions) : ($medicalConditions ?? 'N/A');
-                                            @endphp
-                                        </p>
-                                    </td>   
-                                </tr>
-                                <tr>
-                                    <td><strong>Medications:</strong></td>
-                                    <td>
-                                        <p>
-                                            @php
-                                                $medications = is_string($beneficiary->generalCarePlan->healthHistory->medications) 
-                                                    ? json_decode($beneficiary->generalCarePlan->healthHistory->medications, true) 
-                                                    : $beneficiary->generalCarePlan->healthHistory->medications;
-                                                    
-                                                echo is_array($medications) ? implode(', ', $medications) : ($medications ?? 'N/A');
-                                            @endphp
-                                        </p>
-                                    </td>   
-                                </tr>
-                                <tr>
-                                    <td><strong>Allergies:</strong></td>
-                                    <td>
-                                        <p>
-                                            @php
-                                                $allergies = is_string($beneficiary->generalCarePlan->healthHistory->allergies) 
-                                                    ? json_decode($beneficiary->generalCarePlan->healthHistory->allergies, true) 
-                                                    : $beneficiary->generalCarePlan->healthHistory->allergies;
-                                                    
-                                                echo is_array($allergies) ? implode(', ', $allergies) : ($allergies ?? 'N/A');
-                                            @endphp
-                                        </p>
-                                    </td>   
-                                </tr>
-                                <tr>
-                                    <td><strong>Immunizations:</strong></td>
-                                    <td>
-                                        <p>
-                                            @php
-                                                $immunizations = is_string($beneficiary->generalCarePlan->healthHistory->immunizations) 
-                                                    ? json_decode($beneficiary->generalCarePlan->healthHistory->immunizations, true) 
-                                                    : $beneficiary->generalCarePlan->healthHistory->immunizations;
-                                                    
-                                                echo is_array($immunizations) ? implode(', ', $immunizations) : ($immunizations ?? 'N/A');
-                                            @endphp
-                                        </p>
-                                    </td>   
-                                </tr>
-                                <tr>
-                                    <td><strong>Category:</strong></td>
-                                    <td><p>{{ $beneficiary->category->category_name }}</p></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <!-- Emergency Details Column -->
-                    <div class="col-lg-5 col-md-5 col-sm-12">
-                        <h5 class="text-center">Emergency Details</h5>
-                        <table class="table table-striped emergency-details">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Emergency Contact:</strong></td>
-                                    <td>{{ $beneficiary->emergency_contact_name }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Relation:</strong></td>
-                                    <td>{{ $beneficiary->emergency_contact_relation ?? 'Not Specified' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Mobile Number:</strong></td>
-                                    <td>{{ $beneficiary->emergency_contact_mobile }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Email Address:</strong></td>
-                                    <td>{{ $beneficiary->emergency_contact_email ?? 'N/A'}}</td>                                </tr>
-                                <tr>
-                                    <td><strong>Emergency Procedure:</strong></td>
-                                    <td>{{ $beneficiary->emergency_procedure}}</td>  
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Medication Management Column -->
-                    <div class="col-lg-7 col-md-7 col-sm-12">
-                        <h5 class="text-center">Medication Management</h5>
-                        <table class="table table-striped medication-management">
-                            <thead>
-                                <th style="width:30%;">Medication Name</th>
-                                <th style="width:20%;">Dosage</th>
-                                <th style="width:20%;">Frequency</th>
-                                <th style="width:30%;">Instructions</th>
-                            </thead>
-                            <tbody>
-                                @foreach ($beneficiary->generalCarePlan->medications as $medication)
-                                <tr>
-                                    <td style="width:30%;"><p>{{ $medication->medication }}</p></td>
-                                    <td style="width:20%;"><p>{{ $medication->dosage }}</p></td>
-                                    <td style="width:20%;"><p>{{ $medication->frequency }}</p></td>
-                                    <td style="width:30%;"><p>{{ $medication->administration_instructions }}</p></td>                                
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Care Needs Column -->
-                    <div class="col-lg-8 col-md-8 col-sm-12">
-                        <h5 class="text-center">Care Needs</h5>
-                        <table class="table table-striped care-needs">                            
-                            <thead>
-                                <th style="width:30%;"></th>
-                                <th style="width:20%;">Frequency</th>
-                                <th style="width:50%;">Assistance Required</th>
-                            </thead>
-                            <tbody>
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds1 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Mobility</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds2 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Cognitive / Communication</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds3 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Self-sustainability</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds4 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Disease / Therapy Handling</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds5 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Daily Life / Social Contact</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds6 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Outdoor Activities</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-
-                                @php $firstRow = true; @endphp
-                                @foreach ($careNeeds7 as $careNeed)
-                                <tr>
-                                    @if ($firstRow)
-                                        <td style="width:30%;"><strong>Household Keeping</strong></td>
-                                        @php $firstRow = false; @endphp
-                                    @else
-                                        <td style="width:30%;"></td>
-                                    @endif
-                                    <td style="width:20%;"><p>{{ $careNeed->frequency }}</p></td>
-                                    <td style="width:50%;"><p>{{ $careNeed->assistance_required }}</p></td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Mobility Column -->
-                    <div class="col-lg-4 col-md-4 col-sm-12">
-                        <h5 class="text-center">Mobility</h5>
-                        <table class="table table-striped mobility">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Walking Ability:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->mobility->walking_ability ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Assistive Devices:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->mobility->assistive_devices ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Transportation Needs:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->mobility->transportation_needs ?? 'N/A' }}</p></td>                                
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- Cognitive Function Column -->
-                <div class="row">
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                        <h5 class="text-center">Cognitive Function</h5>
-                        <table class="table table-striped cognitive-function">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Memory:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->cognitiveFunction->memory ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Thinking Skills:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->cognitiveFunction->thinking_skills ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Orientation:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->cognitiveFunction->orientation ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Behavior:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->cognitiveFunction->behavior ?? 'N/A' }}</p></td>                                
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Emotional Well-being Column -->
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                        <h5 class="text-center">Emotional Well-being</h5>
-                        <table class="table table-striped emotional-wellbeing">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Mood:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->emotionalWellbeing->mood ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Social Interactions:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->emotionalWellbeing->social_interactions ?? 'N/A' }}</p></td>                                
-                                </tr>
-                                <tr>
-                                    <td><strong>Emotional Support Need:</strong></td>
-                                    <td><p>{{ $beneficiary->generalCarePlan->emotionalWellbeing->emotional_support_needs ?? 'N/A' }}</p></td>                                
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Assigned Care Worker Column -->
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                        <h5 class="text-center">Assigned Care Worker</h5>
-                        <table class="table table-striped">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Name:</strong>   {{ $careWorker->first_name ?? 'N/A' }} {{ $careWorker->last_name ?? 'N/A' }}</td>                             
-                                </tr>
-                                <tr> 
-                                    <td style="width: 100%; text-align:center;"><strong>Tasks and Responsibilities</strong></td>                           
-                                </tr>
-                                <!-- LOOP -->
-                                @foreach ($beneficiary->generalCarePlan->careWorkerResponsibility as $responsibility)
-                                <tr>
-                                    <td style="width:100%;"><p>{{ $responsibility->task_description }}</p></td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="col-lg-6 col-md-6 col-sm-12">
-                        <h5 class="text-center">Documents</h5>
-                        <table class="table table-striped">
-                            <tbody>
-                                <tr>
-                                    <td style="width: 40%;"><strong>Care Service Agreement:</strong></td>
-                                    <td style="width: 60%;">
-                                        @if($beneficiary->care_service_agreement_doc)
-                                            <a href="{{ asset('storage/' . $beneficiary->care_service_agreement_doc) }}" download>Download</a>
-                                        @else
-                                            N/A
-                                        @endif
-                                    </td>                                
-                                </tr>
-                                <tr>
-                                    <td style="width: 40%;"><strong>General Careplan:</strong></td>
-                                    <td style="width: 60%;">
-                                        @if($beneficiary->general_care_plan_doc)
-                                            <a href="{{ asset('storage/' . $beneficiary->general_care_plan_doc) }}" download>Download</a>
-                                        @else
-                                            N/A
-                                        @endif
-                                    </td>                                
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- Main Content Tabs -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <ul class="nav nav-tabs px-3 pt-2" id="profileTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                                    <i class="bi bi-person-lines-fill me-1"></i> Personal
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab">
+                                    <i class="bi bi-heart-pulse me-1"></i> Medical
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="care-tab" data-bs-toggle="tab" data-bs-target="#care" type="button" role="tab">
+                                    <i class="bi bi-clipboard2-pulse me-1"></i> Care Plan
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
+                                    <i class="bi bi-file-earmark-text me-1"></i> Documents
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content p-4" id="profileTabsContent">
+                            <!-- Personal Details Tab -->
+                            <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Basic Information -->
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Age:</div>
+                                                    <div class="col-sm-8">{{ \Carbon\Carbon::parse($beneficiary->birthday)->age }} years old</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Birthday:</div>
+                                                    <div class="col-sm-8">{{ \Carbon\Carbon::parse($beneficiary->birthday)->format('F j, Y') }}</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Gender:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->gender }}</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Civil Status:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->civil_status }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Contact Information -->
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Contact Information</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Username:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->username }}</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Mobile:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->mobile }}</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Landline:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->landline ?? 'N/A' }}</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4 fw-bold text-muted">Address:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->street_address }}</div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-4 fw-bold text-muted">Caregiver:</div>
+                                                    <div class="col-sm-8">{{ $beneficiary->primary_caregiver ?? 'N/A' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Emergency Contacts -->
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                                                <h5 class="mb-0 text-white"><i class="bi bi-exclamation-triangle me-2"></i>Emergency Contacts</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="fw-bold text-muted">Contact Person:</div>
+                                                        <div>{{ $beneficiary->emergency_contact_name }}</div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="fw-bold text-muted">Relationship:</div>
+                                                        <div>{{ $beneficiary->emergency_contact_relation ?? 'Not Specified' }}</div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="fw-bold text-muted">Mobile:</div>
+                                                        <div>{{ $beneficiary->emergency_contact_mobile }}</div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="fw-bold text-muted">Email:</div>
+                                                        <div>{{ $beneficiary->emergency_contact_email ?? 'N/A'}}</div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="fw-bold text-muted">Emergency Procedure:</div>
+                                                        <div>{{ $beneficiary->emergency_procedure}}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Medical Tab -->
+                            <div class="tab-pane fade" id="medical" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Health History -->
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Health History</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <div class="fw-bold text-muted">Medical Conditions:</div>
+                                                    <div class="p-3 bg-light rounded mt-2">
+                                                        @php
+                                                            $medicalConditions = is_string($beneficiary->generalCarePlan->healthHistory->medical_conditions) 
+                                                                ? json_decode($beneficiary->generalCarePlan->healthHistory->medical_conditions, true) 
+                                                                : $beneficiary->generalCarePlan->healthHistory->medical_conditions;
+                                                                
+                                                            echo is_array($medicalConditions) ? implode(', ', $medicalConditions) : ($medicalConditions ?? 'N/A');
+                                                        @endphp
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <div class="fw-bold text-muted">Allergies:</div>
+                                                    <div class="p-3 bg-light rounded mt-2">
+                                                        @php
+                                                            $allergies = is_string($beneficiary->generalCarePlan->healthHistory->allergies) 
+                                                                ? json_decode($beneficiary->generalCarePlan->healthHistory->allergies, true) 
+                                                                : $beneficiary->generalCarePlan->healthHistory->allergies;
+                                                                
+                                                            echo is_array($allergies) ? implode(', ', $allergies) : ($allergies ?? 'N/A');
+                                                        @endphp
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <div class="fw-bold text-muted">Immunizations:</div>
+                                                    <div class="p-3 bg-light rounded mt-2">
+                                                        @php
+                                                            $immunizations = is_string($beneficiary->generalCarePlan->healthHistory->immunizations) 
+                                                                ? json_decode($beneficiary->generalCarePlan->healthHistory->immunizations, true) 
+                                                                : $beneficiary->generalCarePlan->healthHistory->immunizations;
+                                                                
+                                                            echo is_array($immunizations) ? implode(', ', $immunizations) : ($immunizations ?? 'N/A');
+                                                        @endphp
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Medications -->
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"><i class="bi bi-capsule me-2"></i>Current Medications</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                @if(count($beneficiary->generalCarePlan->medications) > 0)
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Medication</th>
+                                                                    <th>Dosage</th>
+                                                                    <th>Frequency</th>
+                                                                    <th>Instructions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($beneficiary->generalCarePlan->medications as $medication)
+                                                                <tr>
+                                                                    <td>{{ $medication->medication }}</td>
+                                                                    <td>{{ $medication->dosage }}</td>
+                                                                    <td>{{ $medication->frequency }}</td>
+                                                                    <td>{{ $medication->administration_instructions }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="bi bi-info-circle fs-4"></i>
+                                                        <p class="mt-2">No medications recorded</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Care Plan Tab -->
+                            <div class="tab-pane fade" id="care" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Care Needs -->
+                                    <div class="col-lg-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"><i class="bi bi-clipboard2-check me-2"></i>Care Needs</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                @if(count($careNeeds1) > 0 || count($careNeeds2) > 0 || count($careNeeds3) > 0 || count($careNeeds4) > 0 || count($careNeeds5) > 0 || count($careNeeds6) > 0 || count($careNeeds7) > 0)
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Category</th>
+                                                                    <th>Frequency</th>
+                                                                    <th>Assistance Required</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($careNeeds1 as $careNeed)
+                                                                <tr>
+                                                                    <td>Mobility</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                                
+                                                                @foreach ($careNeeds2 as $careNeed)
+                                                                <tr>
+                                                                    <td>Cognitive/Communication</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                                
+                                                                @foreach ($careNeeds3 as $careNeed)
+                                                                <tr>
+                                                                    <td>Self-sustainability</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                                
+                                                                @foreach ($careNeeds4 as $careNeed)
+                                                                <tr>
+                                                                    <td>Disease/Therapy Handling</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                                
+                                                                @foreach ($careNeeds5 as $careNeed)
+                                                                <tr>
+                                                                    <td>Daily Life/Social Contact</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                                
+                                                                @foreach ($careNeeds6 as $careNeed)
+                                                                <tr>
+                                                                    <td>Outdoor Activities</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                                
+                                                                @foreach ($careNeeds7 as $careNeed)
+                                                                <tr>
+                                                                    <td>Household Keeping</td>
+                                                                    <td>{{ $careNeed->frequency }}</td>
+                                                                    <td>{{ $careNeed->assistance_required }}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="bi bi-info-circle fs-4"></i>
+                                                        <p class="mt-2">No care needs recorded</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Mobility & Cognitive Function -->
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="card mt-4">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0"><i class="bi bi-person-walking me-2"></i>Mobility Details</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Walking Ability:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->mobility->walking_ability ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Assistive Devices:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->mobility->assistive_devices ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-muted">Transportation Needs:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->mobility->transportation_needs ?? 'N/A' }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="card mt-4">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0"><i class="bi bi-brain me-2"></i>Cognitive Function</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Memory:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->cognitiveFunction->memory ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Thinking Skills:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->cognitiveFunction->thinking_skills ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Orientation:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->cognitiveFunction->orientation ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-muted">Behavior:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->cognitiveFunction->behavior ?? 'N/A' }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="card mt-4">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0"><i class="bi bi-emoji-smile me-2"></i>Emotional Well-being</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Mood:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->emotionalWellbeing->mood ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Social Interactions:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->emotionalWellbeing->social_interactions ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-muted">Support Needs:</div>
+                                                        <div>{{ $beneficiary->generalCarePlan->emotionalWellbeing->emotional_support_needs ?? 'N/A' }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="card mt-4">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Assigned Care Worker</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <div class="fw-bold text-muted">Name:</div>
+                                                        <div>{{ $careWorker->first_name ?? 'N/A' }} {{ $careWorker->last_name ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-muted">Responsibilities:</div>
+                                                        @if(count($beneficiary->generalCarePlan->careWorkerResponsibility) > 0)
+                                                            <ul class="list-group list-group-flush mt-2">
+                                                                @foreach ($beneficiary->generalCarePlan->careWorkerResponsibility as $responsibility)
+                                                                <li class="list-group-item border-0 px-0 py-2">
+                                                                    <i class="bi bi-check-circle-fill text-primary me-2"></i>
+                                                                    {{ $responsibility->task_description }}
+                                                                </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @else
+                                                            <div class="text-muted">No responsibilities assigned</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Documents Tab -->
+                            <div class="tab-pane fade" id="documents" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Documents</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card border">
+                                                            <div class="card-body text-center">
+                                                                <i class="bi bi-file-text fs-1 text-primary mb-3"></i>
+                                                                <h5 class="card-title">Care Service Agreement</h5>
+                                                                @if($beneficiary->care_service_agreement_doc)
+                                                                    <div class="d-flex justify-content-center gap-2 mt-3">
+                                                                        <a href="{{ asset('storage/' . $beneficiary->care_service_agreement_doc) }}" 
+                                                                        class="btn btn-primary" 
+                                                                        download>
+                                                                            <i class="bi bi-download me-1"></i> Download
+                                                                        </a>
+                                                                        <a href="{{ asset('storage/' . $beneficiary->care_service_agreement_doc) }}" 
+                                                                        class="btn btn-outline-primary" 
+                                                                        target="_blank">
+                                                                            <i class="bi bi-eye me-1"></i> View
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="mt-2 text-muted small">
+                                                                        Last updated: {{ \Carbon\Carbon::parse($beneficiary->updated_at)->format('M j, Y') }}
+                                                                    </div>
+                                                                @else
+                                                                    <p class="text-muted mt-3">No document uploaded</p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card border">
+                                                            <div class="card-body text-center">
+                                                                <i class="bi bi-file-medical fs-1 text-primary mb-3"></i>
+                                                                <h5 class="card-title">General Care Plan</h5>
+                                                                @if($beneficiary->general_care_plan_doc)
+                                                                    <div class="d-flex justify-content-center gap-2 mt-3">
+                                                                        <a href="{{ asset('storage/' . $beneficiary->general_care_plan_doc) }}" 
+                                                                        class="btn btn-primary" 
+                                                                        download>
+                                                                            <i class="bi bi-download me-1"></i> Download
+                                                                        </a>
+                                                                        <a href="{{ asset('storage/' . $beneficiary->general_care_plan_doc) }}" 
+                                                                        class="btn btn-outline-primary" 
+                                                                        target="_blank">
+                                                                            <i class="bi bi-eye me-1"></i> View
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="mt-2 text-muted small">
+                                                                        Last updated: {{ \Carbon\Carbon::parse($beneficiary->updated_at)->format('M j, Y') }}
+                                                                    </div>
+                                                                @else
+                                                                    <p class="text-muted mt-3">No document uploaded</p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
+    <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-   
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Activate the first accordion item by default
+            var firstAccordion = document.querySelector('.accordion-button');
+            if (firstAccordion) {
+                firstAccordion.classList.remove('collapsed');
+                var firstCollapse = document.querySelector(firstAccordion.getAttribute('data-bs-target'));
+                if (firstCollapse) {
+                    firstCollapse.classList.add('show');
+                }
+            }
+        });
+    </script>
 </body>
 </html>

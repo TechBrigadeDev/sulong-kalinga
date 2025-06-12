@@ -200,7 +200,7 @@ class CareWorkerController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/',
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
         
             // Email fields - with unique constraint exceptions for this user
@@ -486,7 +486,7 @@ class CareWorkerController extends Controller
             'address_details' => [
                 'required',
                 'string',
-                'regex:/^[a-zA-Z0-9\s,.-]+$/', // Allows alphanumeric characters, spaces, commas, periods, and hyphens
+                'regex:/^[a-zA-Z0-9\s,.\-#:\/]+$/', // Allows alphanumeric characters, spaces, commas, periods, hyphens, #, :, and /
             ],
         
             

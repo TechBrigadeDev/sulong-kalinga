@@ -11,11 +11,21 @@
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/staffMessagingSidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/userNavbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/messaging.css') }}">
 
     <style>
+
+        .sidebar .logo-details .logo_name {
+            font-size: 14px;
+        }
+
+        .sidebar .logo-details {
+            gap: 0;
+            padding: 1px;
+        }
+
         .file-preview-container {
             display: flex;
             flex-wrap: wrap;

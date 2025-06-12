@@ -1,6 +1,9 @@
+import { useCarePlanForm } from "features/care-plan/form/form";
 import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
 import { IBeneficiary } from "features/user-management/management.type";
+import { Info } from "lucide-react-native";
 import { useState } from "react";
+import { Controller } from "react-hook-form";
 import {
     Card,
     Input,
@@ -10,14 +13,8 @@ import {
     XStack,
     YStack,
 } from "tamagui";
-export interface Beneficiary {
-    id: string;
-    name: string;
-    age: string;
-    gender: string;
-    medicalConditions: string;
-}
 
+import SubmitCarePlanForm from "./Submit";
 export interface PersonalDetailsData {
     beneficiaryId: string;
     assessment: string;
@@ -28,28 +25,16 @@ export interface PersonalDetailsData {
 }
 
 interface PersonalDetailsProps {
-    data: PersonalDetailsData;
-    onChange: (
+    data?: PersonalDetailsData;
+    onChange?: (
         data: Partial<PersonalDetailsData>,
     ) => void;
 }
 
 export const PersonalDetails = ({
-    data,
-    onChange,
+    data: _data,
+    onChange: _onChange,
 }: PersonalDetailsProps) => {
-    const [
-        selectedBeneficiary,
-        setSelectedBeneficiary,
-    ] = useState<IBeneficiary | null>(null);
-
-    // get age from beneficiary.birthdate
-    const age = selectedBeneficiary
-        ? new Date().getFullYear() -
-          new Date(
-              selectedBeneficiary.birthday,
-          ).getFullYear()
-        : "";
     return (
         <ScrollView>
             <YStack
@@ -64,49 +49,12 @@ export const PersonalDetails = ({
                                     "bold",
                             }}
                         >
-                            Select Beneficiary
+                            Personal Details
                         </Text>
                     </Card.Header>
-                    <YStack p="$4">
-                        <YStack
-                            style={{ gap: 16 }}
-                        >
-                            <SelectBeneficiary
-                                onValueChange={
-                                    setSelectedBeneficiary
-                                }
-                            />
-                            {selectedBeneficiary && (
-                                <YStack gap="$2">
-                                    <Text>
-                                        Age: {age}
-                                    </Text>
-                                    <Text>
-                                        Birthday:{" "}
-                                        {new Date(
-                                            selectedBeneficiary.birthday,
-                                        ).toLocaleDateString()}
-                                    </Text>
-                                    <Text>
-                                        Gender:{" "}
-                                        {
-                                            selectedBeneficiary.gender
-                                        }
-                                    </Text>
-                                    <Text>
-                                        Civil
-                                        Status:{" "}
-                                        {
-                                            selectedBeneficiary.civil_status
-                                        }
-                                    </Text>
-                                    <Text>
-                                        Address:{" "}
-                                        {}
-                                    </Text>
-                                </YStack>
-                            )}
-                        </YStack>
+                    <YStack p="$4" gap="$4">
+                        <Beneficiary />
+                        <Illness />
                     </YStack>
                 </Card>
 
@@ -125,99 +73,12 @@ export const PersonalDetails = ({
                     <YStack p="$4">
                         <YStack gap="$4">
                             <XStack gap="$4">
-                                <YStack flex={1}>
-                                    <Label htmlFor="bloodPressure">
-                                        Blood
-                                        Pressure
-                                    </Label>
-                                    <Input
-                                        id="bloodPressure"
-                                        value={
-                                            data.bloodPressure
-                                        }
-                                        onChangeText={(
-                                            text,
-                                        ) =>
-                                            onChange(
-                                                {
-                                                    bloodPressure:
-                                                        text,
-                                                },
-                                            )
-                                        }
-                                        placeholder="e.g. 120/80"
-                                    />
-                                </YStack>
-                                <YStack flex={1}>
-                                    <Label htmlFor="pulseRate">
-                                        Pulse Rate
-                                    </Label>
-                                    <Input
-                                        id="pulseRate"
-                                        value={
-                                            data.pulseRate
-                                        }
-                                        onChangeText={(
-                                            text,
-                                        ) =>
-                                            onChange(
-                                                {
-                                                    pulseRate:
-                                                        text,
-                                                },
-                                            )
-                                        }
-                                        placeholder="BPM"
-                                    />
-                                </YStack>
+                                <BloodPressure />
+                                <PulseRate />
                             </XStack>
-
                             <XStack gap="$4">
-                                <YStack flex={1}>
-                                    <Label htmlFor="temperature">
-                                        Temperature
-                                    </Label>
-                                    <Input
-                                        id="temperature"
-                                        value={
-                                            data.temperature
-                                        }
-                                        onChangeText={(
-                                            text,
-                                        ) =>
-                                            onChange(
-                                                {
-                                                    temperature:
-                                                        text,
-                                                },
-                                            )
-                                        }
-                                        placeholder="°C"
-                                    />
-                                </YStack>
-                                <YStack flex={1}>
-                                    <Label htmlFor="respiratoryRate">
-                                        Respiratory
-                                        Rate
-                                    </Label>
-                                    <Input
-                                        id="respiratoryRate"
-                                        value={
-                                            data.respiratoryRate
-                                        }
-                                        onChangeText={(
-                                            text,
-                                        ) =>
-                                            onChange(
-                                                {
-                                                    respiratoryRate:
-                                                        text,
-                                                },
-                                            )
-                                        }
-                                        placeholder="Breaths/min"
-                                    />
-                                </YStack>
+                                <Temperature />
+                                <RespiratoryRate />
                             </XStack>
                         </YStack>
                     </YStack>
@@ -236,26 +97,458 @@ export const PersonalDetails = ({
                         </Text>
                     </Card.Header>
                     <YStack p="$4">
+                        <Assessment />
+                    </YStack>
+                </Card>
+                <SubmitCarePlanForm />
+            </YStack>
+        </ScrollView>
+    );
+};
+
+const Beneficiary = () => {
+    const { control } = useCarePlanForm();
+    const [
+        selectedBeneficiary,
+        setSelectedBeneficiary,
+    ] = useState<IBeneficiary | null>(null);
+
+    // get age from beneficiary.birthdate
+    const age = selectedBeneficiary
+        ? new Date().getFullYear() -
+          new Date(
+              selectedBeneficiary.birthday,
+          ).getFullYear()
+        : "";
+
+    return (
+        <YStack gap="$1">
+            <Label htmlFor="beneficiary">
+                Select Beneficiary *
+            </Label>
+            <Controller
+                control={control}
+                name="personalDetails.beneficiaryId"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
+                        <SelectBeneficiary
+                            onValueChange={(
+                                beneficiary,
+                            ) => {
+                                setSelectedBeneficiary(
+                                    beneficiary,
+                                );
+                                field.onChange(
+                                    beneficiary?.beneficiary_id.toString() ||
+                                        "",
+                                );
+                            }}
+                        />
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+            {selectedBeneficiary && (
+                <YStack gap="$2" mt="$2">
+                    <Text>Age: {age}</Text>
+                    <Text>
+                        Birthday:{" "}
+                        {new Date(
+                            selectedBeneficiary.birthday,
+                        ).toLocaleDateString()}
+                    </Text>
+                    <Text>
+                        Gender:{" "}
+                        {
+                            selectedBeneficiary.gender
+                        }
+                    </Text>
+                    <Text>
+                        Civil Status:{" "}
+                        {
+                            selectedBeneficiary.civil_status
+                        }
+                    </Text>
+                    <Text>
+                        Address:{" "}
+                        {
+                            selectedBeneficiary.street_address
+                        }
+                    </Text>
+                </YStack>
+            )}
+        </YStack>
+    );
+};
+
+const Illness = () => {
+    const { control } = useCarePlanForm();
+
+    return (
+        <YStack gap="$1">
+            <Label htmlFor="medicalConditions">
+                Illness
+            </Label>
+            <Controller
+                control={control}
+                name="personalDetails.illness"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
+                        <Input
+                            id="medicalConditions"
+                            value={
+                                field.value || ""
+                            }
+                            onBlur={field.onBlur}
+                            onChangeText={(
+                                text,
+                            ) =>
+                                field.onChange(
+                                    (() => {
+                                        console.log(
+                                            "Illness changed:",
+                                            text,
+                                        );
+                                        return text;
+                                    })(),
+                                )
+                            }
+                            placeholder="e.g. Cough, Fever (separate multiple illnesses with commas)"
+                        />
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+            <XStack
+                items="center"
+                gap="$2"
+                mt="$2"
+            >
+                <Info size={12} color="#888" />
+                <Text
+                    style={{
+                        color: "#888",
+                        fontSize: 12,
+                    }}
+                >
+                    Leave blank if no illness
+                    recorded. Separate multiple
+                    illnesses with commas.
+                </Text>
+            </XStack>
+        </YStack>
+    );
+};
+
+const BloodPressure = () => {
+    const { control } = useCarePlanForm();
+
+    return (
+        <YStack flex={1} gap="$1">
+            <Label htmlFor="bloodPressure">
+                Blood Pressure *
+            </Label>
+            <Controller
+                control={control}
+                name="personalDetails.bloodPressure"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
+                        <Input
+                            id="bloodPressure"
+                            value={
+                                field.value || ""
+                            }
+                            onBlur={field.onBlur}
+                            onChangeText={
+                                field.onChange
+                            }
+                            placeholder="e.g. 120/80"
+                        />
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+        </YStack>
+    );
+};
+
+const PulseRate = () => {
+    const { control } = useCarePlanForm();
+
+    return (
+        <YStack flex={1} gap="$1">
+            <Label htmlFor="pulseRate">
+                Pulse Rate *
+            </Label>
+            <Controller
+                control={control}
+                name="personalDetails.pulseRate"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
+                        <Input
+                            id="pulseRate"
+                            value={
+                                field.value?.toString() ||
+                                ""
+                            }
+                            onBlur={field.onBlur}
+                            onChangeText={(
+                                text,
+                            ) => {
+                                const numValue =
+                                    parseFloat(
+                                        text,
+                                    );
+                                field.onChange(
+                                    isNaN(
+                                        numValue,
+                                    )
+                                        ? undefined
+                                        : numValue,
+                                );
+                            }}
+                            placeholder="BPM"
+                            keyboardType="numeric"
+                        />
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+        </YStack>
+    );
+};
+
+const Temperature = () => {
+    const { control } = useCarePlanForm();
+
+    return (
+        <YStack flex={1} gap="$1">
+            <Label htmlFor="temperature">
+                Temperature *
+            </Label>
+            <Controller
+                control={control}
+                name="personalDetails.temperature"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
+                        <Input
+                            id="temperature"
+                            value={
+                                field.value?.toString() ||
+                                ""
+                            }
+                            onBlur={field.onBlur}
+                            onChangeText={(
+                                text,
+                            ) => {
+                                const numValue =
+                                    parseFloat(
+                                        text,
+                                    );
+                                field.onChange(
+                                    isNaN(
+                                        numValue,
+                                    )
+                                        ? undefined
+                                        : numValue,
+                                );
+                            }}
+                            placeholder="°C"
+                            keyboardType="numeric"
+                        />
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+        </YStack>
+    );
+};
+
+const RespiratoryRate = () => {
+    const { control } = useCarePlanForm();
+
+    return (
+        <YStack flex={1} gap="$1">
+            <Label htmlFor="respiratoryRate">
+                Respiratory Rate *
+            </Label>
+            <Controller
+                control={control}
+                name="personalDetails.respiratoryRate"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
+                        <Input
+                            id="respiratoryRate"
+                            value={
+                                field.value?.toString() ||
+                                ""
+                            }
+                            onBlur={field.onBlur}
+                            onChangeText={(
+                                text,
+                            ) => {
+                                const numValue =
+                                    parseFloat(
+                                        text,
+                                    );
+                                field.onChange(
+                                    isNaN(
+                                        numValue,
+                                    )
+                                        ? undefined
+                                        : numValue,
+                                );
+                            }}
+                            placeholder="Breaths/min"
+                            keyboardType="numeric"
+                        />
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+        </YStack>
+    );
+};
+
+const Assessment = () => {
+    const { control } = useCarePlanForm();
+
+    return (
+        <YStack gap="$1">
+            <Controller
+                control={control}
+                name="personalDetails.assessment"
+                render={({
+                    field,
+                    fieldState,
+                }) => (
+                    <>
                         <Input
                             multiline
                             numberOfLines={4}
                             textAlignVertical="top"
                             value={
-                                data.assessment
+                                field.value || ""
                             }
-                            onChangeText={(
-                                text,
-                            ) =>
-                                onChange({
-                                    assessment:
-                                        text,
-                                })
+                            onBlur={field.onBlur}
+                            onChangeText={
+                                field.onChange
                             }
-                            placeholder="Enter your assessment here..."
+                            placeholder="Enter your assessment here... (minimum 20 characters)"
                         />
-                    </YStack>
-                </Card>
-            </YStack>
-        </ScrollView>
+                        {fieldState.error && (
+                            <Text
+                                color={"$red10"}
+                                fontSize="$4"
+                                mt="$1"
+                                ml="$1"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </>
+                )}
+            />
+        </YStack>
     );
 };

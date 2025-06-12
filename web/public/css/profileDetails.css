@@ -1,0 +1,292 @@
+:root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #2980b9;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: clamp(0.875rem, 0.825rem + 0.25vw, 1rem);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            font-weight: 600;
+            font-size: clamp(0.9375rem, 0.8875rem + 0.25vw, 1.0625rem);
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--dark-gray);
+            font-weight: 500;
+            padding: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem) clamp(1rem, 0.8rem + 1vw, 1.25rem);
+            transition: all 0.3s ease;
+            font-size: clamp(0.8125rem, 0.7875rem + 0.125vw, 0.875rem);
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background-color: transparent;
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .status-select {
+            border-radius: 20px;
+            padding: 0.3125rem 0.9375rem;
+            font-weight: 500;
+            border: 2px solid var(--primary-color);
+            font-size: clamp(0.8125rem, 0.7875rem + 0.125vw, 0.875rem);
+        }
+        
+        .status-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .profile-img {
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: clamp(100px, 8vw + 50px, 150px);
+            height: clamp(100px, 8vw + 50px, 150px);
+            object-fit: cover;
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: rgba(52, 152, 219, 0.25);
+        }
+        
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table {
+            margin-bottom: 0;
+            font-size: clamp(0.8125rem, 0.7875rem + 0.125vw, 0.875rem);
+        }
+        
+        .table thead th {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            font-size: clamp(0.8125rem, 0.7875rem + 0.125vw, 0.875rem);
+        }
+        
+        .table tbody tr:nth-child(even) {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-outline-danger {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .btn-outline-danger:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .badge-status {
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: clamp(0.75rem, 0.725rem + 0.125vw, 0.8125rem);
+        }
+        
+        .badge-active {
+            background-color: rgba(39, 174, 96, 0.2);
+            color: var(--success-color);
+        }
+        
+        .badge-inactive {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--accent-color);
+        }
+
+        .care-needs-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .care-needs-table th {
+            background-color: var(--secondary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .care-needs-table td {
+            vertical-align: middle;
+        }
+
+        .care-needs-table tr:first-child td {
+            border-top: none;
+        }
+
+        /* Document Cards */
+        .document-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            border-radius: 8px;
+        }
+
+        .document-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .document-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .document-card i {
+            color: var(--primary-color);
+        }
+
+        .document-card .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive adjustments for document cards */
+        @media (max-width: 767.98px) {
+            .document-card {
+                margin-bottom: 1rem;
+            }
+            
+            .document-card .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .document-card .d-flex {
+                flex-direction: column;
+            }
+        }
+
+        /* Responsive adjustments */
+        h3 {
+            font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
+        }
+
+        h4 {
+            font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+        }
+
+        h5 {
+            font-size: clamp(0.9375rem, 0.8875rem + 0.25vw, 1.0625rem);
+        }
+
+        .btn {
+            font-size: clamp(0.8125rem, 0.7875rem + 0.125vw, 0.875rem);
+            padding: 0.375rem 0.75rem;
+        }
+
+        .mobile-back-btn {
+            display: none;
+        }
+
+        @media (max-width: 767.98px) {
+            .desktop-back-btn {
+                display: none;
+            }
+            
+            .mobile-back-btn {
+                display: inline-block;
+            }
+            
+            .header-buttons {
+                width: 100%;
+                gap: 0.5rem;
+            }
+            
+            .profile-header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .status-select-container {
+                margin-top: 1rem;
+                width: 100%;
+            }
+            
+            .status-select {
+                width: 100%;
+            }
+            
+            .tab-content {
+                padding: 1rem !important;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .profile-img {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .nav-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 0.5rem 0.75rem;
+            }
+        }
+       

@@ -119,7 +119,7 @@ class WeeklyCarePlanApiController extends Controller
                 'body_temperature' => $request->body_temperature,
                 'pulse_rate' => $request->pulse_rate,
                 'respiratory_rate' => $request->respiratory_rate,
-                'created_by' => $request->user()->id, // or another default/test user ID
+                'created_by' => $request->user()->id,
                 'updated_by' => $request->user()->id,
             ]);
 
@@ -139,18 +139,15 @@ class WeeklyCarePlanApiController extends Controller
             $firstName = $beneficiary ? $beneficiary->first_name : 'unknown';
             $lastName = $beneficiary ? $beneficiary->last_name : 'unknown';
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
-
-            $photoPath = $this->uploadService->upload(
-                $request->file('photo'),
-                'spaces-private',
-                'uploads/weekly_care_plan_photos',
-                [
-                    'filename' => $firstName . '_' . $lastName . '_weeklycare_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
-                ]
-            );
-
-            // // Use a dummy photo path for testing
-            // $photoPath = 'uploads/weekly_care_plan_photos/dummy.jpg';
+            $photoPath = "testing";
+            // $photoPath = $this->uploadService->upload(
+            //     $request->file('photo'),
+            //     'spaces-private',
+            //     'uploads/weekly_care_plan_photos',
+            //     [
+            //         'filename' => $firstName . '_' . $lastName . '_weeklycare_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
+            //     ]
+            // );
 
             // 4. Save Weekly Care Plan
             $wcp = WeeklyCarePlan::create([
@@ -208,6 +205,8 @@ class WeeklyCarePlanApiController extends Controller
             DB::commit();
 
             // --- Notification Service Implementation ---
+            $beneficiaryName = $beneficiary ? trim($beneficiary->first_name . ' ' . $beneficiary->last_name) : '';
+
             // Notify the beneficiary
             if ($beneficiary) {
                 $this->notificationService->notifyBeneficiary(
@@ -228,24 +227,19 @@ class WeeklyCarePlanApiController extends Controller
                 }
             }
 
-            // Notify care manager if available
-            if ($beneficiary && $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
-                $careWorker = \App\Models\User::find($beneficiary->generalCarePlan->care_worker_id);
-                if ($careWorker && $careWorker->care_manager_id) {
-                    $this->notificationService->notifyStaff(
-                        $careWorker->care_manager_id,
-                        'Beneficiary Weekly Care Plan Updated',
-                        'The weekly care plan for your beneficiary has been updated.'
-                    );
-                }
-            }
+            // Notify the actor (care worker)
+            $this->notificationService->notifyStaff(
+                $request->user()->id,
+                'Weekly Care Plan Created',
+                'Your weekly care plan creation was successful.'
+            );
 
             // Log the creation
             $this->logService->createLog(
                 'weekly_care_plan',
                 $wcp->weekly_care_plan_id,
                 'weekly_care_plan_created',
-                "Weekly Care Plan ID {$wcp->weekly_care_plan_id} created by user {$request->user()->id}",
+                "Weekly Care Plan for {$beneficiaryName} created by user {$request->user()->id}",
                 $request->user()->id
             );
 

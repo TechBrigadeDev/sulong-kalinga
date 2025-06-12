@@ -238,11 +238,21 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter new password (leave blank to keep current)">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter new password (leave blank to keep current)">
+                                    <span class="input-group-text password-toggle" data-target="password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm new password">
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm new password">
+                                    <span class="input-group-text password-toggle" data-target="confirmPassword">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -519,6 +529,28 @@
         function validateEmail(input) {
             input.value = input.value.replace(/[^a-zA-Z0-9._%+-@]/g, ''); // Remove invalid characters
         }
+    </script>
+    <script>
+        // Password toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.password-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const passwordInput = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    }
+                });
+            });
+        });
     </script>
     <?php
     // if ($request->hasFile('administrator_photo')) {

@@ -194,6 +194,7 @@ const SelectBeneficiary = ({
                                 handleSearchChange
                             }
                             size="$4"
+                            marginInline="$2"
                         />
                         <Adapt.Contents />
                     </Sheet.Frame>

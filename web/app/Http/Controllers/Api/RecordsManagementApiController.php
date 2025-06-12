@@ -10,14 +10,19 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Services\UploadService;
+use App\Models\Beneficiary;
+use App\Models\User;
+use App\Services\NotificationService;
 
 class RecordsManagementApiController extends Controller
 {
     protected $uploadService;
+    protected $notificationService;
 
-    public function __construct(UploadService $uploadService)
+    public function __construct(UploadService $uploadService, NotificationService $notificationService)
     {
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
     }
 
     // --- WEEKLY CARE PLANS ONLY ---
@@ -26,14 +31,12 @@ class RecordsManagementApiController extends Controller
     public function listWeekly(Request $request)
     {
         $user = $request->user();
-        $query = WeeklyCarePlan::with(['beneficiary', 'author', 'vitalSigns']);
+        $query = WeeklyCarePlan::query();
 
-        // Role-based filtering
         if ($user->role_id == 3) { // Care Worker
             $query->where('care_worker_id', $user->id);
         }
 
-        // Search
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->whereHas('beneficiary', function ($q) use ($search) {
@@ -42,19 +45,30 @@ class RecordsManagementApiController extends Controller
             });
         }
 
-        // Pagination
         $perPage = $request->input('per_page', 15);
         $plans = $query->orderBy('date', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'data' => $plans->map(function ($plan) {
+                // Fetch beneficiary
+                $beneficiary = Beneficiary::find($plan->beneficiary_id);
+                $beneficiaryFullName = $beneficiary
+                    ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+                    : null;
+
+                // Fetch care worker (author)
+                $careWorker = User::find($plan->care_worker_id);
+                $careWorkerFullName = $careWorker
+                    ? trim("{$careWorker->first_name} {$careWorker->last_name}")
+                    : null;
+
                 return [
                     'id' => $plan->weekly_care_plan_id,
                     'date' => $plan->date,
-                    'beneficiary' => $plan->beneficiary ? $plan->beneficiary->full_name : null,
-                    'care_worker' => $plan->author ? $plan->author->full_name : null,
-                    'assessment' => $plan->assessment,
+                    'beneficiary' => $beneficiaryFullName,
+                    'care_worker' => $careWorkerFullName,
+                    // 'assessment' => $plan->assessment,
                     'photo_url' => $plan->photo_path
                         ? $this->uploadService->getTemporaryPrivateUrl($plan->photo_path, 30)
                         : null,
@@ -74,24 +88,33 @@ class RecordsManagementApiController extends Controller
     {
         $user = $request->user();
         $plan = WeeklyCarePlan::with([
-            'beneficiary',
-            'author',
             'vitalSigns',
             'interventions'
         ])->findOrFail($id);
 
-        // Role-based access
         if ($user->role_id == 3 && $plan->care_worker_id != $user->id) {
             return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
         }
+
+        // Fetch beneficiary
+        $beneficiary = Beneficiary::find($plan->beneficiary_id);
+        $beneficiaryFullName = $beneficiary
+            ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+            : null;
+
+        // Fetch care worker (author)
+        $careWorker = User::find($plan->care_worker_id);
+        $careWorkerFullName = $careWorker
+            ? trim("{$careWorker->first_name} {$careWorker->last_name}")
+            : null;
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $plan->weekly_care_plan_id,
                 'date' => $plan->date,
-                'beneficiary' => $plan->beneficiary,
-                'care_worker' => $plan->author,
+                'beneficiary' => $beneficiaryFullName,
+                'care_worker' => $careWorkerFullName,
                 'assessment' => $plan->assessment,
                 'evaluation_recommendations' => $plan->evaluation_recommendations,
                 'illnesses' => $plan->illnesses ? json_decode($plan->illnesses) : [],
@@ -220,8 +243,54 @@ class RecordsManagementApiController extends Controller
                 }
             }
 
+            // Reset acknowledgments
+            $plan->acknowledged_by_beneficiary = null;
+            $plan->acknowledged_by_family = null;
+
             $plan->save();
             DB::commit();
+
+            // --- NOTIFICATIONS (after successful update) ---
+            $beneficiary = Beneficiary::find($plan->beneficiary_id);
+            $beneficiaryName = $beneficiary
+                ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+                : null;
+
+            // Notify beneficiary
+            if ($beneficiary) {
+                $this->notificationService->notifyBeneficiary(
+                    $beneficiary->beneficiary_id,
+                    'Weekly Care Plan Updated',
+                    'Your weekly care plan was updated.'
+                );
+            }
+
+            // Notify all related family members
+            if ($beneficiary && $beneficiary->familyMembers) {
+                foreach ($beneficiary->familyMembers as $familyMember) {
+                    $this->notificationService->notifyFamilyMember(
+                        $familyMember->family_member_id,
+                        'Weekly Care Plan Updated',
+                        "The weekly care plan for {$beneficiaryName} was updated."
+                    );
+                }
+            }
+
+            // Notify assigned care worker (if not the actor)
+            if ($plan->care_worker_id && $plan->care_worker_id != $user->id) {
+                $this->notificationService->notifyStaff(
+                    $plan->care_worker_id,
+                    'Weekly Care Plan Updated',
+                    "The weekly care plan for {$beneficiaryName} was updated."
+                );
+            }
+
+            // Notify the actor
+            $this->notificationService->notifyStaff(
+                $user->id,
+                'Weekly Care Plan Updated',
+                'Your weekly care plan update was successful.'
+            );
 
             return response()->json([
                 'success' => true,

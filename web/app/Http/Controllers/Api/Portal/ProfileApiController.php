@@ -8,9 +8,17 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
+use App\Services\NotificationService;
 
 class ProfileApiController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Show the authenticated user's profile.
      */
@@ -66,6 +74,13 @@ class ProfileApiController extends Controller
         }
         $familyMember->email = $request->email;
         $familyMember->save();
+
+        // Notify the actor
+        $this->notificationService->notifyFamilyMember(
+            $user->family_member_id,
+            'Email Updated',
+            'Your email was updated successfully.'
+        );
 
         return response()->json([
             'success' => true,
@@ -139,6 +154,13 @@ class ProfileApiController extends Controller
             }
             $beneficiary->password = $hashed;
             $beneficiary->save();
+
+            // Notify the actor
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
         } elseif ($user->role_id == 5) {
             // Family Member
             $familyMember = FamilyMember::find($user->family_member_id);
@@ -147,6 +169,13 @@ class ProfileApiController extends Controller
             }
             $familyMember->password = $hashed;
             $familyMember->save();
+
+            // Notify the actor
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
         } else {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }

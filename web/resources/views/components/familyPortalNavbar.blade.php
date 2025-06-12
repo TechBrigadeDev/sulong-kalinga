@@ -203,6 +203,46 @@
             width: 300px;
         }
     }
+
+    /* Message dropdown styles */
+    .message-dropdown {
+        width: 500px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .message-preview-item {
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .message-preview-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .message-preview-item.unread {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .message-dropdown .dropdown-header {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .message-dropdown .dropdown-footer {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        border-top: 1px solid #dee2e6;
+    }
+
+    /* For the unread message indicator */
+    .unread-message-indicator {
+        flex-shrink: 0;
+    }
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
@@ -223,15 +263,13 @@
                     <a class="nav-link nav-message-link {{ Request::routeIs('care-worker.messaging.*') ? 'active' : '' }}" href="#" id="messagesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-chat-dots-fill"></i>
                         <span class="d-none d-md-inline">Chat with COSE</span>
-                        <span class="badge bg-danger rounded-pill message-count" style="display: none;"></span>
+                        <span class="badge bg-danger rounded-pill message-count" style="display: none;" title="Total unread messages"></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end message-dropdown p-0" aria-labelledby="messagesDropdown">
                         <li class="dropdown-header">
-                            <div class="d-flex justify-content-between align-items-center">
                             <h6 class="m-0">Messages</h6>
-                                <a href="javascript:void(0)" class="mark-all-read text-decoration-none">
-                                <small class="mark-all-read">Mark all as read</small>
-                                </a>
+                            <div class="mt-2">
+                                <small class="mark-all-read text-primary">Mark all as read</small>
                             </div>
                         </li>
                         

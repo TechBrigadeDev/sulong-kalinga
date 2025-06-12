@@ -44,6 +44,7 @@ import {
     SocialContact,
     SocialContactData,
 } from "./components/SocialContact";
+import { CarePlanForm } from "./form";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
@@ -274,75 +275,91 @@ const WCPForm = () => {
     };
 
     return (
-        <YStack style={{ flex: 1 }}>
-            <FormProgress
-                currentStep={currentStep}
-                steps={FORM_STEPS}
-                setStep={setCurrentStep}
-            />
+        <CarePlanForm>
+            <YStack style={{ flex: 1 }}>
+                <FormProgress
+                    currentStep={currentStep}
+                    steps={FORM_STEPS}
+                    setStep={setCurrentStep}
+                />
 
-            <TabScroll style={{ flex: 1 }}>
+                <TabScroll style={{ flex: 1 }}>
+                    <YStack
+                        gap="$4"
+                        style={{ padding: 16 }}
+                    >
+                        {renderStep()}
+                    </YStack>
+                </TabScroll>
+
                 <YStack
-                    gap="$4"
-                    style={{ padding: 16 }}
+                    style={{
+                        borderTopWidth: 1,
+                        padding: 16,
+                        borderTopColor: "#e5e5e5",
+                        backgroundColor:
+                            "#ffffff",
+                    }}
                 >
-                    {renderStep()}
-                </YStack>
-            </TabScroll>
-
-            <YStack
-                style={{
-                    borderTopWidth: 1,
-                    padding: 16,
-                    borderTopColor: "#e5e5e5",
-                    backgroundColor: "#ffffff",
-                }}
-            >
-                <XStack style={{ gap: 16 }}>
-                    {currentStep > 0 && (
-                        <Button
-                            style={{ flex: 1 }}
-                            onPress={
-                                handlePrevious
-                            }
-                            icon={
-                                <ArrowLeft
+                    <XStack style={{ gap: 16 }}>
+                        {currentStep > 0 && (
+                            <Button
+                                style={{
+                                    flex: 1,
+                                }}
+                                onPress={
+                                    handlePrevious
+                                }
+                                icon={
+                                    <ArrowLeft
+                                        size={16}
+                                    />
+                                }
+                                disabled={
+                                    currentStep ===
+                                    0
+                                }
+                            >
+                                Previous
+                            </Button>
+                        )}
+                        {currentStep ===
+                        FORM_STEPS.length - 1 ? (
+                            <Button
+                                style={{
+                                    flex: 1,
+                                }}
+                                onPress={
+                                    handleSubmit
+                                }
+                                themeInverse
+                            >
+                                <Check
                                     size={16}
                                 />
-                            }
-                            disabled={
-                                currentStep === 0
-                            }
-                        >
-                            Previous
-                        </Button>
-                    )}
-                    {currentStep ===
-                    FORM_STEPS.length - 1 ? (
-                        <Button
-                            style={{ flex: 1 }}
-                            onPress={handleSubmit}
-                            themeInverse
-                        >
-                            <Check size={16} />
-                            Submit
-                        </Button>
-                    ) : (
-                        <Button
-                            style={{ flex: 1 }}
-                            onPress={handleNext}
-                        >
-                            {currentStep === 0
-                                ? "Start"
-                                : "Next"}
-                            <ArrowRight
-                                size={16}
-                            />
-                        </Button>
-                    )}
-                </XStack>
+                                Submit
+                            </Button>
+                        ) : (
+                            <Button
+                                style={{
+                                    flex: 1,
+                                }}
+                                onPress={
+                                    handleNext
+                                }
+                            >
+                                {currentStep === 0
+                                    ? "Start"
+                                    : "Next"}
+                                <ArrowRight
+                                    size={16}
+                                />
+                            </Button>
+                        )}
+                    </XStack>
+                </YStack>
             </YStack>
-        </YStack>
+        </CarePlanForm>
     );
 };
 
