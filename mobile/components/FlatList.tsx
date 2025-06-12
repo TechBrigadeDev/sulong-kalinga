@@ -26,6 +26,7 @@ type FlatListProps<T> = Omit<
     }) => React.ReactElement;
     estimatedItemSize?: number;
     tabbed?: boolean;
+    showIndicators?: boolean;
 };
 
 function FlatList<T>({
@@ -34,6 +35,7 @@ function FlatList<T>({
     estimatedItemSize = 100,
     contentContainerStyle,
     tabbed = false,
+    showIndicators = true,
     ...props
 }: FlatListProps<T>) {
     const insets = useSafeAreaInsets();
@@ -77,6 +79,31 @@ function FlatList<T>({
         });
     };
 
+    const Indicator = () =>
+        showIndicators ? (
+            <Animated.View
+                style={[
+                    styles.scrollUpButton,
+                    {
+                        bottom: tabbed ? 75 : 0,
+                        opacity: scrollUpOpacity,
+                    },
+                ]}
+                pointerEvents={
+                    showScrollUp ? "auto" : "none"
+                }
+            >
+                <Pressable
+                    onPress={scrollToTop}
+                    style={
+                        styles.scrollUpPressable
+                    }
+                >
+                    <ScrollUp />
+                </Pressable>
+            </Animated.View>
+        ) : null;
+
     return (
         <MaskedView
             style={{ flex: 1 }}
@@ -119,27 +146,7 @@ function FlatList<T>({
                     ...(contentContainerStyle as any),
                 }}
             />
-            <Animated.View
-                style={[
-                    styles.scrollUpButton,
-                    {
-                        bottom: tabbed ? 75 : 0,
-                        opacity: scrollUpOpacity,
-                    },
-                ]}
-                pointerEvents={
-                    showScrollUp ? "auto" : "none"
-                }
-            >
-                <Pressable
-                    onPress={scrollToTop}
-                    style={
-                        styles.scrollUpPressable
-                    }
-                >
-                    <ScrollUp />
-                </Pressable>
-            </Animated.View>
+            <Indicator />
         </MaskedView>
     );
 }

@@ -59,7 +59,7 @@ export const FormProgress = ({
     };
 
     return (
-        <YStack>
+        <YStack paddingInline="$4">
             <XStack>
                 {steps.map((step, index) => (
                     <XStack

@@ -1,14 +1,15 @@
+import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
+import { IBeneficiary } from "features/user-management/management.type";
+import { useState } from "react";
 import {
     Card,
     Input,
     Label,
     ScrollView,
-    Select,
     Text,
     XStack,
     YStack,
 } from "tamagui";
-
 export interface Beneficiary {
     id: string;
     name: string;
@@ -16,24 +17,6 @@ export interface Beneficiary {
     gender: string;
     medicalConditions: string;
 }
-
-const BENEFICIARIES: Beneficiary[] = [
-    {
-        id: "1",
-        name: "Juan Dela Cruz",
-        age: "75",
-        gender: "Male",
-        medicalConditions:
-            "Hypertension, Type 2 Diabetes",
-    },
-    {
-        id: "2",
-        name: "Maria Santos",
-        age: "68",
-        gender: "Female",
-        medicalConditions: "Arthritis",
-    },
-];
 
 export interface PersonalDetailsData {
     beneficiaryId: string;
@@ -55,12 +38,18 @@ export const PersonalDetails = ({
     data,
     onChange,
 }: PersonalDetailsProps) => {
-    const selectedBeneficiary = data.beneficiaryId
-        ? BENEFICIARIES.find(
-              (b) => b.id === data.beneficiaryId,
-          )
-        : undefined;
+    const [
+        selectedBeneficiary,
+        setSelectedBeneficiary,
+    ] = useState<IBeneficiary | null>(null);
 
+    // get age from beneficiary.birthdate
+    const age = selectedBeneficiary
+        ? new Date().getFullYear() -
+          new Date(
+              selectedBeneficiary.birthday,
+          ).getFullYear()
+        : "";
     return (
         <ScrollView>
             <YStack
@@ -82,66 +71,21 @@ export const PersonalDetails = ({
                         <YStack
                             style={{ gap: 16 }}
                         >
-                            <Select
-                                value={
-                                    data.beneficiaryId
+                            <SelectBeneficiary
+                                onValueChange={
+                                    setSelectedBeneficiary
                                 }
-                                onValueChange={(
-                                    value: string,
-                                ) =>
-                                    onChange({
-                                        beneficiaryId:
-                                            value,
-                                    })
-                                }
-                            >
-                                <Select.Trigger
-                                    style={{
-                                        width: "100%",
-                                    }}
-                                >
-                                    <Select.Value placeholder="Choose a beneficiary" />
-                                </Select.Trigger>
-
-                                <Select.Content>
-                                    <Select.ScrollUpButton />
-                                    <Select.Viewport>
-                                        {BENEFICIARIES.map(
-                                            (
-                                                beneficiary,
-                                                index,
-                                            ) => (
-                                                <Select.Item
-                                                    key={
-                                                        beneficiary.id
-                                                    }
-                                                    index={
-                                                        index
-                                                    }
-                                                    value={
-                                                        beneficiary.id
-                                                    }
-                                                >
-                                                    <Select.ItemText>
-                                                        {
-                                                            beneficiary.name
-                                                        }
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ),
-                                        )}
-                                    </Select.Viewport>
-                                    <Select.ScrollDownButton />
-                                </Select.Content>
-                            </Select>
-
+                            />
                             {selectedBeneficiary && (
                                 <YStack gap="$2">
                                     <Text>
-                                        Age:{" "}
-                                        {
-                                            selectedBeneficiary.age
-                                        }
+                                        Age: {age}
+                                    </Text>
+                                    <Text>
+                                        Birthday:{" "}
+                                        {new Date(
+                                            selectedBeneficiary.birthday,
+                                        ).toLocaleDateString()}
                                     </Text>
                                     <Text>
                                         Gender:{" "}
@@ -150,11 +94,15 @@ export const PersonalDetails = ({
                                         }
                                     </Text>
                                     <Text>
-                                        Medical
-                                        Conditions:{" "}
+                                        Civil
+                                        Status:{" "}
                                         {
-                                            selectedBeneficiary.medicalConditions
+                                            selectedBeneficiary.civil_status
                                         }
+                                    </Text>
+                                    <Text>
+                                        Address:{" "}
+                                        {}
                                     </Text>
                                 </YStack>
                             )}
