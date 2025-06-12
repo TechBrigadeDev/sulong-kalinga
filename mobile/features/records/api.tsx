@@ -132,8 +132,12 @@ class ReportController extends Controller {
         }
 
         log(
-            "WCP Records fetched successfully",
-            validate.data,
+            JSON.stringify(
+                validate.data,
+                null,
+                2,
+            ),
+            "\nWCP Record Data",
         );
         return validate.data;
     }
