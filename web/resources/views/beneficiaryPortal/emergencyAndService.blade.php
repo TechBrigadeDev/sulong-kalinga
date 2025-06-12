@@ -744,6 +744,14 @@
                 }
             });
         });
+
+        $('.modal .btn-secondary').on('click', function() {
+            // Remove focus from the button before Bootstrap attempts to close the modal
+            setTimeout(() => {
+                document.activeElement.blur();
+                document.body.focus(); 
+            }, 10);
+        });
         
         // Filter button click
         $('#filterHistoryBtn').on('click', function() {
@@ -1530,44 +1538,272 @@
         // Initialize event handlers
         $(document).ready(function() {
             attachActionEventHandlers();
+
+            // Safety measure - if Escape key is pressed, clean up any errant backdrops
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    setTimeout(() => {
+                        // If no modals are showing but we have backdrops or modal-open class
+                        if (!document.querySelector('.modal.show') && 
+                            (document.querySelector('.modal-backdrop') || 
+                            document.body.classList.contains('modal-open'))) {
+                            
+                            // Remove all backdrop elements
+                            document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                                backdrop.remove();
+                            });
+                            
+                            // Reset body
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                        }
+                    }, 300);
+                }
+            });
         });
 
         /**
-         * Properly close a Bootstrap modal and clean up the backdrop
+         * Advanced modal closing function that properly manages focus and accessibility
          * @param {string} modalId - The ID of the modal element
          */
         function closeModalProperly(modalId) {
-            // Get the modal element
-            const modalEl = document.getElementById(modalId);
-            
-            // Get the Bootstrap modal instance
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            
-            if (modalInstance) {
-                // First hide the modal
-                modalInstance.hide();
+            try {
+                // Get the modal element
+                const modalEl = document.getElementById(modalId);
+                if (!modalEl) return;
                 
-                // Then add an event listener for when the hiding animation completes
-                modalEl.addEventListener('hidden.bs.modal', function cleanup() {
-                    // Remove the backdrop manually if it exists
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) {
+                // Important: First remove aria-hidden to prevent accessibility violations
+                modalEl.removeAttribute('aria-hidden');
+                
+                // First, find any focused element inside the modal and blur it
+                const focusedElement = modalEl.querySelector(':focus');
+                if (focusedElement) {
+                    focusedElement.blur();
+                }
+                
+                // Move focus to the body before closing
+                document.body.focus();
+                
+                // Get the Bootstrap modal instance
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                
+                if (modalInstance) {
+                    // Before hiding, set up a onetime cleanup handler
+                    const cleanupModal = function(e) {
+                        try {
+                            // Remove focus from any remaining elements
+                            const modalButtons = modalEl.querySelectorAll('button');
+                            modalButtons.forEach(btn => btn.blur());
+                            
+                            // Remove all backdrop elements with a small delay to ensure they're all caught
+                            setTimeout(() => {
+                                document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                                    backdrop.remove();
+                                });
+                                
+                                // Reset body classes and styles
+                                document.body.classList.remove('modal-open');
+                                document.body.style.overflow = '';
+                                document.body.style.paddingRight = '';
+                                document.body.classList.remove('modal-backdrop-open');
+                                
+                                // Remove aria-hidden or set it to false on the modal
+                                modalEl.removeAttribute('aria-hidden');
+                                
+                                // Set focus to document.body
+                                document.body.focus();
+                            }, 50);
+                            
+                            // Remove this event listener
+                            modalEl.removeEventListener('hidden.bs.modal', cleanupModal);
+                        } catch (err) {
+                            console.error('Error in modal cleanup:', err);
+                        }
+                    };
+                    
+                    // Listen for the hidden event
+                    modalEl.addEventListener('hidden.bs.modal', cleanupModal);
+                    
+                    // Add an immediate cleanup before hide() to ensure no focus issues occur
+                    modalEl.querySelectorAll('button').forEach(btn => btn.blur());
+                    
+                    // Hide the modal
+                    modalInstance.hide();
+                    
+                    // Final fallback cleanup - ensure modal backdrop is removed
+                    setTimeout(() => {
+                        if (!document.querySelector('.modal.show') && 
+                            (document.querySelector('.modal-backdrop') || 
+                            document.body.classList.contains('modal-open'))) {
+                            
+                            document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                                backdrop.remove();
+                            });
+                            
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                        }
+                    }, 500);
+                } else {
+                    // Direct cleanup if no modal instance
+                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
                         backdrop.remove();
-                    }
+                    });
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
                     
-                    // Remove the modal-open class from body if no other modals are open
-                    if (!document.querySelector('.modal.show')) {
-                        document.body.classList.remove('modal-open');
-                        document.body.style.overflow = '';
-                        document.body.style.paddingRight = '';
-                    }
-                    
-                    // Remove this event listener
-                    modalEl.removeEventListener('hidden.bs.modal', cleanup);
-                });
+                    // Reset any aria-hidden attributes on the modal
+                    modalEl.removeAttribute('aria-hidden');
+                }
+            } catch (error) {
+                // Final fallback - emergency cleanup on any error
+                console.error('Error closing modal:', error);
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                
+                const modalEl = document.getElementById(modalId);
+                if (modalEl) {
+                    modalEl.removeAttribute('aria-hidden');
+                    modalEl.style.display = 'none';
+                }
             }
         }
 
     </script>
+    <script>
+        // Fix for close button (X) focus issue
+        document.addEventListener('DOMContentLoaded', function() {
+            // Target all modal close buttons (X buttons)
+            const closeButtons = document.querySelectorAll('.modal .btn-close');
+            
+            closeButtons.forEach(button => {
+                // Replace existing click handlers by cloning and replacing
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Add our custom handler with proper focus management
+                newButton.addEventListener('click', function(e) {
+                    // Get the parent modal
+                    const modal = this.closest('.modal');
+                    
+                    // Immediately blur the button and move focus away
+                    this.blur();
+                    document.body.focus();
+                    
+                    // Remove aria-hidden attribute from modal
+                    modal.removeAttribute('aria-hidden');
+                    
+                    // Get modal instance and properly close it
+                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                    if (modalInstance) {
+                        // Set up a one-time cleanup handler
+                        const cleanupHandler = function() {
+                            // Remove all modal backdrops
+                            document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                                backdrop.remove();
+                            });
+                            
+                            // Clean up body classes
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                            document.body.classList.remove('modal-backdrop-open');
+                            
+                            // Remove event listener
+                            modal.removeEventListener('hidden.bs.modal', cleanupHandler);
+                        };
+                        
+                        // Add listener for when the modal is fully hidden
+                        modal.addEventListener('hidden.bs.modal', cleanupHandler);
+                        
+                        // Close the modal
+                        modalInstance.hide();
+                        
+                        // Ensure backdrops are cleaned up if something goes wrong
+                        setTimeout(() => {
+                            if (!document.querySelector('.modal.show') && 
+                                (document.querySelector('.modal-backdrop') || 
+                                document.body.classList.contains('modal-open'))) {
+                                
+                                cleanupHandler();
+                            }
+                        }, 500);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        // Fix for all modal dismiss buttons - add this at the bottom of both emergency pages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle all buttons that dismiss modals (close buttons and secondary buttons)
+            const dismissButtons = document.querySelectorAll('.modal .btn-close, .modal .btn-secondary[data-bs-dismiss="modal"]');
+            
+            dismissButtons.forEach(button => {
+                // Clone the button to remove existing event listeners
+                const newButton = button.cloneNode(true);
+                if (button.parentNode) {
+                    button.parentNode.replaceChild(newButton, button);
+                }
+                
+                // Add our custom handler
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default behavior
+                    
+                    // Move focus away from button immediately
+                    this.blur();
+                    document.body.focus();
+                    
+                    // Get the parent modal
+                    const modal = this.closest('.modal');
+                    if (!modal) return;
+                    
+                    // Remove the aria-hidden attribute to avoid accessibility issues
+                    modal.removeAttribute('aria-hidden');
+                    
+                    // Get the Bootstrap modal instance
+                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                    if (modalInstance) {
+                        // Set up cleanup handler before hide is called
+                        const cleanupHandler = function() {
+                            // Remove all backdrops
+                            document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                                backdrop.remove();
+                            });
+                            
+                            // Clean up body classes
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                            
+                            // Remove this event listener
+                            modal.removeEventListener('hidden.bs.modal', cleanupHandler);
+                        };
+                        
+                        // Listen for hidden event
+                        modal.addEventListener('hidden.bs.modal', cleanupHandler);
+                        
+                        // Hide the modal
+                        modalInstance.hide();
+                        
+                        // Safety timeout in case the hidden event doesn't fire
+                        setTimeout(() => {
+                            if (!document.querySelector('.modal.show') && 
+                                (document.querySelector('.modal-backdrop') || 
+                                document.body.classList.contains('modal-open'))) {
+                                cleanupHandler();
+                            }
+                        }, 500);
+                    }
+                });
+            });
+        });
+    </script>
+    
 </body>
 </html>
