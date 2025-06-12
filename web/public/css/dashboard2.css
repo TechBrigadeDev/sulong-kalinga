@@ -525,3 +525,28 @@ body {
     align-items: center;
 }
 
+/* Expense item styling for dashboard */
+.expense-item {
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+
+}
+
+.expense-item:hover {
+    transform: translateY(-2px);
+    background-color: var(--surface-100);
+}
+
+/* Progress bar styling */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--surface-200);
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+

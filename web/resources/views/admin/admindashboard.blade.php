@@ -115,42 +115,59 @@
                 <div class="col-12 col-lg-6">
                     <div class="card">
                         <div class="card-header">
-                            <span>Recent Reports</span>
-                            <a href="#" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                            <span>Expenses & Budgeting</span>
+                            <a href="{{ route('admin.expense.index') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Submitted By</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Monthly Report</td>
-                                            <td>Sarah Johnson</td>
-                                            <td>May 28, 2023</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Incident Report</td>
-                                            <td>Michael Chen</td>
-                                            <td>May 27, 2023</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Weekly Report</td>
-                                            <td>Emma Williams</td>
-                                            <td>May 26, 2023</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Monthly Report</td>
-                                            <td>David Brown</td>
-                                            <td>May 25, 2023</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                        <div class="card-body">
+                            <!-- Recent Expenses List -->
+                            <div class="schedule-item" style="border-left: 4px solid var(--rose-500); padding-left: 10px;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="schedule-time">Office Supplies</div>
+                                    <span class="schedule-details">₱12,500</span>
+                                </div>
+                                <div class="schedule-details">June 10, 2025</div>
+                            </div>
+                            
+                            <div class="schedule-item" style="border-left: 4px solid var(--indigo-500); padding-left: 10px;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="schedule-time">Transportation</div>
+                                    <span class="schedule-details">₱8,750</span>
+                                </div>
+                                <div class="schedule-details">June 8, 2025</div>
+                            </div>
+                            
+                            <div class="schedule-item" style="border-left: 4px solid var(--amber-500); padding-left: 10px;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="schedule-time">Medical Supplies</div>
+                                    <span class="schedule-details">₱21,100</span>
+                                </div>
+                                <div class="schedule-details">June 5, 2025</div>
+                            </div>
+                            
+                            <!-- Budget Categories Breakdown -->
+                            <div class="schedule-item">
+                                <div class="schedule-time mb-2">Budget Categories</div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div style="width: 10px; height: 10px; background-color: var(--rose-500); border-radius: 50%; margin-right: 8px;"></div>
+                                        <span class="schedule-details">Office Supplies</span>
+                                    </div>
+                                    <div class="schedule-details">₱12,500 (29%)</div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div style="width: 10px; height: 10px; background-color: var(--indigo-500); border-radius: 50%; margin-right: 8px;"></div>
+                                        <span class="schedule-details">Transportation</span>
+                                    </div>
+                                    <div class="schedule-details">₱8,750 (21%)</div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div style="width: 10px; height: 10px; background-color: var(--amber-500); border-radius: 50%; margin-right: 8px;"></div>
+                                        <span class="schedule-details">Medical Supplies</span>
+                                    </div>
+                                    <div class="schedule-details">₱21,100 (50%)</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -255,54 +272,59 @@
                 <div class="col-12 col-lg-7">
                     <div class="card">
                         <div class="card-header">
-                            <span>Care Workers On-Shift</span>
-                            <a href="#" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                            <span>Recent Reports</span>
+                            <a href="{{ route('admin.reports') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-12 col-sm-6">
-                                    <div class="user-item">
-                                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Avatar" class="avatar">
-                                        <div class="user-info">
-                                            <div class="user-name">Sarah Johnson</div>
-                                            <div class="user-title">On duty since 8:00 AM</div>
-                                        </div>
-                                        <span class="badge badge-status badge-active">Active</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-12 col-sm-6">
-                                    <div class="user-item">
-                                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Avatar" class="avatar">
-                                        <div class="user-info">
-                                            <div class="user-name">Michael Chen</div>
-                                            <div class="user-title">On duty since 10:00 AM</div>
-                                        </div>
-                                        <span class="badge badge-status badge-active">Active</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-12 col-sm-6">
-                                    <div class="user-item">
-                                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Avatar" class="avatar">
-                                        <div class="user-info">
-                                            <div class="user-name">Emma Williams</div>
-                                            <div class="user-title">On break until 2:30 PM</div>
-                                        </div>
-                                        <span class="badge badge-status badge-inactive">On Break</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-12 col-sm-6">
-                                    <div class="user-item">
-                                        <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Avatar" class="avatar">
-                                        <div class="user-info">
-                                            <div class="user-name">David Brown</div>
-                                            <div class="user-title">On duty since 12:00 PM</div>
-                                        </div>
-                                        <span class="badge badge-status badge-active">Active</span>
-                                    </div>
-                                </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Submitted By</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Monthly Report</td>
+                                            <td>Sarah Johnson</td>
+                                            <td>June 11, 2025</td>
+                                            <td><span class="badge bg-success">Approved</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Incident Report</td>
+                                            <td>Michael Chen</td>
+                                            <td>June 10, 2025</td>
+                                            <td><span class="badge bg-warning">Pending</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Weekly Report</td>
+                                            <td>Emma Williams</td>
+                                            <td>June 9, 2025</td>
+                                            <td><span class="badge bg-success">Approved</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Visitation Report</td>
+                                            <td>David Brown</td>
+                                            <td>June 8, 2025</td>
+                                            <td><span class="badge bg-info">Reviewed</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Monthly Report</td>
+                                            <td>Lisa Anderson</td>
+                                            <td>June 7, 2025</td>
+                                            <td><span class="badge bg-success">Approved</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Financial Report</td>
+                                            <td>John Smith</td>
+                                            <td>June 6, 2025</td>
+                                            <td><span class="badge bg-success">Approved</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
