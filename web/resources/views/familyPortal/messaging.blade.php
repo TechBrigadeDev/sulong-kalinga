@@ -979,15 +979,19 @@
             fetch(getRouteUrl(route_prefix + '.unread-count'))
             .then(response => response.json())
             .then(data => {
-                // Update the badge in navbar if it exists
-                const messageCount = document.querySelector('.message-count');
-                if (messageCount) {
-                    if (data.count > 0) {
-                        messageCount.textContent = data.count;
-                        messageCount.style.display = 'inline-block';
-                    } else {
-                        messageCount.style.display = 'none';
+                // Update badge in navbar (outside messaging page)
+                try {
+                    const navbarBadge = document.querySelector('a.nav-message-link .message-count');
+                    if (navbarBadge) {
+                        if (data.count > 0) {
+                            navbarBadge.textContent = data.count > 99 ? '99+' : data.count;
+                            navbarBadge.style.display = 'inline-block';
+                        } else {
+                            navbarBadge.style.display = 'none';
+                        }
                     }
+                } catch (err) {
+                    console.error('Error updating navbar badge:', err);
                 }
             })
             .catch(error => {

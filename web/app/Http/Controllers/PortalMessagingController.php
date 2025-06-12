@@ -18,6 +18,7 @@ use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Services\LogService;
 use App\Enums\LogType;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class PortalMessagingController extends Controller
@@ -953,18 +954,18 @@ class PortalMessagingController extends Controller
         $user = Auth::guard($userType)->user();
         
         try {
-            // CRITICAL FIX: Handle family vs family_member type mismatch
-            $participantTypes = [$userType];
+            // Handle family vs family_member type correctly
+            $participantType = $userType;
             if ($userType === 'family') {
-                $participantTypes[] = 'family_member';
+                $participantType = 'family_member';
             }
             
             // Get conversations with the user as participant
             $conversationIds = ConversationParticipant::where('participant_id', $user->getKey())
-                ->whereIn('participant_type', $participantTypes)
+                ->where('participant_type', $participantType)
                 ->whereNull('left_at')
                 ->pluck('conversation_id');
-                
+            
             // Get conversations with their last messages
             $conversations = Conversation::whereIn('conversation_id', $conversationIds)
                 ->with(['lastMessage', 'participants'])
@@ -972,68 +973,66 @@ class PortalMessagingController extends Controller
                 ->limit(5)
                 ->get();
             
-            // IMPORTANT: Now we count TOTAL unread messages instead of just conversations
+            // Process conversations for display
             $totalUnreadCount = 0;
             $recentMessages = [];
             
             foreach ($conversations as $conversation) {
-                // Skip conversations with no messages
+                // Skip conversations without messages
                 if (!$conversation->lastMessage) continue;
                 
-                // Get message details
-                $message = $conversation->lastMessage;
+                // Count unread messages for this conversation
+                $unreadCount = Message::where('conversation_id', $conversation->conversation_id)
+                    ->where(function($query) use ($user, $participantType) {
+                        $query->where('sender_id', '!=', $user->getKey())
+                            ->orWhere('sender_type', '!=', $participantType);
+                    })
+                    ->whereDoesntHave('readStatuses', function($query) use ($user, $participantType) {
+                        $query->where('reader_id', $user->getKey())
+                            ->where('reader_type', $participantType);
+                    })
+                    ->count();
                 
-                // Check if message is read using correct participant types
-                $isRead = $message->readStatuses()
-                    ->where('reader_id', $user->getKey())
-                    ->whereIn('reader_type', $participantTypes)
-                    ->exists();
+                $totalUnreadCount += $unreadCount;
                 
-                // Check for unread status correctly
-                $isUnread = !$isRead && 
-                    !($message->sender_id == $user->getKey() && 
-                    in_array($message->sender_type, $participantTypes));
-                    
-                // Count all unread messages in this conversation, not just the last one
-                $conversationUnreadCount = 0;
-                if ($isUnread || true) { // Check all conversations
-                    $conversationUnreadCount = Message::where('conversation_id', $conversation->conversation_id)
-                        ->where(function($query) use ($user, $participantTypes) {
-                            $query->whereNot(function($q) use ($user, $participantTypes) {
-                                $q->where('sender_id', $user->getKey())
-                                ->whereIn('sender_type', $participantTypes);
-                            });
-                        })
-                        ->whereDoesntHave('readStatuses', function($query) use ($user, $participantTypes) {
-                            $query->where('reader_id', $user->getKey())
-                                ->whereIn('reader_type', $participantTypes);
-                        })
-                        ->where('is_unsent', false)
-                        ->count();
-                        
-                    $totalUnreadCount += $conversationUnreadCount;
+                // Determine conversation name
+                $conversationName = $this->getConversationName($conversation, $user, $userType);
+                
+                // Last message content
+                $lastMessageContent = $conversation->lastMessage->is_unsent 
+                    ? 'This message was unsent' 
+                    : $conversation->lastMessage->content;
+                
+                // Sender name for display
+                $senderName = '';
+                if ($conversation->lastMessage->sender_type === 'system') {
+                    $senderName = 'System';
+                } else if ($conversation->lastMessage->sender_id == $user->getKey() && 
+                        ($conversation->lastMessage->sender_type == $userType || 
+                        $conversation->lastMessage->sender_type == $participantType)) {
+                    $senderName = 'You';
+                } else {
+                    $senderName = $this->getSenderName($conversation->lastMessage);
                 }
                 
-                // Set display name for the conversation
-                $conversationName = $conversation->is_group_chat ? 
-                    $conversation->name : 
-                    $this->getConversationName($conversation, $user, $userType);
-                
-                // Add to results
                 $recentMessages[] = [
                     'conversation_id' => $conversation->conversation_id,
-                    'conversation_name' => $conversationName,
-                    'content' => $message->is_unsent ? 'This message was unsent' : $message->content,
-                    'is_unsent' => $message->is_unsent,
-                    'time_ago' => \Carbon\Carbon::parse($message->message_timestamp)->diffForHumans(),
-                    'unread' => $isUnread,
-                    'unread_count' => $conversationUnreadCount, // Add the count per conversation
-                    'is_group' => $conversation->is_group_chat
+                    'name' => $conversationName,
+                    'is_group_chat' => $conversation->is_group_chat,
+                    'last_message' => [
+                        'content' => $lastMessageContent,
+                        'timestamp' => $conversation->lastMessage->message_timestamp,
+                        'time_ago' => Carbon::parse($conversation->lastMessage->message_timestamp)->diffForHumans(null, true),
+                        'is_unsent' => $conversation->lastMessage->is_unsent,
+                        'sender_name' => $senderName
+                    ],
+                    'unread_count' => $unreadCount,
+                    'has_unread' => $unreadCount > 0
                 ];
             }
             
+            // Return data with both conversation-specific and total unread counts
             return response()->json([
-                'success' => true,
                 'messages' => $recentMessages,
                 'unread_count' => $totalUnreadCount
             ]);
@@ -1044,7 +1043,6 @@ class PortalMessagingController extends Controller
             ]);
             
             return response()->json([
-                'success' => false,
                 'messages' => [],
                 'unread_count' => 0,
                 'error' => $e->getMessage()

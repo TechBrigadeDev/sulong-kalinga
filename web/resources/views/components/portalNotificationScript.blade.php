@@ -28,6 +28,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Flag to indicate we're using the optimized message loader from navbar
+    window.usingOptimizedMessageLoader = true;
+
     console.log('Setting up notification and messaging system for {{ $roleName }}');
     
     let refreshPaused = false;    
@@ -80,6 +83,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load recent messages for message dropdown
     function loadRecentMessages() {
+        // Skip execution if using the optimized loader from navbar
+        if (window.usingOptimizedMessageLoader) {
+            console.log('Using optimized message loader instead of the original');
+            return;
+        }
+        
+        // Original function continues here for backwards compatibility
         const container = document.getElementById('message-preview-container');
         if (!container) return;
 
@@ -808,8 +818,12 @@ document.addEventListener('DOMContentLoaded', function() {
         messagesDropdown.addEventListener('show.bs.dropdown', function() {
             console.log('Messages dropdown opened - pausing refresh');
             refreshPaused = true;
-            // Force load messages when dropdown opens
-            loadRecentMessages();
+            
+            // Only load messages if not using optimized loader
+            if (!window.usingOptimizedMessageLoader) {
+                // Force load messages when dropdown opens
+                loadRecentMessages();
+            }
         });
         
         // Resume refreshes when dropdown is closed
