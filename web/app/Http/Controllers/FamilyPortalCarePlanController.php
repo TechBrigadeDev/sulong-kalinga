@@ -97,7 +97,8 @@ class FamilyPortalCarePlanController extends Controller
                     'search' => $search, 
                     'filter' => $filter,
                     'userType' => $userType,
-                    'userId' => $userId
+                    'userId' => $userId,
+                    'isSecure' => $request->secure() // Pass this to the view for secure URL generation
                 ])->render();
             }
             
