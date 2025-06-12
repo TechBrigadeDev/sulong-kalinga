@@ -265,6 +265,15 @@
     font-weight: bold;
     margin-right: 5px;
     padding: 0 4px;
+    position: relative;
+    margin-left: 8px;
+    top: 0;
+}
+
+
+.message-preview .d-flex .justify-content-between {
+    width: 100%;
+    align-items: center;
 }
 
 /* Small dot indicator for unread messages */
