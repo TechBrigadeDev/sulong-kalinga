@@ -465,3 +465,63 @@ body {
     }
 }
 
+/* Emergency & Service Requests styling */
+.notification-card {
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+}
+.notification-card:hover {
+    transform: translateY(-2px);
+}
+.emergency-card {
+    border-left: 4px solid #dc3545;
+}
+.request-card {
+    border-left: 4px solid #0d6efd;
+}
+.notification-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+.emergency-request-container {
+    padding: 15px;
+}
+
+/* Status badges for emergency and service requests */
+.status-badge {
+    font-size: 0.65rem;
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    position: relative;
+    top: -1px;
+    animation: pulse-subtle 2s infinite;
+}
+
+/* Status badge variants */
+.badge.bg-warning {
+    background-color: var(--amber-500) !important;
+    color: white;
+}
+
+/* Subtle pulse animation for new items */
+@keyframes pulse-subtle {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Improve alignment of badges in notification cards */
+.notification-card h6.mb-0.d-flex {
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+}
+
