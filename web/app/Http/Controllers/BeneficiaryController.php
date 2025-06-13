@@ -326,9 +326,21 @@ class BeneficiaryController extends Controller
                 'googleMapsApiKey' => $googleMapsApiKey,
             ]);
         } elseif (Auth::user()->role_id == 2) { // Care Manager
-            return view('careManager.addBeneficiary', compact('municipalities', 'barangays', 'careWorkers', 'categories'));
+            return view('careManager.addBeneficiary', [
+                'municipalities' => $municipalities, 
+                'barangays' => $barangays, 
+                'careWorkers' => $careWorkers, 
+                'categories' => $categories,
+                'googleMapsApiKey' => $googleMapsApiKey,
+            ]);
         } else { // Care Worker - now allowed to add beneficiaries
-            return view('careWorker.addBeneficiary', compact('municipalities', 'barangays', 'careWorkers', 'categories'));
+            return view('careWorker.addBeneficiary', [
+                'municipalities' => $municipalities, 
+                'barangays' => $barangays, 
+                'careWorkers' => $careWorkers, 
+                'categories' => $categories,
+                'googleMapsApiKey' => $googleMapsApiKey,
+            ]);
         }
     }
 
@@ -848,6 +860,15 @@ class BeneficiaryController extends Controller
                 $emergencyContactMobile = '+63' . $emergencyContactMobile;
             }
 
+            // Prepare map_location JSON for Google Maps
+            $mapLocation = null;
+            if ($request->filled('latitude') && $request->filled('longitude')) {
+                $mapLocation = [
+                    'latitude' => $request->input('latitude'),
+                    'longitude' => $request->input('longitude'),
+                ];
+            }
+
             // Store credentials directly in the beneficiary model
             $password = bcrypt($request->input('account.password'));
 
@@ -886,6 +907,7 @@ class BeneficiaryController extends Controller
                 'username' => $username,
                 'password' => $password,
                 'remember_token' => $remember_token,
+                'map_location' => $mapLocation, // <-- Google Maps data
             ]);
 
             // Log the creation of the beneficiary
@@ -1151,6 +1173,17 @@ class BeneficiaryController extends Controller
                         ->select('id', DB::raw("CONCAT(first_name, ' ', last_name) AS name"))
                         ->get();
         
+        // Prepare Google Maps data for the view
+        $latitude = null;
+        $longitude = null;
+        if ($beneficiary->map_location && is_array($beneficiary->map_location)) {
+            $latitude = $beneficiary->map_location['latitude'] ?? null;
+            $longitude = $beneficiary->map_location['longitude'] ?? null;
+        }
+
+        // Pass Google Maps API key if needed
+        $googleMapsApiKey = env('GOOGLE_MAPS_API_KEY');
+
         // Return view based on user role
         if (Auth::user()->role_id == 1) { // Admin
             return view('admin.editBeneficiary', [
@@ -1164,16 +1197,42 @@ class BeneficiaryController extends Controller
                 'currentCareWorker' => $currentCareWorker,  
                 'currentCareWorkerTasks' => $currentCareWorkerTasks, 
                 'careNeeds' => $careNeeds,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'googleMapsApiKey' => $googleMapsApiKey,
             ]);
         } elseif (Auth::user()->role_id == 2) { // Care Manager
-            return view('careManager.editBeneficiary', compact('beneficiary', 'municipalities', 'barangays', 
-                'categories', 'careWorkers', 'birth_date', 'review_date', 'currentCareWorker', 
-                'currentCareWorkerTasks', 'careNeeds'));
+            return view('careManager.editBeneficiary', [
+                'beneficiary' => $beneficiary, 
+                'municipalities' => $municipalities, 
+                'barangays' => $barangays, 
+                'categories' => $categories, 
+                'careWorkers' => $careWorkers, 
+                'birth_date' => $birth_date, 
+                'review_date' => $review_date, 
+                'currentCareWorker' => $currentCareWorker,  
+                'currentCareWorkerTasks' => $currentCareWorkerTasks, 
+                'careNeeds' => $careNeeds,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'googleMapsApiKey' => $googleMapsApiKey,
+            ]);
         } else { // Care Worker - now allowed to edit beneficiaries
-            return view('careWorker.editBeneficiary', compact('beneficiary', 'municipalities', 'barangays', 
-                'categories', 'careWorkers', 'birth_date', 'review_date', 'currentCareWorker', 
-                'currentCareWorkerTasks', 'careNeeds'));
+            return view('careWorker.editBeneficiary', [
+                'beneficiary' => $beneficiary, 
+                'municipalities' => $municipalities, 
+                'barangays' => $barangays, 
+                'categories' => $categories, 
+                'careWorkers' => $careWorkers, 
+                'birth_date' => $birth_date, 
+                'review_date' => $review_date, 
+                'currentCareWorker' => $currentCareWorker,  
+                'currentCareWorkerTasks' => $currentCareWorkerTasks, 
+                'careNeeds' => $careNeeds,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'googleMapsApiKey' => $googleMapsApiKey,
+            ]);
         }
     }
 
@@ -1627,6 +1686,17 @@ class BeneficiaryController extends Controller
             $beneficiary->care_worker_signature = $careWorkerSignaturePath;
             $beneficiary->updated_by = Auth::id();
             $beneficiary->updated_at = now();
+
+            // Update map_location if coordinates are provided
+            if ($request->filled('latitude') && $request->filled('longitude')) {
+                $beneficiary->map_location = [
+                    'latitude' => $request->input('latitude'),
+                    'longitude' => $request->input('longitude'),
+                ];
+            } else {
+                $beneficiary->map_location = null;
+            }
+
             $beneficiary->save();
 
             // Log the update of the beneficiary
@@ -2190,4 +2260,14 @@ class BeneficiaryController extends Controller
         return $username;
     }
 
+    // public function testGoogleMap()
+    // {
+    //     // You can pass a default location or nulls for testing
+    //     $latitude = 17.6145; // Example: Tabuk City, Kalinga
+    //     $longitude = 121.4511;
+    //     $googleMapsApiKey = env('GOOGLE_MAPS_API_KEY');
+
+    //     // Return a simple test view (to be created) with just the map and geocoding input
+    //     return view('admin.testGoogleMap', compact('latitude', 'longitude', 'googleMapsApiKey'));
+    // }
 }
