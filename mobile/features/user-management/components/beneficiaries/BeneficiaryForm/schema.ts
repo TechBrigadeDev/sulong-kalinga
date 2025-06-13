@@ -158,7 +158,6 @@ export const medicationSchema = z.object({
                     .optional(),
             }),
         )
-        .optional()
         .default([]),
 });
 
@@ -215,6 +214,10 @@ export const beneficiaryFormSchema =
         .merge(documentsSchema);
 
 export type IBeneficiaryForm = z.infer<
+    typeof beneficiaryFormSchema
+>;
+
+export type BeneficiaryFormValues = z.infer<
     typeof beneficiaryFormSchema
 >;
 

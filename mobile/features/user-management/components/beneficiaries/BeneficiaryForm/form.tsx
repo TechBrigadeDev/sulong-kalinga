@@ -1,34 +1,48 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PropsWithChildren } from "react";
 import {
-    createFormHook,
-    createFormHookContexts,
-    formOptions,
-} from "@tanstack/react-form";
+    FormProvider,
+    useForm,
+    useFormContext,
+} from "react-hook-form";
 
 import {
     beneficiaryFormDefaults,
     beneficiaryFormSchema,
+    IBeneficiaryForm,
 } from "./schema";
 
-export const {
-    fieldContext: beneficiaryFieldContext,
-    formContext: beneficiaryFormContext,
-    useFieldContext: useBeneficiaryFieldContext,
-    useFormContext: useBeneficiaryFormContext,
-} = createFormHookContexts();
+export const BeneficiaryFormProvider = ({
+    children,
+}: PropsWithChildren) => {
+    const methods = useForm<IBeneficiaryForm>({
+        resolver: zodResolver(
+            beneficiaryFormSchema,
+        ),
+        defaultValues: beneficiaryFormDefaults,
+    });
 
-export const {
-    useAppForm: useBeneficiaryForm,
-    withForm: withBeneficiaryForm,
-} = createFormHook({
-    fieldContext: beneficiaryFieldContext,
-    formContext: beneficiaryFormContext,
-    fieldComponents: {},
-    formComponents: {},
-});
+    return (
+        <FormProvider {...methods}>
+            {children}
+        </FormProvider>
+    );
+};
 
-export const beneficiaryFormOpts = formOptions({
+export const useBeneficiaryForm = () =>
+    useFormContext<IBeneficiaryForm>();
+
+// For compatibility with existing code
+export const beneficiaryFormOpts = {
+    resolver: zodResolver(beneficiaryFormSchema),
     defaultValues: beneficiaryFormDefaults,
-    validators: {
-        onChange: beneficiaryFormSchema,
-    },
-});
+};
+
+// HOC wrapper for components that need form context
+export const withBeneficiaryForm = (Component: any) => {
+    return (props: any) => (
+        <BeneficiaryFormProvider>
+            <Component {...props} />
+        </BeneficiaryFormProvider>
+    );
+};

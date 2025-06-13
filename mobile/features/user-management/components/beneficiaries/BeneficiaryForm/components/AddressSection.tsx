@@ -1,22 +1,15 @@
+import { Controller, useFormContext } from "react-hook-form";
 import {
     Card,
     H3,
     Input,
     Label,
     Select,
+    Text,
     XStack,
     YStack,
 } from "tamagui";
-
-import { IBeneficiary } from "~/features/user-management/management.type";
-
-interface Props {
-    data?: Partial<IBeneficiary>;
-    onChange?: (
-        field: string | number | symbol,
-        value: any,
-    ) => void;
-}
+import { BeneficiaryFormValues } from "../schema";
 
 // TODO: These should come from an API or store
 const MUNICIPALITY_OPTIONS = [
@@ -30,146 +23,114 @@ const BARANGAY_OPTIONS = [
 ];
 
 export const AddressSection = () => {
+    const { control } = useFormContext<BeneficiaryFormValues>();
+
     return (
         <Card elevate>
             <Card.Header padded>
                 <H3>Current Address</H3>
             </Card.Header>
             <YStack p="$4" gap="$4">
-                <YStack gap="$2">
-                    <Label fontWeight="600">
-                        House No., Street,
-                        Subdivision, Barangay,
-                        City, Province *
-                    </Label>
-                    <Input
-                        size="$4"
-                        value={
-                            data.street_address
-                        }
-                        onChangeText={(value) =>
-                            onChange(
-                                "street_address",
-                                value,
-                            )
-                        }
-                        placeholder="Enter complete current address"
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                    />
-                </YStack>
+                <Controller
+                    control={control}
+                    name="street_address"
+                    render={({ field, fieldState }) => (
+                        <YStack gap="$2">
+                            <Label fontWeight="600">
+                                House No., Street, Subdivision, Barangay, City, Province *
+                            </Label>
+                            <Input
+                                size="$4"
+                                value={field.value || ""}
+                                onChangeText={field.onChange}
+                                onBlur={field.onBlur}
+                                placeholder="Enter complete address"
+                            />
+                            {fieldState.error && (
+                                <Text color="$red10" fontSize="$2">
+                                    {fieldState.error.message}
+                                </Text>
+                            )}
+                        </YStack>
+                    )}
+                />
 
                 <XStack gap="$4">
-                    <YStack flex={1} gap="$2">
-                        <Label fontWeight="600">
-                            Municipality *
-                        </Label>
-                        <Select
-                            value={data.municipality_id?.toString()}
-                            onValueChange={(
-                                value,
-                            ) =>
-                                onChange(
-                                    "municipality_id",
-                                    parseInt(
-                                        value,
-                                    ),
-                                )
-                            }
-                        >
-                            <Select.Trigger>
-                                <Select.Value placeholder="Select municipality" />
-                            </Select.Trigger>
-                            <Select.Content>
-                                <Select.ScrollUpButton />
-                                <Select.Viewport>
-                                    <Select.Group>
-                                        {MUNICIPALITY_OPTIONS.map(
-                                            (
-                                                option,
-                                                i,
-                                            ) => (
-                                                <Select.Item
-                                                    index={
-                                                        i
-                                                    }
-                                                    key={
-                                                        option.value
-                                                    }
-                                                    value={
-                                                        option.value
-                                                    }
-                                                >
-                                                    <Select.ItemText>
-                                                        {
-                                                            option.label
-                                                        }
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ),
-                                        )}
-                                    </Select.Group>
-                                </Select.Viewport>
-                                <Select.ScrollDownButton />
-                            </Select.Content>
-                        </Select>
-                    </YStack>
+                    <Controller
+                        control={control}
+                        name="municipality_id"
+                        render={({ field, fieldState }) => (
+                            <YStack flex={1} gap="$2">
+                                <Label>Municipality *</Label>
+                                <Select
+                                    value={field.value?.toString() || ""}
+                                    onValueChange={(value) => 
+                                        field.onChange(value ? parseInt(value) : undefined)
+                                    }
+                                >
+                                    <Select.Trigger>
+                                        <Select.Value placeholder="Select municipality" />
+                                    </Select.Trigger>
+                                    <Select.Content>
+                                        {MUNICIPALITY_OPTIONS.map((option, index) => (
+                                            <Select.Item
+                                                key={option.value}
+                                                index={index}
+                                                value={option.value}
+                                            >
+                                                <Select.ItemText>
+                                                    {option.label}
+                                                </Select.ItemText>
+                                            </Select.Item>
+                                        ))}
+                                    </Select.Content>
+                                </Select>
+                                {fieldState.error && (
+                                    <Text color="$red10" fontSize="$2">
+                                        {fieldState.error.message}
+                                    </Text>
+                                )}
+                            </YStack>
+                        )}
+                    />
 
-                    <YStack flex={1} gap="$2">
-                        <Label fontWeight="600">
-                            Barangay *
-                        </Label>
-                        <Select
-                            value={data.barangay_id?.toString()}
-                            onValueChange={(
-                                value,
-                            ) =>
-                                onChange(
-                                    "barangay_id",
-                                    parseInt(
-                                        value,
-                                    ),
-                                )
-                            }
-                        >
-                            <Select.Trigger>
-                                <Select.Value placeholder="Select barangay" />
-                            </Select.Trigger>
-                            <Select.Content>
-                                <Select.ScrollUpButton />
-                                <Select.Viewport>
-                                    <Select.Group>
-                                        {BARANGAY_OPTIONS.map(
-                                            (
-                                                option,
-                                                i,
-                                            ) => (
-                                                <Select.Item
-                                                    index={
-                                                        i
-                                                    }
-                                                    key={
-                                                        option.value
-                                                    }
-                                                    value={
-                                                        option.value
-                                                    }
-                                                >
-                                                    <Select.ItemText>
-                                                        {
-                                                            option.label
-                                                        }
-                                                    </Select.ItemText>
-                                                </Select.Item>
-                                            ),
-                                        )}
-                                    </Select.Group>
-                                </Select.Viewport>
-                                <Select.ScrollDownButton />
-                            </Select.Content>
-                        </Select>
-                    </YStack>
+                    <Controller
+                        control={control}
+                        name="barangay_id"
+                        render={({ field, fieldState }) => (
+                            <YStack flex={1} gap="$2">
+                                <Label>Barangay *</Label>
+                                <Select
+                                    value={field.value?.toString() || ""}
+                                    onValueChange={(value) => 
+                                        field.onChange(value ? parseInt(value) : undefined)
+                                    }
+                                >
+                                    <Select.Trigger>
+                                        <Select.Value placeholder="Select barangay" />
+                                    </Select.Trigger>
+                                    <Select.Content>
+                                        {BARANGAY_OPTIONS.map((option, index) => (
+                                            <Select.Item
+                                                key={option.value}
+                                                index={index}
+                                                value={option.value}
+                                            >
+                                                <Select.ItemText>
+                                                    {option.label}
+                                                </Select.ItemText>
+                                            </Select.Item>
+                                        ))}
+                                    </Select.Content>
+                                </Select>
+                                {fieldState.error && (
+                                    <Text color="$red10" fontSize="$2">
+                                        {fieldState.error.message}
+                                    </Text>
+                                )}
+                            </YStack>
+                        )}
+                    />
                 </XStack>
             </YStack>
         </Card>
