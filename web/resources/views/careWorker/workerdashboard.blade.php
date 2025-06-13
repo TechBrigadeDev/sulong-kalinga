@@ -148,7 +148,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="schedule-time">{{ $visit['date_display'] }}, {{ $visit['time'] }}</div>
                                 </div>
-                                <div class="schedule-details">{{ $visit['visit_type'] }} for Beneficiary {{ $visit['beneficiary_name'] }}</div>
+                                <div class="schedule-details">{{ $visit['visit_type'] }} for {{ $visit['beneficiary_name'] }}</div>
                                 <div class="schedule-details">{{ T::translate('Location', 'Lokasyon') }}: {{ $visit['location'] }}</div>
                             </div>
                             @empty
