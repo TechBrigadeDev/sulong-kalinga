@@ -96,11 +96,38 @@ class RecordsManagementApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
         }
 
-        // Fetch beneficiary
-        $beneficiary = Beneficiary::find($plan->beneficiary_id);
+        // Fetch beneficiary with relations
+        $beneficiary = Beneficiary::with(['barangay', 'municipality', 'generalCarePlan.healthHistory'])->find($plan->beneficiary_id);
+
+        // Full name
         $beneficiaryFullName = $beneficiary
-            ? trim("{$beneficiary->first_name} {$beneficiary->middle_name} {$beneficiary->last_name}")
+            ? trim("{$beneficiary->first_name} " . ($beneficiary->middle_name ? "{$beneficiary->middle_name} " : "") . "{$beneficiary->last_name}")
             : null;
+
+        // Address
+        $addressParts = [];
+        if ($beneficiary && $beneficiary->street_address) $addressParts[] = $beneficiary->street_address;
+        if ($beneficiary && $beneficiary->barangay) $addressParts[] = $beneficiary->barangay->barangay_name;
+        if ($beneficiary && $beneficiary->municipality) $addressParts[] = $beneficiary->municipality->municipality_name;
+        $address = $beneficiary ? implode(', ', $addressParts) : null;
+
+        // Medical Conditions
+        $medicalConditions = null;
+        if (
+            $beneficiary &&
+            $beneficiary->generalCarePlan &&
+            $beneficiary->generalCarePlan->healthHistory &&
+            $beneficiary->generalCarePlan->healthHistory->medical_conditions
+        ) {
+            $conditions = json_decode($beneficiary->generalCarePlan->healthHistory->medical_conditions, true);
+            $medicalConditions = is_array($conditions) ? implode(', ', $conditions) : $beneficiary->generalCarePlan->healthHistory->medical_conditions;
+        }
+
+        // Illnesses
+        $illnesses = $beneficiary && $beneficiary->illnesses ? $beneficiary->illnesses : null;
+
+        // Civil Status
+        $civilStatus = $beneficiary && $beneficiary->civil_status ? $beneficiary->civil_status : null;
 
         // Fetch care worker (author)
         $careWorker = User::find($plan->care_worker_id);
@@ -132,7 +159,13 @@ class RecordsManagementApiController extends Controller
             'data' => [
                 'id' => $plan->weekly_care_plan_id,
                 'date' => $plan->date,
-                'beneficiary' => $beneficiaryFullName,
+                'beneficiary' => [
+                    'full_name' => $beneficiaryFullName,
+                    'address' => $address,
+                    'medical_conditions' => $medicalConditions,
+                    'illnesses' => $illnesses,
+                    'civil_status' => $civilStatus,
+                ],
                 'care_worker' => $careWorkerFullName,
                 'assessment' => $plan->assessment,
                 'evaluation_recommendations' => $plan->evaluation_recommendations,
@@ -145,7 +178,7 @@ class RecordsManagementApiController extends Controller
                 'created_at' => $plan->created_at,
                 'updated_at' => $plan->updated_at,
                 'acknowledge_status' => $acknowledgeStatus,
-                'acknowledged_by' => $whoAcknowledged,
+                'who_acknowledged' => $whoAcknowledged,
             ]
         ]);
     }
