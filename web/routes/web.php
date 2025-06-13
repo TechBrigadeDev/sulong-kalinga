@@ -36,33 +36,41 @@ Route::get('/session-check', function () {
 
 // Dashboard routes by role (for staff users)
 Route::get('/admin/dashboard', function () {
-    if (auth()->user()?->role_id == 1) {  // Allow ALL users with role_id=1
-        $showWelcome = session()->pull('show_welcome', false);
+    if (auth()->user()?->role_id == 1) {
         \Log::debug('Admin dashboard accessed by user', [
             'user_id' => auth()->id(),
             'role_id' => auth()->user()->role_id,
             'org_role_id' => auth()->user()->organization_role_id
         ]);
-        return view('admin.admindashboard', ['showWelcome' => $showWelcome]);
+        // Use the controller instead of directly returning a view
+        return app()->make('App\Http\Controllers\DashboardController')->adminDashboard();
     }
     abort(403, 'Only administrators can access this page');
 })->middleware('auth')->name('admin.dashboard');
 
 Route::get('/manager/dashboard', function () {
     if (auth()->user()?->isCareManager()) {
-        $showWelcome = session()->pull('show_welcome', false);
-        return view('careManager.managerdashboard', ['showWelcome' => $showWelcome]);
+        \Log::debug('Care Manager dashboard accessed by user', [
+            'user_id' => auth()->id(),
+            'role_id' => auth()->user()->role_id
+        ]);
+        // Use the controller instead of directly returning a view
+        return app()->make('App\Http\Controllers\DashboardController')->careManagerDashboard();
     }
-    abort(403);
-})->middleware('auth')->name('managerdashboard');
+    abort(403, 'Only care managers can access this page');
+})->middleware('auth')->name('care-manager.dashboard');
 
 Route::get('/worker/dashboard', function () {
-    $showWelcome = session()->pull('show_welcome', false);
     if (auth()->user()?->isCareWorker()) {
-        return view('careWorker.workerdashboard', ['showWelcome' => $showWelcome]);
+        \Log::debug('Care Worker dashboard accessed by user', [
+            'user_id' => auth()->id(),
+            'role_id' => auth()->user()->role_id
+        ]);
+        // Use the controller instead of directly returning a view
+        return app()->make('App\Http\Controllers\DashboardController')->careWorkerDashboard();
     }
-    abort(403);
-})->middleware('auth')->name('workerdashboard');
+    abort(403, 'Only care workers can access this page');
+})->middleware('auth')->name('care-worker.dashboard'); // Changed to match naming pattern
 
 Route::get('/family/homePage', function () {
     $showWelcome = session()->pull('show_welcome', false);

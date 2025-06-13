@@ -43,52 +43,52 @@
                     <div class="card stat-card stat-card-beneficiaries">
                         <div class="card-body">
                             <div class="label">Total Beneficiaries</div>
-                            <div class="value">1,248</div>
+                            <div class="value">{{ number_format($beneficiaryStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--teal-600)">892</div>
+                                    <div class="sub-value" style="color: var(--teal-600)">{{ number_format($beneficiaryStats['active']) }}</div>
                                     <div class="sub-label">Active</div>
                                 </div>
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--slate-500)">356</div>
+                                    <div class="sub-value" style="color: var(--slate-500)">{{ number_format($beneficiaryStats['inactive']) }}</div>
                                     <div class="sub-label">Inactive</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-workers">
                         <div class="card-body">
-                            <div class="label">Managed Care Workers</div>
-                            <div class="value">20</div>
+                            <div class="label">Total Care Workers</div>
+                            <div class="value">{{ number_format($careWorkerStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--indigo-600)">12</div>
-                                    <div class="sub-label">On-shift</div>
+                                    <div class="sub-value" style="color: var(--indigo-600)">{{ number_format($careWorkerStats['active']) }}</div>
+                                    <div class="sub-label">Active</div>
                                 </div>
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--slate-500)">8</div>
-                                    <div class="sub-label">Off-shift</div>
+                                    <div class="sub-value" style="color: var(--slate-500)">{{ number_format($careWorkerStats['inactive']) }}</div>
+                                    <div class="sub-label">Inactive</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-requests">
                         <div class="card-body">
                             <div class="label">Requests Today</div>
-                            <div class="value">24</div>
+                            <div class="value">{{ number_format($requestStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--rose-600)">5</div>
+                                    <div class="sub-value" style="color: var(--rose-600)">{{ number_format($requestStats['emergency']) }}</div>
                                     <div class="sub-label">Emergency</div>
                                 </div>
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--amber-600)">19</div>
+                                    <div class="sub-value" style="color: var(--amber-600)">{{ number_format($requestStats['service']) }}</div>
                                     <div class="sub-label">Service</div>
                                 </div>
                             </div>

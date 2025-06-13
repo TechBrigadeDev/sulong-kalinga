@@ -24,6 +24,7 @@ use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\InternalAppointmentsController;
 use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
+use App\Http\Controllers\DashboardController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -31,10 +32,9 @@ require_once __DIR__.'/routeHelpers.php';
 // All routes with care_manager role check
 Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->prefix('care-manager')->name('care-manager.')->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
-        $showWelcome = session()->pull('show_welcome', false);
-        return view('careManager.managerdashboard', ['showWelcome' => $showWelcome]);
-    })->name('dashboard');
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/', [DashboardController::class, 'careManagerDashboard'])->name('index');
+    });
     
     // Care Worker Management
     Route::prefix('care-workers')->name('careworkers.')->group(function () {

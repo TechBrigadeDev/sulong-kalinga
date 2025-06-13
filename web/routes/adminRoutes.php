@@ -29,6 +29,7 @@ use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\CareWorkerTrackingController;
 use App\Http\Controllers\AiSummaryController;
 use App\Http\Controllers\ShiftHistoryController;
+use App\Http\Controllers\DashboardController;
 
 
 // All routes with administrator role check
@@ -41,10 +42,7 @@ use App\Http\Controllers\ShiftHistoryController;
 require_once __DIR__.'/routeHelpers.php';
 
 Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/admin/dashboard', function () {
-        $showWelcome = session()->pull('show_welcome', false);
-        return view('admin.admindashboard', ['showWelcome' => $showWelcome]);
-    })->name('dashboard');
+     Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('dashboard');
 
     // Administrator Management
     Route::prefix('administrators')->name('administrators.')->group(function () {
