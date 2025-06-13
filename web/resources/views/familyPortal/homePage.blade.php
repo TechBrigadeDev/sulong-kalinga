@@ -14,6 +14,10 @@
     @include('components.familyPortalNavbar')
     @include('components.familyPortalSidebar')
 
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <!-- Welcome Back Modal -->
     <div class="modal fade" id="welcomeBackModal" tabindex="-1" aria-labelledby="welcomeBackModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -40,7 +44,9 @@
                 <!-- Combined Welcome and Alert Banners -->
                 <div class="banner-grid">
                     <div class="welcome-banner">
-                        <h1 class="welcome-title">Welcome, {{ $familyMember->first_name }}!</h1>
+                        <h1 class="welcome-title">
+                            {{ T::translate('Welcome, ' . $familyMember->first_name . '!', 'Maligayang pagdating, ' . $familyMember->first_name . '!') }}
+                        </h1
                         <p class="welcome-subtitle">You're viewing the profile of {{ $beneficiary->first_name }} {{ $beneficiary->last_name }}</p>
                         <p>Last care worker visit: {{ \Carbon\Carbon::now()->subDays(3)->format('F d, Y') }}</p>
                     </div>

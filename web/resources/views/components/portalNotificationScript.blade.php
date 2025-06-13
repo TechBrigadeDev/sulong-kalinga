@@ -24,6 +24,33 @@
         $rolePrefix = 'family';
         $userType = 'family_member';
     }
+
+    // Determine language preference
+    $userType = null;
+    $userId = null;
+    
+    if (Auth::guard('web')->check()) {
+        $userType = 'cose_user';
+        $userId = Auth::guard('web')->id();
+    } elseif (Auth::guard('beneficiary')->check()) {
+        $userType = 'beneficiary'; 
+        $userId = Auth::guard('beneficiary')->user()->beneficiary_id;
+    } elseif (Auth::guard('family')->check()) {
+        $userType = 'family_member';
+        $userId = Auth::guard('family')->user()->family_member_id;
+    }
+    
+    $useTagalog = false;
+    if ($userType && $userId) {
+        $useTagalog = App\Models\LanguagePreference::where('user_type', $userType)
+                        ->where('user_id', $userId)
+                        ->exists();
+    } else {
+        $useTagalog = request()->cookie('use_tagalog') === '1';
+    }
+    
+    // Share with views
+    View::share('useTagalog', $useTagalog);
 @endphp
 
 <script>

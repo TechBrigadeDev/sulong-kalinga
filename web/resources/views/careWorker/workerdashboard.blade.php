@@ -14,6 +14,10 @@
     @include('components.careWorkerNavbar')
     @include('components.careWorkerSidebar')
 
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <!-- Welcome Back Modal -->
     <div class="modal fade" id="welcomeBackModal" tabindex="-1" aria-labelledby="welcomeBackModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -35,7 +39,7 @@
     </div>
 
     <div class="home-section">
-        <div class="text-left">CARE WORKER DASHBOARD</div>
+        <div class="text-left">{{ T::translate('CARE WORKER DASHBOARD', 'DASHBOARD PARA SA CARE WORKER') }}</div>
         <div class="container-fluid">
             <div class="row g-3" id="home-content">
                 <!-- First Row -->

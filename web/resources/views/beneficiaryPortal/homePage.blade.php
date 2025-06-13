@@ -14,6 +14,10 @@
     @include('components.beneficiaryPortalNavbar')
     @include('components.beneficiaryPortalSidebar')
 
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <!-- Welcome Back Modal -->
     <div class="modal fade" id="welcomeBackModal" tabindex="-1" aria-labelledby="welcomeBackModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -40,7 +44,9 @@
                 <!-- Combined Welcome and Alert Banners -->
                 <div class="banner-grid">
                     <div class="welcome-banner">
-                        <h1 class="welcome-title">Welcome, {{ Auth::guard('beneficiary')->user()->first_name }}!</h1>
+                        <h1 class="welcome-title">
+                            {{ T::translate('Welcome, ' . Auth::guard('beneficiary')->user()->first_name . '!', 'Maligayang pagdating, ' . Auth::guard('beneficiary')->user()->first_name . '!') }}
+                        </h1>
                         <p class="welcome-subtitle">We are passionate about giving you the best care possible.</p>
                         <p>Last care worker visit: <span class="fw-bold">{{ \Carbon\Carbon::now()->subDays(3)->format('F d, Y') }}</span></p>
                     </div>

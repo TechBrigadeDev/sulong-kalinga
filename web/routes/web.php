@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\MessageController;
 use App\Http\Middleware\CheckRole;
+use App\Http\Controllers\LanguageController;
+
 
 // Include route files for role-specific routes
 require __DIR__.'/adminRoutes.php';
@@ -13,6 +15,10 @@ require __DIR__.'/careWorkerRoutes.php';
 require __DIR__.'/beneficiaryRoutes.php';  // Add beneficiary routes
 require __DIR__.'/familyRoutes.php';       // Add family routes
 
+Route::post('/toggle-language', [LanguageController::class, 'toggle'])
+    ->name('toggle-language')
+    ->middleware('web');
+    
 // Authentication Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->middleware('throttle:10,1');
