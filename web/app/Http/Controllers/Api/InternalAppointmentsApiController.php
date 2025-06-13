@@ -53,35 +53,44 @@ class InternalAppointmentsApiController extends Controller
     /**
      * Show a single internal appointment with occurrences and participants.
      */
-    public function show($id, Request $request)
+    public function show($id)
     {
-        $user = $request->user();
-
-        $appointment = Appointment::with([
+        $appointment = \App\Models\Appointment::with([
             'appointmentType',
             'participants',
             'occurrences'
-        ])->find($id);
+        ])->findOrFail($id);
 
-        if (!$appointment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Appointment not found.'
-            ], 404);
-        }
-
-        // Role-based access check
-        if ($user->role_id == 3) {
-            $isParticipant = $appointment->participants->where('participant_type', 'cose_user')
-                ->where('participant_id', $user->id)->count() > 0;
-            if (!$isParticipant) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        // Add full name to each participant
+        $participantsWithNames = $appointment->participants->map(function ($participant) {
+            $fullName = null;
+            if ($participant->participant_type === 'cose_user') {
+                $user = \App\Models\User::find($participant->participant_id);
+                if ($user) {
+                    $fullName = trim($user->first_name . ' ' . $user->last_name);
+                }
+            } elseif ($participant->participant_type === 'beneficiary') {
+                $beneficiary = \App\Models\Beneficiary::find($participant->participant_id);
+                if ($beneficiary) {
+                    $fullName = trim($beneficiary->first_name . ' ' . ($beneficiary->middle_name ? $beneficiary->middle_name . ' ' : '') . $beneficiary->last_name);
+                }
+            } elseif ($participant->participant_type === 'family_member') {
+                $family = \App\Models\FamilyMember::find($participant->participant_id);
+                if ($family) {
+                    $fullName = trim($family->first_name . ' ' . $family->last_name);
+                }
             }
-        }
+            $data = $participant->toArray();
+            $data['full_name'] = $fullName;
+            return $data;
+        });
+
+        $data = $appointment->toArray();
+        $data['participants'] = $participantsWithNames;
 
         return response()->json([
             'success' => true,
-            'data' => $appointment
+            'data' => $data
         ]);
     }
 
