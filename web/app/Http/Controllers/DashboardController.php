@@ -39,13 +39,118 @@ class DashboardController extends Controller
         // Get today's requests
         $requestStats = $this->getTodayRequestStats();
         
+        // Get upcoming visitations for all care workers
+        $upcomingVisitations = $this->getUpcomingVisitationsForAllCareWorkers();
+        
+        // Get top care workers performance
+        $careWorkerPerformance = $this->getTopCareWorkersPerformance();
+        
+        // Get recent care plans for all care workers
+        $recentCarePlans = $this->getRecentCarePlansForAllCareWorkers();
+        
+        // Get expense data (using existing expense controller)
+        $expenseData = $this->getExpenseData();
+        
         return view('admin.admindashboard', [
             'showWelcome' => $showWelcome,
             'beneficiaryStats' => $beneficiaryStats,
             'careWorkerStats' => $careWorkerStats,
             'locationStats' => $locationStats,
             'requestStats' => $requestStats,
+            'upcomingVisitations' => $upcomingVisitations,
+            'careWorkerPerformance' => $careWorkerPerformance,
+            'recentCarePlans' => $recentCarePlans,
+            'expenseData' => $expenseData
         ]);
+    }
+
+    /**
+     * Get this month's expense data for admin dashboard
+     * 
+     * @return array
+     */
+    private function getExpenseData()
+    {
+        try {
+            // Get current month's start and end dates
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $endOfMonth = Carbon::now()->endOfMonth();
+            
+            // Get expenses for current month (up to 5 most recent)
+            $recentExpenses = DB::table('expenses as e')
+                ->join('expense_categories as ec', 'e.category_id', '=', 'ec.category_id')
+                ->select(
+                    'e.expense_id',
+                    'e.title',
+                    'e.amount',
+                    'e.date',
+                    'ec.name as category_name',
+                    'ec.color_code'
+                )
+                ->whereBetween('e.date', [$startOfMonth, $endOfMonth])
+                ->orderBy('e.date', 'desc')
+                ->limit(5)
+                ->get();
+            
+            // Calculate total spent this month
+            $totalSpent = DB::table('expenses')
+                ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                ->sum('amount');
+                
+            // Get budget breakdown by category
+            $budgetBreakdown = DB::table('expenses as e')
+                ->join('expense_categories as ec', 'e.category_id', '=', 'ec.category_id')
+                ->select(
+                    'ec.name as category_name',
+                    'ec.color_code',
+                    DB::raw('SUM(e.amount) as total_amount')
+                )
+                ->whereBetween('e.date', [$startOfMonth, $endOfMonth])
+                ->groupBy('ec.name', 'ec.color_code')
+                ->orderBy('total_amount', 'desc')
+                ->limit(4)  // Show top 4 categories
+                ->get();
+            
+            // Format the data for the view
+            $formattedExpenses = [];
+            foreach ($recentExpenses as $expense) {
+                $formattedExpenses[] = [
+                    'id' => $expense->expense_id,
+                    'title' => $expense->title,
+                    'amount' => $expense->amount,
+                    'date' => $expense->date,
+                    'category' => $expense->category_name,
+                    'color' => $expense->color_code
+                ];
+            }
+            
+            // Format category breakdown
+            $categoryBreakdown = [];
+            foreach ($budgetBreakdown as $category) {
+                $percentage = $totalSpent > 0 ? round(($category->total_amount / $totalSpent) * 100) : 0;
+                $categoryBreakdown[] = [
+                    'category' => $category->category_name,
+                    'amount' => $category->total_amount,
+                    'percentage' => $percentage,
+                    'color' => $category->color_code
+                ];
+            }
+            
+            return [
+                'recent_expenses' => $formattedExpenses,
+                'total_spent' => $totalSpent,
+                'month' => Carbon::now()->format('F Y'),
+                'category_breakdown' => $categoryBreakdown
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error getting expense data for dashboard: ' . $e->getMessage());
+            return [
+                'recent_expenses' => [],
+                'total_spent' => 0,
+                'month' => Carbon::now()->format('F Y'),
+                'category_breakdown' => []
+            ];
+        }
     }
     
     /**
