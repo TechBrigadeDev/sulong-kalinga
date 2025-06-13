@@ -101,7 +101,6 @@
       <ul class="sub-menu">
         <li><a class="link_name">Location Tracking</a></li>
         <li><a href="#" @if($isMessagingView) target="_top" onclick="window.top.location.href='#'; return false;" @endif>Beneficiary Map</a></li>
-        <li><a href="#" @if($isMessagingView) target="_top" onclick="window.top.location.href='#'; return false;" @endif>Care Worker Tracking</a></li>
       </ul>
     </li>
 
