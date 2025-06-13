@@ -3,135 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Shift Histories</title>
+    <title>Shift Histories | Admin Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <style>
-        #home-content {
-            font-size: clamp(0.8rem, 1vw, 1rem);
-        }
-
-        #home-content th,
-        #home-content td {
-            font-size: 0.9rem; /* Increased font size */
-            vertical-align: middle;
-        }
-
-        #home-content .card-header,
-        #home-content .form-label {
-            font-size: clamp(0.9rem, 1.1vw, 1.1rem);
-        }
-
-        #home-content .btn {
-            font-size: 0.85rem; /* Slightly increased button text size */
-        }
-        
-        .action-icons a {
-            text-decoration: none;
-            color: #333;
-            margin: 0 5px;
-            font-size: 1rem; /* Increased icon size */
-        }
-        
-        .action-icons a:hover {
-            color: #4e73df;
-        }
-        
-        .table-responsive {
-            min-height: 400px;
-        }
-        
-        .badge {
-            font-weight: 500;
-            padding: 0.35em 0.65em;
-            font-size: 0.85rem; /* Increased badge text size */
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/shiftHistory.css') }}">
 </head>
 <body>
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     
     <div class="home-section">
-        <div class="text-left">SHIFT HISTORIES</div>
         <div class="container-fluid">
+            <div class="text-left">SHIFT HISTORY</div>            
             <div class="row" id="home-content">
                 <div class="col-12">
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
-                            <h5 class="mb-0 text-primary">Care Worker Shift Records</h5>
-                            <a href="{{ route('admin.shift.histories.archived') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-archive"></i> Archived Histories
-                            </a>
-                        </div>
-                        <div class="card-body">
-                            <form action="{{ route('admin.shift.histories.index') }}" method="GET" id="searchFilterForm">
-                                <div class="row mb-3 align-items-center">
-                                    <!-- Search Bar -->
-                                    <div class="col-12 col-md-5 mb-2">
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="bi bi-search"></i>
-                                            </span>
-                                            <input type="text" class="form-control" placeholder="Search by care worker name..." 
-                                                id="searchBar" name="search" value="{{ $search ?? '' }}">
-                                        </div>
-                                    </div>
-
-                                    <!-- Date Filter -->
-                                    <div class="col-12 col-md-4 mb-2">
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="bi bi-calendar"></i>
-                                            </span>
-                                            <input type="date" class="form-control" 
-                                                id="dateFilter" name="date" value="{{ $date ?? '' }}">
-                                        </div>
-                                    </div>
-
-                                    <!-- Filter Button -->
-                                    <div class="col-6 col-md-2 mb-2">
-                                        <button type="submit" class="btn btn-primary w-100">
-                                            <i class="bi bi-funnel"></i> Apply Filters
-                                        </button>
-                                    </div>
-
-                                    <!-- Reset Button -->
-                                    <div class="col-6 col-md-1 mb-2">
-                                        <button type="button" class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                                            <i class="bi bi-arrow-counterclockwise"></i> Reset
-                                        </button>
+                    <div class="filter-section">
+                        <form action="{{ route('admin.shift.histories.index') }}" method="GET" id="searchFilterForm">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-5 col-12">
+                                    <label for="searchBar" class="filter-label">Search Care Worker</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Search by name..." 
+                                            id="searchBar" name="search" value="{{ $search ?? '' }}">
                                     </div>
                                 </div>
-                            </form>
-                            
+
+                                <div class="col-md-4 col-12">
+                                    <label for="dateFilter" class="filter-label">Filter by Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-calendar"></i>
+                                        </span>
+                                        <input type="date" class="form-control" 
+                                            id="dateFilter" name="date" value="{{ $date ?? '' }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2 col-6">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-funnel me-1"></i> Apply
+                                    </button>
+                                </div>
+
+                                <div class="col-md-1 col-6">
+                                    <button type="button" class="btn btn-outline-secondary w-100" onclick="resetFilters()" title="Reset filters">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Care Worker Shift Records</h5>
+                        </div>
+                        <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover">
+                                <table class="table">
                                     <thead>
                                         <tr>
                                             <th scope="col">Care Worker</th>
                                             <th scope="col">Date</th>
-                                            <th scope="col">Shift Start</th>
-                                            <th scope="col">Shift End</th>
-                                            <th scope="col">Municipality</th>  <!-- Changed from "Location Tags" -->
+                                            <th scope="col">Shift Time</th>
+                                            <th scope="col">Municipality</th>
                                             <th scope="col">Status</th>
                                             <th scope="col" class="text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <!-- Demo data - would be replaced with actual data from the database -->
                                         <tr>
-                                            <td>John Smith</td>
+                                            <td><strong>John Smith</strong></td>
                                             <td>May 20, 2025</td>
-                                            <td>08:00 AM</td>
-                                            <td>04:00 PM</td>
+                                            <td>08:00 AM - 04:00 PM</td>
                                             <td>Mondragon</td>
-                                            <td><span class="badge bg-success">Completed</span></td>
+                                            <td><span class="badge badge-success">Completed</span></td>
                                             <td class="text-center">
                                                 <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
+                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="#" title="Download Report">
@@ -141,15 +93,14 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>Maria Garcia</td>
+                                            <td><strong>Maria Garcia</strong></td>
                                             <td>May 20, 2025</td>
-                                            <td>09:00 AM</td>
-                                            <td>05:00 PM</td>
+                                            <td>09:00 AM - 05:00 PM</td>
                                             <td>San Roque</td>
-                                            <td><span class="badge bg-success">Completed</span></td>
+                                            <td><span class="badge badge-success">Completed</span></td>
                                             <td class="text-center">
                                                 <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
+                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="#" title="Download Report">
@@ -159,15 +110,14 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>David Johnson</td>
+                                            <td><strong>David Johnson</strong></td>
                                             <td>May 20, 2025</td>
-                                            <td>02:00 PM</td>
-                                            <td>10:00 PM</td>
+                                            <td>02:00 PM - 10:00 PM</td>
                                             <td>Mondragon</td>
-                                            <td><span class="badge bg-warning">In Progress</span></td>
+                                            <td><span class="badge badge-warning">In Progress</span></td>
                                             <td class="text-center">
                                                 <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
+                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="#" title="Download Report">
@@ -177,15 +127,14 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>Sarah Wilson</td>
+                                            <td><strong>Sarah Wilson</strong></td>
                                             <td>May 19, 2025</td>
-                                            <td>08:00 AM</td>
-                                            <td>04:00 PM</td>
+                                            <td>08:00 AM - 04:00 PM</td>
                                             <td>San Roque</td>
-                                            <td><span class="badge bg-success">Completed</span></td>
+                                            <td><span class="badge badge-success">Completed</span></td>
                                             <td class="text-center">
                                                 <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
+                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="#" title="Download Report">
@@ -198,17 +147,20 @@
                                 </table>
                             </div>
                             
-                            <!-- Pagination -->
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination justify-content-center mt-4">
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
                                     <li class="page-item disabled">
-                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                                        <a class="page-link" href="#" tabindex="-1">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
                                     </li>
                                     <li class="page-item active"><a class="page-link" href="#">1</a></li>
                                     <li class="page-item"><a class="page-link" href="#">2</a></li>
                                     <li class="page-item"><a class="page-link" href="#">3</a></li>
                                     <li class="page-item">
-                                        <a class="page-link" href="#">Next</a>
+                                        <a class="page-link" href="#">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
                                     </li>
                                 </ul>
                             </nav>
@@ -222,13 +174,5 @@
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     
-    <script>
-        // Function to reset filters
-        function resetFilters() {
-            document.getElementById('searchBar').value = '';
-            document.getElementById('dateFilter').value = '';
-            document.getElementById('searchFilterForm').submit();
-        }
-    </script>
 </body>
 </html>
