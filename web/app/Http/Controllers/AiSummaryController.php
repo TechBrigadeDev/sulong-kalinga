@@ -167,4 +167,136 @@ class AiSummaryController extends Controller
             'carePlan' => $carePlan
         ]);
     }
+
+    public function translate(Request $request)
+    {
+        $request->validate([
+            'text' => 'required|string',
+            'weekly_care_plan_id' => 'required|integer',
+            'type' => 'required|in:assessment,evaluation'
+        ]);
+
+        try {
+            $libreTranslateUrl = env('LIBRETRANSLATE_URL', 'http://libretranslate:5000');
+            
+            \Log::info("Calling LibreTranslate API at: " . $libreTranslateUrl);
+            
+            $response = Http::timeout(30)
+                ->withOptions([
+                    'verify' => false, // Disable SSL verification for local development
+                ])
+                ->post($libreTranslateUrl . '/translate', [
+                    'q' => $request->text,
+                    'source' => 'tl', // Tagalog
+                    'target' => 'en', // English
+                    'format' => 'text',
+                ]);
+            
+            \Log::info("API Response Status: " . $response->status());
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                \Log::info("Translation successful");
+                
+                // Update the database with the translation
+                $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
+                
+                if ($request->type === 'assessment') {
+                    $carePlan->assessment_translation_draft = $data['translatedText'];
+                } else {
+                    $carePlan->evaluation_translation_draft = $data['translatedText'];
+                }
+                
+                $carePlan->save();
+                
+                return response()->json([
+                        'translatedText' => $data['translatedText'] // Make sure this matches what your JS expects
+                ]);
+            }
+
+            \Log::error("Translation Error: " . $response->status() . " - " . $response->body());
+            return response()->json([
+                'error' => 'Translation failed: ' . $response->status(),
+                'details' => $response->body()
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error("Translation Exception: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Translation service unavailable',
+                'details' => $e->getMessage()
+            ], 503);
+        }
+    }
+
+    public function translateSections(Request $request)
+    {
+        $request->validate([
+            'sections' => 'required|array',
+            'weekly_care_plan_id' => 'required|integer',
+            'type' => 'required|in:assessment,evaluation'
+        ]);
+
+        $translatedSections = [];
+        $libreTranslateUrl = env('LIBRETRANSLATE_URL', 'http://libretranslate:5000');
+        \Log::info("Translating sections for care plan #{$request->weekly_care_plan_id}");
+
+        try {
+            foreach ($request->sections as $key => $text) {
+                // Skip empty sections
+                if (empty(trim($text))) {
+                    $translatedSections[$key] = '';
+                    continue;
+                }
+
+                \Log::info("Translating section: {$key}");
+                
+                $response = Http::timeout(30)
+                    ->withOptions([
+                        'verify' => false, // For local development
+                    ])
+                    ->post($libreTranslateUrl . '/translate', [
+                        'q' => $text,
+                        'source' => 'tl', // Tagalog
+                        'target' => 'en', // English
+                        'format' => 'text',
+                    ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $translatedSections[$key] = $data['translatedText'];
+                } else {
+                    // If translation fails, keep the original
+                    $translatedSections[$key] = $text;
+                    \Log::error("Translation error for section {$key}: " . $response->status());
+                }
+            }
+
+            // Save to database
+            $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
+            
+            if ($request->type === 'assessment') {
+                $carePlan->assessment_translation_sections = $translatedSections;
+                // Also save the combined text for compatibility
+                $carePlan->assessment_translation_draft = implode("\n\n", array_values($translatedSections));
+            } else {
+                $carePlan->evaluation_translation_sections = $translatedSections;
+                $carePlan->evaluation_translation_draft = implode("\n\n", array_values($translatedSections));
+            }
+            
+            $carePlan->save();
+
+            return response()->json([
+                'translatedSections' => $translatedSections,
+                'translatedText' => implode("\n\n", array_values($translatedSections))
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Translation error: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Translation service unavailable',
+                'details' => $e->getMessage()
+            ], 503);
+        }
+    }
+
 }
+
