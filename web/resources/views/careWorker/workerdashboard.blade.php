@@ -14,6 +14,10 @@
     @include('components.careWorkerNavbar')
     @include('components.careWorkerSidebar')
 
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <!-- Welcome Back Modal -->
     <div class="modal fade" id="welcomeBackModal" tabindex="-1" aria-labelledby="welcomeBackModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -35,7 +39,7 @@
     </div>
 
     <div class="home-section">
-        <div class="text-left">CARE WORKER DASHBOARD</div>
+        <div class="text-left">{{ T::translate('CARE WORKER DASHBOARD', 'DASHBOARD PARA SA CARE WORKER') }}</div>
         <div class="container-fluid">
             <div class="row g-3" id="home-content">
                 <!-- First Row -->
@@ -43,52 +47,52 @@
                     <div class="card stat-card stat-card-beneficiaries">
                         <div class="card-body">
                             <div class="label">Managed Beneficiaries</div>
-                            <div class="value">18</div>
+                            <div class="value">{{ number_format($beneficiaryStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--teal-600)">15</div>
+                                    <div class="sub-value" style="color: var(--teal-600)">{{ number_format($beneficiaryStats['active']) }}</div>
                                     <div class="sub-label">Active</div>
                                 </div>
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--slate-500)">3</div>
+                                    <div class="sub-value" style="color: var(--slate-500)">{{ number_format($beneficiaryStats['inactive']) }}</div>
                                     <div class="sub-label">Inactive</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-workers">
                         <div class="card-body">
-                            <div class="label">Total Work Hours</div>
-                            <div class="value">142</div>
+                            <div class="label">Total Care Hours</div>
+                            <div class="value">{{ $careHoursStats['total_formatted'] }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--indigo-600)">38</div>
+                                    <div class="sub-value" style="color: var(--indigo-600)">{{ $careHoursStats['week_formatted'] }}</div>
                                     <div class="sub-label">This Week</div>
                                 </div>
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--amber-600)">104</div>
+                                    <div class="sub-value" style="color: var(--amber-600)">{{ $careHoursStats['month_formatted'] }}</div>
                                     <div class="sub-label">This Month</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-requests">
                         <div class="card-body">
-                            <div class="label">Submitted Reports</div>
-                            <div class="value">24</div>
+                            <div class="label">Submitted Care Plans</div>
+                            <div class="value">{{ number_format($reportStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--rose-600)">5</div>
+                                    <div class="sub-value" style="color: var(--rose-600)">{{ number_format($reportStats['pending']) }}</div>
                                     <div class="sub-label">Pending</div>
                                 </div>
                                 <div class="sub-stat">
-                                    <div class="sub-value" style="color: var(--emerald-600)">19</div>
+                                    <div class="sub-value" style="color: var(--emerald-600)">{{ number_format($reportStats['approved']) }}</div>
                                     <div class="sub-label">Approved</div>
                                 </div>
                             </div>
@@ -108,7 +112,7 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>Type</th>
+                                            <th>Beneficiary</th>
                                             <th>Status</th>
                                             <th>Date</th>
                                         </tr>

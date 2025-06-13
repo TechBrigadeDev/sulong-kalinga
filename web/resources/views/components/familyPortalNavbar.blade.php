@@ -439,15 +439,15 @@
                         </li>
                         <!-- Keep the existing language toggle -->
                         <li>
-                            <div class="dropdown-item d-flex align-items-center justify-content-between">
+                             <div class="dropdown-item d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-translate me-2"></i>
                                     <label for="languageToggle" class="m-0" style="cursor: pointer;" onclick="event.stopPropagation();">
-                                        <span>Tagalog</span>
+                                        <span>{{ $useTagalog ? 'Tagalog' : 'Tagalog' }}</span>
                                     </label>
                                 </div>
                                 <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="languageToggle" style="cursor: pointer;">
+                                    <input class="form-check-input" type="checkbox" id="languageToggle" style="cursor: pointer;" {{ $useTagalog ? 'checked' : '' }}>
                                 </div>
                             </div>
                         </li>
@@ -817,5 +817,43 @@ document.addEventListener('DOMContentLoaded', function() {
             this.innerHTML = 'Mark all as read';
         });
     });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const languageToggle = document.getElementById('languageToggle');
+    if (languageToggle) {
+        languageToggle.addEventListener('change', function(event) {
+            // Prevent the dropdown from closing
+            event.stopPropagation();
+            
+            const useTagalog = this.checked;
+            
+            // Update the label immediately
+            const label = document.querySelector('label[for="languageToggle"] span');
+            if (label) {
+                label.textContent = useTagalog ? 'Tagalog' : 'English';
+            }
+            
+            // Send AJAX request to update preference
+            fetch('/toggle-language', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ use_tagalog: useTagalog })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to apply language change
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error toggling language:', error));
+        });
+    }
 });
 </script>

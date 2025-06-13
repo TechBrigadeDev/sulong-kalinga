@@ -42,11 +42,17 @@ Route::middleware(['auth:beneficiary'])->prefix('beneficiary')->name('beneficiar
         $nextMedication = app()->make(\App\Http\Controllers\PortalMedicationScheduleController::class)
             ->getNextMedication();
         
+        // Get unread message count
+        $messagingController = app()->make(\App\Http\Controllers\PortalMessagingController::class);
+        $unreadMessagesResponse = $messagingController->getUnreadCount();
+        $unreadMessageCount = json_decode($unreadMessagesResponse->getContent())->count ?? 0;
+        
         return view('beneficiaryPortal.homePage', [
             'showWelcome' => $showWelcome,
             'beneficiary' => $beneficiary,
             'nextVisit' => $nextVisit,
-            'nextMedication' => $nextMedication
+            'nextMedication' => $nextMedication,
+            'unreadMessageCount' => $unreadMessageCount
         ]);
     })->name('dashboard');
     

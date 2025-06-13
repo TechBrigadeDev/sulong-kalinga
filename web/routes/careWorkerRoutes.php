@@ -24,7 +24,7 @@ use App\Http\Controllers\VisitationController;
 use App\Http\Controllers\InternalAppointmentsController;
 use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
-
+use App\Http\Controllers\DashboardController;
 
 
 require_once __DIR__.'/routeHelpers.php';
@@ -32,11 +32,10 @@ require_once __DIR__.'/routeHelpers.php';
 // All routes with care_worker role check
 Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefix('care-worker')->name('care-worker.')->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
-        $showWelcome = session()->pull('show_welcome', false);
-        return view('careWorker.workerdashboard', ['showWelcome' => $showWelcome]);
-    })->name('dashboard');
-    
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/', [DashboardController::class, 'careWorkerDashboard'])->name('index');
+    });
+            
     // Beneficiary Management (add, edit, view only - no delete or status change)
     Route::prefix('beneficiaries')->name('beneficiaries.')->group(function () {
         Route::get('/', [BeneficiaryController::class, 'index'])->name('index');

@@ -846,6 +846,7 @@ class MessageController extends Controller
             })->take(10);
             
             $result = [];
+            $totalUnreadCount = 0;
             
             foreach ($sortedConversations as $conversation) {
                 $lastMessage = $conversation->lastMessage;
@@ -885,7 +886,9 @@ class MessageController extends Controller
                             ? 'This message was unsent' 
                             : $lastMessage->content,
                         'message_timestamp' => $lastMessage->message_timestamp,
-                        'sender_name' => 'Unknown'
+                        'time_ago' => Carbon::parse($lastMessage->message_timestamp)->diffForHumans(null, true),
+                        'sender_name' => 'Unknown',
+                        'is_unsent' => $lastMessage->is_unsent
                     ];
                     
                     // Resolve sender name
@@ -899,7 +902,6 @@ class MessageController extends Controller
                         $familyMember = FamilyMember::find($lastMessage->sender_id);
                         $messageData['sender_name'] = $familyMember ? $familyMember->first_name . ' ' . $familyMember->last_name : 'Unknown Family Member';
                     } else if ($lastMessage->sender_type == 'system') {
-                        // Add this case for system messages
                         $messageData['sender_name'] = 'System';
                     }
                     
@@ -907,7 +909,6 @@ class MessageController extends Controller
                     if ((!$lastMessage->content || trim($lastMessage->content) === '') && 
                         $lastMessage->attachments && $lastMessage->attachments->count() > 0) {
                         
-                        // Update this section to check if message is unsent first
                         if ($lastMessage->is_unsent) {
                             $messageData['content'] = 'This message was unsent';
                         } else {
@@ -922,17 +923,21 @@ class MessageController extends Controller
                     
                     $convoData['last_message'] = $messageData;
                     
-                    // Check for unread status
-                    $hasUnread = false;
-                    if ($lastMessage->sender_id != $user->id || $lastMessage->sender_type != 'cose_staff') {
-                        $readStatus = MessageReadStatus::where('message_id', $lastMessage->message_id)
-                            ->where('reader_id', $user->id)
-                            ->where('reader_type', 'cose_staff')
-                            ->exists();
-                        $hasUnread = !$readStatus;
-                    }
+                    // COUNT ALL UNREAD MESSAGES IN THIS CONVERSATION - KEY CHANGE
+                    $unreadCount = Message::where('conversation_id', $conversation->conversation_id)
+                        ->where(function($query) use ($user) {
+                            $query->where('sender_id', '!=', $user->id)
+                                ->orWhere('sender_type', '!=', 'cose_staff');
+                        })
+                        ->whereDoesntHave('readStatuses', function($query) use ($user) {
+                            $query->where('reader_id', $user->id)
+                                ->where('reader_type', 'cose_staff');
+                        })
+                        ->count();
                     
-                    $convoData['has_unread'] = $hasUnread;
+                    $convoData['has_unread'] = ($unreadCount > 0);
+                    $convoData['unread_count'] = $unreadCount;
+                    $totalUnreadCount += $unreadCount;
                 }
                 
                 $result[] = $convoData;
@@ -940,6 +945,7 @@ class MessageController extends Controller
             
             return response()->json([
                 'conversations' => $result,
+                'unread_count' => $totalUnreadCount,
                 'route_prefix' => $rolePrefix
             ]);
         } catch (\Exception $e) {
@@ -949,6 +955,7 @@ class MessageController extends Controller
             ]);
             return response()->json([
                 'conversations' => [],
+                'unread_count' => 0,
                 'route_prefix' => $rolePrefix,
                 'error' => 'Failed to load messages'
             ]);
