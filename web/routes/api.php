@@ -32,6 +32,8 @@ Route::get('/public-test', function () {
 // Authentication Routes
 Route::post('/login', [AuthApiController::class, 'login']);
 
+// Route::get('/test-google-map', [\App\Http\Controllers\BeneficiaryController::class, 'testGoogleMap']);
+
 
 // Protected Routes
 Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':admin,care_manager,care_worker')->group(function () {
