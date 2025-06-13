@@ -38,6 +38,11 @@ class WeeklyCarePlan extends Model
     {
         return $this->belongsTo(User::class, 'care_worker_id', 'id');
     }
+
+    public function careManager()
+    {
+        return $this->belongsTo(User::class, 'care_manager_id', 'id');
+    }
     
     public function vitalSigns()
     {

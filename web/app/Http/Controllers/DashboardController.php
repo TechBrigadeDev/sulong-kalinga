@@ -92,12 +92,127 @@ class DashboardController extends Controller
         // Get report statistics for this care worker
         $reportStats = $this->getReportStats($user->id);
         
+        // Get recent care plans for this care worker
+        $recentCarePlans = $this->getRecentCarePlans($user->id);
+        
+        // Get upcoming visitations for this care worker
+        $upcomingVisitations = $this->getUpcomingVisitations($user->id);
+        
         return view('careWorker.workerdashboard', [
             'showWelcome' => $showWelcome,
             'beneficiaryStats' => $beneficiaryStats,
             'careHoursStats' => $careHoursStats,
             'reportStats' => $reportStats,
+            'recentCarePlans' => $recentCarePlans,
+            'upcomingVisitations' => $upcomingVisitations,
         ]);
+    }
+
+    /**
+     * Get recent care plans for a specific care worker
+     * 
+     * @param int $careWorkerId
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    private function getRecentCarePlans($careWorkerId)
+    {
+        try {
+            // Get 7 most recent care plans created by this care worker
+            $recentPlans = DB::table('weekly_care_plans as wcp')
+                ->join('beneficiaries as b', 'wcp.beneficiary_id', '=', 'b.beneficiary_id')
+                ->where('wcp.care_worker_id', $careWorkerId)
+                ->select(
+                    'wcp.weekly_care_plan_id',
+                    'b.first_name',
+                    'b.last_name',
+                    'wcp.created_at',
+                    'wcp.date',
+                    'wcp.acknowledged_by_beneficiary',
+                    'wcp.acknowledged_by_family'
+                )
+                ->orderBy('wcp.created_at', 'desc')
+                ->limit(7)
+                ->get();
+                
+            // Transform data to include status
+            $recentPlans->transform(function($plan) {
+                $status = ($plan->acknowledged_by_beneficiary || $plan->acknowledged_by_family) ? 'Acknowledged' : 'Pending Review';
+                $statusClass = $status === 'Acknowledged' ? 'badge-reviewed' : 'badge-emergency';
+                
+                return [
+                    'id' => $plan->weekly_care_plan_id,
+                    'beneficiary_name' => $plan->first_name . ' ' . $plan->last_name,
+                    'status' => $status,
+                    'status_class' => $statusClass,
+                    'date' => Carbon::parse($plan->date)->format('M d, Y')
+                ];
+            });
+            
+            return $recentPlans;
+        } catch (\Exception $e) {
+            \Log::error('Error getting recent care plans: ' . $e->getMessage());
+            return collect(); // Return empty collection on error
+        }
+    }
+
+    /**
+     * Get upcoming visitations for a specific care worker
+     * 
+     * @param int $careWorkerId
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    private function getUpcomingVisitations($careWorkerId)
+    {
+        try {
+            $today = Carbon::now()->startOfDay();
+            
+            // Get the 4 nearest upcoming visitations for this care worker
+            $upcomingVisits = DB::table('visitation_occurrences as vo')
+                ->join('visitations as v', 'vo.visitation_id', '=', 'v.visitation_id')
+                ->join('beneficiaries as b', 'v.beneficiary_id', '=', 'b.beneficiary_id')
+                ->where('v.care_worker_id', $careWorkerId)
+                ->where('vo.occurrence_date', '>=', $today)
+                ->where('vo.status', 'scheduled')
+                ->select(
+                    'vo.occurrence_id',
+                    'vo.occurrence_date',
+                    'vo.start_time',
+                    'b.first_name',
+                    'b.last_name',
+                    'b.beneficiary_id',
+                    'b.street_address',
+                    'v.visit_type',
+                    'v.confirmed_by_beneficiary',
+                    'v.confirmed_by_family',
+                    'v.is_flexible_time'
+                )
+                ->orderBy('vo.occurrence_date', 'asc')
+                ->orderBy('vo.start_time', 'asc')
+                ->limit(4)
+                ->get();
+            
+            // Transform data to include formatted time and status
+            $upcomingVisits->transform(function($visit) {
+                $date = Carbon::parse($visit->occurrence_date);
+                $time = $visit->start_time ? Carbon::parse($visit->start_time)->format('g:i A') : 'Flexible Time';
+                $displayDate = $date->isToday() ? 'Today' : ($date->isTomorrow() ? 'Tomorrow' : $date->format('M d, Y'));
+                
+                return [
+                    'id' => $visit->occurrence_id,
+                    'date_display' => $displayDate,
+                    'time' => $time,
+                    'beneficiary_name' => $visit->first_name . ' ' . $visit->last_name,
+                    'beneficiary_id' => 'B-' . str_pad($visit->beneficiary_id, 5, '0', STR_PAD_LEFT),
+                    'location' => $visit->street_address,
+                    'visit_type' => ucwords(str_replace('_', ' ', $visit->visit_type)),
+                ];
+            });
+            
+            return $upcomingVisits;
+        } catch (\Exception $e) {
+            \Log::error('Error getting upcoming visitations: ' . $e->getMessage());
+            return collect(); // Return empty collection on error
+        }
     }
 
     /**
