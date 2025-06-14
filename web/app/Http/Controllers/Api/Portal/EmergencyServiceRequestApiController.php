@@ -933,6 +933,32 @@ class EmergencyServiceRequestApiController extends Controller
     }
 
     /**
+     * Get all emergency types.
+     */
+    public function getEmergencyTypes(Request $request)
+    {
+        $emergencyTypes = EmergencyType::orderBy('name')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $emergencyTypes
+        ]);
+    }
+
+    /**
+     * Get all service request types.
+     */
+    public function getServiceTypes(Request $request)
+    {
+        $serviceTypes = ServiceRequestType::orderBy('name')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $serviceTypes
+        ]);
+    }
+
+    /**
      * Helper to get the beneficiary for the current user (beneficiary or family member).
      */
     protected function getCurrentBeneficiary($user)

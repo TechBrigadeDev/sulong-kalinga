@@ -42,6 +42,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     Route::post('/emergency-service/cancel', [EmergencyServiceRequestApiController::class, 'cancel']);
     Route::get('/emergency-service/emergency/{id}', [EmergencyServiceRequestApiController::class, 'emergencyDetails']);
     Route::get('/emergency-service/service/{id}', [EmergencyServiceRequestApiController::class, 'serviceDetails']);
+    Route::get('/emergency-service/emergency/types', [EmergencyServiceRequestApiController::class, 'getEmergencyTypes']);
+    Route::get('/emergency-service/service/types', [EmergencyServiceRequestApiController::class, 'getServiceTypes']);
 
     // Care Plan
     Route::get('/care-plan', [CarePlanApiController::class, 'index']);
