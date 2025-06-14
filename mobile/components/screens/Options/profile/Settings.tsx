@@ -1,6 +1,9 @@
 import OptionCard from "components/screens/Options/_components/Card";
 import OptionRow from "components/screens/Options/_components/Row";
-import { hasRole, roleLabel } from "features/auth/auth.util";
+import {
+    hasRole,
+    roleLabel,
+} from "features/auth/auth.util";
 import { useCallback, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { Avatar, Text, YStack } from "tamagui";
