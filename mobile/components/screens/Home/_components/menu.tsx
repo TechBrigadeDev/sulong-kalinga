@@ -13,6 +13,12 @@ import {
 
 const menuItems: IMenuItem[] = [
     {
+        title: "Emergency & Service",
+        href: "/(portal)/emergency-service",
+        color: "#ff0202",
+        icon: "ClipboardPlus",
+    },
+    {
         title: "Medication",
         href: "/scheduling/medication",
         color: "#0222FF",
