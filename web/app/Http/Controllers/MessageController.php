@@ -21,15 +21,18 @@ use App\Models\FamilyMember;
 use App\Services\LogService;
 use App\Enums\LogType;
 use Carbon\Carbon;
+use App\Services\UploadService;
 
 class MessageController extends Controller
 {
 
     protected $logService;
+    protected $uploadService;
 
-    public function __construct(LogService $logService)
+    public function __construct(LogService $logService, UploadService $uploadService)
     {
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     /**
@@ -131,6 +134,17 @@ class MessageController extends Controller
                 ->where('conversation_id', $id)
                 ->orderBy('message_timestamp', 'asc')
                 ->get();
+
+            // Process attachments to add file URLs
+            foreach ($messages as $message) {
+                if ($message->attachments && $message->attachments->count() > 0) {
+                    foreach ($message->attachments as $attachment) {
+                        $attachment->file_url = $attachment->file_path
+                            ? $this->uploadService->getTemporaryPrivateUrl($attachment->file_path, 30)
+                            : null;
+                    }
+                }
+            }
             
             // Add sender name to each message for display
             foreach ($messages as $message) {
@@ -322,36 +336,29 @@ class MessageController extends Controller
             
             // Handle attachments
             if ($request->hasFile('attachments')) {
-                Log::info("Request has attachments", [
-                    'count' => is_array($request->file('attachments')) ? count($request->file('attachments')) : 1,
-                    'conversation_id' => $conversationId
-                ]);
-
-                // Handle both array and non-array formats
                 $files = $request->file('attachments');
-                Log::info("Found files in request:", [
-                    'count' => is_array($files) ? count($files) : 1
-                ]);
-
                 if (!is_array($files)) {
                     $files = [$files];
                 }
 
                 foreach ($files as $file) {
-                    // Check if file is valid
                     if ($file && $file->isValid()) {
-                        // Get file info
                         $fileName = $file->getClientOriginalName();
                         $fileType = $file->getMimeType();
                         $fileSize = $file->getSize();
-                        
-                        // Determine if it's an image
                         $isImage = str_starts_with($fileType, 'image/');
-                        
-                        // Store file in storage/app/public/attachments folder
-                        $filePath = $file->store('attachments', 'public');
-                        
-                        // Create attachment record
+
+                        // Use UploadService for upload
+                        $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
+                        $filePath = $this->uploadService->upload(
+                            $file,
+                            'spaces-private',
+                            'uploads/message_attachments',
+                            [
+                                'filename' => 'msg_' . auth()->id() . '_' . $uniqueIdentifier . '.' . $file->getClientOriginalExtension()
+                            ]
+                        );
+
                         $attachment = new MessageAttachment([
                             'message_id' => $message->message_id,
                             'file_name' => $fileName,
@@ -361,22 +368,8 @@ class MessageController extends Controller
                             'is_image' => $isImage
                         ]);
                         $attachment->save();
-                        
-                        // Log successful file upload
-                        Log::info("File attachment created", [
-                            'message_id' => $message->message_id,
-                            'file_name' => $fileName,
-                            'file_path' => $filePath
-                        ]);
-                    } else {
-                        Log::error('Invalid file upload', ['filename' => $file->getClientOriginalName()]);
                     }
                 }
-            } else {
-                Log::warning("No attachments found in request", [
-                    'has_file' => $request->hasFile('attachments'),
-                    'files' => $request->allFiles(),
-                ]);
             }
             
             // Update last message in conversation
@@ -1375,6 +1368,17 @@ class MessageController extends Controller
                 ->orderBy('message_timestamp', 'asc')
                 ->get();
             
+            // Add temporary URLs for attachments
+            foreach ($messages as $message) {
+                if ($message->attachments && $message->attachments->count() > 0) {
+                    foreach ($message->attachments as $attachment) {
+                        $attachment->file_url = $attachment->file_path
+                            ? $this->uploadService->getTemporaryPrivateUrl($attachment->file_path, 30)
+                            : null;
+                    }
+                }
+            }
+
             // Add sender name to each message
             foreach ($messages as $message) {
                 if ($message->sender_type === 'cose_staff') {
@@ -1718,24 +1722,32 @@ class MessageController extends Controller
                 $messageIds = Message::where('conversation_id', $conversationId)
                     ->pluck('message_id')
                     ->toArray();
-                
+
+                // Delete attachments from storage using UploadService
+                $attachments = MessageAttachment::whereIn('message_id', $messageIds)->get();
+                foreach ($attachments as $attachment) {
+                    if ($attachment->file_path) {
+                        $this->uploadService->delete($attachment->file_path, 'spaces-private');
+                    }
+                }
+
                 // Delete read statuses for these messages
                 if (!empty($messageIds)) {
                     MessageReadStatus::whereIn('message_id', $messageIds)->delete();
                 }
-                
-                // Delete message attachments if any
+
+                // Delete message attachments from DB
                 MessageAttachment::whereIn('message_id', $messageIds)->delete();
-                
+
                 // Delete messages
                 Message::where('conversation_id', $conversationId)->delete();
-                
+
                 // Delete participants
                 ConversationParticipant::where('conversation_id', $conversationId)->delete();
-                
+
                 // Finally delete the conversation
                 $conversation->delete();
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'You were the last member. Group has been deleted.',

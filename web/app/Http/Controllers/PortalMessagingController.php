@@ -20,14 +20,17 @@ use App\Services\LogService;
 use App\Enums\LogType;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use App\Services\UploadService;
 
 class PortalMessagingController extends Controller
 {
     protected $logService;
+    protected $uploadService;
 
-    public function __construct(LogService $logService = null)
+    public function __construct(LogService $logService = null, UploadService $uploadService = null)
     {
         $this->logService = $logService ?? app(LogService::class);
+        $this->uploadService = $uploadService ?? app(UploadService::class);
     }
 
     /**
@@ -350,7 +353,16 @@ class PortalMessagingController extends Controller
                 ->where('conversation_id', $id)
                 ->orderBy('message_timestamp', 'asc')
                 ->get();
-            
+            foreach ($messages as $message) {
+                if ($message->attachments && $message->attachments->count() > 0) {
+                    foreach ($message->attachments as $attachment) {
+                        $attachment->file_url = $attachment->file_path
+                            ? $this->uploadService->getTemporaryPrivateUrl($attachment->file_path, 30)
+                            : null;
+                    }
+                }
+            }
+
             // Add sender name to each message for display
             foreach ($messages as $message) {
                 if ($message->sender_type == 'cose_staff') {
@@ -491,14 +503,17 @@ class PortalMessagingController extends Controller
                     $fileType = $file->getMimeType();
                     $fileSize = $file->getSize();
                     $isImage = strpos($fileType, 'image/') === 0;
-                    
-                    // Generate a unique filename to prevent overwriting
-                    $uniqueFileName = Str::uuid() . '_' . $fileName;
-                    
-                    // Store the file in the attachments directory
-                    $filePath = $file->storeAs('attachments', $uniqueFileName, 'public');
-                    
-                    // Create attachment record
+
+                    $uniqueIdentifier = time() . '_' . Str::random(5);
+                    $filePath = $this->uploadService->upload(
+                        $file,
+                        'spaces-private',
+                        'uploads/message_attachments',
+                        [
+                            'filename' => 'msg_' . $user->getKey() . '_' . $uniqueIdentifier . '.' . $file->getClientOriginalExtension()
+                        ]
+                    );
+
                     $attachment = new MessageAttachment([
                         'message_id' => $message->message_id,
                         'file_name' => $fileName,
@@ -508,7 +523,7 @@ class PortalMessagingController extends Controller
                         'is_image' => $isImage
                     ]);
                     $attachment->save();
-                    
+
                     Log::info("File attachment created", [
                         'message_id' => $message->message_id,
                         'file_name' => $fileName,
@@ -1251,7 +1266,16 @@ class PortalMessagingController extends Controller
                 ->where('conversation_id', $id)
                 ->orderBy('message_timestamp', 'asc')
                 ->get();
-            
+            foreach ($messages as $message) {
+                if ($message->attachments && $message->attachments->count() > 0) {
+                    foreach ($message->attachments as $attachment) {
+                        $attachment->file_url = $attachment->file_path
+                            ? $this->uploadService->getTemporaryPrivateUrl($attachment->file_path, 30)
+                            : null;
+                    }
+                }
+            }
+
             // Add sender name to each message for display
             foreach ($messages as $message) {
                 if ($message->sender_type == 'cose_staff') {
@@ -1503,21 +1527,23 @@ class PortalMessagingController extends Controller
                 ], 403);
             }
             
-            // Get the file path
-            $filePath = storage_path('app/public/' . $attachment->file_path);
-            
-            if (!file_exists($filePath)) {
-                Log::error('Attachment file not found', [
-                    'attachment_id' => $id,
-                    'file_path' => $filePath
-                ]);
+            // Get the file path and generate a temporary URL
+            if (!$attachment->file_path) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Attachment file not found'
                 ], 404);
             }
-            
-            return response()->download($filePath, $attachment->file_name);
+
+            $url = $this->uploadService->getTemporaryPrivateUrl($attachment->file_path, 5);
+            if (!$url) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attachment file not found or not accessible'
+                ], 404);
+            }
+
+            return redirect($url);
             
         } catch (\Exception $e) {
             Log::error('Error downloading attachment: ' . $e->getMessage(), [

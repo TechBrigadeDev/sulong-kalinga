@@ -6,9 +6,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Services\UploadService;
 
 class ViewAccountProfileController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(UploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     public function index()
     {
         // Get the authenticated user with their organization role
@@ -22,8 +30,18 @@ class ViewAccountProfileController extends Controller
         
         // Format the account creation date
         $memberSince = Carbon::parse($user->created_at)->format('M Y');
+
+        // Get temporary photo URL if photo path exists and file exists in Spaces
+        $photoUrl = null;
+        if ($user->photo) {
+            try {
+                $photoUrl = $this->uploadService->getTemporaryPrivateUrl($user->photo, 30);
+            } catch (\Exception $e) {
+                $photoUrl = null;
+            }
+        }
         
-        return view('admin.adminViewProfile', compact('user', 'formattedBirthday', 'memberSince'));
+        return view('admin.adminViewProfile', compact('user', 'formattedBirthday', 'memberSince', 'photoUrl'));
     }
     
     public function settings()
@@ -45,11 +63,19 @@ class ViewAccountProfileController extends Controller
         
         // Format the account creation date
         $memberSince = Carbon::parse($user->created_at)->format('M Y');
-        
         // Format the last login date if available
         $lastLogin = $user->last_login ? Carbon::parse($user->last_login)->format('M d, Y \a\t h:i A') : 'Not available';
+
+        $photoUrl = null;
+        if ($user->photo) {
+            try {
+                $photoUrl = $this->uploadService->getTemporaryPrivateUrl($user->photo, 30);
+            } catch (\Exception $e) {
+                $photoUrl = null;
+            }
+        }
         
-        return view('careManager.managerViewProfile', compact('user', 'formattedBirthday', 'memberSince', 'lastLogin'));
+        return view('careManager.managerViewProfile', compact('user', 'formattedBirthday', 'memberSince', 'lastLogin', 'photoUrl'));
     }
 
     public function careManagerSettings()
@@ -71,11 +97,19 @@ class ViewAccountProfileController extends Controller
         
         // Format the account creation date
         $memberSince = Carbon::parse($user->created_at)->format('M Y');
-        
         // Format the last login date if available
         $lastLogin = $user->last_login ? Carbon::parse($user->last_login)->format('M d, Y \a\t h:i A') : 'Not available';
+
+        $photoUrl = null;
+        if ($user->photo) {
+            try {
+                $photoUrl = $this->uploadService->getTemporaryPrivateUrl($user->photo, 30);
+            } catch (\Exception $e) {
+                $photoUrl = null;
+            }
+        }
         
-        return view('careWorker.workerViewProfile', compact('user', 'formattedBirthday', 'memberSince', 'lastLogin'));
+        return view('careWorker.workerViewProfile', compact('user', 'formattedBirthday', 'memberSince', 'lastLogin', 'photoUrl'));
     }
 
     public function careWorkerSettings()

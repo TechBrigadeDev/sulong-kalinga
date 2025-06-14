@@ -18,15 +18,19 @@ use App\Services\LogService;
 use App\Enums\LogType;
 
 use App\Services\UserManagementService;
+use App\Services\UploadService;
 
 class CareManagerController extends Controller
 {
     protected $userManagementService;
-    
-    public function __construct(UserManagementService $userManagementService, LogService $logService)
+    protected $logService;
+    protected $uploadService;
+
+    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
     {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     public function index(Request $request)
@@ -199,29 +203,38 @@ class CareManagerController extends Controller
             // Handle file uploads and rename files
             $firstName = $request->input('first_name');
             $lastName = $request->input('last_name');
-            $uniqueIdentifier = time() . '_' . Str::random(5);
+            $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
             if ($request->hasFile('caremanager_photo')) {
-                $administratorPhotoPath = $request->file('caremanager_photo')->storeAs(
-                    'uploads/caremanager_photos', 
-                    $firstName . '' . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('caremanager_photo')->getClientOriginalExtension(),
-                    'public'
+                $administratorPhotoPath = $this->uploadService->upload(
+                    $request->file('caremanager_photo'),
+                    'spaces-private',
+                    'uploads/caremanager_photos',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_photo_' . $uniqueIdentifier . '.' . $request->file('caremanager_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
-    
+
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/caremanager_government_ids', 
-                    $firstName . '' . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/caremanager_government_ids',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
             }
-    
+
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/caremanager_resumes', 
-                    $firstName . '' . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/caremanager_resumes',
+                    [
+                        'filename' => $firstName . '_' . $lastName . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
             }
 

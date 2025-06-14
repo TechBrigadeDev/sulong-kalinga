@@ -19,14 +19,17 @@ use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ExpensesExport;
 use App\Exports\BudgetsExport;
+use App\Services\UploadService;
 
 class ExpenseTrackerController extends Controller
 {
     protected $logService;
-    
-    public function __construct(LogService $logService)
+    protected $uploadService;
+
+    public function __construct(LogService $logService, UploadService $uploadService)
     {
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     /**
@@ -188,14 +191,21 @@ class ExpenseTrackerController extends Controller
 
         try {
             $receiptPath = null;
-            
-            // Handle receipt file upload
+
+            // Handle receipt file upload using UploadService
             if ($request->hasFile('receipt')) {
                 $file = $request->file('receipt');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $receiptPath = $file->storeAs('receipts', $fileName, 'public');
+                $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
+                $receiptPath = $this->uploadService->upload(
+                    $file,
+                    'spaces-private',
+                    'uploads/expense_receipts',
+                    [
+                        'filename' => 'expense_' . Auth::id() . '_' . $uniqueIdentifier . '.' . $file->getClientOriginalExtension()
+                    ]
+                );
             }
-            
+
             // Create the expense record
             $expense = Expense::create([
                 'title' => $request->title,
@@ -305,7 +315,7 @@ class ExpenseTrackerController extends Controller
         }
 
         try {
-        $expense = Expense::findOrFail($id);
+            $expense = Expense::findOrFail($id);
         
         // Convert request values to appropriate types
         $requestAmount = (float)$request->amount;
@@ -404,15 +414,24 @@ class ExpenseTrackerController extends Controller
             ], 422);
         }
             
-            // Handle receipt file upload if provided
+            // Handle receipt file upload if provided using UploadService
             if ($request->hasFile('receipt')) {
                 // Delete old file if it exists
-                if ($expense->receipt_path && Storage::disk('public')->exists($expense->receipt_path)) {
-                    Storage::disk('public')->delete($expense->receipt_path);
+                if ($expense->receipt_path) {
+                    $this->uploadService->delete($expense->receipt_path, 'spaces-private');
                 }
-                
+
                 // Store new file
-                $receiptPath = $request->file('receipt')->store('receipts', 'public');
+                $file = $request->file('receipt');
+                $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
+                $receiptPath = $this->uploadService->upload(
+                    $file,
+                    'spaces-private',
+                    'uploads/expense_receipts',
+                    [
+                        'filename' => 'expense_' . Auth::id() . '_' . $uniqueIdentifier . '.' . $file->getClientOriginalExtension()
+                    ]
+                );
                 $expense->receipt_path = $receiptPath;
             }
             
@@ -486,9 +505,9 @@ class ExpenseTrackerController extends Controller
             $expenseTitle = $expense->title;
             $expenseAmount = $expense->amount;
             
-            // Delete receipt file if exists
-            if ($expense->receipt_path && Storage::disk('public')->exists($expense->receipt_path)) {
-                Storage::disk('public')->delete($expense->receipt_path);
+            // Delete receipt file if exists using UploadService
+            if ($expense->receipt_path) {
+                $this->uploadService->delete($expense->receipt_path, 'spaces-private');
             }
             
             // Delete the expense record
