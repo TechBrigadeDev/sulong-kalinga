@@ -20,15 +20,18 @@ use App\Models\FamilyMember;
 use App\Models\User;
 
 use App\Services\LogService;
+use App\Services\UploadService;
 use App\Enums\LogType;
 
 class WeeklyCareController extends Controller
 {
     protected $logService;
+    protected $uploadService;
 
-    public function __construct(LogService $logService)
+    public function __construct(LogService $logService, UploadService $uploadService)
     {
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     protected function getRolePrefixRoute()
@@ -229,12 +232,17 @@ class WeeklyCareController extends Controller
                 }
             }
 
-            // Handle photo upload
+            // Handle photo upload using UploadService
             $photoPath = '';
             if ($request->hasFile('upload_picture')) {
                 $photo = $request->file('upload_picture');
                 $fileName = time() . '_' . $photo->getClientOriginalName();
-                $photoPath = $photo->storeAs('weekly_care_plans/photos', $fileName, 'public');
+                $photoPath = $this->uploadService->upload(
+                    $photo,
+                    'spaces-private',
+                    'weekly_care_plans/photos',
+                    ['filename' => $fileName]
+                );
             }
 
             // 2. Create weekly care plan
@@ -462,6 +470,12 @@ class WeeklyCareController extends Controller
         
         $categories = CareCategory::all();
         
+        // Generate temporary photo URL using UploadService
+        $photoUrl = null;
+        if ($weeklyCareplan->photo_path) {
+            $photoUrl = $this->uploadService->getTemporaryPrivateUrl($weeklyCareplan->photo_path, 30);
+        }
+
         // Log the view action
         $this->logService->createLog(
             'weekly_care_plan',
@@ -476,7 +490,8 @@ class WeeklyCareController extends Controller
             'weeklyCareplan',
             'interventionsByCategory',
             'customInterventions',
-            'categories'
+            'categories',
+            'photoUrl'
         ));
     }
 
@@ -639,17 +654,21 @@ class WeeklyCareController extends Controller
             }
 
            $photoPath = $weeklyCarePlan->photo_path; // Default to existing photo
-        if ($request->hasFile('upload_picture')) {
-            // Delete old photo if it exists
-            if ($weeklyCarePlan->photo_path && Storage::disk('public')->exists($weeklyCarePlan->photo_path)) {
-                Storage::disk('public')->delete($weeklyCarePlan->photo_path);
+            if ($request->hasFile('upload_picture')) {
+                // Delete old photo if it exists using UploadService
+                if ($weeklyCarePlan->photo_path) {
+                    $this->uploadService->delete($weeklyCarePlan->photo_path, 'spaces-private');
+                }
+                // Store new photo using UploadService
+                $photo = $request->file('upload_picture');
+                $fileName = time() . '_' . $photo->getClientOriginalName();
+                $photoPath = $this->uploadService->upload(
+                    $photo,
+                    'spaces-private',
+                    'weekly_care_plans/photos',
+                    ['filename' => $fileName]
+                );
             }
-            
-            // Store new photo
-            $photo = $request->file('upload_picture');
-            $fileName = time() . '_' . $photo->getClientOriginalName();
-            $photoPath = $photo->storeAs('weekly_care_plans/photos', $fileName, 'public');
-        }
             
             // 2. Update weekly care plan
             $weeklyCarePlan->update([
@@ -836,6 +855,11 @@ class WeeklyCareController extends Controller
                 if ($vitalSignsId) {
                     VitalSigns::where('vital_signs_id', $vitalSignsId)->delete();
                     Log::info('Deleted vital signs: ' . $vitalSignsId);
+                }
+
+                // Delete photo from storage using UploadService
+                if ($weeklyCarePlan->photo_path) {
+                    $this->uploadService->delete($weeklyCarePlan->photo_path, 'spaces-private');
                 }
 
                 // Process notifications before committing the transaction
