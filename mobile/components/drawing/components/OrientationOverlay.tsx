@@ -1,7 +1,7 @@
+import { drawingStyles } from "components/drawing/styles";
+import { OrientationOverlayProps } from "components/drawing/types";
 import React from "react";
 import { Text, View } from "react-native";
-import { drawingStyles } from "../styles";
-import { OrientationOverlayProps } from "../types";
 
 export const OrientationOverlay: React.FC<
     OrientationOverlayProps

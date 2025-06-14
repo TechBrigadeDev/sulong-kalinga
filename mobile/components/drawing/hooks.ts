@@ -1,10 +1,10 @@
+import {
+    notifyChange,
+    Skia,
+} from "@shopify/react-native-skia";
 import { useEffect, useState } from "react";
 import { Dimensions } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
-import {
-    Skia,
-    notifyChange,
-} from "@shopify/react-native-skia";
 
 export const useOrientation = () => {
     const [isLandscape, setIsLandscape] =

@@ -7,16 +7,16 @@ import React, {
 } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { DrawingContext } from "./store";
 import {
-    useOrientation,
-    useDrawingPath,
-} from "./hooks";
-import {
-    OrientationOverlay,
-    DrawingArea,
     ButtonBar,
+    DrawingArea,
+    OrientationOverlay,
 } from "./components";
+import {
+    useDrawingPath,
+    useOrientation,
+} from "./hooks";
+import { DrawingContext } from "./store";
 
 const DrawingCanvas: React.FC = () => {
     const store = useContext(DrawingContext);

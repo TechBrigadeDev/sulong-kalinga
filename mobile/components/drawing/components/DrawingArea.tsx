@@ -1,18 +1,17 @@
-import React from "react";
-import { Text, View } from "react-native";
 import {
     Canvas,
-    Path,
     notifyChange,
+    Path,
 } from "@shopify/react-native-skia";
+import { drawingStyles } from "components/drawing/styles";
+import { DrawingAreaProps } from "components/drawing/types";
+import React from "react";
+import { Text, View } from "react-native";
 import {
     Gesture,
     GestureDetector,
 } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
-
-import { drawingStyles } from "../styles";
-import { DrawingAreaProps } from "../types";
 
 export const DrawingArea: React.FC<
     DrawingAreaProps

@@ -1,10 +1,10 @@
 import React from "react";
 import {
     Input,
+    InputProps,
     Label,
     Text,
     YStack,
-    InputProps,
 } from "tamagui";
 
 interface EnhancedInputProps extends InputProps {
