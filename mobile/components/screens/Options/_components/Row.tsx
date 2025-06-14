@@ -22,20 +22,29 @@ const OptionRow = ({
 }) => {
     if (!href) {
         return (
-            <XStack style={style.row} gap={10}>
+            <XStack
+                display="flex"
+                flexDirection="row"
+                items="center"
+                justify="space-between"
+                paddingBlock={15}
+                paddingInline={15}
+                gap={10}
+            >
                 <XStack
+                    flexDirection="row"
+                    items="center"
                     gap={10}
-                    style={style.linkLabel}
                 >
                     <Icon />
                     <Text style={style.rowLabel}>
                         {label}
                     </Text>
                 </XStack>
-                <XStack
-                    style={{ marginLeft: "auto" }}
-                >
-                    <Text>{value}</Text>
+                <XStack>
+                    <Text textWrap="stable">
+                        {value}
+                    </Text>
                 </XStack>
             </XStack>
         );

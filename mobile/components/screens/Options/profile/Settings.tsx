@@ -14,6 +14,7 @@ import { useUserProfile } from "~/features/user/user.hook";
 
 import Contributions from "./Contributions";
 import Information from "./Informations";
+import Contact from "./Contact";
 
 const ProfileSettings = () => {
     const {
@@ -63,14 +64,6 @@ const ProfileSettings = () => {
                         href: "/options/profile/update-email",
                     })}
                 />
-
-                <OptionRow
-                    label="Mobile Number"
-                    value={
-                        userData?.mobile ||
-                        "Not set"
-                    }
-                />
                 <OptionRow
                     label="Password"
                     href={
@@ -79,6 +72,7 @@ const ProfileSettings = () => {
                 />
             </OptionCard>
             <Information />
+            <Contact />
             <Contributions />
         </YStack>
     );
