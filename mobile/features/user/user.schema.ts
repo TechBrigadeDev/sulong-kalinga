@@ -8,7 +8,7 @@ const baseUserProfileSchema = z.object({
     landline: z.string().nullable(),
     gender: z.string().nullable(),
     birthday: z.string().nullable(),
-    photo: z.string().nullable(),
+    photo: z.string().optional().nullable(),
     created_by: z.number().optional(),
     updated_by: z.number().optional(),
     created_at: z.string().optional(),

@@ -13,8 +13,7 @@ const ProfileScreen = () => {
         <SafeAreaView style={style.container}>
             <Stack.Screen
                 options={{
-                    headerTitle:
-                        "Profile Settings",
+                    headerTitle: "Profile",
                     headerShown: true,
                 }}
             />

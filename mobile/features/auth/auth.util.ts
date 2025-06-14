@@ -46,3 +46,22 @@ export const isStaff = () => {
         currentRole,
     );
 };
+
+export const roleLabel = (
+    role: IRole,
+): string => {
+    switch (role) {
+        case "beneficiary":
+            return "Beneficiary";
+        case "family_member":
+            return "Family Member";
+        case "admin":
+            return "Admin";
+        case "care_manager":
+            return "Care Manager";
+        case "care_worker":
+            return "Care Worker";
+        default:
+            return role;
+    }
+};

@@ -1,7 +1,9 @@
+import ProfileSettings from "components/screens/Options/profile/Settings";
 import {
     Link as ExpoLink,
     LinkProps,
 } from "expo-router";
+import { isStaff } from "features/auth/auth.util";
 import { icons } from "lucide-react-native";
 import {
     StyleSheet,
@@ -23,8 +25,13 @@ const Screen = () => {
     return (
         <View>
             <Header name="Options" />
-            <TabScroll style={style.scroll}>
-                <Profile />
+            <TabScroll
+                style={style.scroll}
+                contentContainerStyle={{
+                    paddingBlockEnd: 200,
+                }}
+            >
+                <ProfileSettings />
                 <UserManagement />
                 <Reports />
                 <LogoutButton />
@@ -33,22 +40,9 @@ const Screen = () => {
     );
 };
 
-const Profile = () => {
-    return (
-        <Section>
-            <Title name="Profile" />
-            <Card>
-                <Link
-                    href="/options/profile"
-                    label="Settings"
-                    icon="UserPen"
-                />
-            </Card>
-        </Section>
-    );
-};
-
 const UserManagement = () => {
+    if (!isStaff()) return null;
+
     return (
         <Section>
             <Title name="User Management" />
@@ -84,6 +78,7 @@ const UserManagement = () => {
 };
 
 const Reports = () => {
+    if (!isStaff()) return null;
     return (
         <Section>
             <Title name="Reports" />
@@ -122,7 +117,7 @@ const Section = ({
     );
 };
 
-const Title = ({
+export const Title = ({
     name: title,
 }: {
     name: string;
@@ -171,7 +166,6 @@ const Link = ({
 const style = StyleSheet.create({
     scroll: {
         display: "flex",
-        marginTop: 20,
         paddingHorizontal: 40,
     },
     section: {

@@ -1,6 +1,7 @@
 import OptionCard from "components/screens/Options/_components/Card";
 import OptionRow from "components/screens/Options/_components/Row";
-import { hasRole } from "features/auth/auth.util";
+import { hasRole, roleLabel } from "features/auth/auth.util";
+import { useCallback, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { Avatar, Text, YStack } from "tamagui";
 
@@ -8,21 +9,56 @@ import Badge from "~/components/Bagde";
 import UserAvatar from "~/features/user/components/UserAvatar";
 import { useUserProfile } from "~/features/user/user.hook";
 
-const ProfileSettings = () => {
-    const { data: userData } = useUserProfile();
+import Contributions from "./Contributions";
+import Information from "./Informations";
 
+const ProfileSettings = () => {
+    const {
+        data: userData,
+        isStaff,
+        staffData,
+    } = useUserProfile();
+
+    const login = useMemo(() => {
+        if (!userData) return "Not set";
+
+        if (userData.role === "beneficiary")
+            return userData.username;
+
+        return userData.email;
+    }, [userData]);
+
+    const Role = useCallback(() => {
+        if (!isStaff || !staffData?.role)
+            return null;
+
+        return (
+            <OptionRow
+                label="Role"
+                value={
+                    roleLabel(staffData?.role) ||
+                    "Not set"
+                }
+            />
+        );
+    }, [isStaff, staffData]);
     return (
         <YStack style={styles.container}>
             <Header />
             <OptionCard style={styles.card}>
+                <Role />
                 <OptionRow
-                    label="Email"
-                    value={
-                        userData?.email ||
-                        userData?.username ||
-                        "Not set"
+                    label={
+                        hasRole("beneficiary")
+                            ? "Username"
+                            : "Email"
                     }
-                    href="/options/profile/update-email"
+                    value={login || "Not set"}
+                    {...(!hasRole(
+                        "beneficiary",
+                    ) && {
+                        href: "/options/profile/update-email",
+                    })}
                 />
 
                 <OptionRow
@@ -32,38 +68,15 @@ const ProfileSettings = () => {
                         "Not set"
                     }
                 />
-                {!hasRole("family_member") && (
-                    <OptionRow
-                        label="Password"
-                        href={
-                            "/options/profile/update-password"
-                        }
-                    />
-                )}
-            </OptionCard>
-            <OptionCard style={styles.card}>
                 <OptionRow
-                    label="SSS ID Number"
-                    value={
-                        userData?.sss_id ||
-                        "Not set"
-                    }
-                />
-                <OptionRow
-                    label="PhilHealth ID Number"
-                    value={
-                        userData?.philhealth_id ||
-                        "Not set"
-                    }
-                />
-                <OptionRow
-                    label="Pag-IBIG ID Number"
-                    value={
-                        userData?.pagibig_id ||
-                        "Not set"
+                    label="Password"
+                    href={
+                        "/options/profile/update-password"
                     }
                 />
             </OptionCard>
+            <Information />
+            <Contributions />
         </YStack>
     );
 };
@@ -71,8 +84,7 @@ const ProfileSettings = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 20,
-        backgroundColor: "var(--background)",
+        paddingBlockEnd: 30,
     },
     card: {
         marginBottom: 15,
@@ -80,8 +92,11 @@ const styles = StyleSheet.create({
 });
 
 const Header = () => {
-    const { data: user, staffData } =
-        useUserProfile();
+    const {
+        data: user,
+        staffData,
+        isStaff,
+    } = useUserProfile();
 
     const fullName = user
         ? `${user.first_name} ${user.last_name}`
