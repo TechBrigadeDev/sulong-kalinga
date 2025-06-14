@@ -103,7 +103,6 @@
       <ul class="sub-menu">
         <li><a class="link_name">Location Tracking</a></li>
         <li><a href="{{ route('admin.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.beneficiary.map.index') }}'; return false;" @endif class="{{ Request::routeIs('admin.beneficiary.map.*') ? 'active' : '' }}">Beneficiary Map</a></li>
-        <li><a href="{{ route('admin.careworker.tracking.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.careworker.tracking.index') }}'; return false;" @endif class="">Care Worker Tracking</a></li>
         <li><a href="{{ route('admin.shift.histories.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.shift.histories.index') }}'; return false;" @endif class="{{ Request::routeIs('admin.shift.histories.*') ? 'active' : '' }}">Shift Histories</a></li>
       </ul>
     </li>

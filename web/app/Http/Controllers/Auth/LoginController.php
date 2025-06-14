@@ -151,7 +151,7 @@ class LoginController extends Controller
                     }
                     if ($user->role_id == 3) {
                         session()->put('show_welcome', true);
-                        return redirect()->route('workerdashboard');
+                        return redirect()->route('care-worker.dashboard');
                     }
                     
                     $authSuccess = true;

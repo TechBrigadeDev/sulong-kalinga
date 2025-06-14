@@ -161,6 +161,28 @@
                         </div>
 
                         <hr class="my-4">
+                        <!-- Google Maps -->
+                        <div class="row mb-1">
+                            <div class="col-12">
+                                <h5 class="text-start">Map Location<label style="color:red;"> * </label></h5> 
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="mapLocation" class="form-label">Pinpoint in Google Maps<label style="color:red;"> * </label></label>
+                                <div id="googleMap" style="width:100%;height:400px;border:1px solid #ccc;"></div>
+                                <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude', $latitude) }}">
+                                <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude', $longitude) }}">
+                                <small class="text-muted">Drag the marker to set the beneficiary's location.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="searchAddress" class="form-label">Or search address</label>
+                                <input type="text" id="searchAddress" class="form-control" placeholder="Enter address">
+                                <button type="button" id="searchAddressBtn" class="btn btn-primary mt-2">Find on Map</button>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
                         <!-- Row 3: Medical History -->
                         <div class="row mb-1">
                             <div class="col-12">
@@ -1436,3 +1458,57 @@
 
 </body>
 </html>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ $googleMapsApiKey }}&callback=initMap" async defer></script>
+    <script>
+let map, marker, geocoder;
+
+function initMap() {
+    var lat = parseFloat(document.getElementById('latitude').value) || 13.41;
+    var lng = parseFloat(document.getElementById('longitude').value) || 122.56;
+    var initialPosition = {lat: lat, lng: lng};
+
+    map = new google.maps.Map(document.getElementById('googleMap'), {
+        center: initialPosition,
+        zoom: 12
+    });
+
+    marker = new google.maps.Marker({
+        position: initialPosition,
+        map: map,
+        draggable: true
+    });
+
+    geocoder = new google.maps.Geocoder();
+
+    marker.addListener('dragend', function(e) {
+        document.getElementById('latitude').value = e.latLng.lat();
+        document.getElementById('longitude').value = e.latLng.lng();
+    });
+
+    document.getElementById('searchAddressBtn').addEventListener('click', function() {
+        geocodeAddress();
+    });
+
+    document.getElementById('searchAddress').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            geocodeAddress();
+        }
+    });
+}
+
+function geocodeAddress() {
+    var address = document.getElementById('searchAddress').value;
+    if (!address) return;
+    geocoder.geocode({ 'address': address }, function(results, status) {
+        if (status === 'OK') {
+            var location = results[0].geometry.location;
+            map.setCenter(location);
+            marker.setPosition(location);
+            document.getElementById('latitude').value = location.lat();
+            document.getElementById('longitude').value = location.lng();
+        } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+        }
+    });
+}
+</script>

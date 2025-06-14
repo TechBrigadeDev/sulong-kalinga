@@ -19,7 +19,8 @@ class Beneficiary extends Authenticatable
         'emergency_contact_name', 'emergency_contact_relation', 'emergency_contact_mobile',
         'emergency_contact_email', 'emergency_procedure', 'beneficiary_status_id', 'status_reason', 
         'general_care_plan_id', 'username', 'password', 'beneficiary_signature', 'care_worker_signature', 
-        'created_by', 'updated_by', 'photo', 'general_care_plan_doc', 'care_service_agreement_doc'
+        'created_by', 'updated_by', 'photo', 'general_care_plan_doc', 'care_service_agreement_doc',
+        'map_location',
     ];
     
     protected $hidden = [
@@ -28,6 +29,10 @@ class Beneficiary extends Authenticatable
     ];
 
     protected $guard = 'beneficiary';
+
+    protected $casts = [
+        'map_location' => 'array',
+    ];
 
     // Get the category associated with the beneficiary.
     public function category()

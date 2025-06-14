@@ -32,6 +32,8 @@ Route::get('/public-test', function () {
 // Authentication Routes
 Route::post('/login', [AuthApiController::class, 'login']);
 
+// Route::get('/test-google-map', [\App\Http\Controllers\BeneficiaryController::class, 'testGoogleMap']);
+
 
 // Protected Routes
 Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . ':admin,care_manager,care_worker')->group(function () {
@@ -100,6 +102,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // Weekly Care Plan (WCP) API
     // Create only with store
     Route::post('/weekly-care-plans', [WeeklyCarePlanApiController::class, 'store']);
+    Route::get('/interventions/by-category', [WeeklyCarePlanApiController::class, 'getInterventionsByCategory']);
 
     // Uploads (move back inside middleware after testing)
     // Moved backed inside middleware in sk-74/family-api-fix

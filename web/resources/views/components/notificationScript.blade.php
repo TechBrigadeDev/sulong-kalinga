@@ -39,6 +39,33 @@
         $roleName = 'care-worker';
         $rolePrefix = 'care-worker';
     }
+    
+    // ADD THIS CODE: Determine language preference
+    $userType = null;
+    $userId = null;
+    
+    if (Auth::guard('web')->check()) {
+        $userType = 'cose_user';
+        $userId = Auth::guard('web')->id();
+    } elseif (Auth::guard('beneficiary')->check()) {
+        $userType = 'beneficiary'; 
+        $userId = Auth::guard('beneficiary')->user()->beneficiary_id;
+    } elseif (Auth::guard('family')->check()) {
+        $userType = 'family_member';
+        $userId = Auth::guard('family')->user()->family_member_id;
+    }
+    
+    $useTagalog = false;
+    if ($userType && $userId) {
+        $useTagalog = App\Models\LanguagePreference::where('user_type', $userType)
+                        ->where('user_id', $userId)
+                        ->exists();
+    } else {
+        $useTagalog = request()->cookie('use_tagalog') === '1';
+    }
+    
+    // Share with views
+    View::share('useTagalog', $useTagalog);
 @endphp
 
 <script>
@@ -96,6 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('{{ $messageRecentUrl }}')
             .then(response => response.json())
             .then(data => {
+                // Store the latest message data globally for badge updates
+                window.latestMessageData = data;
                 container.innerHTML = '';
                 
                 if (!data.conversations || data.conversations.length === 0) {
@@ -109,29 +138,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 data.conversations.forEach(conversation => {
                     const lastMessage = conversation.last_message;
-                    const senderName = lastMessage && lastMessage.sender ? 
-                        (lastMessage.sender.first_name + ' ' + lastMessage.sender.last_name) : 
-                        'Unknown';
+                    // Get proper sender name - extract this correctly
+                    const senderName = lastMessage && lastMessage.sender_name ? lastMessage.sender_name : 'Unknown';
                     
-                    // ADD YOUR CODE RIGHT HERE - for safely processing message content
+                    // Process message content (keep existing code)
                     let messageContent = lastMessage && lastMessage.content ? lastMessage.content : 'No content';
                     
-                    // If message is unsent, override the content
-                    if (lastMessage && lastMessage.is_unsent) {
-                        messageContent = '<em class="text-muted">This message was unsent</em>';
-                    }
-                    
-                    // If checking for attachments:
-                    if (messageContent && typeof messageContent === 'string' && messageContent.includes('📎')) {
-                        // Process attachment indicators - extract file name from attachment indicator
-                        const fileName = messageContent.split('📎')[1].trim();
-                        messageContent = `<span class="attachment-indicator"><i class="bi bi-paperclip"></i> ${fileName}</span>`;
-                    }
-                    
                     // Determine if conversation has unread messages
-                    const isUnread = conversation.has_unread || false; // ADD THIS LINE
+                    const isUnread = conversation.has_unread || false;
                     
                     const previewHtml = `
+                        <li><hr class="dropdown-divider m-0"></li>
                         <li>
                             <a class="dropdown-item message-preview ${isUnread ? 'unread' : ''}" 
                             href="{{ $messagingUrl }}?conversation=${conversation.conversation_id}">
@@ -143,17 +160,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                             </div>` :
                                             `<img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm" alt="User">`
                                         }
-                                        ${isUnread ? '<span class="unread-indicator"></span>' : ''}
                                     </div>
                                     <div class="flex-grow-1 ms-2 overflow-hidden">
-                                        <p class="mb-0 fw-bold">${conversation.is_group_chat ? conversation.name : (conversation.other_participant_name || 'Unknown')}</p>
-                                        <p class="small text-truncate mb-0">${conversation.is_group_chat && lastMessage.sender_name ? lastMessage.sender_name + ': ' : ''}${messageContent}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <p class="mb-0 fw-bold">${conversation.is_group_chat ? conversation.name : (conversation.other_participant_name || 'Unknown')}</p>
+                                            ${isUnread ? `<span class="badge bg-danger message-badge">${conversation.unread_count}</span>` : ''}
+                                        </div>
+                                        <p class="small text-truncate mb-0">${senderName !== 'Unknown' ? senderName + ': ' : ''}${messageContent}</p>
                                         <p class="text-muted small mb-0">${lastMessage ? timeSince(new Date(lastMessage.message_timestamp)) : ''}</p>
                                     </div>
                                 </div>
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider m-0"></li>
                     `;
                     
                     container.innerHTML += previewHtml;
@@ -375,15 +393,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Add unread badges to unread messages
+        // Update unread badges with correct counts from data
         document.querySelectorAll('.message-preview.unread').forEach(item => {
-            const container = item.querySelector('.d-flex');
-            if (container && !container.querySelector('.unread-badge')) {
-                container.style.position = 'relative';
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-danger unread-badge';
-                badge.textContent = '1';
-                container.appendChild(badge);
+            // Find the container for the badge
+            const container = item.querySelector('.d-flex .justify-content-between');
+            if (container) {
+                // Check if there's already a badge
+                let badge = container.querySelector('.message-badge');
+                
+                // If no badge exists and we're in an unread message preview, add one
+                if (!badge) {
+                    // Try to get the conversation data
+                    const conversationId = item.querySelector('a')?.href?.split('conversation=')[1];
+                    let unreadCount = 1; // Default fallback
+                    
+                    // If we have access to the latest data, use that count
+                    if (window.latestMessageData && window.latestMessageData.conversations) {
+                        const conversation = window.latestMessageData.conversations.find(
+                            c => c.conversation_id.toString() === conversationId
+                        );
+                        if (conversation && conversation.unread_count) {
+                            unreadCount = conversation.unread_count;
+                        }
+                    }
+                    
+                    badge = document.createElement('span');
+                    badge.className = 'badge bg-danger message-badge';
+                    badge.textContent = unreadCount;
+                    container.appendChild(badge);
+                }
             }
         });
     }

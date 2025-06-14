@@ -67,4 +67,9 @@ class ShiftHistoryController extends Controller
             'date' => $request->date
         ]);
     }
+
+    public function shiftDetails()
+    {
+        return view('admin.shiftHistoryDetails');
+    }
 }

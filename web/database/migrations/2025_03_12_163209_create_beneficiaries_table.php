@@ -47,6 +47,7 @@ return new class extends Migration
             $table->integer('created_by');
             $table->integer('updated_by');
             $table->timestamps();
+            $table->json('map_location')->nullable();
 
             // Foreign Key Constraints
             $table->foreign('municipality_id')->references('municipality_id')->on('municipalities')->onDelete('no action');
