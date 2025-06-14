@@ -1,26 +1,19 @@
+import { BeneficiaryFormValues } from "features/user-management/components/beneficiaries/BeneficiaryForm/schema";
+import {
+    Controller,
+    useFormContext,
+} from "react-hook-form";
 import {
     Card,
     H3,
     Input,
+    Label,
     Text,
     XStack,
     YStack,
 } from "tamagui";
 
-import { IBeneficiary } from "~/features/user-management/management.type";
-
-interface Props {
-    data?: Partial<IBeneficiary>;
-    onChange?: (
-        field: string | number | symbol,
-        value: any,
-    ) => void;
-}
-
-export const EmergencyContactSection = ({
-    data = {},
-    onChange = () => {},
-}: Props) => {
+export const EmergencyContactSection = () => {
     return (
         <Card elevate>
             <Card.Header padded>
@@ -28,89 +21,183 @@ export const EmergencyContactSection = ({
             </Card.Header>
             <YStack p="$4" gap="$4">
                 <XStack gap="$4">
-                    <YStack flex={1} gap="$2">
-                        <Text fontWeight="600">
-                            Contact Person Name *
-                        </Text>
-                        <Input
-                            value={
-                                data.emergency_contact_name
-                            }
-                            onChangeText={(
-                                value,
-                            ) =>
-                                onChange(
-                                    "emergency_contact_name",
-                                    value,
-                                )
-                            }
-                            placeholder="Enter contact name"
-                            autoCapitalize="words"
-                        />
-                    </YStack>
-                    <YStack flex={1} gap="$2">
-                        <Text fontWeight="600">
-                            Relationship *
-                        </Text>
-                        <Input
-                            value={
-                                data.emergency_contact_relation
-                            }
-                            onChangeText={(
-                                value,
-                            ) =>
-                                onChange(
-                                    "emergency_contact_relation",
-                                    value,
-                                )
-                            }
-                            placeholder="Enter relationship"
-                            autoCapitalize="words"
-                        />
-                    </YStack>
+                    <EmergencyContactName />
+                    <EmergencyContactRelation />
                 </XStack>
 
-                <YStack gap="$2">
-                    <Text fontWeight="600">
-                        Mobile Number *
-                    </Text>
+                <EmergencyContactMobile />
+                <EmergencyProcedure />
+            </YStack>
+        </Card>
+    );
+};
+
+const EmergencyContactName = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="emergency_contact_name"
+            render={({ field, fieldState }) => (
+                <YStack flex={1} gap="$2">
+                    <Label fontWeight="600">
+                        Contact Person Name *
+                    </Label>
                     <Input
-                        value={data.emergency_contact_mobile?.replace(
-                            "+63",
-                            "",
-                        )}
+                        value={field.value || ""}
+                        onChangeText={
+                            field.onChange
+                        }
+                        onBlur={field.onBlur}
+                        placeholder="Enter contact name"
+                        autoCapitalize="words"
+                    />
+                    {fieldState.error && (
+                        <Text
+                            color="$red10"
+                            fontSize="$2"
+                        >
+                            {
+                                fieldState.error
+                                    .message
+                            }
+                        </Text>
+                    )}
+                </YStack>
+            )}
+        />
+    );
+};
+
+const EmergencyContactRelation = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="emergency_contact_relation"
+            render={({ field, fieldState }) => (
+                <YStack flex={1} gap="$2">
+                    <Label fontWeight="600">
+                        Relationship *
+                    </Label>
+                    <Input
+                        value={field.value || ""}
+                        onChangeText={
+                            field.onChange
+                        }
+                        onBlur={field.onBlur}
+                        placeholder="Enter relationship"
+                        autoCapitalize="words"
+                    />
+                    {fieldState.error && (
+                        <Text
+                            color="$red10"
+                            fontSize="$2"
+                        >
+                            {
+                                fieldState.error
+                                    .message
+                            }
+                        </Text>
+                    )}
+                </YStack>
+            )}
+        />
+    );
+};
+
+const EmergencyContactMobile = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="emergency_contact_mobile"
+            render={({ field, fieldState }) => (
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        Mobile Number *
+                    </Label>
+                    <Input
+                        value={
+                            field.value?.replace(
+                                "+63",
+                                "",
+                            ) || ""
+                        }
                         onChangeText={(value) =>
-                            onChange(
-                                "emergency_contact_mobile",
+                            field.onChange(
                                 `+63${value}`,
                             )
                         }
+                        onBlur={field.onBlur}
                         placeholder="Enter mobile number"
                         keyboardType="phone-pad"
+                        maxLength={10}
+                        autoComplete="tel"
                     />
-                </YStack>
-
-                <YStack gap="$2">
-                    <Text fontWeight="600">
-                        Emergency Procedure
+                    <Text
+                        opacity={0.6}
+                        fontSize="$2"
+                    >
+                        Format: 9XXXXXXXXX (will
+                        be saved as +639XXXXXXXXX)
                     </Text>
+                    {fieldState.error && (
+                        <Text
+                            color="$red10"
+                            fontSize="$2"
+                        >
+                            {
+                                fieldState.error
+                                    .message
+                            }
+                        </Text>
+                    )}
+                </YStack>
+            )}
+        />
+    );
+};
+
+const EmergencyProcedure = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="emergency_procedure"
+            render={({ field, fieldState }) => (
+                <YStack gap="$2">
+                    <Label fontWeight="600">
+                        Emergency Procedure
+                    </Label>
                     <Input
-                        value={
-                            data.emergency_procedure
+                        value={field.value || ""}
+                        onChangeText={
+                            field.onChange
                         }
-                        onChangeText={(value) =>
-                            onChange(
-                                "emergency_procedure",
-                                value,
-                            )
-                        }
+                        onBlur={field.onBlur}
                         placeholder="Enter emergency procedure"
                         multiline
                         numberOfLines={3}
                         textAlignVertical="top"
                     />
+                    {fieldState.error && (
+                        <Text
+                            color="$red10"
+                            fontSize="$2"
+                        >
+                            {
+                                fieldState.error
+                                    .message
+                            }
+                        </Text>
+                    )}
                 </YStack>
-            </YStack>
-        </Card>
+            )}
+        />
     );
 };

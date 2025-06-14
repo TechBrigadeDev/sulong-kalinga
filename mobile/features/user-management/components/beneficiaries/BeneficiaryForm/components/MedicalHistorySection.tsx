@@ -1,139 +1,132 @@
+import { BeneficiaryFormValues } from "features/user-management/components/beneficiaries/BeneficiaryForm/schema";
 import {
-    Card,
-    H3,
-    Input,
-    Text,
-    YStack,
-} from "tamagui";
+    Controller,
+    useFormContext,
+} from "react-hook-form";
+import { Card, H3, YStack } from "tamagui";
 
-import { IBeneficiary } from "~/features/user-management/management.type";
+import { EnhancedInput } from "./EnhancedInput";
 
-interface Props {
-    data?: Partial<IBeneficiary>;
-    onChange?: (
-        field: string | number | symbol,
-        value: any,
-    ) => void;
-}
-
-export const MedicalHistorySection = ({
-    data = {},
-    onChange = () => {},
-}: Props) => {
+export const MedicalHistorySection = () => {
     return (
         <Card elevate>
             <Card.Header padded>
                 <H3>Medical History</H3>
             </Card.Header>
-            <YStack p="$4" gap="$4">
-                <YStack gap="$2">
-                    <Text fontWeight="600">
-                        Medical Conditions
-                    </Text>
-                    <Input
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                        value={
-                            data?.medical_conditions
-                        }
-                        onChangeText={(value) =>
-                            onChange(
-                                "medical_conditions",
-                                value,
-                            )
-                        }
-                        placeholder="List all medical conditions"
-                    />
-                    <Text
-                        opacity={0.6}
-                        fontSize="$2"
-                    >
-                        Separate multiple
-                        conditions with commas
-                    </Text>
-                </YStack>
-
-                <YStack gap="$2">
-                    <Text fontWeight="600">
-                        Medications
-                    </Text>
-                    <Input
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                        value={data?.medications}
-                        onChangeText={(value) =>
-                            onChange(
-                                "medications",
-                                value,
-                            )
-                        }
-                        placeholder="List all medications"
-                    />
-                    <Text
-                        opacity={0.6}
-                        fontSize="$2"
-                    >
-                        Separate multiple
-                        medications with commas
-                    </Text>
-                </YStack>
-
-                <YStack gap="$2">
-                    <Text fontWeight="600">
-                        Allergies
-                    </Text>
-                    <Input
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                        value={data?.allergies}
-                        onChangeText={(value) =>
-                            onChange(
-                                "allergies",
-                                value,
-                            )
-                        }
-                        placeholder="List all allergies"
-                    />
-                    <Text
-                        opacity={0.6}
-                        fontSize="$2"
-                    >
-                        Separate multiple
-                        allergies with commas
-                    </Text>
-                </YStack>
-
-                <YStack gap="$2">
-                    <Text fontWeight="600">
-                        Immunizations
-                    </Text>
-                    <Input
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                        value={
-                            data?.immunizations
-                        }
-                        onChangeText={(value) =>
-                            onChange(
-                                "immunizations",
-                                value,
-                            )
-                        }
-                        placeholder="List all immunizations"
-                    />
-                    <Text
-                        opacity={0.6}
-                        fontSize="$2"
-                    >
-                        Separate multiple
-                        immunizations with commas
-                    </Text>
-                </YStack>
+            <YStack p="$4" gap="$3">
+                <MedicalConditions />
+                <Medications />
+                <Allergies />
+                <Immunizations />
             </YStack>
         </Card>
+    );
+};
+
+const MedicalConditions = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="medical_conditions"
+            render={({ field, fieldState }) => (
+                <EnhancedInput
+                    label="Medical Conditions"
+                    value={field.value || ""}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="List all medical conditions"
+                    error={
+                        fieldState.error?.message
+                    }
+                    helperText="Separate multiple conditions with commas"
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                />
+            )}
+        />
+    );
+};
+
+const Medications = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="medications"
+            render={({ field, fieldState }) => (
+                <EnhancedInput
+                    label="Medications"
+                    value={field.value || ""}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="List all medications"
+                    error={
+                        fieldState.error?.message
+                    }
+                    helperText="Separate multiple medications with commas"
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                />
+            )}
+        />
+    );
+};
+
+const Allergies = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="allergies"
+            render={({ field, fieldState }) => (
+                <EnhancedInput
+                    label="Allergies"
+                    value={field.value || ""}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="List all allergies"
+                    error={
+                        fieldState.error?.message
+                    }
+                    helperText="Separate multiple allergies with commas"
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                />
+            )}
+        />
+    );
+};
+
+const Immunizations = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    return (
+        <Controller
+            control={control}
+            name="immunizations"
+            render={({ field, fieldState }) => (
+                <EnhancedInput
+                    label="Immunizations"
+                    value={field.value || ""}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="List all immunizations"
+                    error={
+                        fieldState.error?.message
+                    }
+                    helperText="Separate multiple immunizations with commas"
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                />
+            )}
+        />
     );
 };

@@ -1,41 +1,39 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BeneficiaryFormValues } from "features/user-management/components/beneficiaries/BeneficiaryForm/schema";
 import { useState } from "react";
+import {
+    Controller,
+    useFieldArray,
+    useFormContext,
+} from "react-hook-form";
 import {
     Button,
     Card,
     H3,
-    Input,
     Label,
     Text,
     XStack,
     YStack,
 } from "tamagui";
 
-import { IBeneficiary } from "~/features/user-management/management.type";
-
-interface Props {
-    data: Partial<IBeneficiary>;
-    onChange: (
-        field: string | number | symbol,
-        value: any,
-    ) => void;
-}
+import { EnhancedInput } from "./EnhancedInput";
 
 interface Medication {
     name: string;
     dosage: string;
     frequency: string;
-    instructions: string;
+    instructions?: string;
 }
 
-export const MedicationSection = ({
-    data,
-    onChange,
-}: Props) => {
-    const [medications, setMedications] =
-        useState<Medication[]>(
-            data.medications_list || [],
-        );
+export const MedicationSection = () => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+    const { fields, append, remove } =
+        useFieldArray({
+            control,
+            name: "medications_list",
+        });
+
     const [
         currentMedication,
         setCurrentMedication,
@@ -51,15 +49,7 @@ export const MedicationSection = ({
             currentMedication.name &&
             currentMedication.dosage
         ) {
-            const newMedications = [
-                ...medications,
-                { ...currentMedication },
-            ];
-            setMedications(newMedications);
-            onChange(
-                "medications_list",
-                newMedications,
-            );
+            append(currentMedication);
             setCurrentMedication({
                 name: "",
                 dosage: "",
@@ -69,75 +59,20 @@ export const MedicationSection = ({
         }
     };
 
-    const handleRemoveMedication = (
-        index: number,
-    ) => {
-        const newMedications = medications.filter(
-            (_, i) => i !== index,
-        );
-        setMedications(newMedications);
-        onChange(
-            "medications_list",
-            newMedications,
-        );
-    };
-
     return (
         <Card elevate>
             <Card.Header padded>
                 <H3>Medication Management</H3>
             </Card.Header>
             <YStack p="$4" gap="$4">
-                {medications.map((med, index) => (
-                    <Card key={index} bordered>
-                        <YStack p="$4" gap="$2">
-                            <XStack gap="$4">
-                                <YStack
-                                    gap="$2"
-                                    flex={1}
-                                >
-                                    <Text fontWeight="600">
-                                        {med.name}
-                                    </Text>
-                                    <Text>
-                                        Dosage:{" "}
-                                        {
-                                            med.dosage
-                                        }
-                                    </Text>
-                                    <Text>
-                                        Frequency:{" "}
-                                        {
-                                            med.frequency
-                                        }
-                                    </Text>
-                                    {med.instructions && (
-                                        <Text>
-                                            Instructions:{" "}
-                                            {
-                                                med.instructions
-                                            }
-                                        </Text>
-                                    )}
-                                </YStack>
-                                <Button
-                                    theme="red"
-                                    size="$3"
-                                    onPress={() =>
-                                        handleRemoveMedication(
-                                            index,
-                                        )
-                                    }
-                                >
-                                    <Ionicons
-                                        name="trash-outline"
-                                        size={20}
-                                        color="white"
-                                    />
-                                </Button>
-                            </XStack>
-                        </YStack>
-                    </Card>
+                {fields.map((field, index) => (
+                    <MedicationItem
+                        key={field.id}
+                        index={index}
+                        onRemove={() =>
+                            remove(index)
+                        }
+                    />
                 ))}
 
                 <Card bordered>
@@ -146,110 +81,64 @@ export const MedicationSection = ({
                             Add New Medication
                         </Label>
 
-                        <YStack gap="$2">
-                            <Label>
-                                Medication Name *
-                            </Label>
-                            <Input
-                                size="$4"
-                                placeholder="Enter medication name"
-                                value={
-                                    currentMedication.name
-                                }
-                                onChangeText={(
-                                    value,
-                                ) =>
-                                    setCurrentMedication(
-                                        (
-                                            prev,
-                                        ) => ({
-                                            ...prev,
-                                            name: value,
-                                        }),
-                                    )
-                                }
-                            />
-                        </YStack>
+                        <MedicationName
+                            value={
+                                currentMedication.name
+                            }
+                            onChange={(value) =>
+                                setCurrentMedication(
+                                    (prev) => ({
+                                        ...prev,
+                                        name: value,
+                                    }),
+                                )
+                            }
+                        />
 
-                        <YStack gap="$2">
-                            <Label>
-                                Dosage *
-                            </Label>
-                            <Input
-                                size="$4"
-                                placeholder="Enter dosage (e.g., 500mg)"
-                                value={
-                                    currentMedication.dosage
-                                }
-                                onChangeText={(
-                                    value,
-                                ) =>
-                                    setCurrentMedication(
-                                        (
-                                            prev,
-                                        ) => ({
-                                            ...prev,
-                                            dosage: value,
-                                        }),
-                                    )
-                                }
-                            />
-                        </YStack>
+                        <MedicationDosage
+                            value={
+                                currentMedication.dosage
+                            }
+                            onChange={(value) =>
+                                setCurrentMedication(
+                                    (prev) => ({
+                                        ...prev,
+                                        dosage: value,
+                                    }),
+                                )
+                            }
+                        />
 
-                        <YStack gap="$2">
-                            <Label>
-                                Frequency
-                            </Label>
-                            <Input
-                                size="$4"
-                                placeholder="Enter frequency (e.g., 2x daily)"
-                                value={
-                                    currentMedication.frequency
-                                }
-                                onChangeText={(
-                                    value,
-                                ) =>
-                                    setCurrentMedication(
-                                        (
-                                            prev,
-                                        ) => ({
-                                            ...prev,
-                                            frequency:
-                                                value,
-                                        }),
-                                    )
-                                }
-                            />
-                        </YStack>
+                        <MedicationFrequency
+                            value={
+                                currentMedication.frequency
+                            }
+                            onChange={(value) =>
+                                setCurrentMedication(
+                                    (prev) => ({
+                                        ...prev,
+                                        frequency:
+                                            value,
+                                    }),
+                                )
+                            }
+                        />
 
-                        <YStack gap="$2">
-                            <Label>
-                                Instructions
-                            </Label>
-                            <Input
-                                size="$4"
-                                placeholder="Enter special instructions"
-                                value={
-                                    currentMedication.instructions
-                                }
-                                onChangeText={(
-                                    value,
-                                ) =>
-                                    setCurrentMedication(
-                                        (
-                                            prev,
-                                        ) => ({
-                                            ...prev,
-                                            instructions:
-                                                value,
-                                        }),
-                                    )
-                                }
-                                multiline
-                                numberOfLines={2}
-                                textAlignVertical="top"
-                            />
-                        </YStack>
+                        <MedicationInstructions
+                            value={
+                                currentMedication.instructions ||
+                                ""
+                            }
+                            onChange={(value) =>
+                                setCurrentMedication(
+                                    (prev) => ({
+                                        ...prev,
+                                        instructions:
+                                            value,
+                                    }),
+                                )
+                            }
+                        />
 
                         <Button
                             theme="blue"
@@ -277,3 +166,152 @@ export const MedicationSection = ({
         </Card>
     );
 };
+
+const MedicationItem = ({
+    index,
+    onRemove,
+}: {
+    index: number;
+    onRemove: () => void;
+}) => {
+    const { control } =
+        useFormContext<BeneficiaryFormValues>();
+
+    return (
+        <Card bordered>
+            <YStack p="$4" gap="$2">
+                <XStack gap="$4">
+                    <YStack gap="$2" flex={1}>
+                        <Controller
+                            control={control}
+                            name={`medications_list.${index}.name`}
+                            render={({
+                                field,
+                            }) => (
+                                <Text fontWeight="600">
+                                    {field.value}
+                                </Text>
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name={`medications_list.${index}.dosage`}
+                            render={({
+                                field,
+                            }) => (
+                                <Text>
+                                    Dosage:{" "}
+                                    {field.value}
+                                </Text>
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name={`medications_list.${index}.frequency`}
+                            render={({
+                                field,
+                            }) => (
+                                <Text>
+                                    Frequency:{" "}
+                                    {field.value}
+                                </Text>
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name={`medications_list.${index}.instructions`}
+                            render={({ field }) =>
+                                field.value && (
+                                    <Text>
+                                        Instructions:{" "}
+                                        {
+                                            field.value
+                                        }
+                                    </Text>
+                                )
+                            }
+                        />
+                    </YStack>
+                    <Button
+                        theme="red"
+                        size="$3"
+                        onPress={onRemove}
+                    >
+                        <Ionicons
+                            name="trash-outline"
+                            size={20}
+                            color="white"
+                        />
+                    </Button>
+                </XStack>
+            </YStack>
+        </Card>
+    );
+};
+
+const MedicationName = ({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+}) => (
+    <EnhancedInput
+        label="Medication Name *"
+        placeholder="Enter medication name"
+        value={value}
+        onChangeText={onChange}
+        autoCapitalize="words"
+    />
+);
+
+const MedicationDosage = ({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+}) => (
+    <EnhancedInput
+        label="Dosage *"
+        placeholder="Enter dosage (e.g., 500mg, 2 tablets)"
+        value={value}
+        onChangeText={onChange}
+        helperText="Include unit (mg, tablets, ml, etc.)"
+    />
+);
+
+const MedicationFrequency = ({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+}) => (
+    <EnhancedInput
+        label="Frequency"
+        placeholder="Enter frequency (e.g., 2x daily, every 8 hours)"
+        value={value}
+        onChangeText={onChange}
+        helperText="How often to take this medication"
+    />
+);
+
+const MedicationInstructions = ({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+}) => (
+    <EnhancedInput
+        label="Instructions"
+        placeholder="Enter special instructions"
+        value={value}
+        onChangeText={onChange}
+        multiline
+        numberOfLines={2}
+        textAlignVertical="top"
+        helperText="Any special instructions for taking this medication"
+    />
+);

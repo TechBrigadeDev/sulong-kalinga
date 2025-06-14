@@ -39,7 +39,9 @@ export const beneficiaryFormOpts = {
 };
 
 // HOC wrapper for components that need form context
-export const withBeneficiaryForm = (Component: any) => {
+export const withBeneficiaryForm = (
+    Component: any,
+) => {
     return (props: any) => (
         <BeneficiaryFormProvider>
             <Component {...props} />

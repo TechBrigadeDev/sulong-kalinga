@@ -11,6 +11,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "~/common/query";
 import config from "~/tamagui.config";
 
+import { DrawingProvider } from "./drawing/store";
 import { GlobalToast } from "./Toast";
 import { useColorScheme } from "./useColorScheme.web";
 
@@ -42,7 +43,9 @@ const Providers = ({
                                     : DefaultTheme
                             }
                         >
-                            {children}
+                            <DrawingProvider>
+                                {children}
+                            </DrawingProvider>
                             <GlobalToast />
                         </ThemeProvider>
                     </QueryClientProvider>
