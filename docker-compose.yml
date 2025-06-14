@@ -17,6 +17,7 @@ services:
     volumes:
       - calamancy_data:/app/data
       - calamancy_models:/root/.cache/spacy/downloads
+      - classifier_models:/app/models  # Add this line for classifier model persistence
     networks:
       - app-network    # Add this line to connect to the app network
     ports:
@@ -93,4 +94,5 @@ volumes:
   calamancy_data:
   calamancy_api_data:
   calamancy_models:
+  classifier_models:
   libretranslate_data:
