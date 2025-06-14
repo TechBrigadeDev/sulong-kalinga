@@ -1,13 +1,14 @@
+import { authStore } from "features/auth/auth.store";
 import { StyleSheet } from "react-native";
 import { Avatar, H3, YStack } from "tamagui";
 
 import GradientBackground from "~/components/GradientContainer";
 import { topBarHeight } from "~/constants/Layout";
 import UserAvatar from "~/features/user/components/UserAvatar";
-import { useUser } from "~/features/user/user.hook";
 
 const Profile = () => {
-    const { data: user } = useUser();
+    const { user } = authStore();
+
     return (
         <GradientBackground>
             <YStack style={style.container}>

@@ -1,4 +1,5 @@
 import { AxiosInstance } from "axios";
+import { log } from "common/debug";
 import { isEmail } from "common/validate";
 
 import { axiosClient } from "~/common/api";
@@ -33,11 +34,25 @@ class AuthController {
             "/login",
             formData,
         );
+        log(
+            "Login successful\n",
+            "Role:",
+            "\nResponse data:",
+            JSON.stringify(
+                response.data,
+                null,
+                2,
+            ),
+        );
         const validate =
             await loginSchema.response.safeParseAsync(
                 response.data,
             );
         if (!validate.success) {
+            console.error(
+                "Login response validation failed",
+                validate.error.errors,
+            );
             throw new Error("Validation failed");
         }
 
@@ -48,6 +63,7 @@ class AuthController {
         return {
             success: validate.data.success,
             token: validate.data.token,
+            user: validate.data.user,
         };
     }
 

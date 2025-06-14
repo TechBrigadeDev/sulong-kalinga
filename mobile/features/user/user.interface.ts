@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+    staffProfileSchema,
     updateEmailSchema,
     updatePasswordSchema,
     userProfileSchema,
@@ -16,4 +17,8 @@ export type dtoEmailUpdate = z.infer<
 
 export type dtoUpdatePassword = z.infer<
     typeof updatePasswordSchema
+>;
+
+export type IStaffProfile = z.infer<
+    typeof staffProfileSchema
 >;

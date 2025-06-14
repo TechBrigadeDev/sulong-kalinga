@@ -1,4 +1,3 @@
-import { ToSignature } from "features/app/debug/toSignature";
 import { StyleSheet } from "react-native";
 
 import TabScroll from "~/components/tabs/TabScroll";
@@ -11,7 +10,6 @@ const Home = () => {
         <TabScroll style={styles.container}>
             <Profile />
             <HomeMenu />
-            <ToSignature />
         </TabScroll>
     );
 };

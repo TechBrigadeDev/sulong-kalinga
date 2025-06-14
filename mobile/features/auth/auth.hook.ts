@@ -11,7 +11,8 @@ import { authStore } from "./auth.store";
 export const useLogin = (params?: {
     onSuccess?: () => void;
 }) => {
-    const { setToken } = authStore();
+    const { setToken, setRole, setUser } =
+        authStore();
     const toast = useToast();
 
     const { mutateAsync: login, isPending } =
@@ -37,6 +38,9 @@ export const useLogin = (params?: {
             },
             onSuccess: (data) => {
                 setToken(data.token);
+                setRole(data.user.role);
+                setUser(data.user);
+
                 if (params?.onSuccess) {
                     params.onSuccess();
                 }
@@ -67,7 +71,7 @@ export const useLogin = (params?: {
 };
 
 export const useLogout = () => {
-    const { token, setToken } = authStore();
+    const { token, clear } = authStore();
     const router = useRouter();
 
     const { mutateAsync: logout, isPending } =
@@ -84,7 +88,7 @@ export const useLogout = () => {
                 );
             },
             onSettled: () => {
-                setToken(null);
+                clear();
                 router.replace("/login");
             },
             onError: (error) => {

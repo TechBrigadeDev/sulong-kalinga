@@ -14,10 +14,6 @@ export const GlobalToast = () => {
     const { left, top, right } =
         useSafeAreaInsets();
 
-    console.log(
-        "GlobalToast currentToast:",
-        toast,
-    );
     if (!toast) {
         return null;
     }

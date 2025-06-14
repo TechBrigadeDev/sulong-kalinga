@@ -3,6 +3,7 @@ import {
     useQuery,
 } from "@tanstack/react-query";
 import { authStore } from "features/auth/auth.store";
+import { useMemo } from "react";
 
 import { invalidateQK, QK } from "~/common/query";
 
@@ -10,55 +11,25 @@ import userController from "./user.api";
 import {
     dtoEmailUpdate,
     dtoUpdatePassword,
+    IStaffProfile,
 } from "./user.interface";
-import { userStore } from "./user.store";
-
-export const useUser = () => {
-    const { token } = authStore();
-    const { setUser } = userStore();
-
-    return useQuery({
-        queryKey: QK.user.getUser(
-            token as string,
-        ),
-        queryFn: async () => {
-            if (!token) {
-                throw new Error(
-                    "Token is required",
-                );
-            }
-            const response =
-                await userController.getUser(
-                    token,
-                );
-
-            setUser(response);
-            console.log(
-                "User data fetched:",
-                response,
-            );
-            return response;
-        },
-        enabled: !!token,
-    });
-};
 
 export const useUserProfile = () => {
-    const { token } = authStore();
+    const { token, role } = authStore();
 
-    return useQuery({
+    const query = useQuery({
         queryKey: QK.user.getUserProfile(
             token as string,
         ),
         queryFn: async () => {
-            if (!token) {
+            if (!token || !role) {
                 throw new Error(
                     "Token is required",
                 );
             }
             const response =
                 await userController.getUserProfile(
-                    token,
+                    role,
                 );
 
             console.log(
@@ -69,12 +40,33 @@ export const useUserProfile = () => {
         },
         enabled: !!token,
     });
+
+    const profileRole = query.data?.role;
+
+    const isStaff =
+        profileRole !== "beneficiary" &&
+        profileRole !== "family_member";
+
+    const staffData = useMemo<
+        IStaffProfile | undefined
+    >(() => {
+        if (!isStaff) {
+            return undefined;
+        }
+        return query.data as unknown as IStaffProfile;
+    }, [isStaff, query.data]);
+
+    return {
+        ...query,
+        isStaff,
+        staffData,
+    };
 };
 
 export const useUpdateEmail = (params?: {
     onSuccess: () => Promise<void>;
 }) => {
-    const { user, setUser } = userStore();
+    const { user, setUser } = authStore();
     const { token } = authStore();
 
     return useMutation({
@@ -100,10 +92,12 @@ export const useUpdateEmail = (params?: {
         },
         onSuccess: async (data) => {
             if (user) {
-                setUser({
-                    ...user,
-                    email: data,
-                });
+                if (user.role !== "beneficiary") {
+                    setUser({
+                        ...user,
+                        email: data,
+                    });
+                }
             }
 
             if (params?.onSuccess) {

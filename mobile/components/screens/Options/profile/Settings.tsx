@@ -1,5 +1,6 @@
 import OptionCard from "components/screens/Options/_components/Card";
 import OptionRow from "components/screens/Options/_components/Row";
+import { hasRole } from "features/auth/auth.util";
 import { StyleSheet } from "react-native";
 import { Avatar, Text, YStack } from "tamagui";
 
@@ -18,12 +19,12 @@ const ProfileSettings = () => {
                     label="Email"
                     value={
                         userData?.email ||
+                        userData?.username ||
                         "Not set"
                     }
-                    href={
-                        "/options/profile/update-email"
-                    }
+                    href="/options/profile/update-email"
                 />
+
                 <OptionRow
                     label="Mobile Number"
                     value={
@@ -31,12 +32,14 @@ const ProfileSettings = () => {
                         "Not set"
                     }
                 />
-                <OptionRow
-                    label="Password"
-                    href={
-                        "/options/profile/update-password"
-                    }
-                />
+                {!hasRole("family_member") && (
+                    <OptionRow
+                        label="Password"
+                        href={
+                            "/options/profile/update-password"
+                        }
+                    />
+                )}
             </OptionCard>
             <OptionCard style={styles.card}>
                 <OptionRow
@@ -77,11 +80,33 @@ const styles = StyleSheet.create({
 });
 
 const Header = () => {
-    const { data: user } = useUserProfile();
+    const { data: user, staffData } =
+        useUserProfile();
 
     const fullName = user
         ? `${user.first_name} ${user.last_name}`
         : "User";
+
+    const Status = () => {
+        if (!staffData) {
+            return null;
+        }
+
+        return (
+            <Badge
+                variant={
+                    staffData?.volunteer_status ===
+                    "Active"
+                        ? "success"
+                        : "warning"
+                }
+                style={headerStyle.shadow}
+                size={15}
+            >
+                {staffData?.volunteer_status}
+            </Badge>
+        );
+    };
 
     return (
         <YStack style={headerStyle.container}>
@@ -95,18 +120,7 @@ const Header = () => {
             <Text style={headerStyle.name}>
                 {fullName}
             </Text>
-            <Badge
-                variant={
-                    user?.volunteer_status ===
-                    "Active"
-                        ? "success"
-                        : "warning"
-                }
-                style={headerStyle.shadow}
-                size={15}
-            >
-                {user?.volunteer_status}
-            </Badge>
+            <Status />
         </YStack>
     );
 };

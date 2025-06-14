@@ -10,13 +10,9 @@ import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View } from "tamagui";
 
-import { useUser } from "~/features/user/user.hook";
-
 export default function Layout() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
-
-    useUser();
 
     return (
         <Tabs>

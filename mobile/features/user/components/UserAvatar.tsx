@@ -1,15 +1,14 @@
 import { shapes } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { Image as ExpoImage } from "expo-image";
+import { authStore } from "features/auth/auth.store";
 import { useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { View } from "tamagui";
 
-import { useUser } from "~/features/user/user.hook";
-
 const UserAvatar = () => {
-    const { data: user } = useUser();
+    const { user } = authStore();
     const Avatar = user?.photo_url ? Image : Svg;
 
     return (
@@ -20,7 +19,7 @@ const UserAvatar = () => {
 };
 
 const Image = () => {
-    const { data: user } = useUser();
+    const { user } = authStore();
 
     const source = useMemo(() => {
         let source = { uri: "" };
@@ -46,7 +45,7 @@ const Image = () => {
 };
 
 const Svg = () => {
-    const { data: user } = useUser();
+    const { user } = authStore();
 
     const xml = useMemo(() => {
         return createAvatar(shapes, {

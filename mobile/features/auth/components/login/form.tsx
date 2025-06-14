@@ -19,7 +19,11 @@ const LoginForm = () => {
         });
 
     const [login, setLogin] = useState("");
-    const [password, setPassword] = useState("");
+    const [password, setPassword] = useState(
+        process.env.NODE_ENV !== "production"
+            ? "12312312"
+            : "",
+    );
 
     const onLogin = async () => {
         await handleLogin({
@@ -39,6 +43,7 @@ const LoginForm = () => {
             <Input
                 placeholder="Password"
                 secureTextEntry
+                value={password}
                 onChangeText={setPassword}
                 style={styles.input}
             />

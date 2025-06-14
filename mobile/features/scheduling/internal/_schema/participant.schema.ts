@@ -1,4 +1,4 @@
-import { userSchema } from "features/user/user.schema";
+import { userSchema } from "features/auth/auth.schema";
 import { z } from "zod";
 
 // Participant type enum
