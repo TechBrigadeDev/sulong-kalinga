@@ -1,11 +1,13 @@
 import { Stack } from "expo-router";
+import { useGetVisitations } from "features/portal/visitation/hook";
+import VisitationList from "features/portal/visitation/list";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "tamagui";
 
 const Screen = () => {
+    useGetVisitations();
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <Text>Visitation</Text>
+            <VisitationList />
         </SafeAreaView>
     );
 };

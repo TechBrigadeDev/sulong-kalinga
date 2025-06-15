@@ -113,6 +113,11 @@ export const QK = {
                 "emergencyService/service/getTypes",
         },
     },
+    visitations: {
+        getVisitations: () => [
+            "visitations/getVisitations",
+        ],
+    },
 };
 
 export const setDataQK = async (
