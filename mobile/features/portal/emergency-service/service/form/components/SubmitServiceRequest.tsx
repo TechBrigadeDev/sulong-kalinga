@@ -29,6 +29,13 @@ const SubmitServiceRequest = () => {
                 status: "success",
                 duration: 3000,
             });
+
+            form.reset({
+                service_type_id: "",
+                service_date: "",
+                service_time: "",
+                message: "",
+            });
         } catch (error) {
             console.error(
                 "Error submitting service request:",
