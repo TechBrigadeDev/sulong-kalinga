@@ -5,7 +5,7 @@ export const emergencyAssistanceFormSchema =
         emergency_type_id: z
             .string()
             .min(1, "Emergency type is required"),
-        emergency_description: z
+        message: z
             .string()
             .min(
                 2,

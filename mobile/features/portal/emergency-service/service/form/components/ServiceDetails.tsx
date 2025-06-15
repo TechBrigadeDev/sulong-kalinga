@@ -13,7 +13,7 @@ const ServiceDetails = () => {
     return (
         <Controller
             control={control}
-            name="service_details"
+            name="message"
             render={({ field, fieldState }) => (
                 <YStack gap="$2">
                     <Label fontWeight="600">

@@ -5,7 +5,6 @@ export interface EmergencyRequest {
     date_submitted: string;
     status: string;
     assigned_to: string | null;
-    actions: string[];
 }
 
 export { default as Badge } from "./Badge";

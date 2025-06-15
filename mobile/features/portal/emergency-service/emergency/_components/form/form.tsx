@@ -17,7 +17,7 @@ export const EmergencyForm = ({
             emergencyAssistanceFormSchema,
         ),
         defaultValues: {
-            emergency_description: "",
+            message: "",
         },
     });
     return (

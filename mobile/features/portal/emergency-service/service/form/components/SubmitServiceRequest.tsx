@@ -1,11 +1,16 @@
 import { useServiceRequestForm } from "features/portal/emergency-service/service/form/form";
 import { IServiceRequestForm } from "features/portal/emergency-service/service/form/schema";
+import { useServiceRequest } from "features/portal/emergency-service/service/hook";
 import { SubmitErrorHandler } from "react-hook-form";
 import { showToastable } from "react-native-toastable";
-import { Button } from "tamagui";
+import { Button, Spinner } from "tamagui";
 
 const SubmitServiceRequest = () => {
     const form = useServiceRequestForm();
+    const {
+        mutate: submitServiceRequest,
+        isPending: isSubmitting,
+    } = useServiceRequest();
 
     const onSuccess = async (
         data: IServiceRequestForm,
@@ -15,6 +20,7 @@ const SubmitServiceRequest = () => {
                 "Submitting service request data:",
                 data,
             );
+            submitServiceRequest(data);
             // Here you can handle the successful submission, e.g., send data to an API
             // For now, we'll just log the data
             showToastable({
@@ -68,19 +74,28 @@ const SubmitServiceRequest = () => {
         }
     };
 
+    const disabled =
+        form.formState.isSubmitting ||
+        isSubmitting;
+
     return (
         <Button
             onPress={handleSubmit}
-            disabled={form.formState.isSubmitting}
+            disabled={disabled}
             size="$5"
             mt="$4"
             theme="blue"
             fontSize="$5"
             fontWeight="600"
         >
-            {form.formState.isSubmitting
-                ? "Submitting..."
-                : "Submit Request"}
+            {form.formState.isSubmitting ||
+                (isSubmitting && (
+                    <Spinner
+                        size="small"
+                        color="$color"
+                    />
+                )) ||
+                "Submit Service Request"}
         </Button>
     );
 };

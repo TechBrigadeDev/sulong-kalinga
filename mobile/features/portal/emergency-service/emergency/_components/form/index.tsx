@@ -15,11 +15,7 @@ import { EmergencyForm } from "./form";
 
 const EmergencyAssistanceForm = () => {
     return (
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior="padding"
-            keyboardVerticalOffset={100}
-        >
+        <KeyboardAvoidingView style={{ flex: 1 }}>
             <EmergencyForm>
                 <Card
                     marginBottom="$2"

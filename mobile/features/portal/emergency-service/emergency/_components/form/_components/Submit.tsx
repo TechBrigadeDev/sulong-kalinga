@@ -1,20 +1,33 @@
 import { useEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
 import { IEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/interface";
+import { useEmergencyRequest } from "features/portal/emergency-service/emergency/hook";
 import { SubmitErrorHandler } from "react-hook-form";
-import { Button } from "tamagui";
+import { showToastable } from "react-native-toastable";
+import { Button, Spinner } from "tamagui";
 
 const SubmitEmergency = () => {
     const form = useEmergencyForm();
+    const {
+        mutate: submitEmergencyRequest,
+        isPending: isSubmitting,
+    } = useEmergencyRequest();
 
     const onSuccess = async (
         data: IEmergencyForm,
     ) => {
         try {
-            console.log(
-                "Submitting emergency data:",
-                data,
-            );
-            // Here you can handle the successful submission, e.g., send data to an API
+            submitEmergencyRequest(data);
+
+            showToastable({
+                title: "Request Submitted",
+                message:
+                    "Your emergency request has been submitted successfully.",
+                status: "success",
+            });
+            form.reset({
+                message: "",
+                emergency_type_id: "",
+            });
         } catch (error) {
             console.error(
                 "Error submitting form:",
@@ -48,17 +61,28 @@ const SubmitEmergency = () => {
         }
     };
 
+    const disabled =
+        form.formState.isSubmitting ||
+        isSubmitting;
+
     return (
         <Button
             onPress={handleSubmit}
-            disabled={form.formState.isSubmitting}
+            disabled={disabled}
             size="$5"
             mt="$8"
             theme="blue"
             fontSize="$5"
             fontWeight="600"
         >
-            {/* <Spinner /> */}
+            {form.formState.isSubmitting ||
+                (isSubmitting && (
+                    <Spinner
+                        size="small"
+                        mr="$2"
+                        color="$white1"
+                    />
+                ))}
             Submit
         </Button>
     );

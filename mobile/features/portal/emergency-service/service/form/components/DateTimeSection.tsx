@@ -47,7 +47,7 @@ const PreferredDate = () => {
     return (
         <Controller
             control={control}
-            name="preferred_date"
+            name="service_date"
             render={({ field, fieldState }) => (
                 <YStack flex={1} gap="$2">
                     <Label fontWeight="600">
@@ -148,7 +148,7 @@ const PreferredTime = () => {
     return (
         <Controller
             control={control}
-            name="preferred_time"
+            name="service_time"
             render={({ field, fieldState }) => (
                 <YStack flex={1} gap="$2">
                     <Label fontWeight="600">

@@ -1,16 +1,16 @@
 import { z } from "zod";
 
 export const serviceRequestFormSchema = z.object({
-    service_type: z
+    service_type_id: z
         .string()
         .min(1, "Service type is required"),
-    preferred_date: z
+    service_date: z
         .string()
         .min(1, "Preferred date is required"),
-    preferred_time: z
+    service_time: z
         .string()
         .min(1, "Preferred time is required"),
-    service_details: z
+    message: z
         .string()
         .min(
             10,

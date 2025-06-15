@@ -19,10 +19,10 @@ export const ServiceRequestForm = ({
             serviceRequestFormSchema,
         ),
         defaultValues: {
-            service_type: "other",
-            preferred_date: "",
-            preferred_time: "",
-            service_details: "",
+            service_type_id: "",
+            service_date: "",
+            service_time: "",
+            message: "",
         },
     });
 

@@ -7,14 +7,14 @@ const EmergencyDescription = () => {
     return (
         <Controller
             control={control}
-            name="emergency_description"
+            name="message"
             render={({ field }) => (
                 <>
-                    <Label htmlFor="emergency_description">
+                    <Label htmlFor="emergency_message">
                         Describe the Emergency
                     </Label>
                     <Input
-                        id="emergency_description"
+                        id="emergency_message"
                         value={field.value}
                         onChangeText={
                             field.onChange

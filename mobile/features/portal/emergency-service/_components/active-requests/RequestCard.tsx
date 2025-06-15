@@ -1,9 +1,15 @@
 import { format } from "date-fns";
+import {
+    useEmergencyCancelRequest,
+    useEmergencyDeleteRequest,
+} from "features/portal/emergency-service/emergency/hook";
 import { StyleSheet } from "react-native";
+import { showToastable } from "react-native-toastable";
 import {
     Button,
     Card,
     Paragraph,
+    Spinner,
     Text,
     XStack,
     YStack,
@@ -57,6 +63,50 @@ const RequestCard = ({
             );
         } catch {
             return dateString;
+        }
+    };
+
+    const handleEdit = () => {
+        console.log(`Edit request ${request.id}`);
+    };
+
+    const {
+        mutate: cancelRequest,
+        isPending: isCancelling,
+    } = useEmergencyCancelRequest();
+    const handleCancel = async () => {
+        try {
+            cancelRequest(request.id.toString());
+            showToastable({
+                title: "Request Cancelled",
+                message:
+                    "Your emergency request has been cancelled successfully.",
+            });
+        } catch (error) {
+            console.error(
+                `Error cancelling request ${request.id}:`,
+                error,
+            );
+        }
+    };
+
+    const {
+        mutate: deleteRequest,
+        isPending: isDeleting,
+    } = useEmergencyDeleteRequest();
+    const handleDelete = async () => {
+        try {
+            deleteRequest(request.id.toString());
+            showToastable({
+                title: "Request Deleted",
+                message:
+                    "Your emergency request has been deleted successfully.",
+            });
+        } catch (error) {
+            console.error(
+                `Error deleting request ${request.id}:`,
+                error,
+            );
         }
     };
 
@@ -124,46 +174,49 @@ const RequestCard = ({
             </XStack>
 
             {/* Action Buttons */}
-            {request.actions &&
-                request.actions.length > 0 && (
-                    <XStack
-                        style={
-                            styles.actionButtons
-                        }
-                    >
-                        {request.actions.map(
-                            (
-                                action: string,
-                                index: number,
-                            ) => (
-                                <Button
-                                    key={index}
-                                    size="$2"
-                                    variant={
-                                        action.toLowerCase() ===
-                                        "cancel"
-                                            ? "outlined"
-                                            : undefined
-                                    }
-                                    theme={
-                                        action.toLowerCase() ===
-                                        "cancel"
-                                            ? "red"
-                                            : "blue"
-                                    }
-                                    flex={1}
-                                    onPress={() => {
-                                        console.log(
-                                            `Action: ${action} for request ${request.id}`,
-                                        );
-                                    }}
-                                >
-                                    {action}
-                                </Button>
-                            ),
-                        )}
-                    </XStack>
-                )}
+            <XStack style={styles.actionButtons}>
+                {/* <Button
+                    size="$2"
+                    theme="blue"
+                    flex={1}
+                    onPress={handleEdit}
+                >
+                    Edit
+                </Button> */}
+                <Button
+                    size="$2"
+                    variant="outlined"
+                    theme="yellow"
+                    flex={1}
+                    onPress={handleCancel}
+                >
+                    {isCancelling ? (
+                        <Spinner
+                            size="small"
+                            mr="$2"
+                        />
+                    ) : (
+                        "Cancel"
+                    )}
+                </Button>
+                <Button
+                    size="$2"
+                    variant="outlined"
+                    theme="red"
+                    flex={1}
+                    onPress={handleDelete}
+                    disabled={isDeleting}
+                >
+                    {isDeleting ? (
+                        <Spinner
+                            size="small"
+                            mr="$2"
+                        />
+                    ) : (
+                        "Delete"
+                    )}
+                </Button>
+            </XStack>
         </Card>
     );
 };

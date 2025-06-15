@@ -4,6 +4,7 @@ import { IRole } from "features/auth/auth.interface";
 import { portalPath } from "features/auth/auth.util";
 import { z } from "zod";
 
+import { IServiceRequestForm } from "./form/schema";
 import { serviceTypes } from "./schema";
 
 class ServiceController extends Controller {
@@ -38,6 +39,33 @@ class ServiceController extends Controller {
             );
             throw new Error(
                 "Failed to fetch emergency types",
+            );
+        }
+    }
+
+    async postServiceRequest(
+        role: IRole,
+        data: IServiceRequestForm,
+    ) {
+        try {
+            const path = portalPath(
+                role,
+                "/emergency-service/service/submit",
+            );
+
+            const response = await this.api.post(
+                path,
+                data,
+            );
+
+            return response.data;
+        } catch (error) {
+            log(
+                "Error submitting service request:",
+                error,
+            );
+            throw new Error(
+                "Failed to submit service request",
             );
         }
     }

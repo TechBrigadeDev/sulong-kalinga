@@ -26,7 +26,7 @@ const ServiceType = () => {
     return (
         <Controller
             control={control}
-            name="service_type"
+            name="service_type_id"
             render={({ field, fieldState }) => (
                 <YStack gap="$2">
                     <Label fontWeight="600">
