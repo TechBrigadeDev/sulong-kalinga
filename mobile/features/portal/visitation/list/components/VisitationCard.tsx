@@ -1,3 +1,4 @@
+import { formatTime } from "common/date";
 import { formatDistance } from "date-fns";
 import { IVisitation } from "features/portal/visitation/type";
 import {
@@ -6,68 +7,56 @@ import {
     MapPin,
 } from "lucide-react-native";
 import { useMemo } from "react";
-import {
-    Card,
-    GetThemeValueForKey,
-    Text,
-    XStack,
-    YStack,
-} from "tamagui";
+import { StyleSheet, View } from "react-native";
+import { Card, Text, YStack } from "tamagui";
 
 interface Props {
     visitation: IVisitation;
 }
 
-const VisitationCard = ({ visitation }: Props) => {
-    const occurrenceDate = new Date(visitation.occurrence_date);
+const VisitationCard = ({
+    visitation,
+}: Props) => {
+    const occurrenceDate = new Date(
+        visitation.occurrence_date,
+    );
     const now = new Date();
 
-    const { backgroundColor, textColor } = useMemo(() => {
-        const getStatusColors = (status: IVisitation["status"]): {
-            backgroundColor: GetThemeValueForKey<"backgroundColor">;
-            textColor: GetThemeValueForKey<"color">;
-        } => {
-            switch (status) {
+    const { backgroundColor, textColor } =
+        useMemo(() => {
+            switch (visitation.status) {
                 case "completed":
                     return {
-                        backgroundColor: "$green2",
-                        textColor: "$green11",
+                        backgroundColor:
+                            "#dcfce7",
+                        textColor: "#166534",
                     };
                 case "canceled":
                     return {
-                        backgroundColor: "$red2",
-                        textColor: "$red11",
+                        backgroundColor:
+                            "#fee2e2",
+                        textColor: "#991b1b",
                     };
                 case "scheduled":
                     return {
-                        backgroundColor: "$blue2",
-                        textColor: "$blue11",
+                        backgroundColor:
+                            "#dbeafe",
+                        textColor: "#1e40af",
                     };
                 default:
                     return {
-                        backgroundColor: "$gray2",
-                        textColor: "$gray11",
+                        backgroundColor:
+                            "#f3f4f6",
+                        textColor: "#374151",
                     };
             }
-        };
-
-        return getStatusColors(visitation.status);
-    }, [visitation.status]);
-
-    const formatTime = (timeString: string | null) => {
-        if (!timeString) return "Flexible Time";
-        try {
-            return new Date(timeString).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-            });
-        } catch {
-            return "Invalid Time";
-        }
-    };
+        }, [visitation.status]);
 
     const getTimeRange = () => {
-        if (!visitation.start_time || !visitation.end_time) {
+        if (
+            !visitation.start_time ||
+            !visitation.end_time
+        ) {
             return "Flexible Time";
         }
         return `${formatTime(visitation.start_time)} - ${formatTime(visitation.end_time)}`;
@@ -85,7 +74,9 @@ const VisitationCard = ({ visitation }: Props) => {
         }
     };
 
-    const getStatusLabel = (status: IVisitation["status"]) => {
+    const getStatusLabel = (
+        status: IVisitation["status"],
+    ) => {
         switch (status) {
             case "scheduled":
                 return "Scheduled";
@@ -101,10 +92,10 @@ const VisitationCard = ({ visitation }: Props) => {
     return (
         <Card
             marginBottom="$3"
-            backgroundColor={backgroundColor}
-            borderRadius="$4"
-            borderWidth={1}
-            borderColor="$borderColor"
+            style={[
+                styles.card,
+                { backgroundColor },
+            ]}
             elevation="$1"
             pressStyle={{
                 scale: 0.98,
@@ -114,54 +105,74 @@ const VisitationCard = ({ visitation }: Props) => {
             <Card.Header p="$4">
                 <YStack gap="$3">
                     {/* Status Badge */}
-                    <XStack justifyContent="space-between" alignItems="center">
-                        <Text
-                            fontSize="$3"
-                            fontWeight="600"
-                            color={textColor}
-                            backgroundColor="$background"
-                            paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
+                    <View
+                        style={
+                            styles.statusHeader
+                        }
+                    >
+                        <View
+                            style={
+                                styles.statusBadge
+                            }
                         >
-                            {getStatusLabel(visitation.status)}
-                        </Text>
+                            <Text
+                                fontSize="$3"
+                                fontWeight="600"
+                                style={{
+                                    color: textColor,
+                                }}
+                            >
+                                {getStatusLabel(
+                                    visitation.status,
+                                )}
+                            </Text>
+                        </View>
                         <Text
                             fontSize="$2"
-                            color="$gray10"
+                            color="#6b7280"
                             fontWeight="500"
                         >
                             {getRelativeTime()}
                         </Text>
-                    </XStack>
+                    </View>
 
                     {/* Date Information */}
-                    <XStack alignItems="center" gap="$2">
-                        <Calendar size={16} color="$gray10" />
+                    <View style={styles.infoRow}>
+                        <Calendar
+                            size={16}
+                            color="#6b7280"
+                        />
                         <Text
                             fontSize="$4"
                             fontWeight="600"
-                            color="$color"
+                            color="#111827"
                         >
-                            {occurrenceDate.toLocaleDateString("en-US", {
-                                weekday: "long",
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                            })}
+                            {occurrenceDate.toLocaleDateString(
+                                "en-US",
+                                {
+                                    weekday:
+                                        "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                },
+                            )}
                         </Text>
-                    </XStack>
+                    </View>
 
                     {/* Time Information */}
-                    <XStack alignItems="center" gap="$2">
-                        <Clock size={16} color="$gray10" />
+                    <View style={styles.infoRow}>
+                        <Clock
+                            size={16}
+                            color="#6b7280"
+                        />
                         <Text
                             fontSize="$3"
-                            color="$gray11"
+                            color="#4b5563"
                         >
                             {getTimeRange()}
                         </Text>
-                    </XStack>
+                    </View>
 
                     {/* Notes if available */}
                     {visitation.notes && (
@@ -169,13 +180,13 @@ const VisitationCard = ({ visitation }: Props) => {
                             <Text
                                 fontSize="$3"
                                 fontWeight="600"
-                                color="$gray11"
+                                color="#374151"
                             >
                                 Notes:
                             </Text>
                             <Text
                                 fontSize="$3"
-                                color="$gray10"
+                                color="#6b7280"
                                 lineHeight="$1"
                             >
                                 {visitation.notes}
@@ -185,21 +196,60 @@ const VisitationCard = ({ visitation }: Props) => {
 
                     {/* Modified Indicator */}
                     {visitation.is_modified && (
-                        <XStack alignItems="center" gap="$1">
-                            <MapPin size={12} color="$orange10" />
+                        <View
+                            style={
+                                styles.modifiedRow
+                            }
+                        >
+                            <MapPin
+                                size={12}
+                                color="#f59e0b"
+                            />
                             <Text
                                 fontSize="$2"
-                                color="$orange10"
-                                fontStyle="italic"
+                                color="#f59e0b"
+                                style={{
+                                    fontStyle:
+                                        "italic",
+                                }}
                             >
                                 Schedule modified
                             </Text>
-                        </XStack>
+                        </View>
                     )}
                 </YStack>
             </Card.Header>
         </Card>
     );
 };
+
+const styles = StyleSheet.create({
+    card: {
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+    },
+    statusHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    statusBadge: {
+        backgroundColor: "#ffffff",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    infoRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    modifiedRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+    },
+});
 
 export default VisitationCard;

@@ -1,4 +1,7 @@
-import { formatDate } from "common/date";
+import {
+    formatDate,
+    formatTime,
+} from "common/date";
 import { IInternalAppointment } from "features/scheduling/internal/type";
 import {
     BookUser,
@@ -23,19 +26,8 @@ interface Props extends YStackProps {
 
 const InternalAppointmentDetail = ({
     appointment,
-    ...props
+    ..._props
 }: Props) => {
-    const formatTime = (time?: string) => {
-        if (!time) return "";
-        return new Date(time).toLocaleTimeString(
-            [],
-            {
-                hour: "2-digit",
-                minute: "2-digit",
-            },
-        );
-    };
-
     return (
         <YStack gap="$4">
             {/* Basic Details Card */}

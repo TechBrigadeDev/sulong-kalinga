@@ -118,6 +118,11 @@ export const QK = {
             "visitations/getVisitations",
         ],
     },
+    medication: {
+        getMedications: () => [
+            "medication/getMedications",
+        ],
+    },
 };
 
 export const setDataQK = async (

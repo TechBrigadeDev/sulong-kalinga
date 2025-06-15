@@ -53,7 +53,7 @@ const MedicationDetail = ({
     const fullName = `${scheduleData.beneficiary?.first_name} ${scheduleData.beneficiary?.last_name}`;
 
     return (
-        <ScrollView p="$4">
+        <ScrollView>
             <Stack.Screen
                 options={{
                     headerTitle: fullName,

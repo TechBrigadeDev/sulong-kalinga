@@ -1,12 +1,29 @@
+import LoadingScreen from "components/loaders/LoadingScreen";
 import { Stack } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "tamagui";
+import { useGetMedications } from "features/portal/medication/hook";
+import PortalMedicationList from "features/portal/medication/list";
+import PortalMedicationSearch from "features/portal/medication/list/_components/Search";
+import { YStack } from "tamagui";
 
 const Screen = () => {
+    const { isLoading } = useGetMedications();
+
+    const List = () =>
+        isLoading ? (
+            <LoadingScreen />
+        ) : (
+            <PortalMedicationList />
+        );
+
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <Text>Medication</Text>
-        </SafeAreaView>
+        <YStack flex={1} bg="$background">
+            <YStack gap="$3" p="$4" pb="$2">
+                <PortalMedicationSearch />
+            </YStack>
+            <YStack flex={1}>
+                <List />
+            </YStack>
+        </YStack>
     );
 };
 

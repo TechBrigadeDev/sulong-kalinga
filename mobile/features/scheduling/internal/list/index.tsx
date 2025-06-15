@@ -1,4 +1,7 @@
-import { formatDate } from "common/date";
+import {
+    formatDate,
+    formatTime,
+} from "common/date";
 import { QK, setDataQK } from "common/query";
 import { weekCalendarStore } from "components/calendars/WeekCalendar/store";
 import FlatList from "components/FlatList";
@@ -146,19 +149,13 @@ const Schedule = ({
                         color={textColor}
                         ml="$1"
                     >
-                        {new Date(
+                        {formatTime(
                             appointment.start_time,
-                        ).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}{" "}
+                        )}{" "}
                         -{" "}
-                        {new Date(
+                        {formatTime(
                             appointment.end_time,
-                        ).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}
+                        )}
                     </Text>
                 </XStack>
             );

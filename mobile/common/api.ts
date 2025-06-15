@@ -2,6 +2,7 @@ import axios, {
     AxiosError,
     AxiosInstance,
 } from "axios";
+import { IRole } from "features/auth/auth.interface";
 import { authStore } from "features/auth/auth.store";
 
 console.log(
@@ -44,6 +45,8 @@ axiosClient.interceptors.response.use(
 );
 
 export class Controller {
+    public role: IRole;
+
     constructor(
         public api: AxiosInstance = axiosClient,
     ) {
@@ -62,6 +65,12 @@ export class Controller {
             } else {
                 delete this.api.defaults.headers
                     .common["Authorization"];
+            }
+        });
+
+        authStore.subscribe((state) => {
+            if (state.role) {
+                this.role = state.role;
             }
         });
     }

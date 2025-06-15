@@ -1,4 +1,7 @@
-import { isSameDay } from "common/date";
+import {
+    formatTime,
+    isSameDay,
+} from "common/date";
 import { QK, setDataQK } from "common/query";
 import { weekCalendarStore } from "components/calendars/WeekCalendar/store";
 import FlatList from "components/FlatList";
@@ -139,13 +142,13 @@ const Schedule = ({
         }
         return (
             <Text>
-                {new Date(
+                {formatTime(
                     visitation.start_time ?? "",
-                ).toLocaleTimeString()}{" "}
+                )}{" "}
                 -{" "}
-                {new Date(
+                {formatTime(
                     visitation.end_time ?? "",
-                ).toLocaleTimeString()}
+                )}
             </Text>
         );
     }, [

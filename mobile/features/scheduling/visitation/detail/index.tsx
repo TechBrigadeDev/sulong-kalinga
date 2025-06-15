@@ -13,7 +13,7 @@ interface Props extends YStackProps {
 
 const VisitationDetail = ({
     visitation,
-    ...props
+    ..._props
 }: Props) => {
     const beneficiaryFullName = `${visitation.beneficiary.first_name} ${visitation.beneficiary.last_name}`;
     const careWorkerFullName = `${visitation.care_worker.first_name} ${visitation.care_worker.last_name}`;

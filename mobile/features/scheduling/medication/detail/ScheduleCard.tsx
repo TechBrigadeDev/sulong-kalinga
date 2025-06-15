@@ -1,3 +1,4 @@
+import { formatTime } from "common/date";
 import {
     AlertTriangle,
     Clock,
@@ -36,16 +37,6 @@ const ScheduleCard = (
         with_food_night,
         as_needed,
     } = props || {};
-    const formatTime = (time?: string) => {
-        if (!time) return "";
-        return new Date(time).toLocaleTimeString(
-            [],
-            {
-                hour: "numeric",
-                minute: "numeric",
-            },
-        );
-    };
 
     return (
         <Card mb="$2">
