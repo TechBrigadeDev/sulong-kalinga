@@ -1,12 +1,11 @@
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
-import ActiveRequests from "features/emergency-service/_components/active-requests";
-import RequestHistory from "features/emergency-service/_components/request-history";
-import { useEmergencyServiceRequests } from "features/emergency-service/hook";
+import ActiveRequests from "features/portal/emergency-service/_components/active-requests";
+import EmergencyServiceFormSelector from "features/portal/emergency-service/_components/form-selector";
+import RequestHistory from "features/portal/emergency-service/_components/request-history";
+import { useEmergencyServiceRequests } from "features/portal/emergency-service/hook";
 import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import EmergencyServiceFormSelector from "~/features/emergency-service/_components/form-selector";
 
 const Screen = () => {
     const { refetch: refetchRequests } =

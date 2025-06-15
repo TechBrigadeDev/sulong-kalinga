@@ -1,60 +1,21 @@
-import { Href, Link } from "expo-router";
+import {
+    IMenuItem,
+    portalMenuItems,
+    staffMenuItems,
+} from "components/screens/Home/paths";
+import { Link } from "expo-router";
+import { authStore } from "features/auth/auth.store";
 import { icons } from "lucide-react-native";
 import {
     StyleSheet,
     TouchableNativeFeedback,
 } from "react-native";
-import {
-    Card,
-    GetThemeValueForKey,
-    Text,
-    View,
-} from "tamagui";
+import { Card, Text, View } from "tamagui";
 
 const menuItems: IMenuItem[] = [
-    {
-        title: "Emergency & Service",
-        href: "/(tabs)/emergency-service",
-        color: "#ff0202",
-        icon: "ClipboardPlus",
-    },
-    {
-        title: "Medication",
-        href: "/scheduling/medication",
-        color: "#0222FF",
-        icon: "Pill",
-    },
-    {
-        title: "Visitations",
-        href: "/scheduling/visitations",
-        color: "#FF0000",
-        icon: "Calendar",
-    },
-    {
-        title: "Shifts",
-        href: "/(tabs)/shifts",
-        color: "#FCA500",
-        icon: "Clock",
-    },
-    {
-        title: "Care Plan",
-        href: "/options/reports/care-records",
-        color: "#1B8000",
-        icon: "FileText",
-    },
-    {
-        title: "Internal Appointments",
-        href: "/scheduling/internal",
-        color: "#800080",
-        icon: "Users",
-    },
+    ...portalMenuItems,
+    ...staffMenuItems,
 ];
-interface IMenuItem {
-    title: string;
-    href: Href;
-    color: GetThemeValueForKey<"backgroundColor">;
-    icon: keyof typeof icons;
-}
 
 const HomeMenu = () => {
     return (
@@ -84,7 +45,16 @@ const MenuCard = ({
 }: {
     item: IMenuItem;
 }) => {
+    const { role } = authStore();
     const Icon = icons[item.icon];
+
+    if (
+        role &&
+        item.permissions.length > 0 &&
+        !item.permissions.includes(role)
+    ) {
+        return null;
+    }
 
     return (
         <Link href={item.href} asChild>

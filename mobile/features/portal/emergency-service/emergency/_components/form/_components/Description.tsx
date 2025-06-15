@@ -1,4 +1,4 @@
-import { useEmergencyForm } from "features/emergency-service/emergency/_components/form/form";
+import { useEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
 import { Controller } from "react-hook-form";
 import { Input, Label } from "tamagui";
 

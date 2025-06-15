@@ -1,5 +1,5 @@
 import FlatList from "components/FlatList";
-import { useEmergencyServiceRequests } from "features/emergency-service/hook";
+import { useEmergencyServiceRequests } from "features/portal/emergency-service/hook";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import {

@@ -35,6 +35,20 @@ export const hasRole = (...roles: IRole[]) => {
     return roles.includes(currentRole);
 };
 
+export const isPortal = () => {
+    const currentRole = authStore().role;
+
+    if (!currentRole) {
+        return false;
+    }
+
+    return (
+        [...(staffRoles as string[])].includes(
+            currentRole,
+        ) === false
+    );
+};
+
 export const isStaff = () => {
     const currentRole = authStore().role;
 

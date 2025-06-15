@@ -3,7 +3,7 @@ import {
     DateTimePickerAndroid,
     DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { useServiceRequestForm } from "features/emergency-service/service/form/form";
+import { useServiceRequestForm } from "features/portal/emergency-service/service/form/form";
 import { Controller } from "react-hook-form";
 import { Platform } from "react-native";
 import {

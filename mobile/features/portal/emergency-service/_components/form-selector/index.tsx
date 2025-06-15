@@ -1,5 +1,5 @@
-import EmergencyAssistanceForm from "features/emergency-service/emergency/_components/form";
-import ServiceForm from "features/emergency-service/service/form";
+import EmergencyAssistanceForm from "features/portal/emergency-service/emergency/_components/form";
+import ServiceForm from "features/portal/emergency-service/service/form";
 import { ReactNode } from "react";
 import {
     Separator,

@@ -1,6 +1,5 @@
-import { useServiceRequestForm } from "features/emergency-service/service/form/form";
-import { useServiceTypes } from "features/emergency-service/service/hook";
-import { useMemo } from "react";
+import { useEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
+import { useEmergencyTypes } from "features/portal/emergency-service/emergency/hook";
 import { Controller } from "react-hook-form";
 import {
     Adapt,
@@ -11,26 +10,22 @@ import {
     YStack,
 } from "tamagui";
 
-const ServiceType = () => {
-    const { control } = useServiceRequestForm();
-    const { data } = useServiceTypes();
+const EmergencyType = () => {
+    const { data: emergencyTypes, isLoading } =
+        useEmergencyTypes();
 
-    const serviceTypes = useMemo(() => {
-        if (!data) return [];
+    const { control } = useEmergencyForm();
+    const disabled = isLoading || !emergencyTypes;
 
-        return data.map((st) => ({
-            label: st.name,
-            value: st.service_type_id.toString(),
-        }));
-    }, [data]);
     return (
         <Controller
             control={control}
-            name="service_type"
+            disabled={disabled}
+            name="emergency_type_id"
             render={({ field, fieldState }) => (
-                <YStack gap="$2">
-                    <Label fontWeight="600">
-                        Service Type *
+                <YStack flex={1} gap="$2">
+                    <Label htmlFor="emergency_type_id">
+                        Emergency Type
                     </Label>
                     <Select
                         value={field.value || ""}
@@ -39,37 +34,9 @@ const ServiceType = () => {
                         }
                     >
                         <Select.Trigger>
-                            <Select.Value placeholder="Select service type" />
+                            <Select.Value placeholder="Select status" />
                         </Select.Trigger>
-
-                        <Adapt
-                            when="maxMd"
-                            platform="touch"
-                        >
-                            <Sheet
-                                modal
-                                dismissOnSnapToBottom
-                            >
-                                <Sheet.Frame>
-                                    <Sheet.ScrollView>
-                                        <Adapt.Contents />
-                                    </Sheet.ScrollView>
-                                </Sheet.Frame>
-                                <Sheet.Overlay
-                                    animation="lazy"
-                                    enterStyle={{
-                                        opacity: 0,
-                                    }}
-                                    exitStyle={{
-                                        opacity: 0,
-                                    }}
-                                />
-                            </Sheet>
-                        </Adapt>
-
-                        <Select.Content
-                            zIndex={200000}
-                        >
+                        <Select.Content>
                             <Select.ScrollUpButton />
                             <Select.Viewport
                                 bg="$accent1"
@@ -79,33 +46,49 @@ const ServiceType = () => {
                                     minHeight: 200,
                                 }}
                             >
-                                {serviceTypes.map(
+                                {emergencyTypes?.map(
                                     (
                                         option,
                                         index,
                                     ) => (
                                         <Select.Item
                                             key={
-                                                option.value
+                                                index.toString() +
+                                                option.emergency_type_id
+                                            }
+                                            id={
+                                                "emergency_type_id_" +
+                                                option.emergency_type_id
                                             }
                                             index={
                                                 index
                                             }
-                                            value={
-                                                option.value
-                                            }
+                                            value={option.emergency_type_id.toString()}
                                         >
                                             <Select.ItemText>
                                                 {
-                                                    option.label
+                                                    option.name
                                                 }
                                             </Select.ItemText>
                                         </Select.Item>
                                     ),
                                 )}
                             </Select.Viewport>
-                            <Select.ScrollDownButton />
                         </Select.Content>
+                        <Select.Adapt
+                            when="maxMd"
+                            platform="touch"
+                        >
+                            <Sheet
+                                modal
+                                animation="quicker"
+                            >
+                                <Sheet.Frame>
+                                    <Adapt.Contents />
+                                </Sheet.Frame>
+                                <Sheet.Overlay bg="transparent" />
+                            </Sheet>
+                        </Select.Adapt>
                     </Select>
                     {fieldState.error && (
                         <Text
@@ -124,4 +107,4 @@ const ServiceType = () => {
     );
 };
 
-export default ServiceType;
+export default EmergencyType;

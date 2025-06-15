@@ -1,4 +1,5 @@
 import TabButton from "components/screens/Home/_components/button";
+import { portalMenuItems } from "components/screens/Home/paths";
 import { useRouter } from "expo-router";
 import {
     TabList,
@@ -6,6 +7,7 @@ import {
     TabSlot,
     TabTrigger,
 } from "expo-router/ui";
+import { isPortal } from "features/auth/auth.util";
 import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View } from "tamagui";
@@ -63,13 +65,24 @@ export default function Layout() {
                             display: "none",
                         }}
                     />
-                    <TabTrigger
-                        name="/(tabs)/emergency-service/index"
-                        href="/(tabs)/emergency-service"
-                        style={{
-                            display: "none",
-                        }}
-                    />
+                    {isPortal() &&
+                        portalMenuItems.map(
+                            (item, idx) => (
+                                <TabTrigger
+                                    key={idx}
+                                    name={
+                                        item.name
+                                    }
+                                    href={
+                                        item.href
+                                    }
+                                    style={{
+                                        display:
+                                            "none",
+                                    }}
+                                />
+                            ),
+                        )}
                 </View>
             </TabList>
         </Tabs>

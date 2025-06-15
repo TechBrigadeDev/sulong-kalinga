@@ -1,5 +1,5 @@
-import { useEmergencyForm } from "features/emergency-service/emergency/_components/form/form";
-import { IEmergencyForm } from "features/emergency-service/emergency/_components/form/interface";
+import { useEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
+import { IEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/interface";
 import { SubmitErrorHandler } from "react-hook-form";
 import { Button } from "tamagui";
 

@@ -1,9 +1,8 @@
-import { useServiceRequestForm } from "features/emergency-service/service/form/form";
+import { useServiceRequestForm } from "features/portal/emergency-service/service/form/form";
+import { IServiceRequestForm } from "features/portal/emergency-service/service/form/schema";
 import { SubmitErrorHandler } from "react-hook-form";
 import { showToastable } from "react-native-toastable";
 import { Button } from "tamagui";
-
-import { IServiceRequestForm } from "~/features/emergency-service/service/form/schema";
 
 const SubmitServiceRequest = () => {
     const form = useServiceRequestForm();
