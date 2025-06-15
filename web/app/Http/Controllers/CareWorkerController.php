@@ -17,6 +17,7 @@ use App\Models\Beneficiary;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use App\Services\UserManagementService;
+use App\Services\UploadService;
 
 use App\Services\LogService;
 use App\Enums\LogType;
@@ -24,13 +25,15 @@ use App\Enums\LogType;
 
 class CareWorkerController extends Controller
 {
-
     protected $userManagementService;
-    
-    public function __construct(UserManagementService $userManagementService, LogService $logService)
+    protected $logService;
+    protected $uploadService;
+
+    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
     {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     protected function getRolePrefixView()
@@ -157,11 +160,7 @@ class CareWorkerController extends Controller
     public function updateCareWorker(Request $request, $id)
     {
         $rolePrefix = $this->getRolePrefixRoute();
-
-        // Find the care worker by ID
         $careworker = User::where('role_id', 3)->findOrFail($id);
-
-        // Store original care manager ID to detect changes
         $originalCareManagerId = $careworker->assigned_care_manager_id;
 
         // Validate the request data
@@ -266,44 +265,54 @@ class CareWorkerController extends Controller
         }
 
         try {
-            // Handle file uploads if any
             $firstName = $request->input('first_name');
             $lastName = $request->input('last_name');
-            $uniqueIdentifier = time() . '_' . Str::random(5);
+            $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
-            // Process new photo if uploaded
+            // --- UploadService for photo ---
             if ($request->hasFile('careworker_photo')) {
-                $careworkerPhotoPath = $request->file('careworker_photo')->storeAs(
-                    'uploads/careworker_photos', 
-                    $firstName . '' . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('careworker_photo')->getClientOriginalExtension(),
-                    'public'
+                if ($careworker->photo) {
+                    $this->uploadService->delete($careworker->photo, 'spaces-private');
+                }
+                $careworkerPhotoPath = $this->uploadService->upload(
+                    $request->file('careworker_photo'),
+                    'spaces-private',
+                    'uploads/careworker_photos',
+                    [
+                        'filename' => $firstName . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('careworker_photo')->getClientOriginalExtension()
+                    ]
                 );
                 $careworker->photo = $careworkerPhotoPath;
-            } else {
-                // If no new photo is uploaded, keep the existing one
-                if ($careworker->photo) {
-                    $careworkerPhotoPath = $careworker->photo;
-                } else {
-                    $careworkerPhotoPath = null; // No photo available
-                }
             }
 
-            // Process new government ID if uploaded
+            // --- UploadService for government ID ---
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/careworker_government_ids', 
-                    $firstName . '' . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                if ($careworker->government_issued_id) {
+                    $this->uploadService->delete($careworker->government_issued_id, 'spaces-private');
+                }
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/careworker_government_ids',
+                    [
+                        'filename' => $firstName . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
                 $careworker->government_issued_id = $governmentIDPath;
             }
 
-            // Process new resume if uploaded
+            // --- UploadService for resume ---
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/careworker_resumes', 
-                    $firstName . '' . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                if ($careworker->cv_resume) {
+                    $this->uploadService->delete($careworker->cv_resume, 'spaces-private');
+                }
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/careworker_resumes',
+                    [
+                        'filename' => $firstName . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
                 $careworker->cv_resume = $resumePath;
             }
@@ -556,32 +565,46 @@ class CareWorkerController extends Controller
         }
 
         try {
-            // Handle file uploads and rename files - existing code
             $firstName = $request->input('first_name');
             $lastName = $request->input('last_name');
-            $uniqueIdentifier = time() . '_' . Str::random(5);
+            $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
 
+            // --- UploadService for photo ---
+            $careworkerPhotoPath = null;
             if ($request->hasFile('careworker_photo')) {
-                $administratorPhotoPath = $request->file('careworker_photo')->storeAs(
-                    'uploads/careworker_photos', 
-                    $firstName . '' . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('careworker_photo')->getClientOriginalExtension(),
-                    'public'
+                $careworkerPhotoPath = $this->uploadService->upload(
+                    $request->file('careworker_photo'),
+                    'spaces-private',
+                    'uploads/careworker_photos',
+                    [
+                        'filename' => $firstName . $lastName . '_photo' . $uniqueIdentifier . '.' . $request->file('careworker_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
-    
+
+            // --- UploadService for government ID ---
+            $governmentIDPath = null;
             if ($request->hasFile('government_ID')) {
-                $governmentIDPath = $request->file('government_ID')->storeAs(
-                    'uploads/careworker_government_ids', 
-                    $firstName . '' . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-                    'public'
+                $governmentIDPath = $this->uploadService->upload(
+                    $request->file('government_ID'),
+                    'spaces-private',
+                    'uploads/careworker_government_ids',
+                    [
+                        'filename' => $firstName . $lastName . '_government_id' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension()
+                    ]
                 );
             }
-    
+
+            // --- UploadService for resume ---
+            $resumePath = null;
             if ($request->hasFile('resume')) {
-                $resumePath = $request->file('resume')->storeAs(
-                    'uploads/careworker_resumes', 
-                    $firstName . '' . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-                    'public'
+                $resumePath = $this->uploadService->upload(
+                    $request->file('resume'),
+                    'spaces-private',
+                    'uploads/careworker_resumes',
+                    [
+                        'filename' => $firstName . $lastName . '_resume' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension()
+                    ]
                 );
             }
 
