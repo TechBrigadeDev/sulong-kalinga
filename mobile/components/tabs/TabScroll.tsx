@@ -15,12 +15,14 @@ import { GetProps, ScrollView } from "tamagui";
 interface Props
     extends GetProps<typeof ScrollView> {
     showScrollUp?: boolean;
+    tabbed?: boolean;
 }
 
 const TabScroll = ({
     children,
     contentContainerStyle,
     showScrollUp = false,
+    tabbed = false,
     ...props
 }: Props) => {
     const scrollViewRef = useRef<any>(null);
@@ -137,6 +139,7 @@ const TabScroll = ({
                     styles.scrollUpButton,
                     {
                         opacity: scrollUpOpacity,
+                        bottom: tabbed ? 100 : 20,
                     },
                 ]}
                 pointerEvents={
@@ -161,6 +164,7 @@ const TabScroll = ({
                     {
                         opacity:
                             scrollDownOpacity,
+                        bottom: tabbed ? 85 : 5,
                     },
                 ]}
                 pointerEvents="none"
@@ -178,7 +182,6 @@ const styles = StyleSheet.create({
     scrollUpButton: {
         position: "absolute",
         right: 20,
-        bottom: 20,
         backgroundColor: "#000",
         borderRadius: 30,
         padding: 12,
@@ -195,7 +198,6 @@ const styles = StyleSheet.create({
         position: "absolute",
         left: "50%",
         marginLeft: -24,
-        bottom: 5,
         padding: 12,
     },
     scrollPressable: {

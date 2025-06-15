@@ -63,6 +63,13 @@ export default function Layout() {
                             display: "none",
                         }}
                     />
+                    <TabTrigger
+                        name="/(tabs)/emergency-service/index"
+                        href="/(tabs)/emergency-service"
+                        style={{
+                            display: "none",
+                        }}
+                    />
                 </View>
             </TabList>
         </Tabs>

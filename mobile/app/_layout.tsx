@@ -54,12 +54,6 @@ function RootLayoutNav() {
         authStore((state) => state.token) !==
         null;
 
-    const isStaff = authStore(
-        (state) =>
-            state.role !== "beneficiary" &&
-            state.role !== "family_member",
-    );
-
     return (
         <Providers>
             <GestureHandlerRootView
@@ -99,17 +93,6 @@ function RootLayoutNav() {
                                     false,
                             }}
                         />
-                        <Stack.Protected
-                            guard={!isStaff}
-                        >
-                            <Stack.Screen
-                                name="(portal)"
-                                options={{
-                                    headerShown:
-                                        false,
-                                }}
-                            />
-                        </Stack.Protected>
                     </Stack.Protected>
                     <Stack.Screen name="login" />
                 </Stack>

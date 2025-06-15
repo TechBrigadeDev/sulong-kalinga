@@ -14,7 +14,7 @@ import {
 const menuItems: IMenuItem[] = [
     {
         title: "Emergency & Service",
-        href: "/(portal)/emergency-service",
+        href: "/(tabs)/emergency-service",
         color: "#ff0202",
         icon: "ClipboardPlus",
     },
