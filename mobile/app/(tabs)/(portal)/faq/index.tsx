@@ -1,11 +1,11 @@
 import { Stack } from "expo-router";
+import FAQList from "features/portal/faq/list";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "tamagui";
 
 const Screen = () => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <Text>FAQ</Text>
+            <FAQList />
         </SafeAreaView>
     );
 };
