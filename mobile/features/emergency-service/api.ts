@@ -45,7 +45,7 @@ class EmergencyServicenController extends Controller {
         );
         try {
             const response =
-                await this.api.get(path);
+                await this.api.post(path);
 
             const validate =
                 await listResponseSchema(

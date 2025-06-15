@@ -32,10 +32,16 @@ const ActiveRequests = () => {
                 borderRadius={8}
                 borderWidth={1}
                 elevate
-                gap="$4"
+                overflow="hidden"
             >
-                <Card.Header>
-                    <H5>Active Requests</H5>
+                <Card.Header
+                    padded
+                    paddingBlock="$2"
+                    bg="#2d3748"
+                >
+                    <H5 color="$white1">
+                        Active Requests
+                    </H5>
                 </Card.Header>
                 <YStack
                     style={styles.centerContainer}
@@ -53,9 +59,19 @@ const ActiveRequests = () => {
 
     if (error) {
         return (
-            <Card marginTop="$4">
-                <Card.Header>
-                    <H5>
+            <Card
+                marginBottom="$2"
+                borderRadius={8}
+                borderWidth={1}
+                elevate
+                overflow="hidden"
+            >
+                <Card.Header
+                    padded
+                    paddingBlock="$2"
+                    bg="#2d3748"
+                >
+                    <H5 color="$white1">
                         Active Emergency Requests
                     </H5>
                 </Card.Header>

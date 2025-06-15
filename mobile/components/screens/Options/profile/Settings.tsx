@@ -12,9 +12,9 @@ import Badge from "~/components/Bagde";
 import UserAvatar from "~/features/user/components/UserAvatar";
 import { useUserProfile } from "~/features/user/user.hook";
 
+import Contact from "./Contact";
 import Contributions from "./Contributions";
 import Information from "./Informations";
-import Contact from "./Contact";
 
 const ProfileSettings = () => {
     const {

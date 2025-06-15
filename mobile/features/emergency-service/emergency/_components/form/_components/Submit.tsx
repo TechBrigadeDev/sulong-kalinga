@@ -1,7 +1,7 @@
 import { useEmergencyForm } from "features/emergency-service/emergency/_components/form/form";
 import { IEmergencyForm } from "features/emergency-service/emergency/_components/form/interface";
 import { SubmitErrorHandler } from "react-hook-form";
-import { Button, Spinner } from "tamagui";
+import { Button } from "tamagui";
 
 const SubmitEmergency = () => {
     const form = useEmergencyForm();
