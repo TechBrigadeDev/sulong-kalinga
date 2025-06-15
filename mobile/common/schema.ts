@@ -19,3 +19,19 @@ export const itemResponseSchema = <
         success: z.boolean(),
         data: itemSchema,
     });
+
+export const messageResponseSchema = (
+    message: string,
+) =>
+    z.object({
+        success: z.boolean(),
+        message: z
+            .string()
+            .refine(
+                (msg) => msg.includes(message),
+                {
+                    message: `Message must contain "${message}"`,
+                },
+            ),
+        data: z.any().optional(),
+    });

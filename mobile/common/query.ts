@@ -131,6 +131,10 @@ export const QK = {
             "carePlan/getCarePlanById",
             id,
         ],
+        acknowledgeCarePlan: (id: string) => [
+            "carePlan/acknowledgeCarePlan",
+            id,
+        ],
     },
 };
 

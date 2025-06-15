@@ -3,11 +3,15 @@ import { log } from "common/debug";
 import {
     itemResponseSchema,
     listResponseSchema,
+    messageResponseSchema,
 } from "common/schema";
 import { IRole } from "features/auth/auth.interface";
 import { portalPath } from "features/auth/auth.util";
 
-import { portalCarePlanDetailSchema, portalCarePlanListSchema } from "./schema";
+import {
+    portalCarePlanDetailSchema,
+    portalCarePlanListSchema,
+} from "./schema";
 
 class CarePlanController extends Controller {
     async getCarePlans(role: IRole) {
@@ -61,6 +65,44 @@ class CarePlanController extends Controller {
         }
 
         return validate.data;
+    }
+
+    async acknowledgeCarePlan(
+        role: IRole,
+        id: string,
+    ) {
+        try {
+            const path = portalPath(
+                role,
+                `/care-plan/acknowledge/${id}`,
+            );
+
+            const response =
+                await this.api.post(path);
+
+            const validate =
+                await messageResponseSchema(
+                    "Care plan acknowledged.",
+                ).safeParseAsync(response.data);
+
+            if (!validate.success) {
+                log(
+                    "CarePlanController.acknowledgeCarePlan",
+                    validate.error,
+                );
+                throw new Error(
+                    "Invalid response format for acknowledge care plan",
+                );
+            }
+
+            return validate.data;
+        } catch (error) {
+            log(
+                "CarePlanController.acknowledgeCarePlan",
+                error,
+            );
+            throw error;
+        }
     }
 }
 

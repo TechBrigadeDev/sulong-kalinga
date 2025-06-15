@@ -111,20 +111,14 @@ const CarePlanList = () => {
         [router],
     );
 
-    const handleAcknowledge = useCallback(
-        (id: number) => {
-            // TODO: Implement acknowledge functionality
-            console.log(
-                "Acknowledge care plan:",
-                id,
-            );
-            showToastable({
-                message: `Care plan #${id} acknowledged successfully`,
-                status: "success",
-            });
-        },
-        [],
-    );
+    const handleAcknowledge = async (
+        id: number,
+    ) => {
+        showToastable({
+            message: `Care plan #${id} acknowledged successfully`,
+            status: "success",
+        });
+    };
 
     const getEmptyStateMessage = () => {
         if (searchTerm.trim()) {
@@ -180,11 +174,11 @@ const CarePlanList = () => {
     return (
         <YStack flex={1} bg="$background">
             <YStack gap="$3" p="$4" pb="$2">
-                <SearchInput
+                {/* <SearchInput
                     value={searchTerm}
                     onSearch={handleSearch}
                     placeholder="Search by author, date, or ID..."
-                />
+                /> */}
                 <StatusFilter
                     selectedStatus={
                         selectedStatus

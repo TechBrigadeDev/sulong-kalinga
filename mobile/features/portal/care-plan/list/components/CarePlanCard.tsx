@@ -1,4 +1,5 @@
 import { formatDate } from "common/date";
+import { useAcknowledgeCarePlan } from "features/portal/care-plan/hook";
 import { portalCarePlanListSchema } from "features/portal/care-plan/schema";
 import {
     EyeIcon,
@@ -9,6 +10,7 @@ import { StyleSheet } from "react-native";
 import {
     Button,
     Card,
+    Spinner,
     Text,
     XStack,
     YStack,
@@ -61,6 +63,25 @@ const CarePlanCard = ({
     const canAcknowledge =
         carePlan.status === "Pending Review" &&
         !carePlan.acknowledged;
+
+    const {
+        mutateAsync: onAcknowledgeCarePlan,
+        isPending: isAcknowledgingCarePlan,
+    } = useAcknowledgeCarePlan(
+        carePlan.id.toString(),
+    );
+
+    const handleAcknowledge = async () => {
+        try {
+            await onAcknowledgeCarePlan();
+            onAcknowledge?.(carePlan.id);
+        } catch (error) {
+            console.error(
+                "Failed to acknowledge care plan:",
+                error,
+            );
+        }
+    };
 
     return (
         <Card
@@ -227,17 +248,27 @@ const CarePlanCard = ({
                                 size="$3"
                                 theme="green"
                                 flex={1}
-                                onPress={() =>
-                                    onAcknowledge?.(
-                                        carePlan.id,
-                                    )
+                                onPress={
+                                    handleAcknowledge
                                 }
                                 bg="#10b981"
                                 color="white"
                                 hoverStyle={{
                                     bg: "#059669",
                                 }}
+                                disabled={
+                                    isAcknowledgingCarePlan
+                                }
                             >
+                                {isAcknowledgingCarePlan && (
+                                    <Spinner
+                                        size="small"
+                                        color="white"
+                                        style={{
+                                            marginRight: 8,
+                                        }}
+                                    />
+                                )}
                                 Acknowledge
                             </Button>
                         )}
