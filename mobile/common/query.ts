@@ -136,6 +136,11 @@ export const QK = {
             id,
         ],
     },
+    family: {
+        getFamilyMembers: () => [
+            "family/getFamilyMembers",
+        ],
+    },
 };
 
 export const setDataQK = async (

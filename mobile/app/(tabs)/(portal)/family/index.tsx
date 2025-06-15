@@ -1,11 +1,11 @@
 import { Stack } from "expo-router";
+import FamilyList from "features/portal/family/list";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "tamagui";
 
 const Screen = () => {
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <Text>Family</Text>
+            <FamilyList />
         </SafeAreaView>
     );
 };
@@ -15,7 +15,7 @@ const Layout = () => {
         <>
             <Stack.Screen
                 options={{
-                    title: "Family",
+                    title: "Family Members",
                     headerShown: true,
                     headerTitleAlign: "center",
                 }}

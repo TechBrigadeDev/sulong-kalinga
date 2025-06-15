@@ -6,7 +6,7 @@ export const listResponseSchema = <
     itemSchema: T,
 ) =>
     z.object({
-        success: z.boolean(),
+        success: z.boolean().optional(),
         data: z.array(itemSchema),
     });
 
