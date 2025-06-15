@@ -985,24 +985,4 @@ class EmergencyServiceRequestApiController extends Controller
         }
         return $actions;
     }
-
-    // Get all Emergency Types
-    public function getEmergencyTypes()
-    {
-        $types = \App\Models\EmergencyType::all();
-        return response()->json([
-            'success' => true,
-            'data' => $types
-        ]);
-    }
-
-    // Get all Service Request Types
-    public function getServiceRequestTypes()
-    {
-        $types = \App\Models\ServiceRequestType::all();
-        return response()->json([
-            'success' => true,
-            'data' => $types
-        ]);
-    }
 }
