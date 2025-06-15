@@ -11,35 +11,45 @@ interface Props {
 
 const ErrorState = ({
     onRetry,
-    message = "Unable to load medications. Please try again.",
+    message = "Unable to load care plans. Please check your connection and try again.",
 }: Props) => {
     return (
         <YStack
             flex={1}
-            justifyContent="center"
-            alignItems="center"
+            style={{
+                justifyContent: "center",
+                alignItems: "center",
+            }}
             gap="$4"
-            p="$6"
+            p="$4"
         >
             <AlertCircle
                 size={64}
-                color="$red10"
+                color="#ef4444"
             />
-            <YStack alignItems="center" gap="$2">
+            <YStack
+                style={{
+                    alignItems: "center",
+                }}
+                gap="$2"
+            >
                 <Text
                     fontSize="$6"
                     fontWeight="600"
-                    color="$red11"
-                    textAlign="center"
+                    color="#dc2626"
+                    style={{
+                        textAlign: "center",
+                    }}
                 >
                     Something went wrong
                 </Text>
                 <Text
                     fontSize="$4"
-                    color="grey"
-                    textAlign="center"
-                    maxWidth={280}
-                    lineHeight="$1"
+                    color="#6b7280"
+                    style={{
+                        textAlign: "center",
+                        maxWidth: 280,
+                    }}
                 >
                     {message}
                 </Text>

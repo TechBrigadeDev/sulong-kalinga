@@ -30,7 +30,7 @@ const ErrorState = ({
                 </Text>
                 <Text
                     fontSize="$4"
-                    color="$gray10"
+                    color="grey"
                     textAlign="center"
                     maxWidth={280}
                 >

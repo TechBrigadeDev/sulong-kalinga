@@ -123,6 +123,15 @@ export const QK = {
             "medication/getMedications",
         ],
     },
+    carePlan: {
+        getCarePlans: () => [
+            "carePlan/getCarePlans",
+        ],
+        getCarePlanById: (id: string) => [
+            "carePlan/getCarePlanById",
+            id,
+        ],
+    },
 };
 
 export const setDataQK = async (
