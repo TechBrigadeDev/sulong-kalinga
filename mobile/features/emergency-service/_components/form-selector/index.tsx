@@ -37,7 +37,7 @@ const EmergencyServiceFormSelector = () => {
                 disablePassBorderRadius
                 radiused={false}
                 gap={"$2"}
-                p="$2"
+                marginBlockEnd={"$4"}
             >
                 {tabs.map((tab) => (
                     <Tabs.Tab

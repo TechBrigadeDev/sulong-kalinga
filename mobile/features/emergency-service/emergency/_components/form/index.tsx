@@ -26,7 +26,6 @@ const EmergencyAssistanceForm = () => {
                     borderRadius={8}
                     borderWidth={1}
                     elevate
-                    marginHorizontal="$4"
                     gap="$4"
                 >
                     <YStack p="$4" gap="$2">

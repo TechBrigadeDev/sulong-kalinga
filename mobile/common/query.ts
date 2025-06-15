@@ -98,9 +98,19 @@ export const QK = {
         ],
     },
     emergencyService: {
+        getActiveRequests: () => [
+            "emergencyService/getActiveRequests",
+        ],
+        getRequestsHistory: () => [
+            "emergencyService/getRequestsHistory",
+        ],
         emergency: {
             getTypes:
                 "emergencyService/emergency/getTypes",
+        },
+        service: {
+            getTypes:
+                "emergencyService/service/getTypes",
         },
     },
 };

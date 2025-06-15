@@ -1,37 +1,22 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PropsWithChildren } from "react";
-import {
-    FormProvider,
-    useForm,
-    useFormContext,
-} from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { QK } from "common/query";
+import { authStore } from "features/auth/auth.store";
 
-import {
-    IServiceRequestForm,
-    serviceRequestFormSchema,
-} from "./schema";
+import serviceController from "./api";
 
-export const ServiceRequestForm = ({
-    children,
-}: PropsWithChildren) => {
-    const form = useForm<IServiceRequestForm>({
-        resolver: zodResolver(
-            serviceRequestFormSchema,
-        ),
-        defaultValues: {
-            service_type: "other",
-            preferred_date: "",
-            preferred_time: "",
-            service_details: "",
+const api = serviceController;
+
+export const useServiceTypes = () => {
+    const { role, token } = authStore();
+    return useQuery({
+        queryKey: [
+            QK.emergencyService.service.getTypes,
+        ],
+        queryFn: async () => {
+            const response =
+                await api.getServiceTypes(role!);
+            return response;
         },
+        enabled: !!role && !!token,
     });
-
-    return (
-        <FormProvider {...form}>
-            {children}
-        </FormProvider>
-    );
 };
-
-export const useServiceRequestForm = () =>
-    useFormContext<IServiceRequestForm>();

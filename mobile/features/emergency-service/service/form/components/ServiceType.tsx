@@ -1,4 +1,6 @@
-import { useServiceRequestForm } from "features/emergency-service/service/form-hook";
+import { useServiceRequestForm } from "features/emergency-service/service/form/form";
+import { useServiceTypes } from "features/emergency-service/service/hook";
+import { useMemo } from "react";
 import { Controller } from "react-hook-form";
 import {
     Adapt,
@@ -9,34 +11,18 @@ import {
     YStack,
 } from "tamagui";
 
-const serviceTypes = [
-    { label: "Other Service", value: "other" },
-    {
-        label: "Home Care",
-        value: "home_care",
-    },
-    {
-        label: "Medical Assistance",
-        value: "medical_assistance",
-    },
-    {
-        label: "Transportation",
-        value: "transportation",
-    },
-    { label: "Counseling", value: "counseling" },
-    {
-        label: "Equipment Rental",
-        value: "equipment_rental",
-    },
-    {
-        label: "Therapy Services",
-        value: "therapy_services",
-    },
-];
-
 const ServiceType = () => {
     const { control } = useServiceRequestForm();
+    const { data } = useServiceTypes();
 
+    const serviceTypes = useMemo(() => {
+        if (!data) return [];
+
+        return data.map((st) => ({
+            label: st.name,
+            value: st.service_type_id.toString(),
+        }));
+    }, [data]);
     return (
         <Controller
             control={control}
@@ -55,7 +41,7 @@ const ServiceType = () => {
                         <Select.Trigger>
                             <Select.Value placeholder="Select service type" />
                         </Select.Trigger>
-                        
+
                         <Adapt
                             when="maxMd"
                             platform="touch"

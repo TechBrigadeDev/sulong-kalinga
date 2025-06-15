@@ -1,7 +1,9 @@
-import { useServiceRequestForm } from "features/emergency-service/service/form-hook";
-import { IServiceRequestForm } from "features/emergency-service/service/schema";
+import { useServiceRequestForm } from "features/emergency-service/service/form/form";
 import { SubmitErrorHandler } from "react-hook-form";
+import { showToastable } from "react-native-toastable";
 import { Button } from "tamagui";
+
+import { IServiceRequestForm } from "~/features/emergency-service/service/form/schema";
 
 const SubmitServiceRequest = () => {
     const form = useServiceRequestForm();
@@ -16,17 +18,23 @@ const SubmitServiceRequest = () => {
             );
             // Here you can handle the successful submission, e.g., send data to an API
             // For now, we'll just log the data
-            alert(
-                "Service request submitted successfully!",
-            );
+            showToastable({
+                message:
+                    "Service request submitted successfully!",
+                status: "success",
+                duration: 3000,
+            });
         } catch (error) {
             console.error(
                 "Error submitting service request:",
                 error,
             );
-            alert(
-                "Failed to submit service request. Please try again.",
-            );
+            showToastable({
+                message:
+                    "Failed to submit service request. Please try again later.",
+                status: "danger",
+                duration: 3000,
+            });
         }
     };
 
@@ -37,11 +45,14 @@ const SubmitServiceRequest = () => {
             "Form submission errors:",
             errors,
         );
-        // Find the first error message to show
-        const firstError = Object.values(errors)[0];
-        if (firstError?.message) {
-            alert(firstError.message);
-        }
+
+        showToastable({
+            message: Object.values(errors)
+                .map((error) => error.message)
+                .join("\n"),
+            status: "danger",
+            duration: 3000,
+        });
     };
 
     const handleSubmit = async () => {

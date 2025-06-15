@@ -1,9 +1,21 @@
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
-import EmergencyServiceFormSelector from "features/emergency-service/emergency/_components/form-selector";
+import ActiveRequests from "features/emergency-service/_components/active-requests";
+import RequestHistory from "features/emergency-service/_components/request-history";
+import { useEmergencyServiceRequests } from "features/emergency-service/hook";
+import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import EmergencyServiceFormSelector from "~/features/emergency-service/_components/form-selector";
+
 const Screen = () => {
+    const { refetch: refetchRequests } =
+        useEmergencyServiceRequests();
+
+    useEffect(() => {
+        refetchRequests();
+    }, [refetchRequests]);
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <TabScroll
@@ -12,8 +24,11 @@ const Screen = () => {
                 flexDirection="column"
                 tabbed
                 showScrollUp
+                paddingInline={"$4"}
             >
                 <EmergencyServiceFormSelector />
+                <ActiveRequests />
+                <RequestHistory />
             </TabScroll>
         </SafeAreaView>
     );

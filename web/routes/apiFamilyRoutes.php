@@ -32,7 +32,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
 
     // Emergency & Service Requests
     Route::get('/emergency-service/active', [EmergencyServiceRequestApiController::class, 'active']);
-    Route::post('/emergency-service/history', [EmergencyServiceRequestApiController::class, 'history']);
+    Route::get('/emergency-service/history', [EmergencyServiceRequestApiController::class, 'history']);
     Route::post('/emergency-service/emergency/submit', [EmergencyServiceRequestApiController::class, 'submitEmergency']);
     Route::post('/emergency-service/service/submit', [EmergencyServiceRequestApiController::class, 'submitService']);
     Route::get('/emergency-service/emergency/types', [EmergencyServiceRequestApiController::class, 'getEmergencyTypes']);

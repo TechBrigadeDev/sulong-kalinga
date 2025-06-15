@@ -3,7 +3,7 @@ import {
     DateTimePickerAndroid,
     DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { useServiceRequestForm } from "features/emergency-service/service/form-hook";
+import { useServiceRequestForm } from "features/emergency-service/service/form/form";
 import { Controller } from "react-hook-form";
 import { Platform } from "react-native";
 import {
@@ -128,8 +128,8 @@ const PreferredTime = () => {
                         date &&
                         event.type === "set"
                     ) {
-                        const formattedTime = date
-                            .toLocaleTimeString(
+                        const formattedTime =
+                            date.toLocaleTimeString(
                                 [],
                                 {
                                     hour: "2-digit",

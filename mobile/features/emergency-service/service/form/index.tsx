@@ -1,4 +1,3 @@
-import { ServiceRequestForm } from "features/emergency-service/service/form-hook";
 import { ClipboardList } from "lucide-react-native";
 import { KeyboardAvoidingView } from "react-native";
 import {
@@ -13,6 +12,7 @@ import DateTimeSection from "./components/DateTimeSection";
 import ServiceDetails from "./components/ServiceDetails";
 import ServiceType from "./components/ServiceType";
 import SubmitServiceRequest from "./components/SubmitServiceRequest";
+import { ServiceRequestForm } from "./form";
 
 const ServiceForm = () => {
     return (
@@ -27,7 +27,6 @@ const ServiceForm = () => {
                     borderRadius={8}
                     borderWidth={1}
                     elevate
-                    marginHorizontal="$4"
                     gap="$4"
                 >
                     <YStack p="$4" gap="$2">
