@@ -3742,7 +3742,7 @@
                     memberItem.innerHTML = `
                         <div class="d-flex align-items-center">
                             <div class="me-3">
-                                <img src="/images/defaultProfile.png" class="rounded-circle" width="40" height="40" alt="${member.name}">
+                                <img src="${member.photo_url ? member.photo_url : '/images/defaultProfile.png'}" class="rounded-circle" width="40" height="40" alt="${member.name}">
                             </div>
                             <div>
                                 <div class="fw-bold">${member.name}</div>

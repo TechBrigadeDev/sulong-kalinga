@@ -117,15 +117,32 @@ class MessageController extends Controller
             // Add other_participant_name to conversation object for display purposes
             if (!$conversation->is_group_chat) {
                 $otherParticipant = $conversation->participants
-                    ->where('participant_type', '!=', 'cose_staff')
                     ->where('participant_id', '!=', Auth::id())
                     ->first();
                 
                 if ($otherParticipant) {
-                    // Get participant name using the helper method instead of the relationship
                     $conversation->other_participant_name = $this->getParticipantName($otherParticipant);
+
+                    // Get the participant's photo path
+                    $photoPath = null;
+                    if ($otherParticipant->participant_type === 'cose_staff') {
+                        $user = \App\Models\User::find($otherParticipant->participant_id);
+                        $photoPath = $user ? $user->photo : null;
+                    } elseif ($otherParticipant->participant_type === 'beneficiary') {
+                        $beneficiary = \App\Models\Beneficiary::find($otherParticipant->participant_id);
+                        $photoPath = $beneficiary ? $beneficiary->photo : null;
+                    } elseif ($otherParticipant->participant_type === 'family_member') {
+                        $familyMember = \App\Models\FamilyMember::find($otherParticipant->participant_id);
+                        $photoPath = $familyMember ? $familyMember->photo : null;
+                    }
+
+                    // Generate temporary URL if photo exists
+                    $conversation->other_participant_photo_url = $photoPath
+                        ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                        : null;
                 } else {
                     $conversation->other_participant_name = 'Unknown User';
+                    $conversation->other_participant_photo_url = null;
                 }
             }
             
@@ -152,18 +169,73 @@ class MessageController extends Controller
                     $sender = User::find($message->sender_id);
                     if ($sender) {
                         $message->sender_name = $sender->first_name . ' ' . $sender->last_name;
+                        if ($message->sender_type == 'cose_staff') {
+                            $sender = User::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } elseif ($message->sender_type == 'beneficiary') {
+                            $sender = Beneficiary::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } elseif ($message->sender_type == 'family_member') {
+                            $sender = FamilyMember::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } else {
+                            $message->sender_photo_url = null;
+                        }
                     }
                 } elseif ($message->sender_type == 'beneficiary') {
                     $sender = Beneficiary::find($message->sender_id);
                     if ($sender) {
                         $message->sender_name = $sender->first_name . ' ' . $sender->last_name;
+                        if ($message->sender_type == 'cose_staff') {
+                            $sender = User::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } elseif ($message->sender_type == 'beneficiary') {
+                            $sender = Beneficiary::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } elseif ($message->sender_type == 'family_member') {
+                            $sender = FamilyMember::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } else {
+                            $message->sender_photo_url = null;
+                        }
                     }
                 } elseif ($message->sender_type == 'family_member') {
                     $sender = FamilyMember::find($message->sender_id);
                     if ($sender) {
                         $message->sender_name = $sender->first_name . ' ' . $sender->last_name;
+                        if ($message->sender_type == 'cose_staff') {
+                            $sender = User::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } elseif ($message->sender_type == 'beneficiary') {
+                            $sender = Beneficiary::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } elseif ($message->sender_type == 'family_member') {
+                            $sender = FamilyMember::find($message->sender_id);
+                            $message->sender_photo_url = ($sender && $sender->photo)
+                                ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                                : null;
+                        } else {
+                            $message->sender_photo_url = null;
+                        }
                     }
                 }
+                
             }
             
             // Mark all messages as read
@@ -1007,23 +1079,36 @@ class MessageController extends Controller
         // Process conversations to add other participant name for private chats
         foreach ($conversations as $conversation) {
             if (!$conversation->is_group_chat) {
-                // For private conversations, find the other participant
-                $otherParticipant = null;
-                
-                foreach ($conversation->participants as $participant) {
-                    if (!($participant->participant_id == $user->id && 
-                        $participant->participant_type == 'cose_staff')) {
-                        $otherParticipant = $participant;
-                        break;
-                    }
-                }
-                
+                // Use the loaded participants collection, not a new query
+                $otherParticipant = $conversation->participants
+                    ->where('participant_id', '!=', $user->id)
+                    ->first();
+
                 if ($otherParticipant) {
-                    // Use the helper method to get the name
                     $conversation->other_participant_name = $this->getParticipantName($otherParticipant);
                     $conversation->other_participant_type = $otherParticipant->participant_type;
+
+                    // Get the participant's photo path
+                    $photoPath = null;
+                    if ($otherParticipant->participant_type === 'cose_staff') {
+                        $userModel = \App\Models\User::find($otherParticipant->participant_id);
+                        $photoPath = $userModel ? $userModel->photo : null;
+                    } elseif ($otherParticipant->participant_type === 'beneficiary') {
+                        $beneficiary = \App\Models\Beneficiary::find($otherParticipant->participant_id);
+                        $photoPath = $beneficiary ? $beneficiary->photo : null;
+                    } elseif ($otherParticipant->participant_type === 'family_member') {
+                        $familyMember = \App\Models\FamilyMember::find($otherParticipant->participant_id);
+                        $photoPath = $familyMember ? $familyMember->photo : null;
+                    }
+
+                    // Generate temporary URL if photo exists
+                    $conversation->other_participant_photo_url = $photoPath
+                        ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                        : null;
                 } else {
-                    $conversation->other_participant_name = 'No Other Participant';
+                    $conversation->other_participant_name = 'Unknown User';
+                    $conversation->other_participant_type = '';
+                    $conversation->other_participant_photo_url = null;
                 }
             }
         }
@@ -1344,23 +1429,38 @@ class MessageController extends Controller
             
             // Add other_participant_name to conversation object
             if (!$conversation->is_group_chat) {
-                // Get the participant who isn't the current user
-                $otherParticipant = $conversation->participants()
-                    ->where(function($query) {
-                        $query->where('participant_id', '!=', Auth::id())
-                            ->orWhere('participant_type', '!=', 'cose_staff');
-                    })
-                    ->whereNull('left_at')
-                    ->first();
-                    
-                if ($otherParticipant) {
-                    $conversation->other_participant_name = $this->getParticipantName($otherParticipant);
-                    $conversation->other_participant_type = $otherParticipant->participant_type;
-                } else {
-                    $conversation->other_participant_name = 'Unknown User';
-                    $conversation->other_participant_type = '';
+            // Get the participant who isn't the current user
+            $otherParticipant = $conversation->participants
+                ->where('participant_id', '!=', Auth::id())
+                ->first();
+                
+            if ($otherParticipant) {
+                $conversation->other_participant_name = $this->getParticipantName($otherParticipant);
+                $conversation->other_participant_type = $otherParticipant->participant_type;
+
+                // Get the participant's photo path
+                $photoPath = null;
+                if ($otherParticipant->participant_type === 'cose_staff') {
+                    $user = \App\Models\User::find($otherParticipant->participant_id);
+                    $photoPath = $user ? $user->photo : null;
+                } elseif ($otherParticipant->participant_type === 'beneficiary') {
+                    $beneficiary = \App\Models\Beneficiary::find($otherParticipant->participant_id);
+                    $photoPath = $beneficiary ? $beneficiary->photo : null;
+                } elseif ($otherParticipant->participant_type === 'family_member') {
+                    $familyMember = \App\Models\FamilyMember::find($otherParticipant->participant_id);
+                    $photoPath = $familyMember ? $familyMember->photo : null;
                 }
+
+                // Generate temporary URL if photo exists
+                $conversation->other_participant_photo_url = $photoPath
+                    ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                    : null;
+            } else {
+                $conversation->other_participant_name = 'Unknown User';
+                $conversation->other_participant_type = '';
+                $conversation->other_participant_photo_url = null;
             }
+        }
             
             // Get messages for this conversation
                 $messages = Message::with(['attachments', 'readStatuses'])
@@ -1384,13 +1484,67 @@ class MessageController extends Controller
                 if ($message->sender_type === 'cose_staff') {
                     $sender = User::find($message->sender_id);
                     $message->sender_name = $sender ? $sender->first_name . ' ' . $sender->last_name : 'Unknown Staff';
+                    if ($message->sender_type == 'cose_staff') {
+                        $sender = User::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } elseif ($message->sender_type == 'beneficiary') {
+                        $sender = Beneficiary::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } elseif ($message->sender_type == 'family_member') {
+                        $sender = FamilyMember::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } else {
+                        $message->sender_photo_url = null;
+                    }
                     $message->sender_role_id = $sender ? $sender->role_id : null;
                 } else if ($message->sender_type === 'beneficiary') {
                     $sender = Beneficiary::find($message->sender_id);
                     $message->sender_name = $sender ? $sender->first_name . ' ' . $sender->last_name : 'Unknown Beneficiary';
+                    if ($message->sender_type == 'cose_staff') {
+                        $sender = User::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } elseif ($message->sender_type == 'beneficiary') {
+                        $sender = Beneficiary::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } elseif ($message->sender_type == 'family_member') {
+                        $sender = FamilyMember::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } else {
+                        $message->sender_photo_url = null;
+                    }
                 } else if ($message->sender_type === 'family_member') {
                     $sender = FamilyMember::find($message->sender_id);
                     $message->sender_name = $sender ? $sender->first_name . ' ' . $sender->last_name : 'Unknown Family Member';
+                    if ($message->sender_type == 'cose_staff') {
+                        $sender = User::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } elseif ($message->sender_type == 'beneficiary') {
+                        $sender = Beneficiary::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } elseif ($message->sender_type == 'family_member') {
+                        $sender = FamilyMember::find($message->sender_id);
+                        $message->sender_photo_url = ($sender && $sender->photo)
+                            ? $this->uploadService->getTemporaryPrivateUrl($sender->photo, 30)
+                            : null;
+                    } else {
+                        $message->sender_photo_url = null;
+                    }
                 } else {
                     $message->sender_name = 'Unknown';
                 }
@@ -1580,23 +1734,41 @@ class MessageController extends Controller
             // Process participant names for display
             foreach ($conversations as $conversation) {
                 if (!$conversation->is_group_chat) {
-                    // Find the other participant
-                    $otherParticipant = $conversation->participants()
-                        ->where(function($query) use ($user) {
-                            $query->where('participant_id', '!=', $user->id)
-                                ->orWhere('participant_type', '!=', 'cose_staff');
-                        })
-                        ->whereNull('left_at')
+                    // Use the loaded participants collection, not a new query
+                    $otherParticipant = $conversation->participants
+                        ->where('participant_id', '!=', $user->id)
                         ->first();
-                    
+
                     if ($otherParticipant) {
                         $conversation->other_participant_name = $this->getParticipantName($otherParticipant);
                         $conversation->other_participant_type = $otherParticipant->participant_type;
+
+                        // Get the participant's photo path
+                        $photoPath = null;
+                        if ($otherParticipant->participant_type === 'cose_staff') {
+                            $userModel = \App\Models\User::find($otherParticipant->participant_id);
+                            $photoPath = $userModel ? $userModel->photo : null;
+                        } elseif ($otherParticipant->participant_type === 'beneficiary') {
+                            $beneficiary = \App\Models\Beneficiary::find($otherParticipant->participant_id);
+                            $photoPath = $beneficiary ? $beneficiary->photo : null;
+                        } elseif ($otherParticipant->participant_type === 'family_member') {
+                            $familyMember = \App\Models\FamilyMember::find($otherParticipant->participant_id);
+                            $photoPath = $familyMember ? $familyMember->photo : null;
+                        }
+
+                        // Generate temporary URL if photo exists
+                        $conversation->other_participant_photo_url = $photoPath
+                            ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                            : null;
                     } else {
                         $conversation->other_participant_name = 'Unknown User';
                         $conversation->other_participant_type = '';
+                        $conversation->other_participant_photo_url = null;
                     }
                 }
+                $conversation->other_participant_photo_url = $photoPath
+                    ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                    : null;
             }
             
             // Render conversation list HTML
@@ -1854,6 +2026,21 @@ class MessageController extends Controller
                         $member['email'] = $familyMember->email;
                     }
                 }
+
+                $photoPath = null;
+                if ($participant->participant_type === 'cose_staff') {
+                    $staff = User::find($participant->participant_id);
+                    $photoPath = $staff ? $staff->photo : null;
+                } elseif ($participant->participant_type === 'beneficiary') {
+                    $beneficiary = Beneficiary::find($participant->participant_id);
+                    $photoPath = $beneficiary ? $beneficiary->photo : null;
+                } elseif ($participant->participant_type === 'family_member') {
+                    $familyMember = FamilyMember::find($participant->participant_id);
+                    $photoPath = $familyMember ? $familyMember->photo : null;
+                }
+                $member['photo_url'] = $photoPath
+                    ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                    : null;
                 
                 $members[] = $member;
             }

@@ -45,7 +45,7 @@
                 <div class="profile-header">
                     <div class="row align-items-center">
                         <div class="col-md-3 text-center mb-4 mb-md-0">
-                            <img src="{{ $family_member->photo ? asset('storage/' . $family_member->photo) : asset('images/defaultProfile.png') }}" 
+                            <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" 
                                 alt="Profile Picture" 
                                 class="img-fluid rounded-circle profile-img">
                         </div>
@@ -124,7 +124,7 @@
                             </div>
                             <div class="card-body text-center p-3">
                                 <div class="d-flex flex-column align-items-center">
-                                    <img src="{{ $family_member->beneficiary->photo ? asset('storage/' . $family_member->beneficiary->photo) : asset('images/defaultProfile.png') }}" 
+                                    <img src="{{ $beneficiaryPhotoUrl ?? asset('images/defaultProfile.png') }}" 
                                         class="rounded-circle beneficiary-img mb-3" 
                                         alt="Beneficiary Photo">
                                     <h5 class="mb-2">{{ $family_member->beneficiary->first_name }} {{ $family_member->beneficiary->last_name }}</h5>

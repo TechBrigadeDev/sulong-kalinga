@@ -130,7 +130,19 @@ class CareWorkerController extends Controller
             Auth::id()
         );
 
-        return view($rolePrefix . '.viewCareworkerDetails', compact('careworker', 'beneficiaries'));
+        $photoUrl = $careworker->photo
+            ? $this->uploadService->getTemporaryPrivateUrl($careworker->photo, 30)
+            : null;
+
+        $governmentIdUrl = $careworker->government_issued_id
+            ? $this->uploadService->getTemporaryPrivateUrl($careworker->government_issued_id, 30)
+            : null;
+
+        $resumeUrl = $careworker->cv_resume
+            ? $this->uploadService->getTemporaryPrivateUrl($careworker->cv_resume, 30)
+            : null;
+
+        return view($rolePrefix . '.viewCareworkerDetails', compact('careworker', 'beneficiaries', 'photoUrl', 'governmentIdUrl', 'resumeUrl'));
     }
 
     public function editCareworkerProfile($id)
