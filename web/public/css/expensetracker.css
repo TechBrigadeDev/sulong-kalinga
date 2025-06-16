@@ -177,4 +177,216 @@
                 gap: 5px;
             }
         }
-    
+        
+        .summary-card {
+            padding: 20px;
+            border-radius: 0.5rem;
+            border: 1px solid;
+            height: 100%;
+        }
+        
+        .expense-card {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .expense-item {
+            padding: 12px;
+            border-radius: 0.5rem;
+            margin-bottom: 12px;
+            border-left: 4px solid transparent;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
+        }
+        
+        .expense-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .expense-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .expense-detail {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .expense-amount {
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .chart-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        /* Action buttons styling */
+        .expense-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+        
+        .expense-item:hover .expense-actions {
+            opacity: 1;
+        }
+        
+        .btn-action-icon {
+            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: #fff;
+            background-color: #6c757d;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-action-icon.edit {
+            background-color: #0d6efd;
+        }
+        
+        .btn-action-icon.delete {
+            background-color: #dc3545;
+        }
+        
+        .btn-action-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Required field indicator */
+        .required-field::after {
+            content: "*";
+            color: #dc3545;
+            margin-left: 4px;
+        }
+        
+        /* Budget styles */
+        .budget-item {
+            border-left: 4px solid;
+        }
+        
+        .budget-amount-positive {
+            color: #198754;
+            font-weight: 600;
+        }
+        
+        .budget-amount-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        /* Filter controls */
+        .filter-controls {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 0.5rem;
+            margin-bottom: 16px;
+        }
+        
+        /* Loading spinner */
+        .spinner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            border-radius: 0.5rem;
+        }
+
+        .recent-activity-item {
+            padding: 12px;
+            border-radius: 0.5rem;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            transition: all 0.2s ease;
+        }
+
+        .recent-activity-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .activity-icon.expense {
+            background-color: #0d6efd;
+        }
+
+        .activity-icon.budget {
+            background-color: #198754;
+        }
+
+        .activity-title {
+            font-weight: 600;
+        }
+
+        .activity-description {
+            font-size: 0.85rem;
+            margin-top: 4px;
+            color: #6c757d;
+        }
+
+        .activity-creator {
+            margin-top: 6px;
+            font-size: 0.8rem;
+        }
+
+        .expense-amount {
+            font-weight: 700;
+            color: #212529;
+            width: 120px; /* Fixed width for amount */
+            text-align: right;
+            margin-bottom: 6px; /* Add space between amount and buttons */
+        }
+
+        .expense-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+            justify-content: flex-end; /* Align buttons to the right */
+        }

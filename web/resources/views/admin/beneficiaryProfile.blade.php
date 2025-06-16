@@ -15,8 +15,12 @@
     @include('components.adminSidebar')
     @include('components.modals.statusChangeBeneficiary')
     
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <div class="home-section">
-        <div class="text-left">BENEFICIARY PROFILES</div>
+        <div class="text-left">{{ T::translate('BENEFICIARY PROFILES', 'PROFILE NG MGA BENEPISYARYO')}}</div>
         <div class="container-fluid">
             <div class="row" id="home-content">
         
@@ -38,9 +42,9 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                <input type="text" class="form-control" name="search" placeholder="Search beneficiaries..." id="searchBar" value="{{ request('search') }}">
+                                <input type="text" class="form-control" name="search" placeholder="{{ T::translate('Search beneficiaries...','Maghanap ng mga Benepisyaryo...')}}" id="searchBar" value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">{{ T::translate('Search', 'Maghanap')}}</span>
                                 </button>
                             </div>
                     </div>
@@ -52,10 +56,10 @@
                                 <i class="bi bi-funnel"></i>
                             </span>
                             <select class="form-select" name="filter" id="filterDropdown" onchange="this.form.submit()">
-                                <option value="" {{ request('filter') ? '' : 'selected' }}>Filter by</option>
-                                <option value="category" {{ request('filter') == 'category' ? 'selected' : '' }}>Category</option>
+                                <option value="" {{ request('filter') ? '' : 'selected' }}>{{ T::translate('Filter by','Salain sa')}}</option>
+                                <option value="category" {{ request('filter') == 'category' ? 'selected' : '' }}>{{ T::translate('Category','Kategorya')}}</option>
                                 <option value="status" {{ request('filter') == 'status' ? 'selected' : '' }}>Status</option>
-                                <option value="municipality" {{ request('filter') == 'municipality' ? 'selected' : '' }}>Municipality</option>
+                                <option value="municipality" {{ request('filter') == 'municipality' ? 'selected' : '' }}>{{ T::translate('Municipality','Munisipalidad')}}</option>
                             </select>
                         </div>
                     </div>
@@ -65,7 +69,7 @@
                     <div>
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export','I-Export')}}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                 <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</a></li>
@@ -78,7 +82,7 @@
                     <div>
                         <a href="{{ route('admin.beneficiaries.create') }}" class="w-100">
                             <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Add Beneficiary</span>
+                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Add Beneficiary','Magdagdag ng Benepisyaryo')}}</span>
                             </button>
                         </a>
                     </div>
@@ -102,13 +106,13 @@
                             <th scope="col" class="checkbox-cell">
                                 <input type="checkbox" id="selectAll" />
                             </th>
-                            <th scope="col">Full Name</th>
-                            <th scope="col">Category</th>
+                            <th scope="col">{{ T::translate('Full Name','Buong Pangalan')}}</th>
+                            <th scope="col">{{ T::translate('Category','Kategorya')}}</th>
                             <th scope="col">Mobile</th>
                             <th scope="col">Barangay</th>
-                            <th scope="col">Municipality</th>
+                            <th scope="col">{{ T::translate('Municipality','Munisipalidad')}}</th>
                             <th scope="col">Status</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col">{{ T::translate('Actions','Aksyon')}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -124,8 +128,8 @@
                                 <td>{{ $beneficiary->municipality->municipality_name }}</td>
                                 <td>
                                     <select class="form-select status-select" name="status" id="statusSelect{{ $beneficiary->beneficiary_id }}" onchange="openStatusChangeModal(this, 'Beneficiary', {{ $beneficiary->beneficiary_id }}, '{{ $beneficiary->status->status_name }}')">
-                                        <option value="Active" {{ $beneficiary->status->status_name == 'Active' ? 'selected' : '' }}>Active</option>
-                                        <option value="Inactive" {{ $beneficiary->status->status_name == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                        <option value="Active" {{ $beneficiary->status->status_name == 'Active' ? 'selected' : '' }}>{{ T::translate('Active','Aktibo')}}</option>
+                                        <option value="Inactive" {{ $beneficiary->status->status_name == 'Inactive' ? 'selected' : '' }}>{{ T::translate('Inactive','Di-Aktibo')}}</option>
                                     </select>
                                 </td>
                                 <td>
@@ -150,8 +154,8 @@
                 @else
                 <div class="empty-state">
                     <i class="bi bi-people"></i>
-                    <h4>No beneficiaries found</h4>
-                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                    <h4>{{ T::translate('No Beneficiaries Found','Walang nahanap na Benepisyaryo')}}</h4>
+                    <p class="text-muted">{{ T::translate('Try adjusting your search or filter criteria','Maaring i-adjust ang pagsala sa iyo\'ng paghahanap.')}}</p>
                 </div>
                 @endif
             </div>

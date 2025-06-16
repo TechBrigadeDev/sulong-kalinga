@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="{{ asset('css/profilepages.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.adminNavbar')
     @include('components.adminSidebar')
@@ -20,7 +23,7 @@
     @endphp
    
     <div class="home-section">
-        <div class="text-left">ADMINISTRATOR PROFILES</div>
+        <div class="text-left">{{ T::translate('ADMINISTRATOR PROFILES', 'PROFILE NG ADMINISTRATOR')}}</div>
         <div class="container-fluid">
         <div class="row" id="home-content">
         
@@ -42,9 +45,9 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                <input type="text" class="form-control" name="search" placeholder="Search administrators..." id="searchBar" value="{{ request('search') }}">
+                                <input type="text" class="form-control" name="search" placeholder="{{ T::translate('Search administrators...', 'Maghanap ng mga administrator...')}}" id="searchBar" value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">{{ T::translate('Search', 'Maghanap')}}</span>
                                 </button>
                             </div>
                     </div>
@@ -57,9 +60,9 @@
                                     <i class="bi bi-funnel"></i>
                                 </span>
                                 <select class="form-select" name="filter" id="filterDropdown" onchange="document.getElementById('filterForm').submit()">
-                                    <option value="" {{ request('filter') ? '' : 'selected' }}>Filter by</option>
+                                    <option value="" {{ request('filter') ? '' : 'selected' }}>{{ T::translate('Filter by', 'Salain sa')}}</option>
                                     <option value="status" {{ request('filter') == 'status' ? 'selected' : '' }}>Status</option>
-                                    <option value="organizationrole" {{ request('filter') == 'organizationrole' ? 'selected' : '' }}>Organization Role</option>
+                                    <option value="organizationrole" {{ request('filter') == 'organizationrole' ? 'selected' : '' }}>{{ T::translate('Organization Role', 'Tungkulin sa Organisasyon')}}</option>
                                 </select>
                             </div>
                         </form>
@@ -69,7 +72,7 @@
                     <div>
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-sm-inline">{{ T::translate('Export', 'I-Export')}}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                 <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</a></li>
@@ -83,7 +86,7 @@
                         @if(Auth::user()->organization_role_id == 1)
                             <a href="{{ route('admin.administrators.create') }}" class="w-100">
                                 <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                    <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Add Admin</span>
+                                    <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-sm-inline">{{ T::translate('Add Admin', 'Magdagdag ng Administrator')}}</span>
                                 </button>
                             </a>
                         @endif
@@ -108,13 +111,13 @@
                             <th scope="col" class="checkbox-cell">
                                 <input type="checkbox" id="selectAll" />
                             </th>
-                            <th scope="col">Full Name</th>
-                            <th scope="col" class="d-none d-sm-table-cell">Organization Role</th>
+                            <th scope="col">{{ T::translate('Full Name', 'Buong Pangalan')}}</th>
+                            <th scope="col" class="d-none d-sm-table-cell">{{ T::translate('Organization Role', 'Tungkilin sa Organisasyon')}}</th>
                             <th scope="col" class="d-none d-sm-table-cell">Area</th>
                             <th scope="col" class="d-none d-sm-table-cell">Mobile</th>
                             <th scope="col" class="d-none d-md-table-cell">Email</th>
                             <th scope="col">Status</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col">{{ T::translate('Actions', 'Aksyon')}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -132,15 +135,15 @@
                                     <div class="position-relative" 
                                         {{ isset($administrator->organizationRole) && $administrator->organizationRole->role_name == 'executive_director' ? 'data-bs-toggle="tooltip" data-bs-placement="top" title="Executive Director status cannot be changed."' : '' }}>
                                         @if(isset($administrator->organizationRole) && $administrator->organizationRole->role_name == 'executive_director')
-                                            <span class="badge bg-primary" style="font-size: 18px;">Active</span>
+                                            <span class="badge bg-primary" style="font-size: 18px;">{{ T::translate('Active', 'Aktibo')}}</span>
                                             <select class="form-select d-none" name="status" id="statusSelect{{ $administrator->id }}" disabled>
-                                                <option value="Active" selected>Active</option>
+                                                <option value="Active" selected>{{ T::translate('Active', 'Aktibo')}}</option>
                                             </select>
                                         @else
                                             <select class="form-select status-select" name="status" id="statusSelect{{ $administrator->id }}" 
                                                 onchange="openStatusChangeAdminModal(this, 'Administrator', {{ $administrator->id }}, '{{ $administrator->status }}')">
-                                                <option value="Active" {{ $administrator->status == 'Active' ? 'selected' : '' }}>Active</option>
-                                                <option value="Inactive" {{ $administrator->status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                                <option value="Active" {{ $administrator->status == 'Active' ? 'selected' : '' }}>{{ T::translate('Active', 'Aktibo')}}</option>
+                                                <option value="Inactive" {{ $administrator->status == 'Inactive' ? 'selected' : '' }}>{{ T::translate('Inactive', 'Di-Aktibo')}}</option>
                                             </select>
                                         @endif
                                     </div>
@@ -169,8 +172,8 @@
                 @else
                 <div class="empty-state">
                     <i class="bi bi-person-gear"></i>
-                    <h4>No administrators found</h4>
-                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                    <h4>{{ T::translate('No administrators found.', 'Walang nahanap na administrator')}}</h4>
+                    <p class="text-muted">{{ T::translate('Try adjusting your search or filter criteria','Maaring i-adjust ang pagsala sa iyo\'ng paghahanap.')}}</p>
                 </div>
                 @endif
             </div>

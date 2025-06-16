@@ -1,0 +1,482 @@
+/* Card Design */
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            border: 1px solid rgba(0,0,0,0.07);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            padding: 0.8rem 1.25rem;
+            background-color: #f8f9fc;
+            border-bottom: 1px solid rgba(0,0,0,0.07);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .section-heading {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 0;
+        }
+        
+        /* Search Bar Enhancements */
+        .search-container {
+            position: relative;
+            margin-bottom: 1rem;
+            display: flex;
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            transition: opacity 0.2s ease;
+        }
+        
+        .search-container .search-input:focus + i,
+        .search-container .search-input:not(:placeholder-shown) + i {
+            opacity: 0;
+        }
+        
+        .search-input {
+            padding-left: 35px;
+            border-radius: 6px 0 0 6px;
+            border: 1px solid #dee2e6;
+            border-right: none;
+            height: 38px;
+            flex: 1;
+        }
+        
+        .search-btn {
+            border-radius: 0 6px 6px 0;
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            padding: 0 15px;
+        }
+        
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+        
+        /* Select dropdown styling */
+        .select-container {
+            position: relative;
+        }
+        
+        .select-container select {
+            padding-right: 30px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            min-width: 120px;
+        }
+        
+        /* Table Styling */
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            margin-bottom: 1rem;
+        }
+        
+        .table {
+            margin-bottom: 0;
+            table-layout: fixed; /* Control column widths */
+            width: 100%;
+        }
+        
+        .table thead {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        .table thead th {
+            font-weight: 500;
+            border-bottom: none;
+            padding: 12px 15px;
+        }
+        
+        .table tbody tr:nth-of-type(odd) {
+            background-color: #f8f9fc;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            padding: 12px 15px;
+        }
+        
+        /* Default behavior - allow wrapping for desktop */
+        .table td, .table th {
+            vertical-align: middle;
+            word-wrap: break-word;
+            white-space: normal;
+            overflow: hidden;
+        }
+        
+        /* Column widths for desktop */
+        .table .col-beneficiary {
+            width: 25%;
+        }
+        
+        .table .col-medication {
+            width: 15%;
+        }
+        
+        .table .col-schedule {
+            width: 20%;
+        }
+        
+        .table .col-instructions {
+            width: 23%;
+        }
+        
+        .table .col-status {
+            width: 10%;
+        }
+        
+        .table .col-actions {
+            width: 10%;
+        }
+        
+        /* Medication time badges */
+        .badge-time {
+            background-color: #e8f4fd;
+            color: #0d6efd;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.75rem;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            display: inline-block;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            white-space: nowrap; /* Never wrap badges */
+        }
+        
+        /* Beneficiary row styling */
+        .beneficiary-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2e59d9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 2px solid #e0e4ff;
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+        }
+
+        .beneficiary-icon {
+            color: white;
+            font-size: 1rem;
+            background-color: #4e73df;
+            padding: 5px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+        }
+
+        /* Add a subtle highlight to the entire beneficiary row */
+        .beneficiary-start {
+            border-top: 3px solid #e6e9ff;
+            box-shadow: 0 2px 4px rgba(78, 115, 223, 0.1);
+        }
+        
+        .medication-info {
+            font-weight: 500;
+        }
+        
+        .medication-info .dosage {
+            color: #6c757d;
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+        
+        .medication-type {
+            display: inline-block;
+            background-color: #f1f3f9;
+            color: #4e73df;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+        
+        .medical-info {
+            color: #555;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+        
+        .medical-info strong {
+            color: #4e73df;
+        }
+        
+        .medical-info-item {
+            margin-bottom: 5px;
+            white-space: normal; /* Allow these to wrap always */
+        }
+        
+        /* Action buttons */
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            margin-right: 5px;
+        }
+        
+        /* Pagination styling */
+        .pagination {
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        
+        .page-item.active .page-link {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+        
+        .page-link {
+            color: #4e73df;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Improved divider */
+        .beneficiary-divider td {
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        /* Status badge styling */
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+            white-space: nowrap; /* Never wrap status badges */
+        }
+        
+        .status-active {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-paused {
+            background-color: #fff8e1;
+            color: #f57f17;
+        }
+        
+        .status-completed {
+            background-color: #e0e0e0;
+            color: #616161;
+        }
+        
+        /* Special instructions formatting */
+        .special-instructions {
+            font-style: italic;
+            color: #555;
+            font-size: 0.9rem;
+            white-space: normal; /* Always allow these to wrap */
+        }
+
+        /* Medication Modal Styling */
+        .time-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background-color: #f8f9fc;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .time-group .form-check-input {
+            margin-right: 8px;
+        }
+
+        .time-group .form-check {
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .time-group .form-check-label {
+            margin-bottom: 0;
+        }
+
+        .time-input {
+            width: 120px;
+            margin: 0 10px;
+        }
+
+        .time-group .form-check-input:checked {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-label i {
+            color: #4e73df;
+        }
+
+        .modal-header {
+            background-color: #4e73df;
+            color: white;
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        /* Allergy alert styling */
+        #allergiesAlert {
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f57f17;
+        }
+
+        hr {
+            margin: 20px 0;
+            color: #e0e0e0;
+        }
+
+        /* Status toggle switch styling */
+        .form-switch .form-check-input {
+            width: 40px;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 992px) {
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .filter-group .form-select {
+                width: 100%;
+            }
+            
+            /* Table specific mobile styles */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table {
+                min-width: 800px; /* Force horizontal scroll on mobile */
+                table-layout: auto; /* Let columns expand as needed on mobile */
+            }
+            
+            /* Prevent text wrapping on mobile for better horizontal scrolling */
+            .table td, .table th {
+                white-space: nowrap;
+            }
+            
+            /* Exception for instructions - always allow wrapping */
+            .table .col-instructions {
+                white-space: normal;
+            }
+            
+            .beneficiary-name {
+                font-size: 0.9rem;
+            }
+            
+            .badge-time {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+
+            .times-container {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            /* Make table header sticky for better UX during scrolling */
+            .table thead {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+            
+            /* Set minimum widths for mobile view */
+            .table .col-beneficiary {
+                min-width: 220px;
+            }
+            
+            .table .col-medication {
+                min-width: 150px;
+            }
+            
+            .table .col-schedule {
+                min-width: 200px;
+            }
+            
+            .table .col-instructions {
+                min-width: 200px;
+            }
+            
+            .table .col-status {
+                min-width: 100px;
+            }
+            
+            .table .col-actions {
+                min-width: 100px;
+            }
+        }
