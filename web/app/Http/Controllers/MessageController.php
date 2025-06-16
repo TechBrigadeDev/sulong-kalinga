@@ -941,6 +941,27 @@ class MessageController extends Controller
                     } else {
                         $convoData['other_participant_name'] = 'Unknown User';
                     }
+
+                    // Get other participant's photo URL
+                    if ($otherParticipant) {
+                        $convoData['other_participant_name'] = $this->getParticipantName($otherParticipant);
+
+                        // Add this block:
+                        $photoPath = null;
+                        if ($otherParticipant->participant_type === 'cose_staff') {
+                            $userModel = \App\Models\User::find($otherParticipant->participant_id);
+                            $photoPath = $userModel ? $userModel->photo : null;
+                        } elseif ($otherParticipant->participant_type === 'beneficiary') {
+                            $beneficiary = \App\Models\Beneficiary::find($otherParticipant->participant_id);
+                            $photoPath = $beneficiary ? $beneficiary->photo : null;
+                        } elseif ($otherParticipant->participant_type === 'family_member') {
+                            $familyMember = \App\Models\FamilyMember::find($otherParticipant->participant_id);
+                            $photoPath = $familyMember ? $familyMember->photo : null;
+                        }
+                        $convoData['other_participant_photo_url'] = $photoPath
+                            ? $this->uploadService->getTemporaryPrivateUrl($photoPath, 30)
+                            : null;
+                    } 
                 }
                 
                 // Add last message data
