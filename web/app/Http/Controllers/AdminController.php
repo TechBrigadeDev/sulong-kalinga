@@ -572,8 +572,19 @@ class AdminController extends Controller
             LogType::VIEW,
             Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
         );
+        $photoUrl = $administrator->photo
+            ? $this->uploadService->getTemporaryPrivateUrl($administrator->photo, 30)
+            : null;
 
-        return view('admin.viewAdminDetails', compact('administrator'));
+        $governmentIdUrl = $administrator->government_issued_id
+            ? $this->uploadService->getTemporaryPrivateUrl($administrator->government_issued_id, 30)
+            : null;
+
+        $resumeUrl = $administrator->cv_resume
+            ? $this->uploadService->getTemporaryPrivateUrl($administrator->cv_resume, 30)
+            : null;
+
+        return view('admin.viewAdminDetails', compact('administrator', 'photoUrl', 'governmentIdUrl', 'resumeUrl'));
     }
 
     public function editAdminProfile($id)

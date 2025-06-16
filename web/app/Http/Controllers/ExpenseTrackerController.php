@@ -894,9 +894,15 @@ class ExpenseTrackerController extends Controller
             
             // Transform expenses to include receipt_path
             $transformedExpenses = $expenses->map(function ($expense) {
-                // If receipt_path starts with "receipts/", ensure we prepend the storage path
-                if ($expense->receipt_path && !str_starts_with($expense->receipt_path, 'http')) {
-                    $expense->receipt_path = asset('storage/' . $expense->receipt_path);
+                if ($expense->receipt_path) {
+                    $expense->receipt_url = app(\App\Services\UploadService::class)->getTemporaryPrivateUrl(
+                        $expense->receipt_path,
+                        30,
+                        'spaces-private',
+                        ['ResponseContentDisposition' => 'inline']
+                    );
+                } else {
+                    $expense->receipt_url = null;
                 }
                 return $expense;
             });

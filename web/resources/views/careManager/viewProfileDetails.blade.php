@@ -44,7 +44,7 @@
                     <div class="card-body p-4">
                         <div class="row align-items-center">
                             <div class="col-md-3 text-center mb-4 mb-md-0">
-                                <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}"
+                                <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}"
                                     alt="Profile Picture" 
                                     class="img-fluid rounded-circle profile-img">
                             </div>
@@ -498,18 +498,16 @@
                                                             <div class="card-body text-center">
                                                                 <i class="bi bi-file-text fs-1 text-primary mb-3"></i>
                                                                 <h5 class="card-title">Care Service Agreement</h5>
-                                                                @if($beneficiary->care_service_agreement_doc)
+                                                                @if($careServiceAgreementUrl)
                                                                     <div class="d-flex justify-content-center gap-2 mt-3">
-                                                                        <a href="{{ asset('storage/' . $beneficiary->care_service_agreement_doc) }}" 
-                                                                        class="btn btn-primary" 
-                                                                        download>
+                                                                        <a href="{{ $careServiceAgreementUrl }}" class="btn btn-primary" download>
                                                                             <i class="bi bi-download me-1"></i> Download
                                                                         </a>
-                                                                        <a href="{{ asset('storage/' . $beneficiary->care_service_agreement_doc) }}" 
-                                                                        class="btn btn-outline-primary" 
-                                                                        target="_blank">
-                                                                            <i class="bi bi-eye me-1"></i> View
-                                                                        </a>
+                                                                        @if($careServiceAgreementExtension === 'pdf' && $careServiceAgreementViewUrl)
+                                                                            <a href="{{ $careServiceAgreementViewUrl }}" class="btn btn-outline-primary" target="_blank">
+                                                                                <i class="bi bi-eye me-1"></i> View
+                                                                            </a>
+                                                                        @endif
                                                                     </div>
                                                                     <div class="mt-2 text-muted small">
                                                                         Last updated: {{ \Carbon\Carbon::parse($beneficiary->updated_at)->format('M j, Y') }}
@@ -525,18 +523,16 @@
                                                             <div class="card-body text-center">
                                                                 <i class="bi bi-file-medical fs-1 text-primary mb-3"></i>
                                                                 <h5 class="card-title">General Care Plan</h5>
-                                                                @if($beneficiary->general_care_plan_doc)
+                                                                @if($generalCarePlanUrl)
                                                                     <div class="d-flex justify-content-center gap-2 mt-3">
-                                                                        <a href="{{ asset('storage/' . $beneficiary->general_care_plan_doc) }}" 
-                                                                        class="btn btn-primary" 
-                                                                        download>
+                                                                        <a href="{{ $generalCarePlanUrl }}" class="btn btn-primary" download>
                                                                             <i class="bi bi-download me-1"></i> Download
                                                                         </a>
-                                                                        <a href="{{ asset('storage/' . $beneficiary->general_care_plan_doc) }}" 
-                                                                        class="btn btn-outline-primary" 
-                                                                        target="_blank">
-                                                                            <i class="bi bi-eye me-1"></i> View
-                                                                        </a>
+                                                                        @if($generalCarePlanExtension === 'pdf' && $generalCarePlanViewUrl)
+                                                                            <a href="{{ $generalCarePlanViewUrl }}" class="btn btn-outline-primary" target="_blank">
+                                                                                <i class="bi bi-eye me-1"></i> View
+                                                                            </a>
+                                                                        @endif
                                                                     </div>
                                                                     <div class="mt-2 text-muted small">
                                                                         Last updated: {{ \Carbon\Carbon::parse($beneficiary->updated_at)->format('M j, Y') }}

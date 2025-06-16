@@ -159,7 +159,16 @@ class FamilyMemberController extends Controller
             Auth::id()
         );
 
-        return view($rolePrefix . '.viewFamilyDetails', compact('family_member'));
+        $photoUrl = $family_member->photo
+            ? $this->uploadService->getTemporaryPrivateUrl($family_member->photo, 30)
+            : null;
+
+        // Generate a temporary URL for the related beneficiary's photo if it exists
+        $beneficiaryPhotoUrl = ($family_member->beneficiary && $family_member->beneficiary->photo)
+            ? $this->uploadService->getTemporaryPrivateUrl($family_member->beneficiary->photo, 30)
+            : null;
+
+        return view($rolePrefix . '.viewFamilyDetails', compact('family_member', 'photoUrl', 'beneficiaryPhotoUrl'));
     }
     
     // To revise so that dropdown will be dynamic
