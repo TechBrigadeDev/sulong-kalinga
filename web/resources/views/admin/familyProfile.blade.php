@@ -11,12 +11,15 @@
     
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     
     <div class="home-section">
-        <div class="text-left">FAMILY OR RELATIVE PROFILES</div>
+        <div class="text-left">{{ T::translate('FAMILY OR RELATIVE PROFILES','PROFILE NG PAMILYA O KA-ANAK')}}</div>
         <div class="container-fluid">
             <div class="row" id="home-content">
         <div class="card-container">
@@ -37,9 +40,9 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                <input type="text" class="form-control" name="search" placeholder="Search family members..." id="searchBar" value="{{ request('search') }}">
+                                <input type="text" class="form-control" name="search" placeholder="{{ T::translate('Search Family...','Maghanap ng mga Kapamilya...')}}" id="searchBar" value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">{{ T::translate('Search','Maghanap')}}</span>
                                 </button>
                             </div>
                         </form>
@@ -49,7 +52,7 @@
                     <div>
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export','I-Export')}}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                 <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</a></li>
@@ -62,7 +65,7 @@
                     <div>
                         <a href="{{ route('admin.families.create') }}" class="w-100">
                             <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Add Family</span>
+                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Add Family','Magdagdag ng Pamilya')}}</span>
                             </button>
                         </a>
                     </div>
@@ -86,10 +89,10 @@
                             <th scope="col" class="checkbox-cell">
                                 <input type="checkbox" id="selectAll" />
                             </th>
-                            <th scope="col">Full Name</th>
+                            <th scope="col">{{ T::translate('Full Name','Buong Pangalan')}}</th>
                             <th scope="col">Mobile Number</th>
-                            <th scope="col">Registered Beneficiary</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col">{{ T::translate('Registered Beneficiary','Nakarehistrong Benepisyaryo')}}</th>
+                            <th scope="col">{{ T::translate('Actions','Aksyon')}}</th>
                         </tr>
                     </thead>
                     <tbody>

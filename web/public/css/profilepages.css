@@ -17,14 +17,12 @@
         .card-container {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            
             margin-bottom: 1.5rem;
+            padding: 0px !important;
         }
         
         @media (max-width: 767.98px) {
             .card-container {
-                padding: 1rem;
                 margin-bottom: 1rem;
             }
         }
@@ -103,6 +101,11 @@
             margin-bottom: 0;
             min-width: 800px; /* Ensures table doesn't collapse too much */
         }
+
+        .table th:last-child,
+        .table td:last-child {
+            text-align: center;
+        }
         
         @media (max-width: 991.98px) {
             .table {
@@ -137,6 +140,7 @@
         /* Action buttons */
         .action-icons {
             display: flex;
+            justify-content: center;
             gap: 0.5rem;
         }
         
@@ -170,13 +174,7 @@
             flex: 1 1 auto;
             min-width: 200px;
         }
-        
-        @media (max-width: 767.98px) {
-            .filter-row > div {
-                min-width: 100%;
-            }
-        }
-        
+
         /* Status select dropdown */
         .form-select.status-select {
             min-width: 120px;

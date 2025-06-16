@@ -225,6 +225,9 @@
     </style>
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     @include('components.modals.deleteBarangay')
@@ -235,7 +238,7 @@
     @include('components.modals.editBarangay')
 
     <div class="home-section">
-        <div class="text-left">MUNICIPALITY MANAGEMENT</div>
+        <div class="text-left">{{ T::translate('MUNICIPALITY MANAGEMENT', 'PAMAMAHALA SA MUNISIPALIDAD')}}</div>
         <div class="container-fluid">
         <div class="row" id="home-content">
 
@@ -265,9 +268,9 @@
                         <span class="input-group-text bg-white">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" class="form-control border-start-0" placeholder="Search barangay or municipality..." id="searchBar">
+                        <input type="text" class="form-control border-start-0" placeholder="{{ T::translate('Search barangay or municipality...', 'Maghanap ng Barangay o Munisipalidad...')}}" id="searchBar">
                         <button class="btn btn-primary" type="button" id="searchButton">
-                            <i class="bi bi-search me-1"></i> Search
+                            <i class="bi bi-search me-1"></i> {{ T::translate('Search', 'Maghanap')}}
                         </button>
                     </div>
                 </div>
@@ -279,7 +282,7 @@
                             <i class="bi bi-funnel"></i>
                         </span>
                         <select class="form-select border-start-0" id="filterDropdown">
-                            <option value="">All Municipalities</option>
+                            <option value="">{{ T::translate('All Municipalities', 'Lahat ng Munisipalidad')}}</option>
                             @foreach($municipalities as $municipality)
                                 <option value="{{ $municipality->municipality_id }}">{{ $municipality->municipality_name }}</option>
                             @endforeach
@@ -293,13 +296,13 @@
                 <div class="col-12">
                     <div class="action-buttons">
                         <button type="button" class="btn btn-primary" onclick="openMunicipalityModal()">
-                            <i class="bi bi-building-fill-add me-1"></i> Add/Edit Municipality
+                            <i class="bi bi-building-fill-add me-1"></i> {{ T::translate('Add/Edit Municipality', 'Magdagdag o I-edit ang Munisipalidad')}}
                         </button>
                         <button class="btn btn-primary" id="addBarangayButton" data-bs-toggle="modal" data-bs-target="#addBarangayModal">
-                            <i class="bi bi-plus-circle me-1"></i> Add Barangay
+                            <i class="bi bi-plus-circle me-1"></i>{{ T::translate('Add Barangay', 'Magdagdag ng Barangay')}} 
                         </button>
                         <button class="btn btn-danger" id="deleteMunicipalityButton">
-                            <i class="bi bi-trash-fill me-1"></i> Delete Municipality
+                            <i class="bi bi-trash-fill me-1"></i> {{ T::translate('Delete Municipality', 'Tanggalin ang Munisipalidad')}}
                         </button>
                     </div>
                 </div>
@@ -311,10 +314,10 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th scope="col">Municipality</th>
+                                    <th scope="col">{{ T::translate('Municipality', 'Munisipalidad')}}</th>
                                     <th scope="col">Barangay</th>
-                                    <th scope="col">Beneficiaries</th>
-                                    <th scope="col">Actions</th>
+                                    <th scope="col">{{ T::translate('Beneficiaries', 'Benepisyaryo')}}</th>
+                                    <th scope="col">{{ T::translate('Actions', 'Aksyon')}}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -343,8 +346,8 @@
                                     <tr>
                                         <td colspan="4" class="empty-state">
                                             <i class="bi bi-building-exclamation"></i>
-                                            <h5>No barangays found</h5>
-                                            <p class="text-muted">Add a new barangay to get started</p>
+                                            <h5>{{ T::translate('No barangays found', 'Walang barangay na nakita')}}</h5>
+                                            <p class="text-muted">{{ T::translate('Add a new barangay to get started', 'Magdagdag ng bagong barangay upang makapag-simula')}}</p>
                                         </td>
                                     </tr>
                                 @endforelse

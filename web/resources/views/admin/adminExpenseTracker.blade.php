@@ -7,231 +7,17 @@
     <title>Expense Tracker</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <style>
-        /* Custom styles for Expense Tracker */
-        .summary-card {
-            padding: 20px;
-            border-radius: 0.5rem;
-            border: 1px solid;
-            height: 100%;
-        }
-        
-        .expense-card {
-            border-radius: 0.5rem;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 250px;
-        }
-
-        .expense-item {
-            padding: 12px;
-            border-radius: 0.5rem;
-            margin-bottom: 12px;
-            border-left: 4px solid transparent;
-            background: #f8f9fa;
-            transition: all 0.2s ease;
-        }
-        
-        .expense-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .expense-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .expense-detail {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-        
-        .expense-amount {
-            font-weight: 700;
-            color: #212529;
-        }
-
-        .chart-legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .chart-legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        
-        /* Action buttons styling */
-        .expense-actions {
-            display: flex;
-            gap: 6px;
-            opacity: 0.6;
-            transition: all 0.2s ease;
-        }
-        
-        .expense-item:hover .expense-actions {
-            opacity: 1;
-        }
-        
-        .btn-action-icon {
-            padding: 4px 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            color: #fff;
-            background-color: #6c757d;
-            transition: all 0.2s ease;
-            border: none;
-        }
-        
-        .btn-action-icon.edit {
-            background-color: #0d6efd;
-        }
-        
-        .btn-action-icon.delete {
-            background-color: #dc3545;
-        }
-        
-        .btn-action-icon:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        /* Required field indicator */
-        .required-field::after {
-            content: "*";
-            color: #dc3545;
-            margin-left: 4px;
-        }
-        
-        /* Budget styles */
-        .budget-item {
-            border-left: 4px solid;
-        }
-        
-        .budget-amount-positive {
-            color: #198754;
-            font-weight: 600;
-        }
-        
-        .budget-amount-negative {
-            color: #dc3545;
-            font-weight: 600;
-        }
-        
-        /* Filter controls */
-        .filter-controls {
-            background-color: #f8f9fa;
-            padding: 12px;
-            border-radius: 0.5rem;
-            margin-bottom: 16px;
-        }
-        
-        /* Loading spinner */
-        .spinner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            border-radius: 0.5rem;
-        }
-
-        .recent-activity-item {
-            padding: 12px;
-            border-radius: 0.5rem;
-            margin-bottom: 12px;
-            background: #f8f9fa;
-            border-left: 4px solid #6c757d;
-            transition: all 0.2s ease;
-        }
-
-        .recent-activity-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .activity-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-
-        .activity-icon.expense {
-            background-color: #0d6efd;
-        }
-
-        .activity-icon.budget {
-            background-color: #198754;
-        }
-
-        .activity-title {
-            font-weight: 600;
-        }
-
-        .activity-description {
-            font-size: 0.85rem;
-            margin-top: 4px;
-            color: #6c757d;
-        }
-
-        .activity-creator {
-            margin-top: 6px;
-            font-size: 0.8rem;
-        }
-
-        .expense-amount {
-            font-weight: 700;
-            color: #212529;
-            width: 120px; /* Fixed width for amount */
-            text-align: right;
-            margin-bottom: 6px; /* Add space between amount and buttons */
-        }
-
-        .expense-actions {
-            display: flex;
-            gap: 6px;
-            opacity: 0.6;
-            transition: all 0.2s ease;
-            justify-content: flex-end; /* Align buttons to the right */
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/expensetracker.css') }}">
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
 
     <div class="home-section">
-        <div class="text-left">EXPENSE TRACKER</div>
+        <div class="text-left">{{ T::translate('EXPENSE TRACKER', 'PAGSUBAYBAY SA GASTOS')}}</div>
         
         <!-- Success Alert -->
         <div id="successAlert" class="alert alert-success alert-dismissible fade show d-none mx-3 mb-3" role="alert">
@@ -247,30 +33,30 @@
                     <div class="row mb-3 g-3">
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-primary bg-opacity-10 border-primary border-opacity-25">
-                                <h6 class="text-muted">Total Expenses (Monthly)</h6>
+                                <h6 class="text-muted">{{ T::translate('Total Expenses (Monthly)', 'Kabuuang Gastos (Buwanan)')}}</h6>
                                 <h3 class="text-primary" id="totalExpenses">₱0.00</h3>
-                                <small id="expensesTrend">No previous data available</small>
+                                <small id="expensesTrend">{{ T::translate('No previous data available', 'Walang nakaraang datos ang available.')}}</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-warning bg-opacity-10 border-warning border-opacity-25">
-                                <h6 class="text-muted">Total Expenses (Grand Total)</h6>
+                                <h6 class="text-muted">{{ T::translate('Total Expenses (Grand Total)', 'Kabuuang Gastos(Grand Total)')}}</h6>
                                 <h3 class="text-warning" id="grandTotalExpenses">₱0.00</h3>
-                                <small id="grandTotalExpensesLabel">All-time expenses</small>
+                                <small id="grandTotalExpensesLabel">{{ T::translate('All-time expenses', 'All-time na Gastos')}}</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-success bg-opacity-10 border-success border-opacity-25">
-                                <h6 class="text-muted">Most Spent Category (Monthly)</h6>
+                                <h6 class="text-muted">{{ T::translate('Most Spent Category (Monthly)', 'Pinakaginagastos na Kategorya (Buwanan)')}}</h6>
                                 <h3 class="text-success" id="topCategory">None</h3>
                                 <small id="topCategoryAmount">₱0.00 (0% of total)</small>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
                             <div class="summary-card bg-info bg-opacity-10 border-info border-opacity-25">
-                                <h6 class="text-muted">Overall Budget (Grand Total)</h6>
+                                <h6 class="text-muted">{{ T::translate('Overall Budget (Grand Total)', 'Pangkalahatang Badyet (Grand Total)')}}</h6>
                                 <h3 class="text-info" id="grandTotalBudget">₱0.00</h3>
-                                <small id="grandTotalBudgetLabel">All-time budget allocations</small>
+                                <small id="grandTotalBudgetLabel">{{ T::translate('All-time budget allocations', 'All-time na Alokasyon ng Badyet')}}</small>
                             </div>
                         </div>
                     </div>
@@ -280,18 +66,18 @@
                         <div class="col-md-7 col-lg-8">
                             <div class="d-flex flex-wrap gap-2">
                                 <button class="btn btn-primary btn-action" id="addExpenseBtn">
-                                    <i class="bi bi-plus-circle"></i> Add Expense
+                                    <i class="bi bi-plus-circle"></i> {{ T::translate('Add Expense', 'Magdagdag ng Gastos')}}
                                 </button>
                                 <button class="btn btn-outline-primary btn-action" id="addBudgetBtn">
-                                    <i class="bi bi-wallet2"></i> Add Budget
+                                    <i class="bi bi-wallet2"></i> {{ T::translate('Add Budget', 'Magdagdag ng Badyet')}}
                                 </button>
                                 <div class="dropdown">
                                     <button class="btn btn-outline-secondary btn-action dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-download"></i> Export
+                                        <i class="bi bi-download"></i> {{ T::translate('Export', 'I-Export')}}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                                        <li><a class="dropdown-item" href="#" id="exportExpensesExcel">Export Expenses (Excel)</a></li>
-                                        <li><a class="dropdown-item" href="#" id="exportBudgetsExcel">Export Budgets (Excel)</a></li>
+                                        <li><a class="dropdown-item" href="#" id="exportExpensesExcel">{{ T::translate('Export Expenses (Excel)', 'I-Export ang Gastos (Excel)')}}</a></li>
+                                        <li><a class="dropdown-item" href="#" id="exportBudgetsExcel">{{ T::translate('Export Budgets (Excel)', 'I-Export ang Badyet (Excel)')}}</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -300,7 +86,7 @@
                             <div class="row g-2">
                                 <div class="col-6">
                                     <select class="form-select form-select-sm" id="categoryFilter">
-                                        <option value="">All Categories</option>
+                                        <option value="">{{ T::translate('All Categories', 'Mga Kategorya')}}</option>
                                         @foreach($categories as $category)
                                             <option value="{{ $category->category_id }}" {{ $categoryId == $category->category_id ? 'selected' : '' }}>
                                                 {{ $category->name }}
@@ -327,8 +113,8 @@
                             <div class="card expense-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="card-title mb-0">Recent Expenses</h5>
-                                        <span class="badge bg-primary" id="expensesPeriodBadge">This Month</span>
+                                        <h5 class="card-title mb-0">{{ T::translate('Recent Expenses', 'Kamakailang mga Gastos')}}</h5>
+                                        <span class="badge bg-primary" id="expensesPeriodBadge">{{ T::translate('This Month', 'Ngayong Buwan')}}</span>
                                     </div>
                                     
                                     <div id="recentExpensesContainer" class="position-relative">
@@ -368,13 +154,13 @@
                                                 </div>
                                             @endforeach
                                         @else
-                                            <div class="alert alert-info">No expenses found for the selected period.</div>
+                                            <div class="alert alert-info">{{ T::translate('No expenses found for the selected period.', 'Walang gastos ang nakita para sa napiling panahon')}}</div>
                                         @endif
                                     </div>
                                     
                                     <div class="mt-3 text-center">
                                         <button class="btn btn-outline-primary btn-action" id="viewAllExpensesBtn">
-                                            <i class="bi bi-list-ul"></i> View All Expenses
+                                            <i class="bi bi-list-ul"></i> {{ T::translate('View All Expenses', 'Tingnan ang Lahat ng mga Gastos')}}
                                         </button>
                                     </div>
                                 </div>
@@ -384,9 +170,9 @@
                             <div class="card expense-card mt-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="card-title mb-0">Budget History</h5>
+                                        <h5 class="card-title mb-0">{{ T::translate('Budget Kasaysayan', 'Kasaysayan ng Badyet')}}</h5>
                                         <button class="btn btn-sm btn-outline-primary" id="viewFullHistoryBtn">
-                                            <i class="bi bi-clock-history"></i> Full History
+                                            <i class="bi bi-clock-history"></i> {{ T::translate('Full History', 'Buong Kasaysayan')}}
                                         </button>
                                     </div>
                                     
@@ -400,11 +186,11 @@
                                         <table class="table table-hover align-middle">
                                             <thead>
                                                 <tr>
-                                                    <th>Amount</th>
-                                                    <th>Type</th>
-                                                    <th>Period</th>
-                                                    <th>Description</th>
-                                                    <th>Actions</th>
+                                                    <th>{{ T::translate('Amount', 'Halaga')}}</th>
+                                                    <th>{{ T::translate('Type', 'Uri')}}</th>
+                                                    <th>{{ T::translate('Period', 'Panahon')}}</th>
+                                                    <th>{{ T::translate('Description', 'Paglalarawan')}}</th>
+                                                    <th>{{ T::translate('Actions', 'Aksyon')}}</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="budgetHistoryBody">
@@ -431,7 +217,7 @@
                                                     @endforeach
                                                 @else
                                                     <tr>
-                                                        <td colspan="5" class="text-center">No budget history found.</td>
+                                                        <td colspan="5" class="text-center">{{ T::translate('No budget history found.', 'Walang kasaysayan ng budget ang nakita.')}}</td>
                                                     </tr>
                                                 @endif
                                             </tbody>
@@ -446,7 +232,7 @@
                             <div class="card expense-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="card-title mb-0">Expense Breakdown</h5>
+                                    <h5 class="card-title mb-0">{{ T::translate('Expense Breakdown', 'Paghahati ng Gastos')}}</h5>
                                     <div id="chartSpinner" class="spinner-border spinner-border-sm text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
@@ -463,7 +249,7 @@
                             <!-- Replace the budget progress card with this -->
                             <div class="card expense-card mb-3">
                                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                                    <h6 class="card-title mb-0">Recent Activities</h6>
+                                    <h6 class="card-title mb-0">{{ T::translate('Recent Activities', 'Kamakailang Aktibidad')}}</h6>
                                     <div class="position-relative">
                                         <div id="activitiesSpinner" class="spinner-border spinner-border-sm text-primary d-none" role="status">
                                             <span class="visually-hidden">Loading...</span>
@@ -493,7 +279,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="expenseModalLabel">Add New Expense</h5>
+                    <h5 class="modal-title" id="expenseModalLabel">{{ T::translate('Add New Expense', 'Magdagdag ng Bagong Gastos')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -504,13 +290,13 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="expenseTitle" class="form-label">Title</label>
-                                <input type="text" class="form-control" id="expenseTitle" name="title" placeholder="Enter expense title" required>
+                                <input type="text" class="form-control" id="expenseTitle" name="title" placeholder="{{ T::translate('Enter expense title', 'Ilagay ang Title ng Gasots')}}" required>
                                 <div id="titleError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                             </div>
                             <div class="col-md-6">
-                                <label for="expenseCategory" class="form-label">Category</label>
+                                <label for="expenseCategory" class="form-label">{{ T::translate('Category', 'Kategorya')}}</label>
                                 <select class="form-select" id="expenseCategory" name="category_id" required>
-                                    <option value="">Select Category</option>
+                                    <option value="">{{ T::translate('Select Category', 'Pumili ng Kategorya')}}</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                     @endforeach
@@ -521,22 +307,22 @@
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="expenseAmount" class="form-label">Amount (₱)</label>
-                                <input type="number" class="form-control" id="expenseAmount" name="amount" step="0.01" min="0.01" max="1000000" placeholder="Enter amount" required>
+                                <label for="expenseAmount" class="form-label">{{ T::translate('Amount (₱)', 'Halaga (₱)')}}</label>
+                                <input type="number" class="form-control" id="expenseAmount" name="amount" step="0.01" min="0.01" max="1000000" placeholder="{{ T::translate('Enter amount', 'Ilagay ang halaga')}}" required>
                                 <div id="amountError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                             </div>
                             <div class="col-md-6">
-                                <label for="expensePaymentMethod" class="form-label">Payment Method</label>
+                                <label for="expensePaymentMethod" class="form-label">{{ T::translate('Payment Method', 'Paraan ng Pagbayad')}}</label>
                                 <select class="form-select" id="expensePaymentMethod" name="payment_method" required>
-                                    <option value="">Select Payment Method</option>
+                                    <option value="">{{ T::translate('Select Payment Method', 'Pumili ng Paraan ng Pagbayad')}}</option>
                                     <option value="cash">Cash</option>
-                                    <option value="check">Check</option>
+                                    <option value="check">{{ T::translate('Check', 'Tseke')}}</option>
                                     <option value="bank_transfer">Bank Transfer</option>
                                     <option value="gcash">GCash</option>
                                     <option value="paymaya">PayMaya</option>
                                     <option value="credit_card">Credit Card</option>
                                     <option value="debit_card">Debit Card</option>
-                                    <option value="other">Other</option>
+                                    <option value="other">{{ T::translate('Other', 'Iba pa')}}</option>
                                 </select>
                                 <div id="payment_methodError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                             </div>
@@ -544,42 +330,42 @@
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="expenseDate" class="form-label">Date</label>
+                                <label for="expenseDate" class="form-label">{{ T::translate('Date', 'Petsa')}}</label>
                                 <input type="date" class="form-control" id="expenseDate" name="date" required>
                                 <div id="dateError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                             </div>
                             <div class="col-md-6">
-                                <label for="expenseReceiptNumber" class="form-label">Receipt Number</label>
+                                <label for="expenseReceiptNumber" class="form-label">{{ T::translate('Receipt Number', 'Numero ng Resibo')}}</label>
                                 <input type="text" class="form-control" id="expenseReceiptNumber" name="receipt_number" placeholder="Enter receipt number" required>
                                 <div id="receipt_numberError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="expenseDescription" class="form-label">Description</label>
+                            <label for="expenseDescription" class="form-label">{{ T::translate('Description', 'Paglalarawan')}}</label>
                             <textarea class="form-control" id="expenseDescription" name="description" rows="3" placeholder="Write a brief description about this expense" required></textarea>
                             <div id="descriptionError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="expenseReceipt" class="form-label">Receipt Image (Optional)</label>
+                            <label for="expenseReceipt" class="form-label">{{ T::translate('Receipt Image (Optional)', 'Litrato ng Imahe (Opsyonal)')}}</label>
                             <input type="file" class="form-control" id="expenseReceipt" name="receipt" accept="image/jpeg,image/png,image/jpg,application/pdf">
                             <div id="receiptError" class="text-danger small mt-1 expense-error" style="display:none;"></div>
                             <div class="form-text">
                                 <i class="bi bi-info-circle me-1"></i> 
-                                Upload receipt image or PDF (max 5MB). Supported formats: JPEG, PNG, PDF.
+                                {{ T::translate('Upload receipt image or PDF (max 5MB). Supported formats: JPEG, PNG, PDF.', 'Mag-upload ng litrato ng resibo o PDF (max 5MB). Mga suportadong format: JPEG, PNG, PDF.')}}
                             </div>
                             
                             <!-- Receipt preview area (for edit) -->
                             <div id="receiptPreview" class="mt-2" style="display: none;">
-                                <p>Current Receipt: <a href="#" id="receiptLink" target="_blank">View</a></p>
+                                <p>{{ T::translate('Current Receipt:', 'Kasalakuyang Resibo')}} <a href="#" id="receiptLink" target="_blank">{{ T::translate('View', 'Tingnan')}}</a></p>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveExpenseBtn">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+                    <button type="button" class="btn btn-primary" id="saveExpenseBtn">{{ T::translate('Save', 'I-Save')}}</button>
                 </div>
             </div>
         </div>
@@ -590,7 +376,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="budgetModalTitle">Add New Budget Allocation</h5>
+                    <h5 class="modal-title" id="budgetModalTitle">{{ T::translate('Add New Budget Allocation', 'Magdagdag ng Bagong Alokasyon ng Badyet')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -599,14 +385,14 @@
                     
                     <form id="budgetForm">
                         <div class="mb-3">
-                            <label for="budgetAmount" class="form-label required-field">Amount (₱)</label>
+                            <label for="budgetAmount" class="form-label required-field">{{ T::translate('Amount (₱)', 'Halaga (₱)')}}</label>
                             <input type="number" class="form-control" id="budgetAmount" name="amount" step="0.01" min="0.01" max="1000000" required>
                             <div id="amountError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                         </div>
                         <div class="mb-3">
-                            <label for="budgetType" class="form-label required-field">Budget Type</label>
+                            <label for="budgetType" class="form-label required-field">{{ T::translate('Budget Type', 'Uri ng Badyet')}}</label>
                             <select class="form-select" id="budgetType" name="budget_type_id" required>
-                                <option value="">Select Budget Type</option>
+                                <option value="">{{ T::translate('Select Budget Type', 'Pumili ng Uri ng Badyet')}}</option>
                                 @foreach($budgetTypes as $type)
                                     <option value="{{ $type->budget_type_id }}">{{ $type->name }}</option>
                                 @endforeach
@@ -615,26 +401,26 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="budgetStartDate" class="form-label required-field">Start Date</label>
+                                <label for="budgetStartDate" class="form-label required-field">{{ T::translate('Start Date', 'Simulang Petsa')}}</label>
                                 <input type="date" class="form-control" id="budgetStartDate" name="start_date" required>
                                 <div id="start_dateError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="budgetEndDate" class="form-label required-field">End Date</label>
+                                <label for="budgetEndDate" class="form-label required-field">{{ T::translate('End Date', 'Pagtatapos na Petsa')}}</label>
                                 <input type="date" class="form-control" id="budgetEndDate" name="end_date" required>
                                 <div id="end_dateError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="budgetDescription" class="form-label">Description</label>
+                            <label for="budgetDescription" class="form-label">{{ T::translate('Description', 'Paglalarawan')}}</label>
                             <textarea class="form-control" id="budgetDescription" name="description" rows="3"></textarea>
                             <div id="descriptionError" class="text-danger small mt-1 budget-error" style="display:none;"></div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveBudgetBtn">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+                    <button type="button" class="btn btn-primary" id="saveBudgetBtn">{{ T::translate('Save', 'I-Save')}}</button>
                 </div>
             </div>
         </div>
@@ -645,36 +431,36 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">All Expenses</h5>
+                    <h5 class="modal-title">{{ T::translate('All Expenses', 'Lahat ng Gastos')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="filter-controls mb-3">
                         <div class="row">
                             <div class="col-md-3">
-                                <label for="expensesFilterCategory" class="form-label">Category</label>
+                                <label for="expensesFilterCategory" class="form-label">{{ T::translate('Category', 'Kategorya')}}</label>
                                 <select id="expensesFilterCategory" class="form-select">
-                                    <option value="">All Categories</option>
+                                    <option value="">{{ T::translate('All Categories', 'Lahat ng Kategorya')}}</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->category_id }}">{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="expensesFilterStartDate" class="form-label">Start Date</label>
+                                <label for="expensesFilterStartDate" class="form-label">{{ T::translate('Start Date', 'Simulang Petsa')}}</label>
                                 <input type="date" id="expensesFilterStartDate" class="form-control">
                             </div>
                             <div class="col-md-3">
-                                <label for="expensesFilterEndDate" class="form-label">End Date</label>
+                                <label for="expensesFilterEndDate" class="form-label">{{ T::translate('End Date', 'Pagtatapos na Petsa')}}</label>
                                 <input type="date" id="expensesFilterEndDate" class="form-control">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
                                 <button id="resetExpensesFilter" class="btn btn-outline-secondary me-2">
                                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                                 </button>
-                                <button id="applyExpensesFilter" class="btn btn-primary me-2">Apply Filter</button>
+                                <button id="applyExpensesFilter" class="btn btn-primary me-2">{{ T::translate('Apply Filter', 'I-Apply ang Pagsala')}}</button>
                                 <button id="exportFilteredExpenses" class="btn btn-outline-success">
-                                    <i class="bi bi-download"></i> Export
+                                    <i class="bi bi-download"></i> {{ T::translate('Export', 'I-Export')}}
                                 </button>
                             </div>
                         </div>
@@ -691,15 +477,15 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
+                                    <th>{{ T::translate('Date', '')}}</th>
                                     <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Payment</th>
-                                    <th>Receipt #</th>
-                                    <th>Created By</th>
-                                    <th>Receipt File</th>
-                                    <th>Actions</th>
+                                    <th>{{ T::translate('Category', 'Kategorya')}}</th>
+                                    <th>{{ T::translate('Amount', 'Halaga')}}</th>
+                                    <th>{{ T::translate('Payment', 'Pagbabayad')}}</th>
+                                    <th>{{ T::translate('Receipt #', 'Resibo #')}}</th>
+                                    <th>{{ T::translate('Created By', 'Nilikha Ni')}}</th>
+                                    <th>{{ T::translate('Receipt File', 'File ng Resibo')}}</th>
+                                    <th>{{ T::translate('Actions', 'Aksyon')}}</th>
                                 </tr>
                             </thead>
                             <tbody id="allExpensesBody">
@@ -712,7 +498,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>
@@ -723,36 +509,36 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Budget History</h5>
+                    <h5 class="modal-title">{{ T::translate('Budget History', 'Kasaysayan ng Budget')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="filter-controls mb-3">
                         <div class="row">
                             <div class="col-md-3">
-                                <label for="budgetFilterType" class="form-label">Budget Type</label>
+                                <label for="budgetFilterType" class="form-label">{{ T::translate('Budget Type', 'Uri ng Badyet')}}</label>
                                 <select id="budgetFilterType" class="form-select">
-                                    <option value="">All Types</option>
+                                    <option value="">{{ T::translate('All Types', 'Lahat ng Uri')}}</option>
                                     @foreach($budgetTypes as $type)
                                         <option value="{{ $type->budget_type_id }}">{{ $type->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="budgetFilterStartDate" class="form-label">Start Date</label>
+                                <label for="budgetFilterStartDate" class="form-label">{{ T::translate('Start Date', 'Simulang Petsa')}}</label>
                                 <input type="date" id="budgetFilterStartDate" class="form-control">
                             </div>
                             <div class="col-md-3">
-                                <label for="budgetFilterEndDate" class="form-label">End Date</label>
+                                <label for="budgetFilterEndDate" class="form-label">{{ T::translate('End Date', 'Pagtatapos na Petsa')}}</label>
                                 <input type="date" id="budgetFilterEndDate" class="form-control">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
                                 <button id="resetBudgetFilter" class="btn btn-outline-secondary me-2">
                                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                                 </button>
-                                <button id="applyBudgetFilter" class="btn btn-primary me-2">Apply Filter</button>
+                                <button id="applyBudgetFilter" class="btn btn-primary me-2">{{ T::translate('Apply Filter', 'I-Apply ang Pagsala')}}</button>
                                 <button id="exportFilteredBudgets" class="btn btn-outline-success">
-                                    <i class="bi bi-download"></i> Export
+                                    <i class="bi bi-download"></i> {{ T::translate('Export', 'I-Export')}}
                                 </button>
                             </div>
                         </div>
@@ -770,13 +556,13 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Amount</th>
-                                    <th>Type</th>
-                                    <th>Period</th>
-                                    <th>Description</th>
-                                    <th>Created By</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
+                                    <th>{{ T::translate('Amount', 'Halaga')}}</th>
+                                    <th>{{ T::translate('Type', 'Uri')}}</th>
+                                    <th>{{ T::translate('Period', 'Panahon')}}</th>
+                                    <th>{{ T::translate('Description', 'Paglalarawan')}}</th>
+                                    <th>{{ T::translate('Created By', 'Nilikha ni')}}</th>
+                                    <th>{{ T::translate('Created At', 'Nilikha nang')}}</th>
+                                    <th>{{ T::translate('Actions', 'Aksyon')}}</th>
                                 </tr>
                             </thead>
                             <tbody id="fullHistoryBody">
@@ -789,7 +575,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>
@@ -801,46 +587,46 @@
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title" id="deleteModalTitle">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Confirmation
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ T::translate('Delete Confirmation', 'Pagkumpirma ng Pagtanggal')}}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-circle-fill me-2"></i>
-                        <strong>Warning:</strong> This action cannot be undone!
+                        <strong>{{ T::translate('Warning:', 'Babala')}}</strong> {{ T::translate('This action cannot be undone!', 'Ang hakbang na ito ay hindi maibabalik!')}}
                     </div>
                     
                     <div id="deleteItemDetails" class="mb-3 border-bottom pb-3">
                         <!-- Dynamically populated with item details -->
                     </div>
                     
-                    <p id="deleteConfirmMessage">You're about to permanently delete this item. Consider editing instead if you only need to make changes.</p>
+                    <p id="deleteConfirmMessage">{{ T::translate('You\'re about to permanently delete this item. Consider editing instead if you only need to make changes.', 'Permanente mo nang tatanggalin ang item na ito. Isaalang-alang ang pag-edit sa halip kung kailangan mo lang gumawa ng mga pagbabago.')}}</p>
                     
                     <form id="deleteConfirmationForm" class="mt-3">
                         <input type="hidden" id="deleteItemId">
                         <input type="hidden" id="deleteItemType">
                         
                         <div class="mb-3">
-                            <label for="confirmPassword" class="form-label required-field">For security, please enter your password to confirm deletion</label>
+                            <label for="confirmPassword" class="form-label required-field">{{ T::translate('For security, please enter your password to confirm deletion', 'Para sa seguridad, mangyaring ilagay ang iyong password upang kumpirmahin ang pagtanggal')}}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-danger text-white">
                                     <i class="bi bi-key-fill"></i>
                                 </span>
-                                <input type="password" class="form-control" id="confirmPassword" name="password" required placeholder="Enter your password">
+                                <input type="password" class="form-control" id="confirmPassword" name="password" required placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password')}}">
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Cancel
+                        <i class="bi bi-x-circle me-1"></i> {{ T::translate('Cancel', 'I-Kansela')}}
                     </button>
                     <button type="button" class="btn btn-outline-primary" onclick="editInsteadOfDelete()">
-                        <i class="bi bi-pencil-square me-1"></i> Edit Instead
+                        <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit Instead', 'I-Edit sa halip')}}
                     </button>
                     <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                        <i class="bi bi-trash me-1"></i> Yes, Delete
+                        <i class="bi bi-trash me-1"></i> {{ T::translate('Yes, Delete', 'Oo, Tanggalin')}}
                     </button>
                 </div>
             </div>
@@ -1223,8 +1009,8 @@
                         }
                     } else {
                         // Show error details for debugging
-                        console.error('Error saving expense:', xhr);
-                        toastr.error('An error occurred while saving the expense. Please try again.');
+                        console.error('{{ T::translate('Error saving expense:', 'Error sa pag-save ng gastos:')}}', xhr);
+                        toastr.error('{{ T::translate('An error occurred while saving the expense. Please try again.', 'Nagkaroon ng error habang sine-save ang gastos. Pakisubukan muli.')}}');
                     }
                 },
                 complete: function() {
@@ -1503,7 +1289,7 @@
                     const expense = response.expense;
                     
                     // Set up delete confirmation modal for an expense
-                    $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Expense');
+                    $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> {{ T::translate('Delete Expense', 'Tanggalin ang Gastos')}}');
                     
                     // Prepare detail information
                     const detailsHtml = `
@@ -1512,23 +1298,23 @@
                             <span>${expense.title}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <strong>Category:</strong>
+                            <strong>{{ T::translate('Category:', 'Kategorya:')}}</strong>
                             <span>${expense.category.name}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <strong>Amount:</strong>
+                            <strong>{{ T::translate('Amount:', 'Halaga:')}}</strong>
                             <span class="text-danger">₱${formatNumber(expense.amount)}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <strong>Date:</strong>
+                            <strong>{{ T::translate('Date:', 'Petsa:')}}</strong>
                             <span>${formatDate(expense.date)}</span>
                         </div>
                     `;
                     
                     $('#deleteItemDetails').html(detailsHtml);
                     $('#deleteConfirmMessage').html(`
-                        You're about to <strong>permanently delete</strong> this expense record. 
-                        This action <strong>cannot be undone</strong>. Consider editing instead if you only need to make changes.
+                        {{ T::translate('You\'re about to', 'Ikaw ay')}} <strong>{{ T::translate('permanently delete', 'permanenteng tatanggalin')}}</strong> {{ T::translate('this expense record', 'ang talaan ng gastos na ito.')}} 
+                        {{ T::translate('This action', 'Ang hakbang na ito')}} <strong>{{ T::translate('cannot be undone', 'ay hindi na maaring maibalik')}}</strong>. {{ T::translate('Consider editing instead if you only need to make changes.', 'Ikonsidera ang pag-edit sa halip kung kailangan mo lamang gumawa ng mga pagbabago.')}}
                     `);
                     
                     $('#deleteItemId').val(id);
@@ -1543,8 +1329,8 @@
                     new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
                 },
                 error: function(xhr) {
-                    console.error('Error loading expense details for deletion:', xhr);
-                    toastr.error('Failed to load expense details');
+                    console.error('{{ T::translate('Error loading expense details for deletion:', 'Error sa pag-load ng detalye ng gastos para sa pagtanggal:')}}', xhr);
+                    toastr.error('{{ T::translate('Failed to load expense details', 'Nabigong i-load ang mga detalye ng gastos')}}');
                 }
             });
         }
@@ -1562,34 +1348,34 @@
                     const budget = response.budget;
                     
                     // Set up delete confirmation modal for a budget allocation
-                    $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Budget Allocation');
+                    $('#deleteModalTitle').html('<i class="bi bi-exclamation-triangle-fill me-2"></i> {{ T::translate('Delete Budget Allocation', 'Tanggalin ang Alokasyon ng Badyet')}}');
                     
                     // Prepare detail information - FIXED DESCRIPTION ALIGNMENT
                     const detailsHtml = `
                         <div class="d-flex justify-content-between">
-                            <strong>Budget Type:</strong>
+                            <strong>{{ T::translate('Budget Type:', 'Uri ng Badyet:')}}</strong>
                             <span>${budget.budget_type.name}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <strong>Amount:</strong>
+                            <strong>{{ T::translate('Amount:', 'Halaga:')}}</strong>
                             <span class="${budget.amount >= 0 ? 'text-success' : 'text-danger'}">
                                 ₱${formatNumber(budget.amount)}
                             </span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <strong>Period:</strong>
+                            <strong>{{ T::translate('Period:', 'Panahon')}}</strong>
                             <span>${formatDate(budget.start_date)} to ${formatDate(budget.end_date)}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-start">
-                            <strong>Description:</strong>
+                            <strong>{{ T::translate('Description:', 'Paglalarawan:')}}</strong>
                             <span class="text-end" style="max-width: 65%;">${budget.description || 'No description'}</span>
                         </div>
                     `;
                     
                     $('#deleteItemDetails').html(detailsHtml);
                     $('#deleteConfirmMessage').html(`
-                        You're about to <strong>permanently delete</strong> this budget allocation. 
-                        This action <strong>cannot be undone</strong>. Consider editing instead if you only need to make changes.
+                        {{ T::translate('You\'re about to', 'Ikaw ay')}} <strong>{{ T::translate('permanently delete', 'permanenteng tatanggalin')}}</strong> {{ T::translate('this budget record', 'ang talaan ng badyet na ito.')}} 
+                        {{ T::translate('This action', 'Ang hakbang na ito')}} <strong>{{ T::translate('cannot be undone', 'ay hindi na maaring maibalik')}}</strong>. {{ T::translate('Consider editing instead if you only need to make changes.', 'Ikonsidera ang pag-edit sa halip kung kailangan mo lamang gumawa ng mga pagbabago.')}}
                     `);
                     
                     $('#deleteItemId').val(id);
@@ -1604,8 +1390,8 @@
                     new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
                 },
                 error: function(xhr) {
-                    console.error('Error loading budget details for deletion:', xhr);
-                    toastr.error('Failed to load budget details');
+                    console.error('{{ T::translate('Error loading budget details for deletion:', 'Error sa pag-load ng detalye ng budget para sa pagtanggal:')}}', xhr);
+                    toastr.error('{{ T::translate('Failed to load budget details', 'Nabigong i-load ang mga detalye ng badyet')}}');
                 }
             });
         }
@@ -1630,7 +1416,7 @@
             const password = $('#confirmPassword').val();
             
             if (!password) {
-                toastr.error('Please enter your password to confirm');
+                toastr.error('{{ T::translate('Please enter your password to confirm', 'Mangyaring ilagay ang iyong password upang makumpirma')}}');
                 $('#confirmPassword').addClass('is-invalid');
                 return;
             }
@@ -1838,7 +1624,7 @@
                     container.append(expenseItem);
                 });
             } else {
-                container.html('<div class="alert alert-info">No expenses found for the selected period.</div>');
+                container.html('<div class="alert alert-info">{{ T::translate('No expenses found for the selected period.', 'Walang nakitang gastos sa napiling panahon.')}}</div>');
             }
         }
 
@@ -1876,7 +1662,7 @@
                     tableBody.append(budgetRow);
                 });
             } else {
-                tableBody.html('<tr><td colspan="5" class="text-center">No budget history found.</td></tr>');
+                tableBody.html('<tr><td colspan="5" class="text-center">{{ T::translate('No budget history found.', 'Walang Kasaysayan ng Badyet ang nakita.')}}</td></tr>');
             }
         }
 
@@ -1934,7 +1720,7 @@
                                         <i class="bi bi-receipt"></i>
                                     </div>
                                     <div class="activity-title">
-                                        New expense: ${activity.title}
+                                        {{ T::translate('New expense:', 'Bagong Gastos')}} ${activity.title}
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between">
@@ -1947,7 +1733,7 @@
                                     </div>
                                 </div>
                                 <div class="activity-creator">
-                                    <small class="text-muted">Created by: ${activity.created_by}</small>
+                                    <small class="text-muted">{{ T::translate('Created by:', 'Nilikha ni:')}} ${activity.created_by}</small>
                                 </div>
                             </div>
                         `;
@@ -1960,7 +1746,7 @@
                                         <i class="bi bi-wallet2"></i>
                                     </div>
                                     <div class="activity-title">
-                                        New budget: ${activity.title}
+                                        {{ T::translate('New budget:', 'Bagong Badyet:')}} ${activity.title}
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between">
@@ -1975,7 +1761,7 @@
                                     <small>${activity.description}</small>
                                 </div>
                                 <div class="activity-creator">
-                                    <small class="text-muted">Created by: ${activity.created_by}</small>
+                                    <small class="text-muted">{{ T::translate('Created by:', 'Nilikha ni:')}} ${activity.created_by}</small>
                                 </div>
                             </div>
                         `;
@@ -1984,7 +1770,7 @@
                     container.append(activityHtml);
                 });
             } else {
-                container.html('<div class="alert alert-info">No recent activities found.</div>');
+                container.html('<div class="alert alert-info">{{ T::translate('No recent activities found.', 'Walang kamakailang aktibidad ang nakita.')}}</div>');
             }
         }
 
@@ -2035,7 +1821,7 @@
                     toastr.error('Failed to load dashboard data');
                     
                     // Clear loading indicators on error
-                    $('#recentActivitiesContainer').html('<div class="alert alert-danger">Failed to load activities</div>');
+                    $('#recentActivitiesContainer').html('<div class="alert alert-danger">{{ T::translate('Failed to load activities', 'Nabigong i-load ang mga aktibidad')}}</div>');
                 },
                 complete: function() {
                     // Hide all spinners
@@ -2098,7 +1884,7 @@
                             : "{{ asset('storage') }}/" + expense.receipt_path;
                         
                         receiptFileHtml = `<a href="${receiptUrl}" target="_blank" class="btn btn-sm btn-outline-info">
-                            <i class="bi bi-file-earmark"></i> View
+                            <i class="bi bi-file-earmark"></i> {{ T::translate('View', 'Tingnan')}}
                         </a>`;
                     }
                     
@@ -2169,7 +1955,7 @@
                     paginationEl.html(paginationControls);
                 }
             } else {
-                tableBody.html('<tr><td colspan="9" class="text-center">No expenses found</td></tr>');
+                tableBody.html('<tr><td colspan="9" class="text-center">{{ T::translate('No expenses found', 'Walang Gastos ang nakita')}}</td></tr>');
             }
         }
 
@@ -2181,7 +1967,7 @@
             
             // Validation
             if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-                toastr.error('Start date cannot be after end date');
+                toastr.error('{{ T::translate('Start date cannot be after end date', 'Ang petsa ng simula ay hindi maaaring mas huli kaysa sa petsa ng pagtatapos')}}');
                 return;
             }
             
@@ -2328,7 +2114,7 @@
                     paginationEl.html(paginationControls);
                 }
             } else {
-                tableBody.html('<tr><td colspan="7" class="text-center">No budget history found</td></tr>');
+                tableBody.html('<tr><td colspan="7" class="text-center">{{ T::translate('No budget history found', 'Walang Kasaysayan ng Badyet ang nakita')}}</td></tr>');
             }
         }
 
