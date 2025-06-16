@@ -8,7 +8,7 @@
                 </div>
                 <h5 class="mb-0">{{ $conversation->name }}</h5>
             @else
-                <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm me-2" alt="User">
+                <img src="{{ $conversation->other_participant_photo_url ?? asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm me-2" alt="User">
                 <h5 class="mb-0">{{ $conversation->other_participant_name ?? 'Unknown User' }}</h5>
             @endif
         </div>
@@ -110,7 +110,7 @@
                     @if($message->sender_id != Auth::id() || $message->sender_type != 'cose_staff')
                         <div class="d-flex">
                             <div class="flex-shrink-0">
-                                <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle" width="30" height="30" alt="User">
+                                <img src="{{ $message->sender_photo_url ?? asset('images/defaultProfile.png') }}" class="rounded-circle" width="30" height="30" alt="User">
                             </div>
                             <div class="flex-grow-1 ms-2">
                                 <!-- Only show sender name in group chats -->
@@ -185,26 +185,24 @@
                                             }
                                         @endphp
                                         
-                                        <a href="/storage/{{ $filePath }}" target="_blank" 
+                                        <a href="{{ $attachment->file_url }}" target="_blank" 
                                         class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
-                                            
-                                                @if($isImage)
-                                                    <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
-                                                        <div class="spinner-border text-primary loading-pulse"></div>
-                                                    </div>
-                                                    <img src="/storage/{{ $filePath }}" 
-                                                        class="attachment-img" 
-                                                        alt="{{ $attachment->file_name }}"
-                                                        style="display: none;" 
-                                                        id="img-{{$attachment->attachment_id}}"
-                                                        onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
-                                                        onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
-                                                @else
+                                            @if($isImage)
+                                                <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
+                                                    <div class="spinner-border text-primary loading-pulse"></div>
+                                                </div>
+                                                <img src="{{ $attachment->file_url }}" 
+                                                    class="attachment-img" 
+                                                    alt="{{ $attachment->file_name }}"
+                                                    style="display: none;" 
+                                                    id="img-{{$attachment->attachment_id}}"
+                                                    onload="this.style.display='block'; document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
+                                                    onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\'font-size:2rem;padding:10px;\'><i class=\'bi bi-exclamation-triangle-fill text-warning\'></i></div>';">
+                                            @else
                                                 <div class="file-icon">
                                                     @php
                                                         $fileName = strtolower($attachment->file_name);
                                                         $iconClass = 'bi-file-earmark';
-                                                        
                                                         if(strpos($attachment->file_type ?? '', 'pdf') !== false || Str::endsWith($fileName, '.pdf')) {
                                                             $iconClass = 'bi-file-earmark-pdf';
                                                         } elseif(Str::endsWith($fileName, '.doc') || Str::endsWith($fileName, '.docx')) {

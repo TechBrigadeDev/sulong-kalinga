@@ -55,7 +55,7 @@
                         <span>{{ $convo->name ? substr($convo->name, 0, 1) : 'G' }}</span>
                     </div>
                 @else
-                    <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm" alt="User">
+                    <img src="{{ $convo->other_participant_photo_url ?? asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm" alt="User">
                 @endif
                 
                 @if($hasUnread)

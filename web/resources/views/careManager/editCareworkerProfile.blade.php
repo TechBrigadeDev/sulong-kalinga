@@ -189,7 +189,7 @@
                         <div class="row mb-1">
                             <div class="col-md-4">
                                 <label for="careWorkerPhoto" class="form-label">Care Worker Photo</label>
-                                <input type="file" class="form-control" id="careWorkerPhoto" name="care_worker_photo" accept="image/png, image/jpeg" capture="user">
+                                <input type="file" class="form-control" id="careWorkerPhoto" name="careworker_photo" accept="image/png, image/jpeg" capture="user">
                                 <small class="text-danger">Maximum file size: 7MB</small>
                                 @if($careworker->photo)
                                     <small class="text-muted" title="{{ basename($careworker->photo) }}">

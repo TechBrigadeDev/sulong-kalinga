@@ -254,6 +254,50 @@ class BeneficiaryController extends Controller
             return redirect()->back()->with('error', 'Beneficiary not found.');
         }
 
+        // Generate temporary URLs for file fields
+        $photoUrl = $beneficiary->photo
+            ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->photo, 30)
+            : null;
+        $careServiceAgreementUrl = $beneficiary->care_service_agreement_doc
+            ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->care_service_agreement_doc, 30)
+            : null;
+        $generalCarePlanUrl = $beneficiary->general_care_plan_doc
+            ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->general_care_plan_doc, 30)
+            : null;
+        $beneficiarySignatureUrl = $beneficiary->beneficiary_signature
+            ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->beneficiary_signature, 30)
+            : null;
+        $careWorkerSignatureUrl = $beneficiary->care_worker_signature
+            ? $this->uploadService->getTemporaryPrivateUrl($beneficiary->care_worker_signature, 30)
+            : null;
+        $careServiceAgreementViewUrl = $beneficiary->care_service_agreement_doc
+            ? $this->uploadService->getTemporaryPrivateUrl(
+                $beneficiary->care_service_agreement_doc,
+                30,
+                'spaces-private',
+                ['ResponseContentDisposition' => 'inline']
+            )
+            : null;
+        $generalCarePlanViewUrl = $beneficiary->general_care_plan_doc
+            ? $this->uploadService->getTemporaryPrivateUrl(
+                $beneficiary->general_care_plan_doc,
+                30,
+                'spaces-private',
+                ['ResponseContentDisposition' => 'inline']
+            )
+            : null;
+        // For Care Service Agreement
+        $careServiceAgreementExtension = null;
+        if ($beneficiary->care_service_agreement_doc) {
+            $careServiceAgreementExtension = strtolower(pathinfo($beneficiary->care_service_agreement_doc, PATHINFO_EXTENSION));
+        }
+
+        // For General Care Plan
+        $generalCarePlanExtension = null;
+        if ($beneficiary->general_care_plan_doc) {
+            $generalCarePlanExtension = strtolower(pathinfo($beneficiary->general_care_plan_doc, PATHINFO_EXTENSION));
+        }
+
         // For care workers, check if they're assigned to this beneficiary
         if (Auth::user()->role_id == 3) {
             $isAssigned = $beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id == Auth::id();
@@ -285,11 +329,21 @@ class BeneficiaryController extends Controller
 
         // Return appropriate view based on user role
         if (Auth::user()->role_id == 1) { // Admin
-            return view('admin.viewProfileDetails', compact('beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker')); 
+            // return view('admin.viewProfileDetails', compact('beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker')); 
+            return view('admin.viewProfileDetails', compact(
+                'beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker',
+                'photoUrl', 'careServiceAgreementUrl', 'generalCarePlanUrl', 'beneficiarySignatureUrl', 'careWorkerSignatureUrl', 'careServiceAgreementViewUrl', 'generalCarePlanViewUrl', 'careServiceAgreementExtension', 'generalCarePlanExtension'
+            ));
         } elseif (Auth::user()->role_id == 2) { // Care Manager
-            return view('careManager.viewProfileDetails', compact('beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker')); 
+            return view('careManager.viewProfileDetails', compact(
+                'beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker',
+                'photoUrl', 'careServiceAgreementUrl', 'generalCarePlanUrl', 'beneficiarySignatureUrl', 'careWorkerSignatureUrl', 'careServiceAgreementViewUrl', 'generalCarePlanViewUrl', 'careServiceAgreementExtension', 'generalCarePlanExtension'
+            ));        
         } else { // Care Worker
-            return view('careWorker.viewProfileDetails', compact('beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker')); 
+            return view('careWorker.viewProfileDetails', compact(
+                'beneficiary', 'careNeeds1', 'careNeeds2', 'careNeeds3', 'careNeeds4', 'careNeeds5', 'careNeeds6', 'careNeeds7', 'careWorker',
+                'photoUrl', 'careServiceAgreementUrl', 'generalCarePlanUrl', 'beneficiarySignatureUrl', 'careWorkerSignatureUrl', 'careServiceAgreementViewUrl', 'generalCarePlanViewUrl', 'careServiceAgreementExtension', 'generalCarePlanExtension'
+            ));        
         }
     }
 
@@ -1544,6 +1598,9 @@ class BeneficiaryController extends Controller
             
             // Store beneficiary profile picture if a new one is uploaded
             if ($request->hasFile('beneficiaryProfilePic')) {
+                if ($beneficiary->photo) {
+                    $this->uploadService->delete($beneficiary->photo, 'spaces-private');
+                }
                 $beneficiaryPhotoPath = $this->uploadService->upload(
                     $request->file('beneficiaryProfilePic'),
                     'spaces-private',
@@ -1556,6 +1613,9 @@ class BeneficiaryController extends Controller
 
             // Handle Care Service Agreement if a new one is uploaded
             if ($request->hasFile('care_service_agreement')) {
+                if ($beneficiary->care_service_agreement_doc) {
+                    $this->uploadService->delete($beneficiary->care_service_agreement_doc, 'spaces-private');
+                }
                 $careServiceAgreementPath = $this->uploadService->upload(
                     $request->file('care_service_agreement'),
                     'spaces-private',
@@ -1568,6 +1628,9 @@ class BeneficiaryController extends Controller
 
             // Handle General Care Plan if a new one is uploaded
             if ($request->hasFile('general_careplan')) {
+                if ($beneficiary->general_care_plan_doc) {
+                    $this->uploadService->delete($beneficiary->general_care_plan_doc, 'spaces-private');
+                }
                 $generalCarePlanPath = $this->uploadService->upload(
                     $request->file('general_careplan'),
                     'spaces-private',
@@ -1580,6 +1643,9 @@ class BeneficiaryController extends Controller
             
             // Handle Beneficiary Signature if a new one is provided
             if ($request->hasFile('beneficiary_signature_upload')) {
+                if ($beneficiary->beneficiary_signature) {
+                    $this->uploadService->delete($beneficiary->beneficiary_signature, 'spaces-private');
+                }
                 $beneficiarySignaturePath = $this->uploadService->upload(
                     $request->file('beneficiary_signature_upload'),
                     'spaces-private',
@@ -1589,22 +1655,31 @@ class BeneficiaryController extends Controller
                     ]
                 );
             } elseif ($request->input('beneficiary_signature_canvas')) {
-                $beneficiarySignaturePath = 'uploads/beneficiary_signatures/' .
-                    $request->input('first_name') . '_' .
-                    $request->input('last_name') . '_signature_' .
-                    $uniqueIdentifier . '.png';
-
-                $directory = storage_path('app/private/uploads/beneficiary_signatures');
-                if (!is_dir($directory)) {
-                    mkdir($directory, 0755, true);
+                if ($beneficiary->beneficiary_signature) {
+                    $this->uploadService->delete($beneficiary->beneficiary_signature, 'spaces-private');
                 }
-                $beneficiarySignatureData = $request->input('beneficiary_signature_canvas');
-                $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $beneficiarySignatureData));
-                file_put_contents($directory . '/' . basename($beneficiarySignaturePath), $decodedImage);
+                $canvasData = $request->input('beneficiary_signature_canvas');
+                $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $canvasData));
+                $tmpFile = tmpfile();
+                $tmpFilePath = stream_get_meta_data($tmpFile)['uri'];
+                file_put_contents($tmpFilePath, $decodedImage);
+
+                $beneficiarySignaturePath = $this->uploadService->upload(
+                    new \Illuminate\Http\File($tmpFilePath),
+                    'spaces-private',
+                    'uploads/beneficiary_signatures',
+                    [
+                        'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_signature_' . $uniqueIdentifier . '.png'
+                    ]
+                );
+                fclose($tmpFile);
             }
             
             // Handle Care Worker Signature if a new one is provided
             if ($request->hasFile('care_worker_signature_upload')) {
+                if ($beneficiary->care_worker_signature) {
+                    $this->uploadService->delete($beneficiary->care_worker_signature, 'spaces-private');
+                }
                 $careWorkerSignaturePath = $this->uploadService->upload(
                     $request->file('care_worker_signature_upload'),
                     'spaces-private',
@@ -1614,18 +1689,24 @@ class BeneficiaryController extends Controller
                     ]
                 );
             } elseif ($request->input('care_worker_signature_canvas')) {
-                $careWorkerSignaturePath = 'uploads/care_worker_signatures/' .
-                    $request->input('first_name') . '_' .
-                    $request->input('last_name') . '_care_worker_signature_' .
-                    $uniqueIdentifier . '.png';
-
-                $directory = storage_path('app/private/uploads/care_worker_signatures');
-                if (!is_dir($directory)) {
-                    mkdir($directory, 0755, true);
+                if ($beneficiary->care_worker_signature) {
+                    $this->uploadService->delete($beneficiary->care_worker_signature, 'spaces-private');
                 }
-                $careWorkerSignatureData = $request->input('care_worker_signature_canvas');
-                $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $careWorkerSignatureData));
-                file_put_contents($directory . '/' . basename($careWorkerSignaturePath), $decodedImage);
+                $canvasData = $request->input('care_worker_signature_canvas');
+                $decodedImage = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $canvasData));
+                $tmpFile = tmpfile();
+                $tmpFilePath = stream_get_meta_data($tmpFile)['uri'];
+                file_put_contents($tmpFilePath, $decodedImage);
+
+                $careWorkerSignaturePath = $this->uploadService->upload(
+                    new \Illuminate\Http\File($tmpFilePath),
+                    'spaces-private',
+                    'uploads/care_worker_signatures',
+                    [
+                        'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_care_worker_signature_' . $uniqueIdentifier . '.png'
+                    ]
+                );
+                fclose($tmpFile);
             }
             
             // Update password only if provided

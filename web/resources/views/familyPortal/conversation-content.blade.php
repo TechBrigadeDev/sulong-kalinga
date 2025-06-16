@@ -29,7 +29,7 @@ function getFileIconClass($fileType) {
                 </div>
                 <h5 class="mb-0">{{ $conversation->name }}</h5>
             @else
-                <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm me-2" alt="User">
+                <img src="{{ $conversation->other_participant_photo_url ?? asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm me-2" alt="User">
                 <h5 class="mb-0">{{ $conversation->other_participant_name ?? 'Unknown User' }}</h5>
             @endif
         </div>
@@ -136,7 +136,7 @@ function getFileIconClass($fileType) {
                         <!-- INCOMING MESSAGE - with profile image -->
                         <div class="d-flex">
                             <div class="flex-shrink-0">
-                                <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle" width="30" height="30" alt="User">
+                                <img src="{{ $message->sender_photo_url ?? asset('images/defaultProfile.png') }}" class="rounded-circle" width="30" height="30" alt="User">
                             </div>
                             <div class="flex-grow-1 ms-2">
                                 @if($conversation->is_group_chat)
@@ -210,14 +210,14 @@ function getFileIconClass($fileType) {
                                                         }
                                                     @endphp
                                                     
-                                                    <a href="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                    <a href="{{ $attachment->file_url }}" 
                                                     target="_blank" 
                                                     class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
                                                         @if($isImage)
                                                             <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
                                                                 <div class="spinner-border text-primary loading-pulse"></div>
                                                             </div>
-                                                            <img src="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                            <img src="{{ $attachment->file_url }}" 
                                                                 class="attachment-img" 
                                                                 alt="{{ $attachment->file_name }}"
                                                                 onload="document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"
@@ -282,14 +282,14 @@ function getFileIconClass($fileType) {
                                                     }
                                                 @endphp
                                                 
-                                                <a href="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                <a href="{{ $attachment->file_url }}" 
                                                 target="_blank" 
                                                 class="{{ $isImage ? 'attachment-link' : 'attachment-file' }}">
                                                     @if($isImage)
                                                         <div class="attachment-loading" id="loading-{{$attachment->attachment_id}}">
                                                             <div class="spinner-border text-primary loading-pulse"></div>
                                                         </div>
-                                                        <img src="{{ route($rolePrefix . '.messaging.attachment', $attachment->attachment_id) }}" 
+                                                        <img src="{{ $attachment->file_url }}" 
                                                             class="attachment-img" 
                                                             alt="{{ $attachment->file_name }}"
                                                             onload="document.getElementById('loading-{{$attachment->attachment_id}}').style.display='none';"

@@ -1877,14 +1877,9 @@
                 expenses.forEach(expense => {
                     // Improved receipt file link handling
                     let receiptFileHtml = '<span class="text-muted">No file</span>';
-                    if (expense.receipt_path) {
-                        // Ensure the receipt path has the proper URL
-                        const receiptUrl = expense.receipt_path.startsWith('http') 
-                            ? expense.receipt_path 
-                            : "{{ asset('storage') }}/" + expense.receipt_path;
-                        
-                        receiptFileHtml = `<a href="${receiptUrl}" target="_blank" class="btn btn-sm btn-outline-info">
-                            <i class="bi bi-file-earmark"></i> {{ T::translate('View', 'Tingnan')}}
+                    if (expense.receipt_url) {
+                        receiptFileHtml = `<a href="${expense.receipt_url}" target="_blank" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-file-earmark"></i> View
                         </a>`;
                     }
                     

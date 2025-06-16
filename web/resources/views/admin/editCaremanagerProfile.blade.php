@@ -332,14 +332,14 @@
     <script src=" {{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.querySelector('form[action="{{ route('admin.caremanagers.update', $caremanager->id) }}"]')
-        .addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent only the main form submission
+        // document.querySelector('form[action="{{ route('admin.caremanagers.update', $caremanager->id) }}"]')
+        // .addEventListener('submit', function (e) {
+        //     e.preventDefault(); // Prevent only the main form submission
             
-            // Show the success modal
-            const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
-            successModal.show();
-        });
+        //     // Show the success modal
+        //     const successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
+        //     successModal.show();
+        // });
     </script>
     <script>
         // document.addEventListener('DOMContentLoaded', function () {
