@@ -2040,7 +2040,7 @@ def create_enhanced_multi_section_summary(doc, sections, doc_type="assessment"):
             
             elif section_name == "pagbabago_sa_pamumuhay" or "pamumuhay" in section_name:
                 # LIFESTYLE CHANGES
-                diet = elements["diet_changes"]
+                diet = elements.get("diet_changes", [])  # Use .get() with default empty list
                 
                 # NEW: More specific lifestyle recommendation sentences
                 if diet:
@@ -2199,7 +2199,330 @@ def create_enhanced_multi_section_summary(doc, sections, doc_type="assessment"):
     
     return final_summary
 
-def summarize_section_text(section_text, section_name, max_length=250):
+def create_simple_summary(doc, sections, doc_type="assessment"):
+    """Create a simple summary as a fallback when enhanced summary generation fails."""
+    # Extract main subject
+    subject = extract_main_subject(doc)
+    
+    if doc_type.lower() == "assessment":
+        if "mga_sintomas" in sections and sections["mga_sintomas"]:
+            symptoms = nlp(sections["mga_sintomas"])
+            symptom_entities = [ent.text for ent in symptoms.ents if ent.label_ in ["SYMPTOM", "DISEASE"]]
+            if symptom_entities:
+                return f"{subject} ay nagpapakita ng {symptom_entities[0]} at iba pang sintomas na nangangailangan ng pagsusuri."
+            else:
+                return f"{subject} ay nagpapakita ng mga sintomas na nangangailangan ng medikal na atensyon."
+        else:
+            return f"{subject} ay nangangailangan ng komprehensibong pagsusuri."
+    else:  # Evaluation
+        if "pangunahing_rekomendasyon" in sections and sections["pangunahing_rekomendasyon"]:
+            recommendations = nlp(sections["pangunahing_rekomendasyon"])
+            referral_entities = [ent.text for ent in recommendations.ents if ent.label_ == "HEALTHCARE_REFERRAL"]
+            if referral_entities:
+                return f"Inirerekomenda ang pagkonsulta sa {referral_entities[0]} para sa karagdagang pagsusuri at paggamot."
+            else:
+                return "Inirerekomenda ang pagkonsulta para sa karagdagang pagsusuri at paggamot."
+        else:
+            return "Kinakailangan ng karagdagang mga hakbang para sa optimal na pangangalaga."
+
+# Define key terms for each section type - EXPANDED SIGNIFICANTLY
+section_key_terms = {
+    "mga_sintomas": [
+        # General symptom terms
+        "sintomas", "sakit", "kondisyon", "nararamdaman", "nagpapakita", 
+        "dumaranas", "nakakaranas", "hirap", "problema",
+        "symptoms", "condition", "experiencing", "suffering from", "presenting with",
+        
+        # Specific symptoms and manifestations
+        "nananakit", "kirot", "pamamanhid", "pamumula", "pangangati", "panginginig",
+        "pananakit", "panghihina", "pamamaga", "pamamanas", "pagkapagod", "pagod",
+        "pagkahilo", "hirap huminga", "pag-ubo", "ubo", "lagnat", "sipon",
+        "pagsusuka", "panunuyo", "kombulsyon", "walang gana kumain",
+        
+        # Pain descriptions
+        "masakit", "sumasakit", "mabigat ang pakiramdam", "matigas",
+        "naiirita", "malamig", "mainit", "burning", "stabbing", "throbbing",
+        
+        # Physical manifestations
+        "pasa", "sugat", "paltos", "galos", "hiwa", "bukol", "cyst", "lumaking parte",
+        "bloating", "swelling", "tenderness", "inflammation", "bleeding", "discharge",
+        
+        # Severity indicators
+        "matinding", "malubhang", "banayad na", "katamtamang", 
+        "severe", "moderate", "mild", "persistent", "chronic", "acute", "intermittent",
+        
+        # Frequency terms
+        "paulit-ulit", "madalas", "paminsan-minsan", "regular", "occasional",
+        "frequent", "daily", "nightly", "weekly", "constant", "recurring",
+        
+        # Duration indicators
+        "matagal na", "ilang araw na", "ilang linggo na", "simula pa", 
+        "ongoing", "recent onset", "long-standing", "new", "sudden"
+    ],
+    
+    "kalagayan_pangkatawan": [
+        # Basic physical terms
+        "pisikal", "katawan", "lakas", "pangangatawan", "physical", "body",
+        "pangkalahatan", "general", "overall", "strength", "condition",
+        
+        # Physical state descriptions
+        "kalusugan", "kundisyon", "pakiramdam", "estado", "state", "profile",
+        "malusog", "mabuti", "mahina", "maayos", "mahirap", "fragile", "frail",
+        
+        # Body systems
+        "cardiovascular", "respiratory", "pulmonary", "musculoskeletal", 
+        "digestive", "circulatory", "nervous system", "neurological",
+        "immune", "endocrine", "integumentary", "skeletal", "sistema",
+        
+        # Vital signs and measurements
+        "vital signs", "sukat", "timbang", "height", "weight", "temperature", 
+        "blood pressure", "pulse", "heart rate", "respiratory rate", "presyon", 
+        "oxygen saturation", "oxygen level", "BMI", "lab results",
+        
+        # Body parts
+        "ulo", "dibdib", "puso", "baga", "tiyan", "balakang", "braso", "kamay",
+        "hita", "tuhod", "binti", "paa", "likod", "spinal", "vertebral", 
+        "atay", "bato", "pancreas", "bituka", "sikmura", "utak", "joints",
+        
+        # Physical abilities
+        "balance", "koordinasyon", "coordination", "lakas", "strength", 
+        "flexibility", "range of motion", "dexterity", "mobility", "stability",
+        "stamina", "endurance", "pagkilos", "paggalaw", "movement", "restriction",
+        
+        # Physical conditions
+        "overweight", "underweight", "obese", "malnourished", "dehydrated",
+        "hypertensive", "hypotensive", "febrile", "afebrile", "cachectic"
+    ],
+    
+    "kalagayan_mental": [
+        # Cognitive terms
+        "pag-iisip", "memorya", "cognitive", "mental", "isip", "memory",
+        "pag-unawa", "comprehension", "understanding", "awareness", "orientation",
+        "concentration", "attention", "focus", "decision-making", "judgment",
+        "reasoning", "perception", "cognition", "processing", "thinking",
+        "mentality", "consciousness", "alertness", "coherence", "confusion",
+        
+        # Mental state descriptions
+        "pagkalito", "disoriented", "forgetful", "nakakalimot", "nalilito",
+        "hindi matandaan", "alert", "oriented", "malinaw ang pag-iisip",
+        "lucid", "confused", "disoriented", "aware", "unaware",
+        
+        # Emotional terms
+        "kalungkutan", "depression", "lungkot", "pagkabalisa", "anxiety",
+        "worry", "stress", "galit", "anger", "takot", "fear", "irritable",
+        "malungkot", "nag-aalala", "balisa", "masaya", "happy", "hopeful",
+        "hopeless", "kawalan ng pag-asa", "frustration", "disappointment",
+        
+        # Psychological conditions
+        "dementia", "Alzheimer's", "cognitive decline", "psychiatric",
+        "psychological", "mental health", "mood disorder", "anxiety disorder",
+        "depressive disorder", "trauma", "PTSD", "schizophrenia", "bipolar",
+        
+        # Behavioral manifestations
+        "pag-uugali", "behavior", "agitation", "agitated", "withdrawal",
+        "pag-iwas", "isolation", "restlessness", "pagod ang isip",
+        "irritability", "emotional lability", "mood swings", "aggression",
+        "apathy", "detachment", "disinterest", "pagkawala ng interes"
+    ],
+    
+    "aktibidad": [
+        # Daily activities
+        "gawain", "aktibidad", "activity", "daily", "routine", "schedule",
+        "araw-araw", "pang-araw-araw", "tasks", "chores", "regular",
+        "obligations", "responsibilidad", "responsibilities", "function",
+        
+        # Mobility & movement
+        "paglalakad", "walking", "paggalaw", "mobility", "pagkilos", "movement",
+        "travel", "commuting", "transferring", "standing", "sitting", "lying down",
+        "pag-akyat", "climbing", "pagbaba", "descending", "stairs", "steps",
+        
+        # ADLs (Activities of Daily Living)
+        "ADL", "self-care", "pangangalaga sa sarili", "hygiene", "kalinisan",
+        "bathing", "pagliligo", "dressing", "pagbibihis", "pagkain", "feeding", 
+        "toileting", "grooming", "pag-aayos", "sleeping", "pagtulog",
+        
+        # IADLs (Instrumental Activities of Daily Living)
+        "IADL", "pagmamaneho", "driving", "paggamit ng telepono", "phone use",
+        "pagluluto", "cooking", "paglilinis", "cleaning", "pagbabayad", "finances",
+        "pamimili", "shopping", "pamamahala ng gamot", "medication management",
+        
+        # Assistive devices
+        "tungkod", "cane", "walker", "wheelchair", "upuan de gulong", "andador",
+        "assistive device", "tulong na kasangkapan", "mobility aid", "crutches",
+        "saklay", "hospital bed", "ambulatory aid", "supportive device",
+        
+        # Activity limitations
+        "limitado", "limited", "restrictions", "hindi magawa", "unable to",
+        "nahihirapan", "difficulty with", "dependence", "dependent", "need assistance",
+        "nangangailangan ng tulong", "supervision", "bantay", "difficulty performing"
+    ],
+    
+    "kalagayan_social": [
+        # Relationships
+        "pamilya", "family", "asawa", "spouse", "anak", "children", "apo", "grandchildren",
+        "magulang", "parents", "kaibigan", "friends", "kamag-anak", "relatives", 
+        "kapit-bahay", "neighbors", "katrabaho", "co-workers", "relationship",
+        "relasyon", "suporta", "support", "support system", "network",
+        
+        # Social environment
+        "pamayanan", "community", "kapitbahayan", "neighborhood", "church", "simbahan", 
+        "social circle", "social network", "social activities", "social groups",
+        "senior center", "church group", "community center", "volunteer group",
+        
+        # Social interaction patterns
+        "pakikisalamuha", "interaction", "pakikipag-usap", "communication",
+        "pakikilahok", "participation", "engagement", "involvement", 
+        "socialization", "pakikisama", "getting along", "collaborative",
+        
+        # Social issues
+        "isolation", "pagkakahiwalay", "social isolation", "loneliness", "kalungkutan",
+        "withdrawal", "pag-iwas", "social stigma", "discrimination", "abandonment",
+        "neglect", "abuse", "pang-aabuso", "household dynamics", "family conflict",
+        
+        # Social support descriptions
+        "assistance", "tulong", "supportive", "matulungin", "caregiver", "tagapag-alaga",
+        "family support", "emotional support", "financial support", "sustento",
+        "help", "aid", "resource", "provider", "social service", "government aid",
+        
+        # Living arrangements
+        "living situation", "living arrangement", "household composition",
+        "lives with", "resides with", "kasama sa bahay", "independent living",
+        "assisted living", "nursing home", "living alone", "nag-iisa sa bahay",
+        "multi-generational household", "extended family", "malawak na pamilya"
+    ],
+    
+    "pangunahing_rekomendasyon": [
+        # Recommendation phrases
+        "inirerekomenda", "rekomendasyon", "iminumungkahi", "mungkahi", 
+        "pinapayuhan", "payo", "ipinapayo", "nirerekomenda", "recommend", 
+        "recommendation", "suggest", "advise", "advice", "proposed", "indicated",
+        
+        # Priority indicators
+        "pangunahin", "primary", "main", "key", "essential", "important",
+        "critical", "crucial", "vital", "necessary", "urgent", "immediate",
+        "priority", "highest priority", "most important", "first step",
+        
+        # Action terms
+        "kailangan", "need", "require", "must", "should", "dapat", "kinakailangan",
+        "importante", "mahalagang", "necessary", "crucial", "critical", "essential",
+        
+        # Healthcare directives
+        "referral", "konsulta", "consultation", "medical evaluation", "assessment",
+        "comprehensive evaluation", "professional assessment", "specialist", 
+        "dalubhasa", "eksperto", "expert opinion", "second opinion",
+        
+        # Conditional terms
+        "kung", "if", "when", "kapag", "in case", "should", "would", "as needed",
+        "as required", "as appropriate", "kung kinakailangan", "kung naaangkop",
+        
+        # Treatment recommendations
+        "treatment", "paggamot", "therapy", "intervention", "procedure", 
+        "operation", "operasyon", "surgical", "non-surgical", "medical management",
+        "therapeutic", "rehabilitative", "palliative", "preventative"
+    ],
+    
+    "mga_hakbang": [
+        # Action words
+        "gawin", "simulan", "isagawa", "ipatupad", "implement", "execute", "perform",
+        "conduct", "undertake", "carry out", "initiate", "begin", "start", "proceed",
+        "follow", "adhere to", "sundin", "sumunod", "tuparin", "execute",
+        
+        # Step terminology
+        "hakbang", "step", "measure", "action", "procedure", "protocol", "process",
+        "approach", "method", "technique", "strategy", "intervention", "tactic",
+        "activity", "operation", "task", "procedure", "regimen", "course",
+        
+        # Treatment terms
+        "treatment", "therapy", "therapeutic", "intervention", "management", 
+        "administration", "application", "delivery", "regimen", "program", 
+        "protocol", "procedure", "course", "plan", "schedule", "therapeutic approach",
+        
+        # Specific interventions
+        "exercise", "ehersisyo", "physical therapy", "occupational therapy",
+        "speech therapy", "rehabilitation", "pain management", "stress management",
+        "cognitive therapy", "behavioral therapy", "paggamot", "therapy",
+        
+        # Medical procedures
+        "surgery", "operasyon", "injection", "turok", "medication administration",
+        "pagbibigay ng gamot", "wound care", "pangangalaga ng sugat", "dressing change",
+        "assessment", "evaluation", "monitoring", "pagsubaybay", "laboratory test",
+        
+        # Timing indicators
+        "immediate", "agaran", "promptly", "quickly", "urgent", "as soon as possible",
+        "daily", "araw-araw", "weekly", "linggu-linggo", "monthly", "regular",
+        "scheduled", "periodic", "intermittent", "continuous", "ongoing"
+    ],
+    
+    "pangangalaga": [
+        # Care terms
+        "pangangalaga", "care", "alaga", "alalay", "assist", "support", "help",
+        "aid", "pagtulong", "pagkalinga", "pag-aaruga", "alagaan", "ingatan",
+        "assistance", "helping", "supporting", "maintaining", "preserving",
+        
+        # Care types
+        "medical care", "nursing care", "supportive care", "palliative care",
+        "preventive care", "rehabilitative care", "long-term care",
+        "home care", "pangangalaga sa bahay", "self-care", "pangangalaga sa sarili",
+        
+        # Monitoring terms
+        "monitor", "subaybayan", "observe", "obserbahan", "bantayan", "check",
+        "assess", "watch", "pagmamasid", "observation", "assessment", "evaluation",
+        "tracking", "measuring", "recording", "documentation", "reporting",
+        
+        # Care activities
+        "feeding", "pagpapakain", "bathing", "pagliligo", "toileting", 
+        "hygiene", "kalinisan", "dressing", "pagbibihis", "grooming", "pag-aayos",
+        "positioning", "pagpoposisyon", "transfer", "paglilipat", "turning",
+        "wound care", "pangangalaga ng sugat", "medication administration",
+        
+        # Caregiver references
+        "caregiver", "tagapag-alaga", "caretaker", "nurse", "nars", "attendant",
+        "family caregiver", "pamilyang tagapag-alaga", "professional caregiver",
+        "home health aide", "nursing assistant", "healthcare provider",
+        
+        # Warning and safety terms
+        "bantay", "watch", "track", "signs", "symptoms", "complications",
+        "adverse effects", "side effects", "red flags", "warning signs",
+        "deterioration", "changes", "pagbabago", "improvement", "pagbuti"
+    ],
+    
+    "pagbabago_sa_pamumuhay": [
+        # Change terminology
+        "pagbabago", "change", "modification", "adjustment", "adaptation", 
+        "transition", "shift", "alteration", "transformation", "conversion",
+        "reforming", "restructuring", "revising", "adapting", "modifying",
+        
+        # Lifestyle terms
+        "pamumuhay", "lifestyle", "daily life", "araw-araw na pamumuhay", 
+        "way of life", "living condition", "daily routine", "karaniwang gawain",
+        "habits", "ugali", "practices", "patterns", "behaviors", "pag-uugali",
+        
+        # Diet and nutrition
+        "diet", "nutrition", "pagkain", "nutrisyon", "eating habits", "food intake",
+        "nutritional needs", "dietary restriction", "meal planning", "hydration",
+        "low sodium", "high protein", "diabetic diet", "heart healthy", "balanced diet",
+        
+        # Physical activity
+        "physical activity", "exercise", "ehersisyo", "activity level", 
+        "movement", "galaw", "active lifestyle", "fitness", "low impact exercise",
+        "strength training", "stretching", "balance exercises", "walking program",
+        
+        # Sleep patterns
+        "sleep", "tulog", "sleeping pattern", "sleep hygiene", "rest", "pahinga",
+        "bedtime routine", "sleep schedule", "sleep quality", "insomnia management",
+        
+        # Stress management
+        "stress management", "relaxation", "coping strategies", "meditation",
+        "mindfulness", "breathing techniques", "anxiety reduction", "mental health care",
+        
+        # Health behaviors
+        "smoking cessation", "alcohol reduction", "substance management",
+        "medication adherence", "pagsunod sa gamot", "preventive care",
+        "health monitoring", "self-management", "self-care", "risk reduction"
+    ]
+}
+
+def summarize_section_text(section_text, section_name, max_length=350):
     """Create a concise summary of a potentially long section with proper sentence selection."""
     # Skip if the section is already short enough
     if len(section_text) <= max_length:
@@ -2211,8 +2534,37 @@ def summarize_section_text(section_text, section_name, max_length=250):
     # Extract key sentences based on section type
     section_sentences = split_into_sentences(section_text)
     
-    if len(section_sentences) <= 2:
-        # If only 1-2 sentences, keep them but intelligently truncate if needed
+    # Fix incomplete sentences - common issue in extracted sections
+    fixed_sentences = []
+    for i, sent in enumerate(section_sentences):
+        # Skip empty sentences
+        if not sent.strip():
+            continue
+            
+        # Check if sentence is a fragment or starts with lowercase (likely fragment)
+        if (len(sent.strip()) < 20 or sent.strip()[0].islower()) and i > 0:
+            # This might be a sentence fragment - combine with previous
+            if fixed_sentences:
+                fixed_sentences[-1] = fixed_sentences[-1] + " " + sent
+            else:
+                # If no previous sentence, try to make it standalone
+                if not sent.strip()[0].isupper():
+                    capitalized = sent[0].upper() + sent[1:]
+                    fixed_sentences.append(capitalized)
+                else:
+                    fixed_sentences.append(sent)
+        else:
+            # Ensure sentence ends with punctuation
+            if not sent.strip()[-1] in ['.', '!', '?']:
+                sent = sent + "."
+            fixed_sentences.append(sent)
+    
+    # Use fixed sentences if we have any, otherwise use originals
+    if fixed_sentences:
+        section_sentences = fixed_sentences
+    
+    if len(section_sentences) <= 3:
+        # If only 1-3 sentences, keep them all but truncate if needed
         summary = " ".join(section_sentences)
         if len(summary) > max_length:
             # Find natural break points for better truncation
@@ -2226,308 +2578,10 @@ def summarize_section_text(section_text, section_name, max_length=250):
                 summary = summary[:max_length-3] + "..."
         return summary
     
+    # For sections with many sentences, select the most informative ones
+    
     # Extract important elements to help with sentence selection
     elements = extract_structured_elements(section_text, section_name)
-    
-    # Define key terms for each section type - EXPANDED SIGNIFICANTLY
-    section_key_terms = {
-        "mga_sintomas": [
-            # General symptom terms
-            "sintomas", "sakit", "kondisyon", "nararamdaman", "nagpapakita", 
-            "dumaranas", "nakakaranas", "hirap", "problema",
-            "symptoms", "condition", "experiencing", "suffering from", "presenting with",
-            
-            # Specific symptoms and manifestations
-            "nananakit", "kirot", "pamamanhid", "pamumula", "pangangati", "panginginig",
-            "pananakit", "panghihina", "pamamaga", "pamamanas", "pagkapagod", "pagod",
-            "pagkahilo", "hirap huminga", "pag-ubo", "ubo", "lagnat", "sipon",
-            "pagsusuka", "panunuyo", "kombulsyon", "walang gana kumain",
-            
-            # Pain descriptions
-            "masakit", "sumasakit", "mabigat ang pakiramdam", "matigas",
-            "naiirita", "malamig", "mainit", "burning", "stabbing", "throbbing",
-            
-            # Physical manifestations
-            "pasa", "sugat", "paltos", "galos", "hiwa", "bukol", "cyst", "lumaking parte",
-            "bloating", "swelling", "tenderness", "inflammation", "bleeding", "discharge",
-            
-            # Severity indicators
-            "matinding", "malubhang", "banayad na", "katamtamang", 
-            "severe", "moderate", "mild", "persistent", "chronic", "acute", "intermittent",
-            
-            # Frequency terms
-            "paulit-ulit", "madalas", "paminsan-minsan", "regular", "occasional",
-            "frequent", "daily", "nightly", "weekly", "constant", "recurring",
-            
-            # Duration indicators
-            "matagal na", "ilang araw na", "ilang linggo na", "simula pa", 
-            "ongoing", "recent onset", "long-standing", "new", "sudden"
-        ],
-        
-        "kalagayan_pangkatawan": [
-            # Basic physical terms
-            "pisikal", "katawan", "lakas", "pangangatawan", "physical", "body",
-            "pangkalahatan", "general", "overall", "strength", "condition",
-            
-            # Physical state descriptions
-            "kalusugan", "kundisyon", "pakiramdam", "estado", "state", "profile",
-            "malusog", "mabuti", "mahina", "maayos", "mahirap", "fragile", "frail",
-            
-            # Body systems
-            "cardiovascular", "respiratory", "pulmonary", "musculoskeletal", 
-            "digestive", "circulatory", "nervous system", "neurological",
-            "immune", "endocrine", "integumentary", "skeletal", "sistema",
-            
-            # Vital signs and measurements
-            "vital signs", "sukat", "timbang", "height", "weight", "temperature", 
-            "blood pressure", "pulse", "heart rate", "respiratory rate", "presyon", 
-            "oxygen saturation", "oxygen level", "BMI", "lab results",
-            
-            # Body parts
-            "ulo", "dibdib", "puso", "baga", "tiyan", "balakang", "braso", "kamay",
-            "hita", "tuhod", "binti", "paa", "likod", "spinal", "vertebral", 
-            "atay", "bato", "pancreas", "bituka", "sikmura", "utak", "joints",
-            
-            # Physical abilities
-            "balance", "koordinasyon", "coordination", "lakas", "strength", 
-            "flexibility", "range of motion", "dexterity", "mobility", "stability",
-            "stamina", "endurance", "pagkilos", "paggalaw", "movement", "restriction",
-            
-            # Physical conditions
-            "overweight", "underweight", "obese", "malnourished", "dehydrated",
-            "hypertensive", "hypotensive", "febrile", "afebrile", "cachectic"
-        ],
-        
-        "kalagayan_mental": [
-            # Cognitive terms
-            "pag-iisip", "memorya", "cognitive", "mental", "isip", "memory",
-            "pag-unawa", "comprehension", "understanding", "awareness", "orientation",
-            "concentration", "attention", "focus", "decision-making", "judgment",
-            "reasoning", "perception", "cognition", "processing", "thinking",
-            "mentality", "consciousness", "alertness", "coherence", "confusion",
-            
-            # Mental state descriptions
-            "pagkalito", "disoriented", "forgetful", "nakakalimot", "nalilito",
-            "hindi matandaan", "alert", "oriented", "malinaw ang pag-iisip",
-            "lucid", "confused", "disoriented", "aware", "unaware",
-            
-            # Emotional terms
-            "kalungkutan", "depression", "lungkot", "pagkabalisa", "anxiety",
-            "worry", "stress", "galit", "anger", "takot", "fear", "irritable",
-            "malungkot", "nag-aalala", "balisa", "masaya", "happy", "hopeful",
-            "hopeless", "kawalan ng pag-asa", "frustration", "disappointment",
-            
-            # Psychological conditions
-            "dementia", "Alzheimer's", "cognitive decline", "psychiatric",
-            "psychological", "mental health", "mood disorder", "anxiety disorder",
-            "depressive disorder", "trauma", "PTSD", "schizophrenia", "bipolar",
-            
-            # Behavioral manifestations
-            "pag-uugali", "behavior", "agitation", "agitated", "withdrawal",
-            "pag-iwas", "isolation", "restlessness", "pagod ang isip",
-            "irritability", "emotional lability", "mood swings", "aggression",
-            "apathy", "detachment", "disinterest", "pagkawala ng interes"
-        ],
-        
-        "aktibidad": [
-            # Daily activities
-            "gawain", "aktibidad", "activity", "daily", "routine", "schedule",
-            "araw-araw", "pang-araw-araw", "tasks", "chores", "regular",
-            "obligations", "responsibilidad", "responsibilities", "function",
-            
-            # Mobility & movement
-            "paglalakad", "walking", "paggalaw", "mobility", "pagkilos", "movement",
-            "travel", "commuting", "transferring", "standing", "sitting", "lying down",
-            "pag-akyat", "climbing", "pagbaba", "descending", "stairs", "steps",
-            
-            # ADLs (Activities of Daily Living)
-            "ADL", "self-care", "pangangalaga sa sarili", "hygiene", "kalinisan",
-            "bathing", "pagliligo", "dressing", "pagbibihis", "pagkain", "feeding", 
-            "toileting", "grooming", "pag-aayos", "sleeping", "pagtulog",
-            
-            # IADLs (Instrumental Activities of Daily Living)
-            "IADL", "pagmamaneho", "driving", "paggamit ng telepono", "phone use",
-            "pagluluto", "cooking", "paglilinis", "cleaning", "pagbabayad", "finances",
-            "pamimili", "shopping", "pamamahala ng gamot", "medication management",
-            
-            # Assistive devices
-            "tungkod", "cane", "walker", "wheelchair", "upuan de gulong", "andador",
-            "assistive device", "tulong na kasangkapan", "mobility aid", "crutches",
-            "saklay", "hospital bed", "ambulatory aid", "supportive device",
-            
-            # Activity limitations
-            "limitado", "limited", "restrictions", "hindi magawa", "unable to",
-            "nahihirapan", "difficulty with", "dependence", "dependent", "need assistance",
-            "nangangailangan ng tulong", "supervision", "bantay", "difficulty performing"
-        ],
-        
-        "kalagayan_social": [
-            # Relationships
-            "pamilya", "family", "asawa", "spouse", "anak", "children", "apo", "grandchildren",
-            "magulang", "parents", "kaibigan", "friends", "kamag-anak", "relatives", 
-            "kapit-bahay", "neighbors", "katrabaho", "co-workers", "relationship",
-            "relasyon", "suporta", "support", "support system", "network",
-            
-            # Social environment
-            "pamayanan", "community", "kapitbahayan", "neighborhood", "church", "simbahan", 
-            "social circle", "social network", "social activities", "social groups",
-            "senior center", "church group", "community center", "volunteer group",
-            
-            # Social interaction patterns
-            "pakikisalamuha", "interaction", "pakikipag-usap", "communication",
-            "pakikilahok", "participation", "engagement", "involvement", 
-            "socialization", "pakikisama", "getting along", "collaborative",
-            
-            # Social issues
-            "isolation", "pagkakahiwalay", "social isolation", "loneliness", "kalungkutan",
-            "withdrawal", "pag-iwas", "social stigma", "discrimination", "abandonment",
-            "neglect", "abuse", "pang-aabuso", "household dynamics", "family conflict",
-            
-            # Social support descriptions
-            "assistance", "tulong", "supportive", "matulungin", "caregiver", "tagapag-alaga",
-            "family support", "emotional support", "financial support", "sustento",
-            "help", "aid", "resource", "provider", "social service", "government aid",
-            
-            # Living arrangements
-            "living situation", "living arrangement", "household composition",
-            "lives with", "resides with", "kasama sa bahay", "independent living",
-            "assisted living", "nursing home", "living alone", "nag-iisa sa bahay",
-            "multi-generational household", "extended family", "malawak na pamilya"
-        ],
-        
-        "pangunahing_rekomendasyon": [
-            # Recommendation phrases
-            "inirerekomenda", "rekomendasyon", "iminumungkahi", "mungkahi", 
-            "pinapayuhan", "payo", "ipinapayo", "nirerekomenda", "recommend", 
-            "recommendation", "suggest", "advise", "advice", "proposed", "indicated",
-            
-            # Priority indicators
-            "pangunahin", "primary", "main", "key", "essential", "important",
-            "critical", "crucial", "vital", "necessary", "urgent", "immediate",
-            "priority", "highest priority", "most important", "first step",
-            
-            # Action terms
-            "kailangan", "need", "require", "must", "should", "dapat", "kinakailangan",
-            "importante", "mahalagang", "necessary", "crucial", "critical", "essential",
-            
-            # Healthcare directives
-            "referral", "konsulta", "consultation", "medical evaluation", "assessment",
-            "comprehensive evaluation", "professional assessment", "specialist", 
-            "dalubhasa", "eksperto", "expert opinion", "second opinion",
-            
-            # Conditional terms
-            "kung", "if", "when", "kapag", "in case", "should", "would", "as needed",
-            "as required", "as appropriate", "kung kinakailangan", "kung naaangkop",
-            
-            # Treatment recommendations
-            "treatment", "paggamot", "therapy", "intervention", "procedure", 
-            "operation", "operasyon", "surgical", "non-surgical", "medical management",
-            "therapeutic", "rehabilitative", "palliative", "preventative"
-        ],
-        
-        "mga_hakbang": [
-            # Action words
-            "gawin", "simulan", "isagawa", "ipatupad", "implement", "execute", "perform",
-            "conduct", "undertake", "carry out", "initiate", "begin", "start", "proceed",
-            "follow", "adhere to", "sundin", "sumunod", "tuparin", "execute",
-            
-            # Step terminology
-            "hakbang", "step", "measure", "action", "procedure", "protocol", "process",
-            "approach", "method", "technique", "strategy", "intervention", "tactic",
-            "activity", "operation", "task", "procedure", "regimen", "course",
-            
-            # Treatment terms
-            "treatment", "therapy", "therapeutic", "intervention", "management", 
-            "administration", "application", "delivery", "regimen", "program", 
-            "protocol", "procedure", "course", "plan", "schedule", "therapeutic approach",
-            
-            # Specific interventions
-            "exercise", "ehersisyo", "physical therapy", "occupational therapy",
-            "speech therapy", "rehabilitation", "pain management", "stress management",
-            "cognitive therapy", "behavioral therapy", "paggamot", "therapy",
-            
-            # Medical procedures
-            "surgery", "operasyon", "injection", "turok", "medication administration",
-            "pagbibigay ng gamot", "wound care", "pangangalaga ng sugat", "dressing change",
-            "assessment", "evaluation", "monitoring", "pagsubaybay", "laboratory test",
-            
-            # Timing indicators
-            "immediate", "agaran", "promptly", "quickly", "urgent", "as soon as possible",
-            "daily", "araw-araw", "weekly", "linggu-linggo", "monthly", "regular",
-            "scheduled", "periodic", "intermittent", "continuous", "ongoing"
-        ],
-        
-        "pangangalaga": [
-            # Care terms
-            "pangangalaga", "care", "alaga", "alalay", "assist", "support", "help",
-            "aid", "pagtulong", "pagkalinga", "pag-aaruga", "alagaan", "ingatan",
-            "assistance", "helping", "supporting", "maintaining", "preserving",
-            
-            # Care types
-            "medical care", "nursing care", "supportive care", "palliative care",
-            "preventive care", "rehabilitative care", "long-term care",
-            "home care", "pangangalaga sa bahay", "self-care", "pangangalaga sa sarili",
-            
-            # Monitoring terms
-            "monitor", "subaybayan", "observe", "obserbahan", "bantayan", "check",
-            "assess", "watch", "pagmamasid", "observation", "assessment", "evaluation",
-            "tracking", "measuring", "recording", "documentation", "reporting",
-            
-            # Care activities
-            "feeding", "pagpapakain", "bathing", "pagliligo", "toileting", 
-            "hygiene", "kalinisan", "dressing", "pagbibihis", "grooming", "pag-aayos",
-            "positioning", "pagpoposisyon", "transfer", "paglilipat", "turning",
-            "wound care", "pangangalaga ng sugat", "medication administration",
-            
-            # Caregiver references
-            "caregiver", "tagapag-alaga", "caretaker", "nurse", "nars", "attendant",
-            "family caregiver", "pamilyang tagapag-alaga", "professional caregiver",
-            "home health aide", "nursing assistant", "healthcare provider",
-            
-            # Warning and safety terms
-            "bantay", "watch", "track", "signs", "symptoms", "complications",
-            "adverse effects", "side effects", "red flags", "warning signs",
-            "deterioration", "changes", "pagbabago", "improvement", "pagbuti"
-        ],
-        
-        "pagbabago_sa_pamumuhay": [
-            # Change terminology
-            "pagbabago", "change", "modification", "adjustment", "adaptation", 
-            "transition", "shift", "alteration", "transformation", "conversion",
-            "reforming", "restructuring", "revising", "adapting", "modifying",
-            
-            # Lifestyle terms
-            "pamumuhay", "lifestyle", "daily life", "araw-araw na pamumuhay", 
-            "way of life", "living condition", "daily routine", "karaniwang gawain",
-            "habits", "ugali", "practices", "patterns", "behaviors", "pag-uugali",
-            
-            # Diet and nutrition
-            "diet", "nutrition", "pagkain", "nutrisyon", "eating habits", "food intake",
-            "nutritional needs", "dietary restriction", "meal planning", "hydration",
-            "low sodium", "high protein", "diabetic diet", "heart healthy", "balanced diet",
-            
-            # Physical activity
-            "physical activity", "exercise", "ehersisyo", "activity level", 
-            "movement", "galaw", "active lifestyle", "fitness", "low impact exercise",
-            "strength training", "stretching", "balance exercises", "walking program",
-            
-            # Sleep patterns
-            "sleep", "tulog", "sleeping pattern", "sleep hygiene", "rest", "pahinga",
-            "bedtime routine", "sleep schedule", "sleep quality", "insomnia management",
-            
-            # Stress management
-            "stress management", "relaxation", "coping strategies", "meditation",
-            "mindfulness", "breathing techniques", "anxiety reduction", "mental health care",
-            
-            # Health behaviors
-            "smoking cessation", "alcohol reduction", "substance management",
-            "medication adherence", "pagsunod sa gamot", "preventive care",
-            "health monitoring", "self-management", "self-care", "risk reduction"
-        ]
-    }
-    
-    # Get terms for this section
-    key_terms = section_key_terms.get(section_name, [])
     
     # Score sentences based on information content and relevance
     scored_sentences = []
@@ -2536,138 +2590,210 @@ def summarize_section_text(section_text, section_name, max_length=250):
         score = 0
         sent_doc = nlp(sent)
         
-        # Position score - first sentence often introduces the topic
+        # Position score - prioritize first sentences for context
         if i == 0:
-            score += 3
+            score += 5  # First sentence is crucial for context
+        elif i == 1:
+            score += 3  # Second sentence often contains important details
         elif i == len(section_sentences) - 1:
-            score += 1  # Conclusion sentences often summarize
-            
-        # Length preference - neither too short nor too long
+            score += 2  # Last sentence may have conclusions/recommendations
+        
+        # Length preference - avoid very short or very long sentences
         sent_length = len(sent)
         if 40 < sent_length < 120:
-            score += 1  # Prefer medium-length sentences
-            
+            score += 2  # Ideal length
+        elif 20 < sent_length <= 40:
+            score += 1  # Short but acceptable
+        elif sent_length <= 20:
+            score -= 1  # Too short
+        elif sent_length > 200:
+            score -= 2  # Too long
+        
+        # Check if sentence begins with a capital letter (better formed)
+        if sent.strip() and sent.strip()[0].isupper():
+            score += 2
+        
         # Entity and information density scoring
         entity_count = len([ent for ent in sent_doc.ents])
-        score += min(3, entity_count)  # Up to 3 points for entities
+        score += min(4, entity_count)  # Up to 4 points for entities
         
-        # Score based on key terms
+        # Check for section-specific key terms
+        key_terms = section_key_terms.get(section_name, [])  # Using the existing dictionary
         for term in key_terms:
-            if term in sent.lower():
+            if term.lower() in sent.lower():
                 score += 2
         
-        # Section-specific content scoring
+        # Section-specific scoring - more detailed than before
         if section_name == "mga_sintomas" or "sintomas" in section_name:
-            # Look for symptoms, conditions and their descriptions
+            # Prioritize sentences with clear symptom descriptions
             for ent in sent_doc.ents:
                 if ent.label_ in ["DISEASE", "SYMPTOM"]:
-                    score += 3
-                elif ent.label_ in ["BODY_PART"]:
-                    score += 1
-                    
-            # Check for specific symptom elements
-            for symptom in elements["symptoms"]:
-                if symptom.lower() in sent.lower():
+                    score += 5  # Strong boost for symptom mentions
+                elif ent.label_ == "BODY_PART":
                     score += 2
-                    
-        elif section_name == "kalagayan_mental" or "mental" in section_name:
-            # Prioritize cognitive status and emotional state descriptions
-            for ent in sent_doc.ents:
-                if ent.label_ in ["COGNITIVE", "EMOTION"]:
-                    score += 3
-                    
-            # Check for mental state elements
-            for state in elements["cognitive_status"] + elements["mental_state"] + elements["emotional_state"]:
-                if state.lower() in sent.lower():
-                    score += 2
-                    
-        elif section_name.startswith("pangunahing_rekomendasyon"):
-            # Prioritize clear recommendations and referrals
-            for ent in sent_doc.ents:
-                if ent.label_ in ["RECOMMENDATION", "HEALTHCARE_REFERRAL"]:
-                    score += 3
-                    
-            # Check for recommendation verbs
-            recommend_words = ["inirerekomenda", "iminumungkahi", "dapat", "kailangan", "kinakailangan"]
-            if any(word in sent.lower() for word in recommend_words):
+            
+            # Check for severity and duration words
+            severity_terms = ["matindi", "malubha", "banayad", "moderate", "mild", "severe"]
+            duration_terms = ["araw-araw", "linggo", "buwan", "daily", "weekly", "years"]
+            
+            if any(term in sent.lower() for term in severity_terms):
+                score += 3
+            if any(term in sent.lower() for term in duration_terms):
                 score += 2
-        
-        # Additional scoring logic for other section types
-        elif "pangkatawan" in section_name:
+                
+        elif section_name == "kalagayan_mental" or "mental" in section_name:
+            # Prioritize sentences with cognitive status descriptions
+            for ent in sent_doc.ents:
+                if ent.label_ == "COGNITIVE":
+                    score += 5  # Strong boost for cognitive mentions
+                elif ent.label_ == "EMOTION":
+                    score += 4
+            
+            # Specific cognitive terms that are high value
+            cognitive_terms = ["memorya", "kalituhan", "confusion", "nakalimutan", 
+                             "hindi matandaan", "disorientation", "pagkalito"]
+            
+            if any(term in sent.lower() for term in cognitive_terms):
+                score += 4
+                
+        elif section_name == "aktibidad" or "aktibidad" in section_name:
+            # Make sure we have complete sentences about activities
+            # Avoid sentence fragments
+            if len(sent) < 30 or sent.strip()[0].islower():
+                score -= 5  # Significant penalty for likely fragments
+                
+            activity_terms = ["gawain", "activity", "araw-araw", "limitasyon", 
+                             "nahihirapan", "tulong", "assistance"]
+            
+            if any(term in sent.lower() for term in activity_terms):
+                score += 3
+                
+        elif section_name == "kalagayan_pangkatawan" or "pangkatawan" in section_name:
+            # Physical status terms
             for ent in sent_doc.ents:
                 if ent.label_ in ["BODY_PART", "MEASUREMENT", "VITAL_SIGNS"]:
-                    score += 2
+                    score += 3
                     
-        elif "hakbang" in section_name:
+            physical_terms = ["pisikal", "katawan", "vital signs", "presyon", "weight"]
+            if any(term in sent.lower() for term in physical_terms):
+                score += 2
+                
+        elif section_name == "kalagayan_social" or "social" in section_name:
+            # Social relationships and support
+            for ent in sent_doc.ents:
+                if ent.label_ in ["SOCIAL_REL", "PER"]:
+                    score += 4
+                    
+            support_terms = ["suporta", "tulong", "pamilya", "asawa", "anak", "apo"]
+            if any(term in sent.lower() for term in support_terms):
+                score += 3
+                
+        elif section_name == "pangunahing_rekomendasyon" or "rekomendasyon" in section_name:
+            for ent in sent_doc.ents:
+                if ent.label_ in ["RECOMMENDATION", "HEALTHCARE_REFERRAL"]:
+                    score += 5
+                    
+            recommendation_terms = ["inirerekomenda", "iminumungkahi", "dapat", "kailangan"]
+            if any(term in sent.lower() for term in recommendation_terms):
+                score += 4
+                
+        elif section_name == "mga_hakbang" or "hakbang" in section_name:
             for ent in sent_doc.ents:
                 if ent.label_ in ["TREATMENT_METHOD", "TREATMENT", "EQUIPMENT"]:
-                    score += 2
+                    score += 4
                     
-        elif "pangangalaga" in section_name:
+            action_terms = ["gawin", "isagawa", "ipatupad", "sundin", "simulan"]
+            if any(term in sent.lower() for term in action_terms):
+                score += 3
+                
+        elif section_name == "pangangalaga" or "alaga" in section_name:
             for ent in sent_doc.ents:
                 if ent.label_ in ["MONITORING", "WARNING_SIGN"]:
-                    score += 2
+                    score += 4
                     
-        elif "pamumuhay" in section_name:
+            care_terms = ["bantayan", "subaybayan", "obserbahan", "i-monitor", "ingatan"]
+            if any(term in sent.lower() for term in care_terms):
+                score += 3
+                
+        elif section_name == "pagbabago_sa_pamumuhay" or "pamumuhay" in section_name:
             for ent in sent_doc.ents:
                 if ent.label_ in ["DIET_RECOMMENDATION", "FOOD"]:
-                    score += 2
+                    score += 4
+                    
+            lifestyle_terms = ["diet", "ehersisyo", "exercise", "pagkain", "nutrition"]
+            if any(term in sent.lower() for term in lifestyle_terms):
+                score += 3
         
         # Store the scored sentence with its original position
         scored_sentences.append((sent, score, i))
     
-    # Get top-scoring sentences (but keep at least one sentence)
-    top_sentences = sorted(scored_sentences, key=lambda x: x[1], reverse=True)
+    # Sort by score (highest first)
+    sorted_sentences = sorted(scored_sentences, key=lambda x: x[1], reverse=True)
     
-    # Select sentences maintaining original document order
+    # Select top sentences, aiming for 3 if possible
     selected_indices = []
     current_length = 0
+    target_sentences = min(3, len(section_sentences))
     
-    # First, select the highest scoring sentences
-    for sent, score, idx in top_sentences:
-        if score > 3 and current_length + len(sent) <= max_length:
+    # First pass: get highest scoring sentences
+    for sent, score, idx in sorted_sentences[:5]:  # Consider top 5 candidates
+        if len(selected_indices) < target_sentences and current_length + len(sent) <= max_length:
             selected_indices.append(idx)
-            current_length += len(sent) + 1
+            current_length += len(sent) + 1  # +1 for space
             
-            if len(selected_indices) >= 2:  # Limit to 2 high-scoring sentences
-                break
-    
-    # If we still have room, add more sentences in order of appearance
-    if current_length < max_length and len(selected_indices) < 2:
+    # If we don't have enough yet, try to fill with other sentences
+    if len(selected_indices) < target_sentences and current_length < max_length:
         remaining = [(i, sent) for i, sent in enumerate(section_sentences) 
                     if i not in selected_indices]
         
-        for i, sent in remaining:
+        # Add sentences in order to maintain narrative flow
+        for i, sent in sorted(remaining, key=lambda x: x[0]):
             if current_length + len(sent) <= max_length:
                 selected_indices.append(i)
                 current_length += len(sent) + 1
                 
-                if len(selected_indices) >= 2:  # Limit to 2 sentences total
+                if len(selected_indices) >= target_sentences:
                     break
     
     # Always include at least one sentence
     if not selected_indices and section_sentences:
+        # Try first sentence (usually has context)
         first_sent = section_sentences[0]
-        if len(first_sent) > max_length:
-            # Find natural break point
+        if len(first_sent) <= max_length:
+            selected_indices.append(0)
+        else:
+            # Truncate if too long
             last_period = first_sent[:max_length-3].rfind('.')
-            last_comma = first_sent[:max_length-3].rfind(',')
-            last_break = max(last_period, last_comma)
-            
-            if last_break > 30:
-                first_sent = first_sent[:last_break+1] + "..."
+            if last_period > 30:
+                first_sent = first_sent[:last_period+1] + "..."
             else:
                 first_sent = first_sent[:max_length-3] + "..."
-        selected_indices.append(0)
+            section_sentences[0] = first_sent
+            selected_indices.append(0)
     
-    # Sort indices to maintain original sentence order
+    # Sort indices to maintain original order (better narrative flow)
     selected_indices.sort()
     
     # Combine sentences in original order
     selected_sentences = [section_sentences[i] for i in selected_indices]
+    
+    # Final check - ensure the first sentence provides context
+    if selected_sentences and not (selected_sentences[0].strip()[0].isupper()):
+        # First sentence seems to be a fragment - try to fix
+        if section_name == "mga_sintomas":
+            selected_sentences[0] = f"Ang pasyente ay nagpapakita ng {selected_sentences[0]}"
+        elif section_name == "kalagayan_pangkatawan":
+            selected_sentences[0] = f"Pisikal na kalagayan: {selected_sentences[0]}"
+        elif section_name == "kalagayan_mental":
+            selected_sentences[0] = f"Mental na kalagayan: {selected_sentences[0]}"
+        elif section_name == "aktibidad":
+            selected_sentences[0] = f"Sa mga pang-araw-araw na gawain, {selected_sentences[0]}"
+        elif section_name == "kalagayan_social":
+            selected_sentences[0] = f"Sa social na aspeto, {selected_sentences[0]}"
+    
     summary = " ".join(selected_sentences)
     
-    # Final check for length
+    # Final length check
     if len(summary) > max_length:
         last_period = summary[:max_length-3].rfind('.')
         if last_period > max_length/2:
@@ -2715,6 +2841,11 @@ def extract_structured_elements(text, section_type):
         "monitoring_plans": [], # Monitoring approaches
         "healthcare_referrals": [], # Referrals to healthcare providers
         
+        # Lifestyle/Diet - ADDED MISSING KEYS
+        "diet_changes": [],   # Diet recommendations
+        "exercise": [],       # Exercise recommendations
+        "lifestyle_changes": [], # Other lifestyle changes
+        
         # Social
         "social_support": [], # Social support systems
         "caregivers": [],     # Caregiver information
@@ -2724,9 +2855,10 @@ def extract_structured_elements(text, section_type):
         "needs": [],          # Identified needs
         "verbs": [],          # Key action verbs
         "adjectives": [],     # Important descriptive adjectives
+        "warnings": [],       # Warning signs or precautions
     }
     
-    # First extract subject (main person)
+    # Extract subject (main person)
     for ent in doc.ents:
         if ent.label_ == "PER" and not elements["subject"]:
             elements["subject"] = ent.text
@@ -2762,6 +2894,13 @@ def extract_structured_elements(text, section_type):
             elements["monitoring_plans"].append(ent.text)
         elif ent.label_ == "SOCIAL_REL" and ent.text not in elements["social_support"]:
             elements["social_support"].append(ent.text)
+        # ADD NEW DIET AND WARNING EXTRACTION
+        elif ent.label_ == "DIET_RECOMMENDATION" and ent.text not in elements["diet_changes"]:
+            elements["diet_changes"].append(ent.text)
+        elif ent.label_ == "FOOD" and ent.text not in elements["diet_changes"]:
+            elements["diet_changes"].append(ent.text)
+        elif ent.label_ == "WARNING_SIGN" and ent.text not in elements["warnings"]:
+            elements["warnings"].append(ent.text)
     
     # Extract severity descriptors
     severity_terms = ["matindi", "malubha", "severe", "moderate", "mild", "banayad", 
@@ -3184,7 +3323,7 @@ def summarize_text():
                 summarized_sections[section_name] = summarize_section_text(
                     section_content, 
                     section_name,
-                    max_length=250  # Reasonable summary length
+                    max_length=350  # INCREASED from 250 to allow for 3 sentences
                 )
                 
         except Exception as e:
