@@ -21,10 +21,10 @@ type ICarePlanDetail = z.infer<
 interface PersonalDetailsProps {
     data: {
         beneficiary: ICarePlanDetail["beneficiary"];
-        author: ICarePlanDetail["author"];
         care_worker: ICarePlanDetail["care_worker"];
         plan_date: string;
         status?: string;
+        acknowledged_by?: string;
     };
 }
 
@@ -33,7 +33,6 @@ export default function PersonalDetails({
 }: PersonalDetailsProps) {
     const {
         beneficiary,
-        author,
         care_worker,
         plan_date,
         status,
@@ -99,10 +98,7 @@ export default function PersonalDetails({
                                     color="#495057"
                                 >
                                     {
-                                        beneficiary.first_name
-                                    }{" "}
-                                    {
-                                        beneficiary.last_name
+                                        beneficiary?.full_name
                                     }
                                 </Text>
                             </XStack>
@@ -115,35 +111,17 @@ export default function PersonalDetails({
                                     fontSize="$3"
                                     color="#6c757d"
                                 >
-                                    Age
+                                    Medical
+                                    Conditions
                                 </Text>
                                 <Text
                                     fontSize="$4"
                                     fontWeight="500"
                                     color="#495057"
+                                    flex={1}
+                                    text="right"
                                 >
-                                    {beneficiary.birthday
-                                        ? `${Math.floor((new Date().getTime() - new Date(beneficiary.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365))} years old`
-                                        : "N/A"}
-                                </Text>
-                            </XStack>
-
-                            <XStack
-                                justify="space-between"
-                                items="center"
-                            >
-                                <Text
-                                    fontSize="$3"
-                                    color="#6c757d"
-                                >
-                                    Gender
-                                </Text>
-                                <Text
-                                    fontSize="$4"
-                                    fontWeight="500"
-                                    color="#495057"
-                                >
-                                    {beneficiary.gender ||
+                                    {beneficiary.medical_conditions ||
                                         "N/A"}
                                 </Text>
                             </XStack>
@@ -182,10 +160,13 @@ export default function PersonalDetails({
                                     fontSize="$4"
                                     fontWeight="500"
                                     color="#495057"
-                                    flexShrink={1}
-                                    textAlign="right"
+                                    style={{
+                                        flexShrink: 1,
+                                        textAlign:
+                                            "right",
+                                    }}
                                 >
-                                    {beneficiary.street_address ||
+                                    {beneficiary.address ||
                                         "N/A"}
                                 </Text>
                             </XStack>
@@ -225,52 +206,7 @@ export default function PersonalDetails({
                                 fontWeight="600"
                                 color="#495057"
                             >
-                                {
-                                    care_worker.first_name
-                                }{" "}
-                                {
-                                    care_worker.last_name
-                                }
-                            </Text>
-                        </XStack>
-                    </Card>
-                </YStack>
-
-                {/* Author Information */}
-                <YStack gap="$3">
-                    <XStack
-                        items="center"
-                        gap="$2"
-                    >
-                        <User
-                            size={16}
-                            color="#495057"
-                        />
-                        <H6 color="#495057">
-                            Author
-                        </H6>
-                    </XStack>
-
-                    <Card bg="#f8f9fa" p="$3">
-                        <XStack
-                            justify="space-between"
-                            items="center"
-                        >
-                            <Text
-                                fontSize="$3"
-                                color="#6c757d"
-                            >
-                                Created By
-                            </Text>
-                            <Text
-                                fontSize="$4"
-                                fontWeight="600"
-                                color="#495057"
-                            >
-                                {
-                                    author.first_name
-                                }{" "}
-                                {author.last_name}
+                                {care_worker}
                             </Text>
                         </XStack>
                     </Card>

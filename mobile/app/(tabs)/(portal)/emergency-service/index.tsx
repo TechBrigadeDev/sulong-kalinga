@@ -5,7 +5,6 @@ import EmergencyServiceFormSelector from "features/portal/emergency-service/_com
 import RequestHistory from "features/portal/emergency-service/_components/request-history";
 import { useEmergencyServiceRequests } from "features/portal/emergency-service/hook";
 import { useEffect } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const Screen = () => {
     const { refetch: refetchRequests } =
@@ -16,20 +15,18 @@ const Screen = () => {
     }, [refetchRequests]);
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <TabScroll
-                flex={1}
-                display="flex"
-                flexDirection="column"
-                tabbed
-                showScrollUp
-                paddingInline={"$4"}
-            >
-                <EmergencyServiceFormSelector />
-                <ActiveRequests />
-                <RequestHistory />
-            </TabScroll>
-        </SafeAreaView>
+        <TabScroll
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            tabbed
+            showScrollUp
+            paddingInline={"$4"}
+        >
+            <EmergencyServiceFormSelector />
+            <ActiveRequests />
+            <RequestHistory />
+        </TabScroll>
     );
 };
 
