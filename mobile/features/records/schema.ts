@@ -51,10 +51,18 @@ export const wcpRecordsResponseSchema = z.object({
     }),
 });
 
+const wcpBeneficiarySchema = z.object({
+    full_name: z.string(),
+    address: z.string(),
+    medical_conditions: z.string().nullable(),
+    illnesses: z.array(z.string()).nullable(),
+    civil_status: z.string(),
+});
+
 export const wcpRecordSchema = z.object({
     id: z.number(),
     date: z.string(),
-    beneficiary: z.string(),
+    beneficiary: wcpBeneficiarySchema,
     care_worker: z.string(),
     assessment: z.string().optional(),
     evaluation_recommendations: z
