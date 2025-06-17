@@ -7,13 +7,12 @@ import AdminList from "~/features/user-management/components/administrators/list
 import AdminSearch from "~/features/user-management/components/administrators/list/search";
 
 const Administrators = () => {
-    const router = useRouter();
-
-    const handleAddAdmin = () => {
-        router.push(
-            "/(tabs)/options/user-management/admins/add",
-        );
-    };
+    // const router = useRouter();
+    // const handleAddAdmin = () => {
+    //     router.push(
+    //         "/(tabs)/options/user-management/admins/add",
+    //     );
+    // };
 
     return (
         <SafeAreaView
@@ -28,14 +27,14 @@ const Administrators = () => {
                 }}
             />
             <View style={style.container}>
-                <YStack py="$4" gap="$4">
-                    <Button
+                <YStack gap="$4">
+                    {/* <Button
                         size="$3"
                         theme="dark_blue"
                         onPressIn={handleAddAdmin}
                     >
                         Add Administrator
-                    </Button>
+                    </Button> */}
                     <AdminSearch />
                 </YStack>
                 <View style={{ flex: 1 }}>

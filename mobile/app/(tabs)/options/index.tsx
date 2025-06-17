@@ -2,12 +2,11 @@ import ProfileSettings from "components/screens/Options/profile/Settings";
 import {
     Link as ExpoLink,
     LinkProps,
-    useRouter,
 } from "expo-router";
+import { authStore } from "features/auth/auth.store";
 import { isStaff } from "features/auth/auth.util";
 import NotificationButton from "features/notification/_components/NotificationButton";
 import { icons } from "lucide-react-native";
-import { useEffect } from "react";
 import {
     StyleSheet,
     TouchableOpacity,
@@ -53,7 +52,8 @@ const Screen = () => {
 };
 
 const UserManagement = () => {
-    if (!isStaff()) return null;
+    const { role } = authStore();
+    if (!isStaff() || !role) return null;
 
     return (
         <Section>
@@ -69,21 +69,27 @@ const UserManagement = () => {
                     href="/options/user-management/family"
                     icon="UsersRound"
                 />
-                <Link
-                    label="Care Workers"
-                    href="/options/user-management/care-workers"
-                    icon="HeartHandshake"
-                />
-                <Link
-                    label="Care Managers"
-                    href="/options/user-management/care-managers"
-                    icon="Smile"
-                />
-                <Link
-                    label="Administrators"
-                    href="/options/user-management/admins"
-                    icon="ShieldUser"
-                />
+                {role !== "care_worker" && (
+                    <Link
+                        label="Care Workers"
+                        href="/options/user-management/care-workers"
+                        icon="HeartHandshake"
+                    />
+                )}
+                {role === "admin" && (
+                    <>
+                        <Link
+                            label="Care Managers"
+                            href="/options/user-management/care-managers"
+                            icon="Smile"
+                        />
+                        <Link
+                            label="Administrators"
+                            href="/options/user-management/admins"
+                            icon="ShieldUser"
+                        />
+                    </>
+                )}
             </Card>
         </Section>
     );
