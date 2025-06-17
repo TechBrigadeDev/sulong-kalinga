@@ -75,18 +75,19 @@ class AiSummaryController extends Controller
                 ])
                 ->post($apiUrl, [
                     'text' => $request->text,
-                    'type' => $request->type,  // Make sure this is passed
+                    'type' => $request->type,
                     'max_sentences' => $request->max_sentences ?? 3
                 ]);
 
             \Log::info("API Response Status: " . $response->status());
+            \Log::info("API Response Body: " . substr($response->body(), 0, 500)); // Log first 500 chars
             
             if ($response->successful()) {
                 $data = $response->json();
                 \Log::info("API Response successful");
                 
                 return response()->json([
-                    'summary' => $data['summary'] ?? '',
+                    'summary' => $data['summary'] ?? 'No summary generated',
                     'sections' => $data['sections'] ?? [],
                     'entities' => $data['entities'] ?? [],
                     'key_concerns' => $data['key_concerns'] ?? []
@@ -99,7 +100,7 @@ class AiSummaryController extends Controller
                 'details' => $response->body()
             ], 500);
         } catch (\Exception $e) {
-            \Log::error("API Exception: " . $e->getMessage());
+            \Log::error("API Exception: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json([
                 'error' => 'Summarization service unavailable',
                 'details' => $e->getMessage()

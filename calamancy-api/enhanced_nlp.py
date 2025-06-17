@@ -1,4 +1,4 @@
-import re  # Add this import at the top
+import re
 import spacy
 from collections import defaultdict
 from typing import List, Dict, Any, Set, Tuple
@@ -245,6 +245,91 @@ def analyze_symptoms_with_morphology(doc):
                 })
     
     return symptoms
+
+def extract_key_concerns_improved(analysis, doc=None):
+    """
+    Extract key concerns using our enhanced analysis with non-medical aspects
+    
+    Args:
+        analysis: Analysis data from text preprocessing
+        doc: Optional spaCy Doc object for deeper analysis
+        
+    Returns:
+        Dictionary of concerns
+    """
+    concerns = {}
+    
+    # Use our enhanced analysis to populate medical concerns
+    if analysis["mobility_mentioned"]:
+        concerns["mobility_issues"] = True
+        if analysis["mobility_sentences"]:
+            concerns["mobility_details"] = analysis["mobility_sentences"][0]
+    
+    if analysis["pain_mentioned"]:
+        concerns["pain_reported"] = True
+        if analysis["pain_sentences"]:
+            concerns["pain_details"] = analysis["pain_sentences"][0]
+    
+    if "vision" in analysis["sensory_issues"]:
+        concerns["vision_problems"] = True
+    
+    if "hearing" in analysis["sensory_issues"]:
+        concerns["hearing_problems"] = True
+    
+    if analysis["emotional_state"]:
+        concerns["emotional_concerns"] = analysis["emotional_state"]
+    
+    # Additional specific checks from original text
+    text = analysis["normalized_text"].lower()
+    
+    # Check for fall risk
+    if any(term in text for term in ["tumba", "natumba", "nahulog", "nadapa"]):
+        concerns["fall_risk"] = True
+    
+    # Non-medical concerns from doc content
+    if doc is not None:
+        # Financial concerns
+        if any(term in text for term in ["pension", "pera", "wala", "ubos", "gastos", "mahal"]):
+            concerns["financial_concerns"] = True
+            # Extract financial details
+            for sent in doc.sents:
+                if any(term in sent.text.lower() for term in ["pension", "pera", "wala", "ubos", "gastos", "mahal"]):
+                    concerns["financial_details"] = sent.text
+                    break
+        
+        # Social support assessment
+        if "pamangkin" in text or "anak" in text or "apo" in text:
+            # Assess quality of social support
+            negative_indicators = ["iniwan", "wala", "hindi", "ayaw", "busy"]
+            positive_indicators = ["kasama", "tulong", "suporta", "mahal", "malapit"]
+            
+            neg_count = sum(1 for term in negative_indicators if term in text)
+            pos_count = sum(1 for term in positive_indicators if term in text)
+            
+            if neg_count > pos_count:
+                concerns["social_support"] = "Poor"
+            elif pos_count > 0:
+                concerns["social_support"] = "Good"
+            else:
+                concerns["social_support"] = "Present but quality unclear"
+    
+    # Nutrition concerns
+    if any(term in text for term in ["hindi kumakain", "pagbaba ng timbang", "payat", 
+                                    "mataba", "naduduwal", "nasusuka", "timbang"]):
+        concerns["nutrition_concerns"] = True
+    
+    # Environmental concerns
+    if any(term in text for term in ["mainit", "malamig", "init", "lamig"]):
+        concerns["environmental_concerns"] = True
+    
+    # Daily activity concerns
+    if any(term in text for term in ["hirap gawin", "hindi na nagagawa", "nahihirapan", 
+                                    "tulong", "tulungan", "gawain"]):
+        concerns["daily_activity_concerns"] = True
+    
+    return {
+        "concerns": concerns
+    }
 
 def extract_key_relations(doc):
     """

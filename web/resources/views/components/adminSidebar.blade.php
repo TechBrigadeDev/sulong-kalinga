@@ -137,13 +137,13 @@
       </ul>
     </li>
 
-    <li class="{{ Request::routeIs('admin.aiSummary.*') ? 'active' : '' }}">
-      <a href="{{ route('admin.aiSummary.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.aiSummary.index') }}'; return false;" @endif>
+    <li class="{{ Request::routeIs('admin.ai-summary.*') ? 'active' : '' }}">
+      <a href="{{ route('admin.ai-summary.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.ai-summary.index') }}'; return false;" @endif>
         <i class="bi bi-stars"></i>
         <span class="link_name">AI Summary</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('admin.aiSummary.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.aiSummary.index') }}'; return false;" @endif>AI Summary</a></li>
+        <li><a class="link_name" href="{{ route('admin.ai-summary.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('admin.ai-summary.index') }}'; return false;" @endif>AI Summary</a></li>
       </ul>
     </li>
     
