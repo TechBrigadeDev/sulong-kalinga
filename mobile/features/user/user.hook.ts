@@ -67,13 +67,13 @@ export const useUpdateEmail = (params?: {
     onSuccess: () => Promise<void>;
 }) => {
     const { user, setUser } = authStore();
-    const { token } = authStore();
+    const { role, token } = authStore();
 
     return useMutation({
         mutationFn: async (
             data: dtoEmailUpdate,
         ) => {
-            if (!token) {
+            if (!token || !role) {
                 throw new Error(
                     "Token is required",
                 );
@@ -82,12 +82,9 @@ export const useUpdateEmail = (params?: {
             const response =
                 await userController.updateEmail(
                     data,
-                    token,
+                    role!,
                 );
-            console.log(
-                "Email updated successfully:",
-                response,
-            );
+
             return response;
         },
         onSuccess: async (data) => {

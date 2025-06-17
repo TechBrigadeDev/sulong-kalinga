@@ -25,18 +25,6 @@ class UserController extends Controller {
             const response =
                 await this.api.get(path);
 
-            log(
-                "User profile response:\n",
-                "Role:",
-                role,
-                "\n",
-                JSON.stringify(
-                    response.data,
-                    null,
-                    2,
-                ),
-            );
-
             const validate =
                 await userProfileSchema.safeParseAsync(
                     {
@@ -67,18 +55,30 @@ class UserController extends Controller {
 
     async updateEmail(
         data: dtoEmailUpdate,
-        token: string,
+        role: IRole,
     ) {
+        const isStaff = isRoleStaff(role);
+
+        const formData = {
+            email: data.new_email,
+            new_email: data.new_email,
+            current_password:
+                data.current_password,
+        };
+
         try {
-            const response = await this.api.patch(
-                "/account-profile/email",
-                data,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
-            );
+            const response = isStaff
+                ? await this.api.patch(
+                      "/account-profile/email",
+                      formData,
+                  )
+                : await this.api.post(
+                      portalPath(
+                          role,
+                          "/profile/update-email",
+                      ),
+                      formData,
+                  );
 
             log(
                 "Email update response:",
@@ -87,6 +87,16 @@ class UserController extends Controller {
 
             return data.new_email;
         } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.status) {
+                    case 422:
+                        console.error(
+                            "Validation error:",
+                            error.response?.data,
+                        );
+                        break;
+                }
+            }
             console.error(
                 "Error updating email:",
                 error,

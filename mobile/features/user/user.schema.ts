@@ -155,7 +155,7 @@ export const userProfileSchema =
 
 export const updateEmailSchema = z.object({
     new_email: z.string().email(),
-    password: z.string(),
+    current_password: z.string(),
 });
 
 export const updatePasswordSchema = z

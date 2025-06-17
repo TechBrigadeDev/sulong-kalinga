@@ -36,7 +36,7 @@ const UpdateEmail = () => {
     const form = useForm({
         defaultValues: {
             new_email: "",
-            password: "",
+            current_password: "",
         },
         validators: {
             onChange: updateEmailSchema,
@@ -92,7 +92,7 @@ const UpdateEmail = () => {
             <XStack
                 style={{ alignItems: "center" }}
             >
-                <form.Field name="password">
+                <form.Field name="current_password">
                     {(field) => (
                         <Input
                             id="current-password-update"
