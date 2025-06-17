@@ -5,7 +5,9 @@ interface Props {
     onStatisticsPress?: () => void;
 }
 
-const CarePlanHeader = ({ onStatisticsPress }: Props) => {
+const CarePlanHeader = ({
+    onStatisticsPress,
+}: Props) => {
     return (
         <XStack
             justifyContent="space-between"

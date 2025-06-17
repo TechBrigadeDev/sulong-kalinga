@@ -65,7 +65,9 @@ const interventionSchema = z.object({
     weekly_care_plan_id: z.number(),
     intervention_id: z.number().nullable(),
     care_category_id: z.number(),
-    intervention_description: z.string().nullable(),
+    intervention_description: z
+        .string()
+        .nullable(),
     duration_minutes: z.string(),
     implemented: z.boolean(),
 });

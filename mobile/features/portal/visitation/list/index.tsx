@@ -14,7 +14,6 @@ import {
     EmptyState,
     ErrorState,
     PullToRefresh,
-    StatusFilter,
     VisitationCard,
 } from "./components";
 import { portalVisitationListStore } from "./store";

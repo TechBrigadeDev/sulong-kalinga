@@ -1,4 +1,7 @@
-import { AlertCircle, RefreshCw } from "lucide-react-native";
+import {
+    AlertCircle,
+    RefreshCw,
+} from "lucide-react-native";
 import { Button, Text, YStack } from "tamagui";
 
 interface Props {
@@ -6,9 +9,9 @@ interface Props {
     message?: string;
 }
 
-const ErrorState = ({ 
-    onRetry, 
-    message = "Unable to load visitations. Please try again." 
+const ErrorState = ({
+    onRetry,
+    message = "Unable to load visitations. Please try again.",
 }: Props) => {
     return (
         <YStack
@@ -18,7 +21,10 @@ const ErrorState = ({
             gap="$4"
             p="$6"
         >
-            <AlertCircle size={64} color="$red10" />
+            <AlertCircle
+                size={64}
+                color="$red10"
+            />
             <YStack alignItems="center" gap="$2">
                 <Text
                     fontSize="$6"
@@ -37,7 +43,7 @@ const ErrorState = ({
                     {message}
                 </Text>
             </YStack>
-            
+
             {onRetry && (
                 <Button
                     size="$4"

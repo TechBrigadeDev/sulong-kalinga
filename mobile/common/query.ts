@@ -1,6 +1,28 @@
-import { QueryClient } from "@tanstack/react-query";
+import {
+    InvalidateOptions,
+    QueryClient,
+} from "@tanstack/react-query";
+import { authStore } from "features/auth/auth.store";
 
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        mutations: {
+            onSuccess: async () => {
+                const token =
+                    authStore.getState().token;
+                if (!token) {
+                    return;
+                }
+
+                await invalidateQK([
+                    QK.notification
+                        .getNotifications,
+                    token,
+                ]);
+            },
+        },
+    },
+});
 
 export const QK = {
     auth: {
@@ -142,6 +164,17 @@ export const QK = {
         ],
     },
     getFAQ: () => ["faq/getFAQ"],
+    notification: {
+        getNotifications:
+            "notification/getNotifications",
+    },
+};
+
+export const getDataQK = async <T>(
+    key: string[],
+) => {
+    const data = queryClient.getQueryData(key);
+    return data as T;
 };
 
 export const setDataQK = async (
@@ -153,8 +186,18 @@ export const setDataQK = async (
 
 export const invalidateQK = async (
     key: string[],
+    opts?: InvalidateOptions,
 ) => {
-    await queryClient.invalidateQueries({
+    await queryClient.invalidateQueries(
+        {
+            queryKey: key,
+        },
+        opts,
+    );
+};
+
+export const cancelQK = async (key: string[]) => {
+    await queryClient.cancelQueries({
         queryKey: key,
     });
 };

@@ -1,6 +1,6 @@
 import { Calendar } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
-import { Text, YStack } from "tamagui";
+import { Text } from "tamagui";
 
 interface EmptyStateProps {
     message?: string;

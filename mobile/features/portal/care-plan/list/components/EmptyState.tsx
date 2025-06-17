@@ -1,4 +1,7 @@
-import { FileX, Search } from "lucide-react-native";
+import {
+    FileX,
+    Search,
+} from "lucide-react-native";
 import { Button, Text, YStack } from "tamagui";
 
 interface Props {
@@ -21,7 +24,10 @@ const EmptyState = ({
             p="$6"
         >
             {hasSearch ? (
-                <Search size={64} color="$gray8" />
+                <Search
+                    size={64}
+                    color="$gray8"
+                />
             ) : (
                 <FileX size={64} color="$gray8" />
             )}

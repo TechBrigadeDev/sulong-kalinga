@@ -52,7 +52,7 @@ axiosClient.interceptors.response.use(
 );
 
 export class Controller {
-    public role: IRole;
+    public role: IRole | null = null;
 
     constructor(
         public api: AxiosInstance = axiosClient,

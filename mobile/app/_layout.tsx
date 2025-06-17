@@ -93,6 +93,14 @@ function RootLayoutNav() {
                                     false,
                             }}
                         />
+                        <Stack.Screen
+                            name="notification"
+                            options={{
+                                title: "Notifications",
+                                headerTitle:
+                                    "Notifications",
+                            }}
+                        />
                     </Stack.Protected>
                     <Stack.Screen name="login" />
                 </Stack>

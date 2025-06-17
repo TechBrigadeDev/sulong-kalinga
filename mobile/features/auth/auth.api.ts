@@ -1,5 +1,4 @@
 import { AxiosInstance } from "axios";
-import { log } from "common/debug";
 import { isEmail } from "common/validate";
 
 import { axiosClient } from "~/common/api";

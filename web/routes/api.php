@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\MedicationScheduleApiController;
 use App\Http\Controllers\Api\InternalAppointmentsApiController;
 use App\Http\Controllers\Api\VisitationApiController;
 use App\Http\Controllers\Api\MessagingApiController;
+use App\Http\Controllers\Api\NotificationsApiController;
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\ShiftTrackApiController;
 use App\Http\Controllers\Api\RecordsManagementApiController;
@@ -88,8 +89,8 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     Route::get('/provinces', [MunicipalityApiController::class, 'provinces']);
 
     // Portal Account (initial)
-    Route::get('/portal-account/{id}/users', [PortalAccountApiController::class, 'getPortalAccountUsers']);
-    Route::post('/portal-account/select-user', [PortalAccountApiController::class, 'selectPortalUser']);
+    // Route::get('/portal-account/{id}/users', [PortalAccountApiController::class, 'getPortalAccountUsers']);
+    // Route::post('/portal-account/select-user', [PortalAccountApiController::class, 'selectPortalUser']);
 
     // Notifications
     Route::get('/notifications', [NotificationsApiController::class, 'index']);

@@ -1,3 +1,4 @@
+import { portalCarePlanListSchema } from "features/portal/care-plan/schema";
 import { useMemo } from "react";
 import {
     Button,
@@ -7,9 +8,9 @@ import {
 } from "tamagui";
 import { z } from "zod";
 
-import { portalCarePlanListSchema } from "../../schema";
-
-type ICarePlan = z.infer<typeof portalCarePlanListSchema>;
+type ICarePlan = z.infer<
+    typeof portalCarePlanListSchema
+>;
 
 interface Props {
     selectedStatus: string;
@@ -31,10 +32,13 @@ const StatusFilter = ({
         };
 
         data.forEach((carePlan) => {
-            const status = carePlan.status.toLowerCase();
+            const status =
+                carePlan.status.toLowerCase();
             if (status === "pending review") {
                 counts["pending review"]++;
-            } else if (status === "acknowledged") {
+            } else if (
+                status === "acknowledged"
+            ) {
                 counts.acknowledged++;
             } else if (status === "completed") {
                 counts.completed++;
@@ -79,14 +83,20 @@ const StatusFilter = ({
         >
             <XStack gap="$2">
                 {filters.map((filter) => {
-                    const isSelected = selectedStatus === filter.key;
+                    const isSelected =
+                        selectedStatus ===
+                        filter.key;
 
                     return (
                         <Button
                             key={filter.key}
                             size="$3"
                             variant="outlined"
-                            theme={isSelected ? "blue" : undefined}
+                            theme={
+                                isSelected
+                                    ? "blue"
+                                    : undefined
+                            }
                             bg={
                                 isSelected
                                     ? "$blue8"
@@ -98,10 +108,18 @@ const StatusFilter = ({
                                     : "$borderColor"
                             }
                             onPress={() =>
-                                onStatusChange(filter.key)
+                                onStatusChange(
+                                    filter.key,
+                                )
                             }
-                            disabled={filter.count === 0}
-                            opacity={filter.count === 0 ? 0.5 : 1}
+                            disabled={
+                                filter.count === 0
+                            }
+                            opacity={
+                                filter.count === 0
+                                    ? 0.5
+                                    : 1
+                            }
                         >
                             <Text
                                 color={
@@ -112,7 +130,8 @@ const StatusFilter = ({
                                 fontSize="$3"
                                 fontWeight="500"
                             >
-                                {filter.label} ({filter.count})
+                                {filter.label} (
+                                {filter.count})
                             </Text>
                         </Button>
                     );

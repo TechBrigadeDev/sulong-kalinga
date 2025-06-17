@@ -1,5 +1,9 @@
 import type { Intervention } from "features/portal/care-plan/schema";
-import { Folder, HeartHandshake, Tag } from "lucide-react-native";
+import {
+    Folder,
+    HeartHandshake,
+    Tag,
+} from "lucide-react-native";
 import React from "react";
 import {
     Card,
@@ -56,10 +60,7 @@ const InterventionItem: React.FC<{
         {intervention.category && (
             <XStack items="center" gap="$1">
                 <Tag size={14} color="grey" />
-                <Text
-                    fontSize="$3"
-                    color="grey"
-                >
+                <Text fontSize="$3" color="grey">
                     {intervention.category}
                 </Text>
             </XStack>

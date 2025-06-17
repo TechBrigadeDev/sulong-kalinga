@@ -14,11 +14,15 @@ const SearchInput = ({
     onSearch,
     placeholder = "Search by author or date...",
 }: Props) => {
-    const [localValue, setLocalValue] = useState(value);
+    const [localValue, setLocalValue] =
+        useState(value);
 
-    const debouncedSearch = useDebounce((searchTerm: string) => {
-        onSearch(searchTerm);
-    }, 300);
+    const debouncedSearch = useDebounce(
+        (searchTerm: string) => {
+            onSearch(searchTerm);
+        },
+        300,
+    );
 
     const handleChangeText = (text: string) => {
         setLocalValue(text);
@@ -62,7 +66,8 @@ const SearchInput = ({
                 borderWidth={0}
                 flex={1}
                 style={{
-                    backgroundColor: "transparent",
+                    backgroundColor:
+                        "transparent",
                     fontSize: 16,
                 }}
             />
@@ -73,8 +78,10 @@ const SearchInput = ({
                     circular
                     onPress={handleClear}
                     style={{
-                        backgroundColor: "transparent",
-                        borderColor: "transparent",
+                        backgroundColor:
+                            "transparent",
+                        borderColor:
+                            "transparent",
                         padding: 4,
                     }}
                 >

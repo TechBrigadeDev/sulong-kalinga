@@ -1,4 +1,7 @@
-import { Circle, ClipboardList } from "lucide-react-native";
+import {
+    Circle,
+    ClipboardList,
+} from "lucide-react-native";
 import React from "react";
 import {
     Card,

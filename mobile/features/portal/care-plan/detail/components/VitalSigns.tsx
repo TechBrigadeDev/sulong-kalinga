@@ -1,5 +1,8 @@
 import type { VitalSigns as VitalSignsType } from "features/portal/care-plan/schema";
-import { Activity, Icon, icons } from "lucide-react-native";
+import {
+    Activity,
+    icons,
+} from "lucide-react-native";
 import React from "react";
 import {
     Card,

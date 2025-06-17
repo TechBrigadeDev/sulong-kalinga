@@ -35,3 +35,59 @@ export const messageResponseSchema = (
             ),
         data: z.any().optional(),
     });
+
+export const paginatedResponseSchema = <
+    T extends z.ZodTypeAny,
+>(
+    itemSchema: T,
+) =>
+    z.object({
+        success: z.boolean(),
+        data: z.object({
+            current_page: z.number(),
+            data: z.array(itemSchema),
+            first_page_url: z.string(),
+            from: z.number(),
+            last_page: z.number(),
+            last_page_url: z.string(),
+            links: z.array(
+                z.object({
+                    url: z.string().nullable(),
+                    label: z.string(),
+                    active: z.boolean(),
+                }),
+            ),
+            next_page_url: z.string().nullable(),
+            path: z.string(),
+            per_page: z.number(),
+            prev_page_url: z.string().nullable(),
+            to: z.number(),
+            total: z.number(),
+        }),
+    });
+
+export interface IPagenatedResponse<T> {
+    current_page: number;
+    data: T[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+    meta: {
+        current_page: number;
+        last_page: number;
+        total: number;
+        per_page: number;
+    };
+}
