@@ -91,9 +91,11 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     Route::get('/portal-account/{id}/users', [PortalAccountApiController::class, 'getPortalAccountUsers']);
     Route::post('/portal-account/select-user', [PortalAccountApiController::class, 'selectPortalUser']);
 
-    // Notifications (initial)
-    // Route::post('/mobile-notifications', [MobileNotificationApiController::class, 'store']);
-
+    // Notifications
+    Route::get('/notifications', [NotificationsApiController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationsApiController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationsApiController::class, 'markAllAsRead']);
+    
     // Reports Management API
     Route::get('/reports', [ReportsApiController::class, 'index']);
     Route::get('/reports/{id}', [ReportsApiController::class, 'show']);
