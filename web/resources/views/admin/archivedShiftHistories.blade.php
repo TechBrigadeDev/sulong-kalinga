@@ -120,93 +120,50 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <!-- Demo data - would be replaced with actual data from the database -->
-                                        <tr>
-                                            <td>John Smith</td>
-                                            <td>Jan 15, 2025</td>
-                                            <td>08:00 AM</td>
-                                            <td>04:00 PM</td>
-                                            <td>Mondragon</td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Maria Garcia</td>
-                                            <td>Jan 10, 2025</td>
-                                            <td>09:00 AM</td>
-                                            <td>05:00 PM</td>
-                                            <td>San Roque</td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>David Johnson</td>
-                                            <td>Dec 20, 2024</td>
-                                            <td>02:00 PM</td>
-                                            <td>10:00 PM</td>
-                                            <td>Mondragon</td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Sarah Wilson</td>
-                                            <td>Dec 15, 2024</td>
-                                            <td>08:00 AM</td>
-                                            <td>04:00 PM</td>
-                                            <td>San Roque</td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="#" title="View Shift Details">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        @forelse($shifts as $shift)
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        {{ $shift->careWorker->first_name ?? '' }} {{ $shift->careWorker->last_name ?? '' }}
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($shift->time_in)->format('M d, Y') }}
+                                                </td>
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }}
+                                                </td>
+                                                <td>
+                                                    {{ $shift->time_out ? \Carbon\Carbon::parse($shift->time_out)->format('h:i A') : '--:--' }}
+                                                </td>
+                                                <td>
+                                                    {{ $shift->careWorker->municipality ?? '-' }}
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="action-icons">
+                                                        <a href="{{ route('admin.shift.histories.shiftDetails', ['shiftId' => $shift->shift_id]) }}" title="View Shift Details">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        <a href="#" title="Download Report">
+                                                            <i class="bi bi-download"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">No archived shift records found.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
                             
-                            <!-- Pagination -->
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination justify-content-center mt-4">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">Next</a>
-                                    </li>
-                                </ul>
-                            </nav>
+                            @if($shifts->hasPages())
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    {{ $shifts->withQueryString()->links() }}
+                                </nav>
+                            @endif
                         </div>
                     </div>
                 </div>

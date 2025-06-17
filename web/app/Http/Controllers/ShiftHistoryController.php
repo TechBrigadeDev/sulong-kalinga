@@ -9,21 +9,20 @@ use App\Models\User;
 class ShiftHistoryController extends Controller
 {
     /**
-     * Display a listing of the current shift histories.
-     *
-     * @return \Illuminate\Http\Response
+     * Display a listing of the current (in-progress) shift histories.
      */
     public function index(Request $request)
     {
         $query = Shift::with('careWorker');
 
-        // Filtering
+        // Filtering by care worker name
         if ($request->filled('search')) {
             $query->whereHas('careWorker', function ($q) use ($request) {
                 $q->where('first_name', 'ilike', '%' . $request->search . '%')
                   ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
             });
         }
+        // Filtering by date
         if ($request->filled('date')) {
             $query->whereDate('time_in', $request->date);
         }
@@ -39,21 +38,20 @@ class ShiftHistoryController extends Controller
     }
     
     /**
-     * Display a listing of archived shift histories.
-     *
-     * @return \Illuminate\Http\Response
+     * Display a listing of archived (completed) shift histories.
      */
     public function archived(Request $request)
     {
         $query = Shift::with('careWorker');
 
-        // Filtering
+        // Filtering by care worker name
         if ($request->filled('search')) {
             $query->whereHas('careWorker', function ($q) use ($request) {
                 $q->where('first_name', 'ilike', '%' . $request->search . '%')
                   ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
             });
         }
+        // Filtering by date
         if ($request->filled('date')) {
             $query->whereDate('time_in', $request->date);
         }
@@ -68,8 +66,25 @@ class ShiftHistoryController extends Controller
         ]);
     }
 
-    public function shiftDetails()
+    /**
+     * Display the details and location history for a specific shift.
+     */
+    public function shiftDetails($shiftId)
     {
-        return view('admin.shiftHistoryDetails');
+        $shift = Shift::with([
+            'careWorker',
+            'tracks.visitation' // eager load tracks and their visitations
+        ])->findOrFail($shiftId);
+
+        // Optionally, sort tracks by recorded_at
+        $tracks = $shift->tracks
+            ->whereIn('arrival_status', ['arrived', 'departed'])
+            ->sortBy('recorded_at')
+            ->values();
+
+        return view('admin.shiftHistoryDetails', [
+            'shift' => $shift,
+            'tracks' => $tracks
+        ]);
     }
 }
