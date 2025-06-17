@@ -37,7 +37,7 @@ class NotificationsApiController extends Controller
         } else {
             // Default: show notifications for staff user_id
             $notifications = Notification::where('user_id', $user->id)
-                ->where('user_type', 'staff')
+                ->where('user_type', 'cose_staff')
                 ->orderByDesc('created_at')
                 ->paginate(20);
         }
