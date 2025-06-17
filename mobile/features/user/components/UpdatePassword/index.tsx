@@ -1,5 +1,4 @@
 import { useForm } from "@tanstack/react-form";
-import { log } from "common/debug";
 import { useRouter } from "expo-router";
 import { useUpdatePassword } from "features/user/user.hook";
 import { updatePasswordSchema } from "features/user/user.schema";
@@ -34,7 +33,6 @@ const UpdatePassword = () => {
         isPending,
     } = useUpdatePassword({
         onSuccess: async () => {
-            log("Password updated successfully");
             router.back();
         },
     });
@@ -49,7 +47,6 @@ const UpdatePassword = () => {
             onChange: updatePasswordSchema,
         },
         onSubmit: async (values) => {
-            log(values.value);
             const validate =
                 await updatePasswordSchema.safeParseAsync(
                     values.value,
@@ -61,7 +58,20 @@ const UpdatePassword = () => {
                 );
                 return;
             }
-            await updatePassword(validate.data);
+            try {
+                await updatePassword(
+                    validate.data,
+                );
+            } catch (error) {
+                form.setErrorMap(
+                    (error as any).response?.data,
+                );
+                // Log the error for debugging
+                console.error(
+                    "Error updating password:",
+                    error,
+                );
+            }
         },
     });
 

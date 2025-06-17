@@ -124,13 +124,13 @@ export const useUpdateEmail = (params?: {
 export const useUpdatePassword = (params?: {
     onSuccess: () => Promise<void>;
 }) => {
-    const { token } = authStore();
+    const { token, role } = authStore();
 
     return useMutation({
         mutationFn: async (
             data: dtoUpdatePassword,
         ) => {
-            if (!token) {
+            if (!token || !role) {
                 throw new Error(
                     "Token is required",
                 );
@@ -139,7 +139,7 @@ export const useUpdatePassword = (params?: {
             const response =
                 await userController.updatePassword(
                     data,
-                    token,
+                    role!,
                 );
             console.log(
                 "Password updated successfully:",

@@ -34,16 +34,6 @@ class AuthController {
             "/login",
             formData,
         );
-        log(
-            "Login successful\n",
-            "Role:",
-            "\nResponse data:",
-            JSON.stringify(
-                response.data,
-                null,
-                2,
-            ),
-        );
         const validate =
             await loginSchema.response.safeParseAsync(
                 response.data,

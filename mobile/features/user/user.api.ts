@@ -97,41 +97,48 @@ class UserController extends Controller {
 
     async updatePassword(
         data: dtoUpdatePassword,
-        token: string,
+        role: IRole,
     ) {
-        try {
-            const response = await this.api.patch(
-                "/account-profile/password",
-                {
-                    current_password:
-                        data.current_password,
-                    new_password:
-                        data.new_password,
-                    new_password_confirmation:
-                        data.confirm_password,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
-            );
+        const isStaff = isRoleStaff(role);
 
-            log(
-                "Password update response:",
-                response.data,
-            );
+        const formData = {
+            current_password:
+                data.current_password,
+            new_password: data.new_password,
+            new_password_confirmation:
+                data.confirm_password,
+        };
+
+        try {
+            const response = isStaff
+                ? await this.api.patch(
+                      "/account-profile/password",
+                      formData,
+                  )
+                : await this.api.post(
+                      portalPath(
+                          role,
+                          "/profile/update-password",
+                      ),
+                      formData,
+                  );
 
             return response.data;
         } catch (error) {
             if (error instanceof AxiosError) {
-                if (error.status === 422) {
-                    console.error(
-                        "Validation error:",
-                        error.response?.data,
-                    );
+                switch (error.status) {
+                    case 422:
+                        console.error(
+                            "Validation error:",
+                            error.response?.data,
+                        );
+                        break;
                 }
             }
+            console.error(
+                "Error updating password:",
+                error,
+            );
             throw error;
         }
     }
