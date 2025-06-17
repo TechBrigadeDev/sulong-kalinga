@@ -1516,336 +1516,1166 @@ def extract_main_subject(doc):
     return "Ang pasyente"
 
 def create_enhanced_multi_section_summary(doc, sections, doc_type="assessment"):
-    """Create a comprehensive and cohesive summary by synthesizing information across sections."""
+    """Create a comprehensive summary with equal representation from all sections."""
     if not sections:
         return "Walang sapat na impormasyon para sa buod."
     
     # Extract main subject (patient)
     subject = extract_main_subject(doc)
     
-    # Apply proper Tagalog name formatting with "si" for names
-    if subject and subject not in ["Ang pasyente", "Ang kliyente"]:
-        if not subject.lower().startswith("si "):
-            subject = f"Si {subject}"
-    
-    # Initialize collection of extracted information for synthesis
-    info = {
-        # Medical condition/symptoms
-        "conditions": [],
-        "symptoms": [],
-        "severity_terms": [],
-        "frequency_terms": [],
-        "measurements": [],
-        
-        # Physical status
-        "physical_limitations": [],
-        "body_parts": [],
-        
-        # Activities
-        "activities": [],
-        "activity_limitations": [],
-        
-        # Mental state
-        "cognitive_states": [],
-        "emotional_states": [],
-        
-        # Social aspects
-        "social_relations": [],
-        "support_systems": [],
-        
-        # Recommendations (for evaluation type)
-        "recommendations": [],
-        "treatments": [],
-        "diet_changes": [],
-        "monitoring_needs": [],
-        "healthcare_referrals": [],
-        
-        # Other important elements
-        "timeframes": [],
-        "warnings": []
-    }
-    
-    # Process each section with improved extraction using extract_structured_elements
+    # ENHANCEMENT 1: Handle long sections by splitting them
+    processed_sections = {}
     for section_name, section_text in sections.items():
-        if not section_text.strip():
+        # Skip empty sections
+        if not section_text or len(section_text.strip()) < 10:
             continue
-        
-        # Use the structured elements extraction for more comprehensive data
-        elements = extract_structured_elements(section_text, section_name)
-        
-        # Map extracted elements to our summary info structure
-        if elements["conditions"]:
-            info["conditions"].extend([c for c in elements["conditions"] if c not in info["conditions"]])
-        
-        if elements["symptoms"]:
-            info["symptoms"].extend([s for s in elements["symptoms"] if s not in info["symptoms"]])
             
-        if elements["severity"]:
-            info["severity_terms"].extend([s for s in elements["severity"] if s not in info["severity_terms"]])
+        # For very long sections (more than 500 chars), split into smaller parts
+        if len(section_text) > 500:
+            # Split into chunks for better processing
+            section_sentences = split_into_sentences(section_text)
             
-        if elements["vital_signs"]:
-            info["measurements"].extend([m for m in elements["vital_signs"] if m not in info["measurements"]])
+            # Create chunks of max 3 sentences
+            chunks = []
+            current_chunk = []
+            current_length = 0
             
-        if elements["limitations"]:
-            info["physical_limitations"].extend([l for l in elements["limitations"] if l not in info["physical_limitations"]])
-            
-        if elements["body_parts"]:
-            info["body_parts"].extend([b for b in elements["body_parts"] if b not in info["body_parts"]])
-            
-        if elements["activities"]:
-            info["activities"].extend([a for a in elements["activities"] if a not in info["activities"]])
-            
-        if elements["activity_limitations"]:
-            info["activity_limitations"].extend([a for a in elements["activity_limitations"] if a not in info["activity_limitations"]])
-            
-        if elements["cognitive_status"]:
-            info["cognitive_states"].extend([c for c in elements["cognitive_status"] if c not in info["cognitive_states"]])
-            
-        if elements["emotional_state"]:
-            info["emotional_states"].extend([e for e in elements["emotional_state"] if e not in info["emotional_states"]])
-            
-        if elements["social_support"]:
-            info["social_relations"].extend([s for s in elements["social_support"] if s not in info["social_relations"]])
-            
-        if elements["recommendations"]:
-            info["recommendations"].extend([r for r in elements["recommendations"] if r not in info["recommendations"]])
-            
-        if elements["treatments"]:
-            info["treatments"].extend([t for t in elements["treatments"] if t not in info["treatments"]])
-            
-        if elements["monitoring_plans"]:
-            info["monitoring_needs"].extend([m for m in elements["monitoring_plans"] if m not in info["monitoring_needs"]])
-            
-        if elements["healthcare_referrals"]:
-            info["healthcare_referrals"].extend([h for h in elements["healthcare_referrals"] if h not in info["healthcare_referrals"]])
-        
-        # Extract severity and frequency terms (for symptoms)
-        severity_terms = ["matindi", "malubha", "severe", "moderate", "mild", "banayad", 
-                        "grabeng", "lubhang", "napakasidhi", "katamtamang", "bahagyang"]
-        
-        for term in severity_terms:
-            if term in section_text.lower() and term not in info["severity_terms"]:
-                info["severity_terms"].append(term)
-                
-        frequency_terms = ["araw-araw", "madalas", "paminsan-minsan", "linggu-linggo", 
-                        "paulit-ulit", "regular", "palaging", "bihira", "significant",
-                        "parati", "pana-panahon", "persistent", "occasional"]
-                
-        for term in frequency_terms:
-            if term in section_text.lower() and term not in info["frequency_terms"]:
-                info["frequency_terms"].append(term)
-        
-        # Extract additional patterns not captured by entity recognition
-        
-        # Limitation patterns
-        limitation_patterns = [
-            r"(nahihirapan|hirap) sa ([^.;,]+)",
-            r"(limitado|limited) ang ([^.;,]+)",
-            r"(problema|issue) sa ([^.;,]+)",
-            r"(hindi|di) (makapag|magawang) ([^.;,]+)"
-        ]
-        
-        for pattern in limitation_patterns:
-            matches = re.finditer(pattern, section_text.lower())
-            for match in matches:
-                if len(match.groups()) >= 2:
-                    limitation = match.group(2).strip()
-                    if limitation and limitation not in info["physical_limitations"] and len(limitation) > 3:
-                        info["physical_limitations"].append(limitation)
-        
-        # Support system patterns
-        support_patterns = [
-            r"(support|tulong|suporta) (mula sa|ng|galing) ([^.;,]+)",
-            r"(tinutulungan|sinusuportahan|inaalagaan) (ng|ni) ([^.;,]+)",
-            r"kasama ang (kanyang|kaniyang) ([^.;,]+)"
-        ]
-        
-        for pattern in support_patterns:
-            matches = re.finditer(pattern, section_text.lower())
-            for match in matches:
-                if len(match.groups()) >= 2:
-                    supporter = match.groupdict().get(match.lastindex, "").strip()
-                    if supporter and supporter not in info["support_systems"] and len(supporter) > 3:
-                        info["support_systems"].append(supporter)
-    
-    # Now build synthesized sentences based on document type
-    summary_sentences = []
-    
-    # For assessment documents
-    if doc_type.lower() == "assessment":
-        # 1. First sentence: Main condition and symptoms
-        if info["conditions"] or info["symptoms"]:
-            conditions = info["conditions"][:2]  # Limit to top 2 conditions
-            symptoms = info["symptoms"][:2]      # Limit to top 2 symptoms
-            
-            # Combine conditions and symptoms with proper formatting
-            medical_issues = []
-            if conditions:
-                medical_issues.extend(conditions)
-            if symptoms and not any(s in " ".join(conditions) for s in symptoms):
-                medical_issues.extend(symptoms)
-                
-            # Add severity/frequency if available
-            descriptor = ""
-            if info["severity_terms"]:
-                descriptor = info["severity_terms"][0] + " "
-            elif info["frequency_terms"]:
-                descriptor = info["frequency_terms"][0] + " "
-                
-            # Create primary condition sentence
-            if medical_issues:
-                # Format nicely with proper conjunctions for Tagalog
-                if len(medical_issues) == 1:
-                    condition_text = f"{descriptor}{medical_issues[0]}"
-                elif len(medical_issues) == 2:
-                    condition_text = f"{descriptor}{medical_issues[0]} at {medical_issues[1]}"
+            for sent in section_sentences:
+                if current_length + len(sent) > 300 and current_chunk:  # Start new chunk if this would make it too long
+                    chunks.append(" ".join(current_chunk))
+                    current_chunk = [sent]
+                    current_length = len(sent)
                 else:
-                    condition_text = f"{descriptor}{', '.join(medical_issues[:-1])}, at {medical_issues[-1]}"
+                    current_chunk.append(sent)
+                    current_length += len(sent)
                     
-                summary_sentences.append(f"{subject} ay nagpapakita ng {condition_text}.")
-        
-        # 2. Second sentence: Physical measurements or status
-        if info["measurements"] or info["physical_limitations"]:
-            if info["measurements"]:
-                measurement = info["measurements"][0]
-                # Check if it contains numbers already
-                if re.search(r'\d', measurement):
-                    summary_sentences.append(f"Ang mga sukat ay nagpapakita ng {measurement}.")
-                else:
-                    summary_sentences.append(f"Ang mga sukat ay nagpapakita ng mataas na {measurement}.")
-            elif info["physical_limitations"]:
-                limitation = info["physical_limitations"][0]
-                summary_sentences.append(f"Mayroon siyang limitasyon sa {limitation}.")
-        
-        # 3. Third sentence: Activity limitations or challenges
-        if info["activities"] or info["activity_limitations"]:
-            activities = info["activities"][:3]
-            
-            if activities:
-                # Format with proper Tagalog conjunctions
-                if len(activities) == 1:
-                    act_text = activities[0]
-                elif len(activities) == 2:
-                    act_text = f"{activities[0]} at {activities[1]}"
-                else:
-                    act_text = f"{', '.join(activities[:-1])}, at {activities[-1]}"
-                    
-                summary_sentences.append(f"{subject} ay nahihirapan sa mga aktibidad na may kaugnayan sa {act_text}.")
-        
-        # 4. Fourth sentence: Social support or mental state
-        if info["social_relations"]:
-            relation = info["social_relations"][0]
-            summary_sentences.append(f"May suporta {subject} mula sa kanyang {relation}.")
-        elif info["cognitive_states"] or info["emotional_states"]:
-            states = info["cognitive_states"] + info["emotional_states"]
-            if states:
-                summary_sentences.append(f"Ang kanyang mental na kalagayan ay nagpapakita ng {states[0]}.")
-    
-    # For evaluation documents
-    else:
-        # 1. First sentence: Primary recommendation or referral
-        if info["healthcare_referrals"]:
-            referral = info["healthcare_referrals"][0]
-            summary_sentences.append(f"Inirerekomenda ang agarang pagkonsulta sa {referral} para sa komprehensibong pagsusuri.")
-        elif info["recommendations"]:
-            recommendation = next((r for r in info["recommendations"] if len(r) > 5), None)
-            if recommendation:
-                # Ensure we're not copying a full sentence but creating a synthesized one
-                summary_sentences.append(f"Inirerekomenda ang pagkakaroon ng {recommendation}.")
-        
-        # 2. Second sentence: Treatment approach
-        if info["treatments"]:
-            treatments = info["treatments"][:2]
-            if treatments:
-                if len(treatments) == 1:
-                    treatment_text = treatments[0]
-                else:
-                    treatment_text = f"{treatments[0]} at {treatments[1]}"
+            # Add the last chunk if not empty
+            if current_chunk:
+                chunks.append(" ".join(current_chunk))
                 
-                summary_sentences.append(f"Dapat isagawa ang {treatment_text} para sa epektibong paggamot.")
-        
-        # 3. Third sentence: Diet or lifestyle changes
-        if info["diet_changes"]:
-            diet_changes = info["diet_changes"][:2]
-            if diet_changes:
-                summary_sentences.append(f"Para sa diet, inirerekomenda ang {diet_changes[0]}.")
-        
-        # 4. Fourth sentence: Monitoring needs
-        if info["monitoring_needs"] or info["warnings"]:
-            elements = info["monitoring_needs"] + info["warnings"]
-            if elements:
-                summary_sentences.append(f"Mahalagang subaybayan ang {elements[0]} para matiyak ang kaligtasan.")
-    
-    # Handle case where we couldn't generate enough sentences
-    if len(summary_sentences) < 2:
-        # Add fallback sentences based on document type
-        if doc_type.lower() == "assessment":
-            if not any("nagpapakita" in s for s in summary_sentences):
-                primary_issue = next((c for c in info["conditions"]), "kondisyon")
-                summary_sentences.append(f"{subject} ay nagpapakita ng {primary_issue}.")
-            
-            if len(summary_sentences) < 2:
-                summary_sentences.append("Kailangan ng karagdagang pagsusuri para sa komprehensibong assessment.")
+            # Store the chunks
+            processed_sections[section_name] = chunks
         else:
-            if not any("inirerekomenda" in s for s in summary_sentences):
-                summary_sentences.append("Inirerekomenda ang komprehensibong medikal na pagsusuri para sa wastong diagnosis at paggamot.")
+            # For normal sections, keep as is
+            processed_sections[section_name] = [section_text]
+    
+    # ENHANCEMENT 2: Calculate how many sentences to dedicate per section
+    section_sentence_allocation = {}
+    
+    # Base allocation - start with one sentence per section
+    for section_name, chunks in processed_sections.items():
+        # Allocate one sentence per chunk, with a minimum of 1 and maximum of 3
+        # This ensures long sections get more representation
+        section_sentence_allocation[section_name] = min(3, max(1, len(chunks)))
+    
+    # Ensure we have reasonable total length (aim for 3-7 sentences total)
+    total_allocation = sum(section_sentence_allocation.values())
+    max_total_sentences = 7
+    
+    if total_allocation > max_total_sentences:
+        # We need to reduce allocation for some sections
+        # Prioritize by section importance
+        priority_sections = []
+        if doc_type.lower() == "assessment":
+            priority_sections = ["mga_sintomas", "kalagayan_pangkatawan", "kalagayan_mental"]
+        else:
+            priority_sections = ["pangunahing_rekomendasyon", "mga_hakbang"]
             
-            if len(summary_sentences) < 2:
-                summary_sentences.append("Mahalagang sundin ang mga gabay sa pangangalaga para sa mas mabilis na paggaling.")
-    
-    # Apply transitions between sentences for better flow
-    final_summary = summary_sentences[0]
-    
-    # More varied Tagalog transitions
-    transitions = [
-        "Bukod dito, ", "Gayundin, ", "Dagdag pa rito, ", 
-        "Karagdagan sa nabanggit, ", "Kasama rito, ", "Sa kabilang banda, ",
-        "Samantala, ", "Higit pa, "
-    ]
-    
-    for i in range(1, len(summary_sentences)):
-        transition = transitions[min(i-1, len(transitions)-1)]
-        next_sentence = summary_sentences[i]
+        # First reduce non-priority sections to 1 sentence each
+        for section_name in section_sentence_allocation:
+            if section_name not in priority_sections and section_sentence_allocation[section_name] > 1:
+                section_sentence_allocation[section_name] = 1
         
-        # Ensure proper capitalization after transition
-        if next_sentence[0].isupper():
-            next_sentence = next_sentence[0].lower() + next_sentence[1:]
+        # If still too many, reduce priority sections evenly
+        total_allocation = sum(section_sentence_allocation.values())
+        if total_allocation > max_total_sentences:
+            # Calculate how many to remove
+            to_remove = total_allocation - max_total_sentences
+            
+            # Convert to list for easier manipulation
+            allocations = [(section, count) for section, count in section_sentence_allocation.items()]
+            allocations.sort(key=lambda x: (x[0] not in priority_sections, -x[1]))  # Sort by priority, then by count
+            
+            # Remove from highest counts first
+            for i in range(to_remove):
+                if i < len(allocations) and allocations[i][1] > 1:
+                    allocations[i] = (allocations[i][0], allocations[i][1] - 1)
+            
+            # Convert back to dict
+            section_sentence_allocation = {section: count for section, count in allocations}
+    
+    # ENHANCEMENT 3: Generate sentences for each section with SPECIFIC details
+    section_sentences = {}
+    
+    # Extract structured elements for all sections first
+    section_elements = {}
+    for section_name, chunks in processed_sections.items():
+        # Process all chunks together to get more context
+        combined_text = " ".join(chunks)
+        section_elements[section_name] = extract_structured_elements(combined_text, section_name)
+    
+    # Process document sections based on document type
+    if doc_type.lower() == "assessment":
+        # Process assessment sections
+        for section_name, chunks in processed_sections.items():
+            # Skip processed sections
+            if section_name in section_sentences:
+                continue
+                
+            sentences = []
+            elements = section_elements[section_name]
+            
+            # Generate sentences based on section type with SPECIFIC DETAILS
+            if section_name == "mga_sintomas" or "sintomas" in section_name:
+                # CONDITIONS AND SYMPTOMS
+                conditions = elements["conditions"][:2]  # Take up to 2 conditions
+                symptoms = elements["symptoms"][:3]      # Take up to 3 symptoms
+                
+                # Combine conditions and symptoms
+                medical_issues = []
+                if conditions:
+                    medical_issues.extend(conditions)
+                if symptoms and not any(s in " ".join(conditions) for s in symptoms):
+                    medical_issues.extend(symptoms)
+                
+                if medical_issues:
+                    # Format the medical issues with proper Tagalog conjunction
+                    if len(medical_issues) == 1:
+                        condition_text = medical_issues[0]
+                    elif len(medical_issues) == 2:
+                        condition_text = f"{medical_issues[0]} at {medical_issues[1]}"
+                    else:
+                        condition_text = f"{', '.join(medical_issues[:-1])}, at {medical_issues[-1]}"
+                    
+                    # NEW: Include specific severity or frequency if available
+                    severity = elements["severity"][0] if elements["severity"] else ""
+                    frequency = elements["frequency"][0] if elements["frequency"] else ""
+                    
+                    if severity and frequency:
+                        sentences.append(f"{subject} ay nagpapakita ng {severity} at {frequency} na {condition_text}.")
+                    elif severity:
+                        sentences.append(f"{subject} ay nagpapakita ng {severity} na {condition_text}.")
+                    elif frequency:
+                        sentences.append(f"{subject} ay nagpapakita ng {condition_text} na nangyayari nang {frequency}.")
+                    else:
+                        sentences.append(f"{subject} ay nagpapakita ng {condition_text}.")
+                
+                # If allocated more than 1 sentence and we have severity info, add it
+                if section_sentence_allocation[section_name] > 1 and (elements["severity"] or elements["frequency"] or elements["duration"]):
+                    severity = elements["severity"][0] if elements["severity"] else ""
+                    frequency = elements["frequency"][0] if elements["frequency"] else ""
+                    duration = elements["duration"][0] if elements["duration"] else ""
+                    
+                    # NEW: Create more specific second sentence about symptom characteristics
+                    if severity and frequency and duration:
+                        sentences.append(f"Ang mga sintomas ay {severity}, nangyayari nang {frequency}, at nagsimula {duration}.")
+                    elif severity and frequency:
+                        sentences.append(f"Ang mga sintomas ay {severity} at {frequency}.")
+                    elif severity and duration:
+                        sentences.append(f"Ang mga sintomas ay {severity} at nagsimula {duration}.")
+                    elif frequency and duration:
+                        sentences.append(f"Ang mga sintomas ay nangyayari nang {frequency} at nagsimula {duration}.")
+                    elif severity:
+                        sentences.append(f"Ang mga sintomas ay {severity}.")
+                    elif frequency:
+                        sentences.append(f"Ang mga sintomas ay nangyayari nang {frequency}.")
+                    elif duration:
+                        sentences.append(f"Ang mga sintomas ay nagsimula {duration}.")
+                
+                # NEW: If allocated 3 sentences and we have additional symptoms, describe them
+                if section_sentence_allocation[section_name] > 2 and len(symptoms) > 2:
+                    additional_symptoms = symptoms[2:]
+                    if additional_symptoms:
+                        if len(additional_symptoms) == 1:
+                            symptom_text = additional_symptoms[0]
+                        else:
+                            symptom_text = f"{additional_symptoms[0]} at {additional_symptoms[1]}"
+                        sentences.append(f"Bukod dito, nararanasan din niya ang {symptom_text}.")
+            
+            elif section_name == "kalagayan_pangkatawan" or "pangkatawan" in section_name:
+                # PHYSICAL STATUS
+                measurements = elements["vital_signs"]
+                limitations = elements["limitations"]
+                body_parts = elements["body_parts"]
+                
+                # NEW: Create more specific physical status sentences
+                if measurements:
+                    measurement = measurements[0]
+                    sentences.append(f"Ang mga sukat ay nagpapakita ng {measurement}.")
+                
+                # NEW: Combine limitations with specific body parts for more detail
+                if limitations and body_parts and not sentences:
+                    limitation = limitations[0]
+                    body_part = body_parts[0]
+                    sentences.append(f"May limitasyon {subject} sa {limitation}, partikular sa {body_part}.")
+                elif limitations and not sentences:
+                    limitation = limitations[0]
+                    sentences.append(f"May limitasyon {subject} sa {limitation}.")
+                elif body_parts and not sentences:
+                    body_part = body_parts[0]
+                    sentences.append(f"May nararamdaman {subject} sa {body_part}.")
+                
+                # Add a second sentence with additional physical details if allocated
+                if section_sentence_allocation[section_name] > 1:
+                    if measurements and len(measurements) > 1 and not any("sukat" in s for s in sentences):
+                        specific_measurement = measurements[1]
+                        sentences.append(f"Ang kanyang vital signs ay nagpapakita ng {specific_measurement}.")
+                    elif body_parts and len(body_parts) > 1 and not any(body_parts[1] in s for s in sentences):
+                        specific_body_part = body_parts[1]
+                        sentences.append(f"May karamdaman din {subject} sa {specific_body_part}.")
+                    elif limitations and len(limitations) > 1 and not any(limitations[1] in s for s in sentences):
+                        specific_limitation = limitations[1]
+                        sentences.append(f"Nakakaranas din siya ng {specific_limitation}.")
+            
+            elif section_name == "aktibidad" or "aktibidad" in section_name:
+                # ACTIVITIES AND MOBILITY
+                activities = elements["activities"]
+                limitations = elements["activity_limitations"]
+                
+                # NEW: More specific activity limitation descriptions
+                if limitations:
+                    specific_limitation = limitations[0]
+                    # Look for specific ADLs or mobility issues
+                    if "paglalakad" in specific_limitation.lower() or "mobility" in specific_limitation.lower():
+                        sentences.append(f"{subject} ay nahihirapan sa {specific_limitation}, na nakakaapekto sa kanyang paggalaw.")
+                    elif "pagkain" in specific_limitation.lower() or "feeding" in specific_limitation.lower():
+                        sentences.append(f"{subject} ay nahihirapan sa {specific_limitation}, na nakakaapekto sa kanyang nutrition.")
+                    else:
+                        sentences.append(f"{subject} ay nahihirapan sa {specific_limitation}.")
+                elif activities:
+                    activity = activities[0]
+                    sentences.append(f"Sa mga pang-araw-araw na gawain, {subject} ay may kahirapan sa {activity}.")
+                
+                # Add second sentence for additional details
+                if section_sentence_allocation[section_name] > 1:
+                    if activities and len(activities) > 1 and not any(activities[1] in s for s in sentences):
+                        specific_activity = activities[1]
+                        sentences.append(f"Nahihirapan din siya sa {specific_activity}.")
+                    elif limitations and len(limitations) > 1:
+                        specific_limitation = limitations[1]
+                        sentences.append(f"May kahirapan din siya sa {specific_limitation}.")
+            
+            elif section_name == "kalagayan_mental" or "mental" in section_name:
+                # MENTAL STATUS
+                cognitive = elements["cognitive_status"]
+                emotional = elements["emotional_state"]
+                mental = elements["mental_state"]
+                
+                # NEW: More specific mental status descriptions
+                mental_states = cognitive + emotional + mental
+                
+                if mental_states:
+                    # Get the most specific cognitive condition first
+                    specific_cognitive_terms = [
+                        "dementia", "Alzheimer", "cognitive decline", "memory loss", 
+                        "confusion", "disorientation", "pagkalito", "nakalimutan",
+                        "hindi matandaan", "nalilito", "hindi makilala"
+                    ]
+                    
+                    # Look for specific cognitive conditions first
+                    specific_state = None
+                    for state in mental_states:
+                        if any(term in state.lower() for term in specific_cognitive_terms):
+                            specific_state = state
+                            break
+                    
+                    # If no specific cognitive condition found, take first mental state
+                    if not specific_state and mental_states:
+                        specific_state = mental_states[0]
+                    
+                    if specific_state:
+                        sentences.append(f"Ang mental na kalagayan ni {subject} ay nagpapakita ng {specific_state}.")
+                    
+                    # Add second sentence with emotional state if different
+                    if section_sentence_allocation[section_name] > 1 and len(mental_states) > 1:
+                        # Try to find a different type of mental state for variety
+                        emotional_terms = ["lungkot", "depression", "anxiety", "takot", "galit", "irritable", "agitation"]
+                        
+                        second_state = None
+                        for state in mental_states:
+                            if state != specific_state and any(term in state.lower() for term in emotional_terms):
+                                second_state = state
+                                break
+                        
+                        if not second_state and len(mental_states) > 1:
+                            second_state = [s for s in mental_states if s != specific_state][0]
+                            
+                        if second_state:
+                            sentences.append(f"Mayroon din siyang {second_state}.")
+                
+                # NEW: Add third sentence with specific behavioral manifestation if allocated
+                if section_sentence_allocation[section_name] > 2:
+                    behavior_terms = [
+                        "behavior", "pag-uugali", "kilos", "ginagawa", "routine",
+                        "pinagkakaabalahan", "pagtulog", "sleeping", "nagagalit",
+                        "nagsisigaw", "nagwawala", "nagiging agresibo"
+                    ]
+                    
+                    # Extract sentences from section text that mention behavior
+                    behavior_sentences = []
+                    for chunk in processed_sections[section_name]:
+                        chunk_sentences = split_into_sentences(chunk)
+                        for sent in chunk_sentences:
+                            if any(term in sent.lower() for term in behavior_terms):
+                                behavior_sentences.append(sent)
+                    
+                    # Find the most relevant behavior sentence
+                    if behavior_sentences:
+                        selected_sent = min(behavior_sentences, key=len)  # Get shortest one
+                        if len(selected_sent) > 100:  # Trim if too long
+                            last_comma = selected_sent[:100].rfind(',')
+                            if last_comma > 30:
+                                selected_sent = selected_sent[:last_comma+1]
+                        sentences.append(f"Kapansin-pansin din ang kanyang {selected_sent}")
+            
+            elif section_name == "kalagayan_social" or "social" in section_name:
+                # SOCIAL STATUS
+                relations = elements["social_support"]
+                
+                # NEW: More specific social support descriptions
+                if relations:
+                    relation = relations[0]
+                    
+                    # Check for specific relationship terms
+                    family_terms = ["pamilya", "asawa", "anak", "apo", "magulang", "kapatid"]
+                    if any(term in relation.lower() for term in family_terms):
+                        sentences.append(f"May suporta {subject} mula sa kanyang {relation}, na tumutulong sa kanyang pangangailangan.")
+                    else:
+                        sentences.append(f"May suporta {subject} mula sa kanyang {relation}.")
+                    
+                    # Add second sentence if allocated
+                    if section_sentence_allocation[section_name] > 1 and len(relations) > 1:
+                        relation2 = relations[1]
+                        sentences.append(f"Tumutulong din ang kanyang {relation2} sa pangangalaga.")
+                
+                # NEW: Add third sentence about social integration/isolation if allocated
+                if section_sentence_allocation[section_name] > 2:
+                    social_issue_terms = [
+                        "isolation", "kalungkutan", "loneliness", "nag-iisa", 
+                        "walang karamay", "walang kasama", "home-bound", "bedridden"
+                    ]
+                    
+                    # Check if text mentions isolation
+                    combined_section_text = " ".join(processed_sections[section_name])
+                    if any(term in combined_section_text.lower() for term in social_issue_terms):
+                        sentences.append(f"Gayunpaman, nararanasan niya ang social isolation na maaaring makaapekto sa kanyang pangkalahatang kalusugan.")
+                    else:
+                        sentences.append(f"Ang kanyang social support network ay mahalaga para sa kanyang recovery at pangkalahatang well-being.")
+            
+            # If we still don't have enough sentences for this section, add generic ones
+            # but with more SPECIFIC CONTENT based on section type
+            if len(sentences) < section_sentence_allocation[section_name]:
+                needed = section_sentence_allocation[section_name] - len(sentences)
+                
+                # Get section-specific text elements to make generic sentences more specific
+                combined_text = " ".join(processed_sections[section_name])
+                doc_section = nlp(combined_text)
+                
+                # Extract entities from section text
+                section_entities = []
+                for ent in doc_section.ents:
+                    if len(ent.text) > 3:  # Skip very short entities
+                        section_entities.append(ent.text)
+                
+                if section_name == "mga_sintomas" and needed > 0:
+                    if section_entities:
+                        specific_entity = section_entities[0]
+                        sentences.append(f"Ang mga sintomas ni {subject} tulad ng {specific_entity} ay nangangailangan ng karagdagang pagsusuri.")
+                    else:
+                        sentences.append(f"Ang mga sintomas ni {subject} ay nangangailangan ng karagdagang pagsusuri.")
+                        
+                elif section_name == "kalagayan_pangkatawan" and needed > 0:
+                    if body_parts:
+                        sentences.append(f"Ang pisikal na kondisyon ni {subject}, lalo na sa {body_parts[0]}, ay nangangailangan ng atensyon.")
+                    else:
+                        sentences.append(f"Ang pisikal na kondisyon ni {subject} ay nangangailangan ng atensyon.")
+                        
+                elif section_name == "aktibidad" and needed > 0:
+                    if activities:
+                        sentences.append(f"May mga limitasyon si {subject} sa kanyang {activities[0]}.")
+                    else:
+                        sentences.append(f"May mga limitasyon si {subject} sa kanyang pang-araw-araw na gawain.")
+                        
+                elif section_name == "kalagayan_mental" and needed > 0:
+                    if section_entities:
+                        cognitive_entity = next((e for e in section_entities if "memory" in e.lower() or "confusion" in e.lower() or "pagkalito" in e.lower() or "cognitive" in e.lower()), "")
+                        if cognitive_entity:
+                            sentences.append(f"Ang mental na kalagayan ni {subject}, partikular ang {cognitive_entity}, ay nangangailangan ng maingat na ebalwasyon.")
+                        else:
+                            sentences.append(f"Ang mental na kalagayan ni {subject} ay nagpapakita ng mga pagbabago na dapat subaybayan.")
+                    else:
+                        sentences.append(f"Ang mental na kalagayan ni {subject} ay nagpapakita ng mga pagbabago.")
+                        
+                elif section_name == "kalagayan_social" and needed > 0:
+                    if relations:
+                        sentences.append(f"Ang suporta mula sa {relations[0]} ay mahalaga para kay {subject}.")
+                    else:
+                        sentences.append(f"Ang suporta ng pamilya at komunidad ay mahalaga para kay {subject}.")
+            
+            section_sentences[section_name] = sentences[:section_sentence_allocation[section_name]]  # Limit to allocation
+            
+    else:  # EVALUATION document
+        # Process evaluation sections
+        for section_name, chunks in processed_sections.items():
+            # Skip processed sections
+            if section_name in section_sentences:
+                continue
+                
+            sentences = []
+            elements = section_elements[section_name]
+            
+            if section_name == "pangunahing_rekomendasyon" or "rekomendasyon" in section_name:
+                # PRIMARY RECOMMENDATIONS
+                referrals = elements["healthcare_referrals"]
+                recommendations = elements["recommendations"]
+                
+                # NEW: More specific recommendation sentences
+                if referrals:
+                    specific_referral = referrals[0]
+                    # Check for specialist type
+                    specialist_terms = ["specialist", "doctor", "gastroenterologist", "neurologist", "cardiologist", "oncologist", "psychologist", "physical therapist"]
+                    
+                    if any(term in specific_referral.lower() for term in specialist_terms):
+                        sentences.append(f"Inirerekomenda ang agarang pagkonsulta sa {specific_referral} para sa komprehensibong pagsusuri at diagnosis.")
+                    else:
+                        sentences.append(f"Inirerekomenda ang agarang pagkonsulta sa {specific_referral} para sa komprehensibong pagsusuri.")
+                elif recommendations:
+                    recommendation = next((r for r in recommendations if len(r) > 5), "komprehensibong pagsusuri")
+                    sentences.append(f"Inirerekomenda ang {recommendation} para sa wastong pangangalaga.")
+                
+                # Second sentence for additional recommendations
+                if section_sentence_allocation[section_name] > 1:
+                    if referrals and len(referrals) > 1:
+                        second_referral = referrals[1]
+                        sentences.append(f"Maaari ring kumunsulta sa {second_referral} para sa mas detalyadong pagsusuri.")
+                    elif recommendations and len(recommendations) > 1:
+                        rec2 = next((r for r in recommendations[1:] if len(r) > 5 and r not in sentences[0]), None)
+                        if rec2:
+                            sentences.append(f"Iminumungkahi rin ang {rec2} para sa kabuuang manangement ng kondisyon.")
+                
+                # Third sentence for urgency or timeline if allocated
+                if section_sentence_allocation[section_name] > 2:
+                    urgency_terms = ["agaran", "urgent", "immediate", "priority", "critical", "crucial", "important"]
+                    combined_section_text = " ".join(processed_sections[section_name])
+                    
+                    if any(term in combined_section_text.lower() for term in urgency_terms):
+                        sentences.append("Ang mga rekomendasyon na ito ay dapat isagawa sa lalong madaling panahon upang maiwasan ang karagdagang komplikasyon.")
+                    else:
+                        sentences.append("Ang pagpapatupad ng mga rekomendasyon na ito ay mahalaga para sa epektibong management ng kanyang kondisyon.")
+            
+            elif section_name == "mga_hakbang" or "hakbang" in section_name:
+                # ACTION STEPS
+                treatments = elements["treatments"]
+                methods = elements["intervention_methods"]
+                
+                all_treatments = treatments + methods
+                
+                # NEW: More specific treatment/intervention sentences
+                if all_treatments:
+                    specific_treatment = all_treatments[0]
+                    
+                    # Check treatment type
+                    medication_terms = ["gamot", "medicine", "medication", "tablets", "pills", "antibiotic", "drug", "prescription"]
+                    therapy_terms = ["therapy", "exercise", "rehabilitation", "physical therapy", "speech therapy", "occupational therapy"]
+                    
+                    if any(term in specific_treatment.lower() for term in medication_terms):
+                        sentences.append(f"Dapat isagawa ang {specific_treatment} ayon sa prescribed dosage at schedule para sa epektibong paggamot.")
+                    elif any(term in specific_treatment.lower() for term in therapy_terms):
+                        sentences.append(f"Dapat isagawa ang {specific_treatment} nang regular at konsistent para sa optimal na recovery.")
+                    else:
+                        sentences.append(f"Dapat isagawa ang {specific_treatment} para sa epektibong paggamot.")
+                    
+                    # Second sentence for additional treatments
+                    if section_sentence_allocation[section_name] > 1 and len(all_treatments) > 1:
+                        second_treatment = all_treatments[1]
+                        sentences.append(f"Makatutulong din ang {second_treatment} sa pangkalahatang paggaling.")
+                
+                # Third sentence for timing or duration if allocated
+                if section_sentence_allocation[section_name] > 2 and all_treatments:
+                    duration_terms = ["weeks", "months", "linggo", "buwan", "araw", "days", "regular", "daily", "weekly"]
+                    combined_section_text = " ".join(processed_sections[section_name])
+                    
+                    if any(term in combined_section_text.lower() for term in duration_terms):
+                        sentences.append(f"Ang {all_treatments[0]} ay dapat ipagpatuloy nang ilang linggo o hanggang sa makita ang pagbuti ng kondisyon.")
+                    else:
+                        sentences.append(f"Mahalagang sundin ang tamang technique sa pagsasagawa ng {all_treatments[0]} para sa maximum benefit.")
+            
+            elif section_name == "pangangalaga" or "alaga" in section_name:
+                # CARE APPROACHES
+                monitoring = elements["monitoring_plans"]
+                warnings = elements["warnings"]
+                
+                # NEW: More specific monitoring and warning sentences
+                if monitoring:
+                    specific_monitoring = monitoring[0]
+                    
+                    vital_sign_terms = ["blood pressure", "temperature", "heart rate", "oxygen", "breathing", "presyon", "temperatura"]
+                    if any(term in specific_monitoring.lower() for term in vital_sign_terms):
+                        sentences.append(f"Mahalagang regular na subaybayan ang {specific_monitoring} at i-record ang mga reading para makita ang trend.")
+                    else:
+                        sentences.append(f"Mahalagang subaybayan ang {specific_monitoring} para sa kaligtasan.")
+                elif warnings:
+                    specific_warning = warnings[0]
+                    sentences.append(f"Kailangang bantayan ang {specific_warning} para maiwasan ang kumplikasyon.")
+                
+                # Add second sentence if allocated
+                if section_sentence_allocation[section_name] > 1:
+                    if warnings and (not monitoring or not any(w in s for w, s in zip(warnings, sentences))):
+                        warn = warnings[0] if not warnings[0] in " ".join(sentences) else warnings[1] if len(warnings) > 1 else ""
+                        if warn:
+                            sentences.append(f"Maging mapagmatyag sa mga palatandaan ng {warn} at kumonsulta agad kung lumala ang mga sintomas.")
+                    elif monitoring and len(monitoring) > 1:
+                        second_monitoring = monitoring[1]
+                        sentences.append(f"Regular ding i-monitor ang {second_monitoring} upang masiguro ang kaligtasan.")
+                
+                # Add third sentence about documentation if allocated
+                if section_sentence_allocation[section_name] > 2:
+                    documentation_terms = ["record", "document", "diary", "log", "listahan", "talaan"]
+                    combined_section_text = " ".join(processed_sections[section_name])
+                    
+                    if any(term in combined_section_text.lower() for term in documentation_terms):
+                        sentences.append("Mahalagang i-document ang lahat ng pagbabago sa kondisyon para makatulong sa healthcare provider sa pag-assess ng progress.")
+                    else:
+                        sentences.append("Regular na pagbabahagi ng updates sa healthcare team ay makatutulong sa pag-adjust ng care plan kung kinakailangan.")
+            
+            elif section_name == "pagbabago_sa_pamumuhay" or "pamumuhay" in section_name:
+                # LIFESTYLE CHANGES
+                diet = elements["diet_changes"]
+                
+                # NEW: More specific lifestyle recommendation sentences
+                if diet:
+                    specific_diet = diet[0]
+                    
+                    restriction_terms = ["bawas", "iwas", "avoid", "limit", "reduce", "cut", "hindi"]
+                    addition_terms = ["dagdag", "increase", "more", "add", "include", "incorporate"]
+                    
+                    if any(term in specific_diet.lower() for term in restriction_terms):
+                        sentences.append(f"Para sa diet, inirerekomenda ang {specific_diet} upang mabawasan ang posibleng komplikasyon.")
+                    elif any(term in specific_diet.lower() for term in addition_terms):
+                        sentences.append(f"Para sa diet, inirerekomenda ang {specific_diet} upang mapalakas ang immune system at mapabilis ang paggaling.")
+                    else:
+                        sentences.append(f"Para sa diet, inirerekomenda ang {specific_diet} upang matugunan ang mga pangangailangan.")
+                else:
+                    sentences.append("Inirerekomenda ang mga pagbabago sa istilo ng pamumuhay para sa paggaling at pag-iwas sa pagbalik ng kondisyon.")
+                
+                # Add second sentence if allocated
+                if section_sentence_allocation[section_name] > 1:
+                    if diet and len(diet) > 1:
+                        second_diet = diet[1]
+                        sentences.append(f"Bukod dito, maaaring isama sa diet ang {second_diet} para sa optimal na nutrition.")
+                    else:
+                        # Check for additional lifestyle recommendations
+                        lifestyle_terms = {
+                            "exercise": "Regular na physical activity na angkop sa kakayahan ng pasyente",
+                            "ehersisyo": "Regular na ehersisyo na angkop sa kakayahan ng pasyente", 
+                            "sleep": "Tamang schedule ng pagtulog at pagpapahinga",
+                            "tulog": "Tamang schedule ng pagtulog at pagpapahinga",
+                            "stress": "Pamamahala ng stress sa pamamagitan ng relaxation techniques",
+                            "smoking": "Pag-iwas sa paninigarilyo",
+                            "alcohol": "Pagbawas o pag-iwas sa alkohol"
+                        }
+                        
+                        combined_section_text = " ".join(processed_sections[section_name])
+                        
+                        for term, recommendation in lifestyle_terms.items():
+                            if term in combined_section_text.lower():
+                                sentences.append(f"Iminumungkahi rin ang {recommendation}.")
+                                break
+                        else:
+                            sentences.append("Ang mga pagbabago sa pang-araw-araw na gawain ay mahalaga para sa pangmatagalang kalusugan at quality of life.")
+                
+                # Add third sentence about consistency if allocated
+                if section_sentence_allocation[section_name] > 2:
+                    sentences.append("Consistent na pagsunod sa mga lifestyle modifications na ito ay mahalaga para makita ang mga positibong resulta sa kalusugan.")
+            
+            # Ensure we have enough sentences based on allocation
+            if len(sentences) < section_sentence_allocation[section_name]:
+                needed = section_sentence_allocation[section_name] - len(sentences)
+                
+                # Get section-specific text elements to make generic sentences more specific
+                combined_text = " ".join(processed_sections[section_name])
+                doc_section = nlp(combined_text)
+                
+                # Extract entities from section text
+                section_entities = []
+                for ent in doc_section.ents:
+                    if len(ent.text) > 3:  # Skip very short entities
+                        section_entities.append(ent.text)
+                
+                if section_name == "pangunahing_rekomendasyon" and needed > 0:
+                    if section_entities:
+                        specific_entity = next((e for e in section_entities if "specialist" in e.lower() or "doctor" in e.lower() or "physical" in e.lower()), section_entities[0])
+                        sentences.append(f"Inirerekomenda ang pagkonsulta sa {specific_entity} para sa komprehensibong medikal na pagsusuri.")
+                    else:
+                        sentences.append("Inirerekomenda ang komprehensibong medikal na pagsusuri para sa wastong diagnosis.")
+                        
+                elif section_name == "mga_hakbang" and needed > 0:
+                    if section_entities:
+                        specific_entity = next((e for e in section_entities if "treatment" in e.lower() or "therapy" in e.lower() or "exercise" in e.lower()), section_entities[0])
+                        sentences.append(f"Ang {specific_entity} ay makatutulong sa pagpapabuti ng kalagayan.")
+                    else:
+                        sentences.append("Ang mga partikular na hakbang na ito ay makatutulong sa pagpapabuti ng kalagayan.")
+                        
+                elif section_name == "pangangalaga" and needed > 0:
+                    if section_entities:
+                        specific_entity = next((e for e in section_entities if "monitor" in e.lower() or "track" in e.lower() or "observe" in e.lower()), section_entities[0])
+                        sentences.append(f"Ang {specific_entity} ay mahalaga para sa epektibong pangangalaga.")
+                    else:
+                        sentences.append("Ang regular na pagsubaybay at pangangalaga ay mahalaga para sa paggaling.")
+                        
+                elif section_name == "pagbabago_sa_pamumuhay" and needed > 0:
+                    if section_entities:
+                        specific_entity = next((e for e in section_entities if "diet" in e.lower() or "nutrition" in e.lower() or "pagkain" in e.lower()), section_entities[0])
+                        sentences.append(f"Ang tamang {specific_entity} ay mahalaga para sa pangmatagalang kalusugan.")
+                    else:
+                        sentences.append("Ang pagbabago sa istilo ng pamumuhay ay mahalaga para sa pangmatagalang kalusugan.")
+            
+            section_sentences[section_name] = sentences[:section_sentence_allocation[section_name]]
+    
+    # ENHANCEMENT 4: Compile the final summary
+    all_sentences = []
+    
+    # Add sentences in a logical order based on document type
+    if doc_type.lower() == "assessment":
+        section_order = ["mga_sintomas", "kalagayan_pangkatawan", "kalagayan_mental", "aktibidad", "kalagayan_social"]
+    else:
+        section_order = ["pangunahing_rekomendasyon", "mga_hakbang", "pangangalaga", "pagbabago_sa_pamumuhay"]
+    
+    # Add sentences from each section in the defined order
+    for section_name in section_order:
+        if section_name in section_sentences:
+            all_sentences.extend(section_sentences[section_name])
+    
+    # Apply transitions between sentences
+    final_summary = ""
+    
+    if all_sentences:
+        final_summary = all_sentences[0]
         
-        final_summary += f" {transition}{next_sentence}"
+        # Transitions
+        transitions = [
+            "Bukod dito, ", 
+            "Gayundin, ", 
+            "Dagdag pa rito, ", 
+            "Karagdagan sa nabanggit, ", 
+            "Kasama rito, ", 
+            "Sa kabilang banda, ",
+            "Samantala, ", 
+            "Higit pa, "
+        ]
+        
+        for i in range(1, len(all_sentences)):
+            # Choose transition and apply
+            prev_content = all_sentences[i-1]
+            next_content = all_sentences[i]
+            
+            relationship = get_semantic_relationship(prev_content, next_content)
+            transition = choose_appropriate_transition(prev_content, next_content, relationship)
+            
+            # Ensure proper capitalization after transition
+            next_sentence = next_content
+            if next_sentence[0].isupper():
+                next_sentence = next_sentence[0].lower() + next_sentence[1:]
+            
+            final_summary += f" {transition}{next_sentence}"
+    else:
+        # Fallback
+        if doc_type.lower() == "assessment":
+            final_summary = f"{subject} ay nangangailangan ng karagdagang pagsusuri."
+        else:
+            final_summary = "Inirerekomenda ang komprehensibong medikal na pagsusuri para sa wastong diagnosis at paggamot."
+    
+    # Final formatting
+    final_summary = re.sub(r'\s+', ' ', final_summary)  # Fix multiple spaces
+    final_summary = re.sub(r'\s([,.;:])', r'\1', final_summary)  # Fix spacing before punctuation
+    
+    # Ensure first letter is capitalized
+    if final_summary and final_summary[0].islower():
+        final_summary = final_summary[0].upper() + final_summary[1:]
+    
+    # Ensure proper ending punctuation
+    if final_summary and not final_summary[-1] in ['.', '!', '?']:
+        final_summary += '.'
     
     return final_summary
 
-def is_sentence_similar_to_original(new_sentence, original_sentences, threshold=0.7):
-    """
-    Check if a generated sentence is too similar to any sentence in the original text.
-    Returns True if similar, False if not.
-    """
-    if not new_sentence or not original_sentences:
-        return False
+def summarize_section_text(section_text, section_name, max_length=250):
+    """Create a concise summary of a potentially long section with proper sentence selection."""
+    # Skip if the section is already short enough
+    if len(section_text) <= max_length:
+        return section_text
         
-    # Clean and normalize for comparison
-    new_clean = ' '.join(new_sentence.lower().split())
+    # Process the section text
+    doc = nlp(section_text)
     
-    for orig in original_sentences:
-        orig_clean = ' '.join(orig.lower().split())
-        
-        # Skip very short sentences
-        if len(orig_clean) < 15 or len(new_clean) < 15:
-            continue
-            
-        # Calculate similarity ratio
-        similarity = difflib.SequenceMatcher(None, new_clean, orig_clean).ratio()
-        
-        # Check if exceeds threshold
-        if similarity > threshold:
-            return True
-            
-        # Also check if sentence is substantially contained within original
-        if (new_clean in orig_clean and len(new_clean) > len(orig_clean) * 0.6) or \
-           (orig_clean in new_clean and len(orig_clean) > len(new_clean) * 0.6):
-            return True
+    # Extract key sentences based on section type
+    section_sentences = split_into_sentences(section_text)
     
-    return False
+    if len(section_sentences) <= 2:
+        # If only 1-2 sentences, keep them but intelligently truncate if needed
+        summary = " ".join(section_sentences)
+        if len(summary) > max_length:
+            # Find natural break points for better truncation
+            last_period = summary[:max_length-3].rfind('.')
+            last_comma = summary[:max_length-3].rfind(',')
+            last_break = max(last_period, last_comma)
+            
+            if last_break > max_length/2:  # Only use break point if it's reasonably far in
+                summary = summary[:last_break+1] + "..."
+            else:
+                summary = summary[:max_length-3] + "..."
+        return summary
+    
+    # Extract important elements to help with sentence selection
+    elements = extract_structured_elements(section_text, section_name)
+    
+    # Define key terms for each section type - EXPANDED SIGNIFICANTLY
+    section_key_terms = {
+        "mga_sintomas": [
+            # General symptom terms
+            "sintomas", "sakit", "kondisyon", "nararamdaman", "nagpapakita", 
+            "dumaranas", "nakakaranas", "hirap", "problema",
+            "symptoms", "condition", "experiencing", "suffering from", "presenting with",
+            
+            # Specific symptoms and manifestations
+            "nananakit", "kirot", "pamamanhid", "pamumula", "pangangati", "panginginig",
+            "pananakit", "panghihina", "pamamaga", "pamamanas", "pagkapagod", "pagod",
+            "pagkahilo", "hirap huminga", "pag-ubo", "ubo", "lagnat", "sipon",
+            "pagsusuka", "panunuyo", "kombulsyon", "walang gana kumain",
+            
+            # Pain descriptions
+            "masakit", "sumasakit", "mabigat ang pakiramdam", "matigas",
+            "naiirita", "malamig", "mainit", "burning", "stabbing", "throbbing",
+            
+            # Physical manifestations
+            "pasa", "sugat", "paltos", "galos", "hiwa", "bukol", "cyst", "lumaking parte",
+            "bloating", "swelling", "tenderness", "inflammation", "bleeding", "discharge",
+            
+            # Severity indicators
+            "matinding", "malubhang", "banayad na", "katamtamang", 
+            "severe", "moderate", "mild", "persistent", "chronic", "acute", "intermittent",
+            
+            # Frequency terms
+            "paulit-ulit", "madalas", "paminsan-minsan", "regular", "occasional",
+            "frequent", "daily", "nightly", "weekly", "constant", "recurring",
+            
+            # Duration indicators
+            "matagal na", "ilang araw na", "ilang linggo na", "simula pa", 
+            "ongoing", "recent onset", "long-standing", "new", "sudden"
+        ],
+        
+        "kalagayan_pangkatawan": [
+            # Basic physical terms
+            "pisikal", "katawan", "lakas", "pangangatawan", "physical", "body",
+            "pangkalahatan", "general", "overall", "strength", "condition",
+            
+            # Physical state descriptions
+            "kalusugan", "kundisyon", "pakiramdam", "estado", "state", "profile",
+            "malusog", "mabuti", "mahina", "maayos", "mahirap", "fragile", "frail",
+            
+            # Body systems
+            "cardiovascular", "respiratory", "pulmonary", "musculoskeletal", 
+            "digestive", "circulatory", "nervous system", "neurological",
+            "immune", "endocrine", "integumentary", "skeletal", "sistema",
+            
+            # Vital signs and measurements
+            "vital signs", "sukat", "timbang", "height", "weight", "temperature", 
+            "blood pressure", "pulse", "heart rate", "respiratory rate", "presyon", 
+            "oxygen saturation", "oxygen level", "BMI", "lab results",
+            
+            # Body parts
+            "ulo", "dibdib", "puso", "baga", "tiyan", "balakang", "braso", "kamay",
+            "hita", "tuhod", "binti", "paa", "likod", "spinal", "vertebral", 
+            "atay", "bato", "pancreas", "bituka", "sikmura", "utak", "joints",
+            
+            # Physical abilities
+            "balance", "koordinasyon", "coordination", "lakas", "strength", 
+            "flexibility", "range of motion", "dexterity", "mobility", "stability",
+            "stamina", "endurance", "pagkilos", "paggalaw", "movement", "restriction",
+            
+            # Physical conditions
+            "overweight", "underweight", "obese", "malnourished", "dehydrated",
+            "hypertensive", "hypotensive", "febrile", "afebrile", "cachectic"
+        ],
+        
+        "kalagayan_mental": [
+            # Cognitive terms
+            "pag-iisip", "memorya", "cognitive", "mental", "isip", "memory",
+            "pag-unawa", "comprehension", "understanding", "awareness", "orientation",
+            "concentration", "attention", "focus", "decision-making", "judgment",
+            "reasoning", "perception", "cognition", "processing", "thinking",
+            "mentality", "consciousness", "alertness", "coherence", "confusion",
+            
+            # Mental state descriptions
+            "pagkalito", "disoriented", "forgetful", "nakakalimot", "nalilito",
+            "hindi matandaan", "alert", "oriented", "malinaw ang pag-iisip",
+            "lucid", "confused", "disoriented", "aware", "unaware",
+            
+            # Emotional terms
+            "kalungkutan", "depression", "lungkot", "pagkabalisa", "anxiety",
+            "worry", "stress", "galit", "anger", "takot", "fear", "irritable",
+            "malungkot", "nag-aalala", "balisa", "masaya", "happy", "hopeful",
+            "hopeless", "kawalan ng pag-asa", "frustration", "disappointment",
+            
+            # Psychological conditions
+            "dementia", "Alzheimer's", "cognitive decline", "psychiatric",
+            "psychological", "mental health", "mood disorder", "anxiety disorder",
+            "depressive disorder", "trauma", "PTSD", "schizophrenia", "bipolar",
+            
+            # Behavioral manifestations
+            "pag-uugali", "behavior", "agitation", "agitated", "withdrawal",
+            "pag-iwas", "isolation", "restlessness", "pagod ang isip",
+            "irritability", "emotional lability", "mood swings", "aggression",
+            "apathy", "detachment", "disinterest", "pagkawala ng interes"
+        ],
+        
+        "aktibidad": [
+            # Daily activities
+            "gawain", "aktibidad", "activity", "daily", "routine", "schedule",
+            "araw-araw", "pang-araw-araw", "tasks", "chores", "regular",
+            "obligations", "responsibilidad", "responsibilities", "function",
+            
+            # Mobility & movement
+            "paglalakad", "walking", "paggalaw", "mobility", "pagkilos", "movement",
+            "travel", "commuting", "transferring", "standing", "sitting", "lying down",
+            "pag-akyat", "climbing", "pagbaba", "descending", "stairs", "steps",
+            
+            # ADLs (Activities of Daily Living)
+            "ADL", "self-care", "pangangalaga sa sarili", "hygiene", "kalinisan",
+            "bathing", "pagliligo", "dressing", "pagbibihis", "pagkain", "feeding", 
+            "toileting", "grooming", "pag-aayos", "sleeping", "pagtulog",
+            
+            # IADLs (Instrumental Activities of Daily Living)
+            "IADL", "pagmamaneho", "driving", "paggamit ng telepono", "phone use",
+            "pagluluto", "cooking", "paglilinis", "cleaning", "pagbabayad", "finances",
+            "pamimili", "shopping", "pamamahala ng gamot", "medication management",
+            
+            # Assistive devices
+            "tungkod", "cane", "walker", "wheelchair", "upuan de gulong", "andador",
+            "assistive device", "tulong na kasangkapan", "mobility aid", "crutches",
+            "saklay", "hospital bed", "ambulatory aid", "supportive device",
+            
+            # Activity limitations
+            "limitado", "limited", "restrictions", "hindi magawa", "unable to",
+            "nahihirapan", "difficulty with", "dependence", "dependent", "need assistance",
+            "nangangailangan ng tulong", "supervision", "bantay", "difficulty performing"
+        ],
+        
+        "kalagayan_social": [
+            # Relationships
+            "pamilya", "family", "asawa", "spouse", "anak", "children", "apo", "grandchildren",
+            "magulang", "parents", "kaibigan", "friends", "kamag-anak", "relatives", 
+            "kapit-bahay", "neighbors", "katrabaho", "co-workers", "relationship",
+            "relasyon", "suporta", "support", "support system", "network",
+            
+            # Social environment
+            "pamayanan", "community", "kapitbahayan", "neighborhood", "church", "simbahan", 
+            "social circle", "social network", "social activities", "social groups",
+            "senior center", "church group", "community center", "volunteer group",
+            
+            # Social interaction patterns
+            "pakikisalamuha", "interaction", "pakikipag-usap", "communication",
+            "pakikilahok", "participation", "engagement", "involvement", 
+            "socialization", "pakikisama", "getting along", "collaborative",
+            
+            # Social issues
+            "isolation", "pagkakahiwalay", "social isolation", "loneliness", "kalungkutan",
+            "withdrawal", "pag-iwas", "social stigma", "discrimination", "abandonment",
+            "neglect", "abuse", "pang-aabuso", "household dynamics", "family conflict",
+            
+            # Social support descriptions
+            "assistance", "tulong", "supportive", "matulungin", "caregiver", "tagapag-alaga",
+            "family support", "emotional support", "financial support", "sustento",
+            "help", "aid", "resource", "provider", "social service", "government aid",
+            
+            # Living arrangements
+            "living situation", "living arrangement", "household composition",
+            "lives with", "resides with", "kasama sa bahay", "independent living",
+            "assisted living", "nursing home", "living alone", "nag-iisa sa bahay",
+            "multi-generational household", "extended family", "malawak na pamilya"
+        ],
+        
+        "pangunahing_rekomendasyon": [
+            # Recommendation phrases
+            "inirerekomenda", "rekomendasyon", "iminumungkahi", "mungkahi", 
+            "pinapayuhan", "payo", "ipinapayo", "nirerekomenda", "recommend", 
+            "recommendation", "suggest", "advise", "advice", "proposed", "indicated",
+            
+            # Priority indicators
+            "pangunahin", "primary", "main", "key", "essential", "important",
+            "critical", "crucial", "vital", "necessary", "urgent", "immediate",
+            "priority", "highest priority", "most important", "first step",
+            
+            # Action terms
+            "kailangan", "need", "require", "must", "should", "dapat", "kinakailangan",
+            "importante", "mahalagang", "necessary", "crucial", "critical", "essential",
+            
+            # Healthcare directives
+            "referral", "konsulta", "consultation", "medical evaluation", "assessment",
+            "comprehensive evaluation", "professional assessment", "specialist", 
+            "dalubhasa", "eksperto", "expert opinion", "second opinion",
+            
+            # Conditional terms
+            "kung", "if", "when", "kapag", "in case", "should", "would", "as needed",
+            "as required", "as appropriate", "kung kinakailangan", "kung naaangkop",
+            
+            # Treatment recommendations
+            "treatment", "paggamot", "therapy", "intervention", "procedure", 
+            "operation", "operasyon", "surgical", "non-surgical", "medical management",
+            "therapeutic", "rehabilitative", "palliative", "preventative"
+        ],
+        
+        "mga_hakbang": [
+            # Action words
+            "gawin", "simulan", "isagawa", "ipatupad", "implement", "execute", "perform",
+            "conduct", "undertake", "carry out", "initiate", "begin", "start", "proceed",
+            "follow", "adhere to", "sundin", "sumunod", "tuparin", "execute",
+            
+            # Step terminology
+            "hakbang", "step", "measure", "action", "procedure", "protocol", "process",
+            "approach", "method", "technique", "strategy", "intervention", "tactic",
+            "activity", "operation", "task", "procedure", "regimen", "course",
+            
+            # Treatment terms
+            "treatment", "therapy", "therapeutic", "intervention", "management", 
+            "administration", "application", "delivery", "regimen", "program", 
+            "protocol", "procedure", "course", "plan", "schedule", "therapeutic approach",
+            
+            # Specific interventions
+            "exercise", "ehersisyo", "physical therapy", "occupational therapy",
+            "speech therapy", "rehabilitation", "pain management", "stress management",
+            "cognitive therapy", "behavioral therapy", "paggamot", "therapy",
+            
+            # Medical procedures
+            "surgery", "operasyon", "injection", "turok", "medication administration",
+            "pagbibigay ng gamot", "wound care", "pangangalaga ng sugat", "dressing change",
+            "assessment", "evaluation", "monitoring", "pagsubaybay", "laboratory test",
+            
+            # Timing indicators
+            "immediate", "agaran", "promptly", "quickly", "urgent", "as soon as possible",
+            "daily", "araw-araw", "weekly", "linggu-linggo", "monthly", "regular",
+            "scheduled", "periodic", "intermittent", "continuous", "ongoing"
+        ],
+        
+        "pangangalaga": [
+            # Care terms
+            "pangangalaga", "care", "alaga", "alalay", "assist", "support", "help",
+            "aid", "pagtulong", "pagkalinga", "pag-aaruga", "alagaan", "ingatan",
+            "assistance", "helping", "supporting", "maintaining", "preserving",
+            
+            # Care types
+            "medical care", "nursing care", "supportive care", "palliative care",
+            "preventive care", "rehabilitative care", "long-term care",
+            "home care", "pangangalaga sa bahay", "self-care", "pangangalaga sa sarili",
+            
+            # Monitoring terms
+            "monitor", "subaybayan", "observe", "obserbahan", "bantayan", "check",
+            "assess", "watch", "pagmamasid", "observation", "assessment", "evaluation",
+            "tracking", "measuring", "recording", "documentation", "reporting",
+            
+            # Care activities
+            "feeding", "pagpapakain", "bathing", "pagliligo", "toileting", 
+            "hygiene", "kalinisan", "dressing", "pagbibihis", "grooming", "pag-aayos",
+            "positioning", "pagpoposisyon", "transfer", "paglilipat", "turning",
+            "wound care", "pangangalaga ng sugat", "medication administration",
+            
+            # Caregiver references
+            "caregiver", "tagapag-alaga", "caretaker", "nurse", "nars", "attendant",
+            "family caregiver", "pamilyang tagapag-alaga", "professional caregiver",
+            "home health aide", "nursing assistant", "healthcare provider",
+            
+            # Warning and safety terms
+            "bantay", "watch", "track", "signs", "symptoms", "complications",
+            "adverse effects", "side effects", "red flags", "warning signs",
+            "deterioration", "changes", "pagbabago", "improvement", "pagbuti"
+        ],
+        
+        "pagbabago_sa_pamumuhay": [
+            # Change terminology
+            "pagbabago", "change", "modification", "adjustment", "adaptation", 
+            "transition", "shift", "alteration", "transformation", "conversion",
+            "reforming", "restructuring", "revising", "adapting", "modifying",
+            
+            # Lifestyle terms
+            "pamumuhay", "lifestyle", "daily life", "araw-araw na pamumuhay", 
+            "way of life", "living condition", "daily routine", "karaniwang gawain",
+            "habits", "ugali", "practices", "patterns", "behaviors", "pag-uugali",
+            
+            # Diet and nutrition
+            "diet", "nutrition", "pagkain", "nutrisyon", "eating habits", "food intake",
+            "nutritional needs", "dietary restriction", "meal planning", "hydration",
+            "low sodium", "high protein", "diabetic diet", "heart healthy", "balanced diet",
+            
+            # Physical activity
+            "physical activity", "exercise", "ehersisyo", "activity level", 
+            "movement", "galaw", "active lifestyle", "fitness", "low impact exercise",
+            "strength training", "stretching", "balance exercises", "walking program",
+            
+            # Sleep patterns
+            "sleep", "tulog", "sleeping pattern", "sleep hygiene", "rest", "pahinga",
+            "bedtime routine", "sleep schedule", "sleep quality", "insomnia management",
+            
+            # Stress management
+            "stress management", "relaxation", "coping strategies", "meditation",
+            "mindfulness", "breathing techniques", "anxiety reduction", "mental health care",
+            
+            # Health behaviors
+            "smoking cessation", "alcohol reduction", "substance management",
+            "medication adherence", "pagsunod sa gamot", "preventive care",
+            "health monitoring", "self-management", "self-care", "risk reduction"
+        ]
+    }
+    
+    # Get terms for this section
+    key_terms = section_key_terms.get(section_name, [])
+    
+    # Score sentences based on information content and relevance
+    scored_sentences = []
+    
+    for i, sent in enumerate(section_sentences):
+        score = 0
+        sent_doc = nlp(sent)
+        
+        # Position score - first sentence often introduces the topic
+        if i == 0:
+            score += 3
+        elif i == len(section_sentences) - 1:
+            score += 1  # Conclusion sentences often summarize
+            
+        # Length preference - neither too short nor too long
+        sent_length = len(sent)
+        if 40 < sent_length < 120:
+            score += 1  # Prefer medium-length sentences
+            
+        # Entity and information density scoring
+        entity_count = len([ent for ent in sent_doc.ents])
+        score += min(3, entity_count)  # Up to 3 points for entities
+        
+        # Score based on key terms
+        for term in key_terms:
+            if term in sent.lower():
+                score += 2
+        
+        # Section-specific content scoring
+        if section_name == "mga_sintomas" or "sintomas" in section_name:
+            # Look for symptoms, conditions and their descriptions
+            for ent in sent_doc.ents:
+                if ent.label_ in ["DISEASE", "SYMPTOM"]:
+                    score += 3
+                elif ent.label_ in ["BODY_PART"]:
+                    score += 1
+                    
+            # Check for specific symptom elements
+            for symptom in elements["symptoms"]:
+                if symptom.lower() in sent.lower():
+                    score += 2
+                    
+        elif section_name == "kalagayan_mental" or "mental" in section_name:
+            # Prioritize cognitive status and emotional state descriptions
+            for ent in sent_doc.ents:
+                if ent.label_ in ["COGNITIVE", "EMOTION"]:
+                    score += 3
+                    
+            # Check for mental state elements
+            for state in elements["cognitive_status"] + elements["mental_state"] + elements["emotional_state"]:
+                if state.lower() in sent.lower():
+                    score += 2
+                    
+        elif section_name.startswith("pangunahing_rekomendasyon"):
+            # Prioritize clear recommendations and referrals
+            for ent in sent_doc.ents:
+                if ent.label_ in ["RECOMMENDATION", "HEALTHCARE_REFERRAL"]:
+                    score += 3
+                    
+            # Check for recommendation verbs
+            recommend_words = ["inirerekomenda", "iminumungkahi", "dapat", "kailangan", "kinakailangan"]
+            if any(word in sent.lower() for word in recommend_words):
+                score += 2
+        
+        # Additional scoring logic for other section types
+        elif "pangkatawan" in section_name:
+            for ent in sent_doc.ents:
+                if ent.label_ in ["BODY_PART", "MEASUREMENT", "VITAL_SIGNS"]:
+                    score += 2
+                    
+        elif "hakbang" in section_name:
+            for ent in sent_doc.ents:
+                if ent.label_ in ["TREATMENT_METHOD", "TREATMENT", "EQUIPMENT"]:
+                    score += 2
+                    
+        elif "pangangalaga" in section_name:
+            for ent in sent_doc.ents:
+                if ent.label_ in ["MONITORING", "WARNING_SIGN"]:
+                    score += 2
+                    
+        elif "pamumuhay" in section_name:
+            for ent in sent_doc.ents:
+                if ent.label_ in ["DIET_RECOMMENDATION", "FOOD"]:
+                    score += 2
+        
+        # Store the scored sentence with its original position
+        scored_sentences.append((sent, score, i))
+    
+    # Get top-scoring sentences (but keep at least one sentence)
+    top_sentences = sorted(scored_sentences, key=lambda x: x[1], reverse=True)
+    
+    # Select sentences maintaining original document order
+    selected_indices = []
+    current_length = 0
+    
+    # First, select the highest scoring sentences
+    for sent, score, idx in top_sentences:
+        if score > 3 and current_length + len(sent) <= max_length:
+            selected_indices.append(idx)
+            current_length += len(sent) + 1
+            
+            if len(selected_indices) >= 2:  # Limit to 2 high-scoring sentences
+                break
+    
+    # If we still have room, add more sentences in order of appearance
+    if current_length < max_length and len(selected_indices) < 2:
+        remaining = [(i, sent) for i, sent in enumerate(section_sentences) 
+                    if i not in selected_indices]
+        
+        for i, sent in remaining:
+            if current_length + len(sent) <= max_length:
+                selected_indices.append(i)
+                current_length += len(sent) + 1
+                
+                if len(selected_indices) >= 2:  # Limit to 2 sentences total
+                    break
+    
+    # Always include at least one sentence
+    if not selected_indices and section_sentences:
+        first_sent = section_sentences[0]
+        if len(first_sent) > max_length:
+            # Find natural break point
+            last_period = first_sent[:max_length-3].rfind('.')
+            last_comma = first_sent[:max_length-3].rfind(',')
+            last_break = max(last_period, last_comma)
+            
+            if last_break > 30:
+                first_sent = first_sent[:last_break+1] + "..."
+            else:
+                first_sent = first_sent[:max_length-3] + "..."
+        selected_indices.append(0)
+    
+    # Sort indices to maintain original sentence order
+    selected_indices.sort()
+    
+    # Combine sentences in original order
+    selected_sentences = [section_sentences[i] for i in selected_indices]
+    summary = " ".join(selected_sentences)
+    
+    # Final check for length
+    if len(summary) > max_length:
+        last_period = summary[:max_length-3].rfind('.')
+        if last_period > max_length/2:
+            summary = summary[:last_period+1] + "..."
+        else:
+            summary = summary[:max_length-3] + "..."
+    
+    return summary
 
 def extract_structured_elements(text, section_type):
     """Extract detailed structured elements from text for better synthesis."""
@@ -2120,7 +2950,7 @@ def extract_important_terms(text, count=5, doc_type="assessment"):
                     
                     if any(rec in pattern_type for rec in ["dapat", "kailangan", "inirerekomenda"]):
                         score = 7 if doc_type.lower() == "evaluation" else 4
-                    elif any(cond in pattern_type for rec in ["problema", "hirap", "sakit"]):
+                    elif any(cond in pattern_type for cond in ["problema", "hirap", "sakit"]):  # FIXED
                         score = 7 if doc_type.lower() == "assessment" else 4
                     else:
                         score = 5
@@ -2347,35 +3177,68 @@ def summarize_text():
             else:
                 # Use general section extraction for assessments
                 sections = extract_sections_improved(sentences, doc_type)
+                
+            # Create summarized versions of sections using our enhanced function
+            summarized_sections = {}
+            for section_name, section_content in sections.items():
+                summarized_sections[section_name] = summarize_section_text(
+                    section_content, 
+                    section_name,
+                    max_length=250  # Reasonable summary length
+                )
+                
         except Exception as e:
             print(f"Section extraction error: {e}")
             sections = {}
-            
-        # Generate simplified summary that doesn't use noun_chunks
+            summarized_sections = {}
+        
+        # Generate enhanced summary that captures important details from ALL sections
         try:
-            # Try the enhanced multi-section approach first
+            # Extract high-importance medical terms and symptoms from the text
+            important_medical_info = []
+            for ent in doc.ents:
+                if ent.label_ in ["DISEASE", "SYMPTOM", "COGNITIVE"] and len(ent.text) > 3:
+                    important_medical_info.append(ent.text)
+            
+            # Use our enhanced multi-section summary generation
             summary = create_enhanced_multi_section_summary(doc, sections, doc_type)
             
-            # If it's too short, fall back to simple summary as backup
-            if len(summary) < 100:
-                backup_summary = create_simple_summary(doc, sections, doc_type)
-                
-                # Use whichever is better (longer and more comprehensive)
-                if len(backup_summary) > len(summary) * 1.5:
-                    summary = backup_summary
-                    
+            # Check for important information that might be missing from the summary
+            # This helps ensure specific key details are included
+            for term in important_medical_info[:3]:  # Check top 3 important terms
+                if term not in summary.lower() and len(term) > 3:
+                    # Find which section this term belongs to
+                    for section_name, section_content in sections.items():
+                        if term.lower() in section_content.lower():
+                            # Extract a relevant sentence containing this term
+                            section_sents = split_into_sentences(section_content)
+                            for sent in section_sents:
+                                if term.lower() in sent.lower():
+                                    # Find a good transition phrase
+                                    transition = "Mahalaga ring banggitin na "
+                                    # Add the information with proper context
+                                    additional_detail = sent
+                                    if len(additional_detail) > 150:  # Trim if too long
+                                        # Find a good break point
+                                        break_point = additional_detail.find(",", 100)
+                                        if break_point > 0:
+                                            additional_detail = additional_detail[:break_point+1]
+                                    
+                                    # Add to summary if not already too long
+                                    if len(summary) < 400:  # Keep summary reasonable
+                                        summary = summary + " " + transition + additional_detail
+                                    break
+            
             # Final sanity check - if summary is still too short, use fallback
             if len(summary) < 50:
                 main_subject = extract_main_subject(doc)
-                if not main_subject.startswith("Ang ") and not main_subject.startswith("Si "):
-                    main_subject = f"Si {main_subject}"
-                    
                 if doc_type.lower() == "assessment":
                     summary = f"{main_subject} ay nangangailangan ng komprehensibong pagsusuri."
                 else:
                     summary = "Inirerekomenda ang pagkonsulta para sa karagdagang pagsusuri at paggamot."
+                    
         except Exception as e:
-            print(f"Enhanced summary generation error: {e}")
+            print(f"Summary generation error: {e}")
             traceback.print_exc()
             
             # Fall back to simple summary if enhanced fails
@@ -2410,7 +3273,8 @@ def summarize_text():
         
         return jsonify({
             "summary": summary,
-            "sections": sections,
+            "sections": sections,  # Full sections
+            "summarized_sections": summarized_sections,  # Shorter versions for display
             "sentence_count": len(sentences),
             "entities": entities,
             "key_medical_terms": key_terms,
