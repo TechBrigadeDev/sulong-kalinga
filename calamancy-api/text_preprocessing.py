@@ -52,7 +52,8 @@ def normalize_text(text: str) -> str:
     
     # Standardize quotation marks
     text = re.sub(r'[""]', '"', text)
-    text = re.sub(r'['']', "'", text)
+    # FIX: Use Unicode escape sequences for quote characters
+    text = re.sub(r'[\u2018\u2019]', "'", text)
     
     # Standardize whitespace
     text = re.sub(r'\s+', ' ', text)
@@ -92,32 +93,27 @@ def split_sentences(text: str) -> List[str]:
     Returns:
         List of sentences
     """
-    # Start with conventional sentence splitting
-    initial_sentences = re.split(r'(?<=[.!?])\s+(?=[A-ZÑña-zñ])', text)
-    
-    # Further refinement for long Tagalog sentences
-    sentences = []
-    for sentence in initial_sentences:
-        # Only consider further splitting if sentence is long
-        if len(sentence) < 100:
-            sentences.append(sentence)
-            continue
-            
-        # Prepare pattern for connecting phrases with lookahead/lookbehind
-        pattern = r'(?<=[.!?]) (?:' + '|'.join(CONNECTING_PHRASES) + r') '
+    try:
+        # Use a simpler, more reliable pattern for initial splitting
+        initial_sentences = []
+        # Use a simple pattern that's less likely to fail
+        for sent in re.split(r'([.!?])\s+', text):
+            if sent.strip():
+                initial_sentences.append(sent)
         
-        # Split by connecting phrases after sentence endings
-        parts = re.split(pattern, sentence)
+        # If the above fails, fall back to an even simpler approach
+        if not initial_sentences:
+            initial_sentences = [s.strip() + "." for s in text.split(".") if s.strip()]
+            if not initial_sentences:
+                return [text]
         
-        # Make sure each part starts with a capital letter
-        for i, part in enumerate(parts):
-            if i > 0 and part and part[0].islower():
-                parts[i] = part[0].upper() + part[1:]
-                
-        sentences.extend(parts)
-    
-    # Clean each sentence
-    return [s.strip() for s in sentences if s.strip()]
+        # Filter out empty strings and clean up
+        return [s.strip() for s in initial_sentences if s.strip()]
+        
+    except Exception as e:
+        print(f"Error splitting sentences: {e}")
+        # Return text as a single sentence as fallback
+        return [text] if text else []
 
 def enhance_medical_assessment(text: str) -> Dict[str, Any]:
     """

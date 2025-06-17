@@ -1,3 +1,7 @@
+import numpy as np
+
+# Then your regular imports:
+import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
@@ -77,52 +81,84 @@ def load_training_data(filepath=None):
     Returns:
         List of (sentence, category) tuples
     """
+    # Try to load from file first
     if filepath and os.path.exists(filepath):
-        with open(filepath, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading training data from file: {e}")
     
     # Generate training data from our assessment examples
-    from tagalog_medical_terms import get_assessment_evaluation_examples
-    from text_preprocessing import preprocess_tagalog_text
-    
-    training_data = []
-    
-    # Get examples 
-    examples = get_assessment_evaluation_examples()
-    
-    # Process each example
-    for example in examples:
-        if "assessment" in example:
-            # Preprocess text
-            sentences = preprocess_tagalog_text(example["assessment"])
-            
-            # Manually assign categories based on keywords
-            for sentence in sentences:
-                sent_lower = sentence.lower()
-                
-                # Assign to appropriate category
-                if any(term in sent_lower for term in ["malakas", "mahina", "hirap", "assistive", "paglalakad"]):
-                    training_data.append((sentence, "kalagayan_pangkatawan"))
-                elif any(term in sent_lower for term in ["masakit", "sumasakit", "kirot", "daing", "kuko"]):
-                    training_data.append((sentence, "mga_sintomas"))
-                elif any(term in sent_lower for term in ["kailangan", "pension", "pera", "tinapay"]):
-                    training_data.append((sentence, "pangangailangan"))
+    try:
+        from tagalog_medical_terms import get_assessment_evaluation_examples
+        from text_preprocessing import preprocess_tagalog_text
         
-        if "evaluation" in example:
-            # Process evaluation sentences similarly
-            sentences = preprocess_tagalog_text(example["evaluation"])
-            
+        training_data = []
+        examples = []
+        
+        # Get examples - with error handling
+        try:
+            examples = get_assessment_evaluation_examples()
+        except Exception as e:
+            print(f"Error getting example data: {e}")
+            examples = []
+        
+        # Helper function for safer text categorization
+        def categorize_text(sentences, is_assessment=True):
+            result = []
             for sentence in sentences:
-                sent_lower = sentence.lower()
+                text = sentence.lower()
+                if is_assessment:
+                    if any(word in text for word in ["malakas", "mahina", "hirap", "assistive", "paglalakad"]):
+                        result.append((sentence, "kalagayan_pangkatawan"))
+                    elif any(word in text for word in ["masakit", "sakit", "kirot", "daing", "kuko"]):
+                        result.append((sentence, "mga_sintomas"))
+                    elif any(word in text for word in ["kailangan", "pension", "pera", "tinapay"]):
+                        result.append((sentence, "pangangailangan"))
+                    else:
+                        # Default category
+                        result.append((sentence, "kalagayan_pangkatawan"))
+                else:  # evaluation text
+                    if any(word in text for word in ["naging", "ngayon", "pagbuti", "bumuti"]):
+                        result.append((sentence, "pagbabago"))
+                    elif any(word in text for word in ["ginawa", "tinulungan", "inilagay"]):
+                        result.append((sentence, "mga_hakbang"))
+                    elif any(word in text for word in ["dapat", "kailangan", "inirerekumenda"]):
+                        result.append((sentence, "rekomendasyon"))
+                    else:
+                        # Default category for evaluation
+                        result.append((sentence, "rekomendasyon"))
+            return result
                 
-                if any(term in sent_lower for term in ["naging", "pagbuti", "ngayon", "bumuti"]):
-                    training_data.append((sentence, "pagbabago"))
-                elif any(term in sent_lower for term in ["ginawa", "tinulungan", "inilagay"]):
-                    training_data.append((sentence, "mga_hakbang"))
-                elif any(term in sent_lower for term in ["dapat", "kailangan", "inirerekumenda"]):
-                    training_data.append((sentence, "rekomendasyon"))
+        # Process each example safely
+        for example in examples:
+            try:
+                if "assessment" in example:
+                    # Simple text splitting as fallback if preprocessing fails
+                    try:
+                        sentences = preprocess_tagalog_text(example["assessment"])
+                    except Exception:
+                        # Very basic fallback if preprocessing fails
+                        sentences = [s.strip() + "." for s in example["assessment"].split(".") if s.strip()]
+                        
+                    training_data.extend(categorize_text(sentences, True))
+                
+                if "evaluation" in example:
+                    try:
+                        sentences = preprocess_tagalog_text(example["evaluation"])
+                    except Exception:
+                        sentences = [s.strip() + "." for s in example["evaluation"].split(".") if s.strip()]
+                        
+                    training_data.extend(categorize_text(sentences, False))
+            except Exception as e:
+                print(f"Error processing example: {e}")
+        
+        return training_data
     
-    return training_data
+    except Exception as e:
+        print(f"Error generating training data: {e}")
+        return []
 
 def save_classifier(classifier, filepath):
     """Save the trained classifier to a file"""

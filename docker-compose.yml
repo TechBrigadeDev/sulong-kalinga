@@ -17,17 +17,15 @@ services:
     volumes:
       - calamancy_data:/app/data
       - calamancy_models:/root/.cache/spacy/downloads
-      - classifier_models:/app/models  # Add this line for classifier model persistence
+      - classifier_models:/app/models
+      - calamancy_models:/root/.calamancy/models
     networks:
-      - app-network    # Add this line to connect to the app network
+      - app-network
     ports:
       - "5000:5000"
-    command: >
-        sh -c "pip install --no-deps https://huggingface.co/ljvmiranda921/tl_calamancy_md/resolve/main/tl_calamancy_md-any-py3-none-any.whl && python app.py"
-    deploy:
-      resources:
-        limits:
-          memory: 2G  
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
   web:
     build:
       context: ./web
