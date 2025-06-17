@@ -2,10 +2,12 @@ import ProfileSettings from "components/screens/Options/profile/Settings";
 import {
     Link as ExpoLink,
     LinkProps,
+    useRouter,
 } from "expo-router";
 import { isStaff } from "features/auth/auth.util";
 import NotificationButton from "features/notification/_components/NotificationButton";
 import { icons } from "lucide-react-native";
+import { useEffect } from "react";
 import {
     StyleSheet,
     TouchableOpacity,

@@ -59,10 +59,18 @@ function RootLayoutNav() {
             <GestureHandlerRootView
                 style={{ flex: 1 }}
             >
-                <Stack>
+                <Stack initialRouteName="(tabs)">
                     <Stack.Protected
                         guard={isAuthenticated}
                     >
+                        <Stack.Screen
+                            name="wcp/index"
+                            options={{
+                                title: "Care Plan",
+                                headerTitle:
+                                    "Care Plan",
+                            }}
+                        />
                         <Stack.Screen
                             name="(tabs)"
                             options={{
@@ -79,26 +87,19 @@ function RootLayoutNav() {
                             }}
                         />
                         <Stack.Screen
+                            name="notifications/index"
+                            options={{
+                                title: "Notifications",
+                                headerTitle:
+                                    "Notifications",
+                            }}
+                        />
+                        <Stack.Screen
                             name="scheduling"
                             options={{
                                 title: "Scheduling",
                                 headerTitle:
                                     "Scheduling",
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(modals)"
-                            options={{
-                                headerShown:
-                                    false,
-                            }}
-                        />
-                        <Stack.Screen
-                            name="notification"
-                            options={{
-                                title: "Notifications",
-                                headerTitle:
-                                    "Notifications",
                             }}
                         />
                     </Stack.Protected>

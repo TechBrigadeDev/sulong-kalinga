@@ -11,7 +11,7 @@ const Screen = () => {
     const router = useRouter();
 
     const handleCreateRecord = () => {
-        router.push("/care-plan");
+        router.push("/wcp");
     };
 
     return (
