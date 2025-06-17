@@ -4,6 +4,7 @@ import { log } from "common/debug";
 import { paginatedResponseSchema } from "common/schema";
 import { IRole } from "features/auth/auth.interface";
 import { portalPath } from "features/auth/auth.util";
+import { ZodError } from "zod";
 
 import { notificationSchema } from "./schema";
 
@@ -51,12 +52,15 @@ class NotificationController extends Controller {
 
             if (!validate.success) {
                 log(
-                    "Invalid response data:",
+                    "Error fetching notifications:",
                     validate.error,
+                    JSON.stringify(
+                        response.data,
+                        null,
+                        2,
+                    ),
                 );
-                throw new Error(
-                    "Invalid response data",
-                );
+                throw validate.error;
             }
 
             return validate.data;
@@ -72,6 +76,9 @@ class NotificationController extends Controller {
                     default:
                         break;
                 }
+            } else if (
+                error instanceof ZodError
+            ) {
             }
 
             throw new Error(

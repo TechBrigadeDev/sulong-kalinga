@@ -4,6 +4,7 @@ import {
     LinkProps,
 } from "expo-router";
 import { isStaff } from "features/auth/auth.util";
+import NotificationButton from "features/notification/_components/NotificationButton";
 import { icons } from "lucide-react-native";
 import {
     StyleSheet,
@@ -24,7 +25,16 @@ import LogoutButton from "~/features/auth/components/logout/button";
 const Screen = () => {
     return (
         <View>
-            <Header name="Options" />
+            <Header
+                name="Options"
+                headerRight={() => (
+                    <NotificationButton
+                        color="black"
+                        items="center"
+                        rounded="$radius.true"
+                    />
+                )}
+            />
             <TabScroll
                 style={style.scroll}
                 contentContainerStyle={{
