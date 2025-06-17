@@ -6,35 +6,42 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Shift;
 use App\Models\ShiftTrack;
-use App\Models\User;
 
-class ShiftApiTrackController extends Controller
+class ShiftTrackApiController extends Controller
 {
     /**
-     * Get all tracks for a shift.
+     * Get all arrival/departure tracks for a shift.
      */
     public function index($shiftId)
     {
-        $shift = Shift::with('tracks')->findOrFail($shiftId);
-        return response()->json($shift->tracks);
+        $shift = Shift::with(['tracks.visitation' => function ($query) {
+            $query->whereIn('arrival_status', ['arrived', 'departed']);
+        }])->findOrFail($shiftId);
+
+        // Only return arrival/departure tracks
+        $tracks = $shift->tracks->whereIn('arrival_status', ['arrived', 'departed'])->values();
+
+        return response()->json($tracks);
     }
 
     /**
-     * Add a single location track to a shift.
+     * Add an arrival or departure event to a shift track.
      */
-    public function store(Request $request, $shiftId)
+    public function event(Request $request, $shiftId)
     {
         $request->validate([
             'care_worker_id' => 'required|exists:cose_users,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'address' => 'nullable|string',
+            'track_coordinates' => 'required|array',
+            'track_coordinates.lat' => 'required|numeric',
+            'track_coordinates.lng' => 'required|numeric',
             'recorded_at' => 'required|date',
+            'visitation_id' => 'required|exists:visitations,id',
+            'arrival_status' => 'required|in:arrived,departed',
+            'address' => 'nullable|string',
         ]);
 
         $shift = Shift::findOrFail($shiftId);
 
-        // Optionally, check that care_worker_id matches the shift's care_worker_id
         if ($shift->care_worker_id != $request->care_worker_id) {
             return response()->json(['message' => 'Care worker does not match shift.'], 422);
         }
@@ -42,49 +49,14 @@ class ShiftApiTrackController extends Controller
         $track = ShiftTrack::create([
             'shift_id' => $shift->id,
             'care_worker_id' => $request->care_worker_id,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
+            'track_coordinates' => $request->track_coordinates,
             'address' => $request->address,
             'recorded_at' => $request->recorded_at,
+            'visitation_id' => $request->visitation_id,
+            'arrival_status' => $request->arrival_status,
             'synced' => true,
         ]);
 
         return response()->json($track, 201);
-    }
-
-    /**
-     * Bulk add tracks to a shift (for offline sync).
-     */
-    public function bulkStore(Request $request, $shiftId)
-    {
-        $request->validate([
-            'care_worker_id' => 'required|exists:cose_users,id',
-            'tracks' => 'required|array|min:1',
-            'tracks.*.latitude' => 'required|numeric',
-            'tracks.*.longitude' => 'required|numeric',
-            'tracks.*.address' => 'nullable|string',
-            'tracks.*.recorded_at' => 'required|date',
-        ]);
-
-        $shift = Shift::findOrFail($shiftId);
-
-        if ($shift->care_worker_id != $request->care_worker_id) {
-            return response()->json(['message' => 'Care worker does not match shift.'], 422);
-        }
-
-        $created = [];
-        foreach ($request->tracks as $trackData) {
-            $created[] = ShiftTrack::create([
-                'shift_id' => $shift->id,
-                'care_worker_id' => $request->care_worker_id,
-                'latitude' => $trackData['latitude'],
-                'longitude' => $trackData['longitude'],
-                'address' => $trackData['address'] ?? null,
-                'recorded_at' => $trackData['recorded_at'],
-                'synced' => true,
-            ]);
-        }
-
-        return response()->json(['created' => $created], 201);
     }
 }
