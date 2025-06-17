@@ -59,23 +59,23 @@ function RootLayoutNav() {
             <GestureHandlerRootView
                 style={{ flex: 1 }}
             >
-                <Stack initialRouteName="(tabs)">
+                <Stack>
                     <Stack.Protected
                         guard={isAuthenticated}
                     >
+                        <Stack.Screen
+                            name="(tabs)"
+                            options={{
+                                headerShown:
+                                    false,
+                            }}
+                        />
                         <Stack.Screen
                             name="wcp/index"
                             options={{
                                 title: "Care Plan",
                                 headerTitle:
                                     "Care Plan",
-                            }}
-                        />
-                        <Stack.Screen
-                            name="(tabs)"
-                            options={{
-                                headerShown:
-                                    false,
                             }}
                         />
                         <Stack.Screen
