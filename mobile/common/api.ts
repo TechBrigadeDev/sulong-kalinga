@@ -4,6 +4,7 @@ import axios, {
 } from "axios";
 import { IRole } from "features/auth/auth.interface";
 import { authStore } from "features/auth/auth.store";
+import { showToastable } from "react-native-toastable";
 
 console.log(
     "API URL:",
@@ -29,6 +30,12 @@ axiosClient.interceptors.response.use(
                 switch (message) {
                     case "Unauthenticated.":
                         setToken(null);
+
+                        showToastable({
+                            title: "Session expired",
+                            message:
+                                "Please log in again.",
+                        });
                         break;
                     default:
                         console.error(
