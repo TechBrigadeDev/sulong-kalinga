@@ -30,9 +30,9 @@ axiosClient.interceptors.response.use(
                 switch (message) {
                     case "Unauthenticated.":
                         setToken(null);
-
                         showToastable({
                             title: "Session expired",
+                            status: "danger",
                             message:
                                 "Please log in again.",
                         });
