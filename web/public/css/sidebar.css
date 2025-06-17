@@ -125,6 +125,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0 !important;
 }
 
 .sidebar.close .nav-links li .icon-link {
@@ -133,7 +134,7 @@
 
 .sidebar .nav-links li i {
   height: 50px;
-  min-width: 78px;
+  min-width: 50px;
   text-align: center;
   line-height: 50px;
   color: #161111;
@@ -169,7 +170,7 @@
 }
 
 .sidebar .nav-links li .sub-menu {
-  padding: 6px 6px 14px 80px;
+  padding: 6px 6px 14px 50px;
   margin-top: -10px;
   background: #f1f0fe;
   display: none;
@@ -306,11 +307,12 @@
   }
 
   .sidebar {
-    width: 78px;
+    width: 50px;
   }
 
   .sidebar.close {
-    width: 0;
+    width: 50px;
+    padding: 0 5px;
   }
 
   .home-section {
@@ -320,8 +322,21 @@
   }
 
   .sidebar.close ~ .home-section {
-    width: 100%;
-    left: 0;
+    width: calc(100% - 50px);
+    left: 50px;
+  }
+
+  .sidebar.close .nav-links li i {
+    padding: 0 12px;
+  }
+
+  .sidebar.close .bi-list {
+    display: none;
+  }
+
+  .sidebar.close .logo-details {
+    justify-content: center;
+    transform: translateX(10px);
   }
 }
 

@@ -226,7 +226,7 @@
                             <div class="card-body p-4">
                                 <div class="row align-items-center">
                                     <div class="col-md-3 text-center mb-4 mb-md-0">
-                                        <img src="{{ $administrator->photo ? asset('storage/' . $administrator->photo) : asset('images/defaultProfile.png') }}" 
+                                        <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" 
                                             alt="Profile Picture" 
                                             class="img-fluid rounded-circle profile-img">
                                     </div>
@@ -354,8 +354,8 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Government Issued ID</div>
                                     <div class="detail-value">
-                                        @if($administrator->government_issued_id)
-                                            <a href="{{ asset('storage/' . $administrator->government_issued_id) }}" download class="document-link">
+                                        @if($governmentIdUrl)
+                                            <a href="{{ $governmentIdUrl }}" target="_blank" class="document-link">
                                                 <i class="fas fa-download me-2"></i>Download
                                             </a>
                                         @else
@@ -366,8 +366,8 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Resume / CV</div>
                                     <div class="detail-value">
-                                        @if($administrator->cv_resume)
-                                            <a href="{{ asset('storage/' . $administrator->cv_resume) }}" download class="document-link">
+                                        @if($resumeUrl)
+                                            <a href="{{ $resumeUrl }}" target="_blank" class="document-link">
                                                 <i class="fas fa-download me-2"></i>Download
                                             </a>
                                         @else

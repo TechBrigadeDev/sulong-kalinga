@@ -232,7 +232,7 @@
                         @if(!empty($assignedCareWorkerId))
                             <p>Start a conversation with your assigned care worker:</p>
                             <div class="d-flex align-items-center mb-3">
-                                <img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle me-2" width="40" height="40" alt="Care Worker">
+                                <img src="{{ $assignedCareWorkerPhotoUrl ?? asset('images/defaultProfile.png') }}" class="rounded-circle me-2" width="40" height="40" alt="Care Worker">
                                 <span class="fw-bold">{{ $assignedCareWorkerName }}</span>
                             </div>
                             <form id="newConversationForm" method="POST" action="{{ route($rolePrefix . '.messaging.create') }}">
@@ -3411,7 +3411,7 @@
                                 badgeClass = 'bg-warning text-dark';
                             
                             // FIXED: Use complete image path instead of asset() helper
-                            const profileImageUrl = '/images/defaultProfile.png';
+                            const profileImageUrl = member.photo_url ? member.photo_url : '/images/defaultProfile.png';
                             
                             // Build HTML content
                             listItem.innerHTML = `

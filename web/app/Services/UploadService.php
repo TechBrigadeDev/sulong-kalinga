@@ -21,9 +21,21 @@ class UploadService
     {
         $extension = $file->getClientOriginalExtension();
         $filename = $options['filename'] ?? (Str::uuid() . '.' . $extension);
-        $path = $file->storeAs($directory, $filename, $disk);
+        $path = $directory . '/' . $filename;
 
-        if (!$path) {
+        // Set Content-Type
+        $extraOptions = [
+            'ContentType' => $file->getMimeType(),
+        ];
+
+        // Merge any extra options
+        if (isset($options['extra'])) {
+            $extraOptions = array_merge($extraOptions, $options['extra']);
+        }
+
+        $success = Storage::disk($disk)->putFileAs($directory, $file, $filename, $extraOptions);
+
+        if (!$success) {
             throw new \Exception('File upload failed at storage layer.');
         }
 

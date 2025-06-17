@@ -181,10 +181,8 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Government Issued ID</div>
                                     <div class="detail-value">
-                                        @if($careworker->government_issued_id)
-                                            <a href="{{ asset('storage/' . $careworker->government_issued_id) }}" download class="document-link">
-                                                <i class="fas fa-download me-2"></i>Download
-                                            </a>
+                                        @if($governmentIdUrl)
+                                            <a href="{{ $governmentIdUrl }}" target="_blank">Download Government ID</a>
                                         @else
                                             N/A
                                         @endif
@@ -193,13 +191,11 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Resume / CV</div>
                                     <div class="detail-value">
-                                        @if($careworker->cv_resume)
-                                            <a href="{{ asset('storage/' . $careworker->cv_resume) }}" download class="document-link">
-                                                <i class="fas fa-download me-2"></i>Download
-                                            </a>
-                                        @else
-                                            N/A
-                                        @endif
+                                        @if($resumeUrl)
+                                        <a href="{{ $resumeUrl }}" target="_blank">Download Resume</a>
+                                    @else
+                                        N/A
+                                    @endif
                                     </div>
                                 </div>
                             </div>
@@ -244,7 +240,7 @@
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
                                         <div class="beneficiary-card card h-100">
                                             <div class="d-flex justify-content-center align-items-center p-3" style="height: 120px;">
-                                                <img src="{{ $beneficiary->photo ? asset('storage/' . $beneficiary->photo) : asset('images/defaultProfile.png') }}" 
+                                            <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" alt="Profile Photo">
                                                     class="beneficiary-img img-fluid" 
                                                     alt="{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}">
                                             </div>

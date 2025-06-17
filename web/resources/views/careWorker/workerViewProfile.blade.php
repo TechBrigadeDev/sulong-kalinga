@@ -64,8 +64,8 @@
                         <div class="profile-section {{ session('activeTab') != 'contact' && session('activeTab') != 'settings' ? 'active' : '' }}" id="personal-section">
                             <div class="row">
                                 <div class="col-md-4 text-center mb-4 mb-md-0">
-                                    @if($user->photo)
-                                        <img src="{{ asset('storage/' . $user->photo) }}" alt="Profile Photo" class="profile-photo">
+                                    @if($photoUrl)
+                                        <img src="{{ $photoUrl }}" alt="Profile Photo" class="profile-photo">
                                     @else
                                         <img src="{{ asset('images/defaultProfile.png') }}" alt="Profile Photo" class="profile-photo">
                                     @endif

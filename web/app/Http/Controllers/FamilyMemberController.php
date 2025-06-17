@@ -22,16 +22,20 @@ use App\Models\GeneralCarePlan;
 use App\Models\Notification;
 use App\Services\UserManagementService;
 use App\Services\LogService;
+use App\Services\UploadService;
 use App\Enums\LogType;
 
 class FamilyMemberController extends Controller
 {
     protected $userManagementService;
-    
-    public function __construct(UserManagementService $userManagementService, LogService $logService)
+    protected $logService;
+    protected $uploadService;
+
+    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
     {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
+        $this->uploadService = $uploadService;
     }
 
     protected function getRolePrefix()
@@ -155,7 +159,16 @@ class FamilyMemberController extends Controller
             Auth::id()
         );
 
-        return view($rolePrefix . '.viewFamilyDetails', compact('family_member'));
+        $photoUrl = $family_member->photo
+            ? $this->uploadService->getTemporaryPrivateUrl($family_member->photo, 30)
+            : null;
+
+        // Generate a temporary URL for the related beneficiary's photo if it exists
+        $beneficiaryPhotoUrl = ($family_member->beneficiary && $family_member->beneficiary->photo)
+            ? $this->uploadService->getTemporaryPrivateUrl($family_member->beneficiary->photo, 30)
+            : null;
+
+        return view($rolePrefix . '.viewFamilyDetails', compact('family_member', 'photoUrl', 'beneficiaryPhotoUrl'));
     }
     
     // To revise so that dropdown will be dynamic
@@ -265,13 +278,16 @@ class FamilyMemberController extends Controller
 
         try {
             $uniqueIdentifier = Str::random(10);
-    
-            // Store profile picture if it exists
+
+            // Store profile picture if it exists using UploadService
             if ($request->hasFile('family_photo')) {
-                $familyPhotoPath = $request->file('family_photo')->storeAs(
-                    'uploads/family_photos', 
-                    $request->input('first_name') . '_' . $request->input('last_name') . '_family_member_photo_' . $uniqueIdentifier . '.' . $request->file('family_photo')->getClientOriginalExtension(),
-                    'public'
+                $familyPhotoPath = $this->uploadService->upload(
+                    $request->file('family_photo'),
+                    'spaces-private',
+                    'uploads/family_photos',
+                    [
+                        'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_family_member_photo_' . $uniqueIdentifier . '.' . $request->file('family_photo')->getClientOriginalExtension()
+                    ]
                 );
             }
 
@@ -563,38 +579,25 @@ class FamilyMemberController extends Controller
         try {
             // Find the existing family member
             $familyMember = FamilyMember::findOrFail($id);
-            // For care workers, check if they are assigned to this beneficiary
-            
-            // Store original details for comparison
-            $originalBeneficiaryId = $familyMember->related_beneficiary_id;
 
-            if (Auth::user()->role_id == 3) {
-                // Replace the assignedBeneficiaries() call with direct query
-                $assignedBeneficiaryIds = Beneficiary::whereHas('generalCarePlan', function($query) {
-                    $query->where('care_worker_id', Auth::id());
-                })->pluck('beneficiary_id');
-                
-                if (!$assignedBeneficiaryIds->contains($familyMember->related_beneficiary_id)) {
-                    return redirect()->route($rolePrefix . '.families.index')
-                        ->with('error', 'You do not have permission to update this family member.');
-                }
-            }
-            
             $uniqueIdentifier = Str::random(10);
 
-            // Handle the photo upload if a new one was provided
+            // Handle the photo upload if a new one was provided using UploadService
             if ($request->hasFile('family_photo')) {
-                // If there's an existing photo, delete it
-                if ($familyMember->photo && file_exists(public_path('storage/' . $familyMember->photo))) {
-                    unlink(public_path('storage/' . $familyMember->photo));
+                // If there's an existing photo, delete it using UploadService
+                if ($familyMember->photo) {
+                    $this->uploadService->delete($familyMember->photo, 'spaces-private');
                 }
-                
-                $familyPhotoPath = $request->file('family_photo')->storeAs(
+
+                $familyPhotoPath = $this->uploadService->upload(
+                    $request->file('family_photo'),
+                    'spaces-private',
                     'uploads/family_photos',
-                    $request->input('first_name') . '_' . $request->input('last_name') . '_family_member_photo_' . $uniqueIdentifier . '.' . $request->file('family_photo')->getClientOriginalExtension(),
-                    'public'
+                    [
+                        'filename' => $request->input('first_name') . '_' . $request->input('last_name') . '_family_member_photo_' . $uniqueIdentifier . '.' . $request->file('family_photo')->getClientOriginalExtension()
+                    ]
                 );
-                
+
                 $familyMember->photo = $familyPhotoPath;
             }
 

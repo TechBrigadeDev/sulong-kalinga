@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="{{ asset('css/nlpUI.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.adminNavbar')
     @include('components.adminSidebar')
@@ -39,10 +42,10 @@
                                 <div class="col-md-5">
                                     <div class="btn-container">
                                         <button class="btn btn-primary text-white" id="generateSummary">
-                                            <i class="bi bi-stars me-1"></i> Generate AI Summary
+                                            <i class="bi bi-stars me-1"></i> {{ T::translate('Generate AI Summary', 'Bumuo ng Buod') }}
                                         </button>
                                         <button class="btn btn-success text-white" id="translateReport">
-                                            <i class="bi bi-translate me-1"></i> Translate
+                                            <i class="bi bi-translate me-1"></i> {{ T::translate('Translate', 'Isalin sa Tagalog')}}
                                         </button>
                                     </div>
                                 </div>
@@ -57,21 +60,21 @@
                                 <div id="emptySummary" class="empty-summary">
                                     <i class="bi bi-file-earmark-text-fill"></i>
                                     <h4>No Report Selected</h4>
-                                    <p class="text-muted">Select a care plan from the dropdown above to view the report</p>
+                                    <p class="text-muted">{{ T::translate('Select a care plan from the dropdown above to view the report', 'Pumili ng Care Plan mula sa dropdown sa itaas upang makita ang report')}}</p>
                                 </div>
                                 
                                 <div id="originalReport" style="display: none;">
                                     <div class="summary-header">
                                         <div class="header-content">
                                             <div>
-                                                <h4 class="section-title"><span id="patientName">Patient Name</span></h4>
+                                                <h4 class="section-title"><span id="patientName">{{ T::translate('Beneficiary Name', 'Pangalan ng Benepisyaryo')}}</span></h4>
                                                 <div class="patient-meta">
-                                                    <span class="patient-meta-item"><span id="patientAge">--</span> years</span>
+                                                    <span class="patient-meta-item"><span id="patientAge">--</span> {{ T::translate('Years', 'Taon')}}</span>
                                                     <span class="patient-meta-item"><span id="patientGender">--</span></span>
                                                     <span class="patient-meta-item"><span id="reportDate">--</span></span>
                                                 </div>
                                                 <div class="report-meta">
-                                                    <span class="report-meta-item">Author: <span id="reportAuthor">--</span></span>
+                                                    <span class="report-meta-item">{{ T::translate('Author:', 'Maykatha:')}} <span id="reportAuthor">--</span></span>
                                                     <span class="report-meta-item">Beneficiary: <span id="reportBeneficiary">--</span></span>
                                                 </div>
                                             </div>
@@ -89,14 +92,14 @@
                                     <div class="summary-header">
                                         <div class="header-content">
                                             <div>
-                                                <h4 class="section-title"><span id="summaryPatientName">Patient Name</span></h4>
+                                                <h4 class="section-title"><span id="summaryPatientName">{{ T::translate('Beneficiary Name', 'Pangalan ng Benepisyaryo')}}</span></h4>
                                                 <div class="patient-meta">
-                                                    <span class="patient-meta-item"><span id="summaryPatientAge">--</span> years</span>
+                                                    <span class="patient-meta-item"><span id="summaryPatientAge">--</span> {{ T::translate('Years', 'Taon')}}</span>
                                                     <span class="patient-meta-item"><span id="summaryPatientGender">--</span></span>
                                                     <span class="patient-meta-item"><span id="summaryReportDate">--</span></span>
                                                 </div>
                                                 <div class="report-meta">
-                                                    <span class="report-meta-item">Author: <span id="summaryReportAuthor">--</span></span>
+                                                    <span class="report-meta-item">{{ T::translate('Author:', 'Maykatha')}} <span id="summaryReportAuthor">--</span></span>
                                                     <span class="report-meta-item">Beneficiary: <span id="summaryReportBeneficiary">--</span></span>
                                                 </div>
                                             </div>
@@ -104,13 +107,13 @@
                                         </div>
                                         <div class="summary-actions mt-5">
                                             <button class="btn btn-sm btn-primary" id="viewOriginalReportBtn">
-                                                <i class="bi bi-eye me-1"></i> View Original
+                                                <i class="bi bi-eye me-1"></i>{{ T::translate('View Original', 'Tingnan ang Orihinal')}} 
                                             </button>
                                             <button class="btn btn-sm btn-secondary edit-summary-btn" id="editSummaryBtn">
-                                                <i class="bi bi-pencil-square me-1"></i> Edit
+                                                <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit', 'I-Edit')}}
                                             </button>
                                             <button class="btn btn-sm btn-success save-summary-btn" id="saveSummaryBtn">
-                                                <i class="bi bi-floppy me-1"></i> Save
+                                                <i class="bi bi-floppy me-1"></i> {{ T::translate('Save', 'I-Save')}}
                                             </button>
                                         </div>
                                     </div>
@@ -127,7 +130,7 @@
                                         
                                         <!-- Add section button (visible only in edit mode) -->
                                         <button class="btn btn-sm btn-primary add-section-btn" id="addSectionBtn">
-                                            <i class="bi bi-plus me-1"></i> Add New Section
+                                            <i class="bi bi-plus me-1"></i> {{ T::translate('Add New Section', 'Magdagdag ng Bagong Seksyon')}}
                                         </button>
                                         
                                         <!-- Content will be loaded here dynamically -->
@@ -147,14 +150,14 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="originalReportModalTitle">Original Care Plan Report</h5>
+                    <h5 class="modal-title" id="originalReportModalTitle">{{ T::translate('Original Care Plan Report', 'Orihinal na Care Plan Report')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="originalReportContent">
                     <!-- Original report content will be loaded here -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>

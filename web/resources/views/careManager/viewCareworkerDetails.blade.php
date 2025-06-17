@@ -46,7 +46,7 @@
                             <div class="card-body p-4">
                                 <div class="row align-items-center">
                                     <div class="col-md-3 text-center mb-4 mb-md-0">
-                                        <img src="{{ $careworker->photo ? asset('storage/' . $careworker->photo) : asset('images/defaultProfile.png') }}" 
+                                        <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" alt="Profile Photo">
                                             alt="Profile Picture" 
                                             class="img-fluid rounded-circle profile-img">
                                     </div>
@@ -181,10 +181,8 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Government Issued ID</div>
                                     <div class="detail-value">
-                                        @if($careworker->government_issued_id)
-                                            <a href="{{ asset('storage/' . $careworker->government_issued_id) }}" download class="document-link">
-                                                <i class="bi bi-download me-2"></i>Download
-                                            </a>
+                                        @if($governmentIdUrl)
+                                            <a href="{{ $governmentIdUrl }}" target="_blank">Download Government ID</a>
                                         @else
                                             N/A
                                         @endif
@@ -193,10 +191,8 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Resume / CV</div>
                                     <div class="detail-value">
-                                        @if($careworker->cv_resume)
-                                            <a href="{{ asset('storage/' . $careworker->cv_resume) }}" download class="document-link">
-                                                <i class="bi bi-download me-2"></i>Download
-                                            </a>
+                                        @if($resumeUrl)
+                                            <a href="{{ $resumeUrl }}" target="_blank">Download Resume</a>
                                         @else
                                             N/A
                                         @endif

@@ -10,13 +10,17 @@
     <link rel="stylesheet" href="{{ asset('css/careRecords.css') }}">
 </head>
 <body>
+
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     @include('components.modals.viewGcpRedirect')
     @include('components.modals.editGcpRedirect')
     
     <div class="home-section">
-        <div class="text-left">RECORDS MANAGEMENT</div>
+        <div class="text-left">{{ T::translate('RECORDS MANAGEMENT', 'PAMAMAHALA SA MGA TALA')}}</div>
         <div class="container-fluid">
         <div class="row" id="home-content">
         
@@ -38,10 +42,10 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                <input type="text" class="form-control" placeholder="Search by author or beneficiary..." 
+                                <input type="text" class="form-control" placeholder="{{ T::translate('Search by author or beneficiary...', 'Maghanap ayon sa may-akda o benepisyaryo...') }}" 
                                     id="searchBar" name="search" value="{{ $search ?? '' }}">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">{{ T::translate('Search', 'Maghanap')}}</span>
                                 </button>
                             </div>
                         </div>
@@ -53,9 +57,9 @@
                                     <i class="bi bi-funnel"></i>
                                 </span>
                                 <select class="form-select" id="filterDropdown" name="filter" onchange="this.form.submit()">
-                                    <option value="" {{ empty($filterType ?? '') ? 'selected' : '' }}>Filter by</option>
-                                    <option value="author" {{ ($filterType ?? '') == 'author' ? 'selected' : '' }}>Author</option>
-                                    <option value="type" {{ ($filterType ?? '') == 'type' ? 'selected' : '' }}>Report Type</option>
+                                    <option value="" {{ empty($filterType ?? '') ? 'selected' : '' }}>{{ T::translate('Filter by', 'Salain sa')}}</option>
+                                    <option value="author" {{ ($filterType ?? '') == 'author' ? 'selected' : '' }}>{{ T::translate('Author', 'May-akda')}}</option>
+                                    <option value="type" {{ ($filterType ?? '') == 'type' ? 'selected' : '' }}>{{ T::translate('Report Type', 'Uri ng Report')}}</option>
                                 </select>
                             </div>
                         </div>
@@ -67,10 +71,10 @@
                                     <i class="bi bi-list-ol"></i>
                                 </label>
                                 <select class="form-select" id="perPageSelect" onchange="changePerPage(this.value)">
-                                    <option value="15" {{ request()->get('per_page', 15) == 15 ? 'selected' : '' }}>15 per page</option>
-                                    <option value="25" {{ request()->get('per_page') == 25 ? 'selected' : '' }}>25 per page</option>
-                                    <option value="50" {{ request()->get('per_page') == 50 ? 'selected' : '' }}>50 per page</option>
-                                    <option value="100" {{ request()->get('per_page') == 100 ? 'selected' : '' }}>100 per page</option>
+                                    <option value="15" {{ request()->get('per_page', 15) == 15 ? 'selected' : '' }}>15 {{ T::translate('per page', 'kada pahina')}}</option>
+                                    <option value="25" {{ request()->get('per_page') == 25 ? 'selected' : '' }}>25 {{ T::translate('per page', 'kada pahina')}}</option>
+                                    <option value="50" {{ request()->get('per_page') == 50 ? 'selected' : '' }}>50 {{ T::translate('per page', 'kada pahina')}}</option>
+                                    <option value="100" {{ request()->get('per_page') == 100 ? 'selected' : '' }}>100 {{ T::translate('per page', 'kada pahina')}}</option>
                                 </select>
                             </div>
                         </div>
@@ -89,11 +93,11 @@
                         <div>
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                    <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export', 'I-Export')}}</span>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                                    <li><a class="dropdown-item" href="#" onclick="checkSelectedReports()"><i class="bi bi-file-earmark-pdf me-2"></i>Selected as PDF</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="selectAllAndExport()"><i class="bi bi-file-earmark-pdf-fill me-2"></i>All as PDF</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="checkSelectedReports()"><i class="bi bi-file-earmark-pdf me-2"></i>{{ T::translate('Selected as PDF', 'Pinili bilang PDF')}}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="selectAllAndExport()"><i class="bi bi-file-earmark-pdf-fill me-2"></i>{{ T::translate('All as PDF', 'Lahat bilang PDF')}}</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -109,11 +113,11 @@
                             <th scope="col" class="checkbox-cell">
                                 <input type="checkbox" id="selectAll" />
                             </th>
-                            <th scope="col">Author</th>
-                            <th scope="col">Report Type</th>
-                            <th scope="col">Related Beneficiary</th>
-                            <th scope="col" class="d-none d-sm-table-cell">Date Uploaded</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col">{{ T::translate('Author', 'May-akda')}}</th>
+                            <th scope="col">{{ T::translate('Report Type', 'Uri ng Report')}}</th>
+                            <th scope="col">{{ T::translate('Related Beneficiary', 'Kaugnay na Benepisyaryo')}}</th>
+                            <th scope="col" class="d-none d-sm-table-cell">{{ T::translate('Date Uploaded', 'Petsa ng Pag-upload')}}</th>
+                            <th scope="col">{{ T::translate('Actions', 'Aksyon')}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,8 +169,8 @@
                 @else
                 <div class="empty-state">
                     <i class="bi bi-file-earmark-text"></i>
-                    <h4>No reports found</h4>
-                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                    <h4>{{ T::translate('No reports found', 'Walang Report na nakita.')}}</h4>
+                    <p class="text-muted">{{ T::translate('Try adjusting your search or filter criteria', 'Subukang ayusin ang iyong pamantayan sa paghahanap o filter')}}</p>
                 </div>
                 @endif
             </div>
@@ -184,7 +188,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exportReportsModalLabel">Export Reports</h5>
+                    <h5 class="modal-title" id="exportReportsModalLabel">{{ T::translate('Export Reports', 'IExport ang mga Report')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -194,21 +198,21 @@
                     </div>
                     
                     <div id="exportInfo" class="mb-3">
-                        <p>You are about to export <strong><span id="exportCount">0</span></strong> reports as PDF.</p>
+                        <p>{{ T::translate('You are about to export', 'Malapit ka nang mag-export')}} <strong><span id="exportCount">0</span></strong> {{ T::translate('reports as PDF.', 'ng mga Report bilang PDF')}}</p>
                         <div id="exportTypeBreakdown" class="bg-light p-2 rounded"></div>
                     </div>
 
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" id="includeBeneficiaryDetails">
                         <label class="form-check-label" for="includeBeneficiaryDetails">
-                            Include detailed beneficiary information
+                            {{ T::translate('Include detailed beneficiary information', 'Isama ang detalyadong impormasyon ng benepisyaryo') }}
                         </label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" id="confirmExportBtn" class="btn btn-primary">
-                        <i class="bi bi-download me-1"></i> Export
+                        <i class="bi bi-download me-1"></i> {{ T::translate('Export', 'I-Export')}}
                     </button>
                 </div>
             </div>
@@ -220,12 +224,12 @@
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="noSelectionModalLabel">No Selection</h5>
+                    <h5 class="modal-title" id="noSelectionModalLabel">{{ T::translate('No Selection', 'Walang Napili')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
                     <i class="bi bi-exclamation-circle text-warning" style="font-size: clamp(1.5rem, 4vw, 2rem);"></i>
-                    <p class="mt-2">Please select at least one report to export.</p>
+                    <p class="mt-2">{{ T::translate('Please select at least one report to export.', 'Maaring pumili ng kahit na isang report upang i-export.')}}</p>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>

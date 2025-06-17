@@ -400,67 +400,17 @@ class AdminController extends Controller
         // Generate unique identifier for file naming
         $uniqueIdentifier = time() . '_' . Str::random(5);
 
-
-
-    // Handle Administrator Photo (OLD WAY)
-    // if ($request->hasFile('administrator_photo')) {
-    //     $directory = public_path('storage/uploads/administrator_photos');
-    //     if (!is_dir($directory)) {
-    //         mkdir($directory, 0755, true);
-    //     }
-
-    //     $administratorPhotoPath = $request->file('administrator_photo')->storeAs(
-    //         'uploads/administrator_photos',
-    //         $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension(),
-    //         'public'
-    //     );
-    //     $administrator->photo = $administratorPhotoPath;
-    // }
-
-    // Handle Government Issued ID
-    if ($request->hasFile('government_ID')) {
-        $directory = public_path('storage/uploads/administrator_government_ids');
-        if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
-        $governmentIDPath = $request->file('government_ID')->storeAs(
-            'uploads/administrator_government_ids',
-            $administrator->first_name . '_' . $administrator->last_name . '_government_id_' . $uniqueIdentifier . '.' . $request->file('government_ID')->getClientOriginalExtension(),
-            'public'
-        );
-        $administrator->government_issued_id = $governmentIDPath;
-    }
-
-    // Handle Resume
-    if ($request->hasFile('resume')) {
-        $directory = public_path('storage/uploads/administrator_resumes');
-        if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
-        $resumePath = $request->file('resume')->storeAs(
-            'uploads/administrator_resumes',
-            $administrator->first_name . '_' . $administrator->last_name . '_resume_' . $uniqueIdentifier . '.' . $request->file('resume')->getClientOriginalExtension(),
-            'public'
-        );
-        $administrator->cv_resume = $resumePath;
-    }
-
-        // Handle file uploads if new files are provided
-        $uniqueIdentifier = time() . '_' . Str::random(5);
-
-        // --- FIX: Delete old photo from Spaces if uploading a new one ---
+        // --- Use UploadService for all file uploads ---
+        // Handle Administrator Photo
         if ($request->hasFile('administrator_photo')) {
             // Delete old photo if it exists
             if ($administrator->photo) {
                 $this->uploadService->delete($administrator->photo, 'spaces-private');
             }
-            // Upload new photo and save path
             $administratorPhotoPath = $this->uploadService->upload(
                 $request->file('administrator_photo'),
-                'spaces-private', // disk
-                'uploads/administrator_photos', // directory
+                'spaces-private',
+                'uploads/administrator_photos',
                 [
                     'filename' => $administrator->first_name . '_' . $administrator->last_name . '_photo_' . $uniqueIdentifier . '.' . $request->file('administrator_photo')->getClientOriginalExtension()
                 ]
@@ -468,7 +418,12 @@ class AdminController extends Controller
             $administrator->photo = $administratorPhotoPath;
         }
 
+        // Handle Government Issued ID
         if ($request->hasFile('government_ID')) {
+            // Delete old government ID if it exists
+            if ($administrator->government_issued_id) {
+                $this->uploadService->delete($administrator->government_issued_id, 'spaces-private');
+            }
             $governmentIDPath = $this->uploadService->upload(
                 $request->file('government_ID'),
                 'spaces-private',
@@ -480,7 +435,12 @@ class AdminController extends Controller
             $administrator->government_issued_id = $governmentIDPath;
         }
 
+        // Handle Resume
         if ($request->hasFile('resume')) {
+            // Delete old resume if it exists
+            if ($administrator->cv_resume) {
+                $this->uploadService->delete($administrator->cv_resume, 'spaces-private');
+            }
             $resumePath = $this->uploadService->upload(
                 $request->file('resume'),
                 'spaces-private',
@@ -612,8 +572,19 @@ class AdminController extends Controller
             LogType::VIEW,
             Auth::user()->first_name . ' ' . Auth::user()->last_name . ' viewed administrator ' . $administrator->first_name . ' ' . $administrator->last_name
         );
+        $photoUrl = $administrator->photo
+            ? $this->uploadService->getTemporaryPrivateUrl($administrator->photo, 30)
+            : null;
 
-        return view('admin.viewAdminDetails', compact('administrator'));
+        $governmentIdUrl = $administrator->government_issued_id
+            ? $this->uploadService->getTemporaryPrivateUrl($administrator->government_issued_id, 30)
+            : null;
+
+        $resumeUrl = $administrator->cv_resume
+            ? $this->uploadService->getTemporaryPrivateUrl($administrator->cv_resume, 30)
+            : null;
+
+        return view('admin.viewAdminDetails', compact('administrator', 'photoUrl', 'governmentIdUrl', 'resumeUrl'));
     }
 
     public function editAdminProfile($id)

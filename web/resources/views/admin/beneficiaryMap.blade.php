@@ -12,7 +12,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
 
@@ -21,20 +23,20 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addBeneficiaryModalLabel">Add Beneficiary Location</h5>
+                    <h5 class="modal-title" id="addBeneficiaryModalLabel">{{ T::translate('Add Beneficiary Location', 'Magdagdag ng Lokasyon ng Benepisyaryo')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addBeneficiaryForm">
                         <div class="mb-3">
-                            <label for="beneficiarySelect" class="form-label">Select Beneficiary</label>
+                            <label for="beneficiarySelect" class="form-label">{{ T::translate('Select Beneficiary', 'Pumili ng Benepisyaryo')}}</label>
                             <select class="form-select" id="beneficiarySelect" required>
-                                <option value="" selected disabled>Choose beneficiary...</option>
+                                <option value="" selected disabled>{{ T::translate('Choose beneficiary...', 'Pumili ng Benepisyaryo')}}</option>
                                 <!-- Options will be populated from JavaScript -->
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Location Coordinates</label>
+                            <label class="form-label">{{ T::translate('Location Coordinates', 'Mga Coordinate ng Lokasyon')}}</label>
                             <div class="input-group mb-2">
                                 <span class="input-group-text">Latitude</span>
                                 <input type="text" class="form-control" id="pinLatitude" readonly>
@@ -43,13 +45,13 @@
                                 <span class="input-group-text">Longitude</span>
                                 <input type="text" class="form-control" id="pinLongitude" readonly>
                             </div>
-                            <div class="form-text">Click and drag the pin on the map to adjust position</div>
+                            <div class="form-text">{{ T::translate('Click and drag the pin on the map to adjust position', 'I-click at i-drag ang pin sa mapa upang ayusin ang posisyon')}}</div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveBeneficiaryPin">Save Location</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-kansela')}}</button>
+                    <button type="button" class="btn btn-primary" id="saveBeneficiaryPin">{{ T::translate('Save Location', 'I-save ang Lokasyon')}}</button>
                 </div>
             </div>
         </div>
@@ -60,21 +62,21 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editBeneficiaryModalLabel">Edit Beneficiary Location</h5>
+                    <h5 class="modal-title" id="editBeneficiaryModalLabel">{{ T::translate('Edit Beneficiary Location', 'I-Edit ang Lokasyon ng Benepisyaryo')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editBeneficiaryForm">
                         <div class="mb-3">
-                            <label class="form-label">Beneficiary</label>
+                            <label class="form-label">{{ T::translate('Beneficiary', 'Benepisyaryo')}}</label>
                             <input type="text" class="form-control" id="editBeneficiaryName" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Current Address</label>
+                            <label class="form-label">{{ T::translate('Current Address', 'Kasalukuyang Tirahan')}}</label>
                             <input type="text" class="form-control" id="editBeneficiaryAddress" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Location Coordinates</label>
+                            <label class="form-label">{{ T::translate('Location Coordinates', 'Coordinate ng Lokasyon')}}</label>
                             <div class="input-group mb-2">
                                 <span class="input-group-text">Latitude</span>
                                 <input type="text" class="form-control" id="editPinLatitude">
@@ -83,20 +85,20 @@
                                 <span class="input-group-text">Longitude</span>
                                 <input type="text" class="form-control" id="editPinLongitude">
                             </div>
-                            <div class="form-text">Click and drag the pin on the map to adjust position</div>
+                            <div class="form-text">{{ T::translate('Click and drag the pin on the map to adjust position', 'I-click at i-drag ang pin sa mapa upang ayusin ang posisyon')}}</div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveEditedBeneficiaryPin">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-kansela')}}</button>
+                    <button type="button" class="btn btn-primary" id="saveEditedBeneficiaryPin">{{ T::translate('Save Changes', 'I-save ang Pagbabago')}}</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="home-section">
-        <div class="text-left">BENEFICIARY MAP</div>
+        <div class="text-left">{{ T::translate('BENEFICIARY MAP', 'MAPA NG BENEPISYARYO')}}</div>
         <div class="container-fluid">
             <div class="row" id="home-content">
                 <div class="col-lg-8">
@@ -106,35 +108,30 @@
                         <!-- Map Controls Container -->
                         <div class="map-controls-container">
                             <div class="map-control-group">
-                                <button id="locate-me" class="btn btn-primary">
-                                    <i class="bi bi-geo-alt-fill"></i> My Location
-                                </button>
-                            </div>
-                            <div class="map-control-group">
                                 <button id="add-pin-mode" class="btn btn-success">
-                                    <i class="bi bi-pin-map-fill"></i> Add Pin
+                                    <i class="bi bi-pin-map-fill"></i> {{ T::translate('Add Pin', 'Magdagdag ng Pin')}}
                                 </button>
                                 <button id="cancel-add-pin" class="btn btn-outline-secondary" style="display:none;">
-                                    <i class="bi bi-x-circle"></i> Cancel
+                                    <i class="bi bi-x-circle"></i> {{ T::translate('Cancel', 'I-Kansela')}}
                                 </button>
                             </div>
                             <div class="map-control-group">
                                 <button id="edit-pin-mode" class="btn btn-warning">
-                                    <i class="bi bi-pencil-fill"></i> Edit Pin
+                                    <i class="bi bi-pencil-fill"></i> {{ T::translate('Edit Pin', 'I-Edit ang Pin')}}
                                 </button>
                                 <button id="cancel-edit-pin" class="btn btn-outline-secondary" style="display:none;">
-                                    <i class="bi bi-x-circle"></i> Cancel
+                                    <i class="bi bi-x-circle"></i>{{ T::translate('Cancel', 'I-Kansela')}} 
                                 </button>
                             </div>
                         </div>
                         
                         <div id="beneficiary-details" class="beneficiary-details">
                             <h5 id="beneficiary-name"></h5>
-                            <p><strong>Address:</strong> <span id="beneficiary-address"></span></p>
+                            <p><strong>{{ T::translate('Address:', 'Tirahan')}}</strong> <span id="beneficiary-address"></span></p>
                             <p><strong>Contact:</strong> <span id="beneficiary-contact"></span></p>
-                            <p><strong>Caregiver:</strong> <span id="beneficiary-caregiver"></span></p>
-                            <p><strong>Caregiver Contact:</strong> <span id="beneficiary-caregiver-contact"></span></p>
-                            <button id="close-details" class="btn btn-outline-secondary btn-sm mt-2">Close</button>
+                            <p><strong>{{ T::translate('Caregiver:', 'Tagapag-alaga')}}</strong> <span id="beneficiary-caregiver"></span></p>
+                            <p><strong>{{ T::translate('Caregiver Contact:', 'Contact ng Tagapag-alaga')}}</strong> <span id="beneficiary-caregiver-contact"></span></p>
+                            <button id="close-details" class="btn btn-outline-secondary btn-sm mt-2">{{ T::translate('Close', 'Isara')}}</button>
                         </div>
                         
                         <!-- Instruction box -->
@@ -160,7 +157,7 @@
                                 <div class="beneficiary-card-content">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6>Juan Dela Cruz</h6>
-                                        <span class="badge bg-primary badge-category">Senior</span>
+                                        <span class="badge bg-primary badge-category">{{ T::translate('Senior', 'Nakatatanda')}}</span>
                                     </div>
                                     <p>Brgy. Balnasan, Catarman, Northern Samar</p>
                                     <div class="contact-info">
@@ -186,7 +183,7 @@
                                 <div class="beneficiary-card-content">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6>Pedro Reyes</h6>
-                                        <span class="badge bg-primary badge-category">Senior</span>
+                                        <span class="badge bg-primary badge-category">{{ T::translate('Senior', 'Nakatatanda')}}</span>
                                     </div>
                                     <p>Brgy. UEP, Catarman, Northern Samar</p>
                                     <div class="contact-info">
@@ -212,7 +209,7 @@
                                 <div class="beneficiary-card-content">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6>Ricardo Gonzales</h6>
-                                        <span class="badge bg-primary badge-category">Senior</span>
+                                        <span class="badge bg-primary badge-category">{{ T::translate('Senior', 'Nakatatanda')}}</span>
                                     </div>
                                     <p>Brgy. Macagtas, Catarman, Northern Samar</p>
                                     <div class="contact-info">

@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             `<div class="rounded-circle profile-img-sm d-flex justify-content-center align-items-center bg-primary text-white">
                                                 <span>${conversation.name ? conversation.name.charAt(0) : 'G'}</span>
                                             </div>` :
-                                            `<img src="{{ asset('images/defaultProfile.png') }}" class="rounded-circle profile-img-sm" alt="User">`
+                                            `<img src="${conversation.other_participant_photo_url ? conversation.other_participant_photo_url : '{{ asset('images/defaultProfile.png') }}'}" class="rounded-circle profile-img-sm" alt="User">`
                                         }
                                     </div>
                                     <div class="flex-grow-1 ms-2 overflow-hidden">
