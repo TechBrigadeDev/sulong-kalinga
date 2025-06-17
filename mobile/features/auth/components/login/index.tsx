@@ -21,7 +21,7 @@ const Login = () => {
             <Card
                 elevate
                 elevation="$3"
-                width="75%"
+                maxW="75%"
                 style={styles.container}
             >
                 <Card.Header>
