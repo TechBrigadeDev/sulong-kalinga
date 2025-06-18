@@ -181,9 +181,9 @@
         });
 
         // Function to load shift details
-        function loadShiftDetails() {
-            // ... existing loadShiftDetails function ...
-        }
+        // function loadShiftDetails() {
+        //     // ... existing loadShiftDetails function ...
+        // }
 
         document.addEventListener('DOMContentLoaded', loadShiftDetails);
     </script>

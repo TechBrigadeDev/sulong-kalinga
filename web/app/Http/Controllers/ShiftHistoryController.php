@@ -19,17 +19,19 @@ class ShiftHistoryController extends Controller
         if ($request->filled('search')) {
             $query->whereHas('careWorker', function ($q) use ($request) {
                 $q->where('first_name', 'ilike', '%' . $request->search . '%')
-                  ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
+                ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
             });
         }
         // Filtering by date
         if ($request->filled('date')) {
             $query->whereDate('time_in', $request->date);
         }
-        $query->where('status', 'in_progress');
+        // Show both in_progress and completed
+        $query->whereIn('status', ['completed']);
 
         $shifts = $query->orderBy('time_in', 'desc')->paginate(20);
 
+        // No need to pass municipality or status anymore
         return view('admin.shiftHistories', [
             'shifts' => $shifts,
             'search' => $request->search,
@@ -37,34 +39,6 @@ class ShiftHistoryController extends Controller
         ]);
     }
     
-    /**
-     * Display a listing of archived (completed) shift histories.
-     */
-    public function archived(Request $request)
-    {
-        $query = Shift::with('careWorker');
-
-        // Filtering by care worker name
-        if ($request->filled('search')) {
-            $query->whereHas('careWorker', function ($q) use ($request) {
-                $q->where('first_name', 'ilike', '%' . $request->search . '%')
-                  ->orWhere('last_name', 'ilike', '%' . $request->search . '%');
-            });
-        }
-        // Filtering by date
-        if ($request->filled('date')) {
-            $query->whereDate('time_in', $request->date);
-        }
-        $query->where('status', 'completed');
-
-        $shifts = $query->orderBy('time_in', 'desc')->paginate(20);
-
-        return view('admin.archivedShiftHistories', [
-            'shifts' => $shifts,
-            'search' => $request->search,
-            'date' => $request->date
-        ]);
-    }
 
     /**
      * Display the details and location history for a specific shift.

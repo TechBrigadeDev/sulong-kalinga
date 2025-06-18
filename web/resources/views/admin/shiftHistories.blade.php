@@ -69,8 +69,6 @@
                                             <th scope="col">Care Worker</th>
                                             <th scope="col">Date</th>
                                             <th scope="col">Shift Time</th>
-                                            <th scope="col">Municipality</th>
-                                            <th scope="col">Status</th>
                                             <th scope="col" class="text-center">Actions</th>
                                         </tr>
                                     </thead>
@@ -89,18 +87,6 @@
                                                     {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
                                                     {{ $shift->time_out ? \Carbon\Carbon::parse($shift->time_out)->format('h:i A') : '--:--' }}
                                                 </td>
-                                                <td>
-                                                    {{ $shift->careWorker->municipality ?? '-' }}
-                                                </td>
-                                                <td>
-                                                    @if($shift->status === 'completed')
-                                                        <span class="badge badge-success">Completed</span>
-                                                    @elseif($shift->status === 'in_progress')
-                                                        <span class="badge badge-warning">In Progress</span>
-                                                    @else
-                                                        <span class="badge badge-secondary">{{ ucfirst($shift->status) }}</span>
-                                                    @endif
-                                                </td>
                                                 <td class="text-center">
                                                     <div class="action-icons">
                                                         <a href="{{ route('admin.shift.histories.shiftDetails', ['shiftId' => $shift->shift_id]) }}">
@@ -114,7 +100,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="6" class="text-center text-muted">No shift records found.</td>
+                                                <td colspan="4" class="text-center text-muted">No shift records found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

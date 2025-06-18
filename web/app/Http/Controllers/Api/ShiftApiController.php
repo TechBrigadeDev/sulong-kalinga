@@ -14,46 +14,66 @@ use Illuminate\Support\Facades\Http;
 class ShiftApiController extends Controller
 {
     /**
-     * List/filter shifts.
+     * List upcoming scheduled visitations for the authenticated care worker.
      */
     public function index(Request $request)
     {
-        $query = Shift::with('careWorker');
-
-        // Optional filters
-        if ($request->filled('care_worker_id')) {
-            $query->where('care_worker_id', $request->care_worker_id);
-        }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        if ($request->filled('date')) {
-            $query->whereDate('time_in', $request->date);
+        $user = $request->user();
+        if (!$user || $user->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can access this resource.'
+            ], 403);
         }
 
-        $shifts = $query->orderBy('time_in', 'desc')->paginate(20);
+        $visitations = Visitation::with('beneficiary')
+            ->where('care_worker_id', $user->id)
+            ->where('status', 'scheduled')
+            ->orderBy('visitation_date')
+            ->orderBy('start_time')
+            ->get()
+            ->map(function ($visitation) {
+                $beneficiary = $visitation->beneficiary;
+                return [
+                    'visitation_id' => $visitation->visitation_id,
+                    'care_worker_id' => $visitation->care_worker_id,
+                    'beneficiary_id' => $visitation->beneficiary_id,
+                    'beneficiary_name' => trim(
+                        ($beneficiary->first_name ?? '') . ' ' .
+                        ($beneficiary->middle_name ?? '') . ' ' .
+                        ($beneficiary->last_name ?? '')
+                    ),
+                    'visit_type' => $visitation->visit_type,
+                    'address' => $beneficiary->street_address ?? '',
+                    'start_time' => $visitation->start_time,
+                    'is_flexible_time' => $visitation->is_flexible_time,
+                    'actions' => ['Arrived', 'Departed'],
+                ];
+            });
 
-        return response()->json($shifts);
+        return response()->json($visitations);
     }
 
     /**
-     * Start a shift (time in).
+     * Start a shift (time in) for the authenticated care worker.
      */
-    public function store(Request $request)
+    // ADD IN MOBILE AN "ARE YOU SURE" PROMPT
+    public function timeIn(Request $request)
     {
+        $user = $request->user();
+        if (!$user || $user->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can access this resource.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
-            'care_worker_id' => 'required|exists:cose_users,id',
             'time_in' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // Only allow care workers (role_id == 3)
-        $user = User::where('id', $request->care_worker_id)->where('role_id', 3)->first();
-        if (!$user) {
-            return response()->json(['message' => 'User is not a care worker.'], 422);
         }
 
         // Prevent duplicate in-progress shift
@@ -72,10 +92,19 @@ class ShiftApiController extends Controller
     }
 
     /**
-     * End a shift (time out) and trigger geocoding for all arrival/departure tracks.
+     * End a shift (time out) for the authenticated care worker and trigger geocoding for all arrival/departure tracks.
      */
-    public function update(Request $request, $id)
+    // ADD IN MOBILE AN "ARE YOU SURE" PROMPT
+    public function timeOut(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user || $user->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can access this resource.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'time_out' => 'nullable|date',
         ]);
@@ -84,7 +113,7 @@ class ShiftApiController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $shift = Shift::findOrFail($id);
+        $shift = Shift::where('id', $id)->where('care_worker_id', $user->id)->firstOrFail();
 
         if ($shift->status === 'completed') {
             return response()->json(['message' => 'Shift already completed.'], 409);
@@ -95,21 +124,28 @@ class ShiftApiController extends Controller
             'status' => 'completed',
         ]);
 
-        // Only geocode arrival/departure tracks (no interval tracks anymore)
         $this->batchGeocodeShiftTracks($shift);
 
         return response()->json($shift);
     }
 
     /**
-     * Show shift details (with tracks and visitations).
+     * Show shift details (with tracks and visitations) for the authenticated care worker.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user || $user->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can access this resource.'
+            ], 403);
+        }
+
         $shift = Shift::with([
             'careWorker',
             'tracks.visitation'
-        ])->findOrFail($id);
+        ])->where('id', $id)->where('care_worker_id', $user->id)->firstOrFail();
 
         // Only include arrival/departure tracks
         $shift->tracks = $shift->tracks->whereIn('arrival_status', ['arrived', 'departed'])->values();
@@ -118,29 +154,29 @@ class ShiftApiController extends Controller
     }
 
     /**
-     * Fetch all assigned visitations for a care worker for a given date.
+     * Show all completed shifts (archived) for the authenticated care worker.
      */
-    public function getAssignedVisitations(Request $request)
+    public function archived(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'care_worker_id' => 'required|exists:cose_users,id',
-            'date' => 'nullable|date',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        $user = $request->user();
+        if (!$user || $user->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can access this resource.'
+            ], 403);
         }
 
-        $date = $request->date ?? now()->toDateString();
+        $query = Shift::with('careWorker')
+            ->where('status', 'completed')
+            ->where('care_worker_id', $user->id);
 
-        $visitations = Visitation::with(['beneficiary', 'careWorker'])
-            ->where('care_worker_id', $request->care_worker_id)
-            ->whereDate('visitation_date', $date)
-            ->whereIn('status', ['scheduled', 'active']) // adjust as needed
-            ->orderBy('visitation_date')
-            ->orderBy('start_time')
-            ->get();
+        if ($request->filled('date')) {
+            $query->whereDate('time_in', $request->date);
+        }
 
-        return response()->json($visitations);
+        $shifts = $query->orderBy('time_in', 'desc')->paginate(20);
+
+        return response()->json($shifts);
     }
 
     /**

@@ -20,11 +20,11 @@ class CreateShiftTracksTable extends Migration
             $table->json('track_coordinates')->nullable();
             $table->string('address')->nullable();
             $table->timestamp('recorded_at');
-            $table->boolean('synced')->default(true);
+            $table->boolean('synced')->nullable();
             $table->timestamps();
             $table->unsignedBigInteger('visitation_id')->nullable()->after('care_worker_id');
             $table->enum('arrival_status', ['arrived', 'departed'])->nullable()->after('address');
-            $table->foreign('visitation_id')->references('id')->on('visitations')->onDelete('set null');
+            $table->foreign('visitation_id')->references('visitation_id')->on('visitations')->onDelete('set null');
         });
     }
 
