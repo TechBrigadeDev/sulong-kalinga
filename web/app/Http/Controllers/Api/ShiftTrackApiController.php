@@ -32,6 +32,14 @@ class ShiftTrackApiController extends Controller
     public function event(Request $request, $shiftId)
     {
         $visitation = \App\Models\Visitation::findOrFail($request->visitation_id);
+
+        // Add check: Do not allow event if visitation is already completed
+        if ($visitation->status === 'completed') {
+            return response()->json([
+                'message' => 'Cannot log event for a visitation that is already completed.'
+            ], 422);
+        }
+
         $request->validate([
             'care_worker_id' => 'required|exists:cose_users,id',
             'track_coordinates' => 'required|array',
