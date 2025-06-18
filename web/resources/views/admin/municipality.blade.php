@@ -6,223 +6,8 @@
     <title>Municipality Management</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/municipality.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
-        :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3a0ca3;
-            --accent-color: #f72585;
-            --success-color: #4cc9f0;
-            --light-gray: #f8f9fa;
-            --medium-gray: #e9ecef;
-            --dark-gray: #6c757d;
-            --border-radius: 0.5rem;
-            --box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.08);
-            --transition: all 0.25s ease;
-        }
-
-        /* Card-like container for the management section */
-        .management-container {
-            background-color: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 1.5rem;
-            
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Search and filter styling */
-        .input-group-text {
-            background-color: var(--light-gray);
-            color: var(--dark-gray);
-        }
-
-        #searchBar, #filterDropdown {
-            border-left: none;
-        }
-
-        #searchBar:focus, #filterDropdown:focus {
-            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
-            border-color: var(--primary-color);
-        }
-
-        /* Action buttons */
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .action-buttons .btn {
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            transition: var(--transition);
-            padding: 0.75rem 1.25rem;
-            flex: 1 1 auto;
-            min-width: max-content;
-        }
-
-        .action-buttons .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .action-buttons .btn-primary:hover {
-            background-color: #3a56d4;
-            border-color: #3a56d4;
-        }
-
-        .action-buttons .btn-danger {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        .action-buttons .btn-danger:hover {
-            background-color: #e5177e;
-            border-color: #e5177e;
-        }
-
-        /* Table styling */
-        .table-container {
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-height: 60vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .table {
-            margin-bottom: 0;
-            width: 100%;
-            min-width: 600px;
-        }
-
-        .table thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .table thead th {
-            background-color: var(--secondary-color);
-            color: white;
-            font-weight: 500;
-            padding: 1rem;
-            text-align: center;
-            vertical-align: middle;
-            position: sticky;
-            top: 0;
-        }
-
-        .table tbody tr {
-            transition: var(--transition);
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(67, 97, 238, 0.03);
-        }
-
-        .table td {
-            vertical-align: middle;
-            padding: 1rem;
-            text-align: center;
-            border-top: 1px solid #f1f3f9;
-        }
-
-        /* Action icons */
-        .action-icons {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-        }
-
-        .action-icons i {
-            font-size: 1.1rem;
-            transition: var(--transition);
-            padding: 0.5em;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .action-icons i.bi-trash {
-            color: var(--accent-color);
-        }
-
-        .action-icons i.bi-trash:hover {
-            background-color: rgba(247, 37, 133, 0.1);
-        }
-
-        .action-icons i.bi-pencil-square {
-            color: var(--primary-color);
-        }
-
-        .action-icons i.bi-pencil-square:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-        }
-
-        /* Empty state */
-        .empty-state {
-            padding: 2rem;
-            text-align: center;
-            color: var(--dark-gray);
-        }
-
-        .empty-state i {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: var(--medium-gray);
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 992px) {
-            
-            .management-container {
-                padding: 1rem;
-            }
-            
-            /* Enable horizontal scrolling for the table container */
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                width: 100%;
-            }
-            
-            .table {
-                min-width: 800px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            
-            .action-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .action-buttons .btn {
-                width: 100%;
-            }
-            
-            .table {
-                min-width: 600px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            
-            /* Keep horizontal scrolling for very small screens */
-            .table {
-                min-width: 500px;
-            }
-            
-            .management-container {
-                padding: 0.75rem;
-            }
-        }
-    </style>
 </head>
 <body>
     @php
@@ -292,7 +77,7 @@
             </div>
 
             <!-- Action Buttons Row -->
-            <div class="row mb-4">
+            <div class="row mb-2">
                 <div class="col-12">
                     <div class="action-buttons">
                         <button type="button" class="btn btn-primary" onclick="openMunicipalityModal()">
@@ -496,7 +281,7 @@
                         const barangayId = idInput.value;
                         
                         if (!password) {
-                            forceShowBarangayError('Please enter your password to confirm deletion.');
+                            forceShowBarangayError('{{ T::translate('Please enter your password to confirm deletion.', 'Mangyaring ilagay ang iyonhg password upang kumpirmahin ang pagtanggal.')}}');
                             return;
                         }
                         
@@ -520,12 +305,12 @@
                                 const modalBody = deleteModal.querySelector('.modal-body');
                                 if (modalBody) {
                                     modalBody.innerHTML = `
-                                        <div class="text-center mb-4">
+                                        <div class="text-center mb-2">
                                             <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-                                            <h5 class="mt-3 text-success">Success!</h5>
-                                            <p>The barangay has been successfully deleted.</p>
-                                            <p class="small text-muted">The page will reload shortly...</p>
-                                        </div>
+                                            <h5 class="mt-3 text-success">{{ T::translate('Success', 'Tagumpay')}}!</h5>
+                                            <p>{{ T::translate('The barangay has been successfully deleted.', 'Ang barangay ay matagumpay na na-tanggal')}}</p>
+                                            <p class="small text-muted">{{ T::translate('The page will reload shortly...', 'Ang page ay magre-reload nang ilang sandali...')}}</p>
+                                    </div>
                                     `;
                                 }
                                 
@@ -544,14 +329,14 @@
                                 // Here's where we ensure the error is shown
                                 forceShowBarangayError(data.message || 'Failed to delete barangay.');
                                 this.disabled = false;
-                                this.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Barangay';
+                                this.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Barangay', 'Tanggalin ang Barangay')}}';
                             }
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            forceShowBarangayError('An unexpected error occurred.');
+                            forceShowBarangayError('{{ T::translate('An unexpected error occurred.', 'Isang hindi inaasahang error ang naganap.')}}');
                             this.disabled = false;
-                            this.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Barangay';
+                            this.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Barangay', 'Tanggalin ang Barangay')}}';
                         });
                     });
                 }

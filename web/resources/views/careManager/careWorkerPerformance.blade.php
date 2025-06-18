@@ -7,123 +7,22 @@
     <title>Care Worker Performance</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <style>
-        .compact-chart {
-            height: 220px !important;
-            width: 100% !important;
-        }
-        .card-body {
-            padding: 1rem;
-        }
-        .card-header {
-            padding: 0.75rem 1rem;
-        }
-        .card-title {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-        h5 {
-            font-size: 1.1rem;
-        }
-        .table th, .table td {
-            font-size: clamp(0.8rem, 1vw, 1rem);
-        }
-
-        .table th {
-            font-weight: bold;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-        
-        tbody td{
-            vertical-align: middle;
-        }
-        th button{
-            transform: translateY(-3px);
-        }
-
-        tbody td {
-        vertical-align: middle;
-        }
-
-        th button {
-            transform: translateY(-3px);
-        }
-
-        #home-content {
-            font-size: clamp(0.8rem, 1vw, 1rem);
-        }
-
-        #home-content th,
-        #home-content td {
-            font-size: clamp(0.7rem, 0.9vw, 0.9rem);
-        }
-
-        #home-content .card-header,
-        #home-content .form-label {
-            font-size: clamp(0.9rem, 1.1vw, 1.1rem);
-        }
-
-        #home-content .btn {
-            font-size: 0.8rem;
-        }
-
-        #home-content .form-select,
-        #home-content .form-control {
-            font-size: 0.8rem;
-            padding: 0.25rem 0.5rem;
-        }
-
-        #home-content .table {
-            font-size: 0.8rem;
-        }
-
-        #beneficiaryDetailsRow .form-label {
-            font-size: clamp(0.8rem, 1vw, 1rem);
-        }
-
-        #beneficiaryDetailsRow .form-control {
-            font-size: clamp(0.8rem, 1vw, 1rem);
-            padding: 0.3rem 0.5rem;
-        }
-
-        #beneficiaryDetailsRow .card-header {
-            font-size: clamp(1rem, 1.2vw, 1.2rem);
-        }
-
-        .carousel-item table {
-            margin-bottom: 0;
-        }
-        
-        .carousel-control-prev,
-        .carousel-control-next {
-            display: none; /* Hide default carousel controls since we're using custom buttons */
-        }
-        
-        .position-relative .btn-outline-secondary {
-            margin-top: 0px;
-            padding: 0.1rem 0.4rem;
-        }
-        
-        /* Make intervention names bold in the table */
-        .table tbody td:first-child {
-            font-weight: 500;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/careWorkerPerformance.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div class="text-left">
-                <strong>CARE WORKER PERFORMANCE</strong>
+                <strong>{{ T::translate('CARE WORKER PERFORMANCE', 'PERFORMANCE NG MGA CARE WORKER')}}</strong>
             </div>
             <button class="btn btn-danger btn-md" id="exportPdfBtn">
-                <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+                <i class="bi bi-file-earmark-pdf"></i> {{ T::translate('Export to PDF', 'I-Export sa PDF') }}
             </button>
         </div>
         <div class="container-fluid">
@@ -132,13 +31,13 @@
                     <div class="card shadow-sm mb-3">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                <strong class="me-3">Filters</strong>
+                                <strong class="me-3">{{ T::translate('Filters', 'Pagsala')}}</strong>
                             </div>
                             <div>
                                 <button class="btn btn-outline-secondary btn-sm me-2" id="resetFilterBtn" style="display: none;">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                    <i class="bi bi-arrow-counterclockwise"></i> {{ T::translate('Reset', 'I-reset') }}
                                 </button>
-                                <button class="btn btn-primary btn-sm" id="applyFilterBtn">Apply Filters</button>
+                                <button class="btn btn-primary btn-sm" id="applyFilterBtn">{{ T::translate('Apply Filters', 'I-Apply ang Pagsala')}}</button>
                             </div>
                         </div>
                         <div class="card-body p-2">
@@ -146,9 +45,9 @@
                                 <div class="row g-2">
                                     <!-- Care Worker Select -->
                                     <div class="col">
-                                        <label for="careWorkerSelect" class="form-label">Select Care Worker:</label>
+                                        <label for="careWorkerSelect" class="form-label">{{ T::translate('Select Care Worker:', 'Pumili ng Care Worker')}}</label>
                                         <select class="form-select" id="careWorkerSelect" name="care_worker_id">
-                                            <option value="">All Care Workers</option>
+                                            <option value="">{{ T::translate('All Care Workers', 'Lahat ng Care Worker')}}</option>
                                             @foreach($careWorkers as $worker)
                                                 <option value="{{ $worker->id }}" {{ $selectedCareWorkerId == $worker->id ? 'selected' : '' }}>
                                                     {{ $worker->last_name }}, {{ $worker->first_name }}
@@ -159,9 +58,9 @@
                                     
                                     <!-- Municipalities Select -->
                                     <div class="col">
-                                        <label for="municipalitySelect" class="form-label">Select Municipality:</label>
+                                        <label for="municipalitySelect" class="form-label">{{ T::translate('Select Municipality:', 'Pumili ng Munisipalidad')}}</label>
                                         <select class="form-select" id="municipalitySelect" name="municipality_id" {{ $selectedCareWorkerId ? 'disabled' : '' }}>
-                                            <option value="">All Municipalities</option>
+                                            <option value="">{{ T::translate('All Municipalities', 'Lahat ng Munisipalidad')}}</option>
                                             @foreach($municipalities as $municipality)
                                                 <option value="{{ $municipality->municipality_id }}" {{ $selectedMunicipalityId == $municipality->municipality_id ? 'selected' : '' }}>
                                                     {{ $municipality->municipality_name }}
@@ -172,17 +71,17 @@
                                     
                                     <!-- Time Range Select -->
                                     <div class="col">
-                                        <label for="timeRange" class="form-label">Time Range:</label>
+                                        <label for="timeRange" class="form-label">{{ T::translate('Time Range:', 'Saklaw ng Oras:')}}</label>
                                         <select class="form-select" id="timeRange" name="time_range">
-                                            <option value="weeks" {{ $selectedTimeRange == 'weeks' ? 'selected' : '' }}>Monthly</option>
-                                            <option value="months" {{ $selectedTimeRange == 'months' ? 'selected' : '' }}>Range of Months</option>
-                                            <option value="year" {{ $selectedTimeRange == 'year' ? 'selected' : '' }}>Yearly</option>
+                                            <option value="weeks" {{ $selectedTimeRange == 'weeks' ? 'selected' : '' }}>{{ T::translate('Monthly', 'Buwanan')}}</option>
+                                            <option value="months" {{ $selectedTimeRange == 'months' ? 'selected' : '' }}>{{ T::translate('Range of Months', 'Hanay ng mga buwan')}}</option>
+                                            <option value="year" {{ $selectedTimeRange == 'year' ? 'selected' : '' }}>{{ T::translate('Yearly', 'Taunan')}}</option>
                                         </select>
                                     </div>
 
                                     <!-- Week Filter (visible by default) -->
                                     <div class="col {{ $selectedTimeRange != 'weeks' ? 'd-none' : '' }}" id="weekFilterContainer">
-                                        <label for="monthSelect" class="form-label">Select Month:</label>
+                                        <label for="monthSelect" class="form-label">{{ T::translate('Select Month:', 'Pumili ng buwan:')}}</label>
                                         <div class="d-flex">
                                             <select class="form-select" id="monthSelect" name="month" style="width: 60%;">
                                                 @for($i = 1; $i <= 12; $i++)
@@ -205,7 +104,7 @@
                                     <div class="col {{ $selectedTimeRange != 'months' ? 'd-none' : '' }}" id="monthRangeFilterContainer">
                                         <div class="row g-2">
                                             <div class="col-5">
-                                                <label for="startMonth" class="form-label">Start Month:</label>
+                                                <label for="startMonth" class="form-label">{{ T::translate('Start Month:', 'Simula na Buwan:')}}</label>
                                                 <select class="form-select" id="startMonth" name="start_month">
                                                     @for($i = 1; $i <= 12; $i++)
                                                         <option value="{{ $i }}" {{ $selectedStartMonth == $i ? 'selected' : '' }}>
@@ -215,7 +114,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-5">
-                                                <label for="endMonth" class="form-label">End Month:</label>
+                                                <label for="endMonth" class="form-label">{{ T::translate('End Month:', 'Katapusan na Buwan')}}</label>
                                                 <select class="form-select" id="endMonth" name="end_month">
                                                     @for($i = 1; $i <= 12; $i++)
                                                         <option value="{{ $i }}" {{ $selectedEndMonth == $i ? 'selected' : '' }}>
@@ -225,7 +124,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-2">
-                                                <label for="rangeYearSelect" class="form-label">Year:</label>
+                                                <label for="rangeYearSelect" class="form-label">{{ T::translate('Year:', 'Taon')}}</label>
                                                 <select class="form-select" id="rangeYearSelect" name="range_year">
                                                     @foreach($availableYears as $year)
                                                         <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
@@ -239,7 +138,7 @@
 
                                     <!-- Year Filter (hidden by default) -->
                                     <div class="col {{ $selectedTimeRange != 'year' ? 'd-none' : '' }}" id="yearFilterContainer">
-                                        <label for="yearOnlySelect" class="form-label">Select Year:</label>
+                                        <label for="yearOnlySelect" class="form-label">{{ T::translate('Select Year:', 'Pumili ng Taon')}}</label>
                                         <select class="form-select" id="yearOnlySelect" name="year">
                                             @foreach($availableYears as $year)
                                                 <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
@@ -255,7 +154,7 @@
                     
                     @if(!$hasRecords)
                         <div class="alert alert-info">
-                            No records found for the selected filters. Please try different filters.
+                            {{ T::translate('No records found for the selected filters. Please try different filters.', 'Walang nakitang mga tala para sa mga napiling filter. Mangyaring subukan ang iba\'t ibang mga filter.')}}
                         </div>
                     @endif
                     
@@ -265,7 +164,7 @@
                         <div class="col-md-4 mb-2">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Total Care Hours</h5>
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Total Care Hours', 'Kabuuang Oras ng Pangangalaga')}}</h5>
                                     <h2 class="text-primary" style="font-size: clamp(1.5rem, 2vw, 2rem);">
                                         {{ $formattedCareTime['hours'] }} hrs {{ $formattedCareTime['minutes'] > 0 ? $formattedCareTime['minutes'] . ' min' : '' }}
                                     </h2>
@@ -278,9 +177,9 @@
                         <div class="col-md-4 mb-2">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Active Care Workers</h5>
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Active Care Workers', 'Aktibong mga Tagapag-alaga')}}</h5>
                                     <h2 class="text-success" style="font-size: clamp(1.5rem, 2vw, 2rem);">{{ $activeCareWorkersCount }}</h2>
-                                    <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">Currently active</p>
+                                    <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">{{ T::translate('Currently active', 'Kasalukuyang Aktibo')}}</p>
                                 </div>
                             </div>
                         </div>
@@ -289,7 +188,7 @@
                         <div class="col-md-4 mb-2">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Total Care Services</h5>
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Total Care Services', 'Kabuuang Serbisyo sa Pangangalaga')}}</h5>
                                     <h2 class="text-warning" style="font-size: clamp(1.5rem, 2vw, 2rem);">{{ $totalInterventions }}</h2>
                                     <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">{{ $dateRangeLabel }}</p>
                                 </div>
@@ -302,7 +201,7 @@
                         <div class="col-12">
                             <div class="card shadow-sm">
                                 <div class="card-header text-center">
-                                    <strong>Care Services Summary</strong>
+                                    <strong>{{ T::translate('Care Services Summary', 'Buod ng mga Serbisyo sa Pangangalaga')}}</strong>
                                 </div>
                                 <div class="card-body p-2">
                                     <div id="careServicesCarousel" class="carousel slide" data-bs-interval="false">
@@ -323,9 +222,9 @@
                                                                 </th>
                                                             </tr>
                                                             <tr>
-                                                                <th>Intervention Implemented</th>
-                                                                <th class="text-center">Times Implemented</th>
-                                                                <th>Total Hours</th>
+                                                                <th>{{ T::translate('Intervention Implemented', 'Interbensiyon na Isinagawa')}}</th>
+                                                                <th class="text-center">{{ T::translate('Times Implemented', 'Beses na Isinagawa')}}</th>
+                                                                <th>{{ T::translate('Total Hours', 'Kabuuang Oras')}}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -340,7 +239,7 @@
                                                                 @endforeach
                                                             @else
                                                                 <tr>
-                                                                    <td colspan="3" class="text-center">None</td>
+                                                                    <td colspan="3" class="text-center">{{ T::translate('None', 'Wala')}}</td>
                                                                 </tr>
                                                             @endif
                                                         </tbody>
@@ -360,7 +259,7 @@
                         <div class="col-md-12 mb-2 mx-auto"> <!-- Using col-md-6 and mx-auto for centering -->
                             <div class="card h-100">
                                 <div class="card-header bg-white">
-                                    <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Most Implemented Interventions</h5>
+                                    <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Most Implemented Interventions', 'Pinaka-Isinagawang Interbensiyon')}}</h5>
                                 </div>
                                 <div class="card-body">
                                     <!-- Increase the height to make the chart taller -->
@@ -378,7 +277,7 @@
                         <div class="{{ $selectedCareWorkerId ? 'col-lg-6' : 'col-12' }} mb-2">
                             <div class="card h-100">
                                 <div class="card-header bg-white">
-                                    <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Time Per Care Category</h5>
+                                    <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Time Per Care Category', 'Oras kada Kategorya ng Pangangalaga')}}</h5>
                                 </div>
                                 <div class="card-body">
                                     <canvas id="timePerCategoryChart" height="{{ $selectedCareWorkerId ? '250' : '300' }}"></canvas>
@@ -391,7 +290,7 @@
                         <div class="col-lg-6 mb-2">
                             <div class="card h-100">
                                 <div class="card-header bg-white">
-                                    <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Client Care Breakdown</h5>
+                                    <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Client Care Breakdown', 'Pagkakahati ng mga Pangangalaga sa Kliyente')}}</h5>
                                 </div>
                                 <div class="card-body">
                                     <canvas id="clientCareChart" height="250"></canvas>
@@ -407,7 +306,7 @@
                             <div class="card shadow-sm">
                                 <div class="card-header bg-white">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">Care Worker Performance</h5>
+                                        <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Care Worker Performance', 'Performance ng mga Care Worker')}}</h5>
                                         <div>
                                             <button class="btn btn-sm btn-outline-secondary sort-btn" data-sort="asc">
                                                 <i class="bi bi-sort-alpha-down"></i> A-Z
@@ -423,10 +322,10 @@
                                         <table class="table table-bordered table-sm">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>Care Worker</th>
-                                                    <th class="text-center">Hours Worked</th>
-                                                    <th class="text-center">Beneficiary Visits</th>
-                                                    <th class="text-center">Interventions Performed</th>
+                                                    <th>{{ T::translate('Care Worker', 'Care Worker')}}</th>
+                                                    <th class="text-center">{{ T::translate('Hours Worked', 'Oras na Nagtrabaho')}}</th>
+                                                    <th class="text-center">{{ T::translate('Beneficiary Visits', 'Pagbisita sa Benepisyaryo')}}</th>
+                                                    <th class="text-center">{{ T::translate('Interventions Performed', 'Isinagawang Interbensiyon')}}</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="performanceTableBody">
@@ -439,7 +338,7 @@
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="4" class="text-center">No performance data available</td>
+                                                        <td colspan="4" class="text-center">{{ T::translate('No performance data available', 'Walang available na datos para sa performance.')}}</td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>

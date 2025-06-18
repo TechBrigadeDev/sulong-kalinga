@@ -1,9 +1,12 @@
 <!-- filepath: c:\xampp\htdocs\sulong_kalinga\resources\views\components\modals\editBarangay.blade.php -->
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="editBarangayModal" tabindex="-1" aria-labelledby="editBarangayModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editBarangayModalLabel">Edit Barangay</h5>
+                <h5 class="modal-title" id="editBarangayModalLabel">{{ T::translate('Edit Barangay', 'I-Edit ang Barangay')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -14,9 +17,9 @@
                 <div id="editBarangaySuccessContainer" class="d-none">
                     <p class="text-success">
                         <i class="bi bi-check-circle"></i>
-                        <strong>Success!</strong> <span id="editBarangaySuccessMessage">The barangay has been updated successfully.</span>
+                        <strong>Success!</strong> <span id="editBarangaySuccessMessage">{{ T::translate('The barangay has been updated successfully.', 'Ang Barangay ay matagumpay na na-update.')}}</span>
                     </p>
-                    <p>The page will reload shortly.</p>
+                    <p>{{ T::translate('The page will reload shortly.', 'Ang page ay magre-reload sa ilang sandali.')}}</p>
                 </div>
                 
                 <form id="editBarangayForm">
@@ -27,34 +30,34 @@
                     
                     <div id="editBarangayFormContent">
                         <div class="mb-3">
-                            <label for="editMunicipalityId" class="form-label">Municipality</label>
+                            <label for="editMunicipalityId" class="form-label">{{ T::translate('Municipality', 'Munisipalidad')}}</label>
                             <select class="form-select" id="editMunicipalityId" name="municipality_id" required>
-                                <option value="">Select Municipality</option>
+                                <option value="">{{ T::translate('Select Municipality', 'Pumili ng Munisipalidad')}}</option>
                                 @foreach($municipalities as $municipality)
                                     <option value="{{ $municipality->municipality_id }}">{{ $municipality->municipality_name }}</option>
                                 @endforeach
                             </select>
-                            <div class="form-text">You can change the municipality this barangay belongs to.</div>
+                            <div class="form-text">{{ T::translate('You can change the municipality this barangay belongs to.', 'Maari mong palitan ang munisipalidad na kinabibilangan ng barangay na ito.')}}</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="editBarangayName" class="form-label">Barangay Name</label>
+                            <label for="editBarangayName" class="form-label">{{ T::translate('Barangay Name', 'Pangalan ng Barangay')}}</label>
                             <input type="text" class="form-control" id="editBarangayName" name="barangay_name" required
                                    pattern="^[A-Z][A-Za-z][A-Za-z0-9\s\.\-']*$" 
                                    title="Barangay name must start with a capital letter, contain at least 2 letters, and can only include letters, numbers, spaces, periods, hyphens, and apostrophes">
-                            <div class="form-text">Enter the name of the barangay (e.g., San Roque, Zone 4, Barangay 1). Must start with a capital letter and contain at least 2 letters.</div>
+                            <div class="form-text">{{ T::translate('Enter the name of the barangay (e.g., San Roque, Zone 4, Barangay 1). Must start with a capital letter and contain at least 2 letters.', 'Ilagay ang pangalan ng barangay (hal., San Roque, Zone 4, Barangay 1). Dapat magsimula sa malaking titik at naglalaman ng hindi bababa sa 2 titik.')}}</div>
                         </div>
                         
                         <div class="alert alert-warning">
-                            <small><i class="bi bi-exclamation-circle me-1"></i> Barangay names must be unique within their municipality.</small>
+                            <small><i class="bi bi-exclamation-circle me-1"></i> {{ T::translate('Barangay names must be unique within their municipality.', 'Ang mga pangalan ng barangay ay dapat na natatangi sa loob ng kanilang munisipalidad.')}}</small>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelEditBarangayButton">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelEditBarangayButton">{{ T::translate('Cancel', 'I-Kansela')}}</button>
                 <button type="button" class="btn btn-primary" id="submitEditBarangay">
-                    <i class="bi bi-floppy"></i> Update Barangay
+                    <i class="bi bi-floppy"></i> {{ T::translate('Update Barangay', 'I-Update ang Barangay')}}
                 </button>
             </div>
         </div>
@@ -102,8 +105,8 @@ document.addEventListener('DOMContentLoaded', function() {
         editSuccessContainer.classList.add('d-none');
         submitEditButton.classList.remove('d-none');
         submitEditButton.disabled = false;
-        submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> Update Barangay';
-        cancelEditButton.textContent = 'Cancel';
+        submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> {{ T::translate('Update Barangay', 'I-Update ang Barangay')}}';
+        cancelEditButton.textContent = '{{ T::translate('Cancel', 'I-Kansela')}}';
         
         // Set form values
         document.getElementById('editBarangayId').value = id;
@@ -128,29 +131,29 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check if nothing changed
         if (barangayName === originalName && municipalityId === originalMunicipalityId) {
-            showEditDetailedError('No changes were made. Please modify the barangay name or municipality to update.');
+            showEditDetailedError('{{ T::translate('No changes were made. Please modify the barangay name or municipality to update.', 'Walang pagbabago ang ginawa. Mangyaring baguhin ang pangalan ng barangay o munisipalidad upang ma-update.')}}');
             return false;
         }
         
         if (!municipalityId) {
-            showEditDetailedError('Please select a municipality.');
+            showEditDetailedError('{{ T::translate('Please select a municipality.', 'Mangyaring pumili ng munisipalidad.')}}');
             return false;
         }
         
         if (!barangayName) {
-            showEditDetailedError('Barangay name is required.');
+            showEditDetailedError('{{ T::translate('Barangay name is required.', 'Ang pangalan ng barangay ay kinakailangan.')}}');
             return false;
         }
         
         // Name pattern validation
         const namePattern = /^[A-Z][A-Za-z][A-Za-z0-9\s\.\-']*$/;
         if (!namePattern.test(barangayName)) {
-            showEditDetailedError('Barangay name must start with a capital letter, contain at least 2 letters, and can only include letters, numbers, spaces, periods, hyphens, and apostrophes.');
+            showEditDetailedError('{{ T::translate('Barangay name must start with a capital letter, contain at least 2 letters, and can only include letters, numbers, spaces, periods, hyphens, and apostrophes.', 'Ang pangalan ng barangay ay dapat magsimula sa malaking titik, naglalaman ng hindi bababa sa 2 titik, at maaari lamang magsama ng mga titik, numero, puwang, tuldok, gitling, at kudlit.')}}');
             return false;
         }
         
         if (barangayName.length > 100) {
-            showEditDetailedError('Barangay name cannot exceed 100 characters.');
+            showEditDetailedError('{{ T::translate('Barangay name cannot exceed 100 characters.', 'Ang pangalan ng barangay ay hindi dapat lumampas sa 100 na karakter.')}}');
             return false;
         }
         
@@ -175,12 +178,12 @@ document.addEventListener('DOMContentLoaded', function() {
             guidance.className = 'mt-2 pt-2 border-top';
             guidance.innerHTML = `
                 <small class="text-muted">
-                    <strong>Barangay name tips:</strong>
+                    <strong>{{ T::translate('Barangay name tips:', 'Mga Tip para sa Pangalan ng Barangay:')}}</strong>
                     <ul class="mt-1 mb-0">
-                        <li>Must start with a capital letter (e.g., "San Roque" not "san roque")</li>
-                        <li>Must contain at least 2 letters</li>
-                        <li>Can include letters, numbers, spaces, periods, hyphens, and apostrophes</li>
-                        <li>Example: "San Roque", "Barangay 12", "Zone 4"</li>
+                        <li>{{ T::translate('Must start with a capital letter (e.g., "San Roque" not "san roque")', 'Dapat magsimula sa malaking titik (hal., "San Roque" hindi "san roque")')}}</li>
+                        <li>{{ T::translate('Must contain at least 2 letters', 'Dapat maglaman ng hindi bababa sa 2 titik ')}}</li>
+                        <li>{{ T::translate('Can include letters, numbers, spaces, periods, hyphens, and apostrophes', 'Maaaring magsama ng mga titik, numero, puwang, tuldok, gitling, at kudlit')}}</li>
+                        <li>{{ T::translate('Example: \"San Roque\", \"Barangay 12\", \"Zone 4\"', 'Halimbawa: \"San Roque\", \"Barangay 12\", \"Zone 4\"')}}</li>
                     </ul>
                 </small>
             `;
@@ -266,21 +269,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 // Enhance specific error messages
                                 if (error.includes('required')) {
-                                    enhancedError = 'The barangay name is required.';
+                                    enhancedError = '{{ T::translate('The barangay name is required.', 'Ang pangalan ng barangay ay kinakailangan.')}}';
                                 } 
                                 else if (error.includes('format is invalid') || error.includes('regex')) {
-                                    enhancedError = 'Barangay name must start with a capital letter, contain at least 2 letters, and can only include letters, numbers, spaces, periods, hyphens, and apostrophes.';
+                                    enhancedError = '{{ T::translate('Barangay name must start with a capital letter, contain at least 2 letters, and can only include letters, numbers, spaces, periods, hyphens, and apostrophes.', 'Ang pangalan ng barangay ay dapat magsimula sa malaking titik, naglalaman ng hindi bababa sa 2 titik, at maaari lamang magsama ng mga titik, numero, puwang, tuldok, gitling, at kudlit.')}}';
                                 }
-                                else if (error.includes('already exists') || error.includes('has already been taken') || error.includes('unique')) {
-                                    enhancedError = 'This barangay name already exists in the selected municipality.';
+                                else if (error.includes('{{ T::translate('already exists', 'mayroon na')}}') || error.includes('{{ T::translate('has already been taken', 'nakuha na')}}') || error.includes('{{ T::translate('unique', 'kakaiba')}}')) {
+                                    enhancedError = '{{ T::translate('This barangay name already exists in the selected municipality.', 'Ang pangalan ng barangay na ito ay umiiral na sa napiling munisipalidad.')}}';
                                 }
                                 else if (error.includes('exceed')) {
-                                    enhancedError = 'Barangay name cannot exceed 100 characters.';
+                                    enhancedError = '{{ T::translate('Barangay name cannot exceed 100 characters.', 'Ang pangalan ng barangay ay hindi dapat lumampas sa 100 na karakter.')}}';
                                 }
                             } else if (key === 'municipality_id') {
                                 hasMunicipalityError = true;
                                 if (error.includes('required')) {
-                                    enhancedError = 'Please select a municipality.';
+                                    enhancedError = '{{ T::translate('Please select a municipality.', 'Mangyaring pumili ng munisipalidad.')}}';
                                 }
                             }
                             
@@ -298,12 +301,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         guidance.className = 'mt-2 pt-2 border-top';
                         guidance.innerHTML = `
                             <small class="text-muted">
-                                <strong>Barangay name tips:</strong>
+                                <strong>{{ T::translate('Barangay name tips:', 'Mga Tip para sa pangalan ng Barangay:')}}</strong>
                                 <ul class="mt-1 mb-0">
-                                    <li>Must start with a capital letter (e.g., "San Roque" not "san roque")</li>
-                                    <li>Must contain at least 2 letters</li>
-                                    <li>Can include letters, numbers, spaces, periods, hyphens, and apostrophes</li>
-                                    <li>Example: "San Roque", "Barangay 12", "Zone 4"</li>
+                                    <li>{{ T::translate('Must start with a capital letter (e.g., "San Roque" not "san roque")', 'Dapat magsimula sa malaking titik (hal., "San Roque" hindi "san roque")')}}</li>
+                                    <li>{{ T::translate('Must contain at least 2 letters', 'Dapat maglaman ng hindi bababa sa 2 titik ')}}</li>
+                                    <li>{{ T::translate('Can include letters, numbers, spaces, periods, hyphens, and apostrophes', 'Maaaring magsama ng mga titik, numero, puwang, tuldok, gitling, at kudlit')}}</li>
+                                    <li>{{ T::translate('Example: \"San Roque\", \"Barangay 12\", \"Zone 4\"', 'Halimbawa: \"San Roque\", \"Barangay 12\", \"Zone 4\"')}}</li>
                                 </ul>
                             </small>
                         `;
@@ -315,18 +318,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Reset button
                 submitEditButton.disabled = false;
-                submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> Update Barangay';
+                submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> {{ T::translate('Update Barangay', 'I-Update ang Barangay')}}';
             }
         })
         .catch(error => {
             // Handle network errors
             editErrorContainer.classList.remove('d-none');
-            editErrorContainer.textContent = 'Network error. Please try again.';
+            editErrorContainer.textContent = '{{ T::translate('Network error. Please try again.', 'Error sa network. Mangyaring subukan muli.')}}';
             console.error('Error:', error);
             
             // Reset button
             submitEditButton.disabled = false;
-            submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> Update Barangay';
+            submitEditButton.innerHTML = '<i class="bi bi-floppy"></i> {{ T::translate('Update Barangay', 'I-Update ang Barangay')}}';
         });
     });
     

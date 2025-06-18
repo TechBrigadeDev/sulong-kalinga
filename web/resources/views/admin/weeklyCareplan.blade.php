@@ -6,8 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reports Management</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/weeklyCareplan.css') }}">
 
     <style>
@@ -57,7 +55,9 @@
     </style>
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
 
@@ -66,7 +66,7 @@
         
             <div class="container-fluid">
             <div id="success-message" class="alert alert-success alert-dismissible fade show mx-3" style="display:none;">
-                <strong>Success!</strong> Weekly care plan has been successfully edited.
+                <strong>Success!</strong> {{ T::translate('Weekly care plan has been successfully edited.', 'Ang weekly care plan ay matagumpay na na-edit.') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
                 <div class="row mb-1" id="weeklyCareplanForm">
@@ -77,7 +77,7 @@
                                 <div class="breadcrumb-container">
                                     <nav aria-label="breadcrumb">
                                         <ol class="breadcrumb">
-                                            <li class="breadcrumb-item active" data-page="1"><a href="javascript:void(0)">Personal Details</a></li>
+                                            <li class="breadcrumb-item active" data-page="1"><a href="javascript:void(0)">{{ T::translate('Personal Details', 'Personal na Detalye')}}</a></li>
                                             <li class="breadcrumb-item" data-page="2"><a href="javascript:void(0)">Mobility</a></li>
                                             <li class="breadcrumb-item" data-page="3"><a href="javascript:void(0)">Cognitive/Communication</a></li>
                                             <li class="breadcrumb-item" data-page="4"><a href="javascript:void(0)">Self-Sustainability</a></li>
@@ -103,14 +103,14 @@
                                         <div class="validation-error-container alert alert-danger mb-3" style="display: none;"></div>
                                             <div class="row mb-1">
                                                 <div class="col-12">
-                                                    <h5>Personal Details</h5>
+                                                    <h5>{{ T::translate('Personal Details', 'Personal na Detalye')}}</h5>
                                                 </div>
                                             </div>
                                             <div class="row mb-1">
                                                 <div class="col-md-4 col-sm-9 position-relative">
-                                                    <label for="beneficiary_id" class="form-label">Select Beneficiary</label>
+                                                    <label for="beneficiary_id" class="form-label">{{ T::translate('Select Beneficiary', 'Pumili ng Benepisyaryo')}}</label>
                                                     <select class="form-select" id="beneficiary_id" name="beneficiary_id">
-                                                            <option value="">-- Select Beneficiary --</option>
+                                                            <option value="">-- {{ T::translate('Select Beneficiary', 'Pumili ng Benepisyaryo')}} --</option>
                                                             @foreach($beneficiaries as $beneficiary)
                                                                 <option value="{{ $beneficiary->beneficiary_id }}">
                                                                     {{ $beneficiary->last_name }}, {{ $beneficiary->first_name }} {{ $beneficiary->middle_name }}
@@ -119,46 +119,46 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-2 col-sm-3">
-                                                    <label for="age" class="form-label">Age</label>
+                                                    <label for="age" class="form-label">{{ T::translate('Age', 'Edad')}}</label>
                                                     <input type="text" class="form-control" id="age" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">                                            </div>
                                                 <div class="col-md-3 col-sm-6">
-                                                    <label for="birthDate" class="form-label">Birthdate</label>
+                                                    <label for="birthDate" class="form-label">{{ T::translate('Birthdate', 'Petsa ng Kapanganakan')}}</label>
                                                     <input type="date" class="form-control" id="birthDate" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">                                            </div>
                                                 <div class="col-md-3 col-sm-6 position-relative">
-                                                    <label for="gender" class="form-label">Gender</label>
+                                                    <label for="gender" class="form-label">{{ T::translate('Gender', 'Kasarian')}}</label>
                                                     <input type="text" class="form-control" id="gender" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                 </div>
                                             </div>
                                             <div class="row mb-3">
                                                 <div class="col-md-3 col-sm-4 position-relative">
-                                                    <label for="civilStatus" class="form-label">Civil Status</label>
+                                                    <label for="civilStatus" class="form-label">{{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}</label>
                                                     <input type="text" class="form-control" id="civilStatus" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                     </div>
                                                 <div class="col-md-9 col-sm-8">
-                                                    <label for="address" class="form-label">Address</label>
+                                                    <label for="address" class="form-label">{{ T::translate('', '')}}{{ T::translate('Address', 'Tirahan')}}</label>
                                                     <input type="text" class="form-control" id="address" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                     </div>
                                             </div>
                                             <div class="row mb-3">
                                                 <div class="col-md-6 col-sm-12">
-                                                    <label for="condition" class="form-label">Medical Conditions</label>
+                                                    <label for="condition" class="form-label">{{ T::translate('Medical Conditions', 'Medikal na Kondisyon')}}</label>
                                                     <input type="text" class="form-control" id="medicalConditions" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                 </div>
                                                 <div class="col-md-6 col-sm-12">
-                                                    <label for="illness" class="form-label">Illness</label>
+                                                    <label for="illness" class="form-label">{{ T::translate('Illness', 'Sakit')}}</label>
                                                     <input type="text" class="form-control" id="illness" name="illness" 
                                                         placeholder="e.g. Cough, Fever (separate multiple illnesses with commas)" 
                                                         value="{{ old('illness') }}">
-                                                    <small class="form-text text-muted">Leave blank if no illness recorded. Separate multiple illnesses with commas.</small>
+                                                    <small class="form-text text-muted">{{ T::translate('Leave blank if no illness recorded. Separate multiple illnesses with commas.', 'Iwanang blangko kung walang sakit na nai-tala. Paghiwalayan ang maraming sakit gamit ang kuwit.')}}</small>
                                                 </div>
                                             </div>
                                             <hr my-4>
                                             <!-- Assessment, Vital Signs -->
                                             <div class="row mb-3 mt-2">
                                                 <div class="col-lg-6 col-md-6 col-sm-12 text-center">
-                                                    <label for="assessment" class="form-label"><h5>Assessment</h5></label>
+                                                    <label for="assessment" class="form-label"><h5>{{ T::translate('Assessment', 'Pagtatasa')}}</h5></label>
                                                     <textarea class="form-control @error('assessment') is-invalid @enderror" 
-                                                            id="assessment" name="assessment" rows="5">{{ old('assessment') }}</textarea>
+                                                            id="assessment" name="assessment" rows="10">{{ old('assessment') }}</textarea>
                                                     @error('assessment')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -167,7 +167,7 @@
                                                     <h5>Vital Signs</h5>
                                                     <div class="row">
                                                         <div class="col-md-6 col-sm-6">
-                                                            <label for="blood_pressure" class="form-label">Blood Pressure (mmHg)</label>
+                                                            <label for="blood_pressure" class="form-label">{{ T::translate('Blood Pressure', 'Presyon ng Dugo')}} (mmHg)</label>
                                                             <input type="text" class="form-control @error('blood_pressure') is-invalid @enderror" 
                                                                 id="blood_pressure" name="blood_pressure"
                                                                 placeholder="e.g. 120/80" value="{{ old('blood_pressure') }}"
@@ -179,12 +179,12 @@
                                                             @enderror
                                                         </div>
                                                         <div class="col-md-6 col-sm-6 position-relative">
-                                                            <label for="body_temperature" class="form-label">Body Temperature (°C)</label>
+                                                            <label for="body_temperature" class="form-label">{{ T::translate('Body Temperature', 'Temperatura ng Katawan')}} (°C)</label>
                                                             <input type="number" class="form-control @error('body_temperature') is-invalid @enderror" 
                                                                 id="body_temperature" name="body_temperature" 
                                                                 placeholder="e.g. 36.5" value="{{ old('body_temperature') }}"
                                                                 min="35" max="42" step="0.1">
-                                                            <small class="form-text text-muted">Enter a number between 35-42°C</small>
+                                                            <small class="form-text text-muted">{{ T::translate('Enter a number between', 'Maglagay ng numer na nasa pagintan ng')}} 35-42°C</small>
                                                             @error('body_temperature')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
@@ -192,23 +192,23 @@
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-md-6 col-sm-6">
-                                                            <label for="pulse_rate" class="form-label">Pulse Rate (bpm)</label>
+                                                            <label for="pulse_rate" class="form-label">{{ T::translate('Pulse Rate', 'Bilis ng Pulso')}} (bpm)</label>
                                                             <input type="number" class="form-control @error('pulse_rate') is-invalid @enderror" 
                                                                 id="pulse_rate" name="pulse_rate"
                                                                 placeholder="e.g. 72" value="{{ old('pulse_rate') }}"
                                                                 min="40" max="200" step="1">
-                                                            <small class="form-text text-muted">Enter a whole number (beats per minute)</small>
+                                                            <small class="form-text text-muted">{{ T::translate('Enter a whole number', 'Maglagay ng buong numero')}} (beats per minute)</small>
                                                             @error('pulse_rate')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
                                                         </div>
                                                         <div class="col-md-6 col-sm-6 position-relative">
-                                                            <label for="respiratory_rate" class="form-label">Respiratory Rate (bpm)</label>
+                                                            <label for="respiratory_rate" class="form-label">{{ T::translate('Respiratory Rate', 'Bilis ng Paghinga')}} (bpm)</label>
                                                             <input type="number" class="form-control @error('respiratory_rate') is-invalid @enderror" 
                                                                 id="respiratory_rate" name="respiratory_rate"
                                                                 placeholder="e.g. 16" value="{{ old('respiratory_rate') }}"
                                                                 min="8" max="40" step="1">
-                                                            <small class="form-text text-muted">Enter a whole number (breaths per minute)</small>
+                                                            <small class="form-text text-muted">{{ T::translate('Enter a whole number', 'Maglagay ng buong numero')}} (breaths per minute)</small>
                                                             @error('respiratory_rate')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
@@ -218,7 +218,7 @@
                                             </div>
                                             <div class="row mt-4">
                                                 <div class="col-12 d-flex justify-content-end">
-                                                <button type="button" class="btn btn-primary" onclick="goToPage(2)">Next <i class="fa fa-arrow-right"></i></button>
+                                                <button type="button" class="btn btn-primary" onclick="goToPage(2)">Next <i class="bi bi-arrow-right-short"></i></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -265,13 +265,13 @@
                                                     
                                                     <!-- Custom intervention for this category -->
                                                     <div class="mt-4">
-                                                        <h6>Add Custom {{ $category->care_category_name }} Intervention</h6>
+                                                        <h6>{{ T::translate('Add Custom', 'Magdagdag ng Custom na')}} {{ $category->care_category_name }} {{ T::translate('Intervention', 'Interbensyon')}}</h6>
                                                         <div class="custom-intervention-container" data-category="{{ $category->care_category_id }}">
                                                             <!-- Custom interventions will be added here -->
                                                         </div>
                                                         <button type="button" class="btn btn-sm btn-outline-primary add-custom-intervention"
                                                                 data-category="{{ $category->care_category_id }}">
-                                                            <i class="fa fa-plus"></i> Add Custom Intervention
+                                                            <i class="bi bi-plus"></i> {{ T::translate('Add Custom Intervention', 'Magdagdag ng Custom na Interbensyon')}}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -279,10 +279,10 @@
                                             
                                             <div class="d-flex justify-content-between">
                                                 <button type="button" class="btn btn-secondary" onclick="goToPage({{ $index + 1 }})">
-                                                    <i class="fa fa-arrow-left"></i> Previous
+                                                    <i class="bi bi-arrow-left-short"></i> {{ T::translate('Previous', 'Nakaraan')}}
                                                 </button>
                                                 <button type="button" class="btn btn-primary" onclick="goToPage({{ $index + 3 }})">
-                                                    Next <i class="fa fa-arrow-right"></i>
+                                                    {{ T::translate('Next', 'Susunod')}} <i class="bi bi-arrow-right-short"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -295,27 +295,27 @@
                                                     <div class="col-lg-6 col-md-6 col-sm-12 text-center">
                                                         <div class="row mb-3">
                                                             <div class="col-md-12 col-sm-12">
-                                                                <label for="upload_picture" class="form-label">Upload Picture <span class="text-danger">*</span></label>
+                                                                <label for="upload_picture" class="form-label">{{ T::translate('Upload Picture', 'Mag-upload ng Larawan')}} <span class="text-danger">*</span></label>
                                                                 <input type="file" class="form-control @error('upload_picture') is-invalid @enderror" 
                                                                     id="upload_picture" name="upload_picture" 
                                                                     accept="image/*" onchange="validateAndPreviewImage(event)" required>
-                                                                <small class="form-text text-muted">Use your camera or upload an image for validation purposes. Required.</small>
+                                                                <small class="form-text text-muted">{{ T::translate('Use your camera or upload an image for validation purposes. Required.', 'Gamitin ang iyong camera o mag-upload ng litrato para sa validation purposes. Kailangan.')}}</small>
                                                                 @error('upload_picture')
                                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                                 @enderror
-                                                                <small class="text-danger">Maximum file size: 7MB</small>
+                                                                <small class="text-danger">{{ T::translate('Maximum file size: 7MB', 'Maximum na laki ng file: 7MB')}}</small>
                                                             </div>
                                                             <div class="col-md-12 col-sm-12 text-center mt-2">
-                                                                <label class="form-label">Picture Preview</label>
+                                                                <label class="form-label">{{ T::translate('Picture Preview', 'Preview ng Larawan')}}</label>
                                                                 <div class="border p-2 d-flex justify-content-center align-items-center" style="height: 200px;">
                                                                     <img id="picture_preview" src="#" alt="Preview" class="img-fluid" style="max-height: 100%; display: none;">
-                                                                    <span id="no_preview_text">No image selected</span>
+                                                                    <span id="no_preview_text">{{ T::translate('No image selected', 'Walang napiling larawan')}}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 <div class="col-lg-6 col-md-6 col-sm-12 text-center">
-                                                    <label for="evaluation_recommendations" class="form-label"><h5>Recommendations and Evaluations</h5></label>
+                                                    <label for="evaluation_recommendations" class="form-label"><h5>{{ T::translate('Recommendations and Evaluations', 'Rekomendasyon at Ebalwasyon')}}</h5></label>
                                                     <textarea class="form-control @error('evaluation_recommendations') is-invalid @enderror" 
                                                             id="evaluation_recommendations" name="evaluation_recommendations" 
                                                             rows="6" >{{ old('evaluation_recommendations') }}</textarea>
@@ -328,10 +328,10 @@
                                             <div class="row mt-4">
                                                 <div class="col-12 d-flex justify-content-between align-items-center">
                                                     <button type="button" class="btn btn-secondary" onclick="goToPage(8)">
-                                                        <i class="fa fa-arrow-left"></i> Previous
+                                                        <i class="bi bi-arrow-left-short"></i> {{ T::translate('Previous', 'Nakaraan')}}
                                                     </button>
                                                     <button type="submit" class="btn btn-success">
-                                                        <i class="fa fa-save"></i> Save Weekly Care Plan
+                                                        <i class="bi bi-floppy"></i> {{ T::translate('Save Weekly Care Plan', 'I-Save ang Weekly Care Plan')}}
                                                     </button>
                                                 </div>
                                             </div>
@@ -360,7 +360,7 @@
             </div>
             <div class="col-md-1">
                 <button type="button" class="btn btn-sm btn-danger remove-custom-row">
-                    <i class="fa fa-times"></i>
+                    <i class="bi bi-x"></i>
                 </button>
             </div>
         </div>
