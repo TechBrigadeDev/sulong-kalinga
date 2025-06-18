@@ -12,196 +12,131 @@ def extract_sections_improved(sentences, doc_type="assessment"):
         sentence_docs = [nlp(sent) for sent in sentences]
     except Exception as e:
         print(f"Error processing sentences: {e}")
-        sentence_docs = []
+        sentence_docs = [None] * len(sentences)
     
     # Define section keywords with expanded terms for better matching
-    if doc_type.lower() == "assessment":
-        section_keywords = {
-            "mga_sintomas": [
-                # General symptom terms
-                "sakit", "sintomas", "hirap", "dumaranas", "nararamdaman", "nakakaranas", 
-                "nagpapakita", "kondisyon", "diagnosed", "masakit", "sumasakit", "kirot",
-                "nahihirapan", "problema sa", "nagkaroon ng", "nagdurusa sa",
-                
-                # Specific symptoms and manifestations
-                "pain", "ache", "soreness", "tenderness", "discomfort", "burning",
-                "stabbing", "throbbing", "radiating", "chronic pain", "acute pain",
-                "neuropathic", "muscle pain", "joint pain", "abdominal pain",
-                "chest pain", "back pain", "headache", "sakit ng ulo",
-                
-                # Neurological symptoms
-                "dizziness", "vertigo", "lightheadedness", "fainting", "syncope",
-                "seizure", "tremors", "shaking", "panginginig", "numbness", "tingling",
-                "pamamanhid", "weakness", "paralysis", "incoordination",
-                
-                # Respiratory symptoms
-                "cough", "ubo", "shortness of breath", "hirap huminga", "wheezing",
-                "huni", "sputum", "plema", "hemoptysis", "dugo sa ubo", 
-                "chest tightness", "kapos sa hininga"
-            ],
-            
-            "kalagayan_pangkatawan": [
-                # Basic physical terms
-                "pisikal", "katawan", "lakas", "kahinaan", "balance", "koordinasyon",
-                "physical", "stance", "posture", "tindig", "galaw", "coordination",
-                
-                # Body systems & functions
-                "cardiovascular", "respiratory", "musculoskeletal", "heart", "puso", 
-                "baga", "lungs", "atay", "liver", "bato", "kidney", "presyon", 
-                "blood pressure", "weight", "timbang", "pulse", "rhythm", "pulso",
-                "breathing", "paghinga", "oxygen", "muscle", "kalamnan", "joints",
-                "neuromuscular", "respiratory", "digestion", "excretion", "circulation",
-                
-                # Physical measurements
-                "BMI", "pulse ox", "vital signs", "blood pressure", "temperature",
-                "height", "weight", "range of motion", "muscle strength", "endurance"
-            ],
-            
-            "kalagayan_mental": [
-                # Cognitive aspects
-                "memorya", "nakalimutan", "nalilito", "naguguluhan", "pagkalito",
-                "cognitive", "mental", "isip", "memory", "forgetful", "disorientation",
-                "concentration", "disoriented", "confused", "hindi matandaan",
-                "attention span", "awareness", "alertness", "orientation",
-                "decision-making", "judgment", "reasoning", "comprehension",
-                
-                # Emotional aspects
-                "emosyon", "emotion", "kalungkutan", "pagkabalisa", "depression", 
-                "anxiety", "mood", "affect", "irritability", "agitation",
-                "sadness", "hopelessness", "fear", "takot", "worry", "stress",
-                "coping", "emotional state", "feelings", "damdamin"
-            ],
-            
-            "aktibidad": [
-                # Daily activities
-                "gawain", "aktibidad", "activity", "araw-araw", "daily", "self-care",
-                "routine", "schedule", "regular", "tasks", "chores", "responsibilities",
-                
-                # ADLs
-                "pagligo", "bathing", "pagbibihis", "dressing", "pagkain", "feeding",
-                "toileting", "hygiene", "grooming", "eating", "sleeping", "pagtulog",
-                
-                # Mobility
-                "mobility", "paggalaw", "walking", "paglalakad", "trabaho", "work",
-                "standing", "pagtayo", "bed mobility", "transfers", "wheelchair",
-                "walker", "cane", "tungkod", "assistive device", "mobility aid",
-                
-                # IADLs
-                "cooking", "cleaning", "shopping", "finances", "transportation",
-                "medication management", "communication", "phone", "computer"
-            ],
-            
-            "kalagayan_social": [
-                # Relationships
-                "pamilya", "asawa", "anak", "social", "pakikisalamuha", "kaibigan", 
-                "friend", "spouse", "family", "relatives", "kamag-anak", "apo",
-                
-                # Social environment
-                "kapitbahay", "komunidad", "simbahan", "church", "pakikitungo", 
-                "ugnayan", "community", "neighborhood", "support system", "network",
-                "social engagement", "participation", "interaction", "isolation",
-                "loneliness", "withdrawal"
-            ]
-        }
-    else:  # Evaluation document sections
-        section_keywords = {
-            "pangunahing_rekomendasyon": [
-                # Direct recommendation terms
-                "inirerekomenda", "iminumungkahi", "pinapayuhan", "dapat", "kailangan", 
-                "mahalagang", "ipinapayo", "nirerekomenda", "binigyang-diin", "iminungkahi", 
-                "kinakailangan", "mabuting", "mainam", "mas mainam", "sulit",
-                
-                # Priority language
-                "kritikal", "mahalaga", "essential", "urgent", "agarang",
-                "high priority", "immediate", "necessary", "importante",
-                "crucial", "vital", "indispensable", "non-negotiable",
-                
-                # Professional advice
-                "ayon sa eksperto", "batay sa research", "evidence shows", 
-                "clinical guidelines", "standard practice", "best practice"
-            ],
-            
-            "pangangalaga": [
-                # Care management
-                "pag-iwas", "monitor", "obserbahan", "bantayan", "management", 
-                "symptom management", "preventive care", "care techniques", 
-                "maintenance", "prevention", "alaga", "supervision", 
-                "pagsubaybay", "monitoring", "observation",
-                
-                # Specific care procedures
-                "wound care", "skin care", "pressure relief", "pain management",
-                "pangangalaga", "pagbabantay", "pagbibigay ng gamot", "positioning",
-                "comfort measures", "palliative care", "supportive care"
-            ],
-            
-            "mga_hakbang": [
-                # Action verbs
-                "simulan", "gawin", "ipatupad", "isagawa", "sundin", "interventions", 
-                "measures", "implement", "execute", "perform", "conduct", "carry out",
-                "undertake", "administer", "provide", "apply", "deliver", "follow",
-                
-                # Treatment terms
-                "treatment", "therapy", "program", "regimen", "protocol", "procedure",
-                "exercises", "techniques", "methods", "approaches", "strategies",
-                "interventions", "rehabilitation", "restoration", "recovery"
-            ],
-            
-            "pagbabago_sa_pamumuhay": [
-                # Lifestyle components
-                "diet", "nutrition", "pagkain", "ehersisyo", "physical activity", 
-                "lifestyle", "routine", "habits", "daily schedule", "araw-araw",
-                "sleep", "stress management", "work-life balance", "recreation",
-                
-                # Modification terms
-                "adjustment", "modification", "change", "shift", "transition",
-                "adaptation", "pagbabago", "pag-adjust", "pagsasaayos", "improvement",
-                "enhancement", "reduction", "increase", "moderation"
-            ]
-        }
+    section_keywords = {
+        "mga_sintomas": [
+            "sintomas", "sakit", "nararamdaman", "sumasakit", "masakit", "kirot", 
+            "nagpapakita", "kondisyon", "lumalala", "bumubuti", "symptoms",
+            "nahihirapan", "dumaranas", "nakakaramdam", "condition", "naobserbahan",
+            "napansin", "nakita", "issues", "problema", "nagdurusa", "mahina",
+            "pagbabago", "change", "kakaiba", "abnormal", "unusual", "hindi normal",
+            # Enhanced symptom keywords
+            "pananakit", "lumalala", "pagbabago", "episode", "attack",
+            "kombulsyon", "namamanhid", "numbness", "tusok-tusok",
+            "difficulty", "hindi makagalaw", "hindi makatulog", "insomnia",
+            "palaging", "persistent", "chronic", "paulit-ulit", "recurring",
+            "paranoia", "agitation", "confusion", "hallucination"
+        ],
+        "kalagayan_pangkatawan": [
+            "pisikal", "physical", "katawan", "body", "lakas", "strength", "bigat", "weight",
+            "timbang", "tangkad", "height", "vital signs", "temperatura", "temperature",
+            "pagkain", "eating", "paglunok", "swallowing", "paglakad", "walking",
+            "balanse", "balance", "paggalaw", "movement", "koordinasyon", "coordination",
+            "panginginig", "tremors", "nanghihina", "weakness", "pagod", "fatigue",
+            "paglalakad", "mobility", "joints", "kasukasuan", "namamaga", "swelling",
+            # Enhanced physical condition keywords
+            "blood pressure", "presyon", "heart rate", "pulso", "respiratory",
+            "paghinga", "oxygen", "sugar level", "glucose", "hydration", "dehydration",
+            "nutrisyon", "pagbaba ng timbang", "pagtaba", "edema", "pamamaga",
+            "kakayahang gumalaw", "stamina", "lakas ng katawan", "posture"
+        ],
+        "kalagayan_mental": [
+            "mental", "isip", "cognitive", "cognition", "pag-iisip", "memorya", "memory",
+            "nakalimutan", "forget", "pagkalito", "confusion", "disorientation",
+            "hindi makapag-concentrate", "concentration", "hindi makafocus", "focus",
+            "pagkataranta", "agitation", "irritable", "mairita", "emotional", "emosyonal",
+            "kalungkutan", "depression", "lungkot", "sad", "malungkot", "mood", "estado ng isip",
+            "paranoia", "pagdududa", "suspicion", "doubt", "pag-aalala", "worry", "anxiety",
+            "stress", "pressure", "tension",
+            # Enhanced mental state keywords
+            "orientation", "oryentasyon", "awareness", "pagkakaalam", "alertness",
+            "responsiveness", "pagtugon", "attention span", "atensyon", 
+            "decision-making", "pagpapasya", "judgment", "paghatol", "reasoning",
+            "pangangatwiran", "delusions", "pagkabaliw", "psychosis", 
+            "mood swings", "pagbabago ng mood", "personality changes", 
+            "behavior changes", "pagbabago ng ugali", "fears", "takot", 
+            "dementia", "demensya", "Alzheimer's", "cognitive decline"
+        ],
+        "aktibidad": [
+            "aktibidad", "activities", "gawain", "task", "daily living", "araw-araw",
+            "routine", "gawing", "self-care", "personal care", "pangangalaga sa sarili",
+            "hygiene", "kalinisan", "pagligo", "bathing", "pagbibihis", "dressing",
+            "pagkain", "eating", "pagluluto", "cooking", "paglilinis", "cleaning",
+            "exercise", "ehersisyo", "therapy", "therapiya", "hobbies", "libangan",
+            "social activities", "pakikisalamuha", "pakikipag-usap", "communication",
+            # Enhanced activity keywords
+            "mobility", "paggalaw", "ambulation", "paglalakad", "transfers",
+            "paglipat", "bed mobility", "paggalaw sa kama", "independence",
+            "dependence", "pag-asa sa iba", "tungkod", "cane", "walker",
+            "wheelchair", "silya de gulong", "crutches", "saklay", 
+            "transportasyon", "lakad", "pamimili", "gawaing bahay"
+        ],
+        "kalagayan_social": [
+            "relasyon", "relationship", "pamilya", "family", "social", "pakikisalamuha",
+            "kaibigan", "friends", "komunidad", "community", "suporta", "support",
+            "pakikipag-usap", "communication", "pakikipag-interact", "interaction",
+            "asawa", "spouse", "anak", "children", "kamag-anak", "relatives",
+            "kapitbahay", "neighbors", "kakilala", "acquaintances", "visitors",
+            "bisita", "group", "organization", "samahan",
+            # Enhanced social keywords
+            "socialization", "pakikihalubilo", "isolation", "pagkakahiwalay",
+            "loneliness", "kalungkutan", "withdrawal", "pag-iwas", "social network",
+            "involvement", "participation", "pakikilahok", "church", "simbahan",
+            "volunteer", "boluntaryo", "caregiver", "tagapag-alaga", 
+            "tulong", "financial support", "sustento", "living situation",
+            "tirahan", "kapangyarihan sa bahay", "household dynamics"
+        ]
+    }
     
-    # Initialize scoring for each sentence-section pair
+    # Initialize scoring for each sentence-section pair with improved weights
     sentence_scores = {}
     for i, (sent, doc) in enumerate(zip(sentences, sentence_docs)):
-        sent_lower = sent.lower()
-        scores = {}
+        if not doc:
+            continue
+            
+        sentence_scores[i] = {}
         
-        # Score each section for this sentence
+        # Get sentence length for normalization
+        sent_length = len(sent.split())
+        
         for section, keywords in section_keywords.items():
-            # Base score from keyword matches
-            keyword_matches = sum(1 for keyword in keywords if keyword in sent_lower)
+            # Calculate base score from keyword matches
+            base_score = 0
+            for keyword in keywords:
+                if keyword.lower() in sent.lower():
+                    # Give higher score to exact matches
+                    if f" {keyword.lower()} " in f" {sent.lower()} ":
+                        base_score += 1.5  # Full word match
+                    else:
+                        base_score += 1.0  # Partial match
             
-            # Entity-based matching with stronger weighting
-            entity_score = 0
-            for ent in doc.ents:
-                # Map entity types to relevant sections
-                if section == "mga_sintomas" and ent.label_ in ["SYMPTOM", "DISEASE"]:
-                    entity_score += 2
-                elif section == "kalagayan_pangkatawan" and ent.label_ in ["BODY_PART", "MEASUREMENT"]:
-                    entity_score += 2
-                elif section == "kalagayan_mental" and ent.label_ in ["COGNITIVE", "EMOTION"]:
-                    entity_score += 2
-                elif section == "aktibidad" and ent.label_ in ["ADL", "SAFETY"]:
-                    entity_score += 2
-                elif section == "kalagayan_social" and ent.label_ in ["SOCIAL_REL", "SOCIAL_ACT"]:
-                    entity_score += 2
-                elif section == "pangunahing_rekomendasyon" and ent.label_ in ["RECOMMENDATION", "HEALTHCARE_REFERRAL"]:
-                    entity_score += 2
-                elif section == "pangangalaga" and ent.label_ in ["TREATMENT", "MONITORING"]:
-                    entity_score += 2
-                elif section == "mga_hakbang" and ent.label_ in ["TREATMENT_METHOD", "EQUIPMENT"]:
-                    entity_score += 2
-                elif section == "pagbabago_sa_pamumuhay" and ent.label_ in ["DIET_RECOMMENDATION", "FOOD"]:
-                    entity_score += 2
+            # Normalize by sentence length to avoid favoring long sentences
+            if sent_length > 20:
+                base_score = base_score * (20 / sent_length) * 1.5
             
-            # Position-based scoring - first sentences often indicate topic
-            position_score = 1.5 if i == 0 else (0.5 if i == len(sentences)-1 else 0)
+            # Enhance score based on entity types present
+            entity_boost = 0
+            if doc.ents:
+                for ent in doc.ents:
+                    if section == "mga_sintomas" and ent.label_ in ["SYMPTOM", "DISEASE"]:
+                        entity_boost += 3
+                    elif section == "kalagayan_pangkatawan" and ent.label_ in ["BODY_PART", "MEASUREMENT"]:
+                        entity_boost += 2.5
+                    elif section == "kalagayan_mental" and ent.label_ in ["COGNITIVE", "EMOTION"]:
+                        entity_boost += 2.5
+                    elif section == "aktibidad" and ent.label_ in ["ADL"]:
+                        entity_boost += 2.5
+                    elif section == "kalagayan_social" and ent.label_ in ["SOCIAL_REL", "PER", "ENVIRONMENT"]:
+                        entity_boost += 2
             
-            # Calculate total score
-            total_score = keyword_matches + entity_score + position_score
-            if total_score > 0:
-                scores[section] = total_score
-                
-        sentence_scores[i] = (sent, scores)
+            # First few sentences often provide overview/symptoms
+            if i < 2 and section == "mga_sintomas":
+                base_score += 1
+            
+            # Save the combined score
+            sentence_scores[i][section] = base_score + entity_boost
     
     # Assign sentences to sections based on scores
     result = {}
@@ -211,45 +146,57 @@ def extract_sections_improved(sentences, doc_type="assessment"):
     for section in section_keywords.keys():
         result[section] = []
     
-    # First pass: Assign sentences with clear high scores
+    # FIRST PASS: Assign sentences with clear high scores
+    threshold = 2.5  # Higher threshold for clear assignment
     for section in section_keywords.keys():
-        section_candidates = []
+        sorted_sentences = sorted(sentence_scores.items(), 
+                                  key=lambda x: -x[1].get(section, 0))
         
-        for i, (sent, scores) in sentence_scores.items():
+        # Take up to 5 sentences with high scores
+        count = 0
+        max_sentences = 5
+        
+        for i, scores in sorted_sentences:
             if i in assigned_sentences:
                 continue
                 
-            if section in scores and scores[section] >= 2:  # Strong signal
-                section_candidates.append((i, sent, scores[section]))
-        
-        # Sort by score and add top sentences
-        for i, sent, score in sorted(section_candidates, key=lambda x: x[2], reverse=True):
-            result[section].append(sent)
-            assigned_sentences.add(i)
-    
-    # Second pass: Assign remaining sentences to their best-matching section
-    for i, (sent, scores) in sentence_scores.items():
-        if i in assigned_sentences:
-            continue
+            section_score = scores.get(section, 0)
+            next_best_score = max([s for k, s in scores.items() if k != section], default=0)
             
-        # Find best section for this sentence
-        if scores:
+            # Only assign if score is high and clearly better than other sections
+            if (section_score >= threshold and 
+                section_score > next_best_score * 1.25 and
+                count < max_sentences):
+                
+                result[section].append(sentences[i])
+                assigned_sentences.add(i)
+                count += 1
+    
+    # SECOND PASS: Assign remaining sentences to their best-matching section
+    section_counts = {s: len(sents) for s, sents in result.items()}
+    max_sentences_per_section = 5
+    
+    for i, scores in sorted(sentence_scores.items(), 
+                           key=lambda x: -max(x[1].values() if x[1] else [0])):
+        if i not in assigned_sentences and any(scores.values()):
             best_section = max(scores.items(), key=lambda x: x[1])[0]
-            result[best_section].append(sent)
-            assigned_sentences.add(i)
-        else:
-            # Default assignment for sentences with no matches
-            default_section = "mga_sintomas" if doc_type.lower() == "assessment" else "pangunahing_rekomendasyon"
-            result[default_section].append(sent)
-            assigned_sentences.add(i)
+            
+            # Only add if we haven't reached the max sentences for this section
+            if section_counts.get(best_section, 0) < max_sentences_per_section:
+                result[best_section].append(sentences[i])
+                assigned_sentences.add(i)
+                section_counts[best_section] = section_counts.get(best_section, 0) + 1
+    
+    # THIRD PASS: Ensure sentences are in logical order within each section
+    for section in result:
+        # Get the indices of assigned sentences and sort them
+        indices = [i for i, sent in enumerate(sentences) if sent in result[section]]
+        # Reorder sentences based on original order
+        result[section] = [sentences[i] for i in sorted(indices)]
     
     # Ensure at least one section has content
     if all(not sents for sents in result.values()) and sentences:
-        # Create fallback section with first sentence
-        if doc_type.lower() == "assessment":
-            result["mga_sintomas"] = [sentences[0]]
-        else:
-            result["pangunahing_rekomendasyon"] = [sentences[0]]
+        result["mga_sintomas"] = sentences[:5]  # Limit to 5 sentences
     
     # Convert lists to strings
     return {section: " ".join(sents) for section, sents in result.items() if sents}
@@ -269,21 +216,49 @@ def extract_sections_for_evaluation(sentences):
         "pagbabago_sa_pamumuhay": []
     }
     
-    # Strong signal patterns for each section
+    # Strong signal patterns for each section with expanded patterns
     section_patterns = {
         "pangunahing_rekomendasyon": [
             r'inirerekomenda(ng)? (ko|kong|namin|naming) (na|ang)',
             r'iminumungkahi(ng)? (ko|kong|namin|naming) (na|ang)',
             r'pinapayuhan (ko|kong|namin|naming) (na|ang)',
             r'(una sa lahat|bilang pangunahing hakbang)',
-            r'(dapat|kailangan|kinakailangan|mahalagang) (na )?'
+            r'(dapat|kailangan|kinakailangan|mahalagang) (na )?',
+            r'rekomendasyon',
+            r'agarang pagkonsulta',
+            r'immediate consultation',
+            r'priority',
+            r'most important',
+            r'critical',
+            r'crucial',
+            r'essential',
+            r'necessary',
+            r'kailangang',
+            r'kinakailangan',
+            r'referral',
+            r'irefer'
         ],
         
         "mga_hakbang": [
             r'(simulan|gawin|ipatupad|isagawa) ang',
             r'(susunod na hakbang|sa|mga|bilang) (hakbang|steps|interventions)',
             r'(dapat|kailangang) (din|rin) (na )?',
-            r'(pangalawang|pangatlo|kasunod na) hakbang'
+            r'(pangalawang|pangatlo|kasunod na) hakbang',
+            r'procedure',
+            r'process',
+            r'method',
+            r'technique',
+            r'approach',
+            r'implementation',
+            r'implement',
+            r'execute',
+            r'perform',
+            r'apply',
+            r'administer',
+            r'isagawa',
+            r'gawin',
+            r'therapy sessions',
+            r'treatment course'
         ],
         
         "pangangalaga": [
@@ -292,7 +267,23 @@ def extract_sections_for_evaluation(sentences):
             r'(sa pang-araw-araw na pangangalaga|daily care)',
             r'(sa bahay|home care|home management)',
             r'(kapag|kung|sa) (nagkaroon|nagkakaroon)',
-            r'(palaging|regular na|always|consistently)'
+            r'(palaging|regular na|always|consistently)',
+            r'care',
+            r'alaga',
+            r'monitoring',
+            r'pagbabantay',
+            r'observation',
+            r'pagmamasid',
+            r'maintenance',
+            r'management',
+            r'hygiene',
+            r'kalinisan',
+            r'bathing',
+            r'pagliligo',
+            r'grooming',
+            r'pag-aayos',
+            r'positioning',
+            r'pagpoposisyon'
         ],
         
         "pagbabago_sa_pamumuhay": [
@@ -300,7 +291,29 @@ def extract_sections_for_evaluation(sentences):
             r'(diet|nutrisyon|nutrition|pagkain)',
             r'(exercise|ehersisyo|physical activity)',
             r'(normal na routine|daily habits|araw-araw)',
-            r'(long-term|pangmatagalang|sa hinaharap|future)'
+            r'(long-term|pangmatagalang|sa hinaharap|future)',
+            r'lifestyle',
+            r'pamumuhay',
+            r'habits',
+            r'ugali',
+            r'practices',
+            r'gawain',
+            r'routines',
+            r'modifications',
+            r'adjustments',
+            r'changes',
+            r'pagbabago',
+            r'diet plan',
+            r'meal plan',
+            r'exercise program',
+            r'sleep',
+            r'tulog',
+            r'hydration',
+            r'pag-inom ng tubig',
+            r'stress management',
+            r'relaxation',
+            r'environment',
+            r'kapaligiran'
         ]
     }
     
@@ -308,15 +321,20 @@ def extract_sections_for_evaluation(sentences):
     assigned_sentences = set()
     
     for section, patterns in section_patterns.items():
+        # Limit to 5 sentences per section
+        section_count = 0
+        max_per_section = 5
+        
         for i, sent in enumerate(sentences):
-            if i in assigned_sentences:
+            if i in assigned_sentences or section_count >= max_per_section:
                 continue
                 
-            sent_lower = sent.lower()
+            # Check if sentence matches any pattern for this section
             for pattern in patterns:
-                if re.search(pattern, sent_lower):
+                if re.search(pattern, sent.lower()):
                     sections[section].append(sent)
                     assigned_sentences.add(i)
+                    section_count += 1
                     break
     
     # Second pass: Analyze entities for remaining sentences
@@ -324,54 +342,53 @@ def extract_sections_for_evaluation(sentences):
         if i in assigned_sentences:
             continue
             
-        # Analyze entities
-        recommendation_count = 0
-        treatment_count = 0
-        monitoring_count = 0
-        lifestyle_count = 0
+        section_scores = {section: 0 for section in sections.keys()}
         
-        for ent in doc.ents:
-            if ent.label_ in ["RECOMMENDATION", "HEALTHCARE_REFERRAL"]:
-                recommendation_count += 1
-            elif ent.label_ in ["TREATMENT_METHOD", "TREATMENT", "EQUIPMENT"]:
-                treatment_count += 1
-            elif ent.label_ in ["MONITORING", "WARNING_SIGN"]:
-                monitoring_count += 1
-            elif ent.label_ in ["DIET_RECOMMENDATION", "FOOD"]:
-                lifestyle_count += 1
+        # Score based on entities
+        if doc.ents:
+            for ent in doc.ents:
+                if ent.label_ == "RECOMMENDATION":
+                    section_scores["pangunahing_rekomendasyon"] += 2
+                elif ent.label_ in ["TREATMENT_METHOD", "TREATMENT"]:
+                    section_scores["mga_hakbang"] += 2
+                elif ent.label_ in ["MONITORING", "HEALTHCARE_REFERRAL"]:
+                    section_scores["pangangalaga"] += 2
+                elif ent.label_ in ["DIET_RECOMMENDATION", "FOOD", "HOME_MODIFICATION"]:
+                    section_scores["pagbabago_sa_pamumuhay"] += 2
         
-        # Assign based on entity counts
-        max_count = max(recommendation_count, treatment_count, monitoring_count, lifestyle_count)
+        # Score based on keywords and context
+        for section, patterns in section_patterns.items():
+            for word in sent.split():
+                if any(pattern.lower() in word.lower() for pattern in patterns):
+                    section_scores[section] += 0.5
         
-        if max_count > 0:
-            if max_count == recommendation_count:
-                sections["pangunahing_rekomendasyon"].append(sent)
-            elif max_count == treatment_count:
-                sections["mga_hakbang"].append(sent)
-            elif max_count == monitoring_count:
-                sections["pangangalaga"].append(sent)
-            elif max_count == lifestyle_count:
-                sections["pagbabago_sa_pamumuhay"].append(sent)
-            
-            assigned_sentences.add(i)
+        # Assign to highest scoring section if score is significant
+        best_section = max(section_scores.items(), key=lambda x: x[1])
+        if best_section[1] >= 1.5:  # More stringent threshold
+            if len(sections[best_section[0]]) < 5:  # Respect max 5 sentences per section
+                sections[best_section[0]].append(sent)
+                assigned_sentences.add(i)
     
-    # Third pass: Default assignment of remaining sentences
-    for i, sent in enumerate(sentences):
-        if i in assigned_sentences:
-            continue
-            
-        # Default to "pangunahing_rekomendasyon" for first sentence
-        if i == 0:
-            sections["pangunahing_rekomendasyon"].append(sent)
-        # For remaining sentences, distribute evenly across sections that need content
-        else:
-            # Find the section with the least content
-            empty_sections = [s for s, sentences in sections.items() if not sentences]
-            if empty_sections:
-                sections[empty_sections[0]].append(sent)
-            else:
-                min_section = min(sections.items(), key=lambda x: len(x[1]))[0]
-                sections[min_section].append(sent)
+    # Third pass: Default assignment of remaining important sentences
+    remaining = [i for i in range(len(sentences)) if i not in assigned_sentences]
+    
+    # Prefer assigning introductory sentences to pangunahing_rekomendasyon
+    for i in remaining:
+        if i < 2:  # First two sentences
+            if len(sections["pangunahing_rekomendasyon"]) < 5:
+                sections["pangunahing_rekomendasyon"].append(sentences[i])
+                assigned_sentences.add(i)
+    
+    # Sort sentences within each section to maintain original flow
+    for section in sections:
+        # Get the indices of assigned sentences and sort them
+        indices = []
+        for i, sent in enumerate(sentences):
+            if sent in sections[section]:
+                indices.append(i)
+        
+        # Reorder sentences based on original order
+        sections[section] = [sentences[i] for i in sorted(indices)]
     
     # Convert lists to strings
     return {section: " ".join(sents) for section, sents in sections.items() if sents}
@@ -382,285 +399,75 @@ def summarize_section_text(section_text, section_name, max_length=350):
     if len(section_text) <= max_length:
         return section_text
     
-    # First try to generate a synthesized summary
-    try:
-        synthesized_summary = synthesize_section_summary(section_text, section_name, max_length)
-        if synthesized_summary and len(synthesized_summary) <= max_length and len(synthesized_summary) > 50:
-            return synthesized_summary
-    except Exception as e:
-        print(f"Error synthesizing summary for {section_name}: {e}")
-        # If synthesis fails, continue with the original method
-    
-    # If synthesis didn't work or produced poor results, use the original selection-based method
-    # Process the section text
-    doc = nlp(section_text)
-    
-    # Extract key sentences based on section type
+    # Extract sentences
     section_sentences = split_into_sentences(section_text)
     
+    # If few sentences, just return them all (up to 5)
+    if len(section_sentences) <= 5:
+        return section_text
+        
     # Fix incomplete sentences - common issue in extracted sections
     fixed_sentences = []
     for i, sent in enumerate(section_sentences):
-        # Skip empty sentences
-        if not sent.strip():
-            continue
-            
-        # Check if sentence is a fragment or starts with lowercase (likely fragment)
-        if (len(sent.strip()) < 20 or sent.strip()[0].islower()) and i > 0:
-            # This might be a sentence fragment - combine with previous
-            if fixed_sentences:
-                fixed_sentences[-1] = fixed_sentences[-1] + " " + sent
-            else:
-                # If no previous sentence, try to make it standalone
-                if not sent.strip()[0].isupper():
-                    capitalized = sent[0].upper() + sent[1:]
-                    fixed_sentences.append(capitalized)
-                else:
-                    fixed_sentences.append(sent)
+        if len(sent) < 15 and i > 0:  # Very short sentence might be a fragment
+            fixed_sentences[-1] = fixed_sentences[-1] + " " + sent
         else:
-            # Ensure sentence ends with punctuation
-            if not sent.strip()[-1] in ['.', '!', '?']:
-                sent = sent + "."
             fixed_sentences.append(sent)
     
-    # Use fixed sentences if we have any, otherwise use originals
-    if fixed_sentences:
-        section_sentences = fixed_sentences
+    # If we have a reasonable number of fixed sentences, use them
+    if 1 <= len(fixed_sentences) <= 5:
+        return " ".join(fixed_sentences)
     
-    if len(section_sentences) <= 3:
-        # If only 1-3 sentences, keep them all but truncate if needed
-        summary = " ".join(section_sentences)
-        if len(summary) > max_length:
-            # Find natural break points for better truncation
-            last_period = summary[:max_length-3].rfind('.')
-            last_comma = summary[:max_length-3].rfind(',')
-            last_break = max(last_period, last_comma)
-            
-            if last_break > max_length/2:  # Only use break point if it's reasonably far in
-                summary = summary[:last_break+1] + "..."
-            else:
-                summary = summary[:max_length-3] + "..."
-        return summary
+    # For longer sections, select most representative sentences
+    # Always include first sentence (provides context)
+    selected_sentences = [fixed_sentences[0]]
     
-    # Score sentences based on information content and relevance
+    # Get key terms for this section
+    section_terms = []
+    if section_name in section_key_terms:
+        section_terms = section_key_terms[section_name]
+    
+    # Score the remaining sentences based on key terms and entities
     scored_sentences = []
-    
-    for i, sent in enumerate(section_sentences):
+    for i, sent in enumerate(fixed_sentences[1:], 1):
+        if len(sent) < 15:  # Skip very short sentences
+            continue
+            
         score = 0
-        sent_doc = nlp(sent)
+        sent_lower = sent.lower()
         
-        # Position score - prioritize first sentences for context
-        if i == 0:
-            score += 5  # First sentence is crucial for context
-        elif i == 1:
-            score += 3  # Second sentence often contains important details
-        elif i == len(section_sentences) - 1:
-            score += 2  # Last sentence may have conclusions/recommendations
+        # Check for key terms
+        for term in section_terms:
+            if term.lower() in sent_lower:
+                score += 1
         
-        # Length preference - avoid very short or very long sentences
-        sent_length = len(sent)
-        if 40 < sent_length < 120:
-            score += 2  # Ideal length
-        elif 20 < sent_length <= 40:
-            score += 1  # Short but acceptable
-        elif sent_length <= 20:
-            score -= 1  # Too short
-        elif sent_length > 200:
-            score -= 2  # Too long
-        
-        # Check if sentence begins with a capital letter (better formed)
-        if sent.strip() and sent.strip()[0].isupper():
-            score += 2
-        
-        # Entity and information density scoring
-        entity_count = len([ent for ent in sent_doc.ents])
-        score += min(4, entity_count)  # Up to 4 points for entities
-        
-        # Check for section-specific key terms
-        key_terms = section_key_terms.get(section_name, [])
-        for term in key_terms:
-            if term.lower() in sent.lower():
-                score += 2
-        
-        # Section-specific scoring
-        if section_name == "mga_sintomas" or "sintomas" in section_name:
-            # Prioritize sentences with clear symptom descriptions
-            for ent in sent_doc.ents:
-                if ent.label_ in ["DISEASE", "SYMPTOM"]:
-                    score += 5  # Strong boost for symptom mentions
-                elif ent.label_ == "BODY_PART":
-                    score += 2
+        # Check for named entities
+        doc = nlp(sent)
+        for ent in doc.ents:
+            score += 1
             
-            # Check for severity and duration words
-            severity_terms = ["matindi", "malubha", "banayad", "moderate", "mild", "severe"]
-            duration_terms = ["araw-araw", "linggo", "buwan", "daily", "weekly", "years"]
+        # Prefer sentences with numbers (often contain specific measurements)
+        if any(c.isdigit() for c in sent):
+            score += 0.5
             
-            if any(term in sent.lower() for term in severity_terms):
-                score += 3
-            if any(term in sent.lower() for term in duration_terms):
-                score += 2
-                
-        elif section_name == "kalagayan_mental" or "mental" in section_name:
-            # Prioritize sentences with cognitive status descriptions
-            for ent in sent_doc.ents:
-                if ent.label_ == "COGNITIVE":
-                    score += 5  # Strong boost for cognitive mentions
-                elif ent.label_ == "EMOTION":
-                    score += 4
-            
-            # Specific cognitive terms that are high value
-            cognitive_terms = ["memorya", "kalituhan", "confusion", "nakalimutan", 
-                             "hindi matandaan", "disorientation", "pagkalito"]
-            
-            if any(term in sent.lower() for term in cognitive_terms):
-                score += 4
-                
-        elif section_name == "aktibidad" or "aktibidad" in section_name:
-            # Make sure we have complete sentences about activities
-            # Avoid sentence fragments
-            if len(sent) < 30 or sent.strip()[0].islower():
-                score -= 5  # Significant penalty for likely fragments
-                
-            activity_terms = ["gawain", "activity", "araw-araw", "limitasyon", 
-                             "nahihirapan", "tulong", "assistance"]
-            
-            if any(term in sent.lower() for term in activity_terms):
-                score += 3
-                
-        elif section_name == "kalagayan_pangkatawan" or "pangkatawan" in section_name:
-            # Physical status terms
-            for ent in sent_doc.ents:
-                if ent.label_ in ["BODY_PART", "MEASUREMENT", "VITAL_SIGNS"]:
-                    score += 3
-                    
-            physical_terms = ["pisikal", "katawan", "vital signs", "presyon", "weight"]
-            if any(term in sent.lower() for term in physical_terms):
-                score += 2
-                
-        elif section_name == "kalagayan_social" or "social" in section_name:
-            # Social relationships and support
-            for ent in sent_doc.ents:
-                if ent.label_ in ["SOCIAL_REL", "PER"]:
-                    score += 4
-                    
-            support_terms = ["suporta", "tulong", "pamilya", "asawa", "anak", "apo"]
-            if any(term in sent.lower() for term in support_terms):
-                score += 3
-                
-        elif section_name == "pangunahing_rekomendasyon" or "rekomendasyon" in section_name:
-            for ent in sent_doc.ents:
-                if ent.label_ in ["RECOMMENDATION", "HEALTHCARE_REFERRAL"]:
-                    score += 5
-                    
-            recommendation_terms = ["inirerekomenda", "iminumungkahi", "dapat", "kailangan"]
-            if any(term in sent.lower() for term in recommendation_terms):
-                score += 4
-                
-        elif section_name == "mga_hakbang" or "hakbang" in section_name:
-            for ent in sent_doc.ents:
-                if ent.label_ in ["TREATMENT_METHOD", "TREATMENT", "EQUIPMENT"]:
-                    score += 4
-                    
-            action_terms = ["gawin", "isagawa", "ipatupad", "sundin", "simulan"]
-            if any(term in sent.lower() for term in action_terms):
-                score += 3
-                
-        elif section_name == "pangangalaga" or "alaga" in section_name:
-            for ent in sent_doc.ents:
-                if ent.label_ in ["MONITORING", "WARNING_SIGN"]:
-                    score += 4
-                    
-            care_terms = ["bantayan", "subaybayan", "obserbahan", "i-monitor", "ingatan"]
-            if any(term in sent.lower() for term in care_terms):
-                score += 3
-                
-        elif section_name == "pagbabago_sa_pamumuhay" or "pamumuhay" in section_name:
-            for ent in sent_doc.ents:
-                if ent.label_ in ["DIET_RECOMMENDATION", "FOOD"]:
-                    score += 4
-                    
-            lifestyle_terms = ["diet", "ehersisyo", "exercise", "pagkain", "nutrition"]
-            if any(term in sent.lower() for term in lifestyle_terms):
-                score += 3
+        # Adjust score based on sentence position (prefer earlier sentences)
+        position_weight = 1.0 - (i / len(fixed_sentences))
+        score = score + (position_weight * 0.5)
         
-        # Store the scored sentence with its original position
-        scored_sentences.append((sent, score, i))
+        scored_sentences.append((i, sent, score))
     
-    # Sort by score (highest first)
-    sorted_sentences = sorted(scored_sentences, key=lambda x: x[1], reverse=True)
+    # Sort by score (highest first) and select top sentences
+    scored_sentences.sort(key=lambda x: -x[2])
     
-    # Select top sentences, aiming for 3 if possible
-    selected_indices = []
-    current_length = 0
-    target_sentences = min(3, len(section_sentences))
+    # Take up to 4 more sentences (for a total of 5 with the first one)
+    for _, sent, _ in scored_sentences[:4]:
+        selected_sentences.append(sent)
     
-    # First pass: get highest scoring sentences
-    for sent, score, idx in sorted_sentences[:5]:  # Consider top 5 candidates
-        if len(selected_indices) < target_sentences and current_length + len(sent) <= max_length:
-            selected_indices.append(idx)
-            current_length += len(sent) + 1  # +1 for space
-            
-    # If we don't have enough yet, try to fill with other sentences
-    if len(selected_indices) < target_sentences and current_length < max_length:
-        remaining = [(i, sent) for i, sent in enumerate(section_sentences) 
-                    if i not in selected_indices]
-        
-        # Add sentences in order to maintain narrative flow
-        for i, sent in sorted(remaining, key=lambda x: x[0]):
-            if current_length + len(sent) <= max_length:
-                selected_indices.append(i)
-                current_length += len(sent) + 1
-                
-                if len(selected_indices) >= target_sentences:
-                    break
+    # Reorder selected sentences to maintain original flow
+    selected_sentences = sorted(selected_sentences, 
+                               key=lambda s: fixed_sentences.index(s) if s in fixed_sentences else 0)
     
-    # Always include at least one sentence
-    if not selected_indices and section_sentences:
-        # Try first sentence (usually has context)
-        first_sent = section_sentences[0]
-        if len(first_sent) <= max_length:
-            selected_indices.append(0)
-        else:
-            # Truncate if too long
-            last_period = first_sent[:max_length-3].rfind('.')
-            if last_period > 30:
-                first_sent = first_sent[:last_period+1] + "..."
-            else:
-                first_sent = first_sent[:max_length-3] + "..."
-            section_sentences[0] = first_sent
-            selected_indices.append(0)
-    
-    # Sort indices to maintain original order (better narrative flow)
-    selected_indices.sort()
-    
-    # Combine sentences in original order
-    selected_sentences = [section_sentences[i] for i in selected_indices]
-    
-    # Final check - ensure the first sentence provides context
-    if selected_sentences and not (selected_sentences[0].strip()[0].isupper()):
-        # First sentence seems to be a fragment - try to fix
-        if section_name == "mga_sintomas":
-            selected_sentences[0] = f"Ang pasyente ay nagpapakita ng {selected_sentences[0]}"
-        elif section_name == "kalagayan_pangkatawan":
-            selected_sentences[0] = f"Pisikal na kalagayan: {selected_sentences[0]}"
-        elif section_name == "kalagayan_mental":
-            selected_sentences[0] = f"Mental na kalagayan: {selected_sentences[0]}"
-        elif section_name == "aktibidad":
-            selected_sentences[0] = f"Sa mga pang-araw-araw na gawain, {selected_sentences[0]}"
-        elif section_name == "kalagayan_social":
-            selected_sentences[0] = f"Sa social na aspeto, {selected_sentences[0]}"
-    
-    summary = " ".join(selected_sentences)
-    
-    # Final length check
-    if len(summary) > max_length:
-        last_period = summary[:max_length-3].rfind('.')
-        if last_period > max_length/2:
-            summary = summary[:last_period+1] + "..."
-        else:
-            summary = summary[:max_length-3] + "..."
-    
-    return summary
+    return " ".join(selected_sentences)
 
 def synthesize_section_summary(section_text, section_name, max_length=350):
     """Generate a coherent summary for a section with specific details and context."""
