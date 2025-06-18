@@ -1,4 +1,5 @@
 import FlatList from "components/FlatList";
+import RefreshButton from "features/portal/emergency-service/_components/refresh";
 import { useEmergencyServiceRequestsHistory } from "features/portal/emergency-service/hook";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
@@ -20,6 +21,8 @@ const RequestHistory = () => {
         isLoading,
         error,
         refetch: refetchRequests,
+        isRefetching,
+        reload
     } = useEmergencyServiceRequestsHistory();
 
     useEffect(() => {
@@ -120,6 +123,13 @@ const RequestHistory = () => {
                     <H5 color="$white1">
                         Request History
                     </H5>
+                    {isRefetching ? (
+                        <Spinner size="small" />
+                    ) : (
+                        <RefreshButton
+                            onPress={reload}
+                        />
+                    )}
                     {/* <Button
                         size="$2"
                         variant="outlined"

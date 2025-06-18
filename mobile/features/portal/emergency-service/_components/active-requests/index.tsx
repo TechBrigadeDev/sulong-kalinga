@@ -1,4 +1,5 @@
 import FlatList from "components/FlatList";
+import RefreshButton from "features/portal/emergency-service/_components/refresh";
 import { useEmergencyServiceRequests } from "features/portal/emergency-service/hook";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
@@ -19,6 +20,7 @@ const ActiveRequests = () => {
         isLoading,
         error,
         refetch: refetchRequests,
+        isRefetching,
     } = useEmergencyServiceRequests();
 
     useEffect(() => {
@@ -108,10 +110,20 @@ const ActiveRequests = () => {
                 padded
                 paddingBlock="$2"
                 bg="#2d3748"
+                flexDirection="row"
+                justify="space-between"
+                items="center"
             >
                 <H5 color="$white1">
                     Active Requests
                 </H5>
+                {isRefetching ? (
+                    <Spinner size="small" />
+                ) : (
+                    <RefreshButton
+                        onPress={refetchRequests}
+                    />
+                )}
             </Card.Header>
 
             {activeRequests.length === 0 ? (

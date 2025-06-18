@@ -1,5 +1,6 @@
 import { useEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
 import { useEmergencyTypes } from "features/portal/emergency-service/emergency/hook";
+import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
 import { Controller } from "react-hook-form";
 import {
     Adapt,
@@ -17,92 +18,101 @@ const EmergencyType = () => {
     const { control } = useEmergencyForm();
     const disabled = isLoading || !emergencyTypes;
 
+    const store =
+        useEmergencyServiceStore().getState();
     return (
         <Controller
             control={control}
             disabled={disabled}
             name="emergency_type_id"
-            render={({ field, fieldState }) => (
-                <YStack flex={1} gap="$2">
-                    <Label htmlFor="emergency_type_id">
-                        Emergency Type
-                    </Label>
-                    <Select
-                        value={field.value || ""}
-                        onValueChange={
-                            field.onChange
-                        }
-                    >
-                        <Select.Trigger>
-                            <Select.Value placeholder="Select status" />
-                        </Select.Trigger>
-                        <Select.Content>
-                            <Select.ScrollUpButton />
-                            <Select.Viewport
-                                bg="$accent1"
-                                p="$2"
-                                style={{
-                                    maxHeight: 300,
-                                    minHeight: 200,
-                                }}
-                            >
-                                {emergencyTypes?.map(
-                                    (
-                                        option,
-                                        index,
-                                    ) => (
-                                        <Select.Item
-                                            key={
-                                                index.toString() +
-                                                option.emergency_type_id
-                                            }
-                                            id={
-                                                "emergency_type_id_" +
-                                                option.emergency_type_id
-                                            }
-                                            index={
-                                                index
-                                            }
-                                            value={option.emergency_type_id.toString()}
-                                        >
-                                            <Select.ItemText>
-                                                {
-                                                    option.name
-                                                }
-                                            </Select.ItemText>
-                                        </Select.Item>
-                                    ),
-                                )}
-                            </Select.Viewport>
-                        </Select.Content>
-                        <Select.Adapt
-                            when="maxMd"
-                            platform="touch"
-                        >
-                            <Sheet
-                                modal
-                                animation="quicker"
-                            >
-                                <Sheet.Frame>
-                                    <Adapt.Contents />
-                                </Sheet.Frame>
-                                <Sheet.Overlay bg="transparent" />
-                            </Sheet>
-                        </Select.Adapt>
-                    </Select>
-                    {fieldState.error && (
-                        <Text
-                            color="$red10"
-                            fontSize="$2"
-                        >
-                            {
-                                fieldState.error
-                                    .message
+            render={({ field, fieldState }) => {
+                const currentType = store.request
+                    ? store.request.type
+                    : field.value;
+
+                return (
+                    <YStack flex={1} gap="$2">
+                        <Label htmlFor="emergency_type_id">
+                            Emergency Type
+                        </Label>
+                        <Select
+                            value={currentType}
+                            onValueChange={
+                                field.onChange
                             }
-                        </Text>
-                    )}
-                </YStack>
-            )}
+                        >
+                            <Select.Trigger>
+                                <Select.Value placeholder="Select status" />
+                            </Select.Trigger>
+                            <Select.Content>
+                                <Select.ScrollUpButton />
+                                <Select.Viewport
+                                    bg="$accent1"
+                                    p="$2"
+                                    style={{
+                                        maxHeight: 300,
+                                        minHeight: 200,
+                                    }}
+                                >
+                                    {emergencyTypes?.map(
+                                        (
+                                            option,
+                                            index,
+                                        ) => (
+                                            <Select.Item
+                                                key={
+                                                    index.toString() +
+                                                    option.emergency_type_id
+                                                }
+                                                id={
+                                                    "emergency_type_id_" +
+                                                    option.emergency_type_id
+                                                }
+                                                index={
+                                                    index
+                                                }
+                                                value={option.emergency_type_id.toString()}
+                                            >
+                                                <Select.ItemText>
+                                                    {
+                                                        option.name
+                                                    }
+                                                </Select.ItemText>
+                                            </Select.Item>
+                                        ),
+                                    )}
+                                </Select.Viewport>
+                            </Select.Content>
+                            <Select.Adapt
+                                when="maxMd"
+                                platform="touch"
+                            >
+                                <Sheet
+                                    modal
+                                    animation="quicker"
+                                >
+                                    <Sheet.Frame>
+                                        <Adapt.Contents />
+                                    </Sheet.Frame>
+                                    <Sheet.Overlay bg="transparent" />
+                                </Sheet>
+                            </Select.Adapt>
+                        </Select>
+                        {fieldState.error && (
+                            <Text
+                                color="$red10"
+                                fontSize="$2"
+                            >
+                                {
+                                    fieldState
+                                        .error
+                                        .message
+                                }
+                            </Text>
+                        )}
+                    </YStack>
+                );
+            }}
         />
     );
 };

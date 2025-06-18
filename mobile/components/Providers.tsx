@@ -7,6 +7,7 @@ import { TamaguiProvider } from "@tamagui/core";
 import { PortalProvider } from "@tamagui/portal";
 import { ToastProvider } from "@tamagui/toast";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { EmergencyServiceProvider } from "features/portal/emergency-service/store";
 
 import { queryClient } from "~/common/query";
 import config from "~/tamagui.config";
@@ -44,7 +45,9 @@ const Providers = ({
                             }
                         >
                             <DrawingProvider>
-                                {children}
+                                <EmergencyServiceProvider>
+                                    {children}
+                                </EmergencyServiceProvider>
                             </DrawingProvider>
                             <GlobalToast />
                         </ThemeProvider>

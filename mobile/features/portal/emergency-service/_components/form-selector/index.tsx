@@ -1,6 +1,9 @@
 import EmergencyAssistanceForm from "features/portal/emergency-service/emergency/_components/form";
+import { EmergencyServiceFormProp } from "features/portal/emergency-service/emergency/interface";
 import ServiceForm from "features/portal/emergency-service/service/form";
-import { ReactNode } from "react";
+import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
+import { ICurrentEmergencyServiceForm } from "features/portal/emergency-service/type";
+import { ReactNode, useState } from "react";
 import {
     Separator,
     SizableText,
@@ -25,13 +28,37 @@ const tabs: {
     },
 ];
 
-const EmergencyServiceFormSelector = () => {
+const EmergencyServiceFormSelector = ({
+    ref,
+}: EmergencyServiceFormProp) => {
+    const store = useEmergencyServiceStore();
+
+    const [form, setForm] =
+        useState<ICurrentEmergencyServiceForm>(
+            (store.getState().request
+                ?.type as ICurrentEmergencyServiceForm) ||
+                "emergency",
+        );
+
+    store.subscribe((state) => {
+        if (state.request?.type) {
+            setForm(
+                state.request
+                    .type as ICurrentEmergencyServiceForm,
+            );
+        }
+    });
+
     return (
         <Tabs
-            defaultValue={tabs[0].value}
+            value={form}
+            onValueChange={(value) => {
+                setForm(
+                    value as ICurrentEmergencyServiceForm,
+                );
+            }}
             orientation="horizontal"
             flexDirection="column"
-            // bg="yellow"
         >
             <Tabs.List
                 disablePassBorderRadius
@@ -48,6 +75,11 @@ const EmergencyServiceFormSelector = () => {
                         }}
                         flex={1}
                         value={tab.value}
+                        onPress={() => {
+                            store
+                                .getState()
+                                .setRequest(null);
+                        }}
                     >
                         <SizableText
                             fontFamily="$body"

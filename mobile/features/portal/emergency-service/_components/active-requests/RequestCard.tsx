@@ -1,8 +1,8 @@
 import { format } from "date-fns";
-import {
-    useEmergencyCancelRequest,
-    useEmergencyDeleteRequest,
-} from "features/portal/emergency-service/emergency/hook";
+import { useEmergencyCancelRequest } from "features/portal/emergency-service/emergency/hook";
+import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
+import { IEmergencyServiceRequest } from "features/portal/emergency-service/type";
+import { PenBox } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { showToastable } from "react-native-toastable";
 import {
@@ -16,10 +16,9 @@ import {
 } from "tamagui";
 
 import Badge from "./Badge";
-import type { EmergencyRequest } from "./types";
 
 interface RequestCardProps {
-    request: EmergencyRequest;
+    request: IEmergencyServiceRequest;
 }
 
 const RequestCard = ({
@@ -66,8 +65,11 @@ const RequestCard = ({
         }
     };
 
+    const store =
+        useEmergencyServiceStore().getState();
+
     const handleEdit = () => {
-        console.log(`Edit request ${request.id}`);
+        store.setRequest(request);
     };
 
     const {
@@ -90,25 +92,26 @@ const RequestCard = ({
         }
     };
 
-    const {
-        mutate: deleteRequest,
-        isPending: isDeleting,
-    } = useEmergencyDeleteRequest();
-    const handleDelete = async () => {
-        try {
-            deleteRequest(request.id.toString());
-            showToastable({
-                title: "Request Deleted",
-                message:
-                    "Your emergency request has been deleted successfully.",
-            });
-        } catch (error) {
-            console.error(
-                `Error deleting request ${request.id}:`,
-                error,
-            );
-        }
-    };
+    // const {
+    //     mutate: deleteRequest,
+    //     isPending: isDeleting,
+    // } = useEmergencyDeleteRequest();
+
+    // const handleDelete = async () => {
+    //     try {
+    //         deleteRequest(request.id.toString());
+    //         showToastable({
+    //             title: "Request Deleted",
+    //             message:
+    //                 "Your emergency request has been deleted successfully.",
+    //         });
+    //     } catch (error) {
+    //         console.error(
+    //             `Error deleting request ${request.id}:`,
+    //             error,
+    //         );
+    //     }
+    // };
 
     return (
         <Card
@@ -175,14 +178,24 @@ const RequestCard = ({
 
             {/* Action Buttons */}
             <XStack style={styles.actionButtons}>
-                {/* <Button
+                <Button
                     size="$2"
-                    theme="blue"
+                    theme="green"
                     flex={1}
                     onPress={handleEdit}
                 >
-                    Edit
-                </Button> */}
+                    <PenBox
+                        color="black"
+                        size={16}
+                        style={{ marginRight: 4 }}
+                    />
+                    <Text
+                        color="$color"
+                        fontWeight="bold"
+                    >
+                        Edit
+                    </Text>
+                </Button>
                 <Button
                     size="$2"
                     variant="outlined"
@@ -199,7 +212,7 @@ const RequestCard = ({
                         "Cancel"
                     )}
                 </Button>
-                <Button
+                {/* <Button
                     size="$2"
                     variant="outlined"
                     theme="red"
@@ -215,7 +228,7 @@ const RequestCard = ({
                     ) : (
                         "Delete"
                     )}
-                </Button>
+                </Button> */}
             </XStack>
         </Card>
     );

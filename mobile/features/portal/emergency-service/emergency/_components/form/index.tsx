@@ -1,3 +1,4 @@
+import { EmergencyServiceFormProp } from "features/portal/emergency-service/emergency/interface";
 import { TriangleAlert } from "lucide-react-native";
 import { KeyboardAvoidingView } from "react-native";
 import {
@@ -13,7 +14,9 @@ import EmergencyType from "./_components/EmergencyType";
 import SubmitEmergency from "./_components/Submit";
 import { EmergencyForm } from "./form";
 
-const EmergencyAssistanceForm = () => {
+const EmergencyAssistanceForm = ({
+    ref,
+}: EmergencyServiceFormProp) => {
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>
             <EmergencyForm>
@@ -23,6 +26,7 @@ const EmergencyAssistanceForm = () => {
                     borderWidth={1}
                     elevate
                     gap="$4"
+                    ref={ref}
                 >
                     <YStack p="$4" gap="$2">
                         <XStack

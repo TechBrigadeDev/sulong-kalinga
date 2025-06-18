@@ -201,3 +201,9 @@ export const cancelQK = async (key: string[]) => {
         queryKey: key,
     });
 };
+
+export const resetQK = async (key: string[]) => {
+    await queryClient.resetQueries({
+        queryKey: key,
+    });
+};

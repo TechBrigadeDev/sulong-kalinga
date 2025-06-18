@@ -3,16 +3,35 @@ import { Stack } from "expo-router";
 import ActiveRequests from "features/portal/emergency-service/_components/active-requests";
 import EmergencyServiceFormSelector from "features/portal/emergency-service/_components/form-selector";
 import RequestHistory from "features/portal/emergency-service/_components/request-history";
-import { useEmergencyServiceRequests } from "features/portal/emergency-service/hook";
-import { useEffect } from "react";
+import {
+    useEmergencyServiceRequests,
+    useEmergencyServiceRequestsHistory,
+} from "features/portal/emergency-service/hook";
+import { useEffect, useRef } from "react";
+import { RefreshControl } from "react-native";
+import { TamaguiElement } from "tamagui";
 
 const Screen = () => {
-    const { refetch: refetchRequests } =
-        useEmergencyServiceRequests();
+    const {
+        refetch: refetchRequests,
+        isRefetching: isRequestRefetching,
+    } = useEmergencyServiceRequests();
+
+    const {
+        refetch: refetchHistory,
+        isRefetching: isHistoryRefetching,
+    } = useEmergencyServiceRequestsHistory();
 
     useEffect(() => {
         refetchRequests();
     }, [refetchRequests]);
+
+    const ref = useRef<TamaguiElement>(null);
+
+    const reload = () => {
+        refetchRequests();
+        refetchHistory();
+    };
 
     return (
         <TabScroll
@@ -22,17 +41,22 @@ const Screen = () => {
             tabbed
             showScrollUp
             paddingInline={"$4"}
+            pt="$4"
+            refreshControl={
+                <RefreshControl
+                    refreshing={
+                        isRequestRefetching ||
+                        isHistoryRefetching
+                    }
+                    onRefresh={reload}
+                />
+            }
         >
-            <EmergencyServiceFormSelector />
+            <EmergencyServiceFormSelector
+                ref={ref}
+            />
             <ActiveRequests />
             <RequestHistory />
-        </TabScroll>
-    );
-};
-
-const Layout = () => {
-    return (
-        <>
             <Stack.Screen
                 options={{
                     headerTitle:
@@ -41,6 +65,13 @@ const Layout = () => {
                     headerBackVisible: true,
                 }}
             />
+        </TabScroll>
+    );
+};
+
+const Layout = () => {
+    return (
+        <>
             <Screen />
         </>
     );
