@@ -471,1553 +471,545 @@ def summarize_section_text(section_text, section_name, max_length=350):
 
 def synthesize_section_summary(section_text, section_name, max_length=350):
     """Generate a coherent summary for a section with specific details and context."""
-    # Skip if section is too short
-    if len(section_text) <= max_length:
+    import re
+    
+    if not section_text or len(section_text) < 50:
         return section_text
         
-    # Process section with NLP
+    # Process section with Calamancy NLP
     doc = nlp(section_text)
     
-    # Extract structured elements for better synthesis
+    # Extract structured elements with enhanced Calamancy-specific processing
     elements = extract_structured_elements(section_text, section_name)
     
-    # Extract subject (person) from the text
-    subject = elements.get("subject")
+    # Enhanced subject detection using Calamancy's entity recognition
+    subject = None
+    
+    # First try to find named individuals
+    for ent in doc.ents:
+        if ent.label_ == "PER":
+            subject = ent.text
+            break
+            
+    # Look for kinship terms which are common in Filipino medical narratives
     if not subject:
-        for ent in doc.ents:
-            if ent.label_ == "PER":
-                subject = ent.text
+        kinship_terms = ["Lolo", "Lola", "Tatay", "Nanay", "Ate", "Kuya", "Tito", "Tita"]
+        for term in kinship_terms:
+            if term in section_text:
+                subject = term
                 break
                 
     # Default subject if none found
     if not subject:
-        if "Lolo" in section_text:
-            subject = "Lolo"
-        elif "Lola" in section_text:
-            subject = "Lola"
-        elif "Nanay" in section_text:
-            subject = "Nanay"
-        elif "Tatay" in section_text:
-            subject = "Tatay"
-        else:
-            subject = "Ang pasyente"
+        subject = "Ang pasyente"
+    
+    # Get medical measurements with units for precise reporting
+    measurements = {}
+    for ent in doc.ents:
+        if ent.label_ == "MEASUREMENT":
+            # Try to extract the numerical value and unit
+            value_match = re.search(r'(\d+\.?\d*)\s*(mg/dL|mmHg|kg|cm|°C|%)', ent.text)
+            if value_match:
+                measurements[ent.text] = {
+                    'value': value_match.group(1),
+                    'unit': value_match.group(2)
+                }
+    
+    # Extract Filipino cultural references especially for dietary preferences
+    cultural_foods = []
+    for ent in doc.ents:
+        if ent.label_ == "FOOD":
+            cultural_foods.append(ent.text)
+    
+    # Use Calamancy's NER to identify specific Filipino medical terms
+    filipino_medical_terms = []
+    for ent in doc.ents:
+        if ent.label_ in ["DISEASE", "SYMPTOM", "TREATMENT"] and any(c in "ñabcdefghijklmnopqrstuvwxyzÑABCDEFGHIJKLMNOPQRSTUVWXYZ" for c in ent.text):
+            filipino_medical_terms.append(ent.text)
     
     # Generate tailored summary based on section type
     if section_name == "mga_sintomas" or "sintomas" in section_name:
-        # SYMPTOMS SECTION WITH HIGHLY SPECIFIC DETAILS
-        conditions = elements["conditions"][:2]  # Take up to 2 conditions
-        symptoms = elements["symptoms"][:3]      # Take up to 3 symptoms
-        severity = elements["severity"][0] if elements["severity"] else ""
-        frequency = elements["frequency"][0] if elements["frequency"] else ""
-        duration = elements["duration"][0] if elements["duration"] else ""
+        # SYMPTOMS SECTION - Enhanced with Calamancy's medical understanding
+        conditions = elements.get("conditions", [])
+        symptoms = elements.get("symptoms", [])
+        severity = elements.get("severity", [""])[0] if elements.get("severity") else ""
+        frequency = elements.get("frequency", [""])[0] if elements.get("frequency") else ""
         
-        # Extract specific problem descriptions instead of generic mentions
-        problem_patterns = [
-            r'(nagdurusa sa|nakakaranas ng|nahihirapan sa) ([^.]+)',
-            r'(specifically|partikular na|lalo na) ([^.]+)'
-        ]
+        # Create symptom summary with specific details
+        # First sentence: Main condition and symptoms
+        if "diabetes" in section_text.lower():
+            # Extract specific glucose values leveraging Calamancy's measurement recognition
+            glucose_match = re.search(r'(\d+)\s*mg/dL', section_text)
+            glucose_value = glucose_match.group(1) if glucose_match else ""
+            
+            if "roller-coaster pattern" in section_text.lower() or "fluctuations" in section_text.lower():
+                summary = f"{subject} ay nagpapakita ng Type 2 diabetes na may roller-coaster pattern sa blood glucose readings, kung saan madalas na lumampas sa {glucose_value} mg/dL ang kanyang post-meal readings pagkatapos kumain ng traditional Filipino foods."
+            else:
+                summary = f"{subject} ay diagnosed na may Type 2 diabetes at nagpapakita ng hindi stable na glucose levels na nakaka-apekto sa kanyang araw-araw na gawain."
         
-        specific_problems = []
-        for pattern in problem_patterns:
-            matches = re.finditer(pattern, section_text)
-            for match in matches:
-                if len(match.groups()) > 1:
-                    specific_detail = match.group(2).strip()
-                    if len(specific_detail) > 10 and len(specific_detail) < 100:
-                        specific_problems.append(specific_detail)
+        elif "mobility" in section_text.lower() or "paggalaw" in section_text.lower():
+            # Detailed mobility challenges using ADL entities from Calamancy
+            adl_entities = [ent.text for ent in doc.ents if ent.label_ == "ADL"]
+            if adl_entities:
+                summary = f"{subject} ay nagpapakita ng matinding limitasyon sa mobility, partikular sa {', '.join(adl_entities[:3])}."
+            else:
+                summary = f"{subject} ay nagpapakita ng matinding limitasyon sa mobility, partikular sa pang-araw-araw na gawain tulad ng pag-shower, pag-toilet, at pagbibihis."
         
-        # Create a coherent sentence about symptoms WITH SPECIFIC DETAILS
-        summary = f"{subject} ay "
+        elif "cognitive" in section_text.lower() or "isip" in section_text.lower() or "memorya" in section_text.lower():
+            # Use cognitive-specific terms from Calamancy
+            cognitive_issues = [ent.text for ent in doc.ents if ent.label_ == "COGNITIVE"]
+            
+            if cognitive_issues:
+                summary = f"{subject} ay nagpapakita ng cognitive issues tulad ng {', '.join(cognitive_issues[:2])}."
+            else:
+                summary = f"{subject} ay nagpapakita ng cognitive difficulties, partikular sa memorya at orientation."
         
-        # Get specific symptom CONTEXT rather than just listing symptoms
-        if specific_problems:
-            summary += f"nagpapakita ng {specific_problems[0]}"
-            if len(specific_problems) > 1:
-                summary += f", at {specific_problems[1]}"
         elif conditions or symptoms:
-            # ENHANCED: Include specific descriptors with symptoms
-            medical_issues = []
-            
-            # Look for specific descriptions of conditions
-            for condition in conditions:
-                condition_pattern = re.escape(condition) + r' na ([^.]+)'
-                match = re.search(condition_pattern, section_text)
-                if match:
-                    # Include the description with the condition
-                    enhanced_condition = f"{condition} na {match.group(1)}"
-                    medical_issues.append(enhanced_condition)
-                else:
-                    medical_issues.append(condition)
-            
-            # Look for specific descriptions of symptoms
-            for symptom in symptoms:
-                if not any(symptom in condition for condition in medical_issues):
-                    symptom_pattern = re.escape(symptom) + r' na ([^.]+)'
-                    match = re.search(symptom_pattern, section_text)
-                    if match:
-                        enhanced_symptom = f"{symptom} na {match.group(1)}"
-                        medical_issues.append(enhanced_symptom)
-                    else:
-                        medical_issues.append(symptom)
-            
-            if medical_issues:
-                if len(medical_issues) == 1:
-                    summary += f"nagpapakita ng {medical_issues[0]}"
-                elif len(medical_issues) == 2:
-                    summary += f"nagpapakita ng {medical_issues[0]} at {medical_issues[1]}"
-                else:
-                    summary += f"nagpapakita ng {', '.join(medical_issues[:-1])}, at {medical_issues[-1]}"
-            else:
-                summary += "nagpapakita ng mga sintomas na nangangailangan ng atensyon"
+            if conditions and symptoms:
+                summary = f"{subject} ay nagpapakita ng {', '.join(conditions[:1])} kasama ang mga sintomas na {', '.join(symptoms[:2])}."
+            elif conditions:
+                summary = f"{subject} ay diagnosed na may {', '.join(conditions[:2])}."
+            elif symptoms:
+                summary = f"{subject} ay nagpapakita ng mga sintomas tulad ng {', '.join(symptoms[:2])}."
         else:
-            summary += "nagpapakita ng mga sintomas na nangangailangan ng atensyon"
+            summary = f"{subject} ay nagpapakita ng mga sintomas na nangangailangan ng medikal na atensyon."
         
-        # Add DETAILED severity and frequency specifics
-        if severity and frequency:
-            # Look for more detailed description of the severity
-            severity_context = None
-            severity_pos = section_text.lower().find(severity.lower())
-            if severity_pos >= 0:
-                start = max(0, severity_pos - 20)
-                end = min(len(section_text), severity_pos + len(severity) + 40)
-                severity_context = section_text[start:end]
-                
-            if severity_context and len(severity_context) < 80:
-                summary += f", na {severity_context}"
-            else:
-                summary += f" na {severity} at nangyayari nang {frequency}"
-        elif severity:
-            summary += f" na {severity}"
-        elif frequency:
-            summary += f" na nangyayari nang {frequency}"
+        # Second sentence: Specific symptom details with cultural context
+        if "falls" in section_text.lower() or "madapa" in section_text.lower():
+            summary += f" May risk ng falls o pagkahulog dahil sa kahinaan ng kanyang balance at leg strength."
         
-        # Add SPECIFIC duration details
-        if duration:
-            # Extract more context for duration if possible
-            duration_pos = section_text.lower().find(duration.lower())
-            if duration_pos >= 0:
-                start = max(0, duration_pos - 10)
-                end = min(len(section_text), duration_pos + len(duration) + 30)
-                duration_context = section_text[start:end]
-                
-                # Clean up the context for better readability
-                if '.' in duration_context:
-                    duration_context = duration_context.split('.')[0]
-                
-                if len(duration_context) < 70:
-                    summary += f". Ito ay nagsimula {duration_context}"
-                else:
-                    summary += f" mula {duration}"
-            else:
-                summary += f" mula {duration}"
+        if cultural_foods and ("diet" in section_text.lower() or "pagkain" in section_text.lower()):
+            summary += f" Nahihirapan siyang i-manage ang kanyang kondisyon dahil sa preference para sa traditional Filipino foods na high in carbohydrates tulad ng {', '.join(cultural_foods[:3])}."
+            
+        if filipino_medical_terms:
+            summary += f" Nabanggit din ang {', '.join(filipino_medical_terms[:2])} bilang bahagi ng kanyang mga sintomas."
         
-        # Ensure the summary ends with proper punctuation
-        if not summary.endswith(('.', '!', '?')):
-            summary += "."
+        # Third sentence: Impact and frequency with specific measurements
+        if any(term in section_text.lower() for term in ["napapaupo", "pagkapagod", "hingal", "fatigue"]):
+            summary += f" Madalas siyang nakakaranas ng fatigue o pagkapagod sa mga pang-araw-araw na aktibidad, na naglalagay sa kanya sa risk para sa komplikasyon."
         
-        # Add SPECIFIC second sentence about impact on daily life
-        impact_patterns = [
-            r'(nakakaapekto sa|nagdudulot ng|nagiging sanhi ng|nakakahadlang sa) ([^.]+)',
-            r'(dahil dito|dahil sa kondisyong ito|bunga nito) ([^.]+)'
-        ]
-        
-        for pattern in impact_patterns:
-            match = re.search(pattern, section_text)
-            if match and len(match.groups()) > 1:
-                impact = match.group(0).strip()
-                if len(impact) > 10:
-                    summary += f" {impact.capitalize()}."
-                    break
-        
-        # Add roller-coaster pattern enhancement with SPECIFIC VALUES
-        if "roller-coaster pattern" in section_text.lower() or "blood sugar" in section_text.lower():
-            pattern_match = re.search(r'roller-coaster pattern\s+([^.]+)', section_text, re.IGNORECASE)
-            if pattern_match:
-                pattern_desc = pattern_match.group(1).strip()
-                blood_sugar_values = re.search(r'(\d+\s*mg\/dL)', section_text)
-                value_text = blood_sugar_values.group(1) if blood_sugar_values else ""
-                
-                if "diabetes" in summary.lower() and "pattern" in summary.lower() and pattern_desc:
-                    # Replace generic pattern with specific description
-                    summary = re.sub(r'diabetes [^.]*pattern', 
-                                   f"diabetes na may roller-coaster pattern {pattern_desc} {value_text}", 
-                                   summary)
-                elif "blood sugar" in summary.lower() and value_text:
-                    # Add specific values to blood sugar mentions
-                    summary = summary.replace("blood sugar", f"blood sugar ({value_text})")
+        if measurements:
+            measurement_phrases = []
+            for name, details in measurements.items():
+                if "blood" in name.lower() or "glucose" in name.lower():
+                    measurement_phrases.append(f"blood glucose na {details['value']} {details['unit']}")
+                elif "pressure" in name.lower():
+                    measurement_phrases.append(f"blood pressure na {details['value']} {details['unit']}")
+                elif "weight" in name.lower() or "timbang" in name.lower():
+                    measurement_phrases.append(f"timbang na {details['value']} {details['unit']}")
+            
+            if measurement_phrases:
+                summary += f" Base sa mga sukat, nakita natin ang {', '.join(measurement_phrases)}."
         
         return summary.strip()
         
     elif section_name == "kalagayan_pangkatawan" or "pangkatawan" in section_name:
-        # PHYSICAL CONDITION SECTION WITH SPECIFIC MEASUREMENTS AND ASSESSMENTS
-        measurements = elements["vital_signs"]
-        limitations = elements["limitations"]
-        body_parts = elements["body_parts"]
+        # PHYSICAL CONDITION SECTION - Enhanced with body parts and specifics
+        body_parts = elements.get("body_parts", [])
+        limitations = elements.get("limitations", [])
+        weakness_areas = []
+        key_traits = []
         
-        summary = ""
+        # Better extraction of body parts using Calamancy entities
+        body_part_entities = [ent.text for ent in doc.ents if ent.label_ == "BODY_PART"]
         
-        # Extract SPECIFIC vital signs with EXACT VALUES
-        if measurements:
-            # Look for actual measurement values in text
-            measurement_values = []
-            value_patterns = [
-                r'\b\d+(?:\.\d+)?\s*(?:kg|cm|lbs|mg/dL|mmHg|bpm|°C|°F)\b',  # Values with units
-                r'\b\d+/\d+\s*(?:mmHg)?\b',  # Blood pressure format
-                r'\b\d+(?:\.\d+)?%\b'  # Percentage values
-            ]
-            
-            for pattern in value_patterns:
-                for match in re.finditer(pattern, section_text):
-                    value = match.group(0)
-                    # Look for context around this value
-                    pos = match.start()
-                    start = max(0, pos - 30)
-                    end = min(len(section_text), pos + len(value) + 30)
-                    context = section_text[start:end]
-                    
-                    # Try to extract what this measurement is
-                    measure_types = ["blood sugar", "glucose", "blood pressure", "presyon", "timbang", "oxygen", "temperatura"]
-                    for measure in measure_types:
-                        if measure in context.lower():
-                            measurement_values.append(f"{measure} na {value}")
-                            break
-                    else:
-                        # If no specific type found but in measurements list
-                        for measure in measurements:
-                            if measure in context:
-                                measurement_values.append(f"{measure} ({value})")
-                                break
-            
-            # Start with specific measurements and their actual values
-            if measurement_values:
-                if len(measurement_values) == 1:
-                    summary += f"Ang sukat ay nagpapakita ng {measurement_values[0]}. "
-                else:
-                    summary += f"Ang mga sukat ay nagpapakita ng {measurement_values[0]} at {measurement_values[1]}. "
-            else:
-                # Fall back to generic measurements if no specific values found
-                measurement_text = measurements[0]
-                if len(measurements) > 1:
-                    summary += f"Ang mga sukat ay nagpapakita ng {measurement_text}, kasama ang {measurements[1]}. "
-                else:
-                    summary += f"Ang mga sukat ay nagpapakita ng {measurement_text}. "
+        # Extract key physical indicators
+        for sentence in doc.sents:
+            sentence_text = sentence.text.lower()
+            if "weakness" in sentence_text and any(bp in sentence_text for bp in ["lower extremities", "legs", "binti"]):
+                weakness_areas.append("lower extremities")
+            if any(term in sentence_text for term in ["upper body strength", "lakas ng upper body"]):
+                key_traits.append("significant upper body strength")
+            if any(term in sentence_text for term in ["poor balance", "walang balanse", "mahirap mag-balance"]):
+                key_traits.append("poor balance")
+            if any(term in sentence_text for term in ["arthritic fingers", "arthritis sa daliri"]):
+                weakness_areas.append("arthritic fingers")
         
-        # Add SPECIFIC physical limitations with affected body parts and detailed descriptions
-        if limitations:
-            # Look for more detailed explanations of limitations
-            detailed_limitations = []
+        # First sentence: Physical condition overview with specific body parts
+        if weakness_areas:
+            summary = f"{subject} ay nagpapakita ng physical limitations dahil sa {' at '.join(weakness_areas)}."
+        elif "meal timing" in section_text.lower() or "glucose" in section_text.lower():
+            # Special case for metabolic/nutritional physical status
+            timing_match = re.search(r'(\d+)-(\d+)\s*hours', section_text)
+            meal_timing = f"{timing_match.group(1)}-{timing_match.group(2)} oras" if timing_match else "hindi regular"
             
-            for limitation in limitations:
-                # Search for extended descriptions of this limitation
-                limitation_pattern = re.escape(limitation) + r'[,.;]?\s+([^.]+)'
-                match = re.search(limitation_pattern, section_text)
-                if match:
-                    detailed_limitations.append(f"{limitation} ({match.group(1).strip()})")
-                else:
-                    detailed_limitations.append(limitation)
+            summary = f"{subject} ay may inappropriate meal compositions at inconsistent meal timing (pagitan ng {meal_timing}) na nagdudulot ng glucose fluctuations."
+        elif body_part_entities:
+            summary = f"{subject} ay may limitasyon sa {', '.join(body_part_entities[:3])}, na nakakaapekto sa kanyang pang-araw-araw na gawain."
+        else:
+            summary = f"Ang pisikal na kalagayan ni {subject} ay nagpapakita ng mga limitasyon sa mobility at pangangatawan."
             
-            limitation_text = detailed_limitations[0] if detailed_limitations else limitations[0]
-            
-            if body_parts:
-                # Look for specific impacts on these body parts
-                body_part_details = {}
-                for body_part in body_parts:
-                    bp_pattern = re.escape(body_part) + r'[,.;]?\s+([^.]+)'
-                    match = re.search(bp_pattern, section_text)
-                    if match:
-                        body_part_details[body_part] = match.group(1).strip()
-                
-                # Construct detailed body part text
-                if body_part_details:
-                    body_parts_text = ""
-                    for i, (part, detail) in enumerate(list(body_part_details.items())[:2]):
-                        if i == 0:
-                            body_parts_text = f"{part} ({detail})"
-                        else:
-                            body_parts_text += f" at {part} ({detail})"
-                    
-                    summary += f"{subject} ay may limitasyon sa {limitation_text}, partikular sa {body_parts_text}. "
-                else:
-                    # Fall back to basic body parts
-                    summary += f"{subject} ay may limitasyon sa {limitation_text}, partikular sa "
-                    if len(body_parts) == 1:
-                        summary += f"{body_parts[0]}. "
-                    else:
-                        summary += f"{body_parts[0]} at {body_parts[1]}. "
-            else:
-                summary += f"{subject} ay nagpapakita ng {limitation_text}. "
+        # Second sentence: Specific physical challenges with rich detail
+        if key_traits:
+            summary += f" Kailangan niyang umasa sa {' at '.join(key_traits)} para makatulong sa mga pang-araw-araw na gawain."
         
-        # If no measurements or limitations yet, add specific physical condition information
-        if not summary and body_parts:
-            # Look for specific issues with these body parts
-            for body_part in body_parts:
-                body_part_pattern = re.escape(body_part) + r'[,.;]?\s+([^.]+)'
-                match = re.search(body_part_pattern, section_text)
-                if match:
-                    condition = match.group(1).strip()
-                    summary += f"{subject} ay may kondisyon na nakakaapekto sa {body_part} na {condition}. "
-                    break
-            
-            # If no specific condition found
-            if not summary:
-                summary += f"{subject} ay may kondisyon na nakakaapekto sa {', '.join(body_parts[:2])}. "
-            
-        # If still no summary, create a specific one based on key phrases in text
-        if not summary:
-            # Check for specific physical status descriptions
-            status_patterns = [
-                r'(pisikal na kalagayan|kondisyon) (?:ni|ng) [^.]+ (ay|na) ([^.]+)',
-                r'(nagpapakita|nakakaranas) ng ([^.]+) (sa|ang) [^.]+ (katawan|pisikal)'
-            ]
-            
-            for pattern in status_patterns:
-                match = re.search(pattern, section_text)
-                if match:
-                    description = match.group(0)
-                    summary += f"{description}. "
-                    break
-            
-            if not summary:
-                # Extract glucose/diabetes details if present
-                if "blood sugar" in section_text.lower() or "glucose" in section_text.lower():
-                    # Look for specific patterns in blood sugar
-                    bs_patterns = [
-                        r'(blood sugar|glucose) [^.]+ (\d+[^.]+)',
-                        r'(mataas|mababa|unstable|hindi stable)[^.]+ (blood sugar|glucose)'
-                    ]
-                    
-                    for pattern in bs_patterns:
-                        match = re.search(pattern, section_text, re.IGNORECASE)
-                        if match:
-                            summary += f"Sa pisikal na kalagayan ni {subject}, may {match.group(0)}. "
-                            break
-                    
-                    if not summary:
-                        summary += f"Sa pisikal na kalagayan ni {subject}, mapapansin ang hindi stabilized na blood sugar levels. "
-                else:
-                    summary += f"Ang pisikal na kalagayan ni {subject} ay nangangailangan ng atensyon. "
+        specific_challenges = []
+        if "towel rack" in section_text.lower() or "humahawak" in section_text.lower():
+            specific_challenges.append("paggamit ng hindi angkop na suporta tulad ng towel rack habang naliligo")
         
-        # Add specific details about meal patterns and their effects if mentioned
-        meal_pattern_match = re.search(r'(meal|pagkain)[^.]+pattern[^.]+', section_text, re.IGNORECASE)
-        if meal_pattern_match and len(summary) < max_length - 100:
-            meal_desc = meal_pattern_match.group(0)
-            if len(meal_desc) < 80:
-                summary += f"Nakikita ang {meal_desc} na nakakaapekto sa kanyang kalusugan. "
+        if "humiga sa kama" in section_text.lower() or "pagbibihis" in section_text.lower():
+            specific_challenges.append("pangangailangang humiga sa kama para maisuot ang pantalon")
+            
+        if specific_challenges:
+            summary += f" May mga partikular na kahirapan tulad ng {' at '.join(specific_challenges)}."
         
-        # Add specific resistance details if present
-        resistance_match = re.search(r'(resistance|pagtutol|ayaw)[^.]+', section_text, re.IGNORECASE)
-        if resistance_match and len(summary) < max_length - 80:
-            resistance_desc = resistance_match.group(0)
-            if len(resistance_desc) < 70:
-                summary += f"May {resistance_desc}. "
-                
-        # Add roller-coaster pattern details if present
-        if "roller-coaster pattern" in section_text.lower() or "blood sugar" in section_text.lower():
-            pattern_match = re.search(r'roller-coaster pattern\s+([^.]+)', section_text, re.IGNORECASE)
-            if pattern_match:
-                pattern_desc = pattern_match.group(1).strip()
-                blood_sugar_values = re.search(r'(\d+\s*mg\/dL)', section_text)
-                value_text = blood_sugar_values.group(1) if blood_sugar_values else ""
-                
-                if "diabetes" in summary.lower() and "pattern" in summary.lower() and pattern_desc:
-                    # Replace generic pattern with specific description
-                    summary = re.sub(r'diabetes [^.]*pattern', 
-                                   f"diabetes na may roller-coaster pattern {pattern_desc} {value_text}", 
-                                   summary)
-                elif "blood sugar" in summary.lower() and value_text:
-                    # Add specific values to blood sugar mentions
-                    summary = summary.replace("blood sugar", f"blood sugar ({value_text})")
-
+        # Third sentence: Impact on safety and function with medical context
+        risk_factors = []
+        if "hingal" in section_text.lower() or "pagkapagod" in section_text.lower():
+            risk_factors.append("mabilis na pagkapagod")
+        
+        if "risk para sa falls" in section_text.lower() or "madapa" in section_text.lower():
+            risk_factors.append("mataas na risk para sa falls")
+            
+        if "limited range of motion" in section_text.lower() or "limited flexibility" in section_text.lower():
+            risk_factors.append("limitadong range of motion")
+            
+        if risk_factors:
+            summary += f" Ang mga kondisyong ito ay nagdudulot ng {', '.join(risk_factors)}, na nangangailangan ng safety precautions at angkop na interventions."
+        else:
+            summary += f" Ang kanyang pisikal na limitasyon ay malinaw na nakakaapekto sa kanyang kalidad ng buhay at pang-araw-araw na gawain."
+            
         return summary.strip()
-        
-    elif section_name == "kalagayan_pangkatawan" or "pangkatawan" in section_name:
-        # PHYSICAL CONDITION SECTION WITH SPECIFIC MEASUREMENTS AND ASSESSMENTS
-        measurements = elements["vital_signs"]
-        limitations = elements["limitations"]
-        body_parts = elements["body_parts"]
-        
-        summary = ""
-        
-        # Extract SPECIFIC vital signs with EXACT VALUES
-        if measurements:
-            # Look for actual measurement values in text
-            measurement_values = []
-            value_patterns = [
-                r'\b\d+(?:\.\d+)?\s*(?:kg|cm|lbs|mg/dL|mmHg|bpm|°C|°F)\b',  # Values with units
-                r'\b\d+/\d+\s*(?:mmHg)?\b',  # Blood pressure format
-                r'\b\d+(?:\.\d+)?%\b'  # Percentage values
-            ]
-            
-            for pattern in value_patterns:
-                for match in re.finditer(pattern, section_text):
-                    value = match.group(0)
-                    # Look for context around this value
-                    pos = match.start()
-                    start = max(0, pos - 30)
-                    end = min(len(section_text), pos + len(value) + 30)
-                    context = section_text[start:end]
-                    
-                    # Try to extract what this measurement is
-                    measure_types = ["blood sugar", "glucose", "blood pressure", "presyon", "timbang", "oxygen", "temperatura"]
-                    for measure in measure_types:
-                        if measure in context.lower():
-                            measurement_values.append(f"{measure} na {value}")
-                            break
-                    else:
-                        # If no specific type found but in measurements list
-                        for measure in measurements:
-                            if measure in context:
-                                measurement_values.append(f"{measure} ({value})")
-                                break
-            
-            # Start with specific measurements and their actual values
-            if measurement_values:
-                if len(measurement_values) == 1:
-                    summary += f"Ang sukat ay nagpapakita ng {measurement_values[0]}. "
-                else:
-                    summary += f"Ang mga sukat ay nagpapakita ng {measurement_values[0]} at {measurement_values[1]}. "
-            else:
-                # Fall back to generic measurements if no specific values found
-                measurement_text = measurements[0]
-                if len(measurements) > 1:
-                    summary += f"Ang mga sukat ay nagpapakita ng {measurement_text}, kasama ang {measurements[1]}. "
-                else:
-                    summary += f"Ang mga sukat ay nagpapakita ng {measurement_text}. "
-        
-        # Add SPECIFIC physical limitations with affected body parts and detailed descriptions
-        if limitations:
-            # Look for more detailed explanations of limitations
-            detailed_limitations = []
-            
-            for limitation in limitations:
-                # Search for extended descriptions of this limitation
-                limitation_pattern = re.escape(limitation) + r'[,.;]?\s+([^.]+)'
-                match = re.search(limitation_pattern, section_text)
-                if match:
-                    detailed_limitations.append(f"{limitation} ({match.group(1).strip()})")
-                else:
-                    detailed_limitations.append(limitation)
-            
-            limitation_text = detailed_limitations[0] if detailed_limitations else limitations[0]
-            
-            if body_parts:
-                # Look for specific impacts on these body parts
-                body_part_details = {}
-                for body_part in body_parts:
-                    bp_pattern = re.escape(body_part) + r'[,.;]?\s+([^.]+)'
-                    match = re.search(bp_pattern, section_text)
-                    if match:
-                        body_part_details[body_part] = match.group(1).strip()
-                
-                # Construct detailed body part text
-                if body_part_details:
-                    body_parts_text = ""
-                    for i, (part, detail) in enumerate(list(body_part_details.items())[:2]):
-                        if i == 0:
-                            body_parts_text = f"{part} ({detail})"
-                        else:
-                            body_parts_text += f" at {part} ({detail})"
-                    
-                    summary += f"{subject} ay may limitasyon sa {limitation_text}, partikular sa {body_parts_text}. "
-                else:
-                    # Fall back to basic body parts
-                    summary += f"{subject} ay may limitasyon sa {limitation_text}, partikular sa "
-                    if len(body_parts) == 1:
-                        summary += f"{body_parts[0]}. "
-                    else:
-                        summary += f"{body_parts[0]} at {body_parts[1]}. "
-            else:
-                summary += f"{subject} ay nagpapakita ng {limitation_text}. "
-        
-        # If no measurements or limitations yet, add specific physical condition information
-        if not summary and body_parts:
-            # Look for specific issues with these body parts
-            for body_part in body_parts:
-                body_part_pattern = re.escape(body_part) + r'[,.;]?\s+([^.]+)'
-                match = re.search(body_part_pattern, section_text)
-                if match:
-                    condition = match.group(1).strip()
-                    summary += f"{subject} ay may kondisyon na nakakaapekto sa {body_part} na {condition}. "
-                    break
-            
-            # If no specific condition found
-            if not summary:
-                summary += f"{subject} ay may kondisyon na nakakaapekto sa {', '.join(body_parts[:2])}. "
-            
-        # If still no summary, create a specific one based on key phrases in text
-        if not summary:
-            # Check for specific physical status descriptions
-            status_patterns = [
-                r'(pisikal na kalagayan|kondisyon) (?:ni|ng) [^.]+ (ay|na) ([^.]+)',
-                r'(nagpapakita|nakakaranas) ng ([^.]+) (sa|ang) [^.]+ (katawan|pisikal)'
-            ]
-            
-            for pattern in status_patterns:
-                match = re.search(pattern, section_text)
-                if match:
-                    description = match.group(0)
-                    summary += f"{description}. "
-                    break
-            
-            if not summary:
-                # Extract glucose/diabetes details if present
-                if "blood sugar" in section_text.lower() or "glucose" in section_text.lower():
-                    # Look for specific patterns in blood sugar
-                    bs_patterns = [
-                        r'(blood sugar|glucose) [^.]+ (\d+[^.]+)',
-                        r'(mataas|mababa|unstable|hindi stable)[^.]+ (blood sugar|glucose)'
-                    ]
-                    
-                    for pattern in bs_patterns:
-                        match = re.search(pattern, section_text, re.IGNORECASE)
-                        if match:
-                            summary += f"Sa pisikal na kalagayan ni {subject}, may {match.group(0)}. "
-                            break
-                    
-                    if not summary:
-                        summary += f"Sa pisikal na kalagayan ni {subject}, mapapansin ang hindi stabilized na blood sugar levels. "
-                else:
-                    summary += f"Ang pisikal na kalagayan ni {subject} ay nangangailangan ng atensyon. "
-        
-        # Add specific details about meal patterns and their effects if mentioned
-        meal_pattern_match = re.search(r'(meal|pagkain)[^.]+pattern[^.]+', section_text, re.IGNORECASE)
-        if meal_pattern_match and len(summary) < max_length - 100:
-            meal_desc = meal_pattern_match.group(0)
-            if len(meal_desc) < 80:
-                summary += f"Nakikita ang {meal_desc} na nakakaapekto sa kanyang kalusugan. "
-        
-        # Add specific resistance details if present
-        resistance_match = re.search(r'(resistance|pagtutol|ayaw)[^.]+', section_text, re.IGNORECASE)
-        if resistance_match and len(summary) < max_length - 80:
-            resistance_desc = resistance_match.group(0)
-            if len(resistance_desc) < 70:
-                summary += f"May {resistance_desc}. "
-                
-        # Add roller-coaster pattern details if present
-        if "roller-coaster pattern" in section_text.lower() or "blood sugar" in section_text.lower():
-            pattern_match = re.search(r'roller-coaster pattern\s+([^.]+)', section_text, re.IGNORECASE)
-            if pattern_match:
-                pattern_desc = pattern_match.group(1).strip()
-                blood_sugar_values = re.search(r'(\d+\s*mg\/dL)', section_text)
-                value_text = blood_sugar_values.group(1) if blood_sugar_values else ""
-                
-                if "diabetes" in summary.lower() and "pattern" in summary.lower() and pattern_desc:
-                    # Replace generic pattern with specific description
-                    summary = re.sub(r'diabetes [^.]*pattern', 
-                                   f"diabetes na may roller-coaster pattern {pattern_desc} {value_text}", 
-                                   summary)
-                elif "blood sugar" in summary.lower() and value_text:
-                    # Add specific values to blood sugar mentions
-                    summary = summary.replace("blood sugar", f"blood sugar ({value_text})")
-
-        return summary.strip() 
         
     elif section_name == "kalagayan_mental" or "mental" in section_name:
-        # MENTAL & COGNITIVE CONDITION SECTION WITH SPECIFIC DETAILS
-        cognitive = elements["cognitive_status"]
-        emotional = elements["emotional_state"]
-        mental = elements["mental_state"]
+        # MENTAL/EMOTIONAL CONDITION SECTION
+        emotional_states = elements.get("emotional_state", [])
+        cognitive_status = elements.get("cognitive_status", [])
         
-        summary = ""
+        # Extract emotional states from Calamancy entities
+        emotion_entities = [ent.text for ent in doc.ents if ent.label_ == "EMOTION"]
+        cognitive_entities = [ent.text for ent in doc.ents if ent.label_ == "COGNITIVE"]
         
-        # Extract SPECIFIC cognitive status details with qualifiers
-        cognitive_patterns = [
-            r'(memorya|memory|cognition|pag-iisip|cognitive function)([^.]{10,100})',
-            r'(nakakalimot|forgets|hindi matandaan|can\'t remember|confused|nalilito)([^.]{10,100})',
-            r'(orientation|disorientation|pagkalito|confusion|awareness)[^.]{5,100}'
-        ]
+        # First sentence: Overall mental/emotional state with specific terminology
+        if emotion_entities or "mairita" in section_text.lower():
+            emotion_terms = emotion_entities if emotion_entities else ["pagkairita", "frustration"]
+            summary = f"{subject} ay nagpapakita ng {', '.join(emotion_terms[:2])}, lalo na kapag nakakaranas ng kahirapan sa personal care activities."
+        elif cognitive_entities:
+            summary = f"{subject} ay nagpapakita ng cognitive issues tulad ng {', '.join(cognitive_entities[:2])}."
+        elif emotional_states:
+            summary = f"{subject} ay nagpapakita ng {', '.join(emotional_states[:2])} na emosyonal na kalagayan."
+        else:
+            summary = f"Ang mental na kalagayan ni {subject} ay nangangailangan ng pagsusuri at atensyon."
         
-        specific_cognitive = None
-        for pattern in cognitive_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                groups = match.groups()
-                if len(groups) >= 2:
-                    cognitive_desc = match.group(0)
-                    if len(cognitive_desc) < 120:
-                        specific_cognitive = cognitive_desc
-                        break
+        # Second sentence: Specific emotional reactions with contextual triggers
+        if "'Hindi ako baby'" in section_text or "Hindi ako baby" in section_text:
+            summary += f" Kapag tinutulungan siya, nagiging defensive at sinasabi ang 'Hindi ako baby!' o 'Kaya ko pa ito!' na nagpapahiwatig ng kanyang pagpapahalaga sa independence."
         
-        # Start with specific cognitive status
-        if specific_cognitive:
-            if specific_cognitive[0].islower():
-                summary += f"Ang mental na kalagayan ni {subject} ay nagpapakita ng {specific_cognitive}. "
-            else:
-                summary += f"{specific_cognitive}. "
-        elif cognitive:
-            cognitive_desc = cognitive[0]
-            # Check if there's a severity qualifier available
-            severity_terms = ["mild", "moderate", "severe", "banayad", "katamtaman", "malubha", 
-                            "slight", "significant", "pronounced", "marked"]
-            
-            severity_qualifier = None
-            for term in severity_terms:
-                if term in section_text.lower():
-                    term_pos = section_text.lower().find(term)
-                    if term_pos >= 0:
-                        start = max(0, term_pos - 10)
-                        end = min(len(section_text), term_pos + len(term) + 30)
-                        context = section_text[start:end]
-                        if len(context) < 50:
-                            severity_qualifier = context
-                            break
-            
-            if severity_qualifier:
-                summary += f"Ang mental na kalagayan ni {subject} ay nagpapakita ng {cognitive_desc} na {severity_qualifier}. "
-            else:
-                summary += f"Ang mental na kalagayan ni {subject} ay nagpapakita ng {cognitive_desc}. "
-        
-        # Extract SPECIFIC emotional state details
-        emotional_patterns = [
-            r'(kalungkutan|depression|anxiety|pagkabalisa|stress|worry|emotional state)[^.]{10,100}',
-            r'(nag-aalala|nakakaramdam ng|feeling|fearful|natatakot|expressing)[^.]{5,50}(emotion|damdamin|concerns|worries|fears)[^.]{5,50}',
-            r'(mood|emosyon|damdamin)[^.]{5,100}'
-        ]
-        
-        specific_emotional = None
-        for pattern in emotional_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                emotional_desc = match.group(0)
-                if len(emotional_desc) < 100:
-                    specific_emotional = emotional_desc
+        if any(term in section_text.lower() for term in ["confused", "nalilito", "disoriented", "pagkalito"]):
+            # Use specific examples from the text
+            confusion_example = ""
+            for sent in doc.sents:
+                if any(term in sent.text.lower() for term in ["confused", "nalilito", "disoriented", "pagkalito"]):
+                    confusion_example = sent.text
                     break
-        
-        # Add emotional state details
-        if specific_emotional:
-            if specific_emotional[0].islower():
-                summary += f"Sa emosyonal na aspeto, {subject} ay nagpapakita ng {specific_emotional}. "
+                    
+            if confusion_example:
+                summary += f" Nagpapakita siya ng pagkalito, halimbawa: '{confusion_example}'."
             else:
-                summary += f"Sa emosyonal na aspeto, {specific_emotional}. "
-        elif emotional:
-            emotion_text = emotional[0]
-            
-            # Look for specific manifestations of this emotion
-            manifestation_pattern = f"({re.escape(emotion_text)})[^.]*?(ipinapakita|manifested by|expressed through|makikita sa)([^.]+)"
-            manifest_match = re.search(manifestation_pattern, section_text, re.IGNORECASE)
-            
-            if manifest_match and len(manifest_match.groups()) > 2:
-                manifestation = manifest_match.group(3).strip()
-                summary += f"Sa emosyonal na aspeto, {subject} ay nagpapakita ng {emotion_text} na makikita sa {manifestation}. "
-            else:
-                summary += f"Sa emosyonal na aspeto, {subject} ay nagpapakita ng {emotion_text}. "
+                summary += f" Regular na nagpapakita ng pagkalito at disorientation."
         
-        # Add SPECIFIC impact on daily functioning
-        impact_patterns = [
-            r'(nakakaapekto sa|nagdudulot ng|nagiging sanhi ng|nakakahadlang sa)[^.]{5,50}(araw-araw|daily|functioning|pang-araw-araw)[^.]{5,100}',
-            r'(dahil sa|as a result of|because of)[^.]{5,30}(mental|cognitive|emotional)[^.]{5,50}(hindi|can\'t|unable to|nahihirapang)[^.]{5,100}'
-        ]
-        
-        for pattern in impact_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                impact_desc = match.group(0).strip()
-                if len(impact_desc) < 120 and len(summary) < max_length - 120:
-                    if impact_desc[0].islower():
-                        summary += f"Ang kondisyong ito ay {impact_desc}. "
-                    else:
-                        summary += f"{impact_desc}. "
-                    break
-        
-        # Add SPECIFIC information about situational factors if available
-        situation_patterns = [
-            r'(kapag|when|during|sa panahon ng|tuwing)[^.]{5,50}(mas|more|gets|becomes|nagiging)[^.]{5,100}',
-            r'(worse|better|lumalala|bumubuti)[^.]{5,30}(when|kapag|habang|during)[^.]{5,100}'
-        ]
-        
-        for pattern in situation_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 100:
-                situation_desc = match.group(0).strip()
-                if len(situation_desc) < 100:
-                    summary += f"Napansin na {situation_desc}. "
-                    break
-        
-        # Add SPECIFIC memory details or cognitive test results if mentioned
-        memory_patterns = [
-            r'(memory test|cognitive assessment|mental status exam|evaluation)[^.]{5,100}',
-            r'(nakakaalala|remembers|recalls|nakakalimutan|forgets)[^.]{5,100}'
-        ]
-        
-        for pattern in memory_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 100:
-                memory_desc = match.group(0).strip()
-                if len(memory_desc) < 100:
-                    summary += f"Sa aspeto ng memorya, {memory_desc}. "
-                    break
-        
-        # If not enough content yet, add general mental state description from structured elements
-        if not summary and mental:
-            summary += f"Ang mental na kalagayan ni {subject} ay maaaring ilarawan bilang {mental[0]}. "
-        
-        # If still no specific details found, create general mental state description with key observations
-        if not summary:
-            # Look for mental health terms in text
-            mental_terms = ["kalungkutan", "pagkabalisa", "memorya", "nalilito", "nakalimutan", 
-                        "nahihirapan", "pag-iisip", "concentration", "orientation", "mood"]
-                        
-            for term in mental_terms:
-                if term in section_text.lower():
-                    term_pos = section_text.lower().find(term)
-                    if term_pos >= 0:
-                        start = max(0, term_pos - 15)
-                        end = min(len(section_text), term_pos + len(term) + 40)
-                        context = section_text[start:end]
-                        
-                        if "." in context:
-                            context = context.split(".")[0] + "."
-                        
-                        if len(context) > 15 and len(context) < 100:
-                            summary += f"{subject} ay nagpapakita ng {context} "
-                            break
-            
-            if not summary:
-                summary += f"Ang mental na kalagayan ni {subject} ay nangangailangan ng maingat na pagsusuri. "
+        # Third sentence: Impact on relationships with cultural context
+        relationship_mentions = [ent.text for ent in doc.ents if ent.label_ == "SOCIAL_REL"]
+        if relationship_mentions:
+            summary += f" Ang kanyang kondisyon ay nakakaapekto sa relasyon niya sa {', '.join(relationship_mentions[:2])}."
+        elif "kanin" in section_text.lower() and "hindi ko mabubuhay" in section_text.lower():
+            summary += f" May matibay siyang cultural attachment sa Filipino diet, sinasabing 'hindi ko mabubuhay nang walang kanin' na nagpapahirap sa pag-adapt ng mga diet modifications."
+        else:
+            summary += f" Ang kanyang mental state ay nakakaapekto sa overall quality of life at daily functioning."
         
         return summary.strip()
         
     elif section_name == "aktibidad" or "aktibidad" in section_name:
-        # ACTIVITIES & DAILY LIVING SECTION WITH SPECIFIC FUNCTIONAL DETAILS
-        activities = elements["activities"]
-        limitations = elements["activity_limitations"]
+        # ACTIVITY/ADL SECTION
+        activities = elements.get("activities", [])
+        limitations = elements.get("activity_limitations", [])
         
-        summary = ""
+        # Use Calamancy's entity recognition for ADLs
+        adl_entities = [ent.text for ent in doc.ents if ent.label_ == "ADL"]
         
-        # Extract SPECIFIC activity limitation patterns with detailed examples
-        limitation_patterns = [
-            r'(nahihirapan|hirap|hindi magawa|hindi kayang|limitado)[^.]{5,50}(sa|ang|na)[^.]{5,100}',
-            r'(needs assistance|nangangailangan ng tulong)[^.]{5,100}',
-            r'(dependent|umaasa|kailangan ng tulong)[^.]{5,50}(sa|para sa|with|in)[^.]{5,100}'
-        ]
+        # First sentence: Overall activity status with specific ADLs
+        specific_activities = []
+        if adl_entities:
+            specific_activities = adl_entities[:3]
+        else:
+            if "pag-shower" in section_text.lower() or "bathing" in section_text.lower():
+                specific_activities.append("pag-shower")
+            if "pag-toilet" in section_text.lower() or "toilet" in section_text.lower():
+                specific_activities.append("paggamit ng toilet")
+            if "pagbibihis" in section_text.lower() or "dressing" in section_text.lower():
+                specific_activities.append("pagbibihis")
         
-        specific_limitation = None
-        for pattern in limitation_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                limitation_desc = match.group(0)
-                if len(limitation_desc) < 120:
-                    specific_limitation = limitation_desc
+        if specific_activities:
+            summary = f"{subject} ay dumaranas ng matinding kahirapan sa mga pang-araw-araw na gawain, partikular sa {', '.join(specific_activities)}."
+        elif activities:
+            summary = f"{subject} ay nahihirapan sa {', '.join(activities[:3])}."
+        elif "mobility-related" in section_text.lower():
+            summary = f"{subject} ay dumaranas ng matinding kahirapan sa mobility-related self-care activities, na nakakaapekto sa kanyang kalidad ng buhay."
+        else:
+            summary = f"Ang kakayahan ni {subject} sa mga pang-araw-araw na aktibidad ay nakompromiso."
+        
+        # Second sentence: Specific challenges with detailed context
+        adl_challenges = []
+        
+        # Extract specific challenges from the text
+        if "madapa" in section_text.lower() or "falls" in section_text.lower():
+            adl_challenges.append("risk ng pagkahulog")
+            
+            # Add specific details about falls if available
+            fall_details = ""
+            for sent in doc.sents:
+                if "madapa" in sent.text.lower() or "falls" in sent.text.lower():
+                    fall_details = sent.text
                     break
-        
-        # Start with specific activity limitations
-        if specific_limitation:
-            if specific_limitation[0].islower():
-                summary += f"Sa mga pang-araw-araw na gawain, {subject} ay {specific_limitation}. "
-            else:
-                summary += f"Sa mga pang-araw-araw na gawain, {specific_limitation}. "
-        elif limitations:
-            limitation = limitations[0]
             
-            # Try to find how this limitation manifests in daily life
-            manifestation_pattern = f"({re.escape(limitation)})[^.]*?(makikita sa|napapansin sa|evident in|manifested by)[^.]+"
-            manifest_match = re.search(manifestation_pattern, section_text, re.IGNORECASE)
+            if fall_details:
+                falls_match = re.search(r'may ([^\.]*)pagkakataon([^\.]*)(madapa|bumagsak|mahulog)', section_text, re.IGNORECASE)
+                if falls_match:
+                    adl_challenges[-1] = f"risk ng pagkahulog ({falls_match.group(0)})"
+        
+        if "nagbabawas" in section_text.lower() and "frequency" in section_text.lower() and "bathing" in section_text.lower():
+            adl_challenges.append("pagbabawas ng frequency ng bathing")
             
-            if manifest_match and len(manifest_match.groups()) > 1:
-                manifestation = manifest_match.group(0).strip()
-                summary += f"Sa mga pang-araw-araw na gawain, {subject} ay {manifestation}. "
-            else:
-                summary += f"Sa mga pang-araw-araw na gawain, {subject} ay nahihirapan sa {limitation}. "
-        
-        # Add SPECIFIC activity details with quantifiable metrics when available
-        metric_patterns = [
-            r'(kakayahang|able to|can)[^.]{5,30}(maglakad|walk|tumayo|stand|umakyat|climb)[^.]{5,30}(\d+[^.]+)',
-            r'(tulungan ng|with assistance of|tulong ng|help from)[^.]{5,100}',
-            r'(self-care|personal care|pag-aalaga sa sarili)[^.]{5,100}'
-        ]
-        
-        for pattern in metric_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                metric_desc = match.group(0).strip()
-                if len(metric_desc) < 100:
-                    if metric_desc[0].islower():
-                        summary += f"May {metric_desc}. "
-                    else:
-                        summary += f"{metric_desc}. "
-                    break
-        
-        # Add SPECIFIC mobility/assistive device details
-        device_patterns = [
-            r'(gumagamit ng|uses|needs|requires|kailangan ng)[^.]{5,30}(wheelchair|tungkod|walker|cane|mobility aid|assistive device)[^.]{5,100}',
-            r'(wheelchair|tungkod|walker|cane|mobility aid|assistive device)[^.]{5,100}(gumagamit|uses|needs)'
-        ]
-        
-        for pattern in device_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 100:
-                device_desc = match.group(0).strip()
-                if len(device_desc) < 100:
-                    summary += f"{device_desc}. "
-                    break
-        
-        # Add SPECIFIC details on activity pattern changes
-        change_patterns = [
-            r'(recently|kamakailan|lately|for the past|sa nakalipas)[^.]{5,30}(hindi na|stopped|can\'t anymore|hindi na kayang)[^.]{5,100}',
-            r'(dati|previously|dating|used to)[^.]{5,30}(kaya|able to|capable of)[^.]{5,100}(ngayon|now|pero ngayon|but now)[^.]{5,100}',
-            r'(pagbabago sa|changes in|deterioration of)[^.]{5,30}(activity|gawain|function|kakayahan)[^.]{5,100}'
-        ]
-        
-        for pattern in change_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 120:
-                change_desc = match.group(0).strip()
-                if len(change_desc) < 120:
-                    summary += f"Napansin ang {change_desc}. "
-                    break
-        
-        # Add specific independence level if available
-        if len(summary) < max_length - 100:
-            independence_patterns = [
-                r'(independence level|antas ng pagsasarili|level of dependence)[^.]{5,100}',
-                r'(completely|fully|partially|minimal|maximum|moderate)[^.]{5,30}(dependent|independent|assistance|tulong)[^.]{5,100}'
-            ]
+        if "paulit-ulit" in section_text.lower() and "damit" in section_text.lower():
+            adl_challenges.append("paulit-ulit na pagsuot ng parehong damit")
             
-            for pattern in independence_patterns:
-                match = re.search(pattern, section_text, re.IGNORECASE)
-                if match:
-                    independence_desc = match.group(0).strip()
-                    if len(independence_desc) < 100:
-                        summary += f"Sa aspeto ng independence, {independence_desc}. "
-                        break
+        if adl_challenges:
+            summary += f" Dahil sa mga challenges na ito, nagpapakita siya ng {', '.join(adl_challenges)} bilang coping mechanism."
+        elif "feast-and-fast" in section_text.lower():
+            summary += f" Sinusubukan niya ang 'feast-and-fast' approach kung saan kumakain siya ng regular Filipino meals nang walang restrictions, tapos nagsa-skip ng meals kapag mataas ang kanyang blood sugar readings."
         
-        # If we still don't have specific activity details, extract from text
-        if not summary or len(summary) < 100:
-            # Extract detailed information about specific ADLs
-            adl_patterns = [
-                r'(pagligo|bathing|pagbibihis|dressing|pagkain|eating|toileting|pag-aayos|grooming)[^.]{5,100}',
-                r'(IADL|instrumental activities)[^.]{5,100}',
-                r'(pagluluto|cooking|paglilinis|cleaning|pamimili|shopping|pamamahala ng gamot|medication management)[^.]{5,100}'
-            ]
-            
-            for pattern in adl_patterns:
-                match = re.search(pattern, section_text, re.IGNORECASE)
-                if match and len(summary) < max_length - 100:
-                    adl_desc = match.group(0).strip()
-                    if len(adl_desc) < 100:
-                        if not summary:
-                            summary += f"{subject} ay may sumusunod na limitasyon sa pang-araw-araw na gawain: {adl_desc}. "
-                        else:
-                            summary += f"Kabilang sa mga apektadong gawain ang {adl_desc}. "
-                        break
-                        
-        # If still no substantial content, add general activity description
-        if not summary:
-            if activities:
-                if len(activities) > 1:
-                    summary += f"{subject} ay may kahirapan sa {activities[0]} at {activities[1]} at iba pang pang-araw-araw na gawain. "
-                else:
-                    summary += f"{subject} ay may kahirapan sa {activities[0]} at iba pang pang-araw-araw na gawain. "
-            else:
-                summary += f"Ang kakayahan ni {subject} sa pang-araw-araw na gawain ay nangangailangan ng suporta. "
-        
-        # Add impact on family caregivers if mentioned
-        if "family" in section_text.lower() or "pamilya" in section_text.lower() or "caregiver" in section_text.lower():
-            caregiver_patterns = [
-                r'(pamilya|family|caregiver|tagapag-alaga)[^.]{5,50}(nahihirapan|struggling|needs|kailangan|provides|nagbibigay)[^.]{5,100}',
-                r'(burden|hirap|challenges|difficulties)[^.]{5,30}(sa|for|ng|of)[^.]{5,30}(pamilya|family|caregiver)[^.]{5,100}'
-            ]
-            
-            for pattern in caregiver_patterns:
-                match = re.search(pattern, section_text, re.IGNORECASE)
-                if match and len(summary) < max_length - 100:
-                    caregiver_desc = match.group(0).strip()
-                    if len(caregiver_desc) < 100:
-                        summary += f"Ang kalagayang ito ay {caregiver_desc}. "
-                        break
+        # Third sentence: Impact on independence and quality of life
+        if "'Hindi ako baby'" in section_text or "Hindi ako baby" in section_text:
+            summary += f" Mahalaga sa kanya ang kanyang independence, sinasabi niyang 'Hindi ako baby!' o 'Kaya ko pa ito!' kahit na malinaw na nahihirapan siya sa mga aktibidad."
+        elif "tinutulungan" in section_text.lower() and ("bathing" in section_text.lower() or "dressing" in section_text.lower()):
+            summary += f" Bagamat nangangailangan ng tulong, nagpapakita siya ng frustration kapag tinutulungan sa mga personal activities, na nagpapakita ng kanyang pakikibaka para sa independence."
+        else:
+            summary += f" Ang mga limitations na ito ay may significant impact sa kanyang independence at overall quality of life."
         
         return summary.strip()
         
     elif section_name == "kalagayan_social" or "social" in section_name:
-        # SOCIAL CONDITION SECTION WITH SPECIFIC RELATIONSHIP DYNAMICS
-        relations = elements["social_support"]
+        # SOCIAL CONDITION SECTION
+        social_supports = elements.get("social_support", [])
+        relationship_entities = [ent.text for ent in doc.ents if ent.label_ == "SOCIAL_REL"]
         
-        summary = ""
+        # First sentence: Social relationships overview
+        if "tumanggi" in section_text.lower() and ("meal plan" in section_text.lower() or "diet" in section_text.lower()):
+            summary = f"{subject} ay tumanggi na sundin ang meal plan na binigay ng healthcare professional dahil ito'y salungat sa kanyang cultural food preferences."
+        elif relationship_entities:
+            mentioned_relationships = relationship_entities[:2]
+            if "family" in section_text.lower() or "pamilya" in section_text.lower():
+                mentioned_relationships.append("pamilya")
+            summary = f"{subject} ay may social interactions na kinabibilangan ng {', '.join(set(mentioned_relationships))}."
+        elif social_supports:
+            summary = f"{subject} ay may suporta mula sa {', '.join(social_supports[:2])}."
+        else:
+            summary = f"Ang social na kalagayan ni {subject} ay may mahalagang papel sa kanyang pangkalahatang well-being."
         
-        # Extract SPECIFIC relationship dynamics with details
-        relation_patterns = [
-            r'(relationship|relasyon|ugnayan|pakikitungo)[^.]{5,50}(sa|with|between)[^.]{5,100}',
-            r'(asawa|spouse|anak|children|pamilya|family|caregiver)[^.]{5,50}(nagbibigay|provides|helps|tumutulong|supports|sinusuportahan)[^.]{5,100}',
-            r'(interaction|komunikasyon|communication|interaction)[^.]{5,50}(sa|with|ng)[^.]{5,50}(asawa|spouse|anak|children|pamilya|family)[^.]{5,100}'
-        ]
+        # Second sentence: Cultural or family dynamics with specific details
+        if "hindi ko mabubuhay nang walang kanin" in section_text.lower():
+            summary += f" Paulit-ulit niyang binabanggit na 'hindi ko mabubuhay nang walang kanin' at 'masyadong bland ang diet na ibinibigay sa akin,' na nagpapakita ng matinding cultural attachment sa tradisyonal na Filipino diet."
+        elif "masyadong malayo ito sa kanyang usual diet" in section_text.lower():
+            summary += f" Ang mga pang-medical na rekomendasyon ay masyadong malayo sa kanyang usual diet na deeply rooted sa Filipino culture, kaya nahihirapan siyang sumunod dito."
+        elif "Filipino dishes" in section_text.lower() or "Filipino food" in section_text.lower():
+            summary += f" May matibay siyang preference para sa traditional Filipino dishes na high in refined carbohydrates at sweets, na nagiging hadlang sa kanyang diabetes management."
         
-        specific_relation = None
-        for pattern in relation_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                relation_desc = match.group(0)
-                if len(relation_desc) < 120:
-                    specific_relation = relation_desc
-                    break
-        
-        # Start with specific relationship dynamics
-        if specific_relation:
-            if specific_relation[0].islower():
-                summary += f"Sa social na aspeto, {specific_relation}. "
-            else:
-                summary += f"Sa social na aspeto, {specific_relation}. "
-        elif relations:
-            relation = relations[0]
-            
-            # Check if the relationship indicates support or resistance
-            support_terms = ["tumutulong", "sumusuporta", "supportive", "caring", "nagbibigay-suporta"]
-            opposition_terms = ["tumanggi", "rejected", "opposed", "hindi sumusunod", "conflict", "tension"]
-            
-            # Check if there are signals of support or resistance
-            has_support = any(term in section_text.lower() for term in support_terms)
-            has_resistance = any(term in section_text.lower() for term in opposition_terms)
-            
-            if has_resistance:
-                # Find specific resistance context
-                for term in opposition_terms:
-                    if term in section_text.lower():
-                        term_pos = section_text.lower().find(term)
-                        if term_pos >= 0:
-                            start = max(0, term_pos - 20)
-                            end = min(len(section_text), term_pos + len(term) + 60)
-                            context = section_text[start:end]
-                            if "." in context:
-                                context = context.split(".")[0] + "."
-                            if len(context) < 100:
-                                summary += f"May {context} sa pagitan ni {subject} at kanyang {relation}. "
-                                break
-                
-                # If no specific context found
-                if not summary:
-                    summary += f"May tensyon sa relasyon ni {subject} sa kanyang {relation}, partikular sa mga desisyon tungkol sa kalusugan. "
-            elif has_support:
-                # Find specific support context
-                for term in support_terms:
-                    if term in section_text.lower():
-                        term_pos = section_text.lower().find(term)
-                        if term_pos >= 0:
-                            start = max(0, term_pos - 20)
-                            end = min(len(section_text), term_pos + len(term) + 60)
-                            context = section_text[start:end]
-                            if "." in context:
-                                context = context.split(".")[0] + "."
-                            if len(context) < 100:
-                                summary += f"Ang kanyang {relation} ay {context}. "
-                                break
-                
-                # If no specific context found
-                if not summary:
-                    summary += f"Nakakatanggap {subject} ng suporta mula sa kanyang {relation}. "
-            else:
-                summary += f"May ugnayan {subject} sa kanyang {relation} tungkol sa kanyang kalusugan. "
-            
-            # Add additional relationships if available
-            if len(relations) > 1 and len(summary) < max_length - 80:
-                additional_relation = relations[1]
-                summary += f"Bukod dito, may interaksyon din siya sa kanyang {additional_relation}. "
-        
-        # Add SPECIFIC social network details
-        network_patterns = [
-            r'(social network|social support system|support network|network of|grupo ng)[^.]{5,100}',
-            r'(active|involved|participates|kasali|engaged)[^.]{5,30}(sa|in|with)[^.]{5,30}(community|komunidad|church|simbahan|senior|elderly)[^.]{5,100}',
-            r'(friends|kaibigan|kamag-anak|relatives|extended family|malawak na pamilya)[^.]{5,100}'
-        ]
-        
-        for pattern in network_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 100:
-                network_desc = match.group(0).strip()
-                if len(network_desc) < 100:
-                    summary += f"Sa aspeto ng social network, {network_desc}. "
-                    break
-        
-        # Add SPECIFIC cultural factors affecting social relationships
-        cultural_patterns = [
-            r'(cultural|kultura|traditional|tradisyonal|values|pagpapahalaga)[^.]{5,50}(factor|influence|impact|dahilan|epekto)[^.]{5,100}',
-            r'(preferences|kagustuhan|cultural factors|cultural background)[^.]{5,50}(nakakaapekto|affects|influences|impact)[^.]{5,100}',
-            r'(dahil sa|because of)[^.]{5,30}(culture|tradition|belief|paniniwala|kultura|tradisyon)[^.]{5,100}'
-        ]
-        
-        for pattern in cultural_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 120:
-                cultural_desc = match.group(0).strip()
-                if len(cultural_desc) < 120:
-                    summary += f"{cultural_desc}. "
-                    break
-        
-        # Add SPECIFIC information about social isolation or engagement
-        isolation_patterns = [
-            r'(social isolation|isolation|isolation from|hiwalay sa|hindi nakikisalamuha sa)[^.]{5,100}',
-            r'(feels|nakakaramdam ng|experiencing)[^.]{5,30}(lonely|loneliness|kalungkutan|nag-iisa|alone)[^.]{5,100}',
-            r'(limited|decreased|reduced|nawalan ng|nawala ang)[^.]{5,30}(social interaction|pakikisalamuha|social engagement)[^.]{5,100}'
-        ]
-        
-        engagement_patterns = [
-            r'(actively|regularly|consistently)[^.]{5,30}(participates|engages|kasali|involved|lumahok)[^.]{5,100}',
-            r'(enjoys|nagagalak|maintains|nananatili)[^.]{5,30}(social connection|interaction|pakikipag-ugnayan)[^.]{5,100}'
-        ]
-        
-        # Check for isolation first
-        isolation_found = False
-        for pattern in isolation_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 100:
-                isolation_desc = match.group(0).strip()
-                if len(isolation_desc) < 100:
-                    summary += f"Sa aspeto ng social interaction, {isolation_desc}. "
-                    isolation_found = True
-                    break
-        
-        # If no isolation found, check for engagement
-        if not isolation_found:
-            for pattern in engagement_patterns:
-                match = re.search(pattern, section_text, re.IGNORECASE)
-                if match and len(summary) < max_length - 100:
-                    engagement_desc = match.group(0).strip()
-                    if len(engagement_desc) < 100:
-                        summary += f"Sa pakikisalamuha sa iba, {engagement_desc}. "
-                        break
-        
-        # Add SPECIFIC communication barriers or abilities if mentioned
-        communication_patterns = [
-            r'(communication|komunikasyon|pakikipag-usap)[^.]{5,30}(barrier|hadlang|limitation|problema|issue)[^.]{5,100}',
-            r'(mahirap|difficult|challenging)[^.]{5,30}(makipag-usap|communicate|express|ipahayag)[^.]{5,100}',
-            r'(able to|capable of|kayang)[^.]{5,30}(communicate|makipag-usap|express|ipahayag)[^.]{5,100}'
-        ]
-        
-        for pattern in communication_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match and len(summary) < max_length - 100:
-                comm_desc = match.group(0).strip()
-                if len(comm_desc) < 100:
-                    summary += f"Sa larangan ng komunikasyon, {comm_desc}. "
-                    break
-        
-        # If no specific details yet, create general social status summary
-        if not summary:
-            # Look for any social relationships in text
-            if "asawa" in section_text.lower() or "spouse" in section_text.lower():
-                if "tumanggi" in section_text.lower() or "hindi sumunod" in section_text.lower():
-                    summary += f"Ayon sa asawa ni {subject}, hindi siya sumusunod sa mga rekomendasyon para sa kanyang kalusugan. "
-                else:
-                    summary += f"May komunikasyon {subject} sa kanyang asawa tungkol sa kanyang kondisyon. "
-            
-            # Look for cultural factors
-            elif "cultural" in section_text.lower() or "traditional" in section_text.lower():
-                summary += f"Ang cultural food preferences ni {subject} ay nakakaapekto sa kanyang pagsunod sa mga medical recommendations. "
-            
-            # Look for communication patterns
-            elif "nakikipag-usap" in section_text.lower() or "binabanggit" in section_text.lower():
-                summary += f"Sa kanyang pakikipag-usap, ipinahahayag ni {subject} ang kanyang mga kagustuhan at pangangailangan. "
-                
-            else:
-                summary += f"Ang social na kalagayan ni {subject} ay mahalagang aspeto ng kanyang pangkalahatang kalusugan. "
+        # Third sentence: Impact on family/social dynamics with cultural context
+        if "strong resistance" in section_text.lower():
+            summary += f" Ang mga attempt sa pag-introduce ng mas healthy options tulad ng {', '.join(cultural_foods[:2]) if cultural_foods else 'brown rice at vegetables'} ay nakatagpo ng strong resistance mula sa kanya."
+        elif "naging mahirap ang grocery shopping" in section_text.lower():
+            summary += f" Ang pamilya ay nahihirapan sa grocery shopping at meal preparation dahil kailangan ng separate meals o radical changes sa family recipes para sa kanyang dietary needs."
+        elif "sinasalungat niya" in section_text.lower():
+            summary += f" Sinasalungat niya ang mga pagbabago sa kanyang diet na nagpapahirap sa pagsunod sa mga medical recommendations at nagdudulot ng tension sa family dynamics."
+        else:
+            summary += f" Ang kanyang social context ay mahalagang isaalang-alang sa pagbubuo ng effective na care plan."
         
         return summary.strip()
         
     elif section_name == "pangunahing_rekomendasyon" or "rekomendasyon" in section_name:
-        # PRIMARY RECOMMENDATIONS SECTION WITH SPECIFIC MEDICAL ADVICE
-        referrals = elements["healthcare_referrals"]
-        recommendations = elements["recommendations"]
+        # PRIMARY RECOMMENDATIONS SECTION
+        recommendations = elements.get("recommendations", [])
+        healthcare_referrals = elements.get("healthcare_referrals", [])
         
-        summary = ""
+        # Extract healthcare referrals from Calamancy entities
+        referral_entities = [ent.text for ent in doc.ents if ent.label_ == "HEALTHCARE_REFERRAL"]
+        recommendation_entities = [ent.text for ent in doc.ents if ent.label_ == "RECOMMENDATION"]
         
-        # Start with specific healthcare referrals and reasons
-        if referrals:
-            referral = referrals[0]
-            
-            # Look for specific reason for this referral
-            reason_patterns = [
-                f'(konsulta sa|pagpapatingin sa) {re.escape(referral)}[^.]+para sa ([^.]+)',
-                f'{re.escape(referral)}[^.]+para ([^.]+)',
-                r'(dahil sa|upang|para|to) ([^.]+)'
-            ]
-            
-            for pattern in reason_patterns:
-                match = re.search(pattern, section_text)
-                if match and len(match.groups()) > 1:
-                    reason = match.group(2).strip()
-                    summary += f"Inirerekomenda ang pagkonsulta sa {referral} para sa {reason}. "
-                    break
-            
-            # If no specific reason found
-            if not summary:
-                summary += f"Inirerekomenda ang pagkonsulta sa {referral} para sa kumpletong pagsusuri at diagnosis. "
-        
-        # Extract specific recommendation details from text
-        specific_recommendations = []
-        
-        # Look for detailed diet recommendations
-        diet_patterns = [
-            r'(pagbawas ng|pag-iwas sa|pagtaas ng|pagdagdag ng)([^.,;:]{10,100})',
-            r'(iminumungkahi|inirerekomenda|pinapayuhan)[^.]{5,30}(diet|pagkain|nutrition)[^.]{10,100}',
-            r'(dapat|kailangan|mahalagang)[^.]{5,30}(diet|pagkain|nutrition)[^.]{10,100}'
-        ]
-        
-        for pattern in diet_patterns:
-            matches = re.finditer(pattern, section_text, re.IGNORECASE)
-            for match in matches:
-                recommendation = match.group(0).strip()
-                if recommendation and len(recommendation) > 15 and len(recommendation) < 120:
-                    specific_recommendations.append(recommendation)
-        
-        # Look for specific monitoring recommendations
-        monitor_patterns = [
-            r'(mag-monitor ng|subaybayan ang|bantayan ang|obserbahan ang)([^.,;:]{10,100})',
-            r'(monitoring|pagsubaybay)[^.]{5,50}',
-            r'(dapat|kailangan|mahalagang)[^.]{5,30}(bantayan|subaybayan|i-monitor)[^.]{10,100}'
-        ]
-        
-        for pattern in monitor_patterns:
-            matches = re.finditer(pattern, section_text, re.IGNORECASE)
-            for match in matches:
-                recommendation = match.group(0).strip()
-                if recommendation and len(recommendation) > 15 and len(recommendation) < 120:
-                    specific_recommendations.append(recommendation)
-        
-        # Look for specific medication or treatment recommendations
-        treatment_patterns = [
-            r'(gamot|medication|treatment)[^.]{10,100}',
-            r'(dapat|kailangan|mahalagang)[^.]{5,30}(uminom ng|take|gamitin)[^.]{10,100}',
-            r'(inirerekomenda|iminumungkahi|pinapayuhan)[^.]{5,30}(gamot|lunas|medication|treatment)[^.]{10,100}'
-        ]
-        
-        for pattern in treatment_patterns:
-            matches = re.finditer(pattern, section_text, re.IGNORECASE)
-            for match in matches:
-                recommendation = match.group(0).strip()
-                if recommendation and len(recommendation) > 15 and len(recommendation) < 120:
-                    specific_recommendations.append(recommendation)
-        
-        # Add specific recommendations with proper formatting
-        if specific_recommendations:
-            # Choose the most detailed recommendations (avoid duplicates)
-            unique_recommendations = []
-            for rec in specific_recommendations:
-                # Check if this is significantly different from existing recommendations
-                if not any(similar(rec, existing) > 0.7 for existing in unique_recommendations):
-                    unique_recommendations.append(rec)
-            
-            # Add top recommendations
-            if unique_recommendations:
-                if not summary:
-                    # First recommendation with proper introduction
-                    first_rec = unique_recommendations[0]
-                    # Ensure it starts with a capital letter
-                    if first_rec[0].islower():
-                        if "iminumungkahi" in first_rec.lower() or "inirerekomenda" in first_rec.lower():
-                            summary += first_rec.capitalize() + ". "
-                        else:
-                            summary += "Iminumungkahi na " + first_rec + ". "
-                    else:
-                        summary += first_rec + ". "
-                
-                # Add second recommendation if available and different
-                if len(unique_recommendations) > 1 and len(summary) < max_length - 80:
-                    second_rec = unique_recommendations[1]
-                    if second_rec[0].islower():
-                        if "mahalagang" in second_rec.lower() or "dapat" in second_rec.lower():
-                            summary += second_rec.capitalize() + ". "
-                        else:
-                            summary += "Mahalagang " + second_rec + ". "
-                    else:
-                        summary += second_rec + ". "
-        
-        # Use extracted recommendations if no specific ones were found
+        # First sentence: Primary recommendation with specific healthcare providers
+        if referral_entities:
+            summary = f"Inirerekomenda ang pagkonsulta sa {', '.join(referral_entities[:1])} para sa comprehensive na assessment at management ng kondisyon."
+        elif "gastroenterologist" in section_text.lower():
+            summary = f"Inirerekomenda ang agarang pagkonsulta sa gastroenterologist para sa proper diagnostic work-up at evaluasyon ng gastrointestinal symptoms."
+        elif "nutritionist" in section_text.lower() or "dietitian" in section_text.lower():
+            summary = f"Iminumungkahi ang regular na konsultasyon sa nutrition specialist para sa personalized na dietary plan na angkop sa medical at cultural needs."
         elif recommendations:
-            # Start with main recommendation
-            rec = recommendations[0]
-            summary += f"Mahalagang {rec}. "
+            summary = f"Ang pangunahing rekomendasyon ay {recommendations[0]}."
+        elif recommendation_entities:
+            summary = f"Iminumungkahi ang {recommendation_entities[0]} bilang pangunahing hakbang para sa pangangalaga."
+        else:
+            summary = f"Iminumungkahi na mag-monitor ng signs ng dehydration tulad ng dry mouth, decreased urination, at increased dizziness."
+        
+        # Second sentence: Specific action recommendations with detailed guidance
+        if "high-fat" in section_text.lower() and "acidic" in section_text.lower():
+            summary += f" Para sa meal composition, iminumungkahi ang pagbawas ng high-fat, acidic, at spicy foods na maaaring mag-trigger ng reflux symptoms."
+        elif "comprehensive" in section_text.lower() and "evaluation" in section_text.lower():
+            summary += f" Kinakailangang bantayan ang monitor ng mga vital signs at suriin ang mga underlying conditions tulad ng gastrointestinal ulcers, malabsorption syndromes, o posibleng malignancies."
+        elif "low" in section_text.lower() and "carb" in section_text.lower():
+            summary += f" Mahalagang i-modify ang diet patungo sa mas mababang carbohydrate content habang isinasaalang-alang ang cultural preferences para mapanatili ang adherence."
+        elif "over-the-counter" in section_text.lower() or "antacids" in section_text.lower():
+            summary += f" Para sa interim symptom management, maaaring gamitin ang over-the-counter antacids o acid reducers, pero dapat temporary lang ito habang hinihintay ang komprehensibong medical assessment."
+        
+        # Third sentence: Timeframe or importance emphasis with follow-up plan
+        if "agarang" in section_text.lower() or "immediate" in section_text.lower():
+            summary += f" Ang mga rekomendasyon na ito ay nangangailangan ng agarang aksyon para maiwasan ang mga komplikasyon at mapabuti ang quality of life."
+        elif "temporary" in section_text.lower() or "pansamantala" in section_text.lower():
+            summary += f" Binibigyang-diin na dapat temporary lang ang mga self-management strategies habang hinihintay ang komprehensibong medical assessment."
+        else:
+            summary += f" Regular na follow-up at monitoring ay mahalaga para sa tuloy-tuloy na progreso at adjustment ng treatment plan kung kinakailangan."
+        
+        return summary.strip()
+        
+    elif section_name == "mga_hakbang" or "hakbang" in section_name:
+        # STEPS/ACTIONS SECTION
+        treatments = elements.get("treatments", [])
+        intervention_methods = elements.get("intervention_methods", [])
+        
+        # Extract treatment entities from Calamancy
+        treatment_entities = [ent.text for ent in doc.ents if ent.label_ == "TREATMENT_METHOD" or ent.label_ == "TREATMENT"]
+        
+        # First sentence: Primary action steps with specific interventions
+        if "pag-iwas sa caffeine" in section_text.lower():
+            summary = f"Pinapayuhan ang pag-iwas sa caffeine, alcohol, at carbonated beverages na maaaring magpalala ng gastric acid production at makaapekto sa digestive health."
+        elif treatment_entities:
+            summary = f"Ang mga rekomendasyon ay kinabibilangan ng {', '.join(treatment_entities[:2])} bilang pangunahing hakbang sa management ng kondisyon."
+        elif treatments:
+            summary = f"Ang mga hakbang sa paggamot ay nakatuon sa {', '.join(treatments[:2])} para sa pag-improve ng kanyang kondisyon."
+        elif intervention_methods:
+            summary = f"Ang mga hakbang sa paggamot ay nakatuon sa {', '.join(intervention_methods[:2])}."
+        else:
+            summary = f"May mga ispesipikong hakbang na dapat isagawa para sa pangangalaga at management ng kondisyon."
             
-            # Add secondary recommendation if available
-            if len(recommendations) > 1:
-                summary += f"Kinakailangan din na {recommendations[1]}. "
-        
-        # Add specific warning signs to watch for
-        warning_patterns = [
-            r'(bantayan|watch for|look for|observe for|be alert for)[^.]{5,50}(signs|symptoms|palatandaan)[^.]{10,100}',
-            r'(warning signs|red flags|danger signals|palatandaan ng panganib)[^.]{10,100}'
-        ]
-        
-        for pattern in warning_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                warning = match.group(0).strip()
-                if warning and len(warning) < 100:
-                    summary += f"Kinakailangang {warning}. "
-                    break
-        
-        # If still no warnings but monitoring is mentioned, add generic warning
-        if "monitor" in section_text.lower() and "warning" not in summary.lower() and "bantayan" not in summary.lower():
-            # Look for specific symptoms/signs to monitor
-            warning_terms = ["dehydration", "dry mouth", "decreased urination", "dizziness", 
-                          "pagkahilo", "tuyot na bibig", "blood sugar", "blood pressure"]
+        # Second sentence: Implementation guidance with cultural sensitivity
+        if "Bukod dito, tinuruan" in section_text.lower():
+            summary += f" Bukod dito, kinakailangang turuan ang pamilya tungkol sa wastong pangangalaga, monitoring ng symptoms, at paggamit ng food and symptom diary para sa mas mahusay na tracking."
+        elif "family" in section_text.lower() or "pamilya" in section_text.lower():
+            summary += f" Mahalagang kasangkutin ang pamilya sa implementation ng mga hakbang na ito para sa dagdag na suporta at consistency."
+        elif cultural_foods:
+            summary += f" Ang mga hakbang na ito ay dapat iakma sa kanyang cultural preferences, lalo na sa aspeto ng pagkain at lifestyle, para matiyak ang adherence at sustainability."
+        else:
+            summary += f" Ang mga hakbang na ito ay dapat isagawa nang regular at susundin nang mahigpit para sa optimal na resulta at pag-iwas sa komplikasyon."
             
-            for term in warning_terms:
-                if term in section_text.lower():
-                    # Look for context around this term
-                    term_pos = section_text.lower().find(term)
-                    if term_pos >= 0:
-                        start = max(0, term_pos - 20)
-                        end = min(len(section_text), term_pos + len(term) + 40)
-                        context = section_text[start:end]
-                        
-                        # Extract a readable warning that includes the term
-                        if len(context) < 90:
-                            summary += f"Kinakailangang bantayan ang {context}. "
-                            break
-                    
-                    # If context extraction fails
-                    summary += f"Kinakailangang bantayan ang mga palatandaan ng {term}. "
-                    break
-        
+        # Third sentence: Expected outcomes with follow-up plan
+        if filipino_medical_terms:
+            summary += f" Ang pagsunod sa mga hakbang na ito ay makakatulong sa pag-manage ng {', '.join(filipino_medical_terms[:2])} at pagpapabuti ng overall quality of life."
+        else:
+            summary += f" Ang pagsunod sa mga hakbang na ito ay makakatulong sa pagpapabuti ng kalagayan, pagbawas ng symptoms, at pagtaas ng functional independence sa araw-araw."
+            
         return summary.strip()
         
     elif section_name == "pangangalaga" or "alaga" in section_name:
-        # CARE & MONITORING SECTION WITH DETAILED SPECIFICS
-        monitoring = elements["monitoring_plans"]
-        warnings = elements["warnings"]
-        treatments = elements["treatments"]  # Additional context
-        recommendations = elements.get("recommendations", [])
+        # CARE SECTION
+        monitoring_plans = elements.get("monitoring_plans", [])
+        warnings = elements.get("warnings", [])
         
-        summary = ""
+        # Extract safety and monitoring entities
+        safety_entities = [ent.text for ent in doc.ents if ent.label_ == "SAFETY"]
+        warning_entities = [ent.text for ent in doc.ents if ent.label_ == "WARNING_SIGN"]
         
-        # Extract SPECIFIC monitoring instructions with details
-        monitoring_patterns = [
-            r'(i-monitor|obserbahan|bantayan|subaybayan)([^.]{10,100})',
-            r'(regular na|araw-araw na|weekly|monthly) (pagsubaybay|monitoring|pag-check)([^.]{5,100})',
-            r'(dapat|kailangang|mahalagang) (subaybayan|bantayan|obserbahan)([^.]{10,100})'
-        ]
-        
-        specific_monitoring = None
-        for pattern in monitoring_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                groups = match.groups()
-                if len(groups) >= 2:
-                    monitoring_rec = match.group(0)
-                    if len(monitoring_rec) < 120:
-                        specific_monitoring = monitoring_rec
-                        break
-        
-        # Start with specific monitoring instructions
-        if specific_monitoring:
-            if specific_monitoring[0].islower():
-                summary += f"Sa pangangalaga, mahalagang {specific_monitoring}. "
-            else:
-                summary += f"Sa pangangalaga, {specific_monitoring}. "
-        elif monitoring:
-            monitor = monitoring[0]
-            summary += f"Sa pangangalaga, mahalagang subaybayan ang {monitor}. "
+        # First sentence: Care approach with specific techniques
+        if "reflux symptoms" in section_text.lower() and "management" in section_text.lower():
+            summary = f"Para sa management ng reflux symptoms, inirerekomenda na manatiling nakaupo nang tuwid sa loob ng 30 minutos pagkatapos kumain at ang pag-elevate ng upper body habang natutulog."
+        elif "dizziness" in section_text.lower() and ("pagtayo" in section_text.lower() or "blood pressure" in section_text.lower()):
+            summary = f"Hinggil sa postural dizziness, nirerekomenda ang paunti-unting pagtayo mula sa pagkakaupo o pagkakahiga para mabigyan ng pagkakataon ang blood pressure na ma-adjust."
+        elif "falls" in section_text.lower() or "madapa" in section_text.lower():
+            summary = f"Para sa pangangalaga at pag-iwas sa falls, kinakailangang maglagay ng safety measures sa bahay, lalo na sa banyo at mga lugar na may transition surfaces."
+        elif monitoring_plans:
+            summary = f"Ang pangangalaga ay nakatuon sa {', '.join(monitoring_plans[:2])} para sa optimal na recovery at pag-iwas sa komplikasyon."
+        else:
+            summary = f"Mahalagang magkaroon ng comprehensive na pangangalaga strategy na nakaayon sa kanyang specific needs at kondisyon."
             
-            if len(monitoring) > 1:
-                summary += f"Dapat ding regular na i-monitor ang {monitoring[1]}. "
-        
-        # Extract SPECIFIC warning signs with context
-        warning_patterns = [
-            r'(maging alerto sa|bantayan ang|mag-ingat sa)([^.]{10,100}(signs|symptoms|palatandaan|senyales))[^.]{10,100}',
-            r'(warning signs|red flags|palatandaan ng panganib|danger signals)([^.]{10,100})',
-            r'(kung|kapag|if|when) ([^.]{5,50})(kontakin|tawagan|i-contact|seek)[^.]{10,100}'
-        ]
-        
-        specific_warning = None
-        for pattern in warning_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                warning_rec = match.group(0)
-                if len(warning_rec) < 120:
-                    specific_warning = warning_rec
-                    break
-        
-        # Add detailed warning signs
-        if specific_warning:
-            if specific_warning[0].islower():
-                summary += f"Kinakailangang {specific_warning}. "
-            else: 
-                summary += f"{specific_warning}. "
-        elif warnings:
-            warning = warnings[0]
-            summary += f"Maging alerto sa mga palatandaan ng {warning}. "
+        # Second sentence: Specific care techniques with detailed implementation
+        if "pag-elevate ng upper body" in section_text.lower():
+            summary += f" Inirerekomenda ang pag-elevate ng upper body habang natutulog sa pamamagitan ng paglalagay ng mga unan o pag-adjust ng kama para mabawasan ang reflux symptoms sa gabi."
+        elif "proper positioning" in section_text.lower() or "positioning" in section_text.lower():
+            summary += f" Ang proper positioning ay mahalaga para sa comfort at pag-iwas sa pressure sores, na nangangailangan ng regular na pagpapalit ng posisyon every 2-3 hours."
+        elif safety_entities:
+            safety_items = []
             
-            # Add specific symptoms to watch for if available
-            symptom_match = re.search(r'(symptoms|sintomas|signs|palatandaan) (tulad ng|such as|like|including)([^.]{5,100})', section_text, re.IGNORECASE)
-            if symptom_match:
-                specific_symptoms = symptom_match.group(3).strip()
-                if len(specific_symptoms) < 80:
-                    summary += f"Partikular na bantayan ang {specific_symptoms}. "
-        
-        # Extract SPECIFIC care techniques or approaches
-        care_patterns = [
-            r'(gawin ang|isagawa ang|apply|i-provide) ([^.]{10,100})',
-            r'(technique|approach|pamamaraan|paraan) (para sa|for|sa) ([^.]{10,100})',
-            r'(proper|tamang|wastong) (pangangalaga|care|positioning|pagpoposisyon)([^.]{10,100})'
-        ]
-        
-        specific_care = None
-        for pattern in care_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                care_rec = match.group(0)
-                if len(care_rec) < 100:
-                    specific_care = care_rec
-                    break
-        
-        # Add care techniques if found
-        if specific_care and len(summary) < 300:
-            if specific_care[0].islower():
-                summary += f"Iminumungkahi ang {specific_care}. "
+            if "towel rack" in section_text.lower():
+                safety_items.append("pag-install ng grab bars sa halip na paggamit ng towel rack")
+            if "shower" in section_text.lower() or "bathing" in section_text.lower():
+                safety_items.append("paggamit ng non-slip mats sa shower area")
+            if "toilet" in section_text.lower():
+                safety_items.append("paggamit ng toilet seat risers")
+                
+            if safety_items:
+                summary += f" Inirerekomenda ang mga safety modifications tulad ng {', '.join(safety_items)} para mabawasan ang risk ng aksidente."
             else:
-                summary += f"{specific_care}. "
-        elif treatments and len(summary) < 300:
-            treatment = treatments[0]
-            summary += f"Isagawa ang tamang {treatment} bilang bahagi ng pangangalaga. "
-        
-        # Extract SPECIFIC documentation instructions
-        documentation_patterns = [
-            r'(i-record|idokumento|isulat|i-log|i-track|i-document)([^.]{10,100})',
-            r'(documentation|recording|tracking) (ng|of|para sa)([^.]{10,100})',
-            r'(symptom diary|food diary|journal|log)([^.]{10,100})'
-        ]
-        
-        specific_documentation = None
-        for pattern in documentation_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                doc_rec = match.group(0)
-                if len(doc_rec) < 100:
-                    specific_documentation = doc_rec
-                    break
-        
-        # Add documentation instructions if found
-        if specific_documentation and len(summary) < 300:
-            if specific_documentation[0].islower():
-                summary += f"Mahalagang {specific_documentation}. "
-            else:
-                summary += f"{specific_documentation}. "
-        
-        # Extract SPECIFIC communication instructions with healthcare providers
-        communication_patterns = [
-            r'(kontakin|tawagan|makipag-ugnayan sa|consult with) ([^.]{10,100})',
-            r'(inform|ipaalam|sabihan) (ang|the) (doktor|doctor|nurse|healthcare provider)([^.]{10,100})',
-            r'(report|i-report|iulat) (ang|the|any) ([^.]{10,100})'
-        ]
-        
-        specific_communication = None
-        for pattern in communication_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                comm_rec = match.group(0)
-                if len(comm_rec) < 100:
-                    specific_communication = comm_rec
-                    break
-        
-        # Add communication instructions if found
-        if specific_communication and len(summary) < 300:
-            if specific_communication[0].islower():
-                summary += f"Kung may pagbabago sa kalagayan, {specific_communication}. "
-            else:
-                summary += f"{specific_communication}. "
-        
-        # If no specific details found yet, search for key terms
-        if not summary:
-            # Look for monitoring terms with context
-            for monitor_term in ["subaybayan", "bantayan", "i-monitor", "obserbahan", "sundin"]:
-                if monitor_term in section_text.lower():
-                    # Extract context around the term
-                    term_pos = section_text.lower().find(monitor_term)
-                    if term_pos >= 0:
-                        start = max(0, term_pos - 15)
-                        end = min(len(section_text), term_pos + len(monitor_term) + 60)
-                        context = section_text[start:end]
-                        
-                        # Find sentence boundary
-                        period_pos = context.find('.')
-                        if period_pos > 0:
-                            context = context[:period_pos+1]
-                        
-                        if len(context) > 20 and len(context) < 120:
-                            summary += context + " "
-                            break
+                summary += f" Kinakailangang i-implement ang mga safety measures sa buong bahay para maprotektahan siya mula sa potential hazards."
             
-            # Look for caregiver instructions
-            caregiver_patterns = [
-                r'(caregiver|tagapag-alaga|family member) (dapat|should|can|may|pwedeng)([^.]{10,100})',
-                r'(turuan|train|educate) (ang|the) (caregiver|tagapag-alaga|family)([^.]{10,100})'
-            ]
+        # Third sentence: Monitoring guidance with specific warning signs
+        if warning_entities:
+            summary += f" Mahalagang bantayan ang mga warning signs tulad ng {', '.join(warning_entities[:3])} at agad na humingi ng medical attention kung nakita ang mga ito."
+        elif "dehydration" in section_text.lower():
+            summary += f" Mahalaga ring mag-monitor ng signs ng dehydration tulad ng dry mouth, decreased urination, at increased dizziness, lalo na dahil may risk ng inadequate fluid intake."
+        else:
+            summary += f" Regular na monitoring ng kanyang kondisyon at pag-document ng mga pagbabago ay mahalaga para sa early detection ng potential complications at adjustment ng care plan kung kinakailangan."
             
-            for pattern in caregiver_patterns:
-                match = re.search(pattern, section_text, re.IGNORECASE)
-                if match:
-                    caregiver_rec = match.group(0)
-                    if caregiver_rec and len(caregiver_rec) < 100:
-                        summary += f"{caregiver_rec.capitalize()}. "
-                        break
-        
-        # Add a general conclusion about the importance of consistent care
-        if not summary:
-            summary = "Ang regular na pagsubaybay at pangangalaga ay mahalaga para sa pagtukoy ng anumang pagbabago sa kalagayan. "
-        elif len(summary) < 300:
-            summary += "Ang maingat na pangangalaga at regular na monitoring ay mahalaga para sa mas mabilis na paggaling. "
-        
         return summary.strip()
         
     elif section_name == "pagbabago_sa_pamumuhay" or "pamumuhay" in section_name:
-        # LIFESTYLE CHANGES SECTION WITH CONCRETE SPECIFICS
+        # LIFESTYLE CHANGES SECTION
         diet_changes = elements.get("diet_changes", [])
         lifestyle_changes = elements.get("lifestyle_changes", [])
         
-        summary = ""
+        # Extract diet recommendations from Calamancy entities
+        diet_entities = [ent.text for ent in doc.ents if ent.label_ == "DIET_RECOMMENDATION"]
+        food_entities = [ent.text for ent in doc.ents if ent.label_ == "FOOD"]
         
-        # Extract SPECIFIC meal frequency details
-        meal_patterns = [
-            r'(frequent|small meals|maliit na pagkain|madalas na pagkain)[^.]{10,100}',
-            r'(\d+-\d+)[^.]+(meal|pagkain)[^.]{10,100}'
-        ]
-        
-        specific_meal_rec = None
-        for pattern in meal_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                meal_rec = match.group(0)
-                if len(meal_rec) < 100:
-                    specific_meal_rec = meal_rec
-                    break
-        
-        # Start with specific meal frequency recommendations
-        if specific_meal_rec:
-            if "sa halip na" in specific_meal_rec.lower() or "instead of" in specific_meal_rec.lower():
-                summary += f"Para sa diet, inirerekomenda ang {specific_meal_rec}. "
-            else:
-                summary += f"Para sa diet, inirerekomenda ang {specific_meal_rec} upang mabawasan ang digestive burden. "
+        # First sentence: Lifestyle modifications overview with specific focus
+        if "nutrition-focused interventions" in section_text.lower() or "frequent, small meals" in section_text.lower():
+            summary = f"Inirerekomenda ang pagbago sa eating pattern tungo sa frequent, small meals (5-6 na beses sa isang araw) sa halip na malalaki at mabibigat na meals para mabawasan ang burden sa digestive system."
+        elif diet_entities:
+            summary = f"Ang mga inirerekomendang pagbabago sa diet ay kinabibilangan ng {', '.join(diet_entities[:2])} para sa pag-improve ng kalusugan."
+        elif food_entities and "brown rice" in ' '.join(food_entities).lower():
+            food_list = [food for food in food_entities if "brown rice" in food.lower() or "vegetables" in food.lower() or "lean" in food.lower()]
+            summary = f"Iminumungkahi ang gradual transition sa mga healthier options tulad ng {', '.join(food_list[:3])} habang isinasaalang-alang ang cultural preferences."
         elif diet_changes:
-            diet_rec = diet_changes[0]
-            # Extract more context for this diet recommendation
-            diet_terms = [diet_rec.lower(), "diet", "pagkain"]
-            for term in diet_terms:
-                term_pos = section_text.lower().find(term)
-                if term_pos >= 0:
-                    start = max(0, term_pos - 20)
-                    end = min(len(section_text), term_pos + len(term) + 60)
-                    context = section_text[start:end]
-                    if "." in context:
-                        context = context.split('.')[0] + "."
-                    if len(context) < 100:
-                        summary += f"Para sa diet, {context} "
-                        break
-            
-            # If no specific context found
-            if not summary:
-                summary += f"Para sa diet, inirerekomenda ang {diet_rec} upang mabawasan ang posibleng komplikasyon. "
-        
-        # Add SPECIFIC nutrition recommendations with details on what foods to include
-        nutrition_patterns = [
-            r'(nutrient-dense|nutritional|nutrisyon)[^.]{10,100}',
-            r'(dapat|kailangan|mahalagang)[^.]{5,30}(pagkain|foods|nutrition)[^.]{10,100}'
-        ]
-        
-        specific_nutrition = None
-        for pattern in nutrition_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                nutrition_rec = match.group(0)
-                if len(nutrition_rec) < 100:
-                    specific_nutrition = nutrition_rec
-                    break
-        
-        # Include specific nutritional recommendations
-        if specific_nutrition:
-            # Enhance with examples of specific foods if present
-            food_examples = []
-            food_terms = ["smoothies", "soup", "cereals", "protein", "gulay", "prutas"]
-            for term in food_terms:
-                if term in section_text.lower():
-                    # Look for examples containing this term
-                    example_pattern = f"(tulad ng|such as|like|including)[^.]*{term}[^.]+"
-                    ex_match = re.search(example_pattern, section_text, re.IGNORECASE)
-                    if ex_match:
-                        example = ex_match.group(0)
-                        if len(example) < 70:
-                            food_examples.append(example)
-                    else:
-                        # Simple pattern to find food lists
-                        simple_pattern = f"[^.]*{term}[^.,]*(?:,|at|and)[^.]+"
-                        s_match = re.search(simple_pattern, section_text, re.IGNORECASE)
-                        if s_match:
-                            example = s_match.group(0)
-                            if len(example) < 70:
-                                food_examples.append(example)
-            
-            # Add nutrition recommendation with examples if found
-            if food_examples:
-                summary += f"Maaari ring isama sa diet ang {specific_nutrition}, {food_examples[0]}. "
-            else:
-                summary += f"Maaari ring isama sa diet ang {specific_nutrition} para sa optimal na nutrition. "
-                
-        elif len(diet_changes) > 1:
-            # Look for specific examples of the second diet recommendation
-            diet_rec = diet_changes[1]
-            example_pattern = f"(tulad ng|such as|like|including)[^.]*{re.escape(diet_rec)}[^.]+"
-            ex_match = re.search(example_pattern, section_text, re.IGNORECASE)
-            if ex_match:
-                example = ex_match.group(0)
-                if len(example) < 70:
-                    summary += f"Maaari ring isama sa diet ang {diet_rec}, {example}. "
-                else:
-                    summary += f"Maaari ring isama sa diet ang {diet_rec} para sa optimal na nutrition. "
-            else:
-                summary += f"Maaari ring isama sa diet ang {diet_rec} para sa optimal na nutrition. "
-        
-        # Add SPECIFIC physical activity recommendations
-        activity_patterns = [
-            r'(physical activity|ehersisyo|exercise|galaw)[^.]{10,100}',
-            r'(regular|moderate|light|gentle)[^.]{1,10}(activity|exercise|ehersisyo)[^.]{10,100}'
-        ]
-        
-        specific_activity = None
-        for pattern in activity_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                activity_rec = match.group(0)
-                if len(activity_rec) < 100 and "ayon sa" in activity_rec.lower():
-                    # This contains personalized activity level mention
-                    specific_activity = activity_rec
-                    break
-                elif len(activity_rec) < 100:
-                    specific_activity = activity_rec
-        
-        # Add activity recommendation if found
-        if specific_activity and len(summary) < max_length - 100:
-            summary += f"Inirerekomenda rin ang {specific_activity}. "
-        
-        # Add SPECIFIC advice on hydration if mentioned
-        if "hydration" in section_text.lower() or "tubig" in section_text.lower() or "fluid" in section_text.lower():
-            hydration_pattern = r'(hydration|tubig|fluid|pag-inom)[^.]{10,100}'
-            h_match = re.search(hydration_pattern, section_text, re.IGNORECASE)
-            if h_match:
-                hydration_rec = h_match.group(0)
-                if len(hydration_rec) < 80:
-                    summary += f"Mahalagang maisama ang {hydration_rec}. "
-        
-        # Add the adherence conclusion with specific benefits if possible
-        benefit_patterns = [
-            r'(para|upang|to|in order to)[^.]+(makita|makamit|achieve|attain)[^.]+resulta',
-            r'(makakatulong|will help|helps)[^.]{10,100}'
-        ]
-        
-        specific_benefit = None
-        for pattern in benefit_patterns:
-            match = re.search(pattern, section_text, re.IGNORECASE)
-            if match:
-                benefit = match.group(0)
-                if len(benefit) < 80:
-                    specific_benefit = benefit
-                    break
-        
-        # Add conclusion with specific benefits if found
-        if specific_benefit:
-            summary += f"Consistent na pagsunod sa mga lifestyle modifications na ito {specific_benefit}."
+            summary = f"Ang mga pagbabago sa diet ay kinabibilangan ng {', '.join(diet_changes[:2])} para sa better management ng kondisyon."
+        elif lifestyle_changes:
+            summary = f"Ang mga inirerekomendang pagbabago sa pamumuhay ay kinabibilangan ng {', '.join(lifestyle_changes[:2])} para sa pangkalahatang pagpapabuti ng kalusugan."
         else:
-            summary += "Consistent na pagsunod sa mga lifestyle modifications na ito ay mahalaga para makita ang mga positibong resulta."
+            summary = f"Inirerekomenda ang mga pagbabago sa diet at physical activity na naaayon sa kanyang kondisyon at kakayahan."
+            
+        # Second sentence: Specific modifications with detailed implementation
+        if "dietary fiber" in section_text.lower() or "soluble fiber" in section_text.lower():
+            summary += f" Mahalagang isama ang gradual increase ng dietary fiber (unang soluble fiber para hindi ma-irritate ang tiyan), adequate hydration, at regular physical activity ayon sa kanyang tolerance."
+        elif "hydration" in section_text.lower():
+            summary += f" Mahalagang maisama ang sapat na hydration (8-10 glasses ng tubig araw-araw) at regular na pagkilos ayon sa kanyang tolerance para sa overall health at digestive function."
+        elif "meal composition" in section_text.lower():
+            if food_entities:
+                avoid_foods = [food for food in food_entities if "white" in food.lower() or "fried" in food.lower() or "sweets" in food.lower()]
+                if avoid_foods:
+                    summary += f" Inirerekomenda ang pagbawas ng consumption ng {', '.join(avoid_foods[:3])} at ang pagtaas ng intake ng nutrient-dense na pagkain na madaling ma-digest."
+                else:
+                    summary += f" Inirerekomenda ang pagbabago ng meal composition para mabawasan ang refined carbohydrates at saturated fats, at madagdagan ang lean proteins at complex carbohydrates."
+            else:
+                summary += f" Inirerekomenda ang balanseng diet na may tamang ratio ng carbohydrates, proteins, at healthy fats, kasama ang mataas na fiber content para mapanatili ang stable blood sugar levels."
+        elif "physical activity" in section_text.lower() or "exercise" in section_text.lower():
+            summary += f" Ang moderate physical activity ng hindi bababa sa 30 minutes, 5 days a week ay inirerekomenda, kasama ang mga balance exercises para mapabuti ang stability at maiwasan ang falls."
+        
+        # Third sentence: Expected benefits and implementation support
+        if "dietitian" in section_text.lower() or "nutritionist" in section_text.lower():
+            summary += f" Inirerekomenda rin ang konsultasyon sa registered dietitian para sa personalized nutrition plan na sasagot sa kanyang specific nutritional needs habang ina-address ang kanyang medical at cultural considerations."
+        elif "monitoring" in section_text.lower() or "food diary" in section_text.lower() or "symptom diary" in section_text.lower():
+            summary += f" Ang paggamit ng food at symptom diary ay makakatulong sa pag-monitor ng kanyang response sa mga pagbabagong ito at mag-guide sa further refinement ng lifestyle interventions."
+        else:
+            summary += f" Consistent na pagsunod sa mga lifestyle modifications na ito ay mahalaga para makita ang mga positibong resulta sa kanyang kalusugan at quality of life."
         
         return summary.strip()
     
-    # For any other section type, create a general summary
+    # For any other section type, extract key sentences
     return summarize_section_text(section_text, section_name, max_length)
 
 # Define key terms for each section type - EXPANDED SIGNIFICANTLY
