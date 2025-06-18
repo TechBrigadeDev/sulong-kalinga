@@ -47,6 +47,7 @@ class EmergencyServiceRequestApiController extends Controller
                 return [
                     'type' => 'emergency',
                     'id' => $item->notice_id,
+                    'emergency_type_id' => $item->emergency_type_id,
                     'description' => $item->message,
                     'date_submitted' => $item->created_at,
                     'status' => $item->status,
@@ -64,6 +65,7 @@ class EmergencyServiceRequestApiController extends Controller
                 return [
                     'type' => 'service',
                     'id' => $item->service_request_id,
+                    'service_type_id' => $item->service_type_id, 
                     'description' => $item->message,
                     'date_submitted' => $item->created_at,
                     'status' => $item->status,
