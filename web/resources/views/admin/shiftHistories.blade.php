@@ -69,101 +69,49 @@
                                             <th scope="col">Care Worker</th>
                                             <th scope="col">Date</th>
                                             <th scope="col">Shift Time</th>
-                                            <th scope="col">Municipality</th>
-                                            <th scope="col">Status</th>
                                             <th scope="col" class="text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td><strong>John Smith</strong></td>
-                                            <td>May 20, 2025</td>
-                                            <td>08:00 AM - 04:00 PM</td>
-                                            <td>Mondragon</td>
-                                            <td><span class="badge badge-success">Completed</span></td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Maria Garcia</strong></td>
-                                            <td>May 20, 2025</td>
-                                            <td>09:00 AM - 05:00 PM</td>
-                                            <td>San Roque</td>
-                                            <td><span class="badge badge-success">Completed</span></td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>David Johnson</strong></td>
-                                            <td>May 20, 2025</td>
-                                            <td>02:00 PM - 10:00 PM</td>
-                                            <td>Mondragon</td>
-                                            <td><span class="badge badge-warning">In Progress</span></td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Sarah Wilson</strong></td>
-                                            <td>May 19, 2025</td>
-                                            <td>08:00 AM - 04:00 PM</td>
-                                            <td>San Roque</td>
-                                            <td><span class="badge badge-success">Completed</span></td>
-                                            <td class="text-center">
-                                                <div class="action-icons">
-                                                    <a href="{{ route('admin.shift.histories.shiftDetails') }}">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="#" title="Download Report">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        @forelse($shifts as $shift)
+                                            <tr>
+                                                <td>
+                                                    <strong>
+                                                        {{ $shift->careWorker->first_name ?? '' }} {{ $shift->careWorker->last_name ?? '' }}
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($shift->time_in)->format('M d, Y') }}
+                                                </td>
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
+                                                    {{ $shift->time_out ? \Carbon\Carbon::parse($shift->time_out)->format('h:i A') : '--:--' }}
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="action-icons">
+                                                        <a href="{{ route('admin.shift.histories.shiftDetails', ['shiftId' => $shift->shift_id]) }}">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        <a href="#" title="Download Report">
+                                                            <i class="bi bi-download"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">No shift records found.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
                             
-                            <nav aria-label="Page navigation" class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" tabindex="-1">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
+                            @if($shifts->hasPages())
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    {{ $shifts->withQueryString()->links() }}
+                                </nav>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -171,6 +119,13 @@
         </div>
     </div>
 
+    <script>
+        function resetFilters() {
+            document.getElementById('searchBar').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('searchFilterForm').submit();
+        }
+    </script>
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     

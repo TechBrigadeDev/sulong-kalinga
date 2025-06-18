@@ -49,15 +49,22 @@
                                     <div class="detail-grid">
                                         <div class="detail-row">
                                             <div class="detail-label">Care Worker:</div>
-                                            <div class="detail-value" id="detail-care-worker">John Smith</div>
+                                            <div class="detail-value" id="detail-care-worker">
+                                                {{ $shift->careWorker->first_name ?? '' }} {{ $shift->careWorker->last_name ?? '' }}
+                                            </div>
                                         </div>
                                         <div class="detail-row">
                                             <div class="detail-label">Date:</div>
-                                            <div class="detail-value" id="detail-date">May 20, 2025</div>
+                                            <div class="detail-value" id="detail-date">
+                                                {{ \Carbon\Carbon::parse($shift->time_in)->format('M d, Y') }}
+                                            </div>
                                         </div>
                                         <div class="detail-row">
                                             <div class="detail-label">Shift Time:</div>
-                                            <div class="detail-value" id="detail-shift-time">08:00 AM - 04:00 PM</div>
+                                            <div class="detail-value" id="detail-shift-time">
+                                                {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
+                                                {{ $shift->time_out ? \Carbon\Carbon::parse($shift->time_out)->format('h:i A') : '--:--' }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -65,17 +72,31 @@
                                     <div class="detail-grid">
                                         <div class="detail-row">
                                             <div class="detail-label">Municipality:</div>
-                                            <div class="detail-value" id="detail-municipality">Mondragon</div>
+                                            <div class="detail-value" id="detail-municipality">
+                                                {{ $shift->careWorker->municipality ?? '-' }}
+                                            </div>
                                         </div>
                                         <div class="detail-row">
                                             <div class="detail-label">Status:</div>
                                             <div class="detail-value">
-                                                <span class="badge bg-success" id="detail-status-badge">Completed</span>
+                                                @if($shift->status === 'completed')
+                                                    <span class="badge bg-success" id="detail-status-badge">Completed</span>
+                                                @elseif($shift->status === 'in_progress')
+                                                    <span class="badge bg-warning text-dark" id="detail-status-badge">In Progress</span>
+                                                @else
+                                                    <span class="badge bg-secondary" id="detail-status-badge">{{ ucfirst($shift->status) }}</span>
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="detail-row">
                                             <div class="detail-label">Total Hours:</div>
-                                            <div class="detail-value" id="detail-total-hours">8 hours</div>
+                                            <div class="detail-value" id="detail-total-hours">
+                                                @if($shift->time_out)
+                                                    {{ \Carbon\Carbon::parse($shift->time_in)->diffInHours(\Carbon\Carbon::parse($shift->time_out)) }} hours
+                                                @else
+                                                    In Progress
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -93,31 +114,53 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th style="width: 25%">Time</th>
-                                            <th style="width: 75%">Location</th>
+                                            <th style="width: 20%">Time</th>
+                                            <th style="width: 40%">Location</th>
+                                            <th style="width: 20%">Event</th>
+                                            <th style="width: 20%">Visitation</th>
                                         </tr>
                                     </thead>
                                     <tbody id="history-table-body">
-                                        @php
-                                            $dummyData = [
-                                                ['time' => '08:00 AM', 'location' => 'Mondragon Health Center', 'description' => 'Shift Start', 'icon' => 'geo-alt-fill text-primary', 'status' => 'Started', 'status_class' => 'success'],
-                                                ['time' => '09:15 AM', 'location' => '123 Oak Street', 'description' => 'Patient Visit', 'icon' => 'geo-alt-fill text-primary', 'status' => 'In Progress', 'status_class' => 'info'],
-                                                ['time' => '11:30 AM', 'location' => '456 Pine Avenue', 'description' => 'Patient Visit', 'icon' => 'geo-alt-fill text-primary', 'status' => 'In Progress', 'status_class' => 'info'],
-                                                ['time' => '12:45 PM', 'location' => 'Local Cafe', 'description' => 'Lunch Break', 'icon' => 'cup-fill text-warning', 'status' => 'Break', 'status_class' => 'warning'],
-                                                ['time' => '02:00 PM', 'location' => '789 Maple Road', 'description' => 'Patient Visit', 'icon' => 'geo-alt-fill text-primary', 'status' => 'In Progress', 'status_class' => 'info'],
-                                                ['time' => '04:00 PM', 'location' => 'Mondragon Health Center', 'description' => 'Shift End', 'icon' => 'geo-alt-fill text-danger', 'status' => 'Completed', 'status_class' => 'danger']
-                                            ];
-                                        @endphp
-
-                                        @foreach($dummyData as $entry)
-                                        <tr>
-                                            <td><span class="time-badge">{{ $entry['time'] }}</span></td>
-                                            <td>
-                                                <i class="bi bi-{{ $entry['icon'] }} me-2"></i>
-                                                {{ $entry['location'] }} - {{ $entry['description'] }}
-                                            </td>
-                                        </tr>
-                                        @endforeach
+                                        @forelse($tracks as $track)
+                                            <tr>
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($track->recorded_at)->format('h:i A') }}
+                                                </td>
+                                                <td>
+                                                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                                    {{ $track->address ?? 'Unknown location' }}
+                                                    @if(isset($track->track_coordinates['lat']) && isset($track->track_coordinates['lng']))
+                                                        <span class="text-muted" style="font-size: 0.85em;">
+                                                            ({{ $track->track_coordinates['lat'] }}, {{ $track->track_coordinates['lng'] }})
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($track->arrival_status === 'arrived')
+                                                        <span class="badge bg-success">Arrived</span>
+                                                    @elseif($track->arrival_status === 'departed')
+                                                        <span class="badge bg-danger">Departed</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">Unknown</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($track->visitation)
+                                                        {{ $track->visitation->beneficiary->first_name ?? '' }} {{ $track->visitation->beneficiary->last_name ?? '' }}
+                                                        <br>
+                                                        <span class="text-muted" style="font-size: 0.85em;">
+                                                            {{ $track->visitation->visit_type ?? '' }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-3">No location history available for this shift.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -138,9 +181,9 @@
         });
 
         // Function to load shift details
-        function loadShiftDetails() {
-            // ... existing loadShiftDetails function ...
-        }
+        // function loadShiftDetails() {
+        //     // ... existing loadShiftDetails function ...
+        // }
 
         document.addEventListener('DOMContentLoaded', loadShiftDetails);
     </script>
