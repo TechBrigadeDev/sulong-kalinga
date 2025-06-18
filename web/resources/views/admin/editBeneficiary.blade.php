@@ -5,22 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Beneficiary</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/addUsers.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     
     <div class="home-section">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="container-fluid pt-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <a href="{{ route('admin.beneficiaries.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-bar-left"></i> Back
+                    <i class="bi bi-arrow-bar-left"></i> {{ T::translate('Back', 'Bumalik')}}
                 </a>
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">EDIT BENEFICIARY</div>
+                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">{{ T::translate('EDIT BENEFICIARY', 'I-EDIT ANG BENEPISYARYO')}}</div>
             </div>
             <div class="row" id="addUserForm">
                 <div class="col-12">
@@ -46,70 +47,70 @@
                         <!-- Row 1: Personal Details -->
                         <div class="row mb-1 mt-3">
                             <div class="col-12">
-                                <h5 class="text-start">Personal Details</h5>
+                                <h5 class="text-start">{{ T::translate('Personal Details', 'Personal na Detalye')}}</h5>
                             </div>
                         </div>
                         <div class="row mb-1">
                             <div class="col-md-3 relative">
-                                <label for="firstName" class="form-label">First Name<label style="color:red;"> * </label></label>
+                                <label for="firstName" class="form-label">{{ T::translate('First Name', 'Pangalan')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
                                         value="{{ old('first_name', $beneficiary->first_name) }}"
                                         placeholder="Enter first name" 
                                         required >
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="middleName" class="form-label">Middle Name</label>
+                                <label for="middleName" class="form-label">{{ T::translate('Middle Name', 'Gitnang Pangalan')}}</label>
                                 <input type="text" class="form-control" id="middleName" name="middle_name" 
                                         value="{{ old('middle_name', $beneficiary->middle_name) }}"
                                         placeholder="Enter middle name">
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
+                                <label for="lastName" class="form-label">{{ T::translate('Last Name', 'Apelyido')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                         value="{{ old('last_name', $beneficiary->last_name) }}"
                                         placeholder="Enter last name" 
                                         required >
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="civilStatus" class="form-label">Civil Status<label style="color:red;"> * </label></label>
+                                <label for="civilStatus" class="form-label">{{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="civilStatus" name="civil_status" required>
-                                    <option value="" disabled>Select civil status</option>
-                                    <option value="Single" {{ old('civil_status', $beneficiary->civil_status) == 'Single' ? 'selected' : '' }}>Single</option>
-                                    <option value="Married" {{ old('civil_status', $beneficiary->civil_status) == 'Married' ? 'selected' : '' }}>Married</option>
-                                    <option value="Widowed" {{ old('civil_status', $beneficiary->civil_status) == 'Widowed' ? 'selected' : '' }}>Widowed</option>
-                                    <option value="Divorced" {{ old('civil_status', $beneficiary->civil_status) == 'Divorced' ? 'selected' : '' }}>Divorced</option>
+                                    <option value="" disabled>{{ T::translate('Select civil status', 'Pumili ng Katayuan')}}</option>
+                                    <option value="Single" {{ old('civil_status', $beneficiary->civil_status) == 'Single' ? 'selected' : '' }}>{{ T::translate('Single', 'Walang Asawa')}}</option>
+                                    <option value="Married" {{ old('civil_status', $beneficiary->civil_status) == 'Married' ? 'selected' : '' }}>{{ T::translate('Married', 'May Asawa')}}</option>
+                                    <option value="Widowed" {{ old('civil_status', $beneficiary->civil_status) == 'Widowed' ? 'selected' : '' }}>{{ T::translate('Widowed', 'Balo')}}</option>
+                                    <option value="Divorced" {{ old('civil_status', $beneficiary->civil_status) == 'Divorced' ? 'selected' : '' }}>{{ T::translate('Divorced', 'Diborsyado')}}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3 relative">
-                                <label for="gender" class="form-label">Gender<label style="color:red;"> * </label></label>
+                                <label for="gender" class="form-label">{{ T::translate('Gender', 'Kasarian')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="gender" name="gender" required>
-                                    <option value="" disabled>Select gender</option>
-                                    <option value="Male" {{ old('gender', $beneficiary->gender) == 'Male' ? 'selected' : '' }}>Male</option>
-                                    <option value="Female" {{ old('gender', $beneficiary->gender) == 'Female' ? 'selected' : '' }}>Female</option>
-                                    <option value="Other" {{ old('gender', $beneficiary->gender) == 'Other' ? 'selected' : '' }}>Other</option>
+                                    <option value="" disabled>{{ T::translate('Select gender', 'Pumili ng Kasarian')}}</option>
+                                    <option value="Male" {{ old('gender', $beneficiary->gender) == 'Male' ? 'selected' : '' }}>{{ T::translate('Male', 'Lalaki')}}</option>
+                                    <option value="Female" {{ old('gender', $beneficiary->gender) == 'Female' ? 'selected' : '' }}>{{ T::translate('Female', 'Babae')}}</option>
+                                    <option value="Other" {{ old('gender', $beneficiary->gender) == 'Other' ? 'selected' : '' }}>{{ T::translate('Other', 'Iba pa')}}</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
+                                <label for="birthDate" class="form-label">{{ T::translate('Birthday', 'Kaarawan')}}<label style="color:red;"> * </label></label>
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ old('birth_date', $birth_date) }}" required onkeydown="return true">
                             </div>
                             <div class="col-md-3">
-                                <label for="mobileNumber" class="form-label">Mobile Number</label>
+                                <label for="mobileNumber" class="form-label">{{ T::translate('Mobile Number', 'Numero sa Mobile')}}</label>
                                 <div class="input-group">
                                     <span class="input-group-text">+63</span>
                                     <input type="text" class="form-control" id="mobileNumber"  name="mobile_number" value="{{ old('mobile_number', ltrim($beneficiary->mobile, '+63')) }}" placeholder="Enter mobile number" maxlength="11" required oninput="restrictToNumbers(this)" title="Must be 10 or 11digits.">
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label for="landlineNumber" class="form-label">Landline Number</label>
+                                <label for="landlineNumber" class="form-label">{{ T::translate('Landline Number', 'Numero sa Landline')}}</label>
                                 <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number', $beneficiary->landline) }}" placeholder="Enter Landline number" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3 position-relative">
-                                <label for="primaryCaregiver" class="form-label">Primary Caregiver</label>
+                                <label for="primaryCaregiver" class="form-label">{{ T::translate('Primary Caregiver', 'Pangunahing Tagapag-alaga')}}</label>
                                 <input type="text" class="form-control" id="primaryCaregiver" name="primary_caregiver" value="{{ old('primary_caregiver', $beneficiary->primary_caregiver) }}" placeholder="Enter Primary Caregiver name">                            
                             </div>
                         </div>
@@ -118,12 +119,12 @@
                         <!-- Row 2: Address -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Current Address<label style="color:red;"> * </label></h5> 
+                                <h5 class="text-start">{{ T::translate('Current Address', 'Kasalukuyang Tirahan')}}<label style="color:red;"> * </label></h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="addressDetails" class="form-label">House No., Street, Subdivision, Barangay, City, Province<label style="color:red;"> * </label></label>
+                                <label for="addressDetails" class="form-label">{{ T::translate('House No., Street, Subdivision, Barangay, City, Province', 'Numero ng Bahay, Kalye, Subdivision, Barangay, Probinsya.')}}<label style="color:red;"> * </label></label>
                                 <textarea class="form-control" id="addressDetails" name="address_details" 
                                 placeholder="Enter complete current address" 
                                 rows="2" 
@@ -133,9 +134,9 @@
                                 oninput="validateAddress(this)">{{ old('address_details', $beneficiary->street_address) }}</textarea>
                             </div>
                             <div class="col-md-3">
-                                <label for="municipality" class="form-label">Municipality<label style="color:red;"> * </label></label>
+                                <label for="municipality" class="form-label">{{ T::translate('Municipality', 'Munisipalidad')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="municipality" name="municipality" required>
-                                    <option value="" disabled>Select municipality</option>
+                                    <option value="" disabled>{{ T::translate('Select municipality', 'Pumili ng Munisipalidad')}}</option>
                                     @foreach ($municipalities as $municipality)
                                     <option value="{{ $municipality->municipality_id }}" 
                                             {{ old('municipality', $beneficiary->municipality_id) == $municipality->municipality_id ? 'selected' : '' }}>
@@ -145,9 +146,9 @@
                                 </select>
                             </div> 
                             <div class="col-md-3">
-                                <label for="barangay" class="form-label">Barangay<label style="color:red;"> * </label></label>
+                                <label for="barangay" class="form-label">{{ T::translate('Barangay', 'Barangay')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="barangay" name="barangay" required>
-                                    <option value="" disabled>Select barangay</option>
+                                    <option value="" disabled>{{ T::translate('Select barangay', 'Pumili ng Barangay')}}</option>
                                     @foreach ($barangays as $b)
                                     <option value="{{ $b->barangay_id }}" 
                                             data-municipality-id="{{ $b->municipality_id }}"
@@ -164,21 +165,21 @@
                         <!-- Google Maps -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Map Location<label style="color:red;"> * </label></h5> 
+                                <h5 class="text-start">{{ T::translate('Map Location', 'Lokasyon sa Mapa')}}<label style="color:red;"> * </label></h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="mapLocation" class="form-label">Pinpoint in Google Maps<label style="color:red;"> * </label></label>
+                                <label for="mapLocation" class="form-label">{{ T::translate('Pinpoint in Google Maps', 'Tukuyin sa Google Maps')}}<label style="color:red;"> * </label></label>
                                 <div id="googleMap" style="width:100%;height:400px;border:1px solid #ccc;"></div>
                                 <input type="hidden" id="latitude" name="latitude" value="{{ old('latitude', $latitude) }}">
                                 <input type="hidden" id="longitude" name="longitude" value="{{ old('longitude', $longitude) }}">
-                                <small class="text-muted">Drag the marker to set the beneficiary's location.</small>
+                                <small class="text-muted">{{ T::translate('Drag the marker to set the beneficiary\'s location.', 'I-Drag ang marker upang itakda ang lokasyon ng Benepisyaryo.')}}</small>
                             </div>
                             <div class="col-md-6">
-                                <label for="searchAddress" class="form-label">Or search address</label>
+                                <label for="searchAddress" class="form-label">{{ T::translate('Or search address', 'O hanapin ang address')}}</label>
                                 <input type="text" id="searchAddress" class="form-control" placeholder="Enter address">
-                                <button type="button" id="searchAddressBtn" class="btn btn-primary mt-2">Find on Map</button>
+                                <button type="button" id="searchAddressBtn" class="btn btn-primary mt-2">{{ T::translate('Find on Map', 'Hanapin sa Mapa')}}</button>
                             </div>
                         </div>
 
@@ -186,37 +187,37 @@
                         <!-- Row 3: Medical History -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Medical History</h5> 
+                                <h5 class="text-start">{{ T::translate('Medical History', 'Kasaysayang Medikal')}}</h5> 
                             </div>
                         </div>
                         <div class="row mb-1">
                             <div class="col-md-3">
-                                <label for="medicalConditions" class="form-label">Medical Conditions</label>
+                                <label for="medicalConditions" class="form-label">{{ T::translate('Medical Conditions', 'Medikal na Kondisyon')}}</label>
                                 <textarea class="form-control medical-history-field" id="medicalConditions" name="medical_conditions" placeholder="List all medical conditions" rows="3">{{ old('medical_conditions', is_array($beneficiary->generalCarePlan->healthHistory->medical_conditions ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->medical_conditions)) : ($beneficiary->generalCarePlan->healthHistory->medical_conditions ?? '')) }}</textarea>
-                                <small class="text-muted">Separate multiple conditions with commas</small>
+                                <small class="text-muted">{{ T::translate('Separate multiple conditions with commas', 'Paghiwalayin ang maraming kundisyon gamit ang mga kuwit')}}</small>
                             </div>
                             <div class="col-md-3">
-                                <label for="medications" class="form-label">Medications</label>
+                                <label for="medications" class="form-label">{{ T::translate('Medications', 'Mga Gamot')}}</label>
                                 <textarea class="form-control medical-history-field" id="medications" name="medications" placeholder="List all medications" rows="3">{{ old('medications', is_array($beneficiary->generalCarePlan->healthHistory->medications ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->medications)) : ($beneficiary->generalCarePlan->healthHistory->medications ?? '')) }}</textarea>
-                                <small class="text-muted">Separate multiple medications with commas</small>
+                                <small class="text-muted">{{ T::translate('Separate multiple medications with commas', 'Paghiwalayin ang maraming gamot gamit ang mga kuwit')}}</small>
                             </div>
                             <div class="col-md-3">
-                                <label for="allergies" class="form-label">Allergies</label>
+                                <label for="allergies" class="form-label">{{ T::translate('Allergies', 'Mga Alerhiya')}}</label>
                                 <textarea class="form-control medical-history-field" id="allergies" name="allergies" placeholder="List all allergies" rows="3">{{ old('allergies', is_array($beneficiary->generalCarePlan->healthHistory->allergies ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->allergies)) : ($beneficiary->generalCarePlan->healthHistory->allergies ?? '')) }}</textarea>
-                                <small class="text-muted">Separate multiple allergies with commas</small>
+                                <small class="text-muted">{{ T::translate('Separate multiple allergies with commas', 'Paghiwalayin ang maraming alerhiya gamit ang mga kuwit')}}</small>
                             </div>
                             <div class="col-md-3">
-                                <label for="immunizations" class="form-label">Immunizations</label>
+                                <label for="immunizations" class="form-label">{{ T::translate('Immunizations', 'Mga Bakuna')}}</label>
                                 <textarea class="form-control medical-history-field" id="immunizations" name="immunizations" placeholder="List all immunizations" rows="3">{{ old('immunizations', is_array($beneficiary->generalCarePlan->healthHistory->immunizations ?? '') ? implode(", ", json_decode($beneficiary->generalCarePlan->healthHistory->immunizations)) : ($beneficiary->generalCarePlan->healthHistory->immunizations ?? '')) }}</textarea>
-                                <small class="text-muted">Separate multiple immunizations with commas</small>
+                                <small class="text-muted">{{ T::translate('Separate multiple immunizations with commas', 'Paghiwalayin ang maraming bakuna gamit ang mga kuwit')}}</small>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <!-- Category Dropdown -->
                             <div class="col-md-3 position-relative">
-                                <label for="category" class="form-label">Category<label style="color:red;"> * </label></label>
+                                <label for="category" class="form-label">{{ T::translate('Category', 'Kategorya')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="category" name="category" required>
-                                    <option value="" disabled>Select category</option>
+                                    <option value="" disabled>{{ T::translate('Select category', 'Pumili ng Kategorya')}}</option>
                                     @foreach ($categories as $category)
                                     <option value="{{ $category->category_id }}" {{ old('category', $beneficiary->category_id) == $category->category_id ? 'selected' : '' }}>
                                         {{ $category->category_name }}
@@ -230,14 +231,14 @@
                         <!-- Care Needs -->
                         <div class="row mb-1">
                             <div class="col-md-4">
-                                <h5 class="text-start">Care Needs<label style="color:red;"> * </label></h5>
+                                <h5 class="text-start">{{ T::translate('Care Needs', 'Pangangaialangan sa Pangangalaga')}}<label style="color:red;"> * </label></h5>
                             </div>
                         </div>
 
                         <!-- Care Needs Rows -->
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Mobility</label>
+                                <label class="form-label">{{ T::translate('Mobility', 'Kadaliang Kumilos')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="mobilityFrequency" name="frequency[mobility]" placeholder="Frequency" rows="2">{{ old('frequency.mobility', $careNeeds[1]['frequency'] ?? '') }}</textarea>
@@ -248,7 +249,7 @@
                         </div>
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Cognitive / Communication</label>
+                                <label class="form-label">{{ T::translate('Cognitive / Communication', 'Kognitibo / Komunikasyon')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="cognitiveFrequency" name="frequency[cognitive]" placeholder="Frequency" rows="2">{{ old('frequency.cognitive', $careNeeds[2]['frequency'] ?? '') }}</textarea>
@@ -259,7 +260,7 @@
                         </div>
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Self-sustainability</label>
+                                <label class="form-label">{{ T::translate('Self-sustainability', 'Pagpapanatili sa Sarili')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="selfSustainabilityFrequency" name="frequency[self_sustainability]" placeholder="Frequency" rows="2">{{ old('frequency.self_sustainability', $careNeeds[3]['frequency'] ?? '') }}</textarea>
@@ -270,7 +271,7 @@
                         </div>
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Disease / Therapy Handling</label>
+                                <label class="form-label">{{ T::translate('Disease / Therapy Handling', 'Sakit / Therapy Handling')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="diseaseFrequency" name="frequency[disease]" placeholder="Frequency" rows="2">{{ old('frequency.disease', $careNeeds[4]['frequency'] ?? '') }}</textarea>
@@ -281,7 +282,7 @@
                         </div>
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Daily Life / Social Contact</label>
+                                <label class="form-label">{{ T::translate('Daily Life / Social Contact', 'Pang-araw-araw na Buhay / Pakikipag-ugnayan sa Lipunan')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="dailyLifeFrequency" name="frequency[daily_life]" placeholder="Frequency" rows="2">{{ old('frequency.daily_life', $careNeeds[5]['frequency'] ?? '') }}</textarea>
@@ -292,7 +293,7 @@
                         </div>
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Outdoor Activities</label>
+                                <label class="form-label">{{ T::translate('Outdoor Activities', 'Mga Aktibidad sa Labas')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="outdoorFrequency" name="frequency[outdoor]" placeholder="Frequency" rows="2">{{ old('frequency.outdoor', $careNeeds[6]['frequency'] ?? '') }}</textarea>
@@ -303,7 +304,7 @@
                         </div>
                         <div class="row mb-3 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">Household Keeping</label>
+                                <label class="form-label">{{ T::translate('Household Keeping', 'Pangangalaga sa Bahay')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="householdFrequency" name="frequency[household]" placeholder="Frequency" rows="2">{{ old('frequency.household', $careNeeds[7]['frequency'] ?? '') }}</textarea>
@@ -316,7 +317,7 @@
                        <!-- Medication Management -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Medication Management</h5> 
+                                <h5 class="text-start">{{ T::translate('Medication Management', 'Pamamahala sa Gamot')}}</h5> 
                             </div>
                         </div>
                         <div id="medicationManagement">
@@ -325,22 +326,22 @@
                                     <div class="row mb-1 align-items-center medication-row">
                                         <div class="col-md-3">
                                             <input type="text" class="form-control" name="medication_name[]" 
-                                                value="{{ $name }}" placeholder="Enter Medication name">
+                                                value="{{ $name }}" placeholder="{{ T::translate('Enter Medication name', '')}}">
                                         </div>
                                         <div class="col-md-2">
                                             <input type="text" class="form-control" name="dosage[]" 
-                                                value="{{ old('dosage.'.$index) }}" placeholder="Enter Dosage">
+                                                value="{{ old('dosage.'.$index) }}" placeholder="{{ T::translate('', '')}}nter Dosage">
                                         </div>
                                         <div class="col-md-2">
                                             <input type="text" class="form-control" name="frequency[]" 
-                                                value="{{ old('frequency.'.$index) }}" placeholder="Enter Frequency">
+                                                value="{{ old('frequency.'.$index) }}" placeholder="{{ T::translate('', '')}}Enter Frequency">
                                         </div>
                                         <div class="col-md-4">
                                             <textarea class="form-control" name="administration_instructions[]" 
-                                                placeholder="Enter Administration Instructions" rows="1">{{ old('administration_instructions.'.$index) }}</textarea>
+                                                placeholder="{{ T::translate('Enter Administration Instructions', '')}}" rows="1">{{ old('administration_instructions.'.$index) }}</textarea>
                                         </div>
                                         <div class="col-md-1 d-flex text-start">
-                                            <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">Delete</button>
+                                            <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">{{ T::translate('', '')}}Delete</button>
                                         </div>
                                     </div>
                                 @endforeach
@@ -349,48 +350,48 @@
                                     <div class="row mb-1 align-items-center medication-row">
                                         <div class="col-md-3">
                                             <input type="text" class="form-control" name="medication_name[]" 
-                                                value="{{ $medication->medication }}" placeholder="Enter Medication name">
+                                                value="{{ $medication->medication }}" placeholder="{{ T::translate('Enter Medication name', '')}}">
                                         </div>
                                         <div class="col-md-2">
                                             <input type="text" class="form-control" name="dosage[]" 
-                                                value="{{ $medication->dosage }}" placeholder="Enter Dosage">
+                                                value="{{ $medication->dosage }}" placeholder="{{ T::translate('Enter Dosage', '')}}">
                                         </div>
                                         <div class="col-md-2">
                                             <input type="text" class="form-control" name="frequency[]" 
-                                                value="{{ $medication->frequency }}" placeholder="Enter Frequency">
+                                                value="{{ $medication->frequency }}" placeholder="{{ T::translate('Enter Frequency', '')}}">
                                         </div>
                                         <div class="col-md-4">
                                             <textarea class="form-control" name="administration_instructions[]" 
-                                                placeholder="Enter Administration Instructions" rows="1">{{ $medication->administration_instructions }}</textarea>
+                                                placeholder="{{ T::translate('Enter Administration Instructions', '')}}" rows="1">{{ $medication->administration_instructions }}</textarea>
                                         </div>
                                         <div class="col-md-1 d-flex text-start">
-                                            <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">Delete</button>
+                                            <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">{{ T::translate('', '')}}Delete</button>
                                         </div>
                                     </div>
                                 @endforeach
                             @else
                                 <div class="row mb-1 align-items-center medication-row">
                                     <div class="col-md-3">
-                                        <input type="text" class="form-control" name="medication_name[]" placeholder="Enter Medication name">
+                                        <input type="text" class="form-control" name="medication_name[]" placeholder="{{ T::translate('Enter Medication name', '')}}">
                                     </div>
                                     <div class="col-md-2">
-                                        <input type="text" class="form-control" name="dosage[]" placeholder="Enter Dosage">
+                                        <input type="text" class="form-control" name="dosage[]" placeholder="{{ T::translate('Enter Dosage', '')}}">
                                     </div>
                                     <div class="col-md-2">
-                                        <input type="text" class="form-control" name="frequency[]" placeholder="Enter Frequency">
+                                        <input type="text" class="form-control" name="frequency[]" placeholder="{{ T::translate('Enter Frequency', '')}}">
                                     </div>
                                     <div class="col-md-4">
-                                        <textarea class="form-control" name="administration_instructions[]" placeholder="Enter Administration Instructions" rows="1"></textarea>
+                                        <textarea class="form-control" name="administration_instructions[]" placeholder="{{ T::translate('Enter Administration Instructions', '')}}" rows="1"></textarea>
                                     </div>
                                     <div class="col-md-1 d-flex text-start">
-                                        <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">Delete</button>
+                                        <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">{{ T::translate('Delete', '')}}</button>
                                     </div>
                                 </div>
                             @endif
                         </div>
                         <div class="row mb-3">
                             <div class="col-12 text-start">
-                                <button type="button" class="btn btn-primary" onclick="addMedicationRow()">Add Medication</button>
+                                <button type="button" class="btn btn-primary" onclick="addMedicationRow()"><i class="bi bi-plus-circle"></i> {{ T::translate('Add Medication', 'Magdagdag ng Gamot')}}</button>
                             </div>
                         </div>
 
@@ -398,23 +399,23 @@
                         <!-- Mobility, Cognitive Function, Emotional Well-being -->
                         <div class="row mb-1">
                             <div class="col-md-4">
-                                <h5 class="text-start">Mobility</h5>
+                                <h5 class="text-start">{{ T::translate('Mobility', 'Kadaliang Kumilos')}}</h5>
                                 <div class="mb-1">
-                                    <label for="walkingAbility" class="form-label">Walking Ability</label>
+                                    <label for="walkingAbility" class="form-label">{{ T::translate('Walking Ability', 'Kakayahan sa Paglalakad')}}</label>
                                     <textarea class="form-control" id="walkingAbility" name="mobility[walking_ability]" 
                                         placeholder="Enter details about walking ability" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('mobility.walking_ability', $beneficiary->generalCarePlan->mobility->walking_ability ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="assistiveDevices" class="form-label">Assistive Devices</label>
+                                    <label for="assistiveDevices" class="form-label">{{ T::translate('Assistive Devices', 'Kagamitang Pantulong')}}</label>
                                     <textarea class="form-control" id="assistiveDevices" name="mobility[assistive_devices]" 
                                         placeholder="Enter details about assistive devices" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('mobility.assistive_devices', $beneficiary->generalCarePlan->mobility->assistive_devices ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="transportationNeeds" class="form-label">Transportation Needs</label>
+                                    <label for="transportationNeeds" class="form-label">{{ T::translate('Transportation Needs', 'Pangangailangan sa Transportasyon')}}</label>
                                     <textarea class="form-control" id="transportationNeeds" name="mobility[transportation_needs]" 
                                         placeholder="Enter details about transportation needs" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
@@ -426,28 +427,28 @@
                             <div class="col-md-4">
                                 <h5 class="text-start">Cognitive Function</h5>
                                 <div class="mb-1">
-                                    <label for="memory" class="form-label">Memory</label>
+                                    <label for="memory" class="form-label">{{ T::translate('Memory', 'Memorya')}}</label>
                                     <textarea class="form-control" id="memory" name="cognitive[memory]" 
                                         placeholder="Enter details about memory" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('cognitive.memory', $beneficiary->generalCarePlan->cognitiveFunction->memory ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="thinkingSkills" class="form-label">Thinking Skills</label>
+                                    <label for="thinkingSkills" class="form-label">{{ T::translate('Thinking Skills', 'Kasanayan sa Pag-iisip')}}</label>
                                     <textarea class="form-control" id="thinkingSkills" name="cognitive[thinking_skills]" 
                                         placeholder="Enter details about thinking skills" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('cognitive.thinking_skills', $beneficiary->generalCarePlan->cognitiveFunction->thinking_skills ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="orientation" class="form-label">Orientation</label>
+                                    <label for="orientation" class="form-label">{{ T::translate('Orientation', 'Oryentasyon')}}</label>
                                     <textarea class="form-control" id="orientation" name="cognitive[orientation]" 
                                         placeholder="Enter details about orientation" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('cognitive.orientation', $beneficiary->generalCarePlan->cognitiveFunction->orientation ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="behavior" class="form-label">Behavior</label>
+                                    <label for="behavior" class="form-label">{{ T::translate('Behavior', 'Pag-uugali')}}</label>
                                     <textarea class="form-control" id="behavior" name="cognitive[behavior]" 
                                         placeholder="Enter details about behavior" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
@@ -457,23 +458,23 @@
 
                             <!-- Emotional Well-being Section -->
                             <div class="col-md-4">
-                                <h5 class="text-start">Emotional Well-being</h5>
+                                <h5 class="text-start">{{ T::translate('Emotional Well-being', 'Emosyonal na Kagalingan')}}</h5>
                                 <div class="mb-1">
-                                    <label for="mood" class="form-label">Mood</label>
+                                    <label for="mood" class="form-label">{{ T::translate('Mood', 'Kalooban')}}</label>
                                     <textarea class="form-control" id="mood" name="emotional[mood]" 
                                         placeholder="Enter details about mood" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('emotional.mood', $beneficiary->generalCarePlan->emotionalWellbeing->mood ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="socialInteractions" class="form-label">Social Interactions</label>
+                                    <label for="socialInteractions" class="form-label">{{ T::translate('Social Interactions', 'Pakikipag-ugnayan sa Lipunan')}}</label>
                                     <textarea class="form-control" id="socialInteractions" name="emotional[social_interactions]" 
                                         placeholder="Enter details about social interactions" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
                                         title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('emotional.social_interactions', $beneficiary->generalCarePlan->emotionalWellbeing->social_interactions ?? '') }}</textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="emotionalSupport" class="form-label">Emotional Support Need</label>
+                                    <label for="emotionalSupport" class="form-label">{{ T::translate('Emotional Support Need', 'Pangangailangang Emosyonal na Suporta')}}</label>
                                     <textarea class="form-control" id="emotionalSupport" name="emotional[emotional_support]" 
                                         placeholder="Enter details about emotional support need" rows="2" 
                                         pattern="^[A-Za-z0-9\s.,\-()'\"+'!?]+$"!?]+$" 
@@ -492,7 +493,7 @@
                         <div class="row mb-3">
                             <!-- Contact Name -->
                             <div class="col-md-3">
-                                <label for="contactName" class="form-label">Contact Name<label style="color:red;"> * </label></label>
+                                <label for="contactName" class="form-label">{{ T::translate('Contact Name', 'Pangalan ng Contact')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="contactName" name="emergency_contact[name]" 
                                     value="{{ old('emergency_contact.name', $beneficiary->emergency_contact_name) }}"
                                     placeholder="Enter contact name" 
@@ -501,22 +502,22 @@
 
                             <!-- Relation -->
                             <div class="col-md-3">
-                                <label for="relation" class="form-label">Relation<label style="color:red;"> * </label></label>
+                                <label for="relation" class="form-label">{{ T::translate('Relation', 'Relasyon')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="relation" name="emergency_contact[relation]" required>
                                     <option value="" disabled>Select relation</option>
-                                    <option value="Parent" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Parent' ? 'selected' : '' }}>Parent</option>
-                                    <option value="Sibling" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Sibling' ? 'selected' : '' }}>Sibling</option>
-                                    <option value="Spouse" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Spouse' ? 'selected' : '' }}>Spouse</option>
-                                    <option value="Child" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Child' ? 'selected' : '' }}>Child</option>
-                                    <option value="Relative" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Relative' ? 'selected' : '' }}>Relative</option>
-                                    <option value="Friend" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Friend' ? 'selected' : '' }}>Friend</option>
-                                    <option value="Other" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Other' ? 'selected' : '' }}>Other</option>
+                                    <option value="Parent" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Parent' ? 'selected' : '' }}>{{ T::translate('Parent', 'Magulang')}}</option>
+                                    <option value="Sibling" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Sibling' ? 'selected' : '' }}>{{ T::translate('Sibling', 'Kapatid')}}</option>
+                                    <option value="Spouse" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Spouse' ? 'selected' : '' }}>{{ T::translate('Spouse', 'Asawa')}}</option>
+                                    <option value="Child" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Child' ? 'selected' : '' }}>{{ T::translate('Child', 'Anak')}}</option>
+                                    <option value="Relative" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Relative' ? 'selected' : '' }}>{{ T::translate('Relative', 'Kamag-anak')}}</option>
+                                    <option value="Friend" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Friend' ? 'selected' : '' }}>{{ T::translate('Friend', 'Kaibigan')}}</option>
+                                    <option value="Other" {{ old('emergency_contact.relation', $beneficiary->emergency_contact_relation) == 'Other' ? 'selected' : '' }}>{{ T::translate('Other', 'Iba pa')}}</option>
                                 </select>
                             </div>
 
                             <!-- Mobile Number -->
                             <div class="col-md-3">
-                                <label for="emergencyMobileNumber" class="form-label">Mobile Number<label style="color:red;"> * </label></label>
+                                <label for="emergencyMobileNumber" class="form-label">{{ T::translate('Mobile Number', 'Numero sa Mobile')}}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <span class="input-group-text">+63</span>
                                     <input type="text" class="form-control" id="emergencyMobileNumber" name="emergency_contact[mobile]" 
@@ -543,12 +544,12 @@
                         <!-- Emergency Plan -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Emergency Plan</h5> 
+                                <h5 class="text-start">{{ T::translate('Emergency Plan', 'Plano sa Emergency')}}</h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label for="emergencyProcedures" class="form-label">Emergency Procedures<label style="color:red;"> * </label></label>
+                                <label for="emergencyProcedures" class="form-label">{{ T::translate('Emergency Procedures', 'Mga Pamamaraan sa Emergency')}}<label style="color:red;"> * </label></label>
                                 <textarea class="form-control" id="emergencyProcedures" name="emergency_plan[procedures]" 
                                     placeholder="Enter emergency procedures" 
                                     rows="3" 
@@ -562,15 +563,15 @@
                         <!-- Care Worker's Responsibilities -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Care Worker's Responsibilities<label style="color:red;"> * </label></h5> 
+                                <h5 class="text-start">{{ T::translate('Care Worker\'s Responsibilities', 'Mga Responsibilidad ng Tagapag-alaga')}}<label style="color:red;"> * </label></h5> 
                             </div>
                         </div>
                         <div class="row mb-1">
                             <!-- Select Care Worker -->
                             <div class="col-md-3">
-                                <label for="careworkerName" class="form-label">Select Care Worker<label style="color:red;"> * </label></label>
+                                <label for="careworkerName" class="form-label">{{ T::translate('Select Care Worker', 'Pumili ng Tagapag-alaga')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="careworkerName" name="care_worker[careworker_id]" required>
-                                    <option value="" disabled>Select Care Worker</option>
+                                    <option value="" disabled>{{ T::translate('Select Care Worker', 'Pumili ng Tagapag-alaga')}}</option>
                                     @foreach ($careWorkers as $careWorker)
                                         <option value="{{ $careWorker->id }}" {{ old('care_worker.careworker_id', $currentCareWorker) == $careWorker->id ? 'selected' : '' }}>
                                             {{ $careWorker->name }}
@@ -581,7 +582,7 @@
 
                             <!-- Tasks and Responsibilities -->
                             <div class="col-md-5">
-                                <label class="form-label">Tasks and Responsibilities<label style="color:red;"> * </label></label>
+                                <label class="form-label">{{ T::translate('Tasks and Responsibilities', 'Mga Gawain at Responsibilidad')}}<label style="color:red;"> * </label></label>
                                 <div id="tasksContainer">
                                     @if(old('care_worker.tasks'))
                                         @foreach(old('care_worker.tasks') as $task)
@@ -619,9 +620,9 @@
 
                             <!-- Add/Delete Task Buttons -->
                             <div class="col-md-3 d-flex flex-column align-items-start">
-                                <label class="form-label">Add or Delete Task</label>
-                                <button type="button" class="btn btn-primary btn-sm mb-2 w-100" onclick="addTask()">Add Task</button>
-                                <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeTask()">Delete Task</button>
+                                <label class="form-label">{{ T::translate('Add or Delete Task', 'Magdagdag o Magtanggal ng Gawain')}}</label>
+                                <button type="button" class="btn btn-primary btn-sm mb-2 w-100" onclick="addTask()">{{ T::translate('Add Task', 'Magdagdag ng Gawain')}}</button>
+                                <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeTask()">{{ T::translate('Delete Task', 'Magtanggal ng Gawain')}}</button>
                             </div>
                         </div>
 
@@ -629,13 +630,13 @@
                         <!-- General Care Plan and Care Service Agreement File Upload -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Documents and Signatures</h5> 
+                                <h5 class="text-start">{{ T::translate('Documents and Signatures', 'Mga Dokumento at Lagda')}}</h5> 
                             </div>
                         </div>
                         <div class="row mb-1">
                         <!-- Beneficiary Picture -->
-                        <div class="col-md-3">
-                            <label for="beneficiaryProfilePic" class="form-label">Beneficiary Picture</label>
+                        <div class="col-md-6">
+                            <label for="beneficiaryProfilePic" class="form-label">{{ T::translate('Beneficiary Picture', 'Litrato ng Benepisyaryo')}}</label>
                             <input type="file" class="form-control" id="beneficiaryProfilePic" name="beneficiaryProfilePic" 
                                 accept="image/png, image/jpeg" 
                                 title="Only PNG and JPEG images are allowed.">
@@ -647,14 +648,14 @@
                                         </small>
                                     </div>
                                 @else
-                                    <small class="text-muted">No file uploaded</small>
+                                    <small class="text-muted">{{ T::translate('No file uploaded', 'Walang file ang na-upload')}}</small>
                                 @endif
-                                <small class="text-danger">Maximum file size: 7MB. Please compress or split larger files.</small>
+                                <small class="text-danger">{{ T::translate('Maximum file size: 7MB. Please compress or split larger files.', 'Pinakamataas na laki ng file: 7MB. Mangyaring i-compress o hatiin ang mas malalaking file.')}}</small>
                         </div>
 
                             <!-- Review Date -->
-                            <div class="col-md-3">
-                                <label for="datePicker" class="form-label">Review Date</label>
+                            <div class="col-md-6">
+                                <label for="datePicker" class="form-label">{{ T::translate('Review Date', 'Petsa ng Pagsusuri')}}</label>
                                 <input type="date" class="form-control" id="datePicker" name="date" 
                                     value="{{ old('date', $review_date ?? date('Y-m-d')) }}" 
                                     required 
@@ -664,8 +665,8 @@
                             </div>
 
                             <!-- Care Service Agreement -->
-                            <div class="col-md-3">
-                                <label for="careServiceAgreement" class="form-label">Care Service Agreement</label>
+                            <div class="col-md-6">
+                                <label for="careServiceAgreement" class="form-label">{{ T::translate('Care Service Agreement', 'Kasunduan sa Serbisyo ng Pangangalaga')}}</label>
                                 <input type="file" class="form-control" id="careServiceAgreement" name="care_service_agreement" 
                                     accept=".pdf,.doc,.docx" 
                                     title="Only PDF, DOC, and DOCX files are allowed.">
@@ -677,13 +678,13 @@
                                             </small>
                                         </div>
                                     @else
-                                    <small class="text-muted">No file uploaded</small>
+                                    <small class="text-muted">{{ T::translate('No file uploaded', 'Walang file ang na-upload')}}</small>
                                     @endif
-                                    <small class="text-danger">Maximum file size: 5MB. Please compress or split larger files.</small>
+                                    <small class="text-danger">{{ T::translate('Maximum file size: 5MB. Please compress or split larger files.', 'Pinakamataas na laki ng file: 5MB. Mangyaring i-compress o hatiin ang mas malalaking file.')}}</small>
                             </div>
 
                             <!-- General Careplan -->
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <label for="generalCareplan" class="form-label">General Careplan</label>
                                 <input type="file" class="form-control" id="generalCareplan" name="general_careplan" 
                                     accept=".pdf,.doc,.docx" 
@@ -696,9 +697,9 @@
                                             </small>
                                         </div>
                                     @else
-                                    <small class="text-muted">No file uploaded</small>
+                                    <small class="text-muted">{{ T::translate('No file uploaded', 'Walang file ang na-upload')}}</small>
                                     @endif
-                                    <small class="text-danger">Maximum file size: 5MB. Please compress or split larger files.</small>
+                                    <small class="text-danger">{{ T::translate('Maximum file size: 5MB. Please compress or split larger files.', 'Pinakamataas na laki ng file: 5MB. Mangyaring i-compress o hatiin ang mas malalaking file.')}}</small>
                             </div>
                         </div>
 
@@ -710,8 +711,8 @@
                                     <div class="col-md-12">
                                         <div class="form-group mt-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label for="beneficiarySignatureUpload" class="form-label">Upload Beneficiary Signature</label>
-                                                <button type="button" id="clear-signature-1" class="btn btn-danger btn-sm">Clear</button>
+                                            <label for="beneficiarySignatureUpload" class="form-label">{{ T::translate('Upload Beneficiary Signature', 'Mag-upload ng Lagda ng Benepisyaryo')}}</label>
+                                                <button type="button" id="clear-signature-1" class="btn btn-danger btn-sm">{{ T::translate('Clear', 'Burahin')}}</button>
                                             </div>
                                             <div id="signature-pad-1" class="signature-pad">
                                                 <div class="signature-pad-body">
@@ -721,26 +722,26 @@
                                         </div>
                                     </div>
                                 @if($errors->any())
-                                <small class="text-danger">Note: The old signature is saved after a validation error. You need to enter the new one again.</small>
+                                <small class="text-danger">{{ T::translate('Note: The old signature is saved after a validation error. You need to enter the new one again.', 'Tandaan: Ang lumang lagda ay nai-save pagkatapos ng isang error sa validation. Kailangan mong ilagay muli ang bago.')}}</small>
                                 @endif
                                 </div>
                                 <div class="row mb-1">
                                     <div class="col-md-12">
-                                        <label for="beneficiarySignatureUpload" class="form-label">Upload Beneficiary Signature</label>
+                                        <label for="beneficiarySignatureUpload" class="form-label">{{ T::translate('Upload Beneficiary Signature', 'Mag-Upload ng Lagda ng Benepisyaryo')}}</label>
                                         <input type="file" class="form-control" id="beneficiarySignatureUpload" name="beneficiary_signature_upload" accept="image/png, image/jpeg">
                                                 @if($beneficiary->beneficiary_signature)
                                                     <div class="d-flex align-items-center mt-1">
                                                         <i class="bi bi-file-earmark-text text-primary"></i>
                                                         <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->beneficiary_signature) }}">
-                                                            Current signature: {{ substr(basename($beneficiary->beneficiary_signature), 0, 50) }}{{ strlen(basename($beneficiary->beneficiary_signature)) > 50 ? '...' : '' }}
+                                                            {{ T::translate('Current signature:', 'Kasalukuyang Lagda')}} {{ substr(basename($beneficiary->beneficiary_signature), 0, 50) }}{{ strlen(basename($beneficiary->beneficiary_signature)) > 50 ? '...' : '' }}
                                                         </small>
                                                         <small class="text-muted ms-1 file-name-container" title="{{ basename($beneficiary->beneficiary_signature) }}">
-                                                            Leave blank to keep current signature
+                                                            {{ T::translate('Leave blank to keep current signature', 'Iwanang blank upang panatilihin ang kasalukuyang lagda')}}
                                                         </small>
                                                     </div>
                                                     <img src="{{ asset('storage/' . $beneficiary->beneficiary_signature) }}" class="img-thumbnail signature-preview" style="max-height: 100px;" alt="Current beneficiary signature">
                                                 @else
-                                                    <small class="text-muted">No signature uploaded</small>
+                                                    <small class="text-muted">{{ T::translate('No signature uploaded', 'Walang lagda ang na-upload')}}</small>
                                                 @endif
                                     </div>
                                 </div>
@@ -754,8 +755,8 @@
                                     <div class="col-md-12">
                                         <div class="form-group mt-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label>Care Worker Signature</label>
-                                                <button type="button" id="clear-signature-2" class="btn btn-danger btn-sm">Clear</button>
+                                                <label>{{ T::translate('Care Worker Signature', 'Lagda ng Tagapag-alaga')}}</label>
+                                                <button type="button" id="clear-signature-2" class="btn btn-danger btn-sm">{{ T::translate('Clear', 'Burahin')}}</button>
                                             </div>
                                             <div id="signature-pad-2" class="signature-pad">
                                                 <div class="signature-pad-body">
@@ -765,12 +766,12 @@
                                         </div>
                                     </div>
                                 @if($errors->any())
-                                <small class="text-danger">Note: The old signature is saved after a validation error. You need to enter the new one again.</small>
+                                <small class="text-danger">{{ T::translate('Note: The old signature is saved after a validation error. You need to enter the new one again.', 'Tandaan: Ang lumang lagda ay nai-save pagkatapos ng isang error sa validation. Kailangan mong ilagay muli ang bago.')}}</small>
                                 @endif
                                 </div>
                                 <div class="row mb-1">
                                     <div class="col-md-12">
-                                        <label for="careWorkerSignatureUpload" class="form-label">Upload Care Worker Signature</label>
+                                        <label for="careWorkerSignatureUpload" class="form-label">{{ T::translate('Upload Care Worker Signature', 'I-Upload ang Lagda ng Tagapag-alaga')}}</label>
                                         <input type="file" class="form-control" id="careWorkerSignatureUpload" name="care_worker_signature_upload" accept="image/png, image/jpeg">
                                                 @if($beneficiary->care_worker_signature)
                                                     <div class="d-flex align-items-center mt-1">
@@ -781,7 +782,7 @@
                                                     </div>
                                                     <img src="{{ asset('storage/' . $beneficiary->care_worker_signature) }}" class="img-thumbnail signature-preview" style="max-height: 100px;" alt="Current beneficiary signature">
                                                 @else
-                                                    <small class="text-muted">No signature uploaded</small>
+                                                    <small class="text-muted">{{ T::translate('No signature uploaded', 'Walang lagda nag na-upload')}}</small>
                                                 @endif
                                     </div>
                                 </div>
@@ -794,7 +795,7 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Login Access</h5> 
+                                <h5 class="text-start">{{ T::translate('Login Access', 'Access sa Login')}}</h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -806,7 +807,7 @@
                                         value="{{ $beneficiary->username }}" disabled>
                                     <span class="input-group-text"><i class="bi bi-info-circle" title="Username is automatically generated from name: first initial + middle initial + last name"></i></span>
                                 </div>
-                                <small class="text-muted">Username will update automatically based on name changes</small>
+                                <small class="text-muted">{{ T::translate('Username will update automatically based on name changes', 'Awtomatikong mag-a-update ang username ayon sa nga pagbabago sa pangalan. ')}}</small>
                                 <!-- Hidden field to pass the new username value if name fields are changed -->
                                 <input type="hidden" id="updatedUsername" name="updated_username" value="{{ $beneficiary->username }}">
                             </div>
@@ -825,7 +826,7 @@
 
                             <!-- Confirm Password -->
                             <div class="col-md-4">
-                                <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
+                                <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumpirmahin ang Password')}}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Leave blank to keep old password" title="Passwords must match.">
                                     <span class="input-group-text password-toggle" data-target="confirmPassword">
@@ -840,7 +841,7 @@
                             <div class="col-12 d-flex justify-content-center align-items-center">
                                 <button type="submit" class="btn btn-success btn-lg d-flex align-items-center" id="saveBeneficiaryButton">
                                     <i class='bi bi-floppy me-2' style="font-size: 24px;"></i>
-                                    Save Beneficiary
+                                    {{ T::translate('Save Beneficiary', 'I-Save ang Benepisyaryo')}}
                                 </button>
                             </div>
                         </div>
@@ -855,11 +856,11 @@
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="saveSuccessModalLabel">Success</h5>
+                    <h5 class="modal-title" id="saveSuccessModalLabel">{{ T::translate('Success', 'Tagumpay')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <p>Beneficiary has been successfully saved!</p>
+                    <p>{{ T::translate('Beneficiary has been successfully saved!', 'Ang Benepisyaryo ay tagumpay na na-save!')}}</p>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
@@ -873,7 +874,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">{{ T::translate('File Size Error', 'Error sa File Size')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -883,7 +884,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>
@@ -913,7 +914,7 @@
                 <textarea class="form-control" name="administration_instructions[]" placeholder="Enter administration instructions" rows="1" required>${instructions}</textarea>
             </div>
             <div class="col-md-1 d-flex text-start">
-                <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">Delete</button>
+                <button type="button" class="btn btn-danger" onclick="removeMedicationRow(this)">{{ T::translate('Delete', 'Tanggalin')}}</button>
             </div>
         `;
         container.appendChild(newRow);
@@ -955,7 +956,7 @@
             if (tasksContainer.children.length > 1) {
                 tasksContainer.lastChild.remove();
             } else {
-                alert('At least one task is required.');
+                alert('{{ T::translate('At least one task is required.', 'Hindi bababa sa isang gawain ang kinakailangan.')}}');
             }
         }
 
@@ -1271,9 +1272,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
-                            Maximum allowed size is ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>${fieldLabel}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                            {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         
@@ -1304,9 +1305,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                     }
@@ -1352,7 +1353,7 @@
                 const lastName = lastNameInput.value.trim();
                 
                 if (!firstName || !lastName) {
-                    usernamePreview.value = "Username will be generated from name fields";
+                    usernamePreview.value = "{{ T::translate('Username will be generated from name fields', 'Mabubuo ang username mula sa mga field ng pangalan')}}";
                     return;
                 }
                 

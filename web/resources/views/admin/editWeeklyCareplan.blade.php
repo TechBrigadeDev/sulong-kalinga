@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports Management</title>
+    <title>Edit Weekly Care Plan</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/weeklyCareplan.css') }}">
 
     <style>
@@ -53,10 +51,38 @@
         .form-page.active {
             display: block;
         }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 0;
+            margin: 0;
+            color: var(--bs-gray-800);
+            line-height: 1;
+        }
+
+        .btn-primary {
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 767.98px) {
+            .d-flex {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .page-title {
+                order: -1;
+            }
+        }
     </style>
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     
@@ -69,14 +95,13 @@
         </div>
     @endif
         <div class="d-flex justify-content-between align-items-center">
-            <div class="text-left d-flex align-items-center" style="height: 100%;">
-                <h4 class="m-0">EDIT WEEKLY CARE PLAN</h4>
-            </div>
-            <a href="{{ route('admin.aiSummary.index') }}">
-                <button class="btn btn-primary btn-md" id="exportPdfBtn">
-                    <i class="bi bi-stars"></i>AI Summary
-                </button>
-            </a>
+            <!-- Left aligned title -->
+            <h4 class="page-title mb-0">EDIT WEEKLY CARE PLAN</h4>
+            
+            <!-- Right aligned button -->
+            <button type="button" class="btn btn-primary btn-md" onclick="generateAISummary()">
+                <i class="bi bi-stars me-2"></i>AI Summary
+            </button>
         </div>
         
             <div class="container-fluid">
@@ -115,14 +140,14 @@
                                         <div class="validation-error-container alert alert-danger mb-3" style="display: none;"></div>
                                             <div class="row mb-1">
                                                 <div class="col-12">
-                                                    <h5>Personal Details</h5>
+                                                    <h5>{{ T::translate('Personal Details', 'Personal na Detalye')}}</h5>
                                                 </div>
                                             </div>
                                             <div class="row mb-2">
                                                 <div class="col-md-4 col-sm-9 position-relative">
-                                                    <label for="beneficiary_id" class="form-label">Select Beneficiary</label>
+                                                    <label for="beneficiary_id" class="form-label">{{ T::translate('Select Beneficiary', 'Pumili ng Benepisyaryo')}}</label>
                                                     <select class="form-select" id="beneficiary_id" name="beneficiary_id">
-                                                        <option value="">-- Select Beneficiary --</option>
+                                                        <option value="">-- {{ T::translate('Select Beneficiary', 'Pumili ng Benepisyaryo')}} --</option>
                                                         @foreach($beneficiaries as $beneficiary)
                                                             <option value="{{ $beneficiary->beneficiary_id }}" 
                                                                 {{ old('beneficiary_id', $weeklyCarePlan->beneficiary_id) == $beneficiary->beneficiary_id ? 'selected' : '' }}>
@@ -132,10 +157,10 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-2 col-sm-3">
-                                                    <label for="age" class="form-label">Age</label>
+                                                    <label for="age" class="form-label">{{ T::translate('Age', 'Edad')}}</label>
                                                     <input type="text" class="form-control" id="age" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">                                            </div>
                                                 <div class="col-md-3 col-sm-6">
-                                                    <label for="birthDate" class="form-label">Birthdate</label>
+                                                    <label for="birthDate" class="form-label">{{ T::translate('Birthdate', 'Petsa ng Kaarawan')}}</label>
                                                     <input type="date" class="form-control" id="birthDate" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">                                            </div>
                                                 <div class="col-md-3 col-sm-6 position-relative">
                                                     <label for="gender" class="form-label">Gender</label>
@@ -144,21 +169,21 @@
                                             </div>
                                             <div class="row mb-2">
                                                 <div class="col-md-3 col-sm-4 position-relative">
-                                                    <label for="civilStatus" class="form-label">Civil Status</label>
+                                                    <label for="civilStatus" class="form-label">{{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}</label>
                                                     <input type="text" class="form-control" id="civilStatus" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                     </div>
                                                 <div class="col-md-9 col-sm-8">
-                                                    <label for="address" class="form-label">Address</label>
+                                                    <label for="address" class="form-label">{{ T::translate('Address', 'Tirahan')}}</label>
                                                     <input type="text" class="form-control" id="address" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                     </div>
                                             </div>
                                             <div class="row mb-2">
                                                 <div class="col-md-6 col-sm-6">
-                                                    <label for="condition" class="form-label">Medical Conditions</label>
+                                                    <label for="condition" class="form-label">{{ T::translate('Medical Conditions', 'Mga Kondisyong Medikal')}}</label>
                                                     <input type="text" class="form-control" id="medicalConditions" readonly data-bs-toggle="tooltip" title="Edit in General Care Plan">
                                                 </div>
                                                 <div class="col-md-6 col-sm-12">
-                                                    <label for="illness" class="form-label">Illness</label>
+                                                    <label for="illness" class="form-label">{{ T::translate('Illnesses', 'Mga Sakit')}}</label>
                                                     @php
                                                         $illnessesString = '';
                                                         if ($weeklyCarePlan->illnesses) {
@@ -171,16 +196,16 @@
                                                     <input type="text" class="form-control" id="illness" name="illness" 
                                                         placeholder="e.g. Cough, Fever (separate multiple illnesses with commas)" 
                                                         value="{{ old('illness', $illnessesString) }}">
-                                                    <small class="form-text text-muted">Leave blank if no illness recorded. Separate multiple illnesses with commas.</small>
+                                                    <small class="form-text text-muted">{{ T::translate('Leave blank if no illness recorded. Separate multiple illnesses with commas.', 'Iwanang blangko kung walang sakit ang naitala. Paghiwalayin ang maraming sakit gamit ang kuwit.')}}</small>
                                                 </div>
                                             </div>
                                             <hr my-4>
                                             <!-- Assessment, Vital Signs -->
                                             <div class="row mb-3 mt-2">
-                                                <div class="col-lg-6 col-md-6 col-sm-12 text-center">
-                                                    <label for="assessment" class="form-label"><h5>Assessment</h5></label>
+                                                <div class="col-lg-6 col-md-6 col-sm-12 text-center mb-2">
+                                                    <label for="assessment" class="form-label"><h5>{{ T::translate('Assessment', 'Pagtatasa')}}</h5></label>
                                                     <textarea class="form-control @error('assessment') is-invalid @enderror" 
-                                                        id="assessment" name="assessment" rows="5">{{ old('assessment', $weeklyCarePlan->assessment) }}</textarea>
+                                                        id="assessment" name="assessment" rows="10">{{ old('assessment', $weeklyCarePlan->assessment) }}</textarea>
                                                     @error('assessment')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -189,7 +214,7 @@
                                                     <h5>Vital Signs</h5>
                                                     <div class="row">
                                                         <div class="col-md-6 col-sm-6">
-                                                            <label for="blood_pressure" class="form-label">Blood Pressure (mmHg)</label>
+                                                            <label for="blood_pressure" class="form-label">{{ T::translate('Blood Pressure', 'Presyon ng Dugo')}} (mmHg)</label>
                                                             <input type="text" class="form-control @error('blood_pressure') is-invalid @enderror" 
                                                                 id="blood_pressure" name="blood_pressure"
                                                                 placeholder="e.g. 120/80" value="{{ old('blood_pressure', $weeklyCarePlan->vitalSigns->blood_pressure) }}"
@@ -201,12 +226,12 @@
                                                             @enderror
                                                         </div>
                                                         <div class="col-md-6 col-sm-6 position-relative">
-                                                            <label for="body_temperature" class="form-label">Body Temperature (°C)</label>
+                                                            <label for="body_temperature" class="form-label">{{ T::translate('Body Temperature', 'Temperatura ng Katawan')}} (°C)</label>
                                                             <input type="number" class="form-control @error('body_temperature') is-invalid @enderror" 
                                                                 id="body_temperature" name="body_temperature" 
                                                                 placeholder="e.g. 36.5" value="{{ old('body_temperature', $weeklyCarePlan->vitalSigns->body_temperature) }}"
                                                                 min="35" max="42" step="0.1">
-                                                            <small class="form-text text-muted">Enter a number between 35-42°C</small>
+                                                            <small class="form-text text-muted">{{ T::translate('Enter a number between 35-42°C', 'Ilagay ang numero sa pagitan ng 35-42°C')}}</small>
                                                             @error('body_temperature')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
@@ -214,23 +239,23 @@
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-md-6 col-sm-6">
-                                                            <label for="pulse_rate" class="form-label">Pulse Rate (bpm)</label>
+                                                            <label for="pulse_rate" class="form-label">{{ T::translate('Pulse Rate (bpm)', 'Bilis ng Pulso (bpm)')}}</label>
                                                             <input type="number" class="form-control @error('pulse_rate') is-invalid @enderror" 
                                                                 id="pulse_rate" name="pulse_rate"
                                                                 placeholder="e.g. 72" value="{{ old('pulse_rate', $weeklyCarePlan->vitalSigns->pulse_rate) }}"
                                                                 min="40" max="200" step="1">
-                                                            <small class="form-text text-muted">Enter a whole number (beats per minute)</small>
+                                                            <small class="form-text text-muted">{{ T::translate('Enter a whole number (beats per minute)', 'Ilagay ang buong numero (beats kada minuto)')}}</small>
                                                             @error('pulse_rate')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
                                                         </div>
                                                         <div class="col-md-6 col-sm-6 position-relative">
-                                                            <label for="respiratory_rate" class="form-label">Respiratory Rate (bpm)</label>
+                                                            <label for="respiratory_rate" class="form-label">{{ T::translate('Respiratory Rate (bpm)', 'Bilis ng Paghinga (bpm)')}}</label>
                                                             <input type="number" class="form-control @error('respiratory_rate') is-invalid @enderror" 
                                                                 id="respiratory_rate" name="respiratory_rate"
                                                                 placeholder="e.g. 16" value="{{ old('respiratory_rate', $weeklyCarePlan->vitalSigns->respiratory_rate) }}"
                                                                 min="8" max="40" step="1">
-                                                            <small class="form-text text-muted">Enter a whole number (breaths per minute)</small>
+                                                            <small class="form-text text-muted">{{ T::translate('Enter a whole number (breaths per minute)', 'Ilagay ang buong numero (hinga kada minuto)')}}</small>
                                                             @error('respiratory_rate')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
@@ -240,7 +265,7 @@
                                             </div>
                                             <div class="row mt-4">
                                                 <div class="col-12 d-flex justify-content-end">
-                                                <button type="button" class="btn btn-primary" onclick="goToPage(2)">Next <i class="fa fa-arrow-right"></i></button>
+                                                <button type="button" class="btn btn-primary" onclick="goToPage(2)">{{ T::translate('Next', 'Susunod')}} <i class="bi bi-arrow-right-short"></i></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -290,7 +315,7 @@
                                                     
                                                     <!-- Custom intervention for this category -->
                                                     <div class="mt-4">
-                                                        <h6>Add Custom {{ $category->care_category_name }} Intervention</h6>
+                                                        <h6>{{ T::translate('Add Custom', 'Magdagdag ng Custom sa')}} {{ $category->care_category_name }} {{ T::translate('Intervention', 'na Interbensiyon')}}</h6>
                                                         <div class="custom-intervention-container" data-category="{{ $category->care_category_id }}">
                                                             @if(isset($customInterventionsByCategory[$category->care_category_id]))
                                                                 @foreach($customInterventionsByCategory[$category->care_category_id] as $customIntervention)
@@ -310,7 +335,7 @@
                                                                         </div>
                                                                         <div class="col-md-1">
                                                                             <button type="button" class="btn btn-sm btn-danger remove-custom-row">
-                                                                                <i class="fa fa-times"></i>
+                                                                                <i class="bi bi-x"></i>
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -319,7 +344,7 @@
                                                         </div>
                                                         <button type="button" class="btn btn-sm btn-outline-primary add-custom-intervention"
                                                                 data-category="{{ $category->care_category_id }}">
-                                                            <i class="fa fa-plus"></i> Add Custom Intervention
+                                                            <i class="bi bi-plus"></i> {{ T::translate('Add Custom Intervention', 'Magdagdag ng Custom na Interbensyon')}}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -327,10 +352,10 @@
                                             
                                             <div class="d-flex justify-content-between">
                                                 <button type="button" class="btn btn-secondary" onclick="goToPage({{ $index + 1 }})">
-                                                    <i class="fa fa-arrow-left"></i> Previous
+                                                    <i class="bi bi-arrow-left-short"></i> {{ T::translate('Previous', 'Nakaraan')}}
                                                 </button>
                                                 <button type="button" class="btn btn-primary" onclick="goToPage({{ $index + 3 }})">
-                                                    Next <i class="fa fa-arrow-right"></i>
+                                                    {{ T::translate('Next', 'Susunod')}} <i class="bi bi-arrow-right-short"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -343,34 +368,34 @@
                                                 <div class="col-lg-6 col-md-6 col-sm-12 text-center">
                                                     <div class="row mb-3">
                                                         <div class="col-md-12 col-sm-12">
-                                                            <label for="upload_picture" class="form-label">Upload Picture <span class="text-danger">*</span></label>
+                                                            <label for="upload_picture" class="form-label">{{ T::translate('Upload Picture', 'Mag-Upload ng Litrato')}} <span class="text-danger">*</span></label>
                                                             <input type="file" class="form-control @error('upload_picture') is-invalid @enderror" 
                                                                 id="upload_picture" name="upload_picture" 
                                                                 accept="image/*" onchange="previewImage(event)">
                                                             @if($weeklyCarePlan->photo_path)
-                                                                <small class="form-text text-muted">Current file: {{ basename($weeklyCarePlan->photo_path) }}</small>
+                                                                <small class="form-text text-muted">{{ T::translate('Current File:', 'Kasalukuyang File:')}} {{ basename($weeklyCarePlan->photo_path) }}</small>
                                                             @else
-                                                                <small class="form-text text-muted">No image currently uploaded. Please select a new image.</small>
+                                                                <small class="form-text text-muted">{{ T::translate('No image currently uploaded. Please select a new image.', 'Walang na-upload na larawan sa kasalukuyan. Mangyaring pumili ng bagong larawan.')}}</small>
                                                             @endif
                                                             @error('upload_picture')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
                                                         </div>
                                                         <div class="col-md-12 col-sm-12 text-center mt-2">
-                                                            <label class="form-label">Picture Preview</label>
+                                                            <label class="form-label">{{ T::translate('Picture Preview', 'Preview ng Larawan')}}</label>
                                                             <div class="border p-2 d-flex justify-content-center align-items-center" style="height: 200px;">
                                                                 @if($weeklyCarePlan->photo_path)
                                                                     <img id="picture_preview" src="{{ asset('storage/' . $weeklyCarePlan->photo_path) }}" alt="Current Picture" class="img-fluid" style="max-height: 100%;">
                                                                 @else
                                                                     <img id="picture_preview" src="#" alt="Preview" class="img-fluid" style="max-height: 100%; display: none;">
-                                                                    <span id="no_preview_text">No image selected</span>
+                                                                    <span id="no_preview_text">{{ T::translate('No image selected', 'Walang larawan ang napili')}}</span>
                                                                 @endif
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-6 col-md-6 col-sm-12 text-center">
-                                                <label for="evaluation_recommendations" class="form-label"><h5>Recommendations and Evaluations</h5></label>
+                                                <label for="evaluation_recommendations" class="form-label"><h5>{{ T::translate('Recommendations and Evaluations', 'Rekomendasyon at Ebalwasyon')}}</h5></label>
                                                     <textarea class="form-control @error('evaluation_recommendations') is-invalid @enderror" 
                                                         id="evaluation_recommendations" name="evaluation_recommendations" 
                                                         rows="6">{{ old('evaluation_recommendations', $weeklyCarePlan->evaluation_recommendations) }}</textarea>
@@ -382,10 +407,10 @@
                                             <div class="row mt-4">
                                                 <div class="col-12 d-flex justify-content-between align-items-center">
                                                     <button type="button" class="btn btn-secondary" onclick="goToPage(8)">
-                                                        <i class="fa fa-arrow-left"></i> Previous
+                                                        <i class="bi bi-arrow-left-short"></i> {{ T::translate('Previous', 'Nakaraan')}}
                                                     </button>
                                                     <button type="submit" class="btn btn-success">
-                                                        <i class="fa fa-save"></i> Save Weekly Care Plan
+                                                        <i class="bi bi-floppy"></i> {{ T::translate('Save Weekly Care Plan', 'I-save ang Weekly Care Plan')}}
                                                     </button>
                                                 </div>
                                             </div>
@@ -414,7 +439,7 @@
             </div>
             <div class="col-md-1">
                 <button type="button" class="btn btn-sm btn-danger remove-custom-row">
-                    <i class="fa fa-times"></i>
+                    <i class="bi bi-x"></i>
                 </button>
             </div>
         </div>
@@ -612,12 +637,12 @@
 
                     document.getElementById('medicalConditions').value = medicalConditions;
                 } else {
-                    alert('Failed to load beneficiary details');
+                    alert('{{ T::translate('Failed to load beneficiary details', 'Nabigong i-load ang mga detalye ng benepisaryo') }}');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while fetching beneficiary data');
+                alert('{{ T::translate('An error occurred while fetching beneficiary data', 'May nangyaring error habang kinukuha ang data ng benepisaryo') }}');
             });
     });
         
@@ -682,7 +707,7 @@
             
             // 1. Check if beneficiary is selected
             if (!document.getElementById('beneficiary_id').value) {
-                errors.push('Please select a beneficiary');
+                errors.push('{{ T::translate('Please select a beneficiary', 'Mangyaring pumili ng benepisyaryo')}}');
                 isValid = false;
                 pageToShow = 1;
             }
@@ -690,15 +715,15 @@
             // 2. Check assessment - minimum 20 characters with meaningful content
             const assessment = document.getElementById('assessment').value.trim();
             if (!assessment) {
-                errors.push('Please provide an assessment');
+                errors.push('{{ T::translate('Please provide an assessment', 'Mangyaring magbigay ng pagtatasa')}}');
                 isValid = false;
                 pageToShow = 1;
             } else if (assessment.length < 20) {
-                errors.push('Assessment must be at least 20 characters');
+                errors.push('{{ T::translate('Assessment must be at least 20 characters', 'Ang pagtatasa ay dapat hindi bababa sa 20 na karakter')}}');
                 isValid = false;
                 pageToShow = 1;
             } else if (!/[a-zA-Z]/.test(assessment)) {
-                errors.push('Assessment must contain text and cannot consist of only numbers or symbols');
+                errors.push('{{ T::translate('Assessment must contain text and cannot consist of only numbers or symbols', 'Ang pagtatasa ay dapat maglaman ng teksto at hindi lamang mga numero o simbolo')}}');
                 isValid = false;
                 pageToShow = 1;
             }
@@ -717,7 +742,7 @@
             } else {
                 const bpRegex = /^\d{2,3}\/\d{2,3}$/;
                 if (!bpRegex.test(bloodPressure)) {
-                    errors.push('Blood pressure must be in format 120/80');
+                    errors.push('{{ T::translate('Blood pressure must be in format 120/80', 'Ang Presyon ng Dugo ay dapat nasa format na 120/80')}}');
                     isValid = false;
                     pageToShow = 1;
                 }
@@ -725,33 +750,33 @@
             
             // Validate body temperature
             if (!bodyTemp) {
-                errors.push('Body temperature is required');
+                errors.push('{{ T::translate('Body temperature is required', 'Ang temperatura ng katawan ay kinakailangan')}}');
                 isValid = false;
                 pageToShow = 1;
             } else if (bodyTemp < 35 || bodyTemp > 42) {
-                errors.push('Body temperature must be between 35°C and 42°C');
+                errors.push('{{ T::translate('Body temperature must be between 35°C and 42°C', 'Ang temperatura ng katawan ay dapat nasa pagitan ng 35°C at 42°C')}}');
                 isValid = false;
                 pageToShow = 1;
             }
             
             // Validate pulse rate
             if (!pulseRate) {
-                errors.push('Pulse rate is required');
+                errors.push('{{ T::translate('Pulse rate is required', 'Ang bilis ng pulsong ay kinakailangan')}}');
                 isValid = false;
                 pageToShow = 1;
             } else if (pulseRate < 40 || pulseRate > 200) {
-                errors.push('Pulse rate must be between 40 and 200 bpm');
+                errors.push('{{ T::translate('Pulse rate must be between 40 and 200 bpm', 'Ang bilis ng pulso ay dapat nasa pagitan ng 40 at 200 bpm')}}');
                 isValid = false;
                 pageToShow = 1;
             }
             
             // Validate respiratory rate
             if (!respRate) {
-                errors.push('Respiratory rate is required');
+                errors.push('{{ T::translate('Respiratory rate is required', 'Ang bilis ng paghinga ay kinakailangan')}}');
                 isValid = false;
                 pageToShow = 1;
             } else if (respRate < 8 || respRate > 40) {
-                errors.push('Respiratory rate must be between 8 and 40 bpm');
+                errors.push('{{ T::translate('Respiratory rate must be between 8 and 40 bpm', 'Ang bilis ng paghingan ay dapat nasa pagitan ng 8 at 40 bpm')}}');
                 isValid = false;
                 pageToShow = 1;
             }
@@ -768,7 +793,7 @@
             });
             
             if (checkedInterventions.length === 0 && !hasCustomInterventions) {
-                errors.push('Please select at least one intervention');
+                errors.push('{{ T::translate('Please select at least one intervention', 'Mangyaring pumili ng hindi bababa sa isang interbensyon')}}');
                 isValid = false;
                 pageToShow = 2;
             }
@@ -777,7 +802,7 @@
             checkedInterventions.forEach(checkbox => {
                 const durationInput = checkbox.closest('.row').querySelector('.intervention-duration');
                 if (!durationInput.value) {
-                    errors.push('Please enter duration for all selected interventions');
+                    errors.push('{{ T::translate('Please enter duration for all selected interventions', 'Mangyaring maglagay ng tagal para sa lahat ng napiling interbensyon')}}');
                     isValid = false;
                     
                     // Find which page this intervention is on
@@ -786,7 +811,7 @@
                         pageToShow = parseInt(page.id.replace('page', ''));
                     }
                 } else if (parseFloat(durationInput.value) <= 0) {
-                    errors.push('Duration must be greater than 0');
+                    errors.push('{{ T::translate('Duration must be greater than 0', 'Ang tagal ay dapat higit sa 0')}}');
                     isValid = false;
                     
                     const page = checkbox.closest('.form-page');
@@ -804,7 +829,7 @@
                 if (descriptionInput && descriptionInput.value.trim() !== '') {
                     // Description is provided, check if it meets requirements
                     if (descriptionInput.value.trim().length < 5) {
-                        errors.push('Custom intervention description must be at least 5 characters');
+                        errors.push('{{ T::translate('Custom intervention description must be at least 5 characters', 'Ang paglalarawan ng custom na interbensyon ay dapat hindi bababa sa 5 na karakter')}}');
                         isValid = false;
                         
                         const page = row.closest('.form-page');
@@ -815,7 +840,7 @@
                     }
                     
                     if (!/[a-zA-Z]/.test(descriptionInput.value)) {
-                        errors.push('Custom intervention description must contain text');
+                        errors.push('{{ T::translate('Custom intervention description must contain text', 'Ang paglalarawan ng custom na interbensyon ay dapat maglaman ng tektso.')}}');
                         isValid = false;
                         
                         const page = row.closest('.form-page');
@@ -827,7 +852,7 @@
                     
                     // Check duration
                     if (!durationInput.value) {
-                        errors.push('Please enter duration for all custom interventions');
+                        errors.push('{{ T::translate('Please enter duration for all custom interventions', 'Mangyaring maglagay ng tagal para sa lahat ng mga custom na interbensyon')}}');
                         isValid = false;
                         
                         const page = row.closest('.form-page');
@@ -836,7 +861,7 @@
                             if (pageNum > pageToShow) pageToShow = pageNum;
                         }
                     } else if (parseFloat(durationInput.value) <= 0) {
-                        errors.push('Duration for custom interventions must be greater than 0');
+                        errors.push('{{ T::translate('Duration for custom interventions must be greater than 0', 'Ang tagal ng mga custom na interbensyon ay dapat higit sa 0')}}');
                         isValid = false;
                         
                         const page = row.closest('.form-page');
@@ -854,15 +879,15 @@
             
             if (page9 && page9.classList.contains('active')) {
                 if (!evaluationRecs) {
-                    errors.push('Please provide evaluation recommendations');
+                    errors.push('{{ T::translate('Please provide evaluation recommendations', 'Mangyaring magbigay ng mga rekomendasyon sa ebalwasyon')}}');
                     isValid = false;
                     pageToShow = 9;
                 } else if (evaluationRecs.length < 20) {
-                    errors.push('Evaluation recommendations must be at least 20 characters');
+                    errors.push('{{ T::translate('Evaluation recommendations must be at least 20 characters', 'Ang ebalwasyon sa rekomendasyon ay dapat hindi bababa sa 20 na karakter')}}');
                     isValid = false;
                     pageToShow = 9;
                 } else if (!/[a-zA-Z]/.test(evaluationRecs)) {
-                    errors.push('Evaluation recommendations must contain text and cannot consist of only numbers or symbols');
+                    errors.push('{{ T::translate('Evaluation recommendations must contain text and cannot consist of only numbers or symbols', 'Ang mga rekomendasyon sa ebalwasyon ay dapat maglaman ng teksto at hindi lamang mga numero o simbolo')}}');
                     isValid = false;
                     pageToShow = 9;
                 }
@@ -889,10 +914,10 @@
             <div class="col-md-9">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="${containerId}_others${othersContainer.children.length}">
-                    <label class="form-check-label" for="${containerId}_others${othersContainer.children.length}">Others</label>
+                    <label class="form-check-label" for="${containerId}_others${othersContainer.children.length}">{{ T::translate('Others', 'Iba pa')}}</label>
                 </div>
                 <!-- Additional Input Field -->
-                <input type="text" class="form-control mt-2" placeholder="Enter details">
+                <input type="text" class="form-control mt-2" placeholder="{{ T::translate('Enter details', 'Ilagay ang mga detalye')}}">
             </div>
             <div class="col-md-3">
                 <input type="number" class="form-control" placeholder="Mins">
@@ -911,7 +936,7 @@
             // Find which page this container is on
             const page = othersContainer.closest('.form-page');
             const pageNum = page ? parseInt(page.id.replace('page', '')) : 1;
-            showValidationError(pageNum, "At least one 'Others' input is required.");
+            showValidationError(pageNum, "{{ T::translate('At least one \'Others\' input is required.', 'Hindi bababa sa isang \"Iba pa\" na input ang kinakailangan.')}}");
         }
     }
 
@@ -929,7 +954,7 @@
             
             // Add header
             const header = document.createElement('h5');
-            header.textContent = 'Please fix the following errors:';
+            header.textContent = '{{ T::translate('Please fix the following errors', 'Mangyaring ayusin ang mga sumusunod na error')}}:';
             errorContainer.appendChild(header);
             
             // Create list of errors
