@@ -52,7 +52,6 @@ class ShiftTrackApiController extends Controller
             return response()->json(['message' => 'Care worker does not match shift.'], 422);
         }
 
-        $visitation = \App\Models\Visitation::findOrFail($request->visitation_id);
         if ($visitation->visitation_date->format('Y-m-d') !== date('Y-m-d', strtotime($request->recorded_at))) {
             return response()->json([
                 'message' => 'Arrival/departure date does not match visitation date.'

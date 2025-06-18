@@ -211,8 +211,22 @@ class ShiftApiController extends Controller
     {
         $url = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$lat},{$lng}&key={$apiKey}";
         $response = Http::get($url);
-        if ($response->ok() && isset($response['results'][0]['formatted_address'])) {
-            return $response['results'][0]['formatted_address'];
+
+        if ($response->ok() && isset($response['results'])) {
+            // Prefer establishment or premise over plus_code
+            foreach ($response['results'] as $result) {
+                if (
+                    in_array('establishment', $result['types']) ||
+                    in_array('point_of_interest', $result['types']) ||
+                    in_array('premise', $result['types'])
+                ) {
+                    return $result['formatted_address'];
+                }
+            }
+            // Fallback to first formatted_address
+            if (isset($response['results'][0]['formatted_address'])) {
+                return $response['results'][0]['formatted_address'];
+            }
         }
         return null;
     }
