@@ -1,0 +1,86 @@
+services:
+  libretranslate:
+    build:
+      context: ./libretranslate
+      dockerfile: Dockerfile
+    volumes:
+      - libretranslate_data:/home/libretranslate/.local/share
+    ports:
+      - "5051:5000"
+    networks:
+      - app-network
+    restart: always
+  calamancy-api:
+    build:
+      context: ./calamancy-api
+      dockerfile: Dockerfile
+    volumes:
+      - calamancy_data:/app/data
+      - calamancy_models:/root/.cache/spacy/downloads
+      - classifier_models:/app/models
+      - calamancy_models:/root/.calamancy/models
+    networks:
+      - app-network
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+  web:
+    build:
+      context: ./web
+      dockerfile: docker/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    depends_on:
+      - db
+      - calamancy-api
+      - libretranslate
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=sulong_kalinga_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CALAMANCY_API_URL=http://calamancy-api:5000
+      - LIBRETRANSLATE_URL=http://libretranslate:5000
+      - CADDY_GLOBAL_OPTIONS=debug
+      - APP_KEY=${APP_KEY}
+    volumes:
+      - web_storage:/app/storage
+      - web_bootstrap:/app/bootstrap/cache
+    restart: always
+    networks:
+      - app-network
+
+  # PostgreSQL database section remains unchanged
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=sulong_kalinga_db
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  web_data:
+  web_storage:
+  web_bootstrap:
+  calamancy_data:
+  calamancy_api_data:
+  calamancy_models:
+  classifier_models:
+  libretranslate_data:
