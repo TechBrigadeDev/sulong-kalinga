@@ -161,5 +161,10 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
         Route::post('/send-reminder', [EmergencyAndRequestController::class, 'sendReminder'])->name('send.reminder');
         Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
     });
+    
+    //Beneficiary Map
+    Route::prefix('beneficiary-map')->name('beneficiary.map.')->group(function () {
+        Route::get('/', [BeneficiaryMapController::class, 'index'])->name('index');
+    });
 
 });

@@ -101,7 +101,7 @@
       <ul class="sub-menu">
         <li><a class="link_name">Location Tracking</a></li>
         <li>
-          <a href="#" @if($isMessagingView) target="_top" onclick="window.top.location.href='#'; return false;" @endif>
+          <a href="{{ route('care-manager.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiary-map') }}'; return false;" @endif>
             Beneficiary Map
           </a>
         </li>
