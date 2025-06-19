@@ -15,8 +15,8 @@
     @php
     use App\Helpers\TranslationHelper as T;
     @endphp
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <!-- Modals for Add/Edit Pin are commented out as per requirements -->
 

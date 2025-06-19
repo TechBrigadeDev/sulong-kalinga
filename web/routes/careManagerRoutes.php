@@ -206,5 +206,10 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
             Route::get('/', [ShiftHistoryController::class, 'index'])->name('index');
             Route::get('/shift-details/{shiftId}', [ShiftHistoryController::class, 'shiftDetails'])->name('shiftDetails');
         });
+
+        //Beneficiary Map
+        Route::prefix('beneficiary-map')->name('beneficiary.map.')->group(function () {
+            Route::get('/', [BeneficiaryMapController::class, 'index'])->name('index');
+        });
     
 });
