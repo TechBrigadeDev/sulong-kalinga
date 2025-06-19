@@ -119,6 +119,27 @@ class ShiftApiController extends Controller
             return response()->json(['message' => 'Shift already completed.'], 409);
         }
 
+        // Prevent time out if any visitation has "arrived" but no "departed" event
+        $arrivedVisitations = ShiftTrack::where('shift_id', $shift->id)
+            ->where('arrival_status', 'arrived')
+            ->pluck('visitation_id')
+            ->unique();
+
+        $departedVisitations = ShiftTrack::where('shift_id', $shift->id)
+            ->where('arrival_status', 'departed')
+            ->pluck('visitation_id')
+            ->unique();
+
+        // Find visitations with arrived but no departed
+        $incompleteVisitations = $arrivedVisitations->diff($departedVisitations);
+
+        if ($incompleteVisitations->count() > 0) {
+            return response()->json([
+                'message' => 'Cannot time out. Some visitations have an "arrived" event but no "departed" event.',
+                'incomplete_visitations' => $incompleteVisitations->values()
+            ], 422);
+        }
+
         $shift->update([
             'time_out' => $request->time_out ?? now(),
             'status' => 'completed',
@@ -127,6 +148,37 @@ class ShiftApiController extends Controller
         $this->batchGeocodeShiftTracks($shift);
 
         return response()->json($shift);
+    }
+
+    /**
+     * Show the current in-progress shift for the authenticated care worker.
+     */
+    public function current(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || $user->role_id != 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Care Workers can access this resource.'
+            ], 403);
+        }
+
+        $shift = Shift::where('care_worker_id', $user->id)
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$shift) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No in-progress shift found.',
+                'shift' => null
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'shift' => $shift
+        ]);
     }
 
     /**
