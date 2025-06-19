@@ -545,4 +545,4 @@ def extract_main_subject(doc):
             return ent.text
     
     # Default subjects if no person entity found
-    return "Ang pasyente"
+    return "Ang beneficiary"
