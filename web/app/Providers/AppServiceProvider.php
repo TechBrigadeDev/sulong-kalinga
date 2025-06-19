@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
         FamilyMember::observe(FamilyMemberObserver::class);
 
         // Force HTTPS
-        // URL::forceScheme('https');
+        URL::forceScheme('https');
 
         // Add language preference to all views
         View::composer('*', function ($view) {
