@@ -485,6 +485,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // Global variables
+        let currentCarePlanId = null;
+        let currentPage = 1;
+
         $(document).ready(function() {
             let currentCarePlanId = null;
             let currentPage = 1;
@@ -1348,7 +1352,7 @@
                         alert('Failed to finalize summaries. Please try again.');
                     }
                 });
-            });
+            }
 
             // For Evaluation translation (same pattern)
             $('#translateEvaluationSummary').off('click').click(function() {
@@ -1377,69 +1381,7 @@
                 }
             });
 
-        });
-
-        function finalizeSummary(type) {
-            if (!currentCarePlanId) return;
-            
-            // Get the appropriate content based on type
-            const summaryContent = type === 'assessment' 
-                ? $('#assessmentSummaryDraft').text() 
-                : $('#evaluationSummaryDraft').text();
-            
-            if (!summaryContent.trim()) {
-                alert(`No ${type} summary available to finalize.`);
-                return;
-            }
-            
-            if (confirm(`Are you sure you want to finalize this ${type} summary? This will mark it as the official summary.`)) {
-                // Show loading
-                $('#loadingText').text(`Finalizing ${type} summary...`);
-                $('#loadingProgressBar').css('width', '0%');
-                $('#loadingModal').modal('show');
-                
-                $('#loadingText').text('Translating sections to English...');
-                $('#loadingProgressBar').css('width', '0%');
-                $('#loadingModal').modal('show');
-                
-                let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += 3;
-                    $('#loadingProgressBar').css('width', `${progress}%`);
-                    
-                    if (progress >= 90) {
-                        clearInterval(progressInterval);
-                    }
-                }, 100);
-                
-                $.ajax({
-                    url: '/admin/ai-summary/translate-sections',
-                    type: 'POST',
-                    data: {
-                        sections: sections,
-                        weekly_care_plan_id: currentCarePlanId,
-                        type: 'evaluation',
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        clearInterval(progressInterval);
-                        $('#loadingProgressBar').css('width', '100%');
-                        
-                        setTimeout(() => {
-                            $('#loadingModal').modal('hide');
-                            $('#evaluationTranslationDraft').text(response.translatedText);
-                            displayTranslatedSections('evaluation', response.translatedSections);
-                            $('#evaluationTranslationSection').show();
-                        }, 500);
-                    },
-                    error: function(xhr) {
-                        clearInterval(progressInterval);
-                        $('#loadingModal').modal('hide');
-                        console.error('Error translating sections:', xhr);
-                        alert('Failed to translate sections. Please try again.');
-                    }
-                });
-            });
+        }
 
             function displayTranslatedSections(type, sections) {
                 if (!sections) return;
@@ -1631,71 +1573,6 @@
                     });
                 }
             });
-
-        });
-
-        function finalizeSummary(type) {
-            if (!currentCarePlanId) return;
-            
-            // Get the appropriate content based on type
-            const summaryContent = type === 'assessment' 
-                ? $('#assessmentSummaryDraft').text() 
-                : $('#evaluationSummaryDraft').text();
-            
-            if (!summaryContent.trim()) {
-                alert(`No ${type} summary available to finalize.`);
-                return;
-            }
-            
-            if (confirm(`Are you sure you want to finalize this ${type} summary? This will mark it as the official summary.`)) {
-                // Show loading
-                $('#loadingText').text(`Finalizing ${type} summary...`);
-                $('#loadingProgressBar').css('width', '0%');
-                $('#loadingModal').modal('show');
-                
-                let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += 10;
-                    $('#loadingProgressBar').css('width', `${progress}%`);
-                    
-                    if (progress >= 90) {
-                        clearInterval(progressInterval);
-                    }
-                }, 100);
-                
-                // Prepare data object
-                const data = {};
-                data[`${type}_summary_final`] = summaryContent;
-                
-                // Send request to finalize
-                $.ajax({
-                    url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
-                    type: 'PUT',
-                    data: {
-                        ...data,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        clearInterval(progressInterval);
-                        $('#loadingProgressBar').css('width', '100%');
-                        
-                        setTimeout(() => {
-                            $('#loadingModal').modal('hide');
-                            alert(`${type.charAt(0).toUpperCase() + type.slice(1)} summary has been finalized successfully!`);
-                            
-                            // Update UI to show finalized status
-                            $(`#${type}FinalStatus`).html('<span class="badge bg-success">Finalized</span>');
-                        }, 500);
-                    },
-                    error: function(xhr) {
-                        clearInterval(progressInterval);
-                        $('#loadingModal').modal('hide');
-                        console.error(`Error finalizing ${type} summary:`, xhr);
-                        alert('Failed to finalize summary. Please try again.');
-                    }
-                });
-            }
-        }
 
         // Save translation draft to database
         function saveTranslation(type, translation) {
