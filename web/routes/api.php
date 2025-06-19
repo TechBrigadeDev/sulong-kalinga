@@ -165,6 +165,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     Route::get('/shifts', [ShiftApiController::class, 'index']); // Now returns upcoming scheduled visitations for a care worker
     Route::get('/shifts/archived', [ShiftApiController::class, 'archived']); // New: completed shifts
     Route::post('/shifts/time-in', [ShiftApiController::class, 'timeIn']); // Renamed from store
+    Route::get('/shifts/current', [ShiftApiController::class, 'current']);
     Route::patch('/shifts/{shift}/time-out', [ShiftApiController::class, 'timeOut']); // Renamed from update
     Route::get('/shifts/{shift}', [ShiftApiController::class, 'show']); // Show shift details including tracks and visitations
 

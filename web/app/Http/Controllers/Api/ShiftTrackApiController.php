@@ -33,7 +33,7 @@ class ShiftTrackApiController extends Controller
     {
         $visitation = \App\Models\Visitation::findOrFail($request->visitation_id);
 
-        // Add check: Do not allow event if visitation is already completed
+        // Do not allow event if visitation is already completed
         if ($visitation->status === 'completed') {
             return response()->json([
                 'message' => 'Cannot log event for a visitation that is already completed.'
@@ -65,6 +65,80 @@ class ShiftTrackApiController extends Controller
                 'message' => 'Arrival/departure date does not match visitation date.'
             ], 422);
         }
+
+        // 1. Check if there is any "arrived" entry for this shift (any visitation) without a matching "departed"
+        $openArrived = ShiftTrack::where('shift_id', $shift->id)
+            ->where('arrival_status', 'arrived')
+            ->get()
+            ->filter(function ($track) use ($shift) {
+                // For each arrived, check if there is a departed for the same visitation
+                $departed = ShiftTrack::where('shift_id', $shift->id)
+                    ->where('visitation_id', $track->visitation_id)
+                    ->where('arrival_status', 'departed')
+                    ->exists();
+                return !$departed;
+            });
+
+        // 2. If there is an open "arrived" entry for a different visitation, block any new "arrived" or "departed" for other visitations
+        if ($openArrived->count() > 0) {
+            $openVisitationIds = $openArrived->pluck('visitation_id')->unique()->values();
+            // If trying to "arrived" or "departed" for a different visitation, block
+            if (
+                !$openVisitationIds->contains($request->visitation_id)
+            ) {
+                return response()->json([
+                    'message' => 'You have an ongoing "arrived" entry for another visitation that has not been departed. Complete it before proceeding to another visitation.',
+                    'open_visitation_ids' => $openVisitationIds
+                ], 422);
+            }
+        }
+
+        // 3. Prevent "departed" if there is no "arrived" for this visitation
+        if ($request->arrival_status === 'departed') {
+            $hasArrived = ShiftTrack::where('shift_id', $shift->id)
+                ->where('visitation_id', $request->visitation_id)
+                ->where('arrival_status', 'arrived')
+                ->exists();
+
+            if (!$hasArrived) {
+                return response()->json([
+                    'message' => 'Cannot log "departed" for this visitation because there is no "arrived" entry yet.'
+                ], 422);
+            }
+
+            // Prevent multiple "departed" for the same visitation
+            $alreadyDeparted = ShiftTrack::where('shift_id', $shift->id)
+                ->where('visitation_id', $request->visitation_id)
+                ->where('arrival_status', 'departed')
+                ->exists();
+
+            if ($alreadyDeparted) {
+                return response()->json([
+                    'message' => 'This visitation already has a "departed" entry.'
+                ], 422);
+            }
+        }
+
+        // 4. Prevent multiple "arrived" for the same visitation without a matching "departed"
+        if ($request->arrival_status === 'arrived') {
+            $hasOpenArrived = ShiftTrack::where('shift_id', $shift->id)
+                ->where('visitation_id', $request->visitation_id)
+                ->where('arrival_status', 'arrived')
+                ->whereNotIn('visitation_id', function($query) use ($shift, $request) {
+                    $query->select('visitation_id')
+                        ->from('shift_tracks')
+                        ->where('shift_id', $shift->id)
+                        ->where('arrival_status', 'departed');
+                })
+                ->exists();
+
+            if ($hasOpenArrived) {
+                return response()->json([
+                    'message' => 'You already have an "arrived" entry for this visitation that has not been departed.'
+                ], 422);
+            }
+        }
+
 
         $track = ShiftTrack::create([
             'shift_id' => $shift->id,
