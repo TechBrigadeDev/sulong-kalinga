@@ -264,8 +264,13 @@ class AiSummaryController extends Controller
 
                 if ($response->successful()) {
                     $data = $response->json();
-                    $translatedSections[$key] = $data['translatedText'];
-                } else {
+                    
+                    // Apply post-processing to improve translation quality
+                    $translatedText = $data['translatedText'];
+                    $translatedText = $this->postProcessTranslation($translatedText);
+                    
+                    $translatedSections[$key] = $translatedText;
+                }  else {
                     // If translation fails, keep the original
                     $translatedSections[$key] = $text;
                     \Log::error("Translation error for section {$key}: " . $response->status());
@@ -297,6 +302,83 @@ class AiSummaryController extends Controller
                 'details' => $e->getMessage()
             ], 503);
         }
+    }
+
+    /**
+     * Improve the quality of Filipino-to-English translations
+     * 
+     * @param string $text The translated text to process
+     * @return string The improved translated text
+     */
+    private function postProcessTranslation($text)
+    {
+        if (!$text) {
+            return $text;
+        }
+        
+        // Fix common translation issues
+        $fixes = [
+            'the the' => 'the',
+            'The the' => 'The',
+            'a the' => 'the',
+            'to the the' => 'to the',
+            'in the the' => 'in the',
+            'of the the' => 'of the',
+            // Filipino specific term mappings
+            'Nanay' => 'Mother',
+            'Tatay' => 'Father',
+            'Lola' => 'Grandmother',
+            'Lolo' => 'Grandfather',
+            'barangay' => 'village',
+            ' po ' => ' ',  // Respectful marker not needed in English
+            ' naman ' => ' ',  // Filler word not needed in English
+            ' ba ' => ' ',  // Question marker not needed in English
+        ];
+        
+        // Apply all fixes
+        foreach ($fixes as $wrong => $correct) {
+            $text = preg_replace('/\b' . preg_quote($wrong, '/') . '\b/', $correct, $text);
+        }
+        
+        // Fix missing articles (common in Filipino->English translations)
+        $articles = [
+            '/\bis ([aeiou])/i' => 'is an $1',  // "is apple" -> "is an apple"
+            '/\bis ([bcdfghjklmnpqrstvwxyz])/i' => 'is a $1',  // "is book" -> "is a book"
+            '/\bhas ([aeiou])/i' => 'has an $1',  // "has orange" -> "has an orange"
+            '/\bhas ([bcdfghjklmnpqrstvwxyz])/i' => 'has a $1'  // "has pen" -> "has a pen"
+        ];
+        
+        // Apply article fixes
+        foreach ($articles as $pattern => $replacement) {
+            $text = preg_replace($pattern, $replacement, $text);
+        }
+        
+        // Fix spacing issues
+        $text = preg_replace('/\s+/', ' ', $text);
+        $text = preg_replace('/\s([,.;:])/', '$1', $text);
+        
+        // Ensure proper capitalization at the start
+        $text = ucfirst(trim($text));
+        
+        // Fix capitalization after periods
+        $text = preg_replace('/(\.\s+)([a-z])/', '$1' . strtoupper('$2'), $text);
+        
+        // Ensure ending with period
+        if (!preg_match('/[.!?]$/', $text)) {
+            $text .= '.';
+        }
+        
+        // Medical terminology fixes
+        $medicalTerms = [
+            'high blood' => 'hypertension',
+            'low blood' => 'hypotension',
+        ];
+        
+        foreach ($medicalTerms as $incorrect => $correct) {
+            $text = preg_replace('/\b' . preg_quote($incorrect, '/') . '\b/i', $correct, $text);
+        }
+        
+        return $text;
     }
 
 }

@@ -11,7 +11,7 @@ import spacy
 from text_processor import clean_and_normalize_text, split_into_sentences, enhance_measurement_references
 from entity_extractor import extract_key_elements, extract_important_terms, extract_structured_elements, extract_main_subject
 from context_analyzer import analyze_document_context, extract_measurement_context, identify_cross_section_entities, get_relevant_entities_for_section, get_semantic_relationship, get_contextual_relationship, determine_optimal_section_order
-from section_analyzer import extract_sections_improved, extract_sections_for_evaluation, summarize_section_text, synthesize_section_summary
+from section_analyzer import extract_sections_improved, extract_sections_for_evaluation
 from summary_generator import create_enhanced_multi_section_summary, create_simple_summary
 from summary_generator import choose_context_aware_transition
 
@@ -1026,36 +1026,10 @@ def summarize_text():
             # Create document context analysis for enhanced summarization
             doc_context = analyze_document_context(sections, doc_type)
                 
-            # Create summarized versions of sections using our enhanced synthesized summaries
-            summarized_sections = {}
-            for section_name, section_content in sections.items():
-                try:
-                    # Try to generate a synthesized summary first
-                    synthesized = synthesize_section_summary(section_content, section_name, max_length=350)
-                    if synthesized and len(synthesized) > 50:
-                        summarized_sections[section_name] = synthesized
-                    else:
-                        # Fall back to traditional summarization
-                        summarized_sections[section_name] = summarize_section_text(
-                            section_content, section_name, max_length=350
-                        )
-                except Exception as e:
-                    print(f"Error summarizing section {section_name}: {e}")
-                    # Simple fallback if both methods fail
-                    if len(section_content) > 350:
-                        last_period = section_content[:350].rfind('.')
-                        if last_period > 0:
-                            summarized_sections[section_name] = section_content[:last_period+1]
-                        else:
-                            summarized_sections[section_name] = section_content[:347] + "..."
-                    else:
-                        summarized_sections[section_name] = section_content
-                
         except Exception as e:
             print(f"Section extraction error: {e}")
             traceback.print_exc()
             sections = {}
-            summarized_sections = {}
             doc_context = {"priority_sections": [], "key_entities": {}, "cross_section_themes": []}
         
         # Add section mapping to document context for better sentence transitions
@@ -1155,8 +1129,7 @@ def summarize_text():
         
         return jsonify({
             "summary": summary,
-            "sections": sections,  # Full sections
-            "summarized_sections": summarized_sections,  # Enhanced synthesized section summaries
+            "sections": sections,  # Full sections (now containing up to 5 sentences)
             "sentence_count": len(sentences),
             "entities": entities,
             "key_medical_terms": key_terms,
