@@ -4,17 +4,51 @@ import numpy
 import traceback
 import sys
 import re
+import os
+
+# Add model installer
+from model_installer import download_and_install_calamancy_model
 
 print("Initializing NLP Loader...")
 
-# Initialize NLP model
+# Initialize NLP model with better error handling
 try:
     print(f"NumPy version: {numpy.__version__}")
     print(f"spaCy version: {spacy.__version__}")
     print(f"Loading calamancy model...")
     
-    # Use the versioned model name
-    nlp = calamancy.load("tl_calamancy_md-0.2.0")
+    # First ensure the model is installed with proper versioning
+    if not os.path.exists("models/tl_calamancy_md-0.2.0-py3-none-any.whl"):
+        download_and_install_calamancy_model()
+    
+    # Try multiple loading approaches
+    nlp = None
+    errors = []
+    
+    try:
+        # First try standard loading
+        nlp = calamancy.load("tl_calamancy_md")
+        print("Model loaded successfully using standard method")
+    except Exception as e1:
+        errors.append(f"Standard loading failed: {e1}")
+        try:
+            # Try with version
+            nlp = calamancy.load("tl_calamancy_md-0.2.0")
+            print("Model loaded successfully using version-specific method")
+        except Exception as e2:
+            errors.append(f"Version-specific loading failed: {e2}")
+            try:
+                # Last resort: direct spaCy loading
+                nlp = spacy.load("tl_calamancy_md")
+                print("Model loaded successfully using direct spaCy method")
+            except Exception as e3:
+                errors.append(f"Direct spaCy loading failed: {e3}")
+                # Comprehensive failure summary
+                print("All loading attempts failed:")
+                for i, error in enumerate(errors):
+                    print(f"  Attempt {i+1}: {error}")
+                raise RuntimeError("Unable to load the NLP model through any method")
+    
     print("Model loaded successfully")
     
 except Exception as e:
