@@ -60,6 +60,7 @@ class AiSummaryController extends Controller
             'text' => 'required|string',
             'type' => 'required|in:assessment,evaluation',
             'max_sentences' => 'sometimes|integer|min:1|max:10',
+            'care_plan_id' => 'required|integer',  // Add this to validate care plan ID
         ]);
 
         try {
@@ -71,26 +72,42 @@ class AiSummaryController extends Controller
             
             $response = Http::timeout(60)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, // Disabled assuming we won't apply SSL to internal services
                 ])
                 ->post($apiUrl, [
                     'text' => $request->text,
                     'type' => $request->type,
-                    'max_sentences' => $request->max_sentences ?? 3
+                    'max_sentences' => $request->max_sentences ?? 5
                 ]);
 
             \Log::info("API Response Status: " . $response->status());
-            \Log::info("API Response Body: " . substr($response->body(), 0, 500)); // Log first 500 chars
             
             if ($response->successful()) {
                 $data = $response->json();
                 \Log::info("API Response successful");
                 
+                // Save data to database immediately
+                $carePlan = WeeklyCarePlan::findOrFail($request->care_plan_id);
+                
+                if ($request->type === 'assessment') {
+                    $carePlan->assessment_summary_draft = $data['summary'] ?? 'No summary generated';
+                    $carePlan->assessment_summary_sections = $data['sections'] ?? [];
+                } else {
+                    $carePlan->evaluation_summary_draft = $data['summary'] ?? 'No summary generated';
+                    $carePlan->evaluation_summary_sections = $data['sections'] ?? [];
+                }
+                
+                $carePlan->has_ai_summary = true;
+                $saved = $carePlan->save();
+                
+                \Log::info("Summary saved to database: " . ($saved ? "YES" : "NO") . " for care plan ID: " . $request->care_plan_id);
+                
                 return response()->json([
                     'summary' => $data['summary'] ?? 'No summary generated',
                     'sections' => $data['sections'] ?? [],
                     'entities' => $data['entities'] ?? [],
-                    'key_concerns' => $data['key_concerns'] ?? []
+                    'key_concerns' => $data['key_concerns'] ?? [],
+                    'saved' => $saved
                 ]);
             }
 
@@ -117,6 +134,14 @@ class AiSummaryController extends Controller
             'evaluation_summary_sections' => 'sometimes|nullable|array',
         ]);
 
+        \Log::info("Updating summary for care plan ID: {$id}");
+        \Log::info("Request data: " . json_encode($request->only([
+            'assessment_summary_draft',
+            'evaluation_summary_draft',
+            'assessment_summary_sections',
+            'evaluation_summary_sections'
+        ])));
+
         $carePlan = WeeklyCarePlan::findOrFail($id);
         
         if ($request->filled('assessment_summary_draft')) {
@@ -136,11 +161,21 @@ class AiSummaryController extends Controller
         }
         
         $carePlan->has_ai_summary = true;
-        $carePlan->save();
+        $saved = $carePlan->save();
+        
+        \Log::info("Care plan update result: " . ($saved ? "SUCCESS" : "FAILED"));
+        \Log::info("Updated data: " . json_encode($carePlan->only([
+            'assessment_summary_draft',
+            'evaluation_summary_draft',
+            'assessment_summary_sections',
+            'evaluation_summary_sections',
+            'has_ai_summary'
+        ])));
         
         return response()->json([
             'message' => 'Summary updated successfully',
-            'carePlan' => $carePlan
+            'carePlan' => $carePlan,
+            'saved' => $saved
         ]);
     }
     
@@ -184,7 +219,8 @@ class AiSummaryController extends Controller
             
             $response = Http::timeout(30)
                 ->withOptions([
-                    'verify' => false, // Disable SSL verification for local development
+                    'verify' => false, // Disabled assuming we won't apply SSL to internal services
+                    // Can be changed to 'verify' => env('APP_ENV') === 'production' or 'verify' => env('API_VERIFY_SSL', true), if needed
                 ])
                 ->post($libreTranslateUrl . '/translate', [
                     'q' => $request->text,
@@ -253,7 +289,8 @@ class AiSummaryController extends Controller
                 
                 $response = Http::timeout(30)
                     ->withOptions([
-                        'verify' => false, // For local development
+                        'verify' => false, // Still disabled even in production for internal services
+                        // Can be changed to 'verify' => env('APP_ENV') === 'production' or 'verify' => env('API_VERIFY_SSL', true), if needed
                     ])
                     ->post($libreTranslateUrl . '/translate', [
                         'q' => $text,

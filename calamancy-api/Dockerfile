@@ -19,13 +19,13 @@ RUN pip install --upgrade pip setuptools wheel
 # Install requests first (needed for model_installer.py)
 RUN pip install requests
 
-# CRITICAL: Install exact spaCy version 3.8.1 that the model was trained with
-RUN pip install spacy==3.8.1
+# Install spaCy with correct version
+RUN pip install spacy==3.8.7
 
-# Now install calamancy package
+# Install calamancy package - will bring in transformers 4.36.2
 RUN pip install calamancy==0.2.2
 
-# Install other dependencies AFTER spaCy/calamancy to avoid overrides
+# Install other dependencies
 RUN pip install \
     flask==2.0.1 \
     werkzeug==2.0.1 \

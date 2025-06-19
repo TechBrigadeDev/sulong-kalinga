@@ -26,15 +26,15 @@ try:
     errors = []
     
     try:
-        # First try standard loading
-        nlp = calamancy.load("tl_calamancy_md")
-        print("Model loaded successfully using standard method")
+        # Load specific version
+        nlp = calamancy.load("tl_calamancy_md-0.2.0")
+        print("Model loaded successfully using version-specific method")
     except Exception as e1:
         errors.append(f"Standard loading failed: {e1}")
         try:
-            # Try with version
-            nlp = calamancy.load("tl_calamancy_md-0.2.0")
-            print("Model loaded successfully using version-specific method")
+            # Try with standard version
+            nlp = calamancy.load("tl_calamancy_md")
+            print("Model loaded successfully using standard method")
         except Exception as e2:
             errors.append(f"Version-specific loading failed: {e2}")
             try:

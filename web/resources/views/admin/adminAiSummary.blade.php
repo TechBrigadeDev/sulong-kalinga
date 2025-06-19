@@ -942,6 +942,7 @@
                     data: {
                         text: text,
                         type: 'assessment',
+                        care_plan_id: currentCarePlanId,
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
@@ -1022,6 +1023,7 @@
                     data: {
                         text: text,
                         type: 'evaluation',
+                        care_plan_id: currentCarePlanId,
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {

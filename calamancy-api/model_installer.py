@@ -68,7 +68,7 @@ def download_and_install_calamancy_model():
     print("Attempting to load the model with calamancy.load...")
     try:
         import calamancy
-        nlp = calamancy.load("tl_calamancy_md")
+        nlp = calamancy.load("tl_calamancy_md-0.2.0")
         print("Test load successful!")
         doc = nlp("Ito ay isang test.")
         print("Model works correctly!")
