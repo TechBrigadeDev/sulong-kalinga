@@ -314,6 +314,9 @@
                                                 <i class="bi bi-check-circle"></i> Use Summary as Final
                                             </button>
                                         </div>
+                                        <button class="btn btn-sm btn-outline-success" id="useAssessmentTranslation">
+                                            <i class="bi bi-check-circle"></i> Use Translation as Final
+                                        </button>
                                     </div>
 
                                     <!-- New translation section -->
@@ -1372,6 +1375,28 @@
                     alert('No evaluation summary available to translate.');
                     return;
                 }
+            });
+
+        });
+
+        function finalizeSummary(type) {
+            if (!currentCarePlanId) return;
+            
+            // Get the appropriate content based on type
+            const summaryContent = type === 'assessment' 
+                ? $('#assessmentSummaryDraft').text() 
+                : $('#evaluationSummaryDraft').text();
+            
+            if (!summaryContent.trim()) {
+                alert(`No ${type} summary available to finalize.`);
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to finalize this ${type} summary? This will mark it as the official summary.`)) {
+                // Show loading
+                $('#loadingText').text(`Finalizing ${type} summary...`);
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
                 
                 $('#loadingText').text('Translating sections to English...');
                 $('#loadingProgressBar').css('width', '0%');
