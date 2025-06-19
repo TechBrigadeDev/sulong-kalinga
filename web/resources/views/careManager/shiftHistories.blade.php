@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shift Histories | Admin Dashboard</title>
+    <title>Shift Histories | Care Manager Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/shiftHistory.css') }}">
 </head>
 <body>
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
     
     <div class="home-section">
         <div class="container-fluid">
@@ -18,7 +18,7 @@
             <div class="row" id="home-content">
                 <div class="col-12">
                     <div class="filter-section">
-                        <form action="{{ route('admin.shift.histories.index') }}" method="GET" id="searchFilterForm">
+                        <form action="{{ route('care-manager.shift.histories.index') }}" method="GET" id="searchFilterForm">
                             <div class="row g-3 align-items-end">
                                 <div class="col-md-5 col-12">
                                     <label for="searchBar" class="filter-label">Search Care Worker</label>
@@ -89,7 +89,7 @@
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="action-icons">
-                                                        <a href="{{ route('admin.shift.histories.shiftDetails', ['shiftId' => $shift->id]) }}">
+                                                        <a href="{{ route('care-manager.shift.histories.shiftDetails', ['shiftId' => $shift->id]) }}">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
                                                         <a href="#" title="Download Report">

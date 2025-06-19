@@ -90,7 +90,7 @@
       </ul>
     </li>
     
-    <li class="dropdown">
+    <li class="dropdown {{ Request::routeIs('care-manager.shift.histories.*') ? 'active' : '' }}">
       <div class="icon-link">
         <a class="parent-link">
           <i class="bi bi-geo-alt"></i>
@@ -100,7 +100,16 @@
       </div>
       <ul class="sub-menu">
         <li><a class="link_name">Location Tracking</a></li>
-        <li><a href="#" @if($isMessagingView) target="_top" onclick="window.top.location.href='#'; return false;" @endif>Beneficiary Map</a></li>
+        <li>
+          <a href="#" @if($isMessagingView) target="_top" onclick="window.top.location.href='#'; return false;" @endif>
+            Beneficiary Map
+          </a>
+        </li>
+        <li>
+          <a href="{{ route('care-manager.shift.histories.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.shift.histories.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.shift.histories.*') ? 'active' : '' }}">
+            Shift Histories
+          </a>
+        </li>
       </ul>
     </li>
 
