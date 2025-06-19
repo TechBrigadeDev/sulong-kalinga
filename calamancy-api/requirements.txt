@@ -1,0 +1,22 @@
+flask==2.0.1
+werkzeug==2.0.1
+gunicorn==20.1.0
+calamancy==0.2.2
+
+# Core scientific packages with fixed versions
+# numpy==1.20.3
+# scipy==1.7.3
+# scikit-learn==1.0.2
+# Use older blis compatible with older thinc
+# blis==0.7.8
+# Use older thinc compatible with numpy 1.20.3
+# thinc==8.1.0
+# Use older spacy compatible with thinc 8.1.0
+# spacy==3.4.4
+# Also adjust transformers to compatible version
+# spacy-transformers==1.1.9
+# pytextrank>=3.2.0
+# pandas>=1.3.0,<1.5.0
+# networkx>=2.5
+# Use older torch compatible with this ecosystem
+# torch==1.13.1
