@@ -3,10 +3,13 @@ import { Stack } from "expo-router";
 import ActiveRequests from "features/portal/emergency-service/_components/active-requests";
 import EmergencyServiceFormSelector from "features/portal/emergency-service/_components/form-selector";
 import RequestHistory from "features/portal/emergency-service/_components/request-history";
+import { EmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
 import {
     useEmergencyServiceRequests,
     useEmergencyServiceRequestsHistory,
 } from "features/portal/emergency-service/hook";
+import { ServiceRequestForm } from "features/portal/emergency-service/service/form/form";
+import { EmergencyServiceProvider } from "features/portal/emergency-service/store";
 import { useEffect, useRef } from "react";
 import { RefreshControl } from "react-native";
 import { TamaguiElement } from "tamagui";
@@ -71,9 +74,13 @@ const Screen = () => {
 
 const Layout = () => {
     return (
-        <>
-            <Screen />
-        </>
+        <EmergencyServiceProvider>
+            <EmergencyForm>
+                <ServiceRequestForm>
+                    <Screen />
+                </ServiceRequestForm>
+            </EmergencyForm>
+        </EmergencyServiceProvider>
     );
 };
 

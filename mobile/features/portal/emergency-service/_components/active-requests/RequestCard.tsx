@@ -1,7 +1,10 @@
 import { format } from "date-fns";
 import { useEmergencyCancelRequest } from "features/portal/emergency-service/emergency/hook";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
-import { IEmergencyServiceRequest } from "features/portal/emergency-service/type";
+import {
+    ICurrentEmergencyServiceForm,
+    IEmergencyServiceRequest,
+} from "features/portal/emergency-service/type";
 import { PenBox } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { showToastable } from "react-native-toastable";
@@ -65,11 +68,19 @@ const RequestCard = ({
         }
     };
 
-    const store =
-        useEmergencyServiceStore().getState();
+    const store = useEmergencyServiceStore();
 
     const handleEdit = () => {
-        store.setRequest(request);
+        if (!request) {
+            return;
+        }
+
+        store.setState((state) => ({
+            ...state,
+            currentEmergencyServiceForm:
+                request.type as ICurrentEmergencyServiceForm,
+            request,
+        }));
     };
 
     const {

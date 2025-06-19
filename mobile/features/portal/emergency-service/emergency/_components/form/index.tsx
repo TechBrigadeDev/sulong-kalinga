@@ -1,5 +1,7 @@
 import { EmergencyServiceFormProp } from "features/portal/emergency-service/emergency/interface";
+import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
 import { TriangleAlert } from "lucide-react-native";
+import { useEffect } from "react";
 import { KeyboardAvoidingView } from "react-native";
 import {
     Card,
@@ -12,50 +14,70 @@ import {
 import EmergencyDescription from "./_components/Description";
 import EmergencyType from "./_components/EmergencyType";
 import SubmitEmergency from "./_components/Submit";
-import { EmergencyForm } from "./form";
+import { useEmergencyForm } from "./form";
 
 const EmergencyAssistanceForm = ({
     ref,
 }: EmergencyServiceFormProp) => {
+    const form = useEmergencyForm();
+
+    const store = useEmergencyServiceStore();
+    useEffect(() => {
+        store.subscribe((state) => {
+            if (
+                state.request &&
+                state.request.type === "emergency"
+            ) {
+                const request = state.request;
+
+                form.reset({
+                    message: request.description,
+                    emergency_type_id:
+                        request.emergency_type_id.toString(),
+                });
+            } else if (!state.request) {
+                form.reset({
+                    message: "",
+                    emergency_type_id: "",
+                });
+            }
+            return;
+        });
+    }, [store, form]);
+
     return (
         <KeyboardAvoidingView style={{ flex: 1 }}>
-            <EmergencyForm>
-                <Card
-                    marginBottom="$2"
-                    borderRadius={8}
-                    borderWidth={1}
-                    elevate
-                    gap="$4"
-                    ref={ref}
-                >
-                    <YStack p="$4" gap="$2">
-                        <XStack
-                            flexDirection="row"
-                            items="center"
-                        >
-                            <TriangleAlert />
-                            <H5
-                                ml="$2"
-                                theme="light"
-                            >
-                                Emergency
-                                Assistance
-                            </H5>
-                        </XStack>
-                        <Text>
-                            Immediate help when
-                            you need it most. Our
-                            team will respond to
-                            you as soon as we can.
-                        </Text>
-                    </YStack>
-                    <YStack p="$4" gap="$2">
-                        <EmergencyType />
-                        <EmergencyDescription />
-                        <SubmitEmergency />
-                    </YStack>
-                </Card>
-            </EmergencyForm>
+            <Card
+                marginBottom="$2"
+                borderRadius={8}
+                borderWidth={1}
+                elevate
+                gap="$4"
+                ref={ref}
+            >
+                <YStack p="$4" gap="$2">
+                    <XStack
+                        flexDirection="row"
+                        items="center"
+                    >
+                        <TriangleAlert />
+                        <H5 ml="$2" theme="light">
+                            Emergency Assistance
+                        </H5>
+                    </XStack>
+                    <Text>
+                        Immediate help when you
+                        need it most. Our team
+                        will respond to you as
+                        soon as we can.
+                    </Text>
+                </YStack>
+                <YStack p="$4" gap="$2">
+                    <EmergencyType />
+                    <EmergencyDescription />
+                    <SubmitEmergency />
+                </YStack>
+            </Card>
         </KeyboardAvoidingView>
     );
 };

@@ -18,25 +18,19 @@ const EmergencyType = () => {
     const { control } = useEmergencyForm();
     const disabled = isLoading || !emergencyTypes;
 
-    const store =
-        useEmergencyServiceStore().getState();
     return (
         <Controller
             control={control}
             disabled={disabled}
             name="emergency_type_id"
             render={({ field, fieldState }) => {
-                const currentType = store.request
-                    ? store.request.type
-                    : field.value;
-
                 return (
                     <YStack flex={1} gap="$2">
                         <Label htmlFor="emergency_type_id">
                             Emergency Type
                         </Label>
                         <Select
-                            value={currentType}
+                            value={field.value}
                             onValueChange={
                                 field.onChange
                             }

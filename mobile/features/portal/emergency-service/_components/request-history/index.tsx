@@ -22,7 +22,7 @@ const RequestHistory = () => {
         error,
         refetch: refetchRequests,
         isRefetching,
-        reload
+        reload,
     } = useEmergencyServiceRequestsHistory();
 
     useEffect(() => {

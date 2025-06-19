@@ -3,28 +3,37 @@ import { EmergencyServiceFormProp } from "features/portal/emergency-service/emer
 import ServiceForm from "features/portal/emergency-service/service/form";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
 import { ICurrentEmergencyServiceForm } from "features/portal/emergency-service/type";
-import { ReactNode, useState } from "react";
+import {
+    ReactNode,
+    useEffect,
+    useState,
+} from "react";
 import {
     Separator,
     SizableText,
     Tabs,
     TabsContentProps,
+    View,
 } from "tamagui";
 
 const tabs: {
     value: string;
     label: string;
-    form: ReactNode;
+    form: (
+        prop: EmergencyServiceFormProp,
+    ) => ReactNode;
 }[] = [
     {
         value: "emergency",
         label: "Emergency",
-        form: <EmergencyAssistanceForm />,
+        form: (prop) => (
+            <EmergencyAssistanceForm {...prop} />
+        ),
     },
     {
         value: "service",
         label: "Service Request",
-        form: <ServiceForm />,
+        form: (prop) => <ServiceForm {...prop} />,
     },
 ];
 
@@ -35,30 +44,27 @@ const EmergencyServiceFormSelector = ({
 
     const [form, setForm] =
         useState<ICurrentEmergencyServiceForm>(
-            (store.getState().request
-                ?.type as ICurrentEmergencyServiceForm) ||
-                "emergency",
+            "emergency",
         );
 
-    store.subscribe((state) => {
-        if (state.request?.type) {
-            setForm(
-                state.request
-                    .type as ICurrentEmergencyServiceForm,
-            );
-        }
-    });
+    useEffect(() => {
+        store.subscribe((state) => {
+            if (
+                state.currentEmergencyServiceForm
+            ) {
+                setForm(
+                    state.currentEmergencyServiceForm,
+                );
+            }
+        });
+    }, [store]);
 
     return (
         <Tabs
             value={form}
-            onValueChange={(value) => {
-                setForm(
-                    value as ICurrentEmergencyServiceForm,
-                );
-            }}
             orientation="horizontal"
             flexDirection="column"
+            activationMode="manual"
         >
             <Tabs.List
                 disablePassBorderRadius
@@ -76,9 +82,15 @@ const EmergencyServiceFormSelector = ({
                         flex={1}
                         value={tab.value}
                         onPress={() => {
-                            store
-                                .getState()
-                                .setRequest(null);
+                            console.log(
+                                "Tabbing to:",
+                                tab.value,
+                            );
+                            store.setState({
+                                request: null,
+                                currentEmergencyServiceForm:
+                                    tab.value as ICurrentEmergencyServiceForm,
+                            });
                         }}
                     >
                         <SizableText
@@ -91,14 +103,18 @@ const EmergencyServiceFormSelector = ({
                 ))}
             </Tabs.List>
             <Separator />
-            {tabs.map((tab) => (
-                <TabsContent
-                    key={tab.value}
-                    value={tab.value}
-                >
-                    {tab.form}
-                </TabsContent>
-            ))}
+            <View ref={ref}>
+                {tabs.map((tab) => (
+                    <TabsContent
+                        key={tab.value}
+                        value={tab.value}
+                    >
+                        {tab.form({
+                            ref,
+                        })}
+                    </TabsContent>
+                ))}
+            </View>
         </Tabs>
     );
 };
