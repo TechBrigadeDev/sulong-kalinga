@@ -1098,6 +1098,7 @@
                         case 'treatment': sectionIcon = 'bi-capsule'; break;
                         case 'follow_up': sectionIcon = 'bi-calendar-check'; break;
                         // New additions from the first function's switch cases
+                        case 'hygiene': sectionIcon = 'bi-activity'; break;
                         case 'mga_sintomas': sectionIcon = 'bi-activity'; break;
                         case 'kalagayan_pangkatawan': sectionIcon = 'bi-person'; break;
                         case 'kalagayan_mental': sectionIcon = 'bi-brain'; break;

@@ -651,20 +651,97 @@ def get_contextual_relationship(prev_content, next_content, doc_context, prev_id
         
         # If moving to a new section, relationship is often topical shift
         if prev_section != next_section:
-            # NEW: More nuanced section transitions based on Filipino healthcare narrative structure
-            if next_section in ["mga_hakbang", "pangangalaga", "pangunahing_rekomendasyon"]:
+            # UPDATED: Include new sections in relationship detection
+            
+            # Action-oriented content transitions
+            if next_section in ["mga_hakbang", "pangangalaga", "pangunahing_rekomendasyon", 
+                              "pamamahala_ng_gamot", "safety_risk_factors"]:
                 return "action"  # Moving to action-oriented content
-            elif next_section == "kalagayan_social":
-                return "context"  # Social details provide important context in Filipino care
-            elif next_section == "pagbabago_sa_pamumuhay":
+                
+            # Contextual information transitions  
+            elif next_section in ["kalagayan_social", "suporta_ng_pamilya"]:
+                return "context"  # Social and family details provide important context
+                
+            # Implementation/practical transitions
+            elif next_section in ["pagbabago_sa_pamumuhay", "nutrisyon_at_pagkain", 
+                                "mobility_function", "preventive_health"]:
                 return "implementation"  # Moving to practical implementation
-            elif next_section == "kalagayan_pangkatawan" and prev_section == "mga_sintomas":
-                return "elaboration"  # Physical details often elaborate on symptoms
+                
+            # Physical manifestation transitions
+            elif next_section in ["kalagayan_pangkatawan", "kalusugan_ng_bibig", 
+                                "pain_discomfort", "vital_signs_measurements"] and prev_section == "mga_sintomas":
+                return "elaboration"  # Physical details elaborate on symptoms
+                
+            # Mind-body connection transitions
             elif next_section == "kalagayan_mental" and prev_section in ["mga_sintomas", "kalagayan_pangkatawan"]:
                 return "holistic"  # Mental aspects complement physical in holistic care
+                
+            # Sleep and rest transitions  
+            elif next_section == "kalagayan_ng_tulog" and prev_section in ["kalagayan_mental", "pain_discomfort"]:
+                return "consequence"  # Sleep issues often result from pain/mental state
+                
+            # Medical history transitions
+            elif next_section == "medical_history":
+                return "background"  # Medical history provides background context
+                
             else:
                 return "topical_shift"  # General shift in topic
     
+    # Call the already defined health narrative patterns function
+    health_pattern = detect_health_narrative_patterns(prev_content, next_content)
+    if health_pattern:
+        return health_pattern
+    
+    # NEW: Enhanced Tagalog cause-effect markers from sample data
+    causation_markers = [
+        "dahil", "dahil dito", "dahilan", "sanhi", "bunga ng", "dulot ng",
+        "nagdudulot ng", "nagbubunga ng", "nagiging sanhi ng", "resulting in", 
+        "kaya", "anong nangyayari ay", "humahantong sa", "nakapipigil sa",
+        "nakakaapekto sa", "nakaka-impluwensya sa", "nagpapahirap sa",
+        "nagpapalala sa", "leads to", "triggers", "may epekto sa", 
+        "nagsisilbing dahilan ng", "batay sa", "bilang resulta ng"
+    ]
+
+    # Check for cause-effect relationship with enhanced patterns
+    if any(marker in next_content.lower() for marker in causation_markers):
+        return "causation"
+
+    # NEW: Recommendation pattern detection from evaluation samples
+    recommendation_markers = [
+        "inirerekomenda", "iminumungkahi", "pinapayuhan", "nirerekomenda", 
+        "inirerekumenda", "ipinapayo", "kailangan", "mahalagang", 
+        "importante na", "dapat", "kinakailangan", "mabisa na", 
+        "magandang", "mainam na", "isinasaad na", "binibigyang-diin"
+    ]
+
+    if any(marker in next_content.lower() for marker in recommendation_markers):
+        # Check if previous was describing a problem
+        problem_indicators = ["nahihirapan", "hirap", "problema", "issue", "concern"]
+        if any(indicator in prev_content.lower() for indicator in problem_indicators):
+            return "solution"  # Problem-solution pattern
+
+    # NEW: Sequential steps pattern from evaluation samples
+    sequence_markers = [
+        "unang hakbang", "pangalawang hakbang", "susunod na", "kasunod nito", 
+        "pagkatapos nito", "una", "pangalawa", "pangatlo", "pang-apat", 
+        "sunod-sunod", "step-by-step", "susunod na gagawin"
+    ]
+
+    if any(marker in next_content.lower() for marker in sequence_markers):
+        return "sequential_steps"
+
+    # NEW: Elaboration pattern with medical details (common in sample data)
+    elaboration_markers = [
+        "specifically", "particularly", "lalo na", "halimbawa", "example",
+        "ibig sabihin", "meaning", "that is", "which means", "in other words", 
+        "sa madaling salita", "upang maipaliwanag", "to explain", 
+        "particularly important in", "lalo na sa", "especially for", 
+        "pumupunta sa", "nagdudulog sa", "nagbibigay ng", "provides"
+    ]
+    
+    if any(marker in next_content.lower() for marker in elaboration_markers):
+        return "elaboration"
+
     # NEW: Check for question-answer pattern (common in assessment narratives)
     question_indicators = ["?", "kumusta", "paano", "bakit", "kailan", "saan", "sino", "ano", 
                            "how", "why", "when", "where", "who", "what"]
@@ -829,3 +906,54 @@ def determine_optimal_section_order(doc_context, doc_type):
             default_order.insert(2, "kalagayan_social")
     
     return default_order
+
+def detect_health_narrative_patterns(prev_content, next_content):
+    """Detect healthcare-specific narrative patterns common in Filipino assessments."""
+    
+    # Assessment → Intervention pattern (very common in samples)
+    assessment_terms = ["nakita", "naobserbahan", "napansin", "assessment", "nakitaan"]
+    intervention_terms = ["iminumungkahi ko", "inirerekomenda ko", "binigyan ko", "tinuruan ko", 
+                         "nagbigay ako", "ipinaliwanag ko", "kinausap ko", "nirerekomenda ko"]
+                         
+    if any(term in prev_content.lower() for term in assessment_terms) and \
+       any(term in next_content.lower() for term in intervention_terms):
+        return "assessment_to_intervention"
+    
+    # Add vision/eye pattern detection
+    vision_terms = ["mata", "eye", "paningin", "vision", "nakakita", "blurry", "malabo"]
+    vision_impact_terms = ["hirap magbasa", "hirap manood", "hindi na makabasa", 
+                         "hindi na makapanood", "difficulty reading", "difficulty watching"]
+                         
+    if any(term in prev_content.lower() for term in vision_terms) and \
+       any(term in next_content.lower() for term in vision_impact_terms):
+        return "vision_impact"
+        
+    # Add social withdrawal pattern detection
+    social_terms = ["social", "komunidad", "kaibigan", "friends", "pakikisalamuha"]
+    withdrawal_terms = ["hindi na sumasali", "ayaw nang lumabas", "withdrawal", 
+                      "hindi na nakikipag-usap", "isolation", "pag-iwas"]
+                      
+    if any(term in prev_content.lower() for term in social_terms) and \
+       any(term in next_content.lower() for term in withdrawal_terms):
+        return "social_withdrawal"
+    
+    # Symptom → Management pattern
+    symptom_terms = ["sakit", "pananakit", "hirap", "nahihirapang", "problema sa", 
+                    "nararamdaman", "nagdurusa sa"]
+    management_terms = ["para sa management", "para maibsan", "para mapagaan", "upang mabawasan", 
+                       "inirerekomenda", "makakatulong", "mabisang paraan", "effective"]
+                       
+    if any(term in prev_content.lower() for term in symptom_terms) and \
+       any(term in next_content.lower() for term in management_terms):
+        return "symptom_to_management"
+    
+    # Rehabilitation progression pattern
+    rehab_start_terms = ["simula", "initial", "unang", "sa umpisa", "starting", "pag-uumpisa"]
+    rehab_progress_terms = ["progress", "pagsulong", "improvement", "getting better", 
+                          "gradually", "unti-unti", "dahan-dahan", "paunti-unti"]
+                          
+    if any(term in prev_content.lower() for term in rehab_start_terms) and \
+       any(term in next_content.lower() for term in rehab_progress_terms):
+        return "rehabilitation_progression"
+    
+    return None

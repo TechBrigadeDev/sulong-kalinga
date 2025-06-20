@@ -2,6 +2,7 @@ import re
 from nlp_loader import nlp
 from entity_extractor import extract_structured_elements
 from text_processor import split_into_sentences
+from context_analyzer import get_contextual_relationship, analyze_document_context
 
 def extract_sections_improved(sentences, doc_type="assessment"):
     """Extract and categorize sections with improved handling of complete sentences."""
@@ -30,6 +31,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
         
         # Newly added sections
         "kalusugan_ng_bibig": [],        # Oral/dental health
+        "hygiene": [],                   # Personal hygiene
         "mobility_function": [],         # Mobility aids and assistive devices
         "kalagayan_ng_tulog": [],        # Sleep patterns
         "pain_discomfort": [],           # Pain management
@@ -61,7 +63,13 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             r'pabalik-balik na (sakit|kirot|pananakit)',
             r'nagpapahirap sa (kanya|kaniyang) (paglalakad|pag-upo)',
             r'mabilis (mapagod|mahapo)',
-            r'nararamdaman (niyang|niya na) mahina ang (kanyang|kaniyang) (katawan)'
+            r'nararamdaman (niyang|niya na) mahina ang (kanyang|kaniyang) (katawan)',
+            r'(?:mata|eye|paningin|vision) (?:strain|pagod|tired|fatigued)',
+            r'(?:malabo ang paningin|blurry vision|blurred sight)',
+            r'(?:kuskusin|rubbing|masahe) (?:ang|ng|sa) (?:mata|eyes)',
+            r'(?:luha|naluluha|teary|watery) (?:mata|eyes)',
+            r'(?:mamula|namumula|pula|red) (?:ang|na|ang mga) (?:mata|eyes)',
+            r'(?:napapakurap|blinking|kurap) (?:mata|eyes)',
         ],
         
         "kalagayan_pangkatawan": [
@@ -157,20 +165,19 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             r'(nagtatanggal|pagtatanggal) (ng|sa) (pustiso|dentures)'
         ],
         
-        "hygiene_habits": [
-            r'(personal hygiene|kalinisan|naliligo|paliligo|nalilinis|pag-aayos)',
+        "hygiene": [
+            r'(personal hygiene|kalinisan ng katawan|naliligo|paliligo|nalilinis|pag-aayos ng sarili)',
             r'(routine|gawain|nakagawian) (sa|ng|para sa) (paglilinis|kalinisan)',
             r'(frequency|dalas|beses|daily|araw-araw|lingguhan|monthly) (ng|sa) (pagligo|paghuhugas)',
-            r'(self-care|pangangalaga sa sarili|personal care)',
+            r'(self-care|pangangalaga sa sarili)',
             r'(hindi|ayaw|tumanggi|tumatanggi) (maligo|maghugas|maglinis|mag-ayos)',
             r'(nakalilimutan|nakakalimutan|nalilimutan) (maligo|maghugas|maglinis)',
-            r'(dumumi|mag-CR|gamitin ang banyo|gumamit ng toilet)',
             r'(nahihiyang|nahiya|embarrassed) (maligo|maghugas|maglinis)',
-            r'(bawas|bumaba|tumaas|lalong) (ang|na|ang mga) (pangangalaga sa sarili|self-care|personal hygiene)',
+            r'(bawas|bumaba|tumaas|lalong) (ang|na|ang mga) (pangangalaga sa sarili|hygiene|kalinisan ng katawan)',
             r'(nangangailangan|kailangan) (ng|sa) (tulong|gabay) sa (pag-aayos|paglilinis|paghuhugas)',
             r'(shower|bath|bathing|washing) (practices|habits|routine)',
             r'(grooming|nail care|paggugupit|pagputol ng kuko)',
-            r'(pagbabago|nagbago) (sa|ng) (personal hygiene|pangangalaga sa katawan)'
+            r'(pagbabago|nagbago) (sa|ng) (hygiene|kalinisan ng katawan)'
         ],
         
         "nutrisyon_at_pagkain": [
@@ -608,7 +615,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             "cleaning", "prophylaxis", "adjustment", "dental implant", "bridge"
         ],
         
-        "hygiene_habits": [
+        "hygiene": [
             # General hygiene
             "hygiene", "kalinisan", "cleanliness", "malinis", "makalinis",
             "dirty", "marumi", "dumi", "personal care", "grooming", "pag-aayos",
@@ -1431,6 +1438,64 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             # Save the combined score
             sentence_scores[i][section] = base_score + entity_boost + pattern_score
     
+    # Apply context-aware scoring adjustments
+    print("Applying context-aware scoring adjustments...")
+
+    # First create contextual connections between sentences
+    contextual_connections = {}
+    for i in range(len(sentences)):
+        # Initialize empty set for each sentence
+        contextual_connections[i] = set()
+        
+        # Skip if this is the first sentence
+        if i == 0:
+            continue
+        
+        # Get contextual relationship between this sentence and the previous one
+        # This uses the imported function from context_analyzer.py
+        relationship = get_contextual_relationship(
+            sentences[i-1],  # Previous sentence
+            sentences[i],    # Current sentence
+            {"doc_type": doc_type},  # Basic context info
+            i-1,  # Previous sentence index
+            i     # Current sentence index
+        )
+        
+        # If there's a meaningful relationship, create a connection
+        if relationship in ["continuation", "elaboration", "causation", "addition"]:
+            # Connect this sentence to the previous one
+            contextual_connections[i].add(i-1)
+            print(f"Found contextual connection: sentence {i} related to {i-1} through {relationship}")
+            
+            # Also check the sentence that's 2 positions back for longer relationships
+            if i > 1:
+                relationship_longer = get_contextual_relationship(
+                    sentences[i-2],
+                    sentences[i],
+                    {"doc_type": doc_type},
+                    i-2,
+                    i
+                )
+                if relationship_longer in ["continuation", "elaboration", "causation", "addition"]:
+                    contextual_connections[i].add(i-2)
+                    print(f"Found longer contextual connection: sentence {i} related to {i-2}")
+
+        # Now adjust scores based on contextual connections
+        for i, scores in sentence_scores.items():
+            # For each sentence that this one is connected to
+            for connected_idx in contextual_connections.get(i, set()):
+                if connected_idx in sentence_scores:
+                    # Get the highest-scoring section for the connected sentence
+                    connected_scores = sentence_scores[connected_idx]
+                    if connected_scores:
+                        best_section, best_score = max(connected_scores.items(), key=lambda x: x[1])
+                        
+                        # Boost this sentence's score for the same section
+                        current_score = scores.get(best_section, 0)
+                        # Apply a significant boost to maintain context
+                        sentence_scores[i][best_section] = current_score + 3.0  # Strong contextual boost
+                        print(f"Applied contextual boost: Sentence {i} boosted for section {best_section}")
+
     # Assign sentences to sections based on scores
     result = {}
     assigned_sentences = set()
@@ -1532,6 +1597,28 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             # Apply post-processing to fix formatting issues
             section_text = post_process_summary(section_text)
             processed_sections[section] = section_text
+    
+    # FOURTH PASS: Check for incomplete sentences and ensure full sentence context
+    for section in result:
+        complete_sentences = []
+        for sentence in result[section]:
+            # Check if sentence seems incomplete or very short
+            if len(sentence.split()) < 4 or not re.search(r'[.!?]$', sentence):
+                # Find this fragment in the original text
+                for i, orig_sentence in enumerate(sentences):
+                    if sentence in orig_sentence and sentence != orig_sentence:
+                        # Use the complete original sentence instead
+                        complete_sentences.append(orig_sentence)
+                        print(f"Fixed incomplete sentence: '{sentence}' → '{orig_sentence}'")
+                        break
+                else:
+                    # If we couldn't find it, keep as is
+                    complete_sentences.append(sentence)
+            else:
+                complete_sentences.append(sentence)
+        
+        # Replace with complete sentences
+        result[section] = complete_sentences
     
     return processed_sections
 
@@ -1906,7 +1993,15 @@ def post_process_summary(summary):
         'patternsa': 'pattern—sa',
         'secret-monitor': 'monitor',
         'tugtugin.Madalas': 'tugtugin. Madalas',
-        'tulogSa': 'tulog. Sa'
+        'tulogSa': 'tulog. Sa',
+        # New fixes for observed issues
+        'magba': 'magbasa',
+        'sa kit': 'sakit', 
+        'sa an': 'saan',
+        'sa rili': 'sarili',
+        'ng ayon': 'ngayon',
+        'para ng': 'parang',
+        'pagsali-sa li': 'pagsali-sali'
     }
     
     # Apply all specific word fixes
