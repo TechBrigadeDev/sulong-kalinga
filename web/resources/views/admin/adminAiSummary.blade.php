@@ -305,6 +305,13 @@
                                     <div class="section-header-teal">
                                         <h6 class="section-title">Assessment Summary</h6>
                                     </div>
+
+                                    <div class="card mb-3 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold"><i class="bi bi-file-text me-2"></i>Executive Summary</h6>
+                                            <div id="assessmentSummaryDisplay" class="p-2 bg-light rounded"></div>
+                                        </div>
+                                    </div>
                                     
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
@@ -383,6 +390,13 @@
                                     <hr>
                                     <div class="section-header-purple">
                                         <h6 class="section-title">Evaluation Summary</h6>
+                                    </div>
+
+                                    <div class="card mb-3 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold"><i class="bi bi-file-text me-2"></i>Executive Summary</h6>
+                                            <div id="evaluationSummaryDisplay" class="p-2 bg-light rounded"></div>
+                                        </div>
                                     </div>
                                     
                                     <div id="evaluationSummarySections" class="mb-3">
@@ -775,6 +789,7 @@
                     if (carePlan.assessment_summary_final) {
                         $('#assessmentSummarySection').show();
                         $('#assessmentSummaryDraft').text(carePlan.assessment_summary_final);
+                        $('#assessmentSummaryDisplay').text(carePlan.assessment_summary_final); // Add this
                         $('#assessmentFinalStatus').html('<span class="badge bg-success">Finalized</span>');
                         
                         // Use sections if available
@@ -801,6 +816,7 @@
                     else if (carePlan.assessment_summary_draft) {
                         $('#assessmentSummarySection').show();
                         $('#assessmentSummaryDraft').text(carePlan.assessment_summary_draft);
+                        $('#assessmentSummaryDisplay').text(carePlan.assessment_summary_draft); // Add this
                         $('#assessmentFinalStatus').html('<span class="badge bg-warning">Draft</span>');
                         displaySummarySections('assessment', carePlan.assessment_summary_sections);
                         
@@ -975,6 +991,7 @@
                             
                             // Update BOTH elements with the summary text
                             $('#assessmentSummaryDraft').text(response.summary);  // ADD THIS LINE
+                            $('#assessmentSummaryDisplay').text(response.summary);
                             
                             if (response.sections && Object.keys(response.sections).length > 0) {
                                 displaySummarySections('assessment', response.sections);
@@ -1042,6 +1059,7 @@
                             // Display summary and sections
                             $('#evaluationSummaryDraft').text(response.summary);
                             displaySummarySections('evaluation', response.sections);
+                            $('#evaluationSummaryDisplay').text(response.summary);  // Add this line
                             $('#evaluationSummarySection').show();
                             
                             // Save the generated summary
@@ -1166,7 +1184,11 @@
                 
                 // Get the main summary text
                 let summaryText = $(`#${type}SummaryDraftEditor`).val();
-                
+
+                // Update both the hidden draft and visible display
+                $(`#${type}SummaryDraft`).text(summaryText);
+                $(`#${type}SummaryDisplay`).text(summaryText); // Add this line
+                            
                 // Show loading modal
                 $('#loadingText').text('Saving changes...');
                 $('#loadingProgressBar').css('width', '0%');
