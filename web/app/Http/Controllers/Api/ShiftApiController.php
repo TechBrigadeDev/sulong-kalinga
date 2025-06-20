@@ -26,9 +26,12 @@ class ShiftApiController extends Controller
             ], 403);
         }
 
+        $today = now()->toDateString();
+
         $visitations = Visitation::with('beneficiary')
             ->where('care_worker_id', $user->id)
             ->where('status', 'scheduled')
+            ->whereDate('visitation_date', $today)
             ->orderBy('visitation_date')
             ->orderBy('start_time')
             ->get()
