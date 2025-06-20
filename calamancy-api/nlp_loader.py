@@ -68,29 +68,42 @@ def split_into_sentences(text):
     text = re.sub(r'(\s)-(\s)', r'\1 - \2', text)  # Ensure spaces around standalone dashes
     text = re.sub(r'\s+', ' ', text).strip()
     
+    # List of common abbreviations to avoid incorrect sentence splitting
+    abbreviations = [r'Dr\.', r'St\.', r'Mr\.', r'Mrs\.', r'Ms\.', r'Prof\.', r'etc\.', 
+                     r'e\.g\.', r'i\.e\.', r'vs\.', r'Fig\.', r'No\.', r'Atty\.', r'Gov\.']
+    
+    # Temporarily replace periods in abbreviations to prevent incorrect splitting
+    for abbr in abbreviations:
+        text = re.sub(abbr, abbr.replace('.', '@@'), text)
+    
     # Try spaCy's sentence splitter first
     doc = nlp(text)
     sentences = [sent.text.strip() for sent in doc.sents]
     
     # If that returns just one sentence for a long text, use regex-based splitting
     if len(sentences) <= 1 and len(text) > 100:
-        # Tagalog/English end-of-sentence patterns
-        sentence_endings = r'(?<=[.!?])\s+'
+        # More sophisticated end-of-sentence pattern
+        sentence_endings = r'(?<=[.!?])\s+(?=[A-Z0-9])'
         sentences = [s.strip() for s in re.split(sentence_endings, text) if s.strip()]
         
-        # Further split by common conjunctions if sentences are still very long
+        # Don't split on common Filipino/English conjunctions in mid-sentence 
+        # but retain complete sentences
         refined_sentences = []
         for sent in sentences:
-            if len(sent) > 150:  # Only split long sentences
-                # Split by Tagalog conjunctions but not in the middle of dates or numbers
-                conjunction_splits = re.split(r'(?<!\d)\s+(?:ngunit|subalit|datapwat|gayunman|kapag|kung)\s+', sent)
+            if len(sent) > 150:  # Only split very long sentences
+                # Use lookaround assertions to identify sentence-like boundaries
+                conjunction_pattern = r'(?<=[.!?])\s+(?:ngunit|subalit|datapwat|gayunman|kapag|kung)\s+'
+                conjunction_splits = re.split(conjunction_pattern, sent)
                 refined_sentences.extend([s.strip() for s in conjunction_splits if s.strip()])
             else:
                 refined_sentences.append(sent)
         sentences = refined_sentences
     
-    # Filter out very short or empty sentences
-    return [sent for sent in sentences if len(sent) > 10]
+    # Restore the original abbreviation periods
+    sentences = [re.sub(r'@@', '.', sent) for sent in sentences]
+    
+    # Filter out very short or empty sentences, but be more lenient (min 5 chars instead of 10)
+    return [sent for sent in sentences if len(sent) > 5]
 
 # Text cleaning function - also moved here for convenience
 def clean_and_normalize_text(text):

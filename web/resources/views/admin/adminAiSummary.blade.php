@@ -1097,6 +1097,23 @@
                         case 'recommendations': sectionIcon = 'bi-lightbulb'; break;
                         case 'treatment': sectionIcon = 'bi-capsule'; break;
                         case 'follow_up': sectionIcon = 'bi-calendar-check'; break;
+                        // New additions from the first function's switch cases
+                        case 'mga_sintomas': sectionIcon = 'bi-activity'; break;
+                        case 'kalagayan_pangkatawan': sectionIcon = 'bi-person'; break;
+                        case 'kalagayan_mental': sectionIcon = 'bi-brain'; break;
+                        case 'kalagayan_social': sectionIcon = 'bi-people'; break;
+                        case 'aktibidad': sectionIcon = 'bi-clipboard-check'; break;
+                        case 'kalusugan_ng_bibig': sectionIcon = 'bi-emoji-smile'; break;
+                        case 'mobility_function': sectionIcon = 'bi-person-walking'; break;
+                        case 'kalagayan_ng_tulog': sectionIcon = 'bi-moon'; break;
+                        case 'pain_discomfort': sectionIcon = 'bi-thermometer-half'; break;
+                        case 'nutrisyon_at_pagkain': sectionIcon = 'bi-egg-fried'; break;
+                        case 'suporta_ng_pamilya': sectionIcon = 'bi-heart'; break;
+                        case 'pamamahala_ng_gamot': sectionIcon = 'bi-capsule'; break;
+                        case 'safety_risk_factors': sectionIcon = 'bi-shield-exclamation'; break;
+                        case 'vital_signs_measurements': sectionIcon = 'bi-heart-pulse'; break;
+                        case 'medical_history': sectionIcon = 'bi-journal-medical'; break;
+                        case 'preventive_health': sectionIcon = 'bi-shield-plus'; break;
                         default: sectionIcon = 'bi-card-text';
                     }
                     
@@ -1118,7 +1135,7 @@
                     container.append(sectionHtml);
                 });
 
-                 // Re-add the draft with the SAVED text, not the now-empty text
+                // Re-add the draft with the SAVED text, not the now-empty text
                 container.append(`<div id="${type}SummaryDraft" style="display:none;">${summaryText}</div>`);
             }
             
