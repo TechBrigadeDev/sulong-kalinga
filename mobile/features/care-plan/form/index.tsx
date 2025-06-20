@@ -91,7 +91,7 @@ const WCPForm = () => {
                 />
 
                 <TabScroll flex={1}>
-                    <YStack gap="$4" p="$4">
+                    <YStack gap="$4">
                         {renderStep()}
                     </YStack>
                 </TabScroll>

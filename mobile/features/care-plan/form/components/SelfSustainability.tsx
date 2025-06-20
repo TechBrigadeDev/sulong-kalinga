@@ -176,7 +176,7 @@ const InterventionItem = ({
                 {
                     id: Date.now().toString(),
                     name: interventionName,
-                    minutes: 0,
+                    minutes: 1,
                     isCustom: false,
                 };
             onChange([
@@ -289,7 +289,7 @@ const CustomIntervention = () => {
                                         {
                                             id: Date.now().toString(),
                                             name: customText.trim(),
-                                            minutes: 0,
+                                            minutes: 1,
                                             isCustom:
                                                 true,
                                         };

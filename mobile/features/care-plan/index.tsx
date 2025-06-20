@@ -47,7 +47,12 @@ class CarePlanController extends Controller {
                         });
 
                     default:
-                        toastServerError(error);
+                        toastServerError({
+                            error: error.response
+                                ?.data,
+                            status: error.response
+                                ?.status,
+                        });
 
                         break;
                 }

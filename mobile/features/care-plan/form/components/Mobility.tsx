@@ -150,7 +150,7 @@ const InterventionItem = ({
                 {
                     id: `mobility_${Date.now()}_${Math.random()}`,
                     name: interventionName,
-                    minutes: 0,
+                    minutes: 1,
                     isCustom: false,
                 };
             onChange([
@@ -330,7 +330,7 @@ const CustomIntervention = () => {
                                     {
                                         id: `custom_mobility_${Date.now()}_${Math.random()}`,
                                         name: customName.trim(),
-                                        minutes: 0,
+                                        minutes: 1,
                                         isCustom:
                                             true,
                                         description:

@@ -15,7 +15,20 @@ import {
 
 const SubmitCarePlanForm = () => {
     const { mutateAsync, isPending } =
-        useSubmitCarePlanForm();
+        useSubmitCarePlanForm({
+            onError: async (error) => {
+                console.error(
+                    "Error submitting care plan form:",
+                    error,
+                );
+                showToastable({
+                    message:
+                        "An error occurred while submitting the care plan. Please try again.",
+                    status: "danger",
+                    duration: 4000,
+                });
+            },
+        });
     const { handleSubmit, formState } =
         useCarePlanForm();
 
