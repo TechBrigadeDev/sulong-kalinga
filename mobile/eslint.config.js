@@ -26,6 +26,7 @@ module.exports = defineConfig([
             "simple-import-sort": simpleSort,
         },
         rules: {
+            "react/no-children-prop": "off",
             "import/no-unresolved": "error",
             "no-relative-import-paths/no-relative-import-paths":
                 [

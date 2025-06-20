@@ -1,10 +1,10 @@
-import {
-    useEditEmergencyRequest,
-    useEmergencyRequest,
-} from "features/portal/emergency-service/emergency/hook";
 import { EmergencyServiceFormProp } from "features/portal/emergency-service/emergency/interface";
+import {
+    useEditnServiceRequest,
+    useServiceRequest,
+} from "features/portal/emergency-service/service/hook";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
-import { TriangleAlert } from "lucide-react-native";
+import { ClipboardList } from "lucide-react-native";
 import { useEffect } from "react";
 import { KeyboardAvoidingView } from "react-native";
 import {
@@ -16,52 +16,50 @@ import {
 } from "tamagui";
 
 import {
-    emergencyFormOpts,
-    useEmergencyForm,
+    serviceFormOpts,
+    useServiceForm,
 } from "./form";
-import { IEmergencyForm } from "./interface";
 
-const EmergencyAssistanceForm = ({
+const ServiceAssistanceForm = ({
     onSubmitSuccess,
 }: EmergencyServiceFormProp) => {
-    const {
-        mutateAsync: submitEmergencyRequest,
-    } = useEmergencyRequest();
-    const { mutateAsync: editEmergencyRequest } =
-        useEditEmergencyRequest();
-
     const store = useEmergencyServiceStore();
+    const { mutateAsync: submitServiceRequest } =
+        useServiceRequest();
 
-    const form = useEmergencyForm({
-        ...emergencyFormOpts,
-        defaultValues: {
-            message: "",
-            emergency_type_id: "",
-        } as IEmergencyForm,
+    const { mutateAsync: editServiceRequest } =
+        useEditnServiceRequest();
+
+    const form = useServiceForm({
+        ...serviceFormOpts,
         onSubmit: async ({ value, formApi }) => {
             const request =
                 store.getState().request;
 
             try {
                 if (request && request.id) {
-                    await editEmergencyRequest({
+                    await editServiceRequest({
                         id: request.id.toString(),
                         data: value,
                     });
                 } else {
-                    await submitEmergencyRequest(
+                    // If no request exists, create a new one
+                    await submitServiceRequest(
                         value,
                     );
                 }
+
                 onSubmitSuccess?.();
 
                 formApi.reset({
+                    service_type_id: "",
+                    service_date: "",
+                    service_time: "",
                     message: "",
-                    emergency_type_id: "",
                 });
             } catch (error) {
                 console.error(
-                    "Error submitting emergency request:",
+                    "Error submitting service request:",
                     error,
                 );
             }
@@ -70,14 +68,18 @@ const EmergencyAssistanceForm = ({
 
     const request = store.getState().request;
     useEffect(() => {
-        if (request?.type === "service") {
+        if (request?.type === "emergency") {
             return;
         }
 
         if (request) {
             form.reset({
-                emergency_type_id:
-                    request.emergency_type_id.toString(),
+                service_type_id:
+                    request.service_type_id.toString(),
+                service_date:
+                    request.service_date,
+                service_time:
+                    request.service_time,
                 message: request.description,
             });
         }
@@ -96,29 +98,44 @@ const EmergencyAssistanceForm = ({
                         flexDirection="row"
                         items="center"
                     >
-                        <TriangleAlert />
+                        <ClipboardList />
                         <H5 ml="$2" theme="light">
-                            Emergency Assistance
+                            Service Request
                         </H5>
                     </XStack>
                     <Text>
-                        Immediate help when you
-                        need it most. Our team
-                        will respond to you as
-                        soon as we can.
+                        Request assistance and
+                        services tailored to your
+                        needs. Our team will
+                        review your request and
+                        get back to you soon.
                     </Text>
                 </YStack>
-                <YStack p="$4" gap="$2">
+                <YStack p="$4" gap="$4">
                     <form.AppField
-                        name="emergency_type_id"
+                        name="service_type_id"
                         children={(field) => (
-                            <field.TypeField />
+                            <field.ServiceTypeField />
                         )}
                     />
+                    <XStack gap="$3">
+                        <form.AppField
+                            name="service_date"
+                            children={(field) => (
+                                <field.DateTimeSectionField />
+                            )}
+                        />
+                        <form.AppField
+                            name="service_time"
+                            children={(field) => (
+                                <field.DateTimeSectionField />
+                            )}
+                        />
+                    </XStack>
                     <form.AppField
                         name="message"
                         children={(field) => (
-                            <field.DescriptionField />
+                            <field.ServiceDetailsField />
                         )}
                     />
                     <form.AppForm>
@@ -130,4 +147,4 @@ const EmergencyAssistanceForm = ({
     );
 };
 
-export default EmergencyAssistanceForm;
+export default ServiceAssistanceForm;

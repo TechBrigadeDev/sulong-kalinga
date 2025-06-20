@@ -1,31 +1,34 @@
 import { FormErrors } from "common/form";
-import { useEmergencyFieldContext } from "features/portal/emergency-service/emergency/_components/form/form";
+import { useServiceFieldContext } from "features/portal/emergency-service/service/_components/form/form";
 import { Input, Label, YStack } from "tamagui";
 
-const EmergencyDescription = () => {
-    const field = useEmergencyFieldContext();
+const ServiceDetails = () => {
+    const field = useServiceFieldContext();
 
     return (
         <YStack gap="$2">
-            <Label htmlFor="emergency_message">
-                Describe the Emergency
+            <Label htmlFor="service_message">
+                Service Details
             </Label>
             <Input
-                id="emergency_message"
+                id="service_message"
                 value={
-                    field.state.value as string
+                    (field.state
+                        .value as string) || ""
                 }
                 onChangeText={(text) =>
                     field.handleChange(text)
                 }
                 onBlur={field.handleBlur}
-                placeholder="Briefly describe the situation"
+                placeholder="Please describe your service needs..."
                 size="$4"
                 autoCapitalize="none"
                 autoCorrect={false}
                 maxLength={500}
-                numberOfLines={5}
+                numberOfLines={4}
                 multiline
+                height={100}
+                textAlignVertical="top"
                 borderColor={
                     field.state.meta.errors
                         .length > 0
@@ -40,4 +43,4 @@ const EmergencyDescription = () => {
     );
 };
 
-export default EmergencyDescription;
+export default ServiceDetails;

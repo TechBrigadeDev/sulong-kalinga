@@ -8,11 +8,7 @@ import {
     ArrowDown,
     ArrowUp,
 } from "lucide-react-native";
-import {
-    RefObject,
-    useRef,
-    useState,
-} from "react";
+import { Ref, useRef, useState } from "react";
 import {
     Animated,
     Dimensions,
@@ -27,7 +23,7 @@ interface Props
     extends GetProps<typeof ScrollView> {
     showScrollUp?: boolean;
     tabbed?: boolean;
-    ref?: RefObject<ScrollView | null>;
+    ref?: Ref<ScrollView>;
 }
 
 const TabScroll = ({
@@ -211,23 +207,29 @@ const TabScroll = ({
             scrollPercentage >= 0.95 &&
             isScrollingDown
         ) {
-            scrollViewRef.current?.scrollToEnd({
-                animated: false,
-            });
+            if (scrollViewRef.current?.scrollToEnd) {
+                scrollViewRef.current?.scrollToEnd(
+                    {
+                        animated: false,
+                    },
+                );
+            }
         }
     };
 
     const scrollToTop = () => {
-        scrollViewRef.current?.scrollTo({
-            y: 0,
-            animated: true,
-        });
+        if (scrollViewRef.current?.scrollTo) {
+            scrollViewRef.current?.scrollTo({
+                y: 0,
+                animated: true,
+            });
+        }
     };
 
     return (
         <>
             <ScrollView
-                ref={scrollViewRef}
+                ref={ref}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
                 contentContainerStyle={{

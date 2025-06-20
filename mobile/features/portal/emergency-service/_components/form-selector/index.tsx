@@ -1,6 +1,6 @@
 import EmergencyAssistanceForm from "features/portal/emergency-service/emergency/_components/form";
 import { EmergencyServiceFormProp } from "features/portal/emergency-service/emergency/interface";
-import ServiceForm from "features/portal/emergency-service/service/form";
+import ServiceAssistanceForm from "features/portal/emergency-service/service/_components/form";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
 import { ICurrentEmergencyServiceForm } from "features/portal/emergency-service/type";
 import {
@@ -33,13 +33,15 @@ const tabs: {
     {
         value: "service",
         label: "Service Request",
-        form: (prop) => <ServiceForm {...prop} />,
+        form: (prop) => (
+            <ServiceAssistanceForm {...prop} />
+        ),
     },
 ];
 
-const EmergencyServiceFormSelector = ({
-    ref,
-}: EmergencyServiceFormProp) => {
+const EmergencyServiceFormSelector = (
+    props: EmergencyServiceFormProp,
+) => {
     const store = useEmergencyServiceStore();
 
     const [form, setForm] =
@@ -49,9 +51,9 @@ const EmergencyServiceFormSelector = ({
 
     useEffect(() => {
         store.subscribe((state) => {
-            if (
-                state.currentEmergencyServiceForm
-            ) {
+            const form =
+                state.currentEmergencyServiceForm;
+            if (form) {
                 setForm(
                     state.currentEmergencyServiceForm,
                 );
@@ -103,15 +105,13 @@ const EmergencyServiceFormSelector = ({
                 ))}
             </Tabs.List>
             <Separator />
-            <View ref={ref}>
+            <View>
                 {tabs.map((tab) => (
                     <TabsContent
                         key={tab.value}
                         value={tab.value}
                     >
-                        {tab.form({
-                            ref,
-                        })}
+                        {tab.form(props)}
                     </TabsContent>
                 ))}
             </View>

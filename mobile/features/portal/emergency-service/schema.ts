@@ -45,5 +45,7 @@ export const emergencyServiceHistorySchema =
         }),
         serviceTypeSchema.omit({
             service_type_id: true,
+            service_time: true,
+            service_date: true,
         }),
     ]);

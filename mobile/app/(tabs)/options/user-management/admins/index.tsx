@@ -1,7 +1,7 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, View, YStack } from "tamagui";
+import { View, YStack } from "tamagui";
 
 import AdminList from "~/features/user-management/components/administrators/list";
 import AdminSearch from "~/features/user-management/components/administrators/list/search";

@@ -1,6 +1,6 @@
 import { FormErrors } from "common/form";
-import { useEmergencyFieldContext } from "features/portal/emergency-service/emergency/_components/form/form";
-import { useEmergencyTypes } from "features/portal/emergency-service/emergency/hook";
+import { useServiceFieldContext } from "features/portal/emergency-service/service/_components/form/form";
+import { useServiceTypes } from "features/portal/emergency-service/service/hook";
 import {
     Adapt,
     Label,
@@ -10,22 +10,26 @@ import {
     YStack,
 } from "tamagui";
 
-const EmergencyType = () => {
-    const { data: emergencyTypes, isLoading } =
-        useEmergencyTypes();
+const ServiceType = () => {
+    const { data: serviceTypes, isLoading } =
+        useServiceTypes();
 
-    const field = useEmergencyFieldContext();
-
+    const field = useServiceFieldContext();
     return (
         <YStack flex={1} gap="$2">
-            <Label htmlFor="emergency_type_id">
-                Emergency Type
+            <Label htmlFor="service_type_id">
+                Service Type
             </Label>
             <Select
                 value={
                     field.state.value as string
                 }
                 onValueChange={(value) => {
+                    console.log(
+                        "Selected service type ID:",
+                        value,
+                        typeof value,
+                    );
                     field.handleChange(value);
                 }}
             >
@@ -45,7 +49,7 @@ const EmergencyType = () => {
                             color="$white1"
                         />
                     ) : (
-                        <Select.Value placeholder="Select emergency type" />
+                        <Select.Value placeholder="Select service type" />
                     )}
                 </Select.Trigger>
                 <Select.Content>
@@ -58,19 +62,19 @@ const EmergencyType = () => {
                             minHeight: 200,
                         }}
                     >
-                        {emergencyTypes?.map(
+                        {serviceTypes?.map(
                             (option, index) => (
                                 <Select.Item
                                     key={
                                         index.toString() +
-                                        option.emergency_type_id
+                                        option.service_type_id
                                     }
                                     id={
-                                        "emergency_type_id_" +
-                                        option.emergency_type_id
+                                        "service_type_id_" +
+                                        option.service_type_id
                                     }
                                     index={index}
-                                    value={option.emergency_type_id.toString()}
+                                    value={option.service_type_id.toString()}
                                 >
                                     <Select.ItemText>
                                         {
@@ -104,4 +108,4 @@ const EmergencyType = () => {
     );
 };
 
-export default EmergencyType;
+export default ServiceType;

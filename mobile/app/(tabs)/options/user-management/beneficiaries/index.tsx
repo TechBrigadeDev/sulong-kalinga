@@ -1,7 +1,7 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, View, YStack } from "tamagui";
+import { View, YStack } from "tamagui";
 
 import BeneficiaryList from "~/features/user-management/components/beneficiaries/list";
 import BeneficiariesSearch from "~/features/user-management/components/beneficiaries/list/seach";

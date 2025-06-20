@@ -129,10 +129,14 @@ export const QK = {
         emergency: {
             getTypes:
                 "emergencyService/emergency/getTypes",
+            editRequest:
+                "emergencyService/emergency/editRequest",
         },
         service: {
             getTypes:
                 "emergencyService/service/getTypes",
+            editRequest:
+                "emergencyService/service/editRequest",
         },
     },
     visitations: {

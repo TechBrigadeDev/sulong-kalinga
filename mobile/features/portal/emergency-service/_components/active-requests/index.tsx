@@ -1,12 +1,13 @@
 import FlatList from "components/FlatList";
 import RefreshButton from "features/portal/emergency-service/_components/refresh";
 import { useEmergencyServiceRequests } from "features/portal/emergency-service/hook";
-import { useEffect } from "react";
+import { RefObject, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import {
     Card,
     H5,
     Spinner,
+    TamaguiElement,
     Text,
     YStack,
 } from "tamagui";
@@ -14,7 +15,11 @@ import {
 import RequestCard from "./RequestCard";
 import type { EmergencyRequest } from "./types";
 
-const ActiveRequests = () => {
+const Cards = ({
+    onEdit,
+}: {
+    onEdit: () => void;
+}) => {
     const {
         data: requests,
         isLoading,
@@ -96,7 +101,12 @@ const ActiveRequests = () => {
         item,
     }: {
         item: EmergencyRequest;
-    }) => <RequestCard request={item} />;
+    }) => (
+        <RequestCard
+            request={item}
+            onEdit={onEdit}
+        />
+    );
 
     return (
         <Card
@@ -169,5 +179,19 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
 });
+
+const ActiveRequests = ({
+    ref,
+    onEdit,
+}: {
+    ref?: RefObject<TamaguiElement>;
+    onEdit: () => void;
+}) => {
+    return (
+        <YStack ref={ref}>
+            <Cards onEdit={onEdit} />
+        </YStack>
+    );
+};
 
 export default ActiveRequests;

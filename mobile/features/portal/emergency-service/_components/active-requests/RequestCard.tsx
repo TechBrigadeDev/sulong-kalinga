@@ -1,10 +1,7 @@
 import { format } from "date-fns";
 import { useEmergencyCancelRequest } from "features/portal/emergency-service/emergency/hook";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
-import {
-    ICurrentEmergencyServiceForm,
-    IEmergencyServiceRequest,
-} from "features/portal/emergency-service/type";
+import { ICurrentEmergencyServiceForm } from "features/portal/emergency-service/type";
 import { PenBox } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { showToastable } from "react-native-toastable";
@@ -19,13 +16,16 @@ import {
 } from "tamagui";
 
 import Badge from "./Badge";
+import { EmergencyRequest } from "./types";
 
 interface RequestCardProps {
-    request: IEmergencyServiceRequest;
+    request: EmergencyRequest;
+    onEdit: () => void;
 }
 
 const RequestCard = ({
     request,
+    onEdit,
 }: RequestCardProps) => {
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
@@ -79,8 +79,10 @@ const RequestCard = ({
             ...state,
             currentEmergencyServiceForm:
                 request.type as ICurrentEmergencyServiceForm,
-            request,
+            request: request,
         }));
+
+        onEdit();
     };
 
     const {

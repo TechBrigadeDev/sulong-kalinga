@@ -1,36 +1,40 @@
-import { useEmergencyFormContext } from "features/portal/emergency-service/emergency/_components/form/form";
+import { useServiceFormContext } from "features/portal/emergency-service/service/_components/form/form";
+import { IServiceForm } from "features/portal/emergency-service/service/_components/form/interface";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
 import { IEmergencyServiceRequest } from "features/portal/emergency-service/type";
 import { useEffect, useState } from "react";
 import { Button, Spinner } from "tamagui";
 
-const SubmitEmergency = () => {
-    const store = useEmergencyServiceStore();
-    const form = useEmergencyFormContext();
+const SubmitService = () => {
+    const form = useServiceFormContext();
 
     const [currentRequest, setCurrentRequest] =
         useState<IEmergencyServiceRequest | null>(
             null,
         );
+    const store = useEmergencyServiceStore();
     const request = store.getState().request;
 
     useEffect(() => {
-        if (
-            request &&
-            request.type === "emergency"
-        ) {
+        console.log(
+            "Current request in SubmitService:",
+            request,
+        );
+        if (request?.type === "emergency") {
+            return;
+        } else if (request) {
             setCurrentRequest(request);
-            // form.reset({
-            //     message: request.description,
-            //     emergency_type_id:
-            //         request.emergency_type_id.toString(),
-            // });
+            form.reset({
+                service_type_id:
+                    request.service_type_id?.toString(),
+                service_date:
+                    request.service_date,
+                service_time:
+                    request.service_time,
+                message: request.description,
+            } as IServiceForm);
         } else {
             setCurrentRequest(null);
-            form.reset({
-                message: "",
-                emergency_type_id: "",
-            });
         }
 
         store.subscribe(() => {
@@ -39,27 +43,35 @@ const SubmitEmergency = () => {
             if (updatedRequest) {
                 setCurrentRequest(updatedRequest);
                 form.reset({
-                    message: updatedRequest?.description,
-                    emergency_type_id:
-                        updatedRequest.emergency_type_id?.toString(),
-                });
+                    service_type_id:
+                        updatedRequest.service_type_id?.toString(),
+                    service_date:
+                        updatedRequest.service_date,
+                    service_time:
+                        updatedRequest.service_time,
+                    message: updatedRequest.description,
+                } as IServiceForm);
             } else {
                 setCurrentRequest(null);
                 form.reset({
+                    service_type_id: "",
+                    service_date: "",
+                    service_time: "",
                     message: "",
-                    emergency_type_id: "",
-                });
+                } as IServiceForm);
             }
         });
     }, [store, request, form]);
 
     const isEditing =
-        currentRequest?.type === "emergency";
+        currentRequest?.type === "service";
 
     const resetForm = () => {
         form.reset({
+            service_type_id: "",
+            service_date: "",
+            service_time: "",
             message: "",
-            emergency_type_id: "",
         });
         store.setState({
             request: null,
@@ -94,8 +106,8 @@ const SubmitEmergency = () => {
                             state.isSubmitting
                         }
                         size="$5"
-                        mt="$8"
-                        theme="light_blue"
+                        mt="$1"
+                        theme="blue"
                         fontSize="$5"
                         fontWeight="600"
                     >
@@ -107,10 +119,9 @@ const SubmitEmergency = () => {
                                 color="$white1"
                             />
                         )}
-                        {currentRequest?.id
+                        {isEditing
                             ? "Update"
                             : "Submit"}
-                        {form.state.isSubmitting}
                     </Button>
                     <Edit />
                 </>
@@ -119,4 +130,4 @@ const SubmitEmergency = () => {
     );
 };
 
-export default SubmitEmergency;
+export default SubmitService;
