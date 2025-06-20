@@ -37,6 +37,20 @@ class ShiftApiController extends Controller
             ->get()
             ->map(function ($visitation) {
                 $beneficiary = $visitation->beneficiary;
+
+                // Find the latest shift track for this visitation
+                $latestTrack = \App\Models\ShiftTrack::where('visitation_id', $visitation->visitation_id)
+                    ->orderByDesc('recorded_at')
+                    ->first();
+
+                if (!$latestTrack) {
+                    $currentStatus = null;
+                } else {
+                    $currentStatus = $latestTrack->arrival_status === 'arrived'
+                        ? 'arrived'
+                        : ($latestTrack->arrival_status === 'departed' ? 'departed' : null);
+                }
+
                 return [
                     'visitation_id' => $visitation->visitation_id,
                     'care_worker_id' => $visitation->care_worker_id,
