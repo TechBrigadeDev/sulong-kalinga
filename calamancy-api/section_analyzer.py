@@ -1,0 +1,1314 @@
+import re
+from nlp_loader import nlp
+from entity_extractor import extract_structured_elements
+from text_processor import split_into_sentences
+
+def extract_sections_improved(sentences, doc_type="assessment"):
+    """Extract and categorize sections with improved handling of complete sentences."""
+    print(f"Extracting sections for {doc_type}, {len(sentences)} sentences")
+    
+    # Process all sentences with Calamancy NLP first
+    try:
+        sentence_docs = [nlp(sentence) for sentence in sentences]
+    except Exception as e:
+        print(f"Error processing sentences: {e}")
+        sentence_docs = []
+    
+    # Define section patterns for more precise matching
+    section_patterns = {
+        "mga_sintomas": [
+            r'(nagsimulang|nakakaranas|dumaranas|nakakaramdam) (ng|sa) (sakit|pananakit|sintomas)',
+            r'(nagpapakita|nagkaroon|nakaranas) (ng|sa) (mga sintomas|kondisyon)',
+            r'(nahihirapan|nahihirapang|hirap) (siyang|siya|na) (huminga|lumunok|matulog)',
+            r'(dumaranas|nararamdaman|nakakaramdam) (niya|nila|nya|ko|ng) (pananakit|kirot)',
+            r'sumasakit ang (kanyang|kaniyang|ulo|tiyan|dibdib|likod)',
+            r'(binabangungot|pabalik-balik na panaginip)',
+            r'madalas (siya|siyang|silang) (nahihilo|nasusuka|naduduwal)',
+            r'(nagtatae|constipated|hirap dumumi)',
+            r'may madalas na (ubo|sipon|lagnat)',
+            r'nagkakaroon ng (acid reflux|heartburn)',
+            r'bumaba ang (timbang|gana sa pagkain|appetito)',
+            r'(hindi|di) makontrol ang (pag-ihi|pagdumi)',
+            r'hirap (siya|siyang) mag-(lakad|pasok sa banyo|upo)',
+            r'pabalik-balik na (sakit|kirot|pananakit)',
+            r'nagpapahirap sa (kanya|kaniyang) (paglalakad|pag-upo)',
+            r'mabilis (mapagod|mahapo)',
+            r'nararamdaman (niyang|niya na) mahina ang (kanyang|kaniyang) (katawan)'
+        ],
+        
+        "kalagayan_pangkatawan": [
+            r'ang (kanyang|kaniyang|kanilang) pisikal na (kondisyon|kalagayan)',
+            r'sa terms ng (pisikal na|physical) (lakas|kalagayan)',
+            r'(nagpapakita|nagpapamalas) ng (kahinaan|kahinaang) (pisikal|sa katawan)',
+            r'(hindi|di) stable ang (kanyang|kaniyang) (paglakad|balanse)',
+            r'(mababa|mataas) ang (kanyang|kaniyang) (blood pressure|presyon|heart rate)',
+            r'lumalala ang (kahinaan|panghihina) ng (kanyang|kaniyang) (muscles|kalamnan)',
+            r'(nahihirapan|hirap|nahihirapang) (siya|siyang) (tumayo|bumangon|gumalaw)',
+            r'(nangangailangan|kailangan) (niya|niyang) ng (tulong|suporta) sa paglalakad',
+            r'limited ang (range of motion|movement|galaw) ng (kanyang|kaniyang) joints',
+            r'(hirap|nahihirapan|nahihirapang) sa mga (hagdanan|uneven surfaces|hindi patag)',
+            r'ang (kanyang|kaniyang) (strength|lakas) sa (itaas na|ibabang) parte ng katawan',
+            r'(naaapektuhan|apektado) ang (kanyang|kaniyang) (balanse|coordination)',
+            r'(vital signs|temperature|BP|heart rate|respiratory rate) (are|ay|is)',
+            r'(mahina|malakas) ang (kanyang|kaniyang) (upper body|lower body)',
+            r'(may|merong) (difficulty|kahirapan) sa (pagkilos|paggalaw)',
+            r'(may|meron) siyang (edema|pamamaga) sa (kanyang|kaniyang)',
+            r'ang (kanyang|kaniyang) (physical condition|weight|timbang) ay'
+        ],
+        
+        "kalagayan_mental": [
+            r'(nagpapakita|nagpapahiwatig) ng (signs|sintomas) ng (depression|anxiety|dementia)',
+            r'(kalimutan|nakakalimutan|nalilimutan) (niya|nila|nya) (kung|ang)',
+            r'(nalilito|confused|naguguluhan) (siya|sila) (tungkol sa|kapag|sa)',
+            r'(nag-aalala|worried|concerned) (siya|siyang|sila) (tungkol sa|dahil sa)',
+            r'(bumaba|tumaas) ang (kanyang|kaniyang) (mood|disposition|estado ng isip)',
+            r'(nagiging|naging) (iritable|mainitim ang ulo|short-tempered)',
+            r'mental health (issues|concerns|problems)',
+            r'hindi (niya|nya|nila) (matandaan|maalala) ang (kanyang|kaniyang)',
+            r'(nagpapakita|nagpapamalas) ng (anxiety|depression|lungkot|kalungkutan)',
+            r'(nagbabago-bago|unstable) ang (kanyang|kaniyang) (emosyon|damdamin)',
+            r'(nahihirapan|hirap) (siyang|siyang) mag-(focus|concentrate)',
+            r'(nababalisa|nag-aalalala|worried) (siya|siyang) lagi',
+            r'(nagiging|naging) (defensive|agitated|irritable) (siya|siyang)',
+            r'may cognitive (impairment|decline|deterioration)',
+            r'(bumababa|lumalala) ang (kanyang|kaniyang) kakayahang (mag-isip|magdesisyon)',
+            r'(may|nagpapakita ng|nagpapahiwatig ng) confusion (siya|sila)',
+            r'(feeling|nakakaramdam ng) (hopeless|worthless|helpless|walang halaga)'
+        ],
+        
+        "aktibidad": [
+            r'(kailangan|nangangailangan) (niya|niyang|siya) ng (tulong|assistance) sa (pagligo|pagbibihis|pagkain)',
+            r'(sa|tungkol sa) (kanyang|kaniyang) (activities of daily living|ADLs|pang-araw-araw na gawain)',
+            r'(kaya|hindi) (niya|niyang) (gawin|isagawa) ang (normal|basic) (na )?(activities|gawain)',
+            r'(hirap|nahihirapan|nahihirapang) (siya|siyang) mag-(ligo|bihis|kain|lakad|akyat)',
+            r'(kailangan|nangangailangan) ng (supervision|bantay|gabay) sa (CR|bathroom|banyo)',
+            r'(mahirap|challenging) para sa (kanya|kaniya) ang (paggamit|paggawa) ng',
+            r'(hindi|di) na (makagamit|makaligo|makapunta|makabangon) nang mag-isa',
+            r'(nangagailangan|kailangan) ng (assistive devices|mobility aids|tulong)',
+            r'(iniiwasan|umiiwas) (na|siyang) gumamit ng (hagdanan|stairs)',
+            r'(gumagamit|umaasa) (siya|siyang) ng (wheelchair|walker|cane|tungkod)',
+            r'(kailangan|nangangailangan) ng (modified|assistive) (equipment|devices)',
+            r'(mahirap|challenging) para sa (kanya|kaniya) ang (household tasks|gawaing-bahay)',
+            r'(nawala|bumaba) ang (kanyang|kaniyang) (independence|kakayahang gumalaw)',
+            r'(may|meron siyang) limitations sa (pagbibiyahe|transportation|travel)',
+            r'(natigil|huminto) (siya|na siya|siyang) sa (pagpunta|pagsali) sa',
+            r'hindi na (siya|siyang) (nag|nakaka|nakakasali) sa (church|social activities)'
+        ],
+        
+        "kalagayan_social": [
+            r'(tungkol sa|about) (kanyang|kaniyang) (social support|social network)',
+            r'(nakikitungo|nakikisalamuha) (siya|siyang) sa (kaniyang|kanyang) (pamilya|friends)',
+            r'(bihira|madalang|regular) (siyang|siya|silang) (bumibisita|dumalaw|makipagkita)',
+            r'(umaasa|dependent|nakadepende) (siya|siyang) sa (kanyang|kaniyang) (pamilya|asawa|anak)',
+            r'(naninirahan|nakatira) (siya|siyang|sila) kasama ang (kanyang|kaniyang)',
+            r'(nag-iisa|mag-isa|isolated) (siya|siyang) (nakatira|namumuhay)',
+            r'(nahihirapan|hirap) (siyang|siya) makisalamuha sa (ibang tao|kapwa|komunidad)',
+            r'(may tension|may alitan|strained relationship) sa (kanyang|kaniyang) (pamilya|anak)',
+            r'(nararamdaman|feeling) (niya|niyang) (hiniwalayan|inabandona|iniwanan)',
+            r'financial (concerns|issues|problems) sa (kanyang|kaniyang) (pamilya)',
+            r'(nawala|nabawasan) ang (kanyang|kaniyang) (social contacts|pakikisalamuha)',
+            r'(nababawasan|humihina) ang (supportive|suportang) (network|komunidad)',
+            r'(hirap|nahihirapan) (siyang|siya) mag-adjust sa (bagong|new) environment',
+            r'(generational gap|pagkakaiba ng edad) sa (kanyang|kaniyang) (pamilya|household)',
+            r'(nakikilala|nakikita) bilang (burden|pabigat) sa (kanyang|kaniyang) (pamilya)',
+            r'(feelings of|nararamdamang) (isolation|pagkakalayo|disconnection)',
+            r'(nawala|nabawasan) ang (kanyang|kaniyang) (social role|papel sa lipunan)'
+        ]
+    }
+    
+    # Define section keywords with expanded terms for better matching
+    section_keywords = {
+        "mga_sintomas": [
+            # Existing keywords
+            "sintomas", "sakit", "nararamdaman", "sumasakit", "masakit", "kirot", 
+            "nagpapakita", "kondisyon", "lumalala", "bumubuti", "symptoms",
+            "nahihirapan", "dumaranas", "nakakaramdam", "condition", "naobserbahan",
+            "napansin", "nakita", "issues", "problema", "nagdurusa", "mahina",
+            "pagbabago", "change", "kakaiba", "abnormal", "unusual", "hindi normal",
+            "pananakit", "lumalala", "pagbabago", "episode", "attack",
+            "kombulsyon", "namamanhid", "numbness", "tusok-tusok",
+            "difficulty", "hindi makagalaw", "hindi makatulog", "insomnia",
+            "palaging", "persistent", "chronic", "paulit-ulit", "recurring",
+            "paranoia", "agitation", "confusion", "hallucination",
+            
+            # Additional symptoms from sample text
+            "peripheral edema", "pamamaga", "chronic pain", "matinding sakit",
+            "hirap huminga", "respiratory distress", "cyanosis", "colored sputum",
+            "fever", "lagnat", "panginginig", "night vision problem", "blurry vision",
+            "malabo ang paningin", "eye strain", "headaches", "sakit ng ulo", 
+            "digestive", "acid reflux", "heartburn", "stomach pain", "nausea", 
+            "nasusuka", "pagtatae", "constipation", "hirap dumumi", "weight loss",
+            "significant weight loss", "pagbaba ng timbang", "reduced appetite",
+            "walang ganang kumain", "labored breathing", "hingal", "shortness of breath",
+            "dizziness", "vertigo", "hilo", "pagkahilo", "pagsusuka", "vomiting",
+            "pananakit ng dibdib", "chest pain", "palpitations", "mabilis na tibok ng puso",
+            "joint pain", "arthritis", "stiffness", "paninigas", "incontinence",
+            "hindi mapigilan ang pag-ihi", "bowel problems", "urinary issues"
+        ],
+        
+        "kalagayan_pangkatawan": [
+            # Existing keywords
+            "pisikal", "physical", "katawan", "body", "lakas", "strength", "bigat", "weight",
+            "timbang", "tangkad", "height", "vital signs", "temperatura", "temperature",
+            "pagkain", "eating", "paglunok", "swallowing", "paglakad", "walking",
+            "balanse", "balance", "paggalaw", "movement", "koordinasyon", "coordination",
+            "panginginig", "tremors", "nanghihina", "weakness", "pagod", "fatigue",
+            "paglalakad", "mobility", "joints", "kasukasuan", "namamaga", "swelling",
+            "blood pressure", "presyon", "heart rate", "pulso", "respiratory",
+            "paghinga", "oxygen", "sugar level", "glucose", "hydration", "dehydration",
+            "nutrisyon", "pagbaba ng timbang", "pagtaba", "edema", "pamamaga",
+            "kakayahang gumalaw", "stamina", "lakas ng katawan", "posture",
+            
+            # Additional physical condition terms from sample text
+            "increasing assistance needs", "limited mobility", "paghawak sa hagdanan",
+            "hindi pantay na paglalakad", "uneven surfaces", "unsteady gait", 
+            "hindi stable na paglakad", "muscle weakness", "kahinaan ng kalamnan",
+            "upper body strength", "lower body strength", "extremities", "falls risk",
+            "risk ng pagkahulog", "circulation", "circulatory issues", "sirkulasyon",
+            "fine motor skills", "gross motor skills", "range of motion", "saklaw ng paggalaw", 
+            "flexibility", "flexibility ng joints", "muscle tone", "tone ng kalamnan", 
+            "hand strength", "lakas ng kamay", "grip strength", "hawak", "lakas ng hawak",
+            "weight-bearing", "endurance", "stamina", "tagal ng paggalaw", "chronic dehydration",
+            "madalas na dehydrated", "postural stability", "stability sa pagtayo",
+            "gait pattern", "pattern ng paglakad", "transfer ability", "ability na maglipat",
+            "sit-to-stand", "pagbangon mula sa pagkakaupo", "physical frailty"
+        ],
+        
+        "kalagayan_mental": [
+            # Existing keywords
+            "mental", "isip", "cognitive", "cognition", "pag-iisip", "memorya", "memory",
+            "nakalimutan", "forget", "pagkalito", "confusion", "disorientation",
+            "hindi makapag-concentrate", "concentration", "hindi makafocus", "focus",
+            "pagkataranta", "agitation", "irritable", "mairita", "emotional", "emosyonal",
+            "kalungkutan", "depression", "lungkot", "sad", "malungkot", "mood", "estado ng isip",
+            "paranoia", "pagdududa", "suspicion", "doubt", "pag-aalala", "worry", "anxiety",
+            "stress", "pressure", "tension",
+            "orientation", "oryentasyon", "awareness", "pagkakaalam", "alertness",
+            "responsiveness", "pagtugon", "attention span", "atensyon", 
+            "decision-making", "pagpapasya", "judgment", "paghatol", "reasoning",
+            "pangangatwiran", "delusions", "pagkabaliw", "psychosis", 
+            "mood swings", "pagbabago ng mood", "personality changes", 
+            "behavior changes", "pagbabago ng ugali", "fears", "takot", 
+            "dementia", "demensya", "Alzheimer's", "cognitive decline",
+            
+            # Additional mental state terms from sample text
+            "pagbabago sa memorya", "memory loss", "forgetfulness", "end-of-life anxiety",
+            "death anxiety", "takot sa kamatayan", "grief", "grieving", "pagluluksa",
+            "complicated grief", "major depressive disorder", "sundowning syndrome",
+            "psychotic symptoms", "hallucinations", "false beliefs", "fears of abandonment",
+            "abandonment anxiety", "takot na iwanan", "hopelessness", "kawalan ng pag-asa",
+            "worthlessness", "feeling na walang kwenta", "suicidal ideation", "thoughts of death",
+            "passive suicidal thoughts", "mental confusion", "aggressiveness", "aggression",
+            "pagka-iritable", "irritability", "emotional outbursts", "biglaang pagbabago ng emosyon",
+            "emotional lability", "excessive worry", "labis na pag-aalala", "generalized anxiety",
+            "disorientation to time", "disorientation to place", "temporal confusion",
+            "hindi alam ang araw/oras", "personality disorder", "pagkabaliw", "delirium",
+            "obsessive thoughts", "compulsive behaviors", "executive dysfunction",
+            "loss of identity", "pagkawala ng identidad", "sense of self", "defensive behavior"
+        ],
+        
+        "aktibidad": [
+            # Existing keywords
+            "aktibidad", "activities", "gawain", "task", "daily living", "araw-araw",
+            "routine", "gawing", "self-care", "personal care", "pangangalaga sa sarili",
+            "hygiene", "kalinisan", "pagligo", "bathing", "pagbibihis", "dressing",
+            "pagkain", "eating", "pagluluto", "cooking", "paglilinis", "cleaning",
+            "exercise", "ehersisyo", "therapy", "therapiya", "hobbies", "libangan",
+            "social activities", "pakikisalamuha", "pakikipag-usap", "communication",
+            "mobility", "paggalaw", "ambulation", "paglalakad", "transfers",
+            "paglipat", "bed mobility", "paggalaw sa kama", "independence",
+            "dependence", "pag-asa sa iba", "tungkod", "cane", "walker",
+            "wheelchair", "silya de gulong", "crutches", "saklay", 
+            "transportasyon", "lakad", "pamimili", "gawaing bahay",
+            
+            # Additional activity terms from sample text
+            "shower safety", "ligtas na pagligo", "toilet safety", "ligtas na paggamit ng banyo",
+            "medication management", "pangangasiwa ng gamot", "medication adherence",
+            "pagsunod sa inireseta", "meal preparation", "paghahanda ng pagkain",
+            "nutritional challenges", "hair and nail care", "home management",
+            "pangangasiwa ng tahanan", "household tasks", "gawaing bahay",
+            "ability to manage steps", "kakayahang umakyat ng hagdan",
+            "assistive devices", "tulong sa paggalaw", "adaptive equipment",
+            "modified utensils", "access to transportation", "pagpunta sa appointments",
+            "shopping", "bill payment", "pagbabayad ng bills", "financial management",
+            "phone use", "paggamit ng telepono", "technology use", "paggamit ng gadgets",
+            "community participation", "pakikilahok sa komunidad", "leisure activities",
+            "recreational activities", "libangan", "religious activities", "spiritual practice",
+            "volunteer work", "household safety", "bathroom modifications"
+        ],
+        
+        "kalagayan_social": [
+            # Existing keywords
+            "relasyon", "relationship", "pamilya", "family", "social", "pakikisalamuha",
+            "kaibigan", "friends", "komunidad", "community", "suporta", "support",
+            "pakikipag-usap", "communication", "pakikipag-interact", "interaction",
+            "asawa", "spouse", "anak", "children", "kamag-anak", "relatives",
+            "kapitbahay", "neighbors", "kakilala", "acquaintances", "visitors",
+            "bisita", "group", "organization", "samahan",
+            "socialization", "pakikihalubilo", "isolation", "pagkakahiwalay",
+            "loneliness", "kalungkutan", "withdrawal", "pag-iwas", "social network",
+            "involvement", "participation", "pakikilahok", "church", "simbahan",
+            "volunteer", "boluntaryo", "caregiver", "tagapag-alaga", 
+            "tulong", "financial support", "sustento", "living situation",
+            "tirahan", "kapangyarihan sa bahay", "household dynamics",
+            
+            # Additional social condition terms from sample text
+            "intergenerational communication gap", "communication barriers",
+            "cultural dislocation", "cultural adjustment", "adjustment sa bagong environment",
+            "feeling invisible", "pakiramdam na hindi nakikita", "role changes",
+            "pagbabago ng papel sa pamilya", "loss of authority", "pagkawala ng awtoridad",
+            "social disconnection", "withdrawal from activities", "hindi na sumasali",
+            "social anxiety", "takot sa social situations", "loss of role", "pagkawala ng papel",
+            "care dependency", "dependence on others", "pag-asa sa iba", "social isolation",
+            "elder abuse potential", "potential mistreatment", "pagmamaltratro",
+            "strained family relationships", "tensyong pampamilya", "conflict with caregivers",
+            "multi-generational household", "adjustment to living with family",
+            "boundaries", "personal space issues", "financial dependence",
+            "rural to urban transition", "adapting to new community",
+            "generational differences", "pagkakaiba ng henerasyon", "respect issues",
+            "acceptance by others", "acceptance ng kondisyon", "stigma", "shame", "hiya",
+            "social identity loss", "loss of social standing", "peer relationships"
+        ]
+    }
+    
+     # Initialize scoring for each sentence-section pair with improved weights
+    sentence_scores = {}
+    for i, (sent, doc) in enumerate(zip(sentences, sentence_docs)):
+        if not doc:
+            continue
+            
+        sentence_scores[i] = {}
+        
+        # Get sentence length for normalization
+        sent_length = len(sent.split())
+        
+        for section, keywords in section_keywords.items():
+            # Calculate base score from keyword matches
+            base_score = 0
+            for keyword in keywords:
+                if keyword.lower() in sent.lower():
+                    # Give higher score to exact matches
+                    if f" {keyword.lower()} " in f" {sent.lower()} ":
+                        base_score += 1.5  # Full word match
+                    else:
+                        base_score += 1.0  # Partial match
+            
+            # Check for pattern matches
+            pattern_score = 0
+            if section in section_patterns:
+                for pattern in section_patterns[section]:
+                    if re.search(pattern, sent.lower()):
+                        pattern_score += 4.0  # Higher score for pattern matches
+                        break  # One strong pattern match is enough
+            
+            # Normalize by sentence length
+            if sent_length > 20:
+                base_score = base_score * (20 / sent_length) * 1.5
+            
+            # Enhance score based on entity types present
+            entity_boost = 0
+            if doc.ents:
+                for ent in doc.ents:
+                    if section == "mga_sintomas" and ent.label_ in ["SYMPTOM", "DISEASE"]:
+                        entity_boost += 3
+                    elif section == "kalagayan_pangkatawan" and ent.label_ in ["BODY_PART", "MEASUREMENT"]:
+                        entity_boost += 2.5
+                    elif section == "kalagayan_mental" and ent.label_ in ["COGNITIVE", "EMOTION"]:
+                        entity_boost += 2.5
+                    elif section == "aktibidad" and ent.label_ in ["ADL"]:
+                        entity_boost += 2.5
+                    elif section == "kalagayan_social" and ent.label_ in ["SOCIAL_REL", "PER", "ENVIRONMENT"]:
+                        entity_boost += 2
+            
+            # First few sentences often provide overview/symptoms
+            if i < 2 and section == "mga_sintomas":
+                base_score += 1
+            
+            # Save the combined score
+            sentence_scores[i][section] = base_score + entity_boost + pattern_score
+    
+    # Assign sentences to sections based on scores
+    result = {}
+    assigned_sentences = set()
+    
+    # Initialize all sections to empty arrays
+    for section in section_keywords.keys():
+        result[section] = []
+    
+    # FIRST PASS: Assign sentences with clear high scores
+    threshold = 2.5  # Higher threshold for clear assignment
+    for section in section_keywords.keys():
+        sorted_sentences = sorted(sentence_scores.items(), 
+                                  key=lambda x: -x[1].get(section, 0))
+        
+        # Take up to 5 sentences with high scores
+        count = 0
+        max_sentences = 5
+        
+        for i, scores in sorted_sentences:
+            if i in assigned_sentences:
+                continue
+                
+            section_score = scores.get(section, 0)
+            next_best_score = max([s for k, s in scores.items() if k != section], default=0)
+            
+            # Only assign if score is high and clearly better than other sections
+            if (section_score >= threshold and 
+                section_score > next_best_score * 1.25 and
+                count < max_sentences):
+                
+                result[section].append(sentences[i])
+                assigned_sentences.add(i)
+                count += 1
+    
+    # SECOND PASS: Assign remaining sentences to their best-matching section
+    section_counts = {s: len(sents) for s, sents in result.items()}
+    max_sentences_per_section = 5
+    
+    for i, scores in sorted(sentence_scores.items(), 
+                           key=lambda x: -max(x[1].values() if x[1] else [0])):
+        if i not in assigned_sentences and any(scores.values()):
+            best_section = max(scores.items(), key=lambda x: x[1])[0]
+            
+            # Only add if we haven't reached the max sentences for this section
+            if section_counts.get(best_section, 0) < max_sentences_per_section:
+                result[best_section].append(sentences[i])
+                assigned_sentences.add(i)
+                section_counts[best_section] = section_counts.get(best_section, 0) + 1
+    
+    # THIRD PASS: Ensure sentences are in logical order within each section
+    for section in result:
+        # Get the indices of assigned sentences and sort them
+        indices = [i for i, sent in enumerate(sentences) if sent in result[section]]
+        # Reorder sentences based on original order
+        result[section] = [sentences[i] for i in sorted(indices)]
+    
+    # Ensure at least one section has content
+    if all(not sents for sents in result.values()) and sentences:
+        result["mga_sintomas"] = sentences[:5]  # Limit to 5 sentences
+    
+    # Convert lists to strings and apply post-processing
+    processed_sections = {}
+    for section, sents in result.items():
+        if sents:
+            # Join complete sentences
+            section_text = " ".join(sents)
+            # Apply post-processing to fix formatting issues
+            section_text = post_process_summary(section_text)
+            processed_sections[section] = section_text
+    
+    return processed_sections
+
+def extract_sections_for_evaluation(sentences):
+    """Extract sections for evaluation with improved handling of complete sentences."""
+    print(f"Extracting evaluation-specific sections from {len(sentences)} sentences")
+    
+    # Process sentences with NLP
+    sentence_docs = [nlp(sent) for sent in sentences]
+    
+    # Initialize sections
+    sections = {
+        "pangunahing_rekomendasyon": [],
+        "mga_hakbang": [],
+        "pangangalaga": [],
+        "pagbabago_sa_pamumuhay": [],
+        # New sections
+        "safety_risk_factors": [],         # Safety risks and mitigation
+        "nutrisyon_at_pagkain": [],        # Nutrition and diet
+        "kalusugan_ng_bibig": [],          # Oral/dental health
+        "mobility_function": [],           # Mobility and functional ability
+        "kalagayan_ng_tulog": [],          # Sleep management
+        "pamamahala_ng_gamot": [],         # Medication management
+        "suporta_ng_pamilya": [],          # Family support recommendations
+        "kalagayan_mental": [],            # Mental/emotional support
+        "preventive_health": [],           # Preventive measures
+        "vital_signs_measurements": []     # Vital signs monitoring
+    }
+    
+    # Strong signal patterns for each section with expanded patterns
+    section_patterns = {
+        "pangunahing_rekomendasyon": [
+            # Existing patterns
+            r'inirerekomenda(ng)? (ko|kong|namin|naming) (na|ang)',
+            r'iminumungkahi(ng)? (ko|kong|namin|naming) (na|ang)',
+            r'pinapayuhan (ko|kong|namin|naming) (na|ang)',
+            r'(una sa lahat|bilang pangunahing hakbang)',
+            r'(dapat|kailangan|kinakailangan|mahalagang) (na )?',
+            r'rekomendasyon',
+            r'agarang pagkonsulta',
+            r'immediate consultation',
+            r'priority',
+            r'most important',
+            r'critical',
+            r'crucial',
+            r'essential',
+            r'necessary',
+            r'kailangang',
+            r'kinakailangan',
+            r'referral',
+            r'irefer',
+            
+            # Additional patterns from sample text
+            r'unang-una, inirerekomenda ko',
+            r'una sa lahat, inirerekomenda ko',
+            r'inirerekumenda kong magpatingin',
+            r'agarang pagpapatingin sa',
+            r'immediate medical evaluation',
+            r'immediate intervention',
+            r'komprehensibong assessment',
+            r'comprehensive evaluation',
+            r'referral sa (specialist|doctor|physical therapist|occupational therapist)',
+            r'nirerekomenda ko ang consultation sa',
+            r'kailangang magpa-(konsulta|evaluate|check|assess)',
+            r'binibigyang-diin ko ang kahalagahan ng',
+            r'binigyang-diin ko sa pamilya',
+            r'strong(ly)? (urge|recommend|advised)',
+            r'highest priority',
+            r'urgent need for',
+            r'primary recommendation',
+            r'medical attention',
+            r'emergency (care|evaluation|assessment)',
+            r'kinakailangang ma-address agad',
+            r'nangangailangan ng agarang',
+            r'requires immediate',
+            r'professional help',
+            r'specialist evaluation',
+            r'specialized care'
+        ],
+        
+        "mga_hakbang": [
+            # Existing patterns
+            r'(simulan|gawin|ipatupad|isagawa) ang',
+            r'(susunod na hakbang|sa|mga|bilang) (hakbang|steps|interventions)',
+            r'(dapat|kailangang) (din|rin) (na )?',
+            r'(pangalawang|pangatlo|kasunod na) hakbang',
+            r'procedure',
+            r'process',
+            r'method',
+            r'technique',
+            r'approach',
+            r'implementation',
+            r'implement',
+            r'execute',
+            r'perform',
+            r'apply',
+            r'administer',
+            r'isagawa',
+            r'gawin',
+            r'therapy sessions',
+            r'treatment course',
+            
+            # Additional patterns from sample text
+            r'tinuruan ko si(ya|la|lo|na)? ng',
+            r'nagbigay ako ng demonstration',
+            r'ipinakita ko kung paano',
+            r'gumawa ako ng personalized',
+            r'binuo ko ang isang',
+            r'specific techniques',
+            r'proper technique',
+            r'step-by-step (approach|process|method)',
+            r'systematic approach',
+            r'structured method',
+            r'training sa proper',
+            r'exercises na dapat gawin',
+            r'specific strategies',
+            r'practical solutions',
+            r'intervention plan',
+            r'demonstration sa pamilya',
+            r'family education',
+            r'caregiver training',
+            r'tinuruan ang pamilya',
+            r'pagbibigay ng gabay',
+            r'specific adaptations',
+            r'gumawa ng visual aids',
+            r'energy conservation techniques',
+            r'taught proper positioning',
+            r'nagturo ng proper use',
+            r'exercises for strengthening',
+            r'binigyan ng mga kopya',
+            r'developed system',
+            r'created schedule',
+            r'training session',
+            r'tinuruan sa proper'
+        ],
+        
+        "pangangalaga": [
+            # Existing patterns
+            r'(para sa|upang|sa) (pangangalaga|pag-iwas|pag-aalaga)',
+            r'(i-monitor|obserbahan|bantayan|subaybayan)',
+            r'(sa pang-araw-araw na pangangalaga|daily care)',
+            r'(sa bahay|home care|home management)',
+            r'(kapag|kung|sa) (nagkaroon|nagkakaroon)',
+            r'(palaging|regular na|always|consistently)',
+            r'care',
+            r'alaga',
+            r'monitoring',
+            r'pagbabantay',
+            r'observation',
+            r'pagmamasid',
+            r'maintenance',
+            r'management',
+            r'hygiene',
+            r'kalinisan',
+            r'bathing',
+            r'pagliligo',
+            r'grooming',
+            r'pag-aayos',
+            r'positioning',
+            r'pagpoposisyon',
+            
+            # Additional patterns from sample text
+            r'regular na pag-monitor',
+            r'regular monitoring',
+            r'daily observation',
+            r'araw-araw na pagsusuri',
+            r'weekly medication review',
+            r'routine check',
+            r'follow-up assessment',
+            r'continuity of care',
+            r'care routine',
+            r'skin care',
+            r'skin integrity',
+            r'wound care',
+            r'proper hygiene',
+            r'oral care',
+            r'oral hygiene',
+            r'dental care',
+            r'medication supervision',
+            r'supervised medication',
+            r'supervised intake',
+            r'consistent supervision',
+            r'safety supervision',
+            r'continence care',
+            r'incontinence management',
+            r'hair and nail care',
+            r'skin protection',
+            r'repositioning schedule',
+            r'scheduled turning',
+            r'pressure relief',
+            r'family supervision',
+            r'assisted care',
+            r'bathing assistance',
+            r'washing assistance',
+            r'dressing support',
+            r'regular assessment',
+            r'care schedule',
+            r'caregiver responsibilities',
+            r'daily charting',
+            r'documentation ng symptoms',
+            r'regular reporting'
+        ],
+        
+        "pagbabago_sa_pamumuhay": [
+            # Existing patterns
+            r'(pagbabago sa|baguhin ang|adjustment sa) (pamumuhay|lifestyle)',
+            r'(diet|nutrisyon|nutrition|pagkain)',
+            r'(exercise|ehersisyo|physical activity)',
+            r'(normal na routine|daily habits|araw-araw)',
+            r'(long-term|pangmatagalang|sa hinaharap|future)',
+            r'lifestyle',
+            r'pamumuhay',
+            r'habits',
+            r'ugali',
+            r'practices',
+            r'gawain',
+            r'routines',
+            r'modifications',
+            r'adjustments',
+            r'changes',
+            r'pagbabago',
+            r'diet plan',
+            r'meal plan',
+            r'exercise program',
+            r'sleep',
+            r'tulog',
+            r'hydration',
+            r'pag-inom ng tubig',
+            r'stress management',
+            r'relaxation',
+            r'environment',
+            r'kapaligiran',
+            
+            # Additional patterns from sample text
+            r'balanced diet',
+            r'dietary adjustments',
+            r'dietary modifications',
+            r'nutrition plan',
+            r'nutritional changes',
+            r'healthy eating',
+            r'food choices',
+            r'pagbabago ng diyeta',
+            r'hydration routine',
+            r'increased fluid intake',
+            r'limited sodium',
+            r'reduced sugar',
+            r'pagbawas ng (asukal|asin|alak)',
+            r'sleep hygiene',
+            r'sleep routine',
+            r'tulog schedule',
+            r'regular sleep pattern',
+            r'consistent bedtime',
+            r'avoid screens before bed',
+            r'relaxation techniques',
+            r'stress reduction',
+            r'pagbabawas ng stress',
+            r'home modifications',
+            r'environmental changes',
+            r'safety modifications',
+            r'assistive devices',
+            r'adaptive equipment',
+            r'accessible home',
+            r'grab bars',
+            r'better lighting',
+            r'removing hazards',
+            r'physical activity',
+            r'regular exercise',
+            r'gentle movement',
+            r'strengthening exercises',
+            r'balance exercises',
+            r'daily walking',
+            r'social engagement',
+            r'social activities',
+            r'mental stimulation',
+            r'cognitive activities',
+            r'hobbies at leisure',
+            r'limit alcohol',
+            r'smoking cessation',
+            r'pag-iwas sa paninigarilyo'
+        ],
+        # NEW SECTION PATTERNS
+        "safety_risk_factors": [
+            # Safety risk patterns
+            r'(falls? risk|risk (ng|of) (pagkahulog|pagkatumba))',
+            r'(safety hazards?|panganib sa kaligtasan|mapanganib na (bagay|sitwasyon))',
+            r'(home safety|kaligtasan sa (bahay|tahanan))',
+            r'(alisin|tanggalin) (ang|mga) (clutter|kalat|nakaharang)',
+            r'(anti-slip|non-slip|hindi madulas|rubber|mats)',
+            r'(grab bars?|handrails?|hawakan|suporta sa dingding)',
+            r'(adequate|sapat na) (lighting|liwanag|ilaw)',
+            r'(pangalagaan|siguraduhin|i-secure|secure) ang (hagdanan|stairs)',
+            r'(injury prevention|pag-iwas sa aksidente)',
+            r'(loose|maluwag na) (rugs|cables|wires|basahan|kable)',
+            r'(makaiwas|upang maiwasan) (ang|sa) (pagkahulog|aksidente|pinsala)',
+            r'(nighttime|sa gabi|madaling araw) (safety|kaligtasan)',
+            r'(paglalagay|installation) ng (safety devices|safety equipment)',
+            r'(trip hazards?|madulas na sahig|mahuhulog)',
+            r'(warning signs|alarm system|emergency response)'
+        ],
+        
+        "nutrisyon_at_pagkain": [
+            # Nutrition and diet patterns
+            r'(balanced diet|balanseng pagkain|nutrisyon|nutrition)',
+            r'(dietary|food|pagkain|diyeta) (recommendations|changes|adjustments)',
+            r'(food|meals?|pagkain) (preparation|paghahanda)',
+            r'(specific nutritional|partikular na sustansiya)',
+            r'(healthy eating|malusog na pagkain)',
+            r'(adequate|sapat na) (protein|protina|carbohydrates|karbohidrato)',
+            r'(vitamins?|minerals?|bitamina|mineral)',
+            r'(high|mataas sa) (fiber|dietary fiber|fiber content)',
+            r'(small|frequent|maliit|maliliit|madalas) (meals|pagkain)',
+            r'(soft|malambot) (diet|foods|pagkain)',
+            r'(fluid intake|pag-inom ng tubig|hydration)',
+            r'(nutritional supplements|food supplements|bitamina)',
+            r'(bawasan|limitahan|iwasan) ang (asukal|asin|sodium|fats|taba)',
+            r'(whole grains|fruits|vegetables|gulay|prutas)',
+            r'(swallowing techniques|paglunok|pagkain nang dahan-dahan)'
+        ],
+        
+        "kalusugan_ng_bibig": [
+            # Oral/dental health patterns
+            r'(oral health|oral care|dental care|dental health)',
+            r'(kalinisan ng bibig|pangangalaga ng bibig|oral hygiene)',
+            r'(pagsesepilyo|toothbrushing|brushing teeth)',
+            r'(dental checkups?|dental visits?|pagpapa-dentista)',
+            r'(flossing|paggamit ng dental floss)',
+            r'(dry mouth|tuyong bibig|xerostomia)',
+            r'(dentures?|pustiso|false teeth)',
+            r'(gums?|gilagid|periodontal)',
+            r'(teeth cleaning|paglilinis ng ngipin)',
+            r'(mouthwash|mouth rinse|oral rinse)',
+            r'(saliva|laway|lubrication)',
+            r'(oral medications|gamot sa bibig)',
+            r'(kalinisan ng dila|tongue cleaning)',
+            r'(tooth decay|ngipin na may sira|cavities)',
+            r'(oral sores|sugat sa bibig|mouth ulcers)'
+        ],
+        
+        "mobility_function": [
+            # Mobility patterns
+            r'(assistive devices?|mobility aids?|tulong sa paggalaw)',
+            r'(walker|wheelchair|silya de gulong|tungkod|cane)',
+            r'(gait pattern|pattern ng paglalakad|paglalakad)',
+            r'(strengthening exercises|pagpapalakas|ehersisyo)',
+            r'(balanse|balance exercises|pagpapanatili ng balanse)',
+            r'(sit-to-stand|pagtayo mula sa pagkakaupo)',
+            r'(range of motion|flexibility|saklaw ng paggalaw)',
+            r'(transfer techniques|paglipat|paglilipat)',
+            r'(proper posture|tamang postura|tamang pag-upo)',
+            r'(mobility limitations|limitasyon sa paggalaw)',
+            r'(coordination exercises|training sa coordination)',
+            r'(joint (mobility|protection)|pangangalaga ng kasukasuan)',
+            r'(adapted|modified) (movements|techniques|galaw)',
+            r'(steps?|hakbang|hagdanan|stairs) (nagagawang|ability)',
+            r'(physiotherapy|physical therapy|PT exercises)'
+        ],
+        
+        "kalagayan_ng_tulog": [
+            # Sleep management patterns
+            r'(sleep hygiene|kalinisan ng tulog|sleep habits)',
+            r'(sleep routine|routine sa pagtulog)',
+            r'(sleep schedule|regular na oras ng pagtulog)',
+            r'(comfortable|komportableng) (bed|kama|bedding|sleeping)',
+            r'(sleep environment|sleep setting|kwarto para sa tulog)',
+            r'(before bedtime|bago matulog|bedtime routine)',
+            r'(avoid|iwasan) (screens?|electronic devices?|TV|cellphone)',
+            r'(relaxation techniques?|relaxation method|pagrerelaks)',
+            r'(mattress|unan|pillow|sleeping position)',
+            r'(noise|ilaw|light|temperature|ingay) (sa|sa oras ng) (sleep|tulog)',
+            r'(nap|idlip|pahinga) (schedule|routine)',
+            r'(sleep promoting|nakakatulong sa pagtulog)',
+            r'(insomnia|hirap makatulog|hirap sa pagtulog)',
+            r'(deep breathing|meditation|breathing exercise)',
+            r'(regular na paggising|consistent waking time)'
+        ],
+        
+        "pamamahala_ng_gamot": [
+            # Medication management patterns
+            r'(medication|gamot) (schedule|routine)',
+            r'(medication adherence|pagsunod sa reseta|pagsunod sa gamot)',
+            r'(pill organizer|pill box|lalagyan ng gamot)',
+            r'(medication reminder|paalala sa pag-inom ng gamot)',
+            r'(monitoring|regularly check|bantayan) (ang|the) (side effects|epekto)',
+            r'(prescription|reseta) (refill|renewal)',
+            r'(medication list|listahan ng gamot)',
+            r'(dosage|dosis) (adjustment|pagbabago|timing)',
+            r'(regular medication review|regular na pagsusuri ng gamot)',
+            r'(drug interactions?|kontra-indikasyon|harmful combinations?)',
+            r'(administering|pag-administer|pagbigay) (ng|of) (medications?|gamot)',
+            r'(coordination with|pakikipag-ugnayan sa|consultation with) (physicians?|doctors?|doktor)',
+            r'(injectable medications?|iv medications?|specialty medications?)',
+            r'(adverse reactions?|allergic reactions?)',
+            r'(as-needed medications?|prn medications?)'
+        ],
+        
+        "suporta_ng_pamilya": [
+            # Family support patterns
+            r'(family involvement|family participation|pakikilahok ng pamilya)',
+            r'(caregiver|tagapag-alaga) (education|training|pagsasanay)',
+            r'(family members?|kapamilya|kamag-anak) (dapat|kailangan|need to)',
+            r'(support system|family support|suportang pampamilya)',
+            r'(regular communication|pakikipag-usap sa pamilya)',
+            r'(family meetings?|family conference|pamilya)',
+            r'(shared responsibility|hatian ng responsibilidad)',
+            r'(respite care|pahinga para sa caregiver)',
+            r'(balancing care|pagsasaayos ng pangangalaga)',
+            r'(family dynamics|ugnayang pampamilya)',
+            r'(pinayuhan|tinuruan|binigyang-kaalaman) ang pamilya',
+            r'(collaboration with|pakikipagtulungan sa) (family|pamilya)',
+            r'(sensitibo|mahalagang|importante) para sa (family members?|kapamilya)',
+            r'(multi-generational|buong pamilya)',
+            r'(kasama ang|involvement of|role of) (children|grandchildren|anak|apo)'
+        ],
+        
+        "kalagayan_mental": [
+            # Mental/emotional support patterns
+            r'(emotional support|suportang emosyonal|psychological support)',
+            r'(mental health needs|pangangailangang mental)',
+            r'(anxiety reduction|stress management|pamamahala ng stress)',
+            r'(coping strategies|coping mechanisms|paraan ng pag-cope)',
+            r'(socialization|interaction|pakikisalamuha)',
+            r'(cognitive stimulation|mental exercises|ehersisyo para sa isipan)',
+            r'(addressing fears|pagtugon sa takot|pagharap sa pangamba)',
+            r'(mood improvement|pagpapabuti ng mood)',
+            r'(relaxation techniques|relaxation therapy)',
+            r'(validation|empathy|understanding|pag-unawa)',
+            r'(recreational activities|gawaing libangan|libangan)',
+            r'(depression|loneliness|kalungkutan) (management|therapy)',
+            r'(self-esteem|self-worth|pagpapahalaga sa sarili)',
+            r'(therapeutic communication|pakikipag-usap nang maayos)',
+            r'(grief counseling|counseling|psychological support)'
+        ],
+        
+        "preventive_health": [
+            # Preventive measures patterns
+            r'(preventive measures|pag-iwas sa sakit|makaiwas)',
+            r'(regular check-ups|regular na pagpapatingin)',
+            r'(screening tests?|routine screening)',
+            r'(vaccinations?|bakuna|immunizations?)',
+            r'(early detection|maagang pagtuklas)',
+            r'(monitoring for|signs of|bantayan ang palatandaan)',
+            r'(preventable complications?|maiiwasang komplikasyon)',
+            r'(early intervention|maagang interbensyon)',
+            r'(fall prevention|pag-iwas sa pagkatumba)',
+            r'(pressure ulcers?|bed sores?|pressure injury prevention)',
+            r'(infection control|infection prevention|pag-iwas sa impeksyon)',
+            r'(health promotion|pagpapaunlad ng kalusugan)',
+            r'(disease prevention|pag-iwas sa sakit)',
+            r'(managing risk factors|pangangasiwa ng risk factors)',
+            r'(lifestyle modifications?|pagbabago ng pamumuhay)'
+        ],
+        
+        "vital_signs_measurements": [
+            # Vital signs monitoring patterns
+            r'(vital signs?|vital measurements?|mahahalagang sukatan)',
+            r'(blood pressure|presyon|BP)',
+            r'(temperature|temperatura)',
+            r'(pulse rate|heart rate|rate ng pulso|bilis ng tibok)',
+            r'(respiratory rate|breathing rate|bilis ng paghinga)',
+            r'(oxygen saturation|oxygen levels?|SpO2)',
+            r'(monitoring|pagsusukat|pagsubaybay) (ng|sa) (BP|presyon|temperature)',
+            r'(regular monitoring|regular na pagsusukat)',
+            r'(abnormal readings?|changes in vitals?)',
+            r'(log|record|documentation) (ng|sa|of) (vital signs?)',
+            r'(high|low|elevated|mataas|mababa) (readings?|values?)',
+            r'(blood glucose|blood sugar|asukal sa dugo)',
+            r'(weight monitoring|pagsukat ng timbang|weight changes?)',
+            r'(vital signs equipment|aparato para sa pagsukat)',
+            r'(home monitoring|pagsusukat sa bahay)'
+        ]
+    }
+
+    # ADD THIS: Keywords for evaluation sections to complement the patterns
+    section_keywords = {
+        "pangunahing_rekomendasyon": [
+            "inirerekomenda", "iminumungkahi", "pinapayuhan", "nirerekomenda", 
+            "rekomendasyon", "recommendation", "priority", "una", "first", "kailangan",
+            "necessary", "crucial", "critical", "essential", "importante", "mahalagang",
+            "referral", "irefer", "prioritize", "agaran", "immediate", "urgent",
+            "binibigyang-diin", "emphasize", "highlight", "nangangailangan", "requires",
+            "kinakailangan", "comprehensive", "komprehensibo", "professional help",
+            "konsulta", "specialist", "doctor", "medical attention", "emergency",
+            "key recommendation", "pangunahing rekomendasyon", "pangangailangang"
+        ],
+        
+        "mga_hakbang": [
+            "hakbang", "step", "approach", "method", "technique", "procedure", "process",
+            "implementation", "execute", "administer", "perform", "apply", "implement",
+            "isagawa", "gawin", "simulan", "ipatupad", "pangalawa", "pangatlo",
+            "demonstration", "demonstration sa", "ipakita", "turuan", "binuo", 
+            "pagbubuo", "specific technique", "specific strategy", "structured approach",
+            "step-by-step", "systematic", "proper technique", "tamang technique",
+            "training", "pagsasanay", "intervention plan", "gabay", "guidance",
+            "visual aids", "training session", "practical solution", "personalized",
+            "therapy session", "treatment course", "physical therapy", "kognitibong"
+        ],
+        
+        "pangangalaga": [
+            "care", "alaga", "pangangalaga", "pag-aalaga", "monitoring", "pagbabantay",
+            "observation", "regular", "palagi", "consistently", "daily care", "home care",
+            "pang-araw-araw", "maintenance", "management", "hygiene", "kalinisan",
+            "bathing", "pagliligo", "grooming", "pag-aayos", "positioning", "pagpoposisyon",
+            "observation", "pagmamasid", "subaybayan", "bantayan", "i-monitor", "obserbahan",
+            "regular monitoring", "araw-araw na pagsusuri", "follow-up", "routine check",
+            "continuity of care", "care routine", "skin care", "wound care", "oral care",
+            "supervision", "supervised", "regular assessment", "scheduled", "documentation",
+            "documentation ng symptoms", "report", "consistent", "assistance", "suporta"
+        ],
+        
+        "pagbabago_sa_pamumuhay": [
+            "pagbabago", "baguhin", "change", "adjust", "lifestyle", "pamumuhay", 
+            "modifications", "adjustments", "habits", "ugali", "practices", "gawain",
+            "routines", "diet", "nutrition", "nutrisyon", "exercise", "ehersisyo",
+            "physical activity", "sleep", "tulog", "hydration", "pag-inom ng tubig",
+            "stress management", "relaxation", "environment", "kapaligiran",
+            "diet plan", "meal plan", "exercise program", "balanced diet",
+            "dietary adjustment", "healthy eating", "food choice", "nutritional change",
+            "hydration routine", "fluid intake", "reduced sugar", "reduced salt",
+            "sleep hygiene", "sleep routine", "consistent bedtime", "relaxation technique",
+            "stress reduction", "home modification", "safety modification", "daily habit"
+        ],
+        
+        "safety_risk_factors": [
+            "safety", "kaligtasan", "risk", "panganib", "hazard", "falls", "pagkahulog", 
+            "pagkatumba", "prevention", "iwasan", "accident", "aksidente", "injury", 
+            "pinsala", "secure", "anti-slip", "non-slip", "rubber mats", "grab bars", 
+            "handrails", "hawakan", "lighting", "ilaw", "liwanag", "clear pathways", 
+            "madulas", "trip hazards", "obstacles", "nakaharang", "nightlight", 
+            "emergency", "fire safety", "alarma", "motion sensors", "smoke detectors", 
+            "stairs safety", "bathroom safety", "bathing safety", "kitchen safety", 
+            "sharp objects", "mapanganib", "security", "emergency response", "warning signs",
+            "fall prevention", "pag-iwas sa pagkadapa", "preventative", "emergency plan"
+        ],
+        
+        "nutrisyon_at_pagkain": [
+            "diet", "pagkain", "nutrition", "nutrisyon", "hydration", "tubig", "fluids", 
+            "food", "meals", "protein", "protina", "fiber", "dietary fiber", "vitamins", 
+            "bitamina", "minerals", "mineral", "carbohydrates", "karbohidrato", "healthy eating", 
+            "balanced diet", "soft diet", "thickened liquids", "supplements", "food preparation", 
+            "meal planning", "small meals", "frequent meals", "sodium", "asin", "salt", "sugar", 
+            "asukal", "fats", "taba", "fruits", "vegetables", "gulay", "prutas", "whole grains", 
+            "nutritional needs", "swallowing", "paglunok", "appetite", "gana sa pagkain",
+            "malnutrition", "nutritional status", "high protein", "low sodium", "low sugar",
+            "modified diet", "meal schedule", "eating assistance", "texture modified"
+        ],
+        
+        "kalusugan_ng_bibig": [
+            "oral health", "dental care", "kalusugan ng bibig", "ngipin", "teeth", "gums", 
+            "gilagid", "brushing", "pagsesepilyo", "flossing", "dental floss", "mouthwash", 
+            "dental checkup", "dentist", "dentista", "dentures", "pustiso", "false teeth", 
+            "dry mouth", "xerostomia", "saliva", "laway", "oral hygiene", "kalinisan ng bibig", 
+            "oral pain", "sakit ng ngipin", "tooth decay", "cavities", "teeth cleaning", 
+            "paglilinis ng ngipin", "oral sores", "mouth ulcers", "sugat sa bibig", "tongue", 
+            "dila", "dental health", "oral care", "mouth care", "dental problems",
+            "denture care", "paglilinis ng pustiso", "oral assessment", "gum disease"
+        ],
+        
+        "mobility_function": [
+            "mobility", "paggalaw", "gait", "paglalakad", "assistive device", "walker", "cane", 
+            "tungkod", "wheelchair", "silya de gulong", "balance", "balanse", "transfers", 
+            "paglipat", "strength", "lakas", "exercises", "ehersisyo", "range of motion", 
+            "flexibility", "coordination", "koordinasyon", "posture", "postura", "ergonomics", 
+            "physical therapy", "therapist", "rehabilitation", "positioning", "pagtayo", 
+            "pagbangon", "stability", "joint protection", "protection sa mga joints", 
+            "kasukasuan", "movement", "galaw", "ambulation", "walking aid", "tulong sa paglalakad", 
+            "steps", "hagdanan", "stairs", "functional ability", "functional training",
+            "mobility aid", "strengthening", "transferring", "bed mobility", "sit to stand"
+        ],
+        
+        "kalagayan_ng_tulog": [
+            "sleep", "tulog", "insomnia", "hirap matulog", "sleep pattern", "sleep hygiene", 
+            "kalinisan ng tulog", "bedtime routine", "sleep schedule", "consistent sleep", 
+            "sleep environment", "comfortable bed", "kama", "mattress", "pillow", "unan", 
+            "noise", "ingay", "light", "ilaw", "temperature", "temperatura", "relaxation", 
+            "pagrerelaks", "deep breathing", "breathing exercises", "meditation", "before bed", 
+            "bago matulog", "avoid screens", "electronic devices", "gadgets", "television", 
+            "nap", "idlip", "daytime sleepiness", "sleep quality", "sleep duration", 
+            "sleep disturbance", "nightmare", "bangungot", "sleep position", "sleep apnea",
+            "excessive daytime sleeping", "sleep-wake cycle", "sleeping pills", "pagkakatulog"
+        ],
+        
+        "pamamahala_ng_gamot": [
+            "medication", "gamot", "pills", "tableta", "medicine", "prescription", "reseta", 
+            "dosage", "dosis", "schedule", "iskedyul", "adherence", "pagsunod", "side effects", 
+            "epekto", "adverse reactions", "drug interactions", "interaction", "pill organizer", 
+            "pill box", "lalagyan ng gamot", "reminder", "paalala", "refill", "renewal", 
+            "regular review", "monitoring", "pharmacist", "parmasiyutiko", "doctor", "doktor", 
+            "instructions", "administering", "pagbibigay", "timing", "names of drugs", 
+            "generic name", "brand name", "as needed", "PRN", "maintenance", "injections", 
+            "contraindications", "kontra-indikasyon", "drug allergies", "medication list",
+            "drug-food interaction", "pamahala sa gamot", "medication safety", "prescriptions"
+        ],
+        
+        "suporta_ng_pamilya": [
+            "family", "pamilya", "caregiver", "tagapag-alaga", "spouse", "asawa", "children", 
+            "anak", "relatives", "kamag-anak", "support", "suporta", "involvement", "pakikilahok", 
+            "education", "pagtuturo", "training", "pagsasanay", "communication", "komunikasyon", 
+            "dynamics", "roles", "tungkulin", "responsibilities", "responsibilidad", "meetings", 
+            "pag-uusap", "conferences", "respite", "pahinga", "shared care", "coordination", 
+            "cooperation", "understanding", "pag-unawa", "emotional support", "empathy", 
+            "compassion", "assistance", "tulong", "relationship", "relasyon", "multi-generational", 
+            "extended family", "pamilyang Filipino", "family training", "caregiver stress",
+            "caregiver burden", "family coping", "family education", "family roles"
+        ],
+        
+        "kalagayan_mental": [
+            "emotional", "emosyonal", "mental", "psychological", "sikolohikal", "anxiety", 
+            "pagkabalisa", "depression", "kalungkutan", "stress", "stress management", 
+            "pamamahala ng stress", "coping", "coping strategy", "adjustment", "socialization", 
+            "pakikisalamuha", "interaction", "pakikipag-ugnayan", "memory", "memorya", "cognitive", 
+            "cognition", "fears", "takot", "worry", "agam-agam", "self-esteem", "confidence", 
+            "tiwala sa sarili", "mood", "disposition", "kalagayan ng isip", "recreation", 
+            "libangan", "activity", "stimulation", "counseling", "therapy", "therapist", 
+            "validation", "reassurance", "sense of purpose", "meaning", "social connections", 
+            "support group", "mental health", "psychological support", "cognitive stimulation",
+            "emotional well-being", "motivation", "engagement", "dementia care", "confusion"
+        ],
+        
+        "preventive_health": [
+            "prevention", "pag-iwas", "preventive", "screening", "early detection", 
+            "maagang pagtuklas", "check-up", "regular check-up", "vaccination", "bakuna", 
+            "immunization", "monitoring", "pagsubaybay", "signs", "symptoms", "palatandaan", 
+            "complications", "komplikasyon", "risk reduction", "health promotion", "wellness", 
+            "kalusugan", "wellness plan", "health plan", "follow-up", "maintenance", 
+            "routine care", "fall prevention", "infection prevention", "disease prevention", 
+            "pressure ulcer prevention", "pressure injury", "bed sores", "risk factors", 
+            "early intervention", "preventive strategies", "annual check-up", "taong eksaminasyon",
+            "health screening", "prophylactic", "preventative care", "lifestyle modification"
+        ],
+        
+        "vital_signs_measurements": [
+            "vital signs", "vitals", "blood pressure", "presyon", "BP", "temperature", 
+            "temperatura", "pulse", "pulso", "heart rate", "pulse rate", "respiratory rate", 
+            "breathing rate", "paghinga", "oxygen", "oxygen saturation", "SpO2", "measurements", 
+            "sukatan", "monitoring", "pagsukat", "regular monitoring", "documentation", "log", 
+            "record", "talaan", "readings", "values", "abnormal", "changes", "pagbabago", 
+            "elevated", "high", "mataas", "low", "mababa", "blood glucose", "blood sugar", 
+            "asukal sa dugo", "weight", "timbang", "changes in weight", "equipment", "apparatus", 
+            "device", "monitor", "chart", "tsart", "trends", "pattern", "home monitoring",
+            "vital signs monitoring", "tracking changes", "recording", "baseline measurements"
+        ]
+    }
+
+     # Initialize scoring for each sentence-section pair
+    sentence_scores = {}
+    for i, (sent, doc) in enumerate(zip(sentences, sentence_docs)):
+        if not doc:
+            continue
+            
+        sentence_scores[i] = {}
+        
+        # Get sentence length for normalization
+        sent_length = len(sent.split())
+        
+        for section, keywords in section_keywords.items():
+            # Calculate base score from keyword matches
+            base_score = 0
+            for keyword in keywords:
+                if keyword.lower() in sent.lower():
+                    # Give higher score to exact matches
+                    if f" {keyword.lower()} " in f" {sent.lower()} ":
+                        base_score += 1.5  # Full word match
+                    else:
+                        base_score += 1.0  # Partial match
+            
+            # Check for pattern matches
+            pattern_score = 0
+            if section in section_patterns:
+                for pattern in section_patterns[section]:
+                    if re.search(pattern, sent.lower()):
+                        pattern_score += 4.0  # Higher score for pattern matches
+                        break  # One strong pattern match is enough
+            
+            # Normalize by sentence length
+            if sent_length > 20:
+                base_score = base_score * (20 / sent_length) * 1.5
+            
+            # Enhance score based on entity types present - FIXED ENTITY BOOSTING
+            entity_boost = 0
+            if doc.ents:
+                for ent in doc.ents:
+                    # Add new entity boost for safety section
+                    if section == "safety_risk_factors" and ent.label_ in ["RISK_FACTOR", "SAFETY_DEVICE", "PREVENTION"]:
+                        entity_boost += 2.5
+                    # Add new entity boost for nutrition section  
+                    elif section == "nutrisyon_at_pagkain" and ent.label_ in ["FOOD", "NUTRITION", "DIET"]:
+                        entity_boost += 2.5
+                    # Add new entity boost for oral health section
+                    elif section == "kalusugan_ng_bibig" and ent.label_ in ["BODY_PART", "HYGIENE", "DENTAL"]:
+                        entity_boost += 2.0
+                    # Add new entity boost for mobility section
+                    elif section == "mobility_function" and ent.label_ in ["EQUIPMENT", "MOVEMENT", "EXERCISE"]:
+                        entity_boost += 2.5
+                    # Add new entity boost for sleep section
+                    elif section == "kalagayan_ng_tulog" and ent.label_ in ["ROUTINE", "SLEEP", "REST"]:
+                        entity_boost += 2.0
+                    # Add new entity boost for medication section
+                    elif section == "pamamahala_ng_gamot" and ent.label_ in ["MEDICATION", "PRESCRIPTION", "TREATMENT"]:
+                        entity_boost += 3.0
+                    # Add new entity boost for family support section
+                    elif section == "suporta_ng_pamilya" and ent.label_ in ["PERSON", "SOCIAL_REL", "SUPPORT"]:
+                        entity_boost += 2.0
+                    # Add new entity boost for mental health section
+                    elif section == "kalagayan_mental" and ent.label_ in ["EMOTION", "MENTAL", "PSYCHOLOGICAL"]:
+                        entity_boost += 2.5
+                    # Add new entity boost for preventive health section
+                    elif section == "preventive_health" and ent.label_ in ["PREVENTION", "SCREENING", "RISK_FACTOR"]:
+                        entity_boost += 2.0
+                    # Add new entity boost for vital signs section
+                    elif section == "vital_signs_measurements" and ent.label_ in ["MEASUREMENT", "VITAL_SIGN", "MONITORING"]:
+                        entity_boost += 2.5
+            
+            # Save the combined score
+            sentence_scores[i][section] = base_score + entity_boost + pattern_score
+    
+    # FIRST PASS: Assign sentences with clear high scores - now uses sentence_scores
+    threshold = 2.5  # Higher threshold for clear assignment
+    assigned_sentences = set()
+    
+    for section in sections.keys():
+        sorted_sentences = sorted(sentence_scores.items(), 
+                                  key=lambda x: -x[1].get(section, 0))
+        
+        # Take up to 5 sentences with high scores
+        count = 0
+        max_sentences = 5
+        
+        for i, scores in sorted_sentences:
+            if i in assigned_sentences:
+                continue
+                
+            section_score = scores.get(section, 0)
+            next_best_score = max([s for k, s in scores.items() if k != section], default=0)
+            
+            # Only assign if score is high and clearly better than other sections
+            if (section_score >= threshold and 
+                section_score > next_best_score * 1.25 and
+                count < max_sentences):
+                
+                sections[section].append(sentences[i])
+                assigned_sentences.add(i)
+                count += 1
+    
+    # Second pass: Analyze entities for remaining sentences
+    for i, (sent, doc) in enumerate(zip(sentences, sentence_docs)):
+        if i in assigned_sentences:
+            continue
+            
+        section_scores = {section: 0 for section in sections.keys()}
+        
+        # Score based on entities
+        if doc.ents:
+            for ent in doc.ents:
+                # Add new entity boost for safety section
+                if section == "safety_risk_factors" and ent.label_ in ["RISK_FACTOR", "SAFETY_DEVICE", "PREVENTION"]:
+                    entity_boost += 2.5
+                    
+                # Add new entity boost for nutrition section  
+                elif section == "nutrisyon_at_pagkain" and ent.label_ in ["FOOD", "NUTRITION", "DIET"]:
+                    entity_boost += 2.5
+                    
+                # Add new entity boost for oral health section
+                elif section == "kalusugan_ng_bibig" and ent.label_ in ["BODY_PART", "HYGIENE", "DENTAL"]:
+                    entity_boost += 2.0
+                    
+                # Add new entity boost for mobility section
+                elif section == "mobility_function" and ent.label_ in ["EQUIPMENT", "MOVEMENT", "EXERCISE"]:
+                    entity_boost += 2.5
+                    
+                # Add new entity boost for sleep section
+                elif section == "kalagayan_ng_tulog" and ent.label_ in ["ROUTINE", "SLEEP", "REST"]:
+                    entity_boost += 2.0
+                    
+                # Add new entity boost for medication section
+                elif section == "pamamahala_ng_gamot" and ent.label_ in ["MEDICATION", "PRESCRIPTION", "TREATMENT"]:
+                    entity_boost += 3.0
+                    
+                # Add new entity boost for family support section
+                elif section == "suporta_ng_pamilya" and ent.label_ in ["PERSON", "SOCIAL_REL", "SUPPORT"]:
+                    entity_boost += 2.0
+                    
+                # Add new entity boost for mental health section
+                elif section == "kalagayan_mental" and ent.label_ in ["EMOTION", "MENTAL", "PSYCHOLOGICAL"]:
+                    entity_boost += 2.5
+                    
+                # Add new entity boost for preventive health section
+                elif section == "preventive_health" and ent.label_ in ["PREVENTION", "SCREENING", "RISK_FACTOR"]:
+                    entity_boost += 2.0
+                    
+                # Add new entity boost for vital signs section
+                elif section == "vital_signs_measurements" and ent.label_ in ["MEASUREMENT", "VITAL_SIGN", "MONITORING"]:
+                    entity_boost += 2.5
+        
+        # Score based on keywords and context
+        for section, patterns in section_patterns.items():
+            for word in sent.split():
+                if any(pattern.lower() in word.lower() for pattern in patterns):
+                    section_scores[section] += 0.5
+        
+        # Assign to highest scoring section if score is significant
+        best_section = max(section_scores.items(), key=lambda x: x[1])
+        if best_section[1] >= 1.5:  # More stringent threshold
+            if len(sections[best_section[0]]) < 5:  # Respect max 5 sentences per section
+                sections[best_section[0]].append(sent)
+                assigned_sentences.add(i)
+    
+    # Third pass: Default assignment of remaining important sentences
+    remaining = [i for i in range(len(sentences)) if i not in assigned_sentences]
+    
+    # Prefer assigning introductory sentences to pangunahing_rekomendasyon
+    for i in remaining:
+        if i < 2:  # First two sentences
+            if len(sections["pangunahing_rekomendasyon"]) < 5:  # Changed from 3 to 5
+                sections["pangunahing_rekomendasyon"].append(sentences[i])
+                assigned_sentences.add(i)
+    
+    # Sort sentences within each section to maintain original flow
+    for section in sections:
+        # Get the indices of assigned sentences and sort them
+        indices = []
+        for i, sent in enumerate(sentences):
+            if sent in sections[section]:
+                indices.append(i)
+        
+        # Reorder sentences based on original order
+        sections[section] = [sentences[i] for i in sorted(indices)]
+    
+    # Convert lists to strings and apply post-processing
+    processed_sections = {}
+    for section, sents in sections.items():
+        if sents:
+            # Join complete sentences with proper spacing
+            section_text = " ".join(sents)
+            # Apply post-processing to fix formatting issues
+            section_text = post_process_summary(section_text)
+            processed_sections[section] = section_text
+    
+    return processed_sections
+
+def post_process_summary(summary):
+    """Comprehensive post-processing for section text to fix common issues."""
+    import re
+    
+    if not summary:
+        return summary
+        
+    # Fix merged words (common issues from sample text)
+    # Format: problematic_pattern -> correct_form
+    word_fixes = {
+        'arawmas': 'araw mas',
+        'pagtulognagigising': 'pagtulog nagigising',
+        'expressionslalo': 'expressions lalo',
+        'pagsimangotay': 'pagsimangot ay',
+        'anakparehong': 'anak—parehong',  # Use em dash for clarity
+        'patternsa': 'pattern—sa',
+        'secret-monitor': 'monitor',
+        'tugtugin.Madalas': 'tugtugin. Madalas',
+        'tulogSa': 'tulog. Sa'
+    }
+    
+    # Apply all specific word fixes
+    for wrong, correct in word_fixes.items():
+        summary = summary.replace(wrong, correct)
+    
+    # Fix spacing issues
+    summary = re.sub(r'\s+', ' ', summary)
+    summary = re.sub(r'\s([,.;:])', r'\1', summary)
+    
+    # Fix missing spaces (more comprehensive)
+    summary = re.sub(r'([a-z])([A-Z])', r'\1 \2', summary)  # Space between lowercase and uppercase
+    
+    # Fix common spacing errors
+    summary = re.sub(r'(\w+)([,.;:])(\w+)', r'\1\2 \3', summary)  # Add space after punctuation if missing
+    
+    # Fix period spacing and double periods
+    summary = re.sub(r'\.+', '.', summary)  # Multiple periods to single period
+    summary = re.sub(r'\.([a-zA-Z])', r'. \1', summary)  # Ensure space after period
+    
+    # Fix common Filipino prepositions and conjunctions that run together
+    prepositions = ['sa', 'ng', 'para', 'dahil', 'tungkol']
+    for prep in prepositions:
+        # Make sure preposition has spaces around it
+        summary = re.sub(fr'\b{prep}([a-zA-Z])', fr'{prep} \1', summary)
+    
+    # Fix missing "sa" and "ng" in common phrases
+    summary = re.sub(r'dahil (sakit|lumalalang)', r'dahil sa \1', summary)
+    summary = re.sub(r'timing (symptoms|ng)', r'timing ng \1', summary)
+    
+    # Fix specific patterns with missing words
+    summary = re.sub(r'\b(dahil)\b(?!\s+(sa|ng))', r'\1 sa', summary)
+    summary = re.sub(r'nakikisalamuha\s+sa', r'Siya ay nakikisalamuha sa', summary)
+    
+    # Fix dangling sentences ending with conjunctions or prepositions
+    for prep in ['at', 'ng', 'sa', 'para', 'dahil', 'tungkol']:
+        summary = re.sub(fr'\.\s*{prep}\s*$', f'.', summary)
+        summary = re.sub(fr'{prep}\s*\.$', '.', summary)
+    
+    # Fix common errors in Filipino medical text
+    summary = re.sub(r'ang ang', 'ang', summary)
+    summary = re.sub(r'ng ng', 'ng', summary)
+    summary = re.sub(r'sa sa', 'sa', summary)
+    summary = re.sub(r'para ang', 'para sa', summary)
+    summary = re.sub(r'upang ang', 'upang', summary)
+    
+    # Fix capitalization after periods
+    summary = re.sub(r'(\. )([a-z])', lambda m: f"{m.group(1)}{m.group(2).upper()}", summary)
+    
+    # Ensure proper capitalization at start
+    if summary and summary[0].islower():
+        summary = summary[0].upper() + summary[1:]
+        
+    # Ensure ending with period
+    if summary and not summary[-1] in ['.', '!', '?']:
+        summary += '.'
+    
+    return summary

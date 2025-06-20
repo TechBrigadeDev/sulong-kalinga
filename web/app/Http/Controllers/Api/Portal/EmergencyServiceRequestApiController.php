@@ -47,6 +47,7 @@ class EmergencyServiceRequestApiController extends Controller
                 return [
                     'type' => 'emergency',
                     'id' => $item->notice_id,
+                    'emergency_type_id' => $item->emergency_type_id,
                     'description' => $item->message,
                     'date_submitted' => $item->created_at,
                     'status' => $item->status,
@@ -64,11 +65,14 @@ class EmergencyServiceRequestApiController extends Controller
                 return [
                     'type' => 'service',
                     'id' => $item->service_request_id,
+                    'service_type_id' => $item->service_type_id, 
                     'description' => $item->message,
                     'date_submitted' => $item->created_at,
                     'status' => $item->status,
                     'assigned_to' => $item->careWorker ? $item->careWorker->first_name . ' ' . $item->careWorker->last_name : null,
-                    'actions' => $this->getActions($item->status, $item->careWorker),
+                    'actions' => $this->getActions($item->status, $item->careWorker), 
+                    'service_date' => $item->service_date,
+                    'service_time' => $item->service_time,
                 ];
             }));
 

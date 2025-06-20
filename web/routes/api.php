@@ -96,7 +96,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     Route::get('/notifications', [NotificationsApiController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationsApiController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationsApiController::class, 'markAllAsRead']);
-    
+
     // Reports Management API
     Route::get('/reports', [ReportsApiController::class, 'index']);
     Route::get('/reports/{id}', [ReportsApiController::class, 'show']);
@@ -161,16 +161,24 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // Route::get('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'showGeneral']);
     // Route::put('/records/general-care-plans/{id}', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'updateGeneral']);
 
-    // Shifts API
-    Route::get('/shifts', [ShiftApiController::class, 'index']);
-    Route::post('/shifts', [ShiftApiController::class, 'store']);
-    Route::patch('/shifts/{shift}', [ShiftApiController::class, 'update']);
-    Route::get('/shifts/{shift}', [ShiftApiController::class, 'show']);
+    // Shifts API (refactored)
+    Route::get('/shifts', [ShiftApiController::class, 'index']); // Now returns upcoming scheduled visitations for a care worker
+    Route::get('/shifts/archived', [ShiftApiController::class, 'archived']); // New: completed shifts
+    Route::post('/shifts/time-in', [ShiftApiController::class, 'timeIn']); // Renamed from store
+    Route::get('/shifts/current', [ShiftApiController::class, 'current']);
+    Route::patch('/shifts/{shift}/time-out', [ShiftApiController::class, 'timeOut']); // Renamed from update
+    Route::get('/shifts/{shift}', [ShiftApiController::class, 'show']); // Show shift details including tracks and visitations
 
-    // Shift Tracks API
-    Route::get('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'index']);
-    Route::post('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'store']);
-    Route::post('/shifts/{shift}/tracks/bulk', [ShiftTrackApiController::class, 'bulkStore']);
+    // Assigned Visitations for a Care Worker (for the day)
+    // Route::get('/assigned-visitations', [ShiftApiController::class, 'getAssignedVisitations']);
+
+    // Shift Tracks API (arrival/departure events only)
+    // Route::get('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'index']);
+    Route::post('/shifts/{shift}/tracks/event', [ShiftTrackApiController::class, 'event']);
+
+    // REMOVED
+    // Route::post('/shifts/{shift}/tracks', [ShiftTrackApiController::class, 'store']);
+    // Route::post('/shifts/{shift}/tracks/bulk', [ShiftTrackApiController::class, 'bulkStore']);
 
     
 });

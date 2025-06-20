@@ -73,6 +73,24 @@
         <li><a href="{{ route('care-worker.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-worker.medication.schedule.index') }}'; return false;" @endif class="{{ Request::routeIs('care-worker.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
       </ul>
     </li>
+
+    <li class="dropdown {{ Request::routeIs('care-worker.shift.histories.*') ? 'active' : '' }}">
+      <div class="icon-link">
+        <a class="parent-link">
+          <i class="bi bi-geo-alt"></i>
+          <span class="link_name">Location Tracking</span>
+        </a>
+        <i class="bi bi-chevron-down arrow"></i>
+      </div>
+      <ul class="sub-menu">
+        <li><a class="link_name">Location Tracking</a></li>
+        <li>
+          <a href="{{ route('care-worker.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-worker.beneficiary-map') }}'; return false;" @endif>
+            Beneficiary Map
+          </a>
+        </li>
+      </ul>
+    </li>
     
     <li class="{{ Request::routeIs('care-worker.emergency.request.*') ? 'active' : '' }}">
       <a href="{{ route('care-worker.emergency.request.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-worker.emergency.request.index') }}'; return false;" @endif>

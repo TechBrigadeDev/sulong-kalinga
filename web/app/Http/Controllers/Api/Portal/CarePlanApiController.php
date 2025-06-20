@@ -98,17 +98,110 @@ class CarePlanApiController extends Controller
         $user = $request->user();
         $beneficiary = $this->getCurrentBeneficiary($user);
 
-        $carePlan = WeeklyCarePlan::with(['beneficiary', 'author', 'careWorker'])
-            ->where('beneficiary_id', $beneficiary->beneficiary_id)
-            ->find($id);
+        // Eager load all necessary relations
+        $carePlan = \App\Models\WeeklyCarePlan::with([
+            'beneficiary.barangay',
+            'beneficiary.municipality',
+            'beneficiary.generalCarePlan.healthHistory',
+            'vitalSigns',
+            'interventions',
+            'author',
+            'careWorker'
+        ])
+        ->where('beneficiary_id', $beneficiary->beneficiary_id)
+        ->find($id);
 
         if (!$carePlan) {
             return response()->json(['success' => false, 'message' => 'Care plan not found.'], 404);
         }
 
+        // Format beneficiary details
+        $b = $carePlan->beneficiary;
+        $beneficiaryFullName = $b
+            ? trim("{$b->first_name} " . ($b->middle_name ? "{$b->middle_name} " : "") . "{$b->last_name}")
+            : null;
+
+        $addressParts = [];
+        if ($b && $b->street_address) $addressParts[] = $b->street_address;
+        if ($b && $b->barangay) $addressParts[] = $b->barangay->barangay_name;
+        if ($b && $b->municipality) $addressParts[] = $b->municipality->municipality_name;
+        $address = $b ? implode(', ', $addressParts) : null;
+
+        // Medical Conditions
+        $medicalConditions = null;
+        if (
+            $b &&
+            $b->generalCarePlan &&
+            $b->generalCarePlan->healthHistory &&
+            $b->generalCarePlan->healthHistory->medical_conditions
+        ) {
+            $conditions = json_decode($b->generalCarePlan->healthHistory->medical_conditions, true);
+            $medicalConditions = is_array($conditions) ? implode(', ', $conditions) : $b->generalCarePlan->healthHistory->medical_conditions;
+        }
+
+        // Illnesses
+        $illnesses = $b && $b->illnesses ? $b->illnesses : null;
+
+        // Civil Status
+        $civilStatus = $b && $b->civil_status ? $b->civil_status : null;
+
+        // Care worker (author)
+        $careWorker = $carePlan->author ?: $carePlan->careWorker;
+        $careWorkerFullName = $careWorker
+            ? trim("{$careWorker->first_name} {$careWorker->last_name}")
+            : null;
+
+        // --- Acknowledgement logic ---
+        $acknowledgeStatus = 'Not Acknowledged';
+        $whoAcknowledged = null;
+
+        if ($carePlan->acknowledged_by_beneficiary) {
+            $ackBeneficiary = \App\Models\Beneficiary::find($carePlan->acknowledged_by_beneficiary);
+            if ($ackBeneficiary) {
+                $middle = $ackBeneficiary->middle_name ? $ackBeneficiary->middle_name : '';
+                $whoAcknowledged = trim("{$ackBeneficiary->first_name} {$middle} {$ackBeneficiary->last_name}");
+                $acknowledgeStatus = 'Acknowledged';
+            }
+        } elseif ($carePlan->acknowledged_by_family) {
+            $ackFamily = \App\Models\FamilyMember::find($carePlan->acknowledged_by_family);
+            if ($ackFamily) {
+                $whoAcknowledged = trim("{$ackFamily->first_name} {$ackFamily->last_name}");
+                $acknowledgeStatus = 'Acknowledged';
+            }
+        }
+
+        // Photo URL (if you have an upload service, use it; otherwise, just use the path)
+        $photoUrl = null;
+        if (isset($this->uploadService) && $carePlan->photo_path) {
+            $photoUrl = $this->uploadService->getTemporaryPrivateUrl($carePlan->photo_path, 30);
+        } elseif ($carePlan->photo_path) {
+            $photoUrl = $carePlan->photo_path;
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $carePlan
+            'data' => [
+                'id' => $carePlan->weekly_care_plan_id,
+                'date' => $carePlan->date,
+                'beneficiary' => [
+                    'full_name' => $beneficiaryFullName,
+                    'address' => $address,
+                    'medical_conditions' => $medicalConditions,
+                    'illnesses' => $illnesses,
+                    'civil_status' => $civilStatus,
+                ],
+                'care_worker' => $careWorkerFullName,
+                'assessment' => $carePlan->assessment,
+                'evaluation_recommendations' => $carePlan->evaluation_recommendations,
+                'illnesses' => $carePlan->illnesses ? json_decode($carePlan->illnesses) : [],
+                'vital_signs' => $carePlan->vitalSigns,
+                'interventions' => $carePlan->interventions,
+                'photo_url' => $photoUrl,
+                'created_at' => $carePlan->created_at,
+                'updated_at' => $carePlan->updated_at,
+                'acknowledge_status' => $acknowledgeStatus,
+                'who_acknowledged' => $whoAcknowledged,
+            ]
         ]);
     }
 

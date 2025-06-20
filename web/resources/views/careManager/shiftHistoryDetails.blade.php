@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shift Details | Admin Dashboard</title>
+    <title>Shift Details | Care Manager Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/shiftHistoryDetails.css') }}">
 </head>
 <body>
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
     
     <div class="home-section">
         <div class="container-fluid">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-2 gap-0">
                 <!-- Back button for large screens -->
-                <a href="{{ route('admin.shift.histories.index') }}" class="btn btn-secondary btn-sm d-none d-md-inline-flex">
+                <a href="{{ route('care-manager.shift.histories.index') }}" class="btn btn-secondary btn-sm d-none d-md-inline-flex">
                     <i class="bi bi-arrow-left me-2"></i>Back
                 </a>
                 
@@ -28,7 +28,7 @@
                 <!-- Action buttons container -->
                 <div class="d-flex action-buttons">
                     <!-- Back button for small screens -->
-                    <a href="{{ route('admin.shift.histories.index') }}" class="btn btn-secondary btn-sm d-inline-flex d-md-none">
+                    <a href="{{ route('care-manager.shift.histories.index') }}" class="btn btn-secondary btn-sm d-inline-flex d-md-none">
                         <i class="bi bi-arrow-left me-2"></i>Back
                     </a>
                     <button class="btn btn-primary btn-sm">
@@ -63,24 +63,6 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="detail-grid">
-                                        <!-- <div class="detail-row">
-                                            <div class="detail-label">Municipality:</div>
-                                            <div class="detail-value" id="detail-municipality">
-                                                {{ $shift->careWorker->municipality ?? '-' }}
-                                            </div>
-                                        </div> -->
-                                        <!-- <div class="detail-row">
-                                            <div class="detail-label">Status:</div>
-                                            <div class="detail-value">
-                                                @if($shift->status === 'completed')
-                                                    <span class="badge bg-success" id="detail-status-badge">Completed</span>
-                                                @elseif($shift->status === 'in_progress')
-                                                    <span class="badge bg-warning text-dark" id="detail-status-badge">In Progress</span>
-                                                @else
-                                                    <span class="badge bg-secondary" id="detail-status-badge">{{ ucfirst($shift->status) }}</span>
-                                                @endif
-                                            </div>
-                                        </div> -->
                                         <div class="detail-row">
                                             <div class="detail-label">Shift Time:</div>
                                             <div class="detail-value" id="detail-shift-time">
@@ -195,13 +177,6 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-
-        // Function to load shift details
-        // function loadShiftDetails() {
-        //     // ... existing loadShiftDetails function ...
-        // }
-
-        // document.addEventListener('DOMContentLoaded', loadShiftDetails);
     </script>
 </body>
 </html>

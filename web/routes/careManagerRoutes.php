@@ -25,7 +25,7 @@ use App\Http\Controllers\InternalAppointmentsController;
 use App\Http\Controllers\MedicationScheduleController;
 use App\Http\Controllers\EmergencyAndRequestController;
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\ShiftHistoryController;
 
 require_once __DIR__.'/routeHelpers.php';
 
@@ -197,6 +197,19 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/respond-emergency', [EmergencyAndRequestController::class, 'respondToEmergency'])->name('respond.emergency');
         Route::post('/handle-service', [EmergencyAndRequestController::class, 'handleServiceRequest'])->name('handle.service');
         Route::post('/archive', [EmergencyAndRequestController::class, 'archiveRecord'])->name('archive');
-    });
+
+        
+        });
+
+        // Shift Histories
+        Route::prefix('shift-histories')->name('shift.histories.')->group(function () {
+            Route::get('/', [ShiftHistoryController::class, 'index'])->name('index');
+            Route::get('/shift-details/{shiftId}', [ShiftHistoryController::class, 'shiftDetails'])->name('shiftDetails');
+        });
+
+        //Beneficiary Map
+        Route::prefix('beneficiary-map')->name('beneficiary.map.')->group(function () {
+            Route::get('/', [BeneficiaryMapController::class, 'index'])->name('index');
+        });
     
 });
