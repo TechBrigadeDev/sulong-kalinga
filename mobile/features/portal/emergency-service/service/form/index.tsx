@@ -24,6 +24,10 @@ const ServiceForm = ({
 
     const store = useEmergencyServiceStore();
     useEffect(() => {
+        if (!form || !store) {
+            return;
+        }
+
         store.subscribe((state) => {
             if (
                 state.request &&
@@ -35,8 +39,12 @@ const ServiceForm = ({
                     message: request.description,
                     service_type_id:
                         request.service_type_id.toString(),
+                    service_date:
+                        request.service_date,
+                    service_time:
+                        request.service_time,
                 });
-            } else if (!state.request) {
+            } else if (form && !state.request) {
                 form.reset();
             }
             return;

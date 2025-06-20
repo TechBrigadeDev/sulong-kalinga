@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { emergencyServiceRequestListSchema } from "./schema";
+import { emergencyServiceRequestSchema } from "./schema";
 
 export type IEmergencyServiceRequest = z.infer<
-    typeof emergencyServiceRequestListSchema
+    typeof emergencyServiceRequestSchema
 >;
 
 export type ICurrentEmergencyServiceForm =

@@ -8,7 +8,7 @@ import { Button, Spinner } from "tamagui";
 const SubmitEmergency = () => {
     const form = useEmergencyForm();
     const {
-        mutate: submitEmergencyRequest,
+        mutateAsync: submitEmergencyRequest,
         isPending: isSubmitting,
     } = useEmergencyRequest();
 
@@ -16,7 +16,7 @@ const SubmitEmergency = () => {
         data: IEmergencyForm,
     ) => {
         try {
-            submitEmergencyRequest(data);
+            await submitEmergencyRequest(data);
 
             showToastable({
                 title: "Request Submitted",

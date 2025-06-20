@@ -23,6 +23,10 @@ const EmergencyAssistanceForm = ({
 
     const store = useEmergencyServiceStore();
     useEffect(() => {
+        if (!form || !store) {
+            return;
+        }
+
         store.subscribe((state) => {
             if (
                 state.request &&

@@ -8,7 +8,11 @@ import {
     ArrowDown,
     ArrowUp,
 } from "lucide-react-native";
-import { useRef, useState } from "react";
+import {
+    RefObject,
+    useRef,
+    useState,
+} from "react";
 import {
     Animated,
     Dimensions,
@@ -23,6 +27,7 @@ interface Props
     extends GetProps<typeof ScrollView> {
     showScrollUp?: boolean;
     tabbed?: boolean;
+    ref?: RefObject<ScrollView | null>;
 }
 
 const TabScroll = ({
@@ -30,9 +35,10 @@ const TabScroll = ({
     contentContainerStyle,
     showScrollUp: _showScrollUpProp = false,
     tabbed = false,
+    ref,
     ...props
 }: Props) => {
-    const scrollViewRef = useRef<any>(null);
+    const scrollViewRef = useRef(ref || null);
     const [lastOffset, setLastOffset] =
         useState(0);
     const [_showScrollUp, setShowScrollUp] =

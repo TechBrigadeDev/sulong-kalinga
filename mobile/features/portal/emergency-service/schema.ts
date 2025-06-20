@@ -27,10 +27,12 @@ const serviceTypeSchema =
         type: z.literal(
             requestTypeSchema.enum.service,
         ),
+        service_date: z.string().datetime(),
+        service_time: z.string(),
         service_type_id: z.number(),
     });
 
-export const emergencyServiceRequestListSchema =
+export const emergencyServiceRequestSchema =
     z.union([
         emergencyTypeSchema,
         serviceTypeSchema,

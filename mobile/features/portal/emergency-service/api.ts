@@ -5,7 +5,7 @@ import { portalPath } from "features/auth/auth.util";
 
 import {
     emergencyServiceHistorySchema,
-    emergencyServiceRequestListSchema,
+    emergencyServiceRequestSchema,
 } from "./schema";
 
 class EmergencyServicenController extends Controller {
@@ -20,7 +20,7 @@ class EmergencyServicenController extends Controller {
 
             const validate =
                 await listResponseSchema(
-                    emergencyServiceRequestListSchema,
+                    emergencyServiceRequestSchema,
                 ).safeParseAsync(response.data);
 
             if (!validate.success) {
