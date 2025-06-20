@@ -651,17 +651,39 @@ def get_contextual_relationship(prev_content, next_content, doc_context, prev_id
         
         # If moving to a new section, relationship is often topical shift
         if prev_section != next_section:
-            # NEW: More nuanced section transitions based on Filipino healthcare narrative structure
-            if next_section in ["mga_hakbang", "pangangalaga", "pangunahing_rekomendasyon"]:
+            # UPDATED: Include new sections in relationship detection
+            
+            # Action-oriented content transitions
+            if next_section in ["mga_hakbang", "pangangalaga", "pangunahing_rekomendasyon", 
+                            "pamamahala_ng_gamot", "safety_risk_factors"]:
                 return "action"  # Moving to action-oriented content
-            elif next_section == "kalagayan_social":
-                return "context"  # Social details provide important context in Filipino care
-            elif next_section == "pagbabago_sa_pamumuhay":
+                
+            # Contextual information transitions  
+            elif next_section in ["kalagayan_social", "suporta_ng_pamilya"]:
+                return "context"  # Social and family details provide important context
+                
+            # Implementation/practical transitions
+            elif next_section in ["pagbabago_sa_pamumuhay", "nutrisyon_at_pagkain", 
+                                "mobility_function", "preventive_health"]:
                 return "implementation"  # Moving to practical implementation
-            elif next_section == "kalagayan_pangkatawan" and prev_section == "mga_sintomas":
-                return "elaboration"  # Physical details often elaborate on symptoms
+                
+            # Physical manifestation transitions
+            elif next_section in ["kalagayan_pangkatawan", "kalusugan_ng_bibig", 
+                                "pain_discomfort", "vital_signs_measurements"] and prev_section == "mga_sintomas":
+                return "elaboration"  # Physical details elaborate on symptoms
+                
+            # Mind-body connection transitions
             elif next_section == "kalagayan_mental" and prev_section in ["mga_sintomas", "kalagayan_pangkatawan"]:
                 return "holistic"  # Mental aspects complement physical in holistic care
+                
+            # Sleep and rest transitions  
+            elif next_section == "kalagayan_ng_tulog" and prev_section in ["kalagayan_mental", "pain_discomfort"]:
+                return "consequence"  # Sleep issues often result from pain/mental state
+                
+            # Medical history transitions
+            elif next_section == "medical_history":
+                return "background"  # Medical history provides background context
+                
             else:
                 return "topical_shift"  # General shift in topic
     
@@ -747,11 +769,32 @@ def determine_optimal_section_order(doc_context, doc_type):
     """Determine the optimal order of sections based on enhanced document context analysis."""
     # Default orders based on document type
     if doc_type.lower() == "assessment":
-        default_order = ["mga_sintomas", "kalagayan_pangkatawan", "kalagayan_mental", 
-                         "aktibidad", "kalagayan_social"]
-    else:  # Evaluation document
-        default_order = ["pangunahing_rekomendasyon", "mga_hakbang", 
-                         "pangangalaga", "pagbabago_sa_pamumuhay"]
+        # Updated default order with all new assessment sections
+        default_order = [
+            "mga_sintomas",                # Symptoms - high priority
+            "kalagayan_pangkatawan",       # Physical condition
+            "pain_discomfort",             # Pain/discomfort
+            "vital_signs_measurements",     # Vital signs
+            "kalagayan_mental",            # Mental/cognitive state
+            "kalagayan_ng_tulog",          # Sleep pattern
+            "mobility_function",           # Mobility capabilities
+            "aktibidad",                   # Activities/functional status
+            "kalusugan_ng_bibig",          # Oral/dental health
+            "kalagayan_social",            # Social situation
+            "suporta_ng_pamilya",          # Family support
+            "pamamahala_ng_gamot",         # Medication management
+            "medical_history",             # Medical history background
+            "hygiene_habits",              # Hygiene habits
+            "preventive_health"            # Preventive health measures
+        ]
+    else:  # Evaluation document order
+        default_order = ["pangunahing_rekomendasyon", "safety_risk_factors",
+                         "mga_hakbang", "mobility_function",
+                         "pamamahala_ng_gamot", "nutrisyon_at_pagkain",
+                         "kalusugan_ng_bibig", "kalagayan_ng_tulog",
+                         "kalagayan_mental", "suporta_ng_pamilya", 
+                         "pangangalaga", "preventive_health",
+                         "vital_signs_measurements", "pagbabago_sa_pamumuhay"]
     
     # NEW: Consider severity when ordering assessment sections
     severity_trend = doc_context.get("severity_trend")
