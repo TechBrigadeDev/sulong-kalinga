@@ -65,6 +65,7 @@ class ShiftApiController extends Controller
                     'start_time' => $visitation->start_time,
                     'is_flexible_time' => $visitation->is_flexible_time,
                     'actions' => ['Arrived', 'Departed'],
+                    'current_status' => $currentStatus,
                 ];
             });
 
