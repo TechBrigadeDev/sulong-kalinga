@@ -1,5 +1,6 @@
 import { AxiosError } from "axios";
 import { Controller } from "common/api";
+import { formatTime } from "common/date";
 import { log } from "common/debug";
 import { IRole } from "features/auth/auth.interface";
 import { portalPath } from "features/auth/auth.util";
@@ -8,7 +9,6 @@ import { z } from "zod";
 
 import { IServiceForm } from "./_components/form/interface";
 import { serviceTypes } from "./schema";
-import { formatTime } from "../../../../common/date";
 
 class ServiceController extends Controller {
     async getServiceTypes(role: IRole) {

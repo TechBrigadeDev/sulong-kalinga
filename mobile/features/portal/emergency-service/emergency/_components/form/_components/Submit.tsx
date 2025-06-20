@@ -39,7 +39,8 @@ const SubmitEmergency = () => {
             if (updatedRequest) {
                 setCurrentRequest(updatedRequest);
                 form.reset({
-                    message: updatedRequest?.description,
+                    message:
+                        updatedRequest?.description,
                     emergency_type_id:
                         updatedRequest.emergency_type_id?.toString(),
                 });

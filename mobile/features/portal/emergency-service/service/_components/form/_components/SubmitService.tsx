@@ -49,7 +49,8 @@ const SubmitService = () => {
                         updatedRequest.service_date,
                     service_time:
                         updatedRequest.service_time,
-                    message: updatedRequest.description,
+                    message:
+                        updatedRequest.description,
                 } as IServiceForm);
             } else {
                 setCurrentRequest(null);

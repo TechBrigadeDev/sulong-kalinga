@@ -207,7 +207,9 @@ const TabScroll = ({
             scrollPercentage >= 0.95 &&
             isScrollingDown
         ) {
-            if (scrollViewRef.current?.scrollToEnd) {
+            if (
+                scrollViewRef.current?.scrollToEnd
+            ) {
                 scrollViewRef.current?.scrollToEnd(
                     {
                         animated: false,
