@@ -1115,12 +1115,43 @@
                         case 'vital_signs_measurements': sectionIcon = 'bi-heart-pulse'; break;
                         case 'medical_history': sectionIcon = 'bi-journal-medical'; break;
                         case 'preventive_health': sectionIcon = 'bi-shield-plus'; break;
+                        // Add icons for new sections
+                        case 'safety_risk_factors':  sectionIcon = 'bi-shield-exclamation'; break;
+                        case 'nutrisyon_at_pagkain': sectionIcon = 'bi-egg-fried'; break;
+                        case 'kalusugan_ng_bibig': sectionIcon = 'bi-emoji-smile'; break;
+                        case 'mobility_function': sectionIcon = 'bi-person-walking'; break;
+                        case 'kalagayan_ng_tulog': sectionIcon = 'bi-moon-stars'; break;
+                        case 'pamamahala_ng_gamot': sectionIcon = 'bi-capsule'; break;
+                        case 'suporta_ng_pamilya': sectionIcon = 'bi-people-fill'; break;
+                        case 'kalagayan_mental': sectionIcon = 'bi-brain'; break;
+                        case 'preventive_health': sectionIcon = 'bi-umbrella'; break;
+                        case 'vital_signs_measurements': sectionIcon = 'bi-activity'; break;
                         default: sectionIcon = 'bi-card-text';
                     }
                     
                     // Use different card style based on type
                     const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
                     
+                    const sectionNames = {
+                        // Existing sections
+                        'pangunahing_rekomendasyon': 'Key Recommendations',
+                        'mga_hakbang': 'Action Steps',
+                        'pangangalaga': 'Care Needs',
+                        'pagbabago_sa_pamumuhay': 'Lifestyle Changes',
+                        
+                        // New sections with human-readable names
+                        'safety_risk_factors': 'Safety & Risk Factors',
+                        'nutrisyon_at_pagkain': 'Nutrition & Diet',
+                        'kalusugan_ng_bibig': 'Oral Health',
+                        'mobility_function': 'Mobility & Function',
+                        'kalagayan_ng_tulog': 'Sleep Management',
+                        'pamamahala_ng_gamot': 'Medication Management',
+                        'suporta_ng_pamilya': 'Family Support',
+                        'kalagayan_mental': 'Mental Health',
+                        'preventive_health': 'Preventive Health',
+                        'vital_signs_measurements': 'Vital Signs'
+                    };
+
                     let sectionHtml = `
                     <div class="card mb-3 ${cardClass}">
                         <div class="card-header py-2 bg-light d-flex align-items-center">

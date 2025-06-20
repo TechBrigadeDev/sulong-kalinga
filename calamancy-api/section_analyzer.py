@@ -2,6 +2,7 @@ import re
 from nlp_loader import nlp
 from entity_extractor import extract_structured_elements
 from text_processor import split_into_sentences
+from context_analyzer import detect_oral_medication_context
 
 def extract_sections_improved(sentences, doc_type="assessment"):
     """Extract and categorize sections with improved handling of complete sentences."""
@@ -716,22 +717,22 @@ def extract_sections_for_evaluation(sentences):
         ],
         
         "kalusugan_ng_bibig": [
-            # Oral/dental health patterns
-            r'(oral health|oral care|dental care|dental health)',
-            r'(kalinisan ng bibig|pangangalaga ng bibig|oral hygiene)',
-            r'(pagsesepilyo|toothbrushing|brushing teeth)',
+            # More specific oral health patterns that won't capture general medication info
+            r'(oral health|oral care|dental care|dental health) ((?!medication).)*$',
+            r'(kalinisan ng bibig|pangangalaga ng ngipin|dental hygiene)',
+            r'(pagsesepilyo|toothbrushing|brushing (of )?teeth) ((?!medication).)*$',
             r'(dental checkups?|dental visits?|pagpapa-dentista)',
             r'(flossing|paggamit ng dental floss)',
-            r'(dry mouth|tuyong bibig|xerostomia)',
+            r'(dry mouth|tuyong bibig|xerostomia) ((?!medication).)*$',  # Exclude when related to medication
             r'(dentures?|pustiso|false teeth)',
             r'(gums?|gilagid|periodontal)',
             r'(teeth cleaning|paglilinis ng ngipin)',
-            r'(mouthwash|mouth rinse|oral rinse)',
+            r'(mouthwash|mouth rinse|oral rinse) ((?!medication).)*$',
             r'(saliva|laway|lubrication)',
-            r'(oral medications|gamot sa bibig)',
+            r'(oral problems(?! with medication)|problema sa bibig(?! dahil sa gamot))',
             r'(kalinisan ng dila|tongue cleaning)',
             r'(tooth decay|ngipin na may sira|cavities)',
-            r'(oral sores|sugat sa bibig|mouth ulcers)'
+            r'(oral sores(?! from medication)|sugat sa bibig(?! dahil sa gamot))'
         ],
         
         "mobility_function": [
@@ -788,7 +789,17 @@ def extract_sections_for_evaluation(sentences):
             r'(coordination with|pakikipag-ugnayan sa|consultation with) (physicians?|doctors?|doktor)',
             r'(injectable medications?|iv medications?|specialty medications?)',
             r'(adverse reactions?|allergic reactions?)',
-            r'(as-needed medications?|prn medications?)'
+            r'(as-needed medications?|prn medications?)',
+            # Add patterns for medication explanations, education, and fears
+            r'(explanation|paliwanag|information) (sheet|handout)s? (tungkol sa|about) (medication|gamot)',
+            r'(simplified|simplified na) (explanation|paliwanag) (tungkol sa|about) (medication|gamot)',
+            r'(fears?|takot|misconceptions?|maling paniniwala) (tungkol sa|about|sa|regarding) (medications?|gamot)',
+            r'(benefits?|advantages?|kabutihan) (over|versus|vs|kaysa) (risks?|side effects?|panganib)',
+            r'(package inserts?|leaflets?|information sheets?)',
+            r'(potential|possible|rare) (side effects?|adverse reactions?|epekto)',
+            r'(medication education|edukasyon tungkol sa gamot)',
+            r'(teaching|pagtuturo|explaining|pagpapaliwanag) (about|tungkol sa) (medications?|gamot)',
+            r'(understanding|pag-unawa sa) (medications?|prescriptions?|gamot)'
         ],
         
         "suporta_ng_pamilya": [
@@ -950,7 +961,16 @@ def extract_sections_for_evaluation(sentences):
             "oral pain", "sakit ng ngipin", "tooth decay", "cavities", "teeth cleaning", 
             "paglilinis ng ngipin", "oral sores", "mouth ulcers", "sugat sa bibig", "tongue", 
             "dila", "dental health", "oral care", "mouth care", "dental problems",
-            "denture care", "paglilinis ng pustiso", "oral assessment", "gum disease"
+            "denture care", "paglilinis ng pustiso", "oral assessment", "gum disease",
+            # More specific oral/dental terms
+            "dental", "ngipin", "teeth", "tooth", "gums", "gilagid", "pagsesepilyo", 
+            "toothbrush", "toothpaste", "floss", "mouthwash", "dental checkup", "dentista",
+            "pustiso", "dentures", "dental prosthesis", "braces", "dental bridges", "crowns",
+            "oral lesions", "oral cavity", "mouth sores", "mouth ulcers", "tongue", "dila",
+            "palate", "ngala-ngala", "jaw", "panga", "TMJ", "dental pain", "gum disease",
+            "gingivitis", "periodontitis", "tartar", "plaque", "cavities", "dental caries",
+            "tooth decay", "dental fillings", "root canal", "extraction", "dental surgery", 
+            "dental x-ray", "oral cancer screening", "oral hygiene", "kalinisan ng bibig"
         ],
         
         "mobility_function": [
@@ -986,7 +1006,15 @@ def extract_sections_for_evaluation(sentences):
             "instructions", "administering", "pagbibigay", "timing", "names of drugs", 
             "generic name", "brand name", "as needed", "PRN", "maintenance", "injections", 
             "contraindications", "kontra-indikasyon", "drug allergies", "medication list",
-            "drug-food interaction", "pamahala sa gamot", "medication safety", "prescriptions"
+            "drug-food interaction", "pamahala sa gamot", "medication safety", "prescriptions",
+            # Additional medication management terms
+            "medication guide", "drug information", "paliwanag ng gamot", "medication teaching",
+            "drug education", "patient information", "medication fears", "fear of side effects",
+            "misconceptions", "medication benefits", "risk vs benefit", "package insert", 
+            "drug leaflet", "medication instructions", "patient education materials",
+            "medication adherence education", "drug information sheet", "simplified explanation",
+            "medication counseling", "drug counseling", "medication literacy", "patient understanding",
+            "medication schedule explanation", "drug administration teaching"
         ],
         
         "suporta_ng_pamilya": [
@@ -1111,6 +1139,64 @@ def extract_sections_for_evaluation(sentences):
             # Save the combined score
             sentence_scores[i][section] = base_score + entity_boost + pattern_score
     
+    # Build partial document context with sentence-section mapping
+    doc_context = {"sentence_section_map": {}}
+
+    # First determine best section for each sentence (for context mapping)
+    for i, scores in sentence_scores.items():
+        if scores:
+            best_section = max(scores.items(), key=lambda x: x[1])[0]
+            doc_context["sentence_section_map"][i] = best_section
+
+    # NEW: Add context-aware relationship detection for contiguous sentences
+    contextual_connections = {}
+    for i in range(len(sentences)):
+        # Initialize empty set for each sentence
+        contextual_connections[i] = set()
+        
+        # Skip if this is the first sentence
+        if i == 0:
+            continue
+        
+        current_sent = sentences[i].lower()
+        prev_sent = sentences[i-1].lower()
+        
+        # Then use this context in relationship detection
+        from context_analyzer import get_contextual_relationship
+        relationship = get_contextual_relationship(prev_sent, current_sent, doc_context, i-1, i)
+        
+        # Create contextual connections based on relationship type
+        if relationship in ["elaboration", "causation", "addition", "sequential_steps", 
+                        "solution", "implementation", "holistic", "action"]:
+            contextual_connections[i].add(i-1)
+            
+        # Check for thematic continuity across evaluation sections
+        # Medication theme
+        medication_terms = ["gamot", "medication", "pills", "tablets", "prescription", "side effects", "regimen"]
+        safety_terms = ["safety", "kaligtasan", "falls", "pagkahulog", "prevention", "risk", "hazard"]
+        mobility_terms = ["mobility", "paggalaw", "assistive device", "walker", "cane", "wheelchair"]
+        
+        same_medication_theme = any(term in prev_sent for term in medication_terms) and any(term in current_sent for term in medication_terms)
+        same_safety_theme = any(term in prev_sent for term in safety_terms) and any(term in current_sent for term in safety_terms)
+        same_mobility_theme = any(term in prev_sent for term in mobility_terms) and any(term in current_sent for term in mobility_terms)
+        
+        # Boost thematic connections
+        if same_medication_theme or same_safety_theme or same_mobility_theme:
+            contextual_connections[i].add(i-1)
+
+    # Apply contextual boost to section scores
+    for i in range(len(sentences)):
+        if i in contextual_connections and contextual_connections[i]:
+            # Apply boost to connected sentences
+            for connected_idx in contextual_connections[i]:
+                if connected_idx in sentence_scores:
+                    connected_scores = sentence_scores[connected_idx]
+                    if connected_scores:
+                        best_section, best_score = max(connected_scores.items(), key=lambda x: x[1])
+                        # Apply boost for context connection
+                        sentence_scores[i][best_section] = sentence_scores[i].get(best_section, 0) + 3.0
+
+
     # FIRST PASS: Assign sentences with clear high scores - now uses sentence_scores
     threshold = 2.5  # Higher threshold for clear assignment
     assigned_sentences = set()
@@ -1144,74 +1230,97 @@ def extract_sections_for_evaluation(sentences):
         if i in assigned_sentences:
             continue
             
+        # Initialize section scores for this sentence
         section_scores = {section: 0 for section in sections.keys()}
         
         # Score based on entities
         if doc.ents:
             for ent in doc.ents:
-                # Add new entity boost for safety section
-                if section == "safety_risk_factors" and ent.label_ in ["RISK_FACTOR", "SAFETY_DEVICE", "PREVENTION"]:
-                    entity_boost += 2.5
+                # Check entity types against each section
+                if ent.label_ in ["RISK_FACTOR", "SAFETY_DEVICE", "PREVENTION"]:
+                    section_scores["safety_risk_factors"] += 2.5
                     
-                # Add new entity boost for nutrition section  
-                elif section == "nutrisyon_at_pagkain" and ent.label_ in ["FOOD", "NUTRITION", "DIET"]:
-                    entity_boost += 2.5
+                elif ent.label_ in ["FOOD", "NUTRITION", "DIET"]:
+                    section_scores["nutrisyon_at_pagkain"] += 2.5
                     
-                # Add new entity boost for oral health section
-                elif section == "kalusugan_ng_bibig" and ent.label_ in ["BODY_PART", "HYGIENE", "DENTAL"]:
-                    entity_boost += 2.0
+                elif ent.label_ in ["BODY_PART", "HYGIENE", "DENTAL"]:
+                    section_scores["kalusugan_ng_bibig"] += 2.0
                     
-                # Add new entity boost for mobility section
-                elif section == "mobility_function" and ent.label_ in ["EQUIPMENT", "MOVEMENT", "EXERCISE"]:
-                    entity_boost += 2.5
+                elif ent.label_ in ["EQUIPMENT", "MOVEMENT", "EXERCISE"]:
+                    section_scores["mobility_function"] += 2.5
                     
-                # Add new entity boost for sleep section
-                elif section == "kalagayan_ng_tulog" and ent.label_ in ["ROUTINE", "SLEEP", "REST"]:
-                    entity_boost += 2.0
+                elif ent.label_ in ["ROUTINE", "SLEEP", "REST"]:
+                    section_scores["kalagayan_ng_tulog"] += 2.0
                     
-                # Add new entity boost for medication section
-                elif section == "pamamahala_ng_gamot" and ent.label_ in ["MEDICATION", "PRESCRIPTION", "TREATMENT"]:
-                    entity_boost += 3.0
+                elif ent.label_ in ["MEDICATION", "PRESCRIPTION", "TREATMENT"]:
+                    section_scores["pamamahala_ng_gamot"] += 3.0
                     
-                # Add new entity boost for family support section
-                elif section == "suporta_ng_pamilya" and ent.label_ in ["PERSON", "SOCIAL_REL", "SUPPORT"]:
-                    entity_boost += 2.0
+                elif ent.label_ in ["PERSON", "SOCIAL_REL", "SUPPORT"]:
+                    section_scores["suporta_ng_pamilya"] += 2.0
                     
-                # Add new entity boost for mental health section
-                elif section == "kalagayan_mental" and ent.label_ in ["EMOTION", "MENTAL", "PSYCHOLOGICAL"]:
-                    entity_boost += 2.5
+                elif ent.label_ in ["EMOTION", "MENTAL", "PSYCHOLOGICAL"]:
+                    section_scores["kalagayan_mental"] += 2.5
                     
-                # Add new entity boost for preventive health section
-                elif section == "preventive_health" and ent.label_ in ["PREVENTION", "SCREENING", "RISK_FACTOR"]:
-                    entity_boost += 2.0
+                elif ent.label_ in ["PREVENTION", "SCREENING", "RISK_FACTOR"]:
+                    section_scores["preventive_health"] += 2.0
                     
-                # Add new entity boost for vital signs section
-                elif section == "vital_signs_measurements" and ent.label_ in ["MEASUREMENT", "VITAL_SIGN", "MONITORING"]:
-                    entity_boost += 2.5
+                elif ent.label_ in ["MEASUREMENT", "VITAL_SIGN", "MONITORING"]:
+                    section_scores["vital_signs_measurements"] += 2.5
         
-        # Score based on keywords and context
-        for section, patterns in section_patterns.items():
-            for word in sent.split():
-                if any(pattern.lower() in word.lower() for pattern in patterns):
+        # Score based on keywords and patterns
+        for section in sections.keys():
+            # Check for pattern matches
+            for pattern in section_patterns.get(section, []):
+                if re.search(pattern, sent.lower()):
+                    section_scores[section] += 2.0
+                    break  # Only count one pattern match per section
+                    
+            # Check for keyword matches
+            for keyword in section_keywords.get(section, []):
+                if keyword.lower() in sent.lower():
                     section_scores[section] += 0.5
         
+        # Also consider contextual relationships
+        if i in contextual_connections and contextual_connections[i]:
+            for connected_idx in contextual_connections[i]:
+                if connected_idx in sentence_scores:
+                    connected_best_section = max(sentence_scores[connected_idx].items(), key=lambda x: x[1])[0]
+                    section_scores[connected_best_section] += 1.5  # Boost for contextual relationship
+        
         # Assign to highest scoring section if score is significant
-        best_section = max(section_scores.items(), key=lambda x: x[1])
-        if best_section[1] >= 1.5:  # More stringent threshold
-            if len(sections[best_section[0]]) < 5:  # Respect max 5 sentences per section
-                sections[best_section[0]].append(sent)
+        if section_scores:
+            best_section, best_score = max(section_scores.items(), key=lambda x: x[1])
+            if best_score >= 1.5 and len(sections[best_section]) < 5:  # Enforce max 5 sentences per section
+                sections[best_section].append(sent)
                 assigned_sentences.add(i)
     
     # Third pass: Default assignment of remaining important sentences
     remaining = [i for i in range(len(sentences)) if i not in assigned_sentences]
-    
+        
     # Prefer assigning introductory sentences to pangunahing_rekomendasyon
     for i in remaining:
         if i < 2:  # First two sentences
-            if len(sections["pangunahing_rekomendasyon"]) < 5:  # Changed from 3 to 5
+            if len(sections["pangunahing_rekomendasyon"]) < 5:
                 sections["pangunahing_rekomendasyon"].append(sentences[i])
                 assigned_sentences.add(i)
-    
+
+    # Special handling for potentially ambiguous dental vs medication content
+    for i in remaining:
+        if i in sentence_scores:
+            dental_score = sentence_scores[i].get("kalusugan_ng_bibig", 0)
+            med_score = sentence_scores[i].get("pamamahala_ng_gamot", 0)
+            
+            # If the scores are close and could be ambiguous
+            if abs(dental_score - med_score) < 1.5 and dental_score > 0 and med_score > 0:
+                # Use specialized function to determine correct context
+                context_type = detect_oral_medication_context(sentences[i])
+                if context_type == "dental" and len(sections["kalusugan_ng_bibig"]) < 5:
+                    sections["kalusugan_ng_bibig"].append(sentences[i])
+                    assigned_sentences.add(i)
+                elif context_type == "medication" and len(sections["pamamahala_ng_gamot"]) < 5:
+                    sections["pamamahala_ng_gamot"].append(sentences[i])
+                    assigned_sentences.add(i)
+
     # Sort sentences within each section to maintain original flow
     for section in sections:
         # Get the indices of assigned sentences and sort them
