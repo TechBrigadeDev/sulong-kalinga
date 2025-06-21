@@ -46,7 +46,7 @@ class RecordsManagementApiController extends Controller
         }
 
         $perPage = $request->input('per_page', 15);
-        $plans = $query->orderBy('date', 'desc')->paginate($perPage);
+        $plans = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -160,6 +160,7 @@ class RecordsManagementApiController extends Controller
                 'id' => $plan->weekly_care_plan_id,
                 'date' => $plan->date,
                 'beneficiary' => [
+                    'beneficiary_id' => $plan->beneficiary_id,
                     'full_name' => $beneficiaryFullName,
                     'address' => $address,
                     'medical_conditions' => $medicalConditions,
@@ -171,7 +172,28 @@ class RecordsManagementApiController extends Controller
                 'evaluation_recommendations' => $plan->evaluation_recommendations,
                 'illnesses' => $plan->illnesses ? json_decode($plan->illnesses) : [],
                 'vital_signs' => $plan->vitalSigns,
-                'interventions' => $plan->interventions,
+                'interventions' => $plan->interventions->map(function ($intervention) {
+                    // Try to get from the record, fallback to relation if missing
+                    $careCategoryId = $intervention->care_category_id;
+                    $description = $intervention->intervention_description;
+
+                    // If missing, get from related Intervention model
+                    if (!$careCategoryId && $intervention->intervention) {
+                        $careCategoryId = $intervention->intervention->care_category_id;
+                    }
+                    if (!$description && $intervention->intervention) {
+                        $description = $intervention->intervention->intervention_description;
+                    }
+
+                    return [
+                        'wcp_intervention_id' => $intervention->wcp_intervention_id,
+                        'intervention_id' => $intervention->intervention_id,
+                        'care_category_id' => $careCategoryId,
+                        'description' => $description,
+                        'duration_minutes' => $intervention->duration_minutes,
+                        'implemented' => $intervention->implemented,
+                    ];
+                }),
                 'photo_url' => $plan->photo_path
                     ? $this->uploadService->getTemporaryPrivateUrl($plan->photo_path, 30)
                     : null,
