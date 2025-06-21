@@ -36,18 +36,22 @@ class ShiftApiController extends Controller
 
         $today = now()->toDateString();
 
-        $visitations = Visitation::with('beneficiary')
-            ->where('care_worker_id', $user->id)
-            ->where('status', 'scheduled')
-            ->whereDate('visitation_date', $today)
-            ->orderBy('visitation_date')
+        $visitations = \App\Models\VisitationOccurrence::with(['visitation.beneficiary'])
+            ->where('occurrence_date', $today)
+            ->where('status', 'scheduled') // <-- Only show scheduled occurrences
+            ->whereHas('visitation', function($q) use ($user) {
+                $q->where('care_worker_id', $user->id);
+            })
+            ->orderBy('occurrence_date')
             ->orderBy('start_time')
             ->get()
-            ->map(function ($visitation) {
+            ->map(function ($occurrence) {
+                $visitation = $occurrence->visitation;
                 $beneficiary = $visitation->beneficiary;
 
-                // Find the latest shift track for this visitation
+                // Find the latest shift track for this visitation occurrence
                 $latestTrack = \App\Models\ShiftTrack::where('visitation_id', $visitation->visitation_id)
+                    ->whereDate('recorded_at', $occurrence->occurrence_date)
                     ->orderByDesc('recorded_at')
                     ->first();
 
@@ -70,7 +74,7 @@ class ShiftApiController extends Controller
                     ),
                     'visit_type' => $visitation->visit_type,
                     'address' => $beneficiary->street_address ?? '',
-                    'start_time' => $visitation->start_time,
+                    'start_time' => $occurrence->start_time,
                     'is_flexible_time' => $visitation->is_flexible_time,
                     'actions' => ['Arrived', 'Departed'],
                     'current_status' => $currentStatus,

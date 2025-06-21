@@ -391,7 +391,8 @@ class Visitation extends Model
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
             'is_flexible_time' => $this->is_flexible_time ?? false,
-            'status' => $date < now() ? 'completed' : 'scheduled'
+            // 'status' => $date < now() ? 'completed' : 'scheduled'
+            'status' => $date->toDateString() < now()->toDateString() ? 'completed' : 'scheduled'
         ]);
     }
     
