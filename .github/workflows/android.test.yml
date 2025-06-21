@@ -9,7 +9,8 @@ on:
             - 'mobile/**'
 
 jobs:
-    update:
+    build:
+        name: Build Android (Preview)
         runs-on: ubuntu-latest
         env:
             DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
@@ -25,28 +26,30 @@ jobs:
                     -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
                     -H "Content-Type: application/json" \
                     -d "{\"content\":\"🚀 Android build started for **${{ github.repository }}** (#${{ github.run_number }})\"}"
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-            - name: 🏗 Setup repo
-              uses: actions/checkout@v3
-
-            - name: 🏗 Setup Node
-              uses: actions/setup-node@v3
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
               with:
-                  node-version: 18.x
-                  cache: yarn
+                  node-version: '18'
 
-            - name: 🏗 Setup EAS
+            - name: Install dependencies
+              working-directory: ./mobile
+              run: |
+                  npm install --frozen-lockfile
+            - name: Setup EAS
               uses: expo/expo-github-action@v8
               with:
-                  eas-version: latest
-                  token: ${{ secrets.EXPO_TOKEN }}
+                eas-version: latest
+                token: ${{ secrets.EXPO_TOKEN }}
 
-            - name: 📦 Install dependencies
-              run: npm install
-
-            - name: 🏗 Build Android Preview
-              run: eas build --platform android --local --profile preview
-
+            - name: Run EAS build (Android Preview)
+              working-directory: ./mobile
+              env:
+                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+              run: |
+                  eas build --platform android --profile preview --non-interactive
             - name: Notify Discord – Build Succeeded
               if: success()
               run: |
