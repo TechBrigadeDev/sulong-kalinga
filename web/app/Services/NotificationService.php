@@ -70,6 +70,25 @@ class NotificationService
     }
     
     /**
+     * Send notifications to all care managers
+     *
+     * @param string $title
+     * @param string $message
+     * @return array
+     */
+    public function notifyAllCareManagers($title, $message)
+    {
+        $careManagers = User::where('role_id', 2)->get();
+        $notifications = [];
+
+        foreach ($careManagers as $manager) {
+            $notifications[] = $this->notifyStaff($manager->id, $title, $message);
+        }
+
+        return $notifications;
+    }
+    
+    /**
      * Create a notification record
      *
      * @param int $userId

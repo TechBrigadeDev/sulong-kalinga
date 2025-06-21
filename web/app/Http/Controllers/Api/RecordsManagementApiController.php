@@ -288,10 +288,14 @@ class RecordsManagementApiController extends Controller
                 // Remove old interventions
                 WeeklyCarePlanInterventions::where('weekly_care_plan_id', $plan->weekly_care_plan_id)->delete();
                 foreach ($request->selected_interventions as $idx => $interventionId) {
+                    $intervention = \App\Models\Intervention::find($interventionId);
                     WeeklyCarePlanInterventions::create([
                         'weekly_care_plan_id' => $plan->weekly_care_plan_id,
                         'intervention_id' => $interventionId,
+                        'care_category_id' => $intervention ? $intervention->care_category_id : null,
+                        'intervention_description' => $intervention ? $intervention->intervention_description : null,
                         'duration_minutes' => $request->duration_minutes[$idx] ?? null,
+                        'implemented' => true,
                     ]);
                 }
             }
@@ -366,6 +370,14 @@ class RecordsManagementApiController extends Controller
                 $user->id,
                 'Weekly Care Plan Updated',
                 'Your weekly care plan update was successful.'
+            );
+
+            // Notify all care managers
+            $this->notificationService->notifyAllCareManagers(
+                'Weekly Care Plan Updated',
+                $beneficiaryName
+                    ? "A weekly care plan for {$beneficiaryName} was updated."
+                    : "A weekly care plan was updated."
             );
 
             return response()->json([

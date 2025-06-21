@@ -93,7 +93,7 @@ class WeeklyCarePlanApiController extends Controller
 
             'custom_description.*.required_with' => 'Please provide a description for custom interventions',
             'custom_description.*.min' => 'Custom intervention description must be at least 5 characters',
-            'custom_description.*.max' => 'Custom intervention description cannot exceed 255 characters',
+            'custom_description.*.max' => 'Custom intervention description must not exceed 255 characters',
             'custom_description.*.regex' => 'Custom intervention description must contain text and can only include letters, numbers, and basic punctuation',
 
             'custom_duration.*.required_with' => 'Please provide a duration for custom interventions',
@@ -236,6 +236,12 @@ class WeeklyCarePlanApiController extends Controller
                 $request->user()->id,
                 'Weekly Care Plan Created',
                 'Your weekly care plan creation was successful.'
+            );
+
+            // Notify all care managers
+            $this->notificationService->notifyAllCareManagers(
+                'New Weekly Care Plan Created',
+                "A new weekly care plan has been created for beneficiary {$beneficiaryName} by care worker {$request->user()->id}."
             );
 
             // Log the creation

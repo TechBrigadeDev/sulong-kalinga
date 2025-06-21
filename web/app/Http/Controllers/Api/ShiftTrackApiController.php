@@ -6,9 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Shift;
 use App\Models\ShiftTrack;
+use App\Services\NotificationService;
 
 class ShiftTrackApiController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Get all arrival/departure shift tracks for a specific shift.
      */
@@ -156,6 +164,16 @@ class ShiftTrackApiController extends Controller
             $visitation->status = 'completed';
             $visitation->save();
         }
+
+        // --- Notify all care managers ---
+        $careWorkerName = $shift->careWorker->first_name . ' ' . $shift->careWorker->last_name;
+        $beneficiaryName = $visitation->beneficiary ? ($visitation->beneficiary->first_name . ' ' . $visitation->beneficiary->last_name) : '';
+        $statusText = ucfirst($request->arrival_status);
+
+        $title = "Care Worker {$statusText} at Visitation";
+        $message = "Care worker {$careWorkerName} has {$statusText} for beneficiary {$beneficiaryName}.";
+
+        $this->notificationService->notifyAllCareManagers($title, $message);
 
         return response()->json($track, 201);
     }
