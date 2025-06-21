@@ -546,3 +546,740 @@ def extract_main_subject(doc):
     
     # Default subjects if no person entity found
     return "Ang beneficiary"
+
+def enhanced_main_subject_extraction(doc):
+    """Extract the main subject (person) with improved Filipino name detection."""
+    # Honorific patterns specific to Filipino context
+    filipino_honorifics = [
+        "si", "kay", "lolo", "lola", "tatay", "nanay", "kuya", "ate", 
+        "tito", "tita", "ginoong", "ginang", "binibining", "doktor", "dr."
+    ]
+    
+    # First try to find standard named entities
+    for ent in doc.ents:
+        if ent.label_ == "PER":
+            # Extract properly - include title if present
+            start_idx = max(0, ent.start - 2)
+            preceding_tokens = doc[start_idx:ent.start]
+            
+            # Check if a Filipino honorific precedes the name
+            has_honorific = any(token.text.lower() in filipino_honorifics for token in preceding_tokens)
+            
+            if has_honorific:
+                # Include the honorific in the subject
+                subject = doc[start_idx:ent.end].text
+                return subject
+            else:
+                # Just return the entity text
+                return ent.text
+                
+    # Fallback approach - look for honorific + proper noun patterns
+    for i, token in enumerate(doc):
+        if token.text.lower() in filipino_honorifics and i+1 < len(doc):
+            next_token = doc[i+1]
+            # Check if next token is a proper noun or has capital first letter
+            if next_token.pos_ == "PROPN" or (next_token.text[0].isupper() if next_token.text else False):
+                # Simple honorific + name
+                if i+2 < len(doc) and doc[i+2].pos_ == "PROPN":
+                    # Likely first and last name
+                    return doc[i:i+3].text
+                else:
+                    # Just honorific and single name
+                    return doc[i:i+2].text
+    
+    # Default fallbacks
+    return "Ang beneficiary"
+
+def get_entity_section_confidence(entity_text, entity_label, section_name):
+    """Calculate confidence score for entity belonging to a specific section."""
+    base_score = 1.0
+    
+    # Section-specific entity boosting with detailed categories
+    # Section-specific entity boosting with detailed categories
+    section_entity_affinities = {
+        # KEY RECOMMENDATIONS - Enhanced based on samples
+        "pangunahing_rekomendasyon": {
+            "RECOMMENDATION": [
+                "immediate", "urgent", "primary", "key recommendation", "critical", 
+                "priority", "essential", "important", "necessary", "agarang", 
+                "kritikal", "pangunahing rekomendasyon", "mahalagang",
+                # New from samples
+                "kinakailangang ma-address agad", "comprehensive assessment", 
+                "konsultasyon sa neurologist", "geriatrician", "ophthalmologist", 
+                "psychiatric evaluation", "ENT specialist", "physical therapist"
+            ],
+            "HEALTHCARE_REFERRAL": [
+                "refer to", "consultation with", "evaluation by", "specialist", 
+                "doctor", "physical therapist", "occupational therapist", 
+                "medical professional",
+                # New from samples
+                "geriatric psychiatrist", "psychologist", "formal evaluation",
+                "komprehensibong assessment", "agarang psychiatric evaluation",
+                "sleep specialist", "audiologist", "proper assessment"
+            ],
+            "WARNING_SIGN": [
+                "red flag", "warning sign", "serious symptom", "concerning finding", 
+                "dangerous condition",
+                # New from samples
+                "suicidal ideation", "thoughts of death", "kawalang-saysay ng buhay",
+                "floating spots", "flashes of light", "chest pain", "labored breathing",
+                "significant weight loss", "pagkawala ng balanse"
+            ]
+        },
+        "pain_discomfort": {
+            "SYMPTOM": [
+                "pain", "sakit", "ache", "throbbing", "burning", "pananakit", "kirot", "masakit",
+                "sumasakit", "discomfort", "uncomfortable", "hindi komportable", "matindi",
+                "chronic pain", "acute pain", "sharp pain", "dull pain", "shooting pain",
+                "referred pain", "radiating pain", "persistent pain", "intermittent pain"
+            ],
+            "BODY_PART": [
+                "head", "ulo", "neck", "leeg", "shoulder", "balikat", "arm", "braso", "elbow",
+                "siko", "wrist", "pulso", "hand", "kamay", "back", "likod", "spine", "chest",
+                "dibdib", "abdomen", "tiyan", "hip", "balakang", "leg", "binti", "knee",
+                "tuhod", "ankle", "foot", "paa", "joints", "kasukasuan", "muscles", "kalamnan"
+            ],
+            "TREATMENT": [
+                "pain relief", "pain management", "pain medication", "analgesic", "painkillers",
+                "gamot sa sakit", "hot compress", "cold pack", "ice", "yelo", "massage",
+                "masahe", "physical therapy", "transcutaneous electrical nerve stimulation",
+                "TENS", "acupuncture", "acupressure", "therapy", "relaxation techniques"
+            ],
+            "MEASUREMENT": [
+                "pain scale", "pain level", "intensity", "severity", "mild", "moderate", "severe",
+                "bahagya", "katamtaman", "malala", "1-10", "numeric rating scale", "visual analog scale"
+            ]
+        },
+
+        "hygiene": {
+            "TREATMENT": [
+                "bathing", "pagliligo", "shower", "bath", "washing", "paglilinis", "brushing teeth",
+                "pagsesepilyo", "oral care", "oral hygiene", "grooming", "pag-aayos",
+                "toileting", "nail care", "hair care", "pag-aahit", "shaving", "skincare"
+            ],
+            "EQUIPMENT": [
+                "soap", "sabon", "shampoo", "toothpaste", "toothbrush", "sipilyo", "towel",
+                "tuwalya", "washcloth", "basin", "palanggana", "sponge", "lotion", "deodorant",
+                "shower chair", "bath bench", "grab bars", "hawakan", "shower hose", "hand-held shower",
+                "long-handled sponge", "adaptive equipment", "bathroom aids", "toilet riser"
+            ],
+            "LIMITATION": [
+                "dependence", "independence", "assistance", "tulong", "supervision", "pagbabantay",
+                "needs help", "nangangailangan ng tulong", "unable to", "hindi kayang", "difficulty",
+                "kahirapan", "challenge", "assistance needed", "unable to maintain", "reliant on others"
+            ],
+            "FREQUENCY": [
+                "daily", "araw-araw", "weekly", "lingguhan", "monthly", "buwanan", "regular",
+                "occasionally", "rarely", "bihira", "intermittently", "routinely", "scheduled"
+            ]
+        },
+        
+        # MOBILITY FUNCTION - Enhanced from mobility samples
+        "mobility_function": {
+            "EQUIPMENT": [
+                "walker", "cane", "wheelchair", "mobility aid", "assistive device",
+                "tungkod", "silya de gulong", "ambulatory aid",
+                # New from samples
+                "quad cane", "handrail", "grab bars", "raised toilet seat", 
+                "handles", "knee braces", "non-slip mats", "walking poles",
+                "specialized canes", "wider base", "electronic lift chair"
+            ],
+            "BODY_PART": [
+                "joints", "muscles", "extremities", "legs", "arms", "back",
+                "kasukasuan", "kalamnan", "binti", "braso", "likod",
+                # New from samples
+                "tuhod", "knee", "hip", "balakang", "lower back", "quadriceps", 
+                "gluteal muscles", "core strength", "ankles", "joints", "feet", "paa"
+            ],
+            "TREATMENT_METHOD": [
+                "strengthening exercises", "balance training", "gait training",
+                "transfer training", "range of motion", "flexibility exercises",
+                # New from samples
+                "leg lifts", "gentle squats", "thigh strengthening", "physical therapy",
+                "occupational therapy assessment", "body mechanics", "safe handling techniques",
+                "proper positioning", "leg exercises", "heat application", "gentle stretching"
+            ],
+            "LIMITATION": [
+                "limited mobility", "difficulty walking", "unsteady gait",
+                "fall risk", "transfer difficulty", "balance problems",
+                # New from samples
+                "hirap sa pagtayo", "difficulty in sit-to-stand", "uneven surfaces",
+                "steps navigation", "hirap sa hagdanan", "freezing episodes",
+                "gait instability", "hirap sa pagbabalanse"
+            ]
+        },
+        
+        # SLEEP MANAGEMENT - Enhanced from insomnia sample
+        "kalagayan_ng_tulog": {
+            "ROUTINE": [
+                "sleep routine", "sleep schedule", "sleep hygiene", "bedtime ritual",
+                "sleep pattern", "sleep habit", "gawing pagtulog",
+                # New from samples
+                "structured bedtime routine", "consistent sleep-wake schedule", 
+                "regular sleep pattern", "pagtigil sa panonood ng TV", "no cellphone use",
+                "no screens", "bedtime", "warm bath", "warm shower"
+            ],
+            "ENVIRONMENT": [
+                "bedroom", "sleep environment", "mattress", "pillow", "bedding",
+                "kwarto", "kama", "unan", "kumot", "sapin",
+                # New from samples
+                "dim light", "quiet room", "nakakagambalang ingay", "room temperature",
+                "temperatura ng kwarto", "relaxing scents", "lavender", "comfortable bed",
+                "comfortable temperature", "dark room"
+            ],
+            "SYMPTOM": [
+                "insomnia", "sleep disturbance", "difficulty sleeping", "early waking",
+                "sleep apnea", "hirap matulog", "pagkagising nang maaga",
+                # New from samples
+                "nightmares", "bangungot", "night sweats", "nagigising sa kalagitnaan ng gabi",
+                "daytime drowsiness", "pagtulog sa hapon", "disturbing dreams",
+                "insomnia", "malalang insomnia", "poor sleep quality"
+            ],
+            "RECOMMENDATION": [
+                "consistent bedtime", "avoid caffeine", "relaxation technique",
+                "sleep position", "comfortable environment",
+                # New from samples
+                "deep breathing exercises", "guided meditation", "journaling bago matulog",
+                "no caffeine after noon", "no caffeine after tanghali", "light snack",
+                "avoid heavy meals", "cognitive restructuring", "avoid stimulation"
+            ]
+        },
+        
+        # MENTAL HEALTH - Enhanced from depression/anxiety samples
+        "kalagayan_mental": {
+            "EMOTION": [
+                "anxiety", "depression", "worry", "stress", "fear", "confusion",
+                "pagkabalisa", "kalungkutan", "pag-aalala", "takot", "pagkalito",
+                # New from samples
+                "grief", "prolonged grief", "complicated grief", "profound loss",
+                "feeling worthless", "kawalang-saysay", "fear of abandonment",
+                "embarassment", "frustration", "irritability", "hopelessness"
+            ],
+            "COGNITIVE": [
+                "memory", "cognition", "orientation", "comprehension", "awareness",
+                "memorya", "pag-unawa", "awareness", "cognitive function",
+                # New from samples
+                "sundowning syndrome", "confusion at night", "agitation sa gabi",
+                "false beliefs", "disorientation", "cognitive decline", 
+                "pagbabago sa memorya", "negatibong kaisipan", "overthinking"
+            ],
+            "TREATMENT": [
+                "counseling", "therapy", "emotional support", "psychological support",
+                "cognitive exercises", "mental stimulation",
+                # New from samples
+                "psychiatric evaluation", "grief counseling", "support group", 
+                "grief support", "gentle routine", "structured activities",
+                "cognitive behavioral therapy", "relaxation techniques"
+            ],
+            "SOCIAL_REL": [
+                "socialization", "interaction", "engagement", "participation",
+                "pakikisalamuha", "pakikipag-ugnayan",
+                # New from samples
+                "small manageable interactions", "social circle", "social connections",
+                "support group", "small, quiet gatherings", "family interaction",
+                "spiritual needs", "prayer", "meditation", "church visit"
+            ]
+        },
+        
+        # MEDICATION MANAGEMENT - Enhanced from medication samples
+        "pamamahala_ng_gamot": {
+            "MEDICATION": [
+                "tablet", "capsule", "pill", "tableta", "kapsula", "gamot",
+                "prescription", "reseta", "dose", "dosis",
+                # New from samples
+                "pain medication", "sleeping pills", "anti-anxiety", "maintenance",
+                "prescription medications", "over-the-counter", "supplements",
+                "anti-depressants", "blood pressure medication", "anti-inflammatory"
+            ],
+            "EDUCATION": [
+                "medication education", "drug information", "side effect",
+                "drug interaction", "contraindication", "instruction",
+                # New from samples
+                "simplified explanation sheet", "package insert", "pag-unawa sa gamot",
+                "fears tungkol sa medications", "misconceptions", "simplified visual guide",
+                "potential side effects", "rare complications", "benefits over risks",
+                "medication literacy", "medication guide"
+            ],
+            "RECOMMENDATION": [
+                "medication adherence", "compliance", "pill organizer",
+                "reminder system", "pagsunod sa gamot", "medication safety",
+                # New from samples
+                "take medication as prescribed", "hindi lang kapag may sakit", 
+                "regular schedule", "consistent timing", "medication diary",
+                "tracking log", "pill box", "medication dispenser"
+            ]
+        },
+        
+        # SAFETY RISK FACTORS - Enhanced from falls prevention samples
+        "safety_risk_factors": {
+            "RISK_FACTOR": [
+                "fall risk", "fall hazard", "panganib ng pagkahulog", "trip hazard", 
+                "safety hazard", "slippery", "madulas", "uneven surface",
+                # New from samples
+                "clutter", "walang suporta sa banyo", "loose mats", "madilim na lugar",
+                "poor lighting", "cords", "cables", "high steps", "unstable furniture",
+                "dizziness", "pagkawala ng balanse", "medication side effects",
+                "poor vision", "night vision problems", "poor depth perception"
+            ],
+            "PREVENTION": [
+                "grab bars", "handrails", "safety rails", "non-slip", "rubber mat",
+                "lighting", "clear pathways", "proper footwear",
+                # New from samples
+                "motion-activated lights", "nightlights", "bedside commode",
+                "removal of tripping hazards", "removal of loose rugs",
+                "rearrange furniture", "declutter", "stable furniture",
+                "slip-resistant shoes", "cushioned soles", "wide base support"
+            ],
+            "ENVIRONMENT": [
+                "stairs", "bathroom", "shower", "kitchen", "hagdanan", 
+                "paliguan", "banyo", "kusina", "walkway", "daanan",
+                # New from samples
+                "hallway", "living room", "kitchen area", "bedroom", "entrance",
+                "outdoor paths", "garden", "pasilyo", "salas", "hagdan",
+                "sidewalk", "patio", "balcony", "threshold", "uneven terrain"
+            ]
+        },
+        
+        # ORAL HEALTH - Enhanced from dental health samples
+        "kalusugan_ng_bibig": {
+            "BODY_PART": [
+                "tooth", "teeth", "gums", "tongue", "mouth", "oral cavity", 
+                "ngipin", "dila", "gilagid", "bibig", "ngala-ngala", "jaw", "panga",
+                # New from samples
+                "palate", "cheeks", "pisngi", "lips", "labi", "mucous membrane",
+                "saliva glands", "buccal tissue", "sublingual area", "periodontal tissue"
+            ],
+            "TREATMENT": [
+                "brushing", "flossing", "dental checkup", "tooth extraction", 
+                "pagsesepilyo", "dental cleaning", "oral examination",
+                # New from samples
+                "paraffin wax treatment", "mouthwash", "warm salt water rinses",
+                "oral lubricants", "artificial saliva", "lip balm", "topical fluoride",
+                "professional cleaning", "deep cleaning", "scaling", "root planing"
+            ],
+            "DISEASE": [
+                "cavity", "gingivitis", "periodontitis", "dental caries", 
+                "tooth decay", "oral cancer", "sira ng ngipin",
+                # New from samples
+                "dry mouth", "xerostomia", "halitosis", "bad breath", "mabahong hininga",
+                "oral lesions", "mouth sores", "canker sores", "angular cheilitis", 
+                "oral thrush", "leukoplakia", "lichen planus", "erythema multiforme"
+            ]
+        },
+
+        # SYMPTOMS - For assessment document type
+        "mga_sintomas": {
+            "SYMPTOM": [
+                "pain", "ache", "sakit", "pananakit", "kirot", "discomfort", 
+                "hirap", "difficulty", "problema", "nahihirapan", "nahihirapang",
+                # From samples
+                "dizziness", "pagkahilo", "nausea", "pagduduwal", "headache", "sakit ng ulo",
+                "fatigue", "pagod", "shortness of breath", "hirap huminga", "insomnia",
+                "constipation", "diarrhea", "pagtatae", "loss of appetite", "pamamaga",
+                "edema", "night sweats", "fever", "lagnat", "chills", "panlalamig", 
+                "blurry vision", "hearing loss", "ringing", "balance problems"
+            ],
+            "DISEASE": [
+                "arthritis", "diabetes", "hypertension", "altapresyon", "pneumonia", 
+                "stroke", "heart disease", "sakit sa puso", "UTI", "infection",
+                # From samples
+                "COPD", "dementia", "Alzheimer's", "Parkinson's", "depression",
+                "anxiety", "pagkabalisa", "osteoporosis", "chronic pain", "neuropathy",
+                "peripheral neuropathy", "peripheral edema", "sleep apnea", "insomnia"
+            ],
+            "BODY_PART": [
+                "head", "ulo", "chest", "dibdib", "abdomen", "tiyan", "joints", 
+                "kasukasuan", "back", "likod", "leg", "binti", "arm", "braso",
+                # From samples
+                "knee", "tuhod", "hip", "balakang", "ankle", "wrist", "pulso",
+                "shoulder", "balikat", "neck", "leeg", "eyes", "mata", "ears", "tainga",
+                "feet", "paa", "hands", "kamay", "toes", "fingers", "daliri"
+            ]
+        },
+        
+        # PHYSICAL CONDITION - For assessment document type
+        "kalagayan_pangkatawan": {
+            "MEASUREMENT": [
+                "blood pressure", "presyon", "heart rate", "pulse", "temperatura", 
+                "temperature", "oxygen level", "oxygen saturation", "SpO2", 
+                # From samples
+                "vital signs", "respiratory rate", "breathing rate", "glucose level", 
+                "blood sugar", "weight", "timbang", "height", "tangkad", "BMI",
+                "body mass index", "waist circumference", "hip measurement"
+            ],
+            "PHYSICAL_STATE": [
+                "weak", "mahina", "strong", "malakas", "stable", "unstable", 
+                "frail", "mahina", "muscle tone", "skin texture", "skin color", 
+                # From samples
+                "pale", "maputla", "cyanotic", "edematous", "mamamaga", "underweight",
+                "overweight", "obese", "malnourished", "dehydrated", "fatigued",
+                "well-built", "thin", "payat", "mataba", "cachexic", "wasted"
+            ],
+            "LIMITATION": [
+                "limited range", "stiffness", "paninigas", "weakness", "kahinaan", 
+                "imbalance", "poor balance", "poor coordination", "limited mobility",
+                # From samples
+                "difficulty walking", "hirap maglakad", "tremors", "panginginig",
+                "paralysis", "decreased strength", "limited endurance", "mabilis mapagod",
+                "poor grip strength", "mahina ang hawak", "poor fine motor skills",
+                "inability to stand", "hindi makatayo", "bed-bound", "nakahiga"
+            ]
+        },
+        
+        # ACTIVITIES - For assessment document type
+        "aktibidad": {
+            "ADL": [
+                "bathing", "pagligo", "dressing", "pagbibihis", "eating", "pagkain", 
+                "toileting", "pag-CR", "grooming", "pag-aayos", "mobility", "paggalaw",
+                # From samples
+                "cooking", "pagluluto", "cleaning", "paglilinis", "shopping", "pamimili",
+                "using phone", "paggamit ng telepono", "medication management",
+                "money management", "transportation", "pagbibiyahe", "using stairs"
+            ],
+            "EQUIPMENT": [
+                "cane", "tungkod", "walker", "wheelchair", "silya de gulong", "bedside commode", 
+                "hospital bed", "trapeze", "grab bars", "shower chair", "bath bench",
+                # From samples
+                "toilet riser", "elevated toilet seat", "handrails", "adaptive utensils",
+                "dressing aids", "reacher", "long-handled sponge", "button hook",
+                "elastic shoelaces", "sock aid", "transfer board", "lift equipment"
+            ],
+            "ASSISTANCE": [
+                "independent", "independent sa", "requires assistance", "nangangailangan ng tulong", 
+                "dependent sa", "partial assistance", "minimal assistance", "moderate assistance", 
+                # From samples
+                "maksimal na tulong", "maximal assistance", "standby assistance",
+                "verbal cues", "verbal reminders", "physical assistance", "supervision",
+                "pagbabantay", "complete dependence", "lubusang pag-asa sa iba"
+            ]
+        },
+        
+        # SOCIAL CONDITION - For assessment document type
+        "kalagayan_social": {
+            "SOCIAL_REL": [
+                "family", "pamilya", "spouse", "asawa", "children", "anak", "friends", 
+                "kaibigan", "caregiver", "tagapag-alaga", "support", "suporta", 
+                # From samples
+                "lives with", "kasama sa bahay", "grandchildren", "apo", "neighbors",
+                "kapitbahay", "relatives", "kamag-anak", "church members", "community",
+                "social group", "senior center", "day care", "support group", "companions"
+            ],
+            "SOCIAL_STATE": [
+                "isolated", "nag-iisa", "lonely", "nalulungkot", "engaged", "active", 
+                "withdrawn", "umiiwas", "social", "interactive", "nakikisalamuha",
+                # From samples  
+                "sociable", "enjoys company", "prefers solitude", "recently widowed",
+                "newly separated", "living alone", "fear of abandonment", "neglected", 
+                "abused", "biktima ng pang-aabuso", "elder abuse", "social anxiety",
+                "avoidant", "dependent on others", "socially active"
+            ],
+            "LIVING_CONDITION": [
+                "living situation", "tirahan", "home environment", "kapaligiran sa bahay", 
+                "living alone", "nag-iisang nakatira", "assisted living", "care facility", 
+                # From samples
+                "nursing home", "skilled nursing facility", "senior housing", "multi-generational home",
+                "retirement community", "house", "apartment", "second floor", "stairs",
+                "accessiblity issues", "rural area", "urban setting", "far from services"
+            ]
+        },
+        "medical_history": {
+            "DISEASE": [
+                "diabetes", "hypertension", "heart attack", "stroke", "cancer", "arthritis",
+                "COPD", "asthma", "chronic condition", "diyabetis", "altapresyon", 
+                "atake sa puso", "kanser", "rayuma", "hika", "heart disease", "sakit sa puso",
+                "coronary artery disease", "emphysema", "chronic bronchitis", "osteoporosis",
+                "kidney disease", "renal disease", "liver disease", "cirrhosis", "thyroid disorder"
+            ],
+            "TREATMENT": [
+                "surgery", "operation", "procedure", "hospitalization", "admission",
+                "operasyon", "pagkakaospital", "naospital", "paggamot", "therapeutic",
+                "surgical history", "previous surgeries", "past procedures", "intervention"
+            ],
+            "TIME": [
+                "history", "previous", "past", "chronic", "longtime", "years ago", "months ago",
+                "dati", "noon", "nakaraan", "dating", "matagal na", "diagnosed", "na-diagnose",
+                "onset", "duration", "tagal", "simula", "diagnosed since", "existing"
+            ],
+            "MEDICATION": [
+                "maintenance medication", "long-term medication", "controlled with", "managed with", 
+                "prescribed", "treatment regimen", "iniinom na gamot", "gamot", "reseta", 
+                "inirereseta", "medications", "current medications", "medication history"
+            ],
+            "FAMILY_HISTORY": [
+                "family history", "genetic", "hereditary", "runs in the family", "family medical history",
+                "kasaysayan ng pamilya", "namana", "history sa pamilya", "family condition",
+                "parent had", "magulang", "genetics", "inherited", "predisposition"
+            ]
+        }
+    }
+    
+    # Check if this entity has special affinity with the section
+    if section_name in section_entity_affinities:
+        section_affinities = section_entity_affinities[section_name]
+        
+        # Check if entity type has specific affinities
+        if entity_label in section_affinities:
+            # Check if entity text matches any high-affinity terms
+            entity_lower = entity_text.lower()
+            
+            # Full match - highest boost
+            if any(term.lower() == entity_lower for term in section_affinities[entity_label]):
+                return base_score * 4.0
+                
+            # Partial match - good boost
+            if any(term.lower() in entity_lower or entity_lower in term.lower() 
+                  for term in section_affinities[entity_label]):
+                return base_score * 2.5
+    
+    # Default scores by entity type and section - comprehensive mapping
+    entity_section_scores = {
+        # KEY RECOMMENDATIONS
+        "pangunahing_rekomendasyon": {
+            "RECOMMENDATION": 4.0, "HEALTHCARE_REFERRAL": 3.5, 
+            "WARNING_SIGN": 2.5, "TREATMENT_METHOD": 2.5
+        },
+        
+        # ACTION STEPS
+        "mga_hakbang": {
+            "TREATMENT_METHOD": 3.5, "TREATMENT": 3.0,
+            "EQUIPMENT": 2.5, "RECOMMENDATION": 2.5
+        },
+        
+        # CARE NEEDS  
+        "pangangalaga": {
+            "MONITORING": 3.5, "TREATMENT": 3.0,
+            "TIME": 2.0, "DOCUMENTATION": 2.5
+        },
+        
+        # LIFESTYLE CHANGES
+        "pagbabago_sa_pamumuhay": {
+            "RECOMMENDATION": 3.0, "DIET_RECOMMENDATION": 2.5,
+            "ACTIVITY": 2.5, "ENVIRONMENT": 2.0
+        },
+        
+        # SAFETY RISK FACTORS
+        "safety_risk_factors": {
+            "RISK_FACTOR": 4.0, "PREVENTION": 3.0,
+            "ENVIRONMENT": 2.5, "EQUIPMENT": 2.5,
+            "WARNING_SIGN": 2.5
+        },
+        
+        # NUTRITION AND DIET
+        "nutrisyon_at_pagkain": {
+            "DIET_RECOMMENDATION": 4.0, "FOOD": 3.5,
+            "NUTRITION": 3.5, "FOOD_PREPARATION": 3.0
+        },
+        
+        # ORAL/DENTAL HEALTH
+        "kalusugan_ng_bibig": {
+            "BODY_PART": 1.8, "HYGIENE": 2.0, "DENTAL": 3.5, 
+            "SYMPTOM": 1.0, "TREATMENT": 2.5, "DISEASE": 2.0
+        },
+        
+        # MOBILITY AND FUNCTION
+        "mobility_function": {
+            "EQUIPMENT": 3.5, "BODY_PART": 2.0,
+            "TREATMENT_METHOD": 3.0, "LIMITATION": 2.5
+        },
+        
+        # SLEEP MANAGEMENT
+        "kalagayan_ng_tulog": {
+            "ROUTINE": 3.5, "ENVIRONMENT": 2.0,
+            "SYMPTOM": 2.0, "RECOMMENDATION": 2.5
+        },
+        
+        # MEDICATION MANAGEMENT
+        "pamamahala_ng_gamot": {
+            "MEDICATION": 4.0, "PRESCRIPTION": 3.5, "TREATMENT": 2.5, 
+            "TIME": 2.0, "RECOMMENDATION": 2.5, "EDUCATION": 3.0
+        },
+        
+        # FAMILY SUPPORT
+        "suporta_ng_pamilya": {
+            "PERSON": 3.0, "SOCIAL_REL": 3.5,
+            "RECOMMENDATION": 2.5, "ENVIRONMENT": 2.0
+        },
+        
+        # MENTAL/EMOTIONAL HEALTH
+        "kalagayan_mental": {
+            "EMOTION": 3.5, "COGNITIVE": 3.5,
+            "TREATMENT": 2.5, "SOCIAL_REL": 2.0
+        },
+        
+        # PREVENTIVE HEALTH
+        "preventive_health": {
+            "PREVENTION": 3.5, "HEALTHCARE_REFERRAL": 3.0,
+            "WARNING_SIGN": 2.5, "RISK_FACTOR": 3.0
+        },
+        
+        # VITAL SIGNS MEASUREMENTS
+        "vital_signs_measurements": {
+            "MEASUREMENT": 4.0, "MONITORING": 3.5,
+            "EQUIPMENT": 2.5, "RECOMMENDATION": 2.0
+        },
+         # Assessment section scores
+        "mga_sintomas": {
+            "SYMPTOM": 4.0, "DISEASE": 3.5, "BODY_PART": 2.0,
+            "TIME": 1.5, "FREQUENCY": 2.0
+        },
+        "kalagayan_pangkatawan": {
+            "MEASUREMENT": 3.5, "PHYSICAL_STATE": 3.0, 
+            "LIMITATION": 2.5, "BODY_PART": 2.0
+        },
+        "aktibidad": {
+            "ADL": 3.5, "EQUIPMENT": 2.5,
+            "ASSISTANCE": 3.0, "LIMITATION": 2.0
+        },
+        "kalagayan_social": {
+            "SOCIAL_REL": 3.5, "SOCIAL_STATE": 3.0,
+            "LIVING_CONDITION": 2.5, "PERSON": 2.0
+        },
+        "medical_history": {
+            "DISEASE": 4.0, "TREATMENT": 3.0, "TIME": 3.0, 
+            "MEDICATION": 2.5, "FAMILY_HISTORY": 3.5, "PERSON": 1.5,
+            "SYMPTOM": 1.8, "RISK_FACTOR": 2.0, "HEALTHCARE_REFERRAL": 2.0
+        },
+        "pain_discomfort": {
+            "SYMPTOM": 4.0, "BODY_PART": 3.0, "TREATMENT": 2.5,
+            "MEASUREMENT": 3.0, "TIME": 1.5, "FREQUENCY": 2.0
+        },
+
+        "hygiene": {
+            "TREATMENT": 3.5, "EQUIPMENT": 3.0, "LIMITATION": 3.0,
+            "FREQUENCY": 2.5, "BODY_PART": 1.5, "PERSON": 1.0
+        }
+    }
+    
+    # Return appropriate boost if available
+    if section_name in entity_section_scores and entity_label in entity_section_scores[section_name]:
+        return entity_section_scores[section_name][entity_label]
+        
+    # Base score for non-specific matches
+    return base_score
+
+def normalize_medical_entity(entity_text, entity_type=None):
+    """Normalize medical entity text to handle variations and improve matching."""
+    if not entity_text:
+        return entity_text
+        
+    normalized = entity_text.lower().strip()
+    
+    # Common abbreviations and their expansions
+    abbreviations = {
+        "bp": "blood pressure", "hr": "heart rate", "rr": "respiratory rate",
+        "t": "temperature", "temp": "temperature", "spo2": "oxygen saturation",
+        "bs": "blood sugar", "dm": "diabetes mellitus", "htn": "hypertension",
+        "cva": "cerebrovascular accident", "mi": "myocardial infarction",
+        "copd": "chronic obstructive pulmonary disease", "uti": "urinary tract infection",
+        "adl": "activities of daily living", "cabg": "coronary artery bypass graft",
+        "chf": "congestive heart failure"
+    }
+    
+    # Check for exact abbreviation match
+    if normalized in abbreviations:
+        normalized = abbreviations[normalized]
+    
+    # Remove common prefixes/suffixes that don't change meaning
+    normalized = re.sub(r'^(ang|mga|sa|ng)\s+', '', normalized)
+    normalized = re.sub(r'\s+(niya|nila|ko|mo|nya|namin|niyang|nang)', '', normalized)
+    
+    # Standardize units of measurement
+    normalized = re.sub(r'(\d+)\s*(/)\s*(\d+)', r'\1\2\3', normalized)  # Fix spaces in fractions
+    
+    # Standardize Filipino health terms
+    filipino_term_mapping = {
+        "presyon": "blood pressure",
+        "altapresyon": "hypertension",
+        "diyabetis": "diabetes",
+        "atake sa puso": "heart attack",
+        "sakit sa puso": "heart disease",
+        "stroke": "stroke",
+        "demensya": "dementia",
+        "sipon": "common cold",
+        "ubo": "cough",
+        "lagnat": "fever",
+        "rayuma": "arthritis"
+    }
+    
+    # Apply Filipino term standardization
+    for term, standard in filipino_term_mapping.items():
+        if term in normalized:
+            normalized = normalized.replace(term, standard)
+    
+    # Handle specific entity types
+    if entity_type == "MEDICATION":
+        # Remove dose information for medication matching
+        normalized = re.sub(r'\d+\s*mg|\d+\s*ml|\d+\s*mcg', '', normalized).strip()
+        
+    elif entity_type == "SYMPTOM":
+        # Standardize symptom descriptions
+        pain_terms = ["sakit", "pananakit", "sumasakit", "masakit", "pain"]
+        if any(term in normalized for term in pain_terms):
+            if "chest" in normalized or "dibdib" in normalized:
+                normalized = "chest pain"
+            elif "head" in normalized or "ulo" in normalized:
+                normalized = "headache"
+            elif "stomach" in normalized or "tiyan" in normalized:
+                normalized = "abdominal pain"
+    
+    return normalized
+
+def detect_entity_relationships(doc, entity_spans, max_distance=10):
+    """Detect relationships between medical entities in text."""
+    relationships = []
+    
+    # Skip if we have fewer than 2 entities
+    if len(entity_spans) < 2:
+        return relationships
+    
+    # Relationship patterns to look for between entities
+    relationship_patterns = [
+        (["SYMPTOM", "SYMPTOM"], ["worsened by", "triggered by", "associated with", "along with", 
+                                "kasabay ng", "kasama ang", "at"]),
+        (["SYMPTOM", "DISEASE"], ["caused by", "due to", "dahil sa", "associated with", 
+                                "indication of", "sign of"]),
+        (["SYMPTOM", "MEDICATION"], ["relieved by", "treated with", "responds to", 
+                                   "ginagamot gamit ang"]),
+        (["SYMPTOM", "BODY_PART"], ["in the", "on the", "around the", "of the", "sa", "sa may"]),
+        (["DISEASE", "TREATMENT"], ["treated with", "managed with", "requires", 
+                                  "needs", "ginagamot gamit ang"]),
+        (["MEDICATION", "DISEASE"], ["for", "prescribed for", "treats", "para sa", "gamot sa"]),
+        (["BODY_PART", "RISK_FACTOR"], ["at risk for", "vulnerable to", "prone to", 
+                                      "nanganganib sa"]),
+    ]
+    
+    # Sort entities by document position
+    sorted_entities = sorted(entity_spans, key=lambda e: e.start)
+    
+    # Check pairs of entities
+    for i, entity1 in enumerate(sorted_entities[:-1]):
+        for j in range(i+1, min(i+max_distance, len(sorted_entities))):
+            entity2 = sorted_entities[j]
+            
+            # Calculate token distance between entities
+            distance = entity2.start - entity1.end
+            
+            # Skip if too far apart
+            if distance > 15:
+                continue
+            
+            # Extract text between entities to check for relationship indicators
+            if entity1.end < entity2.start:  # Entities don't overlap
+                between_text = doc.text[entity1.end:entity2.start].lower().strip()
+                
+                # Check if entity types and between text match relationship patterns
+                for (type_pair, indicators) in relationship_patterns:
+                    if [entity1.label_, entity2.label_] == type_pair:
+                        # Check for relationship indicators in between text
+                        if any(indicator in between_text for indicator in indicators):
+                            relationship_type = f"{type_pair[0]}_TO_{type_pair[1]}"
+                            relationships.append({
+                                "entity1": entity1.text,
+                                "entity1_type": entity1.label_,
+                                "entity2": entity2.text,
+                                "entity2_type": entity2.label_,
+                                "relationship": relationship_type,
+                                "confidence": 0.85 if len(between_text) < 10 else 0.7
+                            })
+    
+    return relationships

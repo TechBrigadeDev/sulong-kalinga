@@ -1078,97 +1078,125 @@
             function displaySummarySections(type, sections) {
                 if (!sections) return;
                 
-                // IMPORTANT: Save summary text before clearing the container
-                const summaryText = $(`#${type}SummaryDraft`).text();
-                
-                let container = $(`#${type}SummarySections`);
-                container.empty();
-                
-                Object.entries(sections).forEach(([key, value]) => {
-                    let sectionTitle = key.replace('_', ' ');
-                    sectionTitle = sectionTitle.charAt(0).toUpperCase() + sectionTitle.slice(1);
-                    
-                    let sectionIcon = '';
-                    switch(key) {
-                        case 'vital_signs': sectionIcon = 'bi-heart-pulse'; break;
-                        case 'symptoms': sectionIcon = 'bi-thermometer-half'; break;
-                        case 'observations': sectionIcon = 'bi-eye'; break;
-                        case 'findings': sectionIcon = 'bi-search'; break;
-                        case 'recommendations': sectionIcon = 'bi-lightbulb'; break;
-                        case 'treatment': sectionIcon = 'bi-capsule'; break;
-                        case 'follow_up': sectionIcon = 'bi-calendar-check'; break;
-                        // New additions from the first function's switch cases
-                        case 'hygiene': sectionIcon = 'bi-activity'; break;
-                        case 'mga_sintomas': sectionIcon = 'bi-activity'; break;
-                        case 'kalagayan_pangkatawan': sectionIcon = 'bi-person'; break;
-                        case 'kalagayan_mental': sectionIcon = 'bi-brain'; break;
-                        case 'kalagayan_social': sectionIcon = 'bi-people'; break;
-                        case 'aktibidad': sectionIcon = 'bi-clipboard-check'; break;
-                        case 'kalusugan_ng_bibig': sectionIcon = 'bi-emoji-smile'; break;
-                        case 'mobility_function': sectionIcon = 'bi-person-walking'; break;
-                        case 'kalagayan_ng_tulog': sectionIcon = 'bi-moon'; break;
-                        case 'pain_discomfort': sectionIcon = 'bi-thermometer-half'; break;
-                        case 'nutrisyon_at_pagkain': sectionIcon = 'bi-egg-fried'; break;
-                        case 'suporta_ng_pamilya': sectionIcon = 'bi-heart'; break;
-                        case 'pamamahala_ng_gamot': sectionIcon = 'bi-capsule'; break;
-                        case 'safety_risk_factors': sectionIcon = 'bi-shield-exclamation'; break;
-                        case 'vital_signs_measurements': sectionIcon = 'bi-heart-pulse'; break;
-                        case 'medical_history': sectionIcon = 'bi-journal-medical'; break;
-                        case 'preventive_health': sectionIcon = 'bi-shield-plus'; break;
-                        // Add icons for new sections
-                        case 'safety_risk_factors':  sectionIcon = 'bi-shield-exclamation'; break;
-                        case 'nutrisyon_at_pagkain': sectionIcon = 'bi-egg-fried'; break;
-                        case 'kalusugan_ng_bibig': sectionIcon = 'bi-emoji-smile'; break;
-                        case 'mobility_function': sectionIcon = 'bi-person-walking'; break;
-                        case 'kalagayan_ng_tulog': sectionIcon = 'bi-moon-stars'; break;
-                        case 'pamamahala_ng_gamot': sectionIcon = 'bi-capsule'; break;
-                        case 'suporta_ng_pamilya': sectionIcon = 'bi-people-fill'; break;
-                        case 'kalagayan_mental': sectionIcon = 'bi-brain'; break;
-                        case 'preventive_health': sectionIcon = 'bi-umbrella'; break;
-                        case 'vital_signs_measurements': sectionIcon = 'bi-activity'; break;
-                        default: sectionIcon = 'bi-card-text';
-                    }
-                    
-                    // Use different card style based on type
-                    const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
-                    
-                    const sectionNames = {
-                        // Existing sections
-                        'pangunahing_rekomendasyon': 'Key Recommendations',
-                        'mga_hakbang': 'Action Steps',
-                        'pangangalaga': 'Care Needs',
-                        'pagbabago_sa_pamumuhay': 'Lifestyle Changes',
-                        
-                        // New sections with human-readable names
-                        'safety_risk_factors': 'Safety & Risk Factors',
-                        'nutrisyon_at_pagkain': 'Nutrition & Diet',
-                        'kalusugan_ng_bibig': 'Oral Health',
-                        'mobility_function': 'Mobility & Function',
-                        'kalagayan_ng_tulog': 'Sleep Management',
-                        'pamamahala_ng_gamot': 'Medication Management',
-                        'suporta_ng_pamilya': 'Family Support',
-                        'kalagayan_mental': 'Mental Health',
-                        'preventive_health': 'Preventive Health',
-                        'vital_signs_measurements': 'Vital Signs'
-                    };
+                const sectionContainer = $(`#${type}SummarySections`);
+                sectionContainer.empty();
 
-                    let sectionHtml = `
-                    <div class="card mb-3 ${cardClass}">
-                        <div class="card-header py-2 bg-light d-flex align-items-center">
-                            <i class="bi ${sectionIcon} me-2"></i>
-                            <h6 class="mb-0">${sectionTitle}</h6>
-                        </div>
-                        <div class="card-body py-2">
-                            <p class="section-content mb-0" data-section="${key}">${value}</p>
-                            <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${value}</textarea>
-                        </div>
-                    </div>`;
+                // Define comprehensive section names mapping for both assessment and evaluation
+                const sectionNames = {
+                    // Assessment sections
+                    'mga_sintomas': 'Symptoms',
+                    'kalagayan_pangkatawan': 'Physical Condition',
+                    'kalagayan_mental': 'Mental State',
+                    'aktibidad': 'Activities',
+                    'kalagayan_social': 'Social Condition',
+                    'pain_discomfort': 'Pain & Discomfort',
+                    'hygiene': 'Hygiene & Self-Care',
+                    'medical_history': 'Medical History',
                     
-                    container.append(sectionHtml);
+                    // Evaluation sections
+                    'pangunahing_rekomendasyon': 'Key Recommendations',
+                    'mga_hakbang': 'Action Steps',
+                    'pangangalaga': 'Care Needs',
+                    'pagbabago_sa_pamumuhay': 'Lifestyle Changes',
+                    'safety_risk_factors': 'Safety & Risk Factors',
+                    'nutrisyon_at_pagkain': 'Nutrition & Diet',
+                    'kalusugan_ng_bibig': 'Oral Health',
+                    'mobility_function': 'Mobility & Function',
+                    'kalagayan_ng_tulog': 'Sleep Management',
+                    'pamamahala_ng_gamot': 'Medication Management',
+                    'suporta_ng_pamilya': 'Family Support',
+                    'preventive_health': 'Preventive Health',
+                    'vital_signs_measurements': 'Vital Signs',
+
+                    // Overflow Section
+                    'additional_information': 'Additional Important Information'
+                };
+
+                // Define comprehensive section icons mapping
+                const sectionIcons = {
+                    // Assessment sections
+                    'mga_sintomas': 'bi-thermometer-half',
+                    'kalagayan_pangkatawan': 'bi-person',
+                    'kalagayan_mental': 'bi-brain',
+                    'aktibidad': 'bi-clipboard-check',
+                    'kalagayan_social': 'bi-people',
+                    'pain_discomfort': 'bi-exclamation-triangle',
+                    'hygiene_habits': 'bi-droplet',
+                    'medical_history': 'bi-journal-medical',
+                    
+                    // Evaluation sections
+                    'pangunahing_rekomendasyon': 'bi-star-fill',
+                    'mga_hakbang': 'bi-list-check',
+                    'pangangalaga': 'bi-heart-pulse',
+                    'pagbabago_sa_pamumuhay': 'bi-arrow-repeat',
+                    'safety_risk_factors': 'bi-shield-exclamation',
+                    'nutrisyon_at_pagkain': 'bi-egg-fried',
+                    'kalusugan_ng_bibig': 'bi-emoji-smile',
+                    'mobility_function': 'bi-person-walking',
+                    'kalagayan_ng_tulog': 'bi-moon-stars',
+                    'pamamahala_ng_gamot': 'bi-capsule',
+                    'suporta_ng_pamilya': 'bi-people-fill',
+                    'preventive_health': 'bi-umbrella',
+                    'vital_signs_measurements': 'bi-activity',
+
+                    'additional_information': 'bi-info-circle-fill'  // Using an info icon for additional info
+                };
+
+                // Format section names for display and handle underscore replacement
+                const formatSectionName = (name) => {
+                    // First check if we have a predefined name
+                    if (sectionNames[name]) {
+                        return sectionNames[name];
+                    }
+                    // Otherwise, format the name by replacing underscores with spaces and capitalizing
+                    return name.replace(/_/g, ' ')
+                        .replace(/\b\w/g, c => c.toUpperCase()); // Capitalize first letter of each word
+                };
+
+                // NEW: Sort sections to ensure additional_information is always last
+                const orderedSections = Object.entries(sections).sort(([keyA], [keyB]) => {
+                    // If either key is 'additional_information', sort accordingly
+                    if (keyA === 'additional_information') return 1;  // Move to end
+                    if (keyB === 'additional_information') return -1; // Keep others before
+                    return 0; // Maintain existing order for other sections
+                });
+                
+                 // Format for display - use orderedSections instead of Object.entries(sections)
+                orderedSections.forEach(([key, value]) => {
+                    if (value.trim()) {
+                        // Use the card style based on type
+                        const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
+                        
+                        // Get icon for this section
+                        const sectionIcon = sectionIcons[key] || 'bi-card-text'; // Default icon if not found
+                        
+                        // Get formatted section name
+                        const sectionTitle = formatSectionName(key);
+                        
+                        // Generate HTML for section
+                        let sectionHtml = `
+                        <div class="card mb-3 ${cardClass}">
+                            <div class="card-header py-2 bg-light d-flex align-items-center">
+                                <i class="bi ${sectionIcon} me-2"></i>
+                                <h6 class="mb-0">${sectionTitle}</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <p class="section-content mb-0" data-section="${key}">${value}</p>
+                                <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${value}</textarea>
+                            </div>
+                        </div>`;
+                        
+                        // Append to container
+                        sectionContainer.append(sectionHtml);
+                    }
                 });
 
-                // Re-add the draft with the SAVED text, not the now-empty text
-                container.append(`<div id="${type}SummaryDraft" style="display:none;">${summaryText}</div>`);
+                // Get the summary text ONCE and reuse it
+                const summaryText = $(`#${type}SummaryDraft`).text();
+                if (summaryText) {
+                    // Use sectionContainer consistently
+                    sectionContainer.append(`<div id="${type}SummaryDraft" style="display:none;">${summaryText}</div>`);
+                }
             }
             
             // Edit assessment summary

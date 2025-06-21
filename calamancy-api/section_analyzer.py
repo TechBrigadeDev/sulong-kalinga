@@ -1,8 +1,8 @@
 import re
 from nlp_loader import nlp
-from entity_extractor import extract_structured_elements
+from entity_extractor import extract_structured_elements, get_entity_section_confidence
 from text_processor import split_into_sentences
-from context_analyzer import detect_oral_medication_context
+from context_analyzer import detect_oral_medication_context, get_contextual_relationship
 
 def extract_sections_improved(sentences, doc_type="assessment"):
     """Extract and categorize sections with improved handling of complete sentences."""
@@ -61,12 +61,33 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             r'(nagpapakita|nagpapahiwatig) ng (signs|sintomas) ng (depression|anxiety|dementia)',
             r'(kalimutan|nakakalimutan|nalilimutan) (niya|nila|nya) (kung|ang)',
             r'(nalilito|confused|naguguluhan) (siya|sila) (tungkol sa|kapag|sa)',
-            r'(nag-aalala|worried|concerned) (siya|siyang|sila) (tungkol sa|dahil sa)',
+            r'(nag-aalala|worried|concerned) (siya|siyang|sila) (tungkol sa|dahil sa) (kanyang|kaniyang) (emosyon|damdamin|mental health)',
             r'(bumaba|tumaas) ang (kanyang|kaniyang) (mood|disposition|estado ng isip)',
             r'(nagiging|naging) (iritable|mainitim ang ulo|short-tempered)',
             r'mental health (issues|concerns|problems)',
             r'hindi (niya|nya|nila) (matandaan|maalala) ang (kanyang|kaniyang)',
             r'(nagpapakita|nagpapamalas) ng (anxiety|depression|lungkot|kalungkutan)',
+            r'(nagbabago-bago|unstable) ang (kanyang|kaniyang) (emosyon|damdamin)',
+            r'(nahihirapan|hirap) (siyang|siyang) mag-(focus|concentrate)',
+            r'(nababalisa|nag-aalalala|worried) (siya|siyang) lagi',
+            r'(nagiging|naging) (defensive|agitated|irritable) (siya|siyang)',
+            r'may cognitive (impairment|decline|deterioration)',
+            r'(bumababa|lumalala) ang (kanyang|kaniyang) kakayahang (mag-isip|magdesisyon)',
+            r'(may|nagpapakita ng|nagpapahiwatig ng) confusion (siya|sila)',
+            r'(feeling|nakakaramdam ng) (hopeless|worthless|helpless|walang halaga)',
+            # More specific mental health patterns
+            r'(nagpapakita|nagpapahiwatig) ng (signs|sintomas) ng (depression|anxiety|dementia)',
+            r'(kalimutan|nakakalimutan|nalilimutan) (niya|nila|nya) (kung|ang)',
+            r'(nalilito|confused|naguguluhan) (siya|sila) (tungkol sa|kapag|sa)',
+            # Make worried/concerned patterns more specific to mental health concerns
+            r'(nag-aalala|worried|concerned) (siya|siyang|sila) (tungkol sa|dahil sa) (kanyang|kaniyang|sarili|pag-iisip|memorya|kalungkutan|takot)',
+            r'(bumaba|tumaas) ang (kanyang|kaniyang) (mood|disposition|estado ng isip)',
+            r'(nagiging|naging) (iritable|mainitim ang ulo|short-tempered)',
+            # Make this more specific 
+            r'mental health (issues|concerns|problems)',
+            r'hindi (niya|nya|nila) (matandaan|maalala) ang (kanyang|kaniyang)',
+            # Make pattern more specific to emotional states
+            r'(nagpapakita|nagpapamalas) ng (anxiety|depression|lungkot|kalungkutan|mood swings|pagbabago ng emosyon)',
             r'(nagbabago-bago|unstable) ang (kanyang|kaniyang) (emosyon|damdamin)',
             r'(nahihirapan|hirap) (siyang|siyang) mag-(focus|concentrate)',
             r'(nababalisa|nag-aalalala|worried) (siya|siyang) lagi',
@@ -114,7 +135,75 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             r'(nakikilala|nakikita) bilang (burden|pabigat) sa (kanyang|kaniyang) (pamilya)',
             r'(feelings of|nararamdamang) (isolation|pagkakalayo|disconnection)',
             r'(nawala|nabawasan) ang (kanyang|kaniyang) (social role|papel sa lipunan)'
-        ]
+        ],
+        # NEW SECTION: Medical History
+        "medical_history": [
+            # Specific medical history patterns
+            r'(medical history|history ng sakit|medical background|nakaraang karamdaman)',
+            r'(diagnosed|na-diagnose|diagnosed with|na-diagnose na may) (.*)',
+            r'(may sakit s[ai]|may|nakakaranas ng|diagnosed with) (diabetes|hypertension|cancer|stroke|heart disease|altapresyon)',
+            r'(history|kasaysayan) (ng|ni|niya|nila) (heart attack|stroke|surgery|operation)',
+            r'((siya|siyang|sila) ay may|mayroong|meron (siyang|siya|silang)) (diabetes|hypertension|asthma)',
+            r'(chronic|long-term|pangmatagalan) (na )?(condition|illness|sakit)',
+            r'(controlled|hindi kontrolado|controlled with|managed with) (gamot|medication)',
+            r'(previous|dati|nakaraan|dating) (surgery|operasyon|hospital admission|pagkakaospital)',
+            r'(family history|history sa pamilya|genetic|hereditary)',
+            r'(allerg(y|ies)|allergy sa|allergic reactions|reaksyon sa)',
+            r'(tinanong|kinuha|inalam) (ko|namin) (ang|tungkol sa) (kanyang|kaniyang) (medical history|kasaysayan ng kalusugan)',
+            r'(ayon sa|according to|base sa) (kanyang|kaniyang|kanilang) (medical records|record|medical charts?)',
+            r'(previous|dati|dating) (stroke|heart attack|cardiovascular event|myocardial infarction)',
+            r'(comorbid condition|comorbidity|multiple conditions|diagnosed din with)'
+        ],
+        # PAIN & DISCOMFORT
+        "pain_discomfort": [
+            r'(sumasakit|masakit|nakakaramdam ng sakit) (sa|ang) (kanyang|kaniyang)',
+            r'(nararamdaman|nakakaramdam|dumaranas) (niya|nila|nya|ko|ng) (pananakit|kirot)',
+            r'(chronic|acute|matinding|tuloy-tuloy) (pain|sakit|pananakit)',
+            r'(pain|sakit) (scale|intensity|level)',
+            r'(rated|inireyt|sinabi|described) (niya|niyang|nila) (ang|na ang) pain',
+            r'(10|sampung) point scale',
+            r'(intermittent|pabalik-balik|periodic|occasional|paulit-ulit) (na)? pain',
+            r'(radiating|referred|lumalipat|kumakalat) (na)? pain',
+            r'(discomfort|kawalan ng ginhawa|hindi kumportable|uncomfortable)',
+            r'(throbbing|burning|shooting|stabbing|sharp|dull) pain',
+            r'(matigas|sensitive|tender|namamaga) (kapag|when) (pressed|pinipindot|hinihipo)',
+            r'(hindi|di) (makatulog|makagalaw|makalakad|makapaghinga) dahil sa sakit',
+            r'(affected|nakakaapekto|naaapektuhan) (ang|sa) (kanyang|kaniyang) (quality of life|pamumuhay)',
+            r'(lumalala|lumalalang|sumisingkit) (ang|yung) (pananakit|kirot|sakit)',
+            r'(gumiginhawa|lumilinaw|bumubuti) (ang|yung) (pananakit|kirot|sakit)',
+            r'(pain medications?|pain relievers?|pampatanggal ng sakit)',
+            r'(joint pain|muscle pain|sakit ng kalamnan|sakit ng kasukasuan)',
+            r'(cramping|paninigas ng kalamnan|pulikat)',
+            r'(fibromyalgia|neuropathic pain|nerve pain)',
+            r'(headache|migraine|sakit ng ulo)',
+            r'(stomach pain|abdominal pain|sakit ng tiyan)',
+            r'(back pain|lower back pain|sakit ng likod)',
+            r'(stretching|massage|hot compress|ice pack) (for|para sa) (pain|sakit)'
+        ],
+
+        # HYGIENE & SELF-CARE
+        "hygiene": [
+            r'(personal hygiene|personal care|kalinisan ng sarili)',
+            r'(bathing|pagliligo|paliligo|naliligo|maligo) (routines?|habits?|practices?)',
+            r'(nahihirapan|hirap|nahihirapang) (siya|siyang) (maligo|maglinis|mag-ayos)',
+            r'(brushing teeth|pagsesepilyo|oral hygiene|kalinisan ng bibig)',
+            r'(washing|paglilinis|paghuhugas) (ng|sa) (kamay|mukha|face|hands)',
+            r'(independent|needs assistance|kailangan ng tulong) (sa|in) (grooming|hygiene|self-care)',
+            r'(maintenance|pagpapanatili) (ng|sa) (personal|sariling) cleanliness',
+            r'(incontinence care|pangangalaga sa incontinence)',
+            r'(changing clothes|pagpapalit ng damit|bihis)',
+            r'(toileting|paggamit ng banyo|pag-CR)',
+            r'(shaving|ahit|pag-aahit|nail care|hair care|pangangalaga ng buhok)',
+            r'(regular|araw-araw|daily|weekly|lingguhan|monthly|buwanan) (routine|gawain)',
+            r'(self-neglect|pagpapabaya sa sarili|hindi nag-aalaga ng sarili)',
+            r'(hygiene problems|issues sa kalinisan|poor hygiene|mahinang kalinisan)',
+            r'(assistance|tulong|supervision) (with|sa) (sa|sa mga|sa kanyang) (bathing|toileting)',
+            r'(body odor|amoy|hindi magandang amoy|malansang amoy)',
+            r'(clean clothes|malinis na damit|papalitan ng damit)',
+            r'(ability to|kakayahang) (maintain|panatilihin) (cleanliness|kalinisan)',
+            r'(adaptive equipment|shower chair|grab bars) (for|para sa) (bathing|pagliligo)',
+            r'(proper|improper) (hygiene|kalinisan) (practices|gawi|habits|nakagawian)'
+        ],
     }
     
     # Define section keywords with expanded terms for better matching
@@ -269,6 +358,63 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             "generational differences", "pagkakaiba ng henerasyon", "respect issues",
             "acceptance by others", "acceptance ng kondisyon", "stigma", "shame", "hiya",
             "social identity loss", "loss of social standing", "peer relationships"
+        ],
+        # NEW SECTION: Medical History Keywords
+        "medical_history": [
+            "medical history", "history", "kasaysayan", "diagnosis", "diagnosed", "diyagnosis", 
+            "na-diagnose", "condition", "kondisyon", "chronic", "chronic condition", "matagal na sakit", 
+            "pangmatagalang sakit", "hypertension", "altapresyon", "high blood", "mataas na presyon",
+            "diabetes", "dyabetis", "heart attack", "atake sa puso", "myocardial infarction", "MI", 
+            "stroke", "cardiovascular", "heart disease", "sakit sa puso", "coronary artery disease", 
+            "coronary", "pulmonary", "respiratory", "respiratory disease", "sakit sa baga", "COPD", 
+            "emphysema", "chronic bronchitis", "bronchitis", "asthma", "hika", "cancer", "kanser", 
+            "tumor", "bukol", "arthritis", "rayuma", "osteoporosis", "osteoarthritis", "joint disease",
+            "sakit sa kasukasuan", "kidney disease", "sakit sa kidney", "renal", "liver", "atay", 
+            "hepatic", "thyroid", "thyroid disorder", "goiter", "allergies", "alerhiya", "medications", 
+            "gamot", "maintenance", "maintenance medication", "iniinom na gamot", "surgical history", 
+            "operasyon", "surgery", "surgeries", "previous hospitalizations", "naospital", "hospitalization",
+            "dating sakit", "previous illness", "family history", "history sa pamilya", "hereditary",
+            "genetic", "genetically", "pre-existing condition", "dati nang kondisyon", 
+            "controlled with medication", "controlled by medication", "controlled using",
+            "side effects", "adverse reactions", "medical records", "laboratory results",
+            "lab test", "laboratory test", "xray", "CT scan", "MRI", "imaging", "diagnostic test",
+            "timeline ng sakit", "onset", "duration", "tagal", "complications", "komplikasyon",
+            "underlying condition", "existing condition"
+        ],
+        "pain_discomfort": [
+            "pain", "sakit", "pananakit", "kirot", "masakit", "sumasakit", "discomfort", 
+            "kawalan ng ginhawa", "uncomfortable", "hindi komportable", "ache", "aray", 
+            "masakit", "makirot", "chronic pain", "acute pain", "matinding sakit", 
+            "tuloy-tuloy na sakit", "throbbing", "burning", "shooting", "stabbing", 
+            "sharp", "dull", "matigas", "malambot", "masama", "nakakaapekto", "nakakahadlang", 
+            "lumalala", "lumalalang", "gumiginhawa", "bumubuti", "nasobrahan", "matindi", 
+            "mild", "moderate", "severe", "bahagya", "katamtaman", "malala", "nakakalimitasyon", 
+            "hindi makatulog", "hindi makagalaw", "joint pain", "muscle pain", "sakit ng kalamnan", 
+            "sakit ng kasukasuan", "fibromyalgia", "neuropathic pain", "nerve pain", 
+            "headache", "migraine", "sakit ng ulo", "stomach pain", "abdominal pain", 
+            "sakit ng tiyan", "back pain", "sakit ng likod", "referred pain", 
+            "radiating pain", "intermittent", "pabalik-balik", "persistent", "paulit-ulit", 
+            "pahirap ng pahirap", "pain management", "pain relief", "pain medication", 
+            "pain scale", "pain level", "intensity", "sintomas", "trigger points", "cramping", 
+            "pulikat", "paninigas ng kalamnan", "ngalay", "pagod", "hingal", "pressure", "presyon", 
+            "tender", "sensitive", "namamaga", "swelling", "pamamaga"
+        ],
+        "hygiene": [
+            "hygiene", "kalinisan", "cleanliness", "malinis", "personal care", "pangangalaga sa sarili", 
+            "bathing", "pagliligo", "paliligo", "washing", "paglilinis", "paghuhugas", 
+            "brushing teeth", "pagsesepilyo", "oral hygiene", "kalinisan ng bibig", 
+            "grooming", "pag-aayos", "dressing", "pagbibihis", "toileting", "pag-CR", 
+            "incontinence", "pagpigil sa pag-ihi", "pagpigil sa pagdumi", "nail care", 
+            "hair care", "pag-aahit", "shaving", "skincare", "routine", "gawain", 
+            "assistance", "tulong", "supervision", "pagbabantay", "araw-araw", "daily", 
+            "weekly", "lingguhan", "monthly", "buwanan", "body odor", "amoy", 
+            "clean clothes", "malinis na damit", "dirty clothes", "maruming damit", 
+            "self-care", "self-neglect", "pagpapabaya sa sarili", "pangangalaga sa sarili", 
+            "adaptive equipment", "shower chair", "bath bench", "grab bars", "hawakan", 
+            "soap", "sabon", "shampoo", "shampoo", "toothpaste", "toothbrush", "sipilyo", 
+            "towel", "tuwalya", "washcloth", "basin", "palanggana", "sponge", "lotion", 
+            "deodorant", "cologne", "pabango", "presentable", "malinis na kasuotan", 
+            "independent", "nakakaya", "needs help", "nangangailangan ng tulong"
         ]
     }
     
@@ -306,20 +452,8 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             if sent_length > 20:
                 base_score = base_score * (20 / sent_length) * 1.5
             
-            # Enhance score based on entity types present
-            entity_boost = 0
-            if doc.ents:
-                for ent in doc.ents:
-                    if section == "mga_sintomas" and ent.label_ in ["SYMPTOM", "DISEASE"]:
-                        entity_boost += 3
-                    elif section == "kalagayan_pangkatawan" and ent.label_ in ["BODY_PART", "MEASUREMENT"]:
-                        entity_boost += 2.5
-                    elif section == "kalagayan_mental" and ent.label_ in ["COGNITIVE", "EMOTION"]:
-                        entity_boost += 2.5
-                    elif section == "aktibidad" and ent.label_ in ["ADL"]:
-                        entity_boost += 2.5
-                    elif section == "kalagayan_social" and ent.label_ in ["SOCIAL_REL", "PER", "ENVIRONMENT"]:
-                        entity_boost += 2
+            # REPLACE OLD ENTITY BOOST WITH NEW CONTEXT-AWARE ENTITY SCORING
+            entity_boost = get_entity_context_score(doc, section)
             
             # First few sentences often provide overview/symptoms
             if i < 2 and section == "mga_sintomas":
@@ -344,7 +478,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
         
         # Take up to 5 sentences with high scores
         count = 0
-        max_sentences = 5
+        max_sentences = 7
         
         for i, scores in sorted_sentences:
             if i in assigned_sentences:
@@ -364,7 +498,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
     
     # SECOND PASS: Assign remaining sentences to their best-matching section
     section_counts = {s: len(sents) for s, sents in result.items()}
-    max_sentences_per_section = 5
+    max_sentences_per_section = 7  # Increase to 10 sentences or more
     
     for i, scores in sorted(sentence_scores.items(), 
                            key=lambda x: -max(x[1].values() if x[1] else [0])):
@@ -384,13 +518,26 @@ def extract_sections_improved(sentences, doc_type="assessment"):
         # Reorder sentences based on original order
         result[section] = [sentences[i] for i in sorted(indices)]
     
+    # Fourth pass: Assign any remaining important sentences to most relevant sections
+    for i, sent in enumerate(sentences):
+        if i not in assigned_sentences:
+            if i in sentence_scores:
+                scores = sentence_scores[i]
+                if scores:
+                    best_section = max(scores.items(), key=lambda x: x[1])[0]
+                    # Use "result" instead of "sections"
+                    result[best_section].append(sent)
+                    assigned_sentences.add(i)
+    
     # Ensure at least one section has content
     if all(not sents for sents in result.values()) and sentences:
         result["mga_sintomas"] = sentences[:5]  # Limit to 5 sentences
     
+    sections = handle_section_overflow(result, sentence_scores, sentences, assigned_sentences, max_sentences_per_section)
+    
     # Convert lists to strings and apply post-processing
     processed_sections = {}
-    for section, sents in result.items():
+    for section, sents in sections.items():  # <-- CORRECTED
         if sents:
             # Join complete sentences
             section_text = " ".join(sents)
@@ -732,7 +879,11 @@ def extract_sections_for_evaluation(sentences):
             r'(oral problems(?! with medication)|problema sa bibig(?! dahil sa gamot))',
             r'(kalinisan ng dila|tongue cleaning)',
             r'(tooth decay|ngipin na may sira|cavities)',
-            r'(oral sores(?! from medication)|sugat sa bibig(?! dahil sa gamot))'
+            r'(oral sores(?! from medication)|sugat sa bibig(?! dahil sa gamot))',
+            # More specific oral health patterns that won't capture general medication info
+            r'(oral health|oral care|dental care|dental health) ((?!medication|gamot|drug|prescription).)*$',
+            r'(kalinisan ng bibig|pangangalaga ng ngipin|dental hygiene)',
+            r'(pagsesepilyo|toothbrushing|brushing (of )?teeth) ((?!medication|gamot|drug).)*$',
         ],
         
         "mobility_function": [
@@ -1067,7 +1218,7 @@ def extract_sections_for_evaluation(sentences):
         ]
     }
 
-     # Initialize scoring for each sentence-section pair
+    # Initialize scoring for each sentence-section pair
     sentence_scores = {}
     for i, (sent, doc) in enumerate(zip(sentences, sentence_docs)):
         if not doc:
@@ -1100,42 +1251,10 @@ def extract_sections_for_evaluation(sentences):
             # Normalize by sentence length
             if sent_length > 20:
                 base_score = base_score * (20 / sent_length) * 1.5
-            
-            # Enhance score based on entity types present - FIXED ENTITY BOOSTING
-            entity_boost = 0
-            if doc.ents:
-                for ent in doc.ents:
-                    # Add new entity boost for safety section
-                    if section == "safety_risk_factors" and ent.label_ in ["RISK_FACTOR", "SAFETY_DEVICE", "PREVENTION"]:
-                        entity_boost += 2.5
-                    # Add new entity boost for nutrition section  
-                    elif section == "nutrisyon_at_pagkain" and ent.label_ in ["FOOD", "NUTRITION", "DIET"]:
-                        entity_boost += 2.5
-                    # Add new entity boost for oral health section
-                    elif section == "kalusugan_ng_bibig" and ent.label_ in ["BODY_PART", "HYGIENE", "DENTAL"]:
-                        entity_boost += 2.0
-                    # Add new entity boost for mobility section
-                    elif section == "mobility_function" and ent.label_ in ["EQUIPMENT", "MOVEMENT", "EXERCISE"]:
-                        entity_boost += 2.5
-                    # Add new entity boost for sleep section
-                    elif section == "kalagayan_ng_tulog" and ent.label_ in ["ROUTINE", "SLEEP", "REST"]:
-                        entity_boost += 2.0
-                    # Add new entity boost for medication section
-                    elif section == "pamamahala_ng_gamot" and ent.label_ in ["MEDICATION", "PRESCRIPTION", "TREATMENT"]:
-                        entity_boost += 3.0
-                    # Add new entity boost for family support section
-                    elif section == "suporta_ng_pamilya" and ent.label_ in ["PERSON", "SOCIAL_REL", "SUPPORT"]:
-                        entity_boost += 2.0
-                    # Add new entity boost for mental health section
-                    elif section == "kalagayan_mental" and ent.label_ in ["EMOTION", "MENTAL", "PSYCHOLOGICAL"]:
-                        entity_boost += 2.5
-                    # Add new entity boost for preventive health section
-                    elif section == "preventive_health" and ent.label_ in ["PREVENTION", "SCREENING", "RISK_FACTOR"]:
-                        entity_boost += 2.0
-                    # Add new entity boost for vital signs section
-                    elif section == "vital_signs_measurements" and ent.label_ in ["MEASUREMENT", "VITAL_SIGN", "MONITORING"]:
-                        entity_boost += 2.5
-            
+
+            # Replace with enhanced entity context scoring:
+            entity_boost = get_entity_context_score(doc, section)
+
             # Save the combined score
             sentence_scores[i][section] = base_score + entity_boost + pattern_score
     
@@ -1162,7 +1281,6 @@ def extract_sections_for_evaluation(sentences):
         prev_sent = sentences[i-1].lower()
         
         # Then use this context in relationship detection
-        from context_analyzer import get_contextual_relationship
         relationship = get_contextual_relationship(prev_sent, current_sent, doc_context, i-1, i)
         
         # Create contextual connections based on relationship type
@@ -1207,7 +1325,7 @@ def extract_sections_for_evaluation(sentences):
         
         # Take up to 5 sentences with high scores
         count = 0
-        max_sentences = 5
+        max_sentences = 7  # Increase to 10 sentences or more
         
         for i, scores in sorted_sentences:
             if i in assigned_sentences:
@@ -1332,6 +1450,20 @@ def extract_sections_for_evaluation(sentences):
         # Reorder sentences based on original order
         sections[section] = [sentences[i] for i in sorted(indices)]
     
+    # Fourth pass: Assign any remaining important sentences to most relevant sections
+    for i, sent in enumerate(sentences):
+        if i not in assigned_sentences:
+            # Find best section based on scores
+            if i in sentence_scores:
+                scores = sentence_scores[i]
+                if scores:
+                    best_section = max(scores.items(), key=lambda x: x[1])[0]
+                    # Force assign even if we exceed max sentences
+                    sections[best_section].append(sent)
+                    assigned_sentences.add(i)
+    
+    sections = handle_section_overflow(sections, sentence_scores, sentences, assigned_sentences, max_sentences)
+    
     # Convert lists to strings and apply post-processing
     processed_sections = {}
     for section, sents in sections.items():
@@ -1421,3 +1553,81 @@ def post_process_summary(summary):
         summary += '.'
     
     return summary
+
+def handle_section_overflow(sections, section_scores, sentences, assigned_sentences, max_sentences_per_section):
+    """Handle overflow sentences by reassigning to alternative sections or overflow container."""
+    
+    # Initialize overflow section
+    if "additional_information" not in sections:
+        sections["additional_information"] = []
+    
+    # Find sentences that would exceed section limits
+    overflow_sentences = []
+    for section_name, section_sentences in sections.items():
+        if section_name == "additional_information":
+            continue
+            
+        # Check if section exceeds max length
+        if len(section_sentences) > max_sentences_per_section:
+            # Get the overflow sentences (those beyond the max)
+            overflow = section_sentences[max_sentences_per_section:]
+            # Remove them from original section
+            sections[section_name] = section_sentences[:max_sentences_per_section]
+            
+            # Add to overflow with metadata
+            for sent in overflow:
+                sent_idx = next((i for i, s in enumerate(sentences) if s == sent), None)
+                if sent_idx is not None:
+                    overflow_sentences.append((sent_idx, sent, section_name))
+    
+    # Try to reassign overflow sentences to their next best section
+    for sent_idx, sent, original_section in overflow_sentences:
+        if sent_idx in section_scores:
+            # Get all section scores for this sentence
+            scores = section_scores[sent_idx]
+            
+            # Find next best section
+            alternative_sections = sorted(
+                [(section, score) for section, score in scores.items() 
+                 if section != original_section and len(sections[section]) < max_sentences_per_section],
+                key=lambda x: -x[1]  # Sort by descending score
+            )
+            
+            # If we found an alternative section with room, use it
+            if alternative_sections and alternative_sections[0][1] > 0:
+                alt_section = alternative_sections[0][0]
+                sections[alt_section].append(sent)
+            else:
+                # Otherwise put in overflow section
+                sections["additional_information"].append(sent)
+    
+    # Remove the overflow section if empty
+    if not sections["additional_information"]:
+        del sections["additional_information"]
+        
+    return sections
+
+def get_entity_context_score(sent_doc, section_name):
+    """Get score based on entity context for section classification."""
+    context_score = 0
+    
+    # Skip if no entities found
+    if not sent_doc.ents:
+        return context_score
+    
+    # Calculate context score from entities and their relationships
+    seen_entity_types = set()
+    
+    for ent in sent_doc.ents:
+        # Get confidence score for this entity in this section
+        confidence = get_entity_section_confidence(ent.text, ent.label_, section_name)
+        
+        # Apply score based on confidence
+        context_score += confidence
+        
+        # Small bonus for entity type diversity to favor rich content
+        if ent.label_ not in seen_entity_types:
+            context_score += 0.5
+            seen_entity_types.add(ent.label_)
+    
+    return context_score

@@ -799,7 +799,15 @@ def get_contextual_relationship(prev_content, next_content, doc_context, prev_id
             # NEW: Vital signs to medication management
             elif (next_section == "pamamahala_ng_gamot" and prev_section == "vital_signs_measurements"):
                 return "monitoring_adjustment"  # Vital signs monitoring for medication adjustment
-                
+
+            # Medical history transitions
+            elif next_section == "medical_history" and prev_section in ["mga_sintomas", "kalagayan_pangkatawan"]:
+                return "background"  # Medical history provides background context
+
+            # Add a new relationship type
+            elif prev_section == "medical_history" and next_section in ["pamamahala_ng_gamot", "preventive_health"]:
+                return "risk_basis"  # Medical history as basis for treatment/prevention decisions
+
             else:
                 return "topical_shift"  # General shift in topic
     
@@ -892,7 +900,8 @@ def determine_optimal_section_order(doc_context, doc_type):
         # Assessment order (already updated)
         default_order = [
             "mga_sintomas",                # Symptoms - high priority
-            "kalagayan_pangkatawan",       # Physical condition
+            "kalagayan_pangkatawan",       # Physical condition,
+            "medical_history",             # Medical history background - moved up for logical flow
             "pain_discomfort",             # Pain/discomfort
             "vital_signs_measurements",    # Vital signs
             "kalagayan_mental",            # Mental/cognitive state
@@ -904,7 +913,7 @@ def determine_optimal_section_order(doc_context, doc_type):
             "suporta_ng_pamilya",          # Family support
             "pamamahala_ng_gamot",         # Medication management
             "medical_history",             # Medical history background
-            "hygiene_habits",              # Hygiene habits
+            "hygiene",                      # Hygiene habits
             "preventive_health"            # Preventive health measures
         ]
     else:  # Evaluation document - improved order based on clinical logic
