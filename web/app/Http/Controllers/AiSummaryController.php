@@ -56,6 +56,8 @@ class AiSummaryController extends Controller
 
     public function summarize(Request $request)
     {
+        set_time_limit(90);
+
         $request->validate([
             'text' => 'required|string',
             'type' => 'required|in:assessment,evaluation',

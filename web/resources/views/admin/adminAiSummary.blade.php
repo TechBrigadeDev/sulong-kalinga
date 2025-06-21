@@ -1088,7 +1088,7 @@
                     'kalagayan_pangkatawan': 'Physical Condition',
                     'kalagayan_mental': 'Mental State',
                     'aktibidad': 'Activities',
-                    'kalagayan_social': 'Social Condition',
+                    'kalagayan_social': 'Social Observation',
                     'pain_discomfort': 'Pain & Discomfort',
                     'hygiene': 'Hygiene & Self-Care',
                     'medical_history': 'Medical History',
@@ -1121,7 +1121,7 @@
                     'aktibidad': 'bi-clipboard-check',
                     'kalagayan_social': 'bi-people',
                     'pain_discomfort': 'bi-exclamation-triangle',
-                    'hygiene_habits': 'bi-droplet',
+                    'hygiene': 'bi-droplet',
                     'medical_history': 'bi-journal-medical',
                     
                     // Evaluation sections
