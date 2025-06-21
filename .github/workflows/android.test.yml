@@ -1,0 +1,80 @@
+name: EAS Build (Android Preview)
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - test
+        paths:
+            - 'mobile/**'
+
+jobs:
+    build:
+        name: Build Android (Preview)
+        runs-on: ubuntu-latest
+        env:
+            DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+            API_URL: https://discord.com/api/v10/channels
+            DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+
+        steps:
+            - name: Notify Discord – Build Started
+              if: always()
+              run: |
+                  RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+                    -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"content\":\"🚀 Android build started for **${{ github.repository }}** (#${{ github.run_number }})\"}"
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
+
+            - name: Install dependencies
+              working-directory: ./mobile
+              run: |
+                  npm install --frozen-lockfile
+
+            - name: Authenticate with EAS
+              env:
+                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+              working-directory: ./mobile
+              run: |
+                  npm install -g eas-cli
+                  eas login --token $EXPO_TOKEN
+
+            - name: Run EAS build (Android Preview)
+              working-directory: ./mobile
+              env:
+                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+              run: |
+                  eas build --platform android --profile preview --non-interactive
+
+            - name: Upload build artifacts
+              if: success()
+              uses: actions/upload-artifact@v3
+              with:
+                  name: android-apk
+                  path: |
+                      mobile/dist/**/*.apk
+                      mobile/dist/**/*.aab
+
+            - name: Notify Discord – Build Succeeded
+              if: success()
+              run: |
+                  curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+                    -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"content\":\"✅ Android build succeeded for **${{ github.repository }}** (#${{ github.run_number }})\"}"
+
+            - name: Notify Discord – Build Failed
+              if: failure()
+              run: |
+                  curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+                    -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"content\":\"❌ Android build failed for **${{ github.repository }}** (#${{ github.run_number }})\"}"
