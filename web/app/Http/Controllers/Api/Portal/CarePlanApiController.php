@@ -310,6 +310,12 @@ class CarePlanApiController extends Controller
             );
         }
 
+        // Notify all care managers
+        $this->notificationService->notifyAllCareManagers(
+            'Care Plan Acknowledged',
+            "A weekly care plan for {$beneficiaryName} has been acknowledged."
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Care plan acknowledged.'

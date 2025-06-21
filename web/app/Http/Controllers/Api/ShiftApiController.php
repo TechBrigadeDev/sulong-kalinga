@@ -10,9 +10,17 @@ use App\Models\User;
 use App\Models\Visitation;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use App\Services\NotificationService;
 
 class ShiftApiController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * List upcoming scheduled visitations for the authenticated care worker.
      */
@@ -106,6 +114,12 @@ class ShiftApiController extends Controller
             'status' => 'in_progress',
         ]);
 
+        // Notify all care managers
+        $careWorkerName = $user->first_name . ' ' . $user->last_name;
+        $title = "Care Worker Timed In";
+        $message = "Care worker {$careWorkerName} has started their shift.";
+        $this->notificationService->notifyAllCareManagers($title, $message);
+
         return response()->json($shift, 201);
     }
 
@@ -164,6 +178,12 @@ class ShiftApiController extends Controller
         ]);
 
         $this->batchGeocodeShiftTracks($shift);
+
+        // Notify all care managers
+        $careWorkerName = $user->first_name . ' ' . $user->last_name;
+        $title = "Care Worker Timed Out";
+        $message = "Care worker {$careWorkerName} has ended their shift.";
+        $this->notificationService->notifyAllCareManagers($title, $message);
 
         return response()->json($shift);
     }
