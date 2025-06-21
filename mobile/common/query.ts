@@ -150,6 +150,9 @@ export const QK = {
         ],
     },
     carePlan: {
+        getInterventions: () => [
+            "carePlan/getInterventions",
+        ],
         getCarePlans: () => [
             "carePlan/getCarePlans",
         ],

@@ -10,7 +10,13 @@ module.exports = defineConfig([
     eslintPluginPrettierRecommended,
     {
         files: ["**/*.{ts,tsx}"],
-        ignores: ["dist/*"],
+        ignores: [
+            "dist/*",
+            "node_modules/*",
+            "android/*",
+            "ios/*",
+            ".expo/*",
+        ],
         settings: {
             "import/resolver": {
                 node: {

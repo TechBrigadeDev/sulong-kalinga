@@ -1,21 +1,35 @@
 import LoadingScreen from "components/loaders/LoadingScreen";
-import { Stack } from "expo-router";
+import {
+    Stack,
+    useLocalSearchParams,
+} from "expo-router";
 import WCPForm from "features/care-plan/form";
 import { useGetInterventions } from "features/care-plan/hook";
+import { useWCPRecord } from "features/records/hook";
 import {
     SafeAreaProvider,
     useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 const Screen = () => {
+    const { id } = useLocalSearchParams<{
+        id: string;
+    }>();
+
     const insets = useSafeAreaInsets();
-    const { isLoading } = useGetInterventions();
+    const { data, isLoading: isRecordLoading } =
+        useWCPRecord(id);
+    const { isLoading: interventionsLoading } =
+        useGetInterventions();
+
+    const isLoading =
+        isRecordLoading || interventionsLoading;
 
     const Form = () =>
         isLoading ? (
             <LoadingScreen />
         ) : (
-            <WCPForm />
+            <WCPForm record={data?.data} />
         );
 
     return (

@@ -110,9 +110,13 @@ export async function mapCarePlanFormToApiData(
     // Standard interventions mapping
     standardInterventions.forEach(
         (intervention, index) => {
+            // Use interventionId (database intervention_id) for standard interventions
+            const interventionIdToUse =
+                intervention.interventionId ||
+                intervention.id;
             formDataObj.append(
                 `selected_interventions[${index}]`,
-                intervention.id,
+                interventionIdToUse.toString(),
             );
             formDataObj.append(
                 `duration_minutes[${index}]`,
@@ -128,7 +132,7 @@ export async function mapCarePlanFormToApiData(
                 if (intervention.categoryId) {
                     formDataObj.append(
                         `custom_category[${index}]`,
-                        intervention.categoryId,
+                        intervention.categoryId.toString(),
                     );
                 }
                 if (intervention.description) {

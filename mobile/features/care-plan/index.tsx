@@ -3,11 +3,13 @@ import {
     HttpStatusCode,
 } from "axios";
 import { Controller } from "common/api";
+import { listResponseSchema } from "common/schema";
 import { toastServerError } from "common/toast";
 import { showToastable } from "react-native-toastable";
 
 import { mapCarePlanFormToApiData } from "./form/mapper";
 import { CarePlanFormData } from "./form/type";
+import { interventionListSchema } from "./schema";
 
 class CarePlanController extends Controller {
     async postCarePlan(data: CarePlanFormData) {
@@ -48,6 +50,11 @@ class CarePlanController extends Controller {
 
                     default:
                         toastServerError({
+                            data: JSON.stringify(
+                                data,
+                                null,
+                                2,
+                            ),
                             error: error.response
                                 ?.data,
                             status: error.response
@@ -63,6 +70,50 @@ class CarePlanController extends Controller {
                 error,
             );
 
+            throw error;
+        }
+    }
+
+    async getInterventions() {
+        try {
+            const response = await this.api.get(
+                "/interventions/by-category",
+            );
+
+            const validate =
+                await listResponseSchema(
+                    interventionListSchema,
+                ).safeParseAsync(response.data);
+
+            if (!validate.success) {
+                console.error(
+                    "Invalid response data for interventions:",
+                    validate.error,
+                );
+                throw new Error(
+                    "Invalid response data for interventions",
+                );
+            }
+
+            return validate.data.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.status) {
+                    case HttpStatusCode.BadRequest:
+                    default:
+                        toastServerError({
+                            error: error.response
+                                ?.data,
+                            status: error.response
+                                ?.status,
+                        });
+                }
+            } else {
+                console.error(
+                    "Error fetching interventions:",
+                    error,
+                );
+            }
             throw error;
         }
     }

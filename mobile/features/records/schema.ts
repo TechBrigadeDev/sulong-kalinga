@@ -86,7 +86,9 @@ export const wcpRecordSchema = z.object({
             intervention_id: z
                 .number()
                 .nullable(),
-            care_category_id: z.number(),
+            care_category_id: z
+                .number()
+                .nullable(),
             intervention_description: z
                 .string()
                 .nullable(),
@@ -97,6 +99,8 @@ export const wcpRecordSchema = z.object({
     photo_url: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
+    acknowledge_status: z.string(),
+    who_acknowledged: z.string().nullable(),
 });
 
 export const wcpRecordResponseSchema = z.object({

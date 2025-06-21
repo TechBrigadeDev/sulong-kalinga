@@ -1,10 +1,12 @@
+import { useFocusEffect } from "@react-navigation/native";
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
+import { IRecordDetail } from "features/records/interface";
 import {
     ArrowLeft,
     ArrowRight,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useCallback, useEffect } from "react";
 import {
     Button,
     View,
@@ -23,23 +25,156 @@ import { PersonalDetails } from "./components/PersonalDetails";
 import { SelfSustainability } from "./components/SelfSustainability";
 import { SocialContact } from "./components/SocialContact";
 import Submit from "./components/Submit";
-import { CarePlanForm } from "./form";
+import {
+    CarePlanForm,
+    useCarePlanForm,
+} from "./form";
+import { useCarePlanFormStore } from "./store";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
     { label: "Mobility" },
     { label: "Cognitive/Communication" },
-    { label: "Self-Sustainability" },
-    { label: "Disease/Therapy" },
-    { label: "Social Contact" },
+    { label: "Self-sustainability" },
+    { label: "Disease/Therapy Handling" },
+    { label: "Daily life/Social contact" },
     { label: "Outdoor Activities" },
     { label: "Household Keeping" },
     { label: "Evaluation" },
 ];
 
-const WCPForm = () => {
-    const [currentStep, setCurrentStep] =
-        useState(0);
+interface Props {
+    record?: IRecordDetail;
+}
+
+const Form = ({ record }: Props) => {
+    const {
+        setRecord,
+        currentStep,
+        setCurrentStep,
+        resetStep,
+    } = useCarePlanFormStore();
+
+    const form = useCarePlanForm();
+
+    // Helper function to map interventions for each category
+    const mapInterventions = (
+        record: IRecordDetail,
+        categoryId: number,
+    ) => {
+        return record.interventions
+            .filter(
+                (intervention) =>
+                    intervention.care_category_id ===
+                    categoryId,
+            )
+            .map((intervention) => ({
+                id: intervention.wcp_intervention_id.toString(),
+                name:
+                    intervention.intervention_description ||
+                    "",
+                minutes:
+                    parseFloat(
+                        intervention.duration_minutes,
+                    ) || 0,
+                isCustom:
+                    intervention.intervention_id ===
+                    null,
+                interventionId:
+                    intervention.intervention_id ||
+                    undefined,
+                categoryId:
+                    intervention.care_category_id ||
+                    undefined,
+                description:
+                    intervention.intervention_id ===
+                    null
+                        ? intervention.intervention_description ||
+                          undefined
+                        : undefined,
+            }));
+    };
+
+    useEffect(() => {
+        setRecord(record ? record : null);
+        console.log({
+            record,
+        });
+
+        if (record) {
+            form.reset({
+                personalDetails: {
+                    beneficiaryId: record
+                        .beneficiary.full_name
+                        ? "1"
+                        : "", // You may need to map this properly based on your beneficiary selection logic
+                    illness:
+                        record.illnesses?.join(
+                            ", ",
+                        ) || "",
+                    assessment:
+                        record.assessment || "",
+                    bloodPressure:
+                        record.vital_signs
+                            .blood_pressure,
+                    pulseRate:
+                        record.vital_signs
+                            .pulse_rate,
+                    temperature:
+                        parseFloat(
+                            record.vital_signs
+                                .body_temperature,
+                        ) || 36.5,
+                    respiratoryRate:
+                        record.vital_signs
+                            .respiratory_rate,
+                },
+                // mobility: mapInterventions(
+                //     record,
+                //     1,
+                // ),
+                // cognitive: mapInterventions(
+                //     record,
+                //     7,
+                // ),
+                // selfSustainability:
+                //     mapInterventions(record, 8),
+                // diseaseTherapy: mapInterventions(
+                //     record,
+                //     9,
+                // ),
+                // socialContact: mapInterventions(
+                //     record,
+                //     10,
+                // ),
+                // outdoorActivity: mapInterventions(
+                //     record,
+                //     11,
+                // ),
+                // householdKeeping:
+                //     mapInterventions(record, 12),
+                evaluation: {
+                    pictureUri:
+                        record.photo_url || "",
+                    recommendations:
+                        record.evaluation_recommendations ||
+                        "",
+                },
+            });
+        } else {
+            form.reset();
+        }
+    }, [record, setRecord]);
+
+    // Reset step when component unmounts or user navigates away
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                // Reset step when leaving this screen
+                resetStep();
+            };
+        }, [resetStep]),
+    );
 
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {
@@ -82,7 +217,7 @@ const WCPForm = () => {
         currentStep === FORM_STEPS.length - 1;
 
     return (
-        <CarePlanForm>
+        <>
             <YStack flex={1}>
                 <FormProgress
                     currentStep={currentStep}
@@ -154,6 +289,14 @@ const WCPForm = () => {
                             .label,
                 }}
             />
+        </>
+    );
+};
+
+const WCPForm = (props: Props) => {
+    return (
+        <CarePlanForm>
+            <Form {...props} />
         </CarePlanForm>
     );
 };

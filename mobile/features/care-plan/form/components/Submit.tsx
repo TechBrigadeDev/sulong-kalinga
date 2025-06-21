@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { CarePlanFormData } from "features/care-plan/form/type";
 import { useSubmitCarePlanForm } from "features/care-plan/hook";
@@ -14,6 +15,8 @@ import {
 } from "tamagui";
 
 const SubmitCarePlanForm = () => {
+    const router = useRouter();
+
     const { mutateAsync, isPending } =
         useSubmitCarePlanForm({
             onError: async (error) => {
@@ -29,7 +32,7 @@ const SubmitCarePlanForm = () => {
                 });
             },
         });
-    const { handleSubmit, formState } =
+    const { handleSubmit, formState, reset } =
         useCarePlanForm();
 
     const onSubmit: SubmitHandler<
@@ -42,6 +45,16 @@ const SubmitCarePlanForm = () => {
 
         try {
             await mutateAsync(data);
+
+            reset();
+            router.back();
+
+            showToastable({
+                message:
+                    "Weekly Care Plan saved successfully!",
+                status: "success",
+                duration: 4000,
+            });
         } catch (error) {
             console.error(
                 "Error submitting form:",
