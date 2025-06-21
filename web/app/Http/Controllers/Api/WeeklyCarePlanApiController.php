@@ -170,10 +170,14 @@ class WeeklyCarePlanApiController extends Controller
                     !is_null($request->duration_minutes[$idx]) &&
                     $request->duration_minutes[$idx] > 0
                 ) {
+                    $intervention = \App\Models\Intervention::find($interventionId);
                     WeeklyCarePlanInterventions::create([
                         'weekly_care_plan_id' => $wcp->weekly_care_plan_id,
                         'intervention_id' => $interventionId,
+                        'care_category_id' => $intervention ? $intervention->care_category_id : null,
+                        'intervention_description' => $intervention ? $intervention->intervention_description : null,
                         'duration_minutes' => $request->duration_minutes[$idx],
+                        'implemented' => true,
                     ]);
                 }
             }
