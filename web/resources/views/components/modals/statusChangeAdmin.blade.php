@@ -1,23 +1,26 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="statusChangeAdminModal" tabindex="-1" aria-labelledby="statusChangeAdminModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="statusChangeAdminModalLabel">Confirm Status Change</h5>
+                <h5 class="modal-title" id="statusChangeAdminModalLabel">{{ T::translate('Confirm Status Change', 'Kumpirmahin ang Pagbabago sa Status')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="adminStatusChangeMessage" class="alert d-none" role="alert"></div>
-                <p>Are you sure you want to change the status of this <span id="adminEntityType" style="font-weight: bold;"></span>?</p>
+                <p>{{ T::translate('Are you sure you want to change the status of this', 'Sigurado ka bang nais mong baguhin ang status na ito')}} <span id="adminEntityType" style="font-weight: bold;"></span>?</p>
                 <form id="statusChangeAdminForm">
                     <div class="mb-3">
-                        <label for="adminPasswordInput" class="form-label">Enter Password to Confirm</label>
-                        <input type="password" class="form-control" id="adminPasswordInput" placeholder="Enter your password" required>
+                        <label for="adminPasswordInput" class="form-label">{{ T::translate('Enter Password to Confirm', 'Ilagay ang Password upang Kumpirmahin')}}</label>
+                        <input type="password" class="form-control" id="adminPasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang password')}}" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmAdminStatusChangeButton">Confirm</button>
+                <button type="button" class="btn btn-primary" id="confirmAdminStatusChangeButton">{{ T::translate('Confirm', 'Kumpirmahin')}}</button>
             </div>
         </div>
     </div>
@@ -56,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
             messageElement.classList.add("d-none");
 
             if (!enteredPassword) {
-                messageElement.textContent = "Please enter your password to confirm the status change.";
+                messageElement.textContent = "{{ T::translate('Please enter your password to confirm the status change', 'Mangyaring ilagay ang iyong password upang kumpirmahin ang pagbabago sa status')}}.";
                 messageElement.classList.remove("d-none", "alert-success");
                 messageElement.classList.add("alert-danger");
                 return;
@@ -98,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                     .then(data => {
                         // Update success message
-                        messageElement.textContent = `Status changed to "${selectedAdminStatusElement.value}" for ${adminEntityType}.`;
+                        messageElement.textContent = `{{ T::translate('Status changed to', 'Ang status ay nabago mula sa')}} "${selectedAdminStatusElement.value}" {{ T::translate('for', 'para sa')}} ${adminEntityType}.`;
                         
                         // Reset password field
                         passwordInput.value = "";
@@ -121,19 +124,19 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        messageElement.textContent = "Failed to update status. Please try again.";
+                        messageElement.textContent = "{{ T::translate('Failed to update status. Please try again.', 'Nabigong i-update ang status. Pakisubukan muli.')}}";
                         messageElement.classList.remove("alert-success");
                         messageElement.classList.add("alert-danger");
                     });
                 } else {
-                    messageElement.textContent = "Incorrect password. Please try again.";
+                    messageElement.textContent = "{{ T::translate('Incorrect password. Please try again.', 'Mali ang password. Pakisubukan muli.')}}";
                     messageElement.classList.remove("d-none", "alert-success");
                     messageElement.classList.add("alert-danger");
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                messageElement.textContent = "An error occurred. Please try again.";
+                messageElement.textContent = "{{ T::translate('An error occurred. Please try again.', 'Isang error ang naganap. Pakisubukan muli.')}}";
                 messageElement.classList.remove("d-none", "alert-success");
                 messageElement.classList.add("alert-danger");
             });
@@ -155,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
         statusChangeAdminModalElement.addEventListener("hidden.bs.modal", function () {
             if (selectedAdminStatusElement && previousAdminStatusValue !== null) {
                 // Revert the dropdown to its previous value if the modal is cancelled
-                selectedAdminStatusElement.value = previousAdminStatusValue === 'Active' ? 'Active' : 'Inactive';
+                selectedAdminStatusElement.value = previousAdminStatusValue === 'Active' ? '{{ T::translate('Active', 'Aktibbo')}}' : '{{ T::translate('Inactive', 'Di-Aktibo')}}';
                 location.reload(); // Refresh the page if the modal is cancelled
             }
         });

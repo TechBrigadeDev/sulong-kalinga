@@ -1,18 +1,21 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="statusChangeModal" tabindex="-1" aria-labelledby="statusChangeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="statusChangeModalLabel">Confirm Status Change</h5>
+                <h5 class="modal-title" id="statusChangeModalLabel">{{ T::translate('Confirm Status Change', 'Kumpirmahin ang Pagbabago sa Status')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="successMessage" class="alert alert-success" style="display: none;">Status updated successfully!</div>
+                <div id="successMessage" class="alert alert-success" style="display: none;">{{ T::translate('Status updated successfully', 'Tagumpay na na-update ang status')}}!</div>
                 <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
-                <p>Are you sure you want to change the status of this <span id="entityType" style="font-weight: bold;"></span>?</p>
+                <p>{{ T::translate('Are you sure you want to change the status of this', 'Sigurado ka bang nais mong baguhin ang status na ito ng')}} <span id="entityType" style="font-weight: bold;"></span>?</p>
                 
                 <div class="alert alert-warning">
                     <i class="bi bi-info-circle"></i> 
-                    <strong>Note:</strong> Changing the status of this beneficiary will affect (allow or prevent) their access to the system, as well as their registered family members.
+                    <strong>{{ T::translate('Note', 'Tandaan')}}:</strong> {{ T::translate('Changing the status of this beneficiary will affect (allow or prevent) their access to the system, as well as their registered family members.', 'Ang pagpapalit ng status ng benepisyaryo na ito ay makakaapekto (payagan o pigilan) ang kanilang pag-access sa system, pati na rin ang kanilang mga rehistradong miyembro ng pamilya.')}}
                 </div>
 
                 <form id="statusChangeFormHidden" method="POST" style="display:none;">
@@ -26,14 +29,14 @@
 
                 <form id="statusChangeForm">
                     <div class="mb-3" id="reasonDiv">
-                        <label for="reasonSelect" class="form-label">Reason for Status Change</label>
+                        <label for="reasonSelect" class="form-label">{{ T::translate('Reason for Status Change', 'Dahilan para sa Pagbabago sa Status')}}</label>
                         <select class="form-select" id="reasonSelect">
-                            <option value="" selected disabled>Select a reason</option>
+                            <option value="" selected disabled>{{ T::translate('Select a reason', 'Pumili ng Dahilan')}}</option>
                             <option value="Opted Out">Opted Out</option>
-                            <option value="Deceased">Deceased</option>
-                            <option value="Hospitalized">Hospitalized</option>
-                            <option value="Moved Residence">Moved Residence</option>
-                            <option value="No Longer Needed Assistance">No Longer Needed Assistance</option>
+                            <option value="Deceased">{{ T::translate('Deceased', 'Yumao')}}</option>
+                            <option value="Hospitalized">{{ T::translate('Hospitalized', 'Naospital')}}</option>
+                            <option value="Moved Residence">{{ T::translate('Moved Residence', 'Lumipat ng Tirahan')}}</option>
+                            <option value="No Longer Needed Assistance">{{ T::translate('No Longer Needed Assistance', 'Hindi na Kailangan ng Tulong')}}</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -43,8 +46,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmStatusChangeButton">Confirm</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+                <button type="button" class="btn btn-primary" id="confirmStatusChangeButton">{{ T::translate('Confirm', 'Kumpirmahin')}}</button>
             </div>
         </div>
     </div>
@@ -114,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
-                    throw new Error(data.message || 'Incorrect password. Please try again.');
+                    throw new Error(data.message || '{{ T::translate('Incorrect password. Please try again', 'Mali ang password. Pakisubukan muli')}}.');
                 });
             }
             return response.json();
@@ -135,13 +138,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const newStatus = selectedStatusElement.value;
 
         if (newStatus !== 'Active' && !selectedReason) {
-            errorMessage.textContent = "Please select a reason for the status change.";
+            errorMessage.textContent = "{{ T::translate('Please select a reason for the status change.', 'Mangyaring pumili ng dahilan para sa pagbabago sa status')}}";
             errorMessage.style.display = 'block';
             return;
         }
 
         if (!password) {
-            errorMessage.textContent = "Please enter your password to confirm the status change.";
+            errorMessage.textContent = "{{ T::translate('Please enter your password to confirm the status change.', 'Mangyaring ilagay ang iyong password upang kumpirmahin ang pagbabago sa status')}}";
             errorMessage.style.display = 'block';
             return;
         }
@@ -188,17 +191,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    errorMessage.textContent = "Failed to update status. Please try again.";
+                    errorMessage.textContent = "{{ T::translate('Failed to update status. Please try again.', 'Nabigong i-update ang status. Pakisubukan muli.')}}";
                     errorMessage.style.display = 'block';
                     successMessage.style.display = 'none';
                 });
             } else {
-                throw new Error('Incorrect password. Please try again.');
+                throw new Error('{{ T::translate('Incorrect password. Please try again.', 'Mali ang password. Pakisubukan muli.')}}');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            errorMessage.textContent = error.message || 'An error occurred. Please try again.';
+            errorMessage.textContent = error.message || '{{ T::translate('An error occurred. Please try again.', 'Isang error ang naganap. Pakisubukan muli.')}}';
             errorMessage.style.display = 'block';
         });
     });

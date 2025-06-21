@@ -8,42 +8,6 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewWeeklyCareplan.css') }}">
-    <style>
-        /* Ensure scrolling works properly */
-        html, body {
-            height: 100%;
-            overflow-y: auto;
-        }
-        
-        /* Fix for home-section to ensure it's scrollable */
-        .home-section {
-            position: relative;
-            min-height: 100%;
-            height: auto;
-            transition: all 0.5s ease;
-            padding: 12px;
-            overflow-y: visible;
-        }
-        
-        /* Responsive adjustment when sidebar is closed */
-        .sidebar.close ~ .home-section {
-            left: 78px;
-            width: calc(100% - 78px);
-        }
-        
-        @media (max-width: 768px) {
-            .home-section {
-                width: 100%;
-                left: 0;
-            }
-            
-            .sidebar.close ~ .home-section {
-                left: 0;
-                width: 100%;
-            }
-        }
-    </style>
-
 </head>
 <body>
     @php
@@ -84,7 +48,7 @@
 
     <div class="home-section">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <!-- Back Button -->
                 <a href="{{ route('family.care.plan.index') }}" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> {{ T::translate('Back to Care Plans', 'Bumalik sa Care Plan')}}
@@ -116,7 +80,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            
+            <div class="row" id="home-content">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">{{ T::translate('Beneficiary Information', 'Impormasyong ng Benepisyaryo')}}</h5>
@@ -413,6 +377,7 @@
                     </div>
                 </div>
             @endif
+        </div>
         </div>
     </div>
 

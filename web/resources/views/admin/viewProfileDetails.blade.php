@@ -26,7 +26,7 @@
                     <i class="bi bi-arrow-left"></i> {{ T::translate('Back', 'Bumalik')}}
                 </a>
                 <h4 class="mb-0 text-center" style="font-weight: bold;">
-                    {{ T::translate('BENEFICIARY PROFILE DETAILS', 'DETALYE SA PROFILE NG BENEPISSYARYO')}}
+                    {{ T::translate('BENEFICIARY PROFILE DETAILS', 'DETALYE SA PROFILE NG BENEPISYARYO')}}
                 </h4>
                 <div class="d-flex gap-2 align-self-end align-self-md-center header-buttons">
                     <a href="{{ route('admin.beneficiaries.index') }}" class="btn btn-secondary mobile-back-btn" style="height: 33px;">

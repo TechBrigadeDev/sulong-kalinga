@@ -1,18 +1,22 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
+
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color:rgb(251, 68, 68);">
-                <h5 class="modal-title text-white" id="deleteModalLabel">Confirm Delete</h5>
+                <h5 class="modal-title text-white" id="deleteModalLabel">{{ T::translate('Confirm Delete', 'Kumpirmahin ang Pagtanggal')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="deleteModalMessage" class="alert d-none" role="alert"></div>
                 
                 <div id="passwordConfirmationContent">
-                    <p id="deleteModalQuestion">Are you sure you want to delete this item? Please enter your password to confirm.</p>
+                    <p id="deleteModalQuestion">{{ T::translate('Are you sure you want to delete this item? Please enter your password to confirm.' ,'Sigurado ka bang gusto mong tanggalin ang item na ito? Mangyaring ilagay ang iyong password upang kumpirmahin.')}}</p>
                     <div class="mb-3">
                         <label for="passwordInput" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="passwordInput" placeholder="Enter your password" required>
+                        <input type="password" class="form-control" id="passwordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password')}}" required>
                         <input type="hidden" id="itemToDelete">
                         <input type="hidden" id="deleteEndpoint">
                         <input type="hidden" id="redirectUrl">
@@ -21,13 +25,13 @@
                 
                 <div id="deleteSuccessContent" class="d-none text-center">
                     <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-                    <p class="mt-3" id="successMessage">Item deleted successfully!</p>
-                    <p>You will be redirected shortly.</p>
+                    <p class="mt-3" id="successMessage">{{ T::translate('Item deleted successfully', 'Ang item ay matagumpay na natanggal')}}!</p>
+                    <p>{{ T::translate('You will be redirected shortly', 'Ikaw ay ire-redirect sa ilang sandali')}}.</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancelDeleteButton" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Delete</button>
+                <button type="button" class="btn btn-secondary" id="cancelDeleteButton" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">{{ T::translate('Delete', 'Tanggalin')}}</button>
             </div>
         </div>
     </div>
@@ -167,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else {
                 // Invalid password
-                messageElement.textContent = 'The password you entered is incorrect.';
+                messageElement.textContent = '{{ T::translate('The password you entered is incorrect', 'Ang password na iyong inilagay ay mali')}}.';
                 messageElement.classList.remove('d-none', 'alert-success', 'alert-warning');
                 messageElement.classList.add('alert-danger');
             }

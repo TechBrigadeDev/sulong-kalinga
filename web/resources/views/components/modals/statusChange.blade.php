@@ -1,22 +1,25 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="statusChangeModal" tabindex="-1" aria-labelledby="statusChangeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="statusChangeModalLabel">Confirm Status Change</h5>
+                <h5 class="modal-title" id="statusChangeModalLabel">{{ T::translate('Confirm Status Change', 'Kumpirmahin ang Pagbabago sa Status')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to change the status or access of this <span id="entityType" style="font-weight: bold;"></span>?</p>
+                <p>{{ T::translate('Are you sure you want to change the status or access of this', 'Sigurado ka bang nais mong baguhin ang status o access na ito')}} <span id="entityType" style="font-weight: bold;"></span>?</p>
                 <form id="statusChangeForm">
                     <div class="mb-3">
-                        <label for="passwordInput" class="form-label">Enter Password to Confirm</label>
-                        <input type="password" class="form-control" id="passwordInput" placeholder="Enter your password" required>
+                        <label for="passwordInput" class="form-label">{{ T::translate('Enter Password to Confirm', 'Ilagay ang Password upang Kumpirmahin')}}</label>
+                        <input type="password" class="form-control" id="passwordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang password')}}" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmStatusChangeButton">Confirm</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela)}}</button>
+                <button type="button" class="btn btn-primary" id="confirmStatusChangeButton">{{ T::translate('Confirm', 'Kumpirmahin')}}</button>
             </div>
         </div>
     </div>
@@ -45,14 +48,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const enteredPassword = passwordInput.value.trim();
 
         if (!enteredPassword) {
-            alert("Please enter your password to confirm the status change.");
+            alert("{{ T::translate('Please enter your password to confirm the status change', 'Mangyaring ilagay ang iyong password upang kumpirmahin ang pagbabago ng status')}}.");
             return;
         }
 
         // Simulate password validation (replace with actual server-side validation)
         const correctPassword = "userpassword"; // Replace with actual password validation logic
         if (enteredPassword !== correctPassword) {
-            alert("Incorrect password. Please try again.");
+            alert("{{ T::translate('Incorrect password. Please try again.', 'Mali ang password. Pakisubukan muli.')}}");
             return;
         }
 

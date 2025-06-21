@@ -44,7 +44,7 @@
     <li class="{{ Request::routeIs('family.medication.schedule.*') ? 'active' : '' }}">
       <a href="{{ route('family.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('family.medication.schedule.index') }}'; return false;" @endif>
         <i class="bi bi-capsule"></i>
-        <span class="link_name">{{ T::translate('Medication Schedule', 'Ikedyul ng Gamot')}}</span>
+        <span class="link_name">{{ T::translate('Medication Schedule', 'Iskedyul ng Gamot')}}</span>
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('family.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('family.medication.schedule.index') }}'; return false;" @endif>Medication Schedule</a></li>

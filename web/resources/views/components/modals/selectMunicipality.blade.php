@@ -1,9 +1,12 @@
 <!-- filepath: c:\xampp\htdocs\sulong_kalinga\resources\views\components\modals\selectMunicipality.blade.php -->
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="selectMunicipalityModal" tabindex="-1" aria-labelledby="selectMunicipalityModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="selectMunicipalityModalLabel">Select Municipality to Delete</h5>
+            <div class="modal-header" style="background-color: var(--accent-color); color: white;">
+                <h5 class="modal-title" id="selectMunicipalityModalLabel">{{ T::translate('Select Municipality to Delete', 'Pumili ng Munisipalidad na Tatanggalin')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -13,7 +16,7 @@
                                 onclick="openDeleteMunicipalityModal('{{ $municipality->municipality_id }}', '{{ $municipality->municipality_name }}')">
                             {{ $municipality->municipality_name }}
                             <span class="badge bg-primary rounded-pill">
-                                {{ $barangays->where('municipality_id', $municipality->municipality_id)->count() }} barangays
+                                {{ $barangays->where('municipality_id', $municipality->municipality_id)->count() }} {{ T::translate('barangays', 'mga barangay')}}
                             </span>
                         </button>
                     @endforeach

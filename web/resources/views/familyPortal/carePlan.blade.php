@@ -27,12 +27,6 @@
             --danger: #ef233c;     /* Red */
         }
         
-        body {
-            color: var(--neutral-3);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.5;
-        }
-        
         .beneficiary-name {
             font-size: clamp(0.7rem, 1.8vw, 1.2rem);
         }

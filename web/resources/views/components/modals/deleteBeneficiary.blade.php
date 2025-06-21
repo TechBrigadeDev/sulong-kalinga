@@ -1,8 +1,11 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="deleteBeneficiaryModal" tabindex="-1" aria-labelledby="deleteBeneficiaryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color:rgb(251, 68, 68);">
-                <h5 class="modal-title text-white" id="deleteBeneficiaryModalLabel">Confirm Beneficiary Deletion</h5>
+                <h5 class="modal-title text-white" id="deleteBeneficiaryModalLabel">{{ T::translate('Confirm Beneficiary Deletion', 'Kumpirmahin ang Pagtanggal ng Benepisyaryo') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -11,18 +14,18 @@
                 <div id="deleteConfirmation">
                     <p class="text-danger">
                         <i class="bi bi-exclamation-circle"></i> 
-                        <strong>Warning!</strong> You are about to delete this beneficiary profile.
+                        <strong>{{ T::translate('Warning', 'Babala') }}!</strong> {{ T::translate('You are about to delete this beneficiary profile.', 'Tatanggalin mo na ang profile ng benepisyaryong ito.') }}
                     </p>
-                    <p>Are you sure you want to permanently delete <span id="beneficiaryNameToDelete" style="font-weight: bold;"></span>?</p>
+                    <p>{{ T::translate('Are you sure you want to permanently delete', 'Sigurado ka bang nais mong permanenteng tanggalin') }} <span id="beneficiaryNameToDelete" style="font-weight: bold;"></span>?</p>
                     
                     <div class="alert alert-warning">
                         <i class="bi bi-info-circle"></i> 
-                        <strong>Note:</strong> If this beneficiary profile is deleted, the general care plan associated to this beneficiary will also be deleted.
+                        <strong>{{ T::translate('Note', 'Paalala') }}:</strong> {{ T::translate('If this beneficiary profile is deleted, the general care plan associated to this beneficiary will also be deleted.', 'Kung tatanggalin ang profile ng benepisyaryong ito, ang general care plan na nakaugnay dito ay tatanggalin din.') }}
                     </div>
                     
                     <div class="mb-3">
-                        <label for="beneficiaryDeletePasswordInput" class="form-label">Enter Your Password to Confirm</label>
-                        <input type="password" class="form-control" id="beneficiaryDeletePasswordInput" placeholder="Enter your password" required>
+                        <label for="beneficiaryDeletePasswordInput" class="form-label">{{ T::translate('Enter Your Password to Confirm', 'Ilagay ang Iyong Password upang Kumpirmahin') }}</label>
+                        <input type="password" class="form-control" id="beneficiaryDeletePasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password') }}" required>
                         <input type="hidden" id="beneficiaryIdToDelete" value="">
                     </div>
                 </div>
@@ -30,15 +33,15 @@
                 <div id="deleteSuccess" class="d-none">
                     <p class="text-success">
                         <i class="bi bi-check-circle"></i>
-                        <strong>Success!</strong> The beneficiary has been deleted successfully.
+                        <strong>{{ T::translate('Success', 'Tagumpay') }}!</strong> {{ T::translate('The beneficiary has been deleted successfully.', 'Matagumpay na natanggal ang benepisyaryo.') }}
                     </p>
-                    <p>You will be redirected to the beneficiary list shortly.</p>
+                    <p>{{ T::translate('You will be redirected to the beneficiary list shortly.', 'Ikaw ay maire-redirect sa listahan ng mga benepisyaryo sa ilang sandali.') }}</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">{{ T::translate('Cancel', 'I-Kansela') }}</button>
                 <button type="button" class="btn btn-danger" id="confirmBeneficiaryDeleteButton">
-                    <i class="bi bi-trash-fill"></i> Delete Beneficiary
+                    <i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}
                 </button>
             </div>
         </div>
@@ -58,10 +61,10 @@ window.openDeleteBeneficiaryModal = function(id, name) {
     
     const confirmButton = document.getElementById('confirmBeneficiaryDeleteButton');
     confirmButton.disabled = false;
-    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
     confirmButton.classList.remove('d-none');
     
-    document.getElementById('cancelDeleteButton').textContent = 'Cancel';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate('Cancel', 'I-Kansela') }}';
     
     // Show the modal
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteBeneficiaryModal'));
@@ -90,7 +93,7 @@ function showDependencyError(message, errorType) {
     let errorContent = `
         <div class="d-flex align-items-center mb-2">
             <i class="bi bi-exclamation-circle me-2" style="font-size: 1.5rem;"></i>
-            <strong>Unable to Delete</strong>
+            <strong>{{ T::translate('Unable to Delete', 'Hindi Matanggal') }}</strong>
         </div>
         <p>${message}</p>
     `;
@@ -99,38 +102,38 @@ function showDependencyError(message, errorType) {
     if (errorType === 'dependency_weekly_care_plans') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>What you can do instead:</strong>
-                <p class="mt-2 mb-2">This beneficiary has weekly care plans which must be maintained for audit and historical purposes.</p>
+                <strong>{{ T::translate('What you can do instead', 'Ang maaari mong gawin') }}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('This beneficiary has weekly care plans which must be maintained for audit and historical purposes.', 'Ang benepisyaryong ito ay may mga weekly care plan na dapat panatilihin para sa audit at makasaysayang layunin.') }}</p>
                 <ol class="mt-2 mb-0">
-                    <li>Instead of deleting, you can mark this beneficiary as <strong>Inactive</strong> in their profile</li>
-                    <li>This will prevent any new care plans from being created while preserving existing records</li>
-                    <li>Changing the beneficiary's status will also prevent the beneficiary and their family from logging into the system</li>
-                    <li>Use the status dropdown at the Beneficiary Profile page to change their status</li>
+                    <li>{{ T::translate('Instead of deleting, you can mark this beneficiary as Inactive in their profile', 'Sa halip na tanggalin, maaari mong markahan ang benepisyaryong ito bilang Hindi Aktibo sa kanilang profile') }}</li>
+                    <li>{{ T::translate('This will prevent any new care plans from being created while preserving existing records', 'Ito ay maiiwasan ang anumang mga bagong care plan na malikha habang pinapanatili ang mga umiiral na rekord') }}</li>
+                    <li>{{ T::translate('Changing the beneficiary\'s status will also prevent the beneficiary and their family from logging into the system', 'Ang pagbabago ng katayuan ng benepisyaryo ay maiiwasan din ang benepisyaryo at kanilang pamilya na mag-login sa system') }}</li>
+                    <li>{{ T::translate('Use the status dropdown at the Beneficiary Profile page to change their status', 'Gamitin ang status dropdown sa pahina ng Profile ng Benepisyaryo upang baguhin ang kanilang katayuan') }}</li>
                 </ol>
             </div>
         `;
     } else if (errorType === 'dependency_family') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>What you can do instead:</strong>
-                <p class="mt-2 mb-2">This beneficiary is linked to family members in the system.</p>
+                <strong>{{ T::translate('What you can do instead', 'Ang maaari mong gawin') }}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('This beneficiary is linked to family members in the system.', 'Ang benepisyaryong ito ay naka-link sa mga miyembro ng pamilya sa system.') }}</p>
                 <ol class="mt-2 mb-0">
-                    <li>First, remove the beneficiary relationship from linked family members</li>
-                    <li>Go to each family member's profile and edit their details</li>
-                    <li>Remove this beneficiary as their related beneficiary</li>
-                    <li>After all relationships are removed, you can try deleting this beneficiary again</li>
+                    <li>{{ T::translate('First, remove the beneficiary relationship from linked family members', 'Una, alisin ang relasyon ng benepisyaryo mula sa mga naka-link na miyembro ng pamilya') }}</li>
+                    <li>{{ T::translate('Go to each family member\'s profile and edit their details', 'Pumunta sa profile ng bawat miyembro ng pamilya at i-edit ang kanilang mga detalye') }}</li>
+                    <li>{{ T::translate('Remove this beneficiary as their related beneficiary', 'Alisin ang benepisyaryong ito bilang kanilang kaugnay na benepisyaryo') }}</li>
+                    <li>{{ T::translate('After all relationships are removed, you can try deleting this beneficiary again', 'Matapos maalis ang lahat ng mga relasyon, maaari mong subukang tanggalin muli ang benepisyaryong ito') }}</li>
                 </ol>
             </div>
         `;
     } else if (errorType === 'dependency_audit') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>What you can do instead:</strong>
-                <p class="mt-2 mb-2">This beneficiary has records in the system that require audit history to be maintained.</p>
+                <strong>{{ T::translate('What you can do instead', 'Ang maaari mong gawin') }}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('This beneficiary has records in the system that require audit history to be maintained.', 'Ang benepisyaryong ito ay may mga rekord sa system na nangangailangan ng kasaysayan ng audit na mapanatili.') }}</p>
                 <ol class="mt-2 mb-0">
-                    <li>Instead of deleting, you can mark this beneficiary as <strong>Inactive</strong> in their profile</li>
-                    <li>This will prevent any new care plans from being created while preserving the audit trail</li>
-                    <li>Use the status dropdown at the top of the beneficiary profile to change their status</li>
+                    <li>{{ T::translate('Instead of deleting, you can mark this beneficiary as Inactive in their profile', 'Sa halip na tanggalin, maaari mong markahan ang benepisyaryong ito bilang Hindi Aktibo sa kanilang profile') }}</li>
+                    <li>{{ T::translate('This will prevent any new care plans from being created while preserving the audit trail', 'Ito ay maiiwasan ang anumang mga bagong care plan na malikha habang pinapanatili ang audit trail') }}</li>
+                    <li>{{ T::translate('Use the status dropdown at the top of the beneficiary profile to change their status', 'Gamitin ang status dropdown sa itaas ng profile ng benepisyaryo upang baguhin ang kanilang katayuan') }}</li>
                 </ol>
             </div>
         `;
@@ -139,7 +142,7 @@ function showDependencyError(message, errorType) {
     messageElement.innerHTML = errorContent;
     
     // Change the cancel button text
-    document.getElementById('cancelDeleteButton').textContent = 'Close';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate('Close', 'Isara') }}';
     
     // Hide the delete button
     document.getElementById('confirmBeneficiaryDeleteButton').classList.add('d-none');
@@ -156,17 +159,17 @@ function showSuccess(deletedCarePlan) {
             <div class="mb-3">
                 <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
             </div>
-            <h4 class="text-success mb-3">Successfully Deleted</h4>
+            <h4 class="text-success mb-3">{{ T::translate('Successfully Deleted', 'Matagumpay na Natanggal') }}</h4>
             <div class="alert alert-light border py-3">
-                <p class="mb-1">The beneficiary profile has been permanently removed from the system.</p>
+                <p class="mb-1">{{ T::translate('The beneficiary profile has been permanently removed from the system.', 'Ang profile ng benepisyaryo ay permanenteng natanggal na mula sa system.') }}</p>
                 <div class="mt-2 pt-2 border-top">
                     <p class="mb-0 text-muted">
-                        <i class="bi bi-info-circle"></i> The associated general care plan and related records have also been deleted.
+                        <i class="bi bi-info-circle"></i> {{ T::translate('The associated general care plan and related records have also been deleted.', 'Ang nauugnay na general care plan at mga kaugnay na rekord ay natanggal na rin.') }}
                     </p>
                 </div>
             </div>
             <p class="text-muted mt-3">
-                <i class="bi bi-clock"></i> You will be redirected to the beneficiary list in a few seconds...
+                <i class="bi bi-clock"></i> {{ T::translate('You will be redirected to the beneficiary list in a few seconds...', 'Ikaw ay maire-redirect sa listahan ng mga benepisyaryo sa ilang segundo...') }}
             </p>
         </div>
     `;
@@ -176,7 +179,7 @@ function showSuccess(deletedCarePlan) {
     
     // Hide delete button and change cancel button text
     document.getElementById('confirmBeneficiaryDeleteButton').classList.add('d-none');
-    document.getElementById('cancelDeleteButton').textContent = 'Close';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate('Close', 'Isara') }}';
     
     // Redirect after a delay
     setTimeout(function() {
@@ -201,13 +204,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const beneficiaryId = document.getElementById('beneficiaryIdToDelete').value;
         
         if (!password) {
-            showError('Please enter your password to confirm deletion.');
+            showError('{{ T::translate('Please enter your password to confirm deletion.', 'Mangyaring ilagay ang iyong password upang kumpirmahin ang pagtanggal.') }}');
             return;
         }
         
         // Show loading state
         this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ T::translate('Deleting...', 'Tinatanggal...') }}';
         
         // First verify password via standard form submission
         let formData = new FormData();
@@ -261,50 +264,50 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (response.error_type) {
                                             showDependencyError(response.message, response.error_type);
                                         } else {
-                                            showError(response.message || 'Failed to delete beneficiary.');
+                                            showError(response.message || '{{ T::translate('Failed to delete beneficiary.', 'Nabigong tanggalin ang benepisyaryo.') }}');
                                             document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                                            document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                                            document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
                                         }
                                     }
                                 } catch (e) {
                                     console.error('Error parsing JSON response:', e);
-                                    showError('An unexpected error occurred. Please try again.');
+                                    showError('{{ T::translate('An unexpected error occurred. Please try again.', 'Isang hindi inaasahang error ang naganap. Mangyaring subukan muli.') }}');
                                     document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                                    document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                                    document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
                                 }
                             } else {
-                                showError('Server error: ' + xhr2.status);
+                                showError('{{ T::translate('Server error', 'Error sa server') }}: ' + xhr2.status);
                                 document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                                document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                                document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
                             }
                         };
                         xhr2.onerror = function() {
-                            showError('Network error. Please try again.');
+                            showError('{{ T::translate('Network error. Please try again.', 'Error sa network. Mangyaring subukan muli.') }}');
                             document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                            document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                            document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
                         };
                         xhr2.send(deleteForm);
                     } else {
-                        showError('Incorrect password. Please try again.');
+                        showError('{{ T::translate('Incorrect password. Please try again.', 'Maling password. Mangyaring subukan muli.') }}');
                         document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                        document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                        document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
                     }
                 } catch (e) {
                     console.error('Error parsing JSON response:', e);
-                    showError('An unexpected error occurred during password validation. Please try again.');
+                    showError('{{ T::translate('An unexpected error occurred during password validation. Please try again.', 'Isang hindi inaasahang error ang naganap sa pag-validate ng password. Mangyaring subukan muli.') }}');
                     document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                    document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                    document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
                 }
             } else {
-                showError('Password validation failed. Please try again.');
+                showError('{{ T::translate('Password validation failed. Please try again.', 'Nabigo ang pag-validate ng password. Mangyaring subukan muli.') }}');
                 document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-                document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+                document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
             }
         };
         xhr1.onerror = function() {
-            showError('Network error during password validation. Please try again.');
+            showError('{{ T::translate('Network error during password validation. Please try again.', 'Error sa network habang nagva-validate ng password. Mangyaring subukan muli.') }}');
             document.getElementById('confirmBeneficiaryDeleteButton').disabled = false;
-            document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Beneficiary';
+            document.getElementById('confirmBeneficiaryDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Beneficiary', 'Tanggalin ang Benepisyaryo') }}';
         };
         xhr1.send(formData);
     });
