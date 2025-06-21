@@ -9,8 +9,7 @@ on:
             - 'mobile/**'
 
 jobs:
-    build:
-        name: Build Android (Preview)
+    update:
         runs-on: ubuntu-latest
         env:
             DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
@@ -26,42 +25,27 @@ jobs:
                     -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
                     -H "Content-Type: application/json" \
                     -d "{\"content\":\"🚀 Android build started for **${{ github.repository }}** (#${{ github.run_number }})\"}"
-            - name: Checkout repository
-              uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
+            - name: 🏗 Setup repo
+              uses: actions/checkout@v3
+
+            - name: 🏗 Setup Node
+              uses: actions/setup-node@v3
               with:
-                  node-version: '18'
+                  node-version: 18.x
+                  cache: yarn
 
-            - name: Install dependencies
-              working-directory: ./mobile
-              run: |
-                  npm install --frozen-lockfile
-
-            - name: Authenticate with EAS
-              env:
-                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-              working-directory: ./mobile
-              run: |
-                  npm install -g eas-cli
-                  eas login --token $EXPO_TOKEN
-
-            - name: Run EAS build (Android Preview)
-              working-directory: ./mobile
-              env:
-                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-              run: |
-                  eas build --platform android --profile preview --non-interactive
-
-            - name: Upload build artifacts
-              if: success()
-              uses: actions/upload-artifact@v4
+            - name: 🏗 Setup EAS
+              uses: expo/expo-github-action@v8
               with:
-                  name: android-apk
-                  path: |
-                      mobile/dist/**/*.apk
-                      mobile/dist/**/*.aab
+                  eas-version: latest
+                  token: ${{ secrets.EXPO_TOKEN }}
+
+            - name: 📦 Install dependencies
+              run: npm install
+
+            - name: 🏗 Build Android Preview
+              run: eas build --platform android --local --profile preview
 
             - name: Notify Discord – Build Succeeded
               if: success()
