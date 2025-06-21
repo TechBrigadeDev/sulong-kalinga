@@ -8,6 +8,71 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard2.css') }}">
+    <style>
+        /* Emergency & Service Request Card Styles - Updated for consistency */
+        .emergency-card,
+        .request-card {
+            border-left: 3px solid; /* Reduced from 4px */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Reduced shadow */
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 0.75rem; /* Consistent spacing */
+        }
+        
+        .emergency-card {
+            border-color: var(--rose-500);
+            background: linear-gradient(to right, rgba(254, 242, 242, 0.5), white) !important; /* More subtle gradient */
+        }
+        
+        .request-card {
+            border-color: var(--teal-500);
+            background: linear-gradient(to right, rgba(239, 246, 255, 0.5), white) !important; /* More subtle gradient */
+        }
+        
+        .notification-card:hover {
+            transform: translateY(-1px); /* Reduced movement */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Badge Styles - Match other dashboard badges */
+        .notification-card .badge {
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        /* Typography normalization */
+        .notification-card p {
+            font-size: 0.75rem; /* 14px - standard text size */
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+            border-left-width: 2px !important; /* Thinner accent border */
+        }
+        
+        .notification-card .fw-semibold {
+            font-weight: 500 !important; /* Less bold */
+        }
+        
+        /* Make rounded pill badges match other badges */
+        .notification-card .badge.rounded-pill {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem !important;
+        }
+        
+        /* Reduce icon size */
+        .notification-card i {
+            font-size: 0.75rem;
+        }
+
+        .notification-card .beneficiary-name {
+            font-size: 0.8rem;  /* Match other text */
+        }
+        
+        /* Also ensure consistent font sizes for all elements */
+        .notification-card span:not(.badge),
+        .notification-card small {
+            font-size: 0.8rem;
+        }
+    </style>
 </head>
 <body>
 

@@ -218,7 +218,7 @@
                                             </div>
                                             <div class="row mt-4">
                                                 <div class="col-12 d-flex justify-content-end">
-                                                <button type="button" class="btn btn-primary" onclick="goToPage(2)">Next <i class="fa fa-arrow-right"></i></button>
+                                                <button type="button" class="btn btn-primary" onclick="goToPage(2)">Next <i class="bi bi-arrow-right-short"></i></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -271,7 +271,7 @@
                                                         </div>
                                                         <button type="button" class="btn btn-sm btn-outline-primary add-custom-intervention"
                                                                 data-category="{{ $category->care_category_id }}">
-                                                            <i class="fa fa-plus"></i> Add Custom Intervention
+                                                            <i class="bi bi-plus"></i> Add Custom Intervention
                                                         </button>
                                                     </div>
                                                 </div>
@@ -279,10 +279,10 @@
                                             
                                             <div class="d-flex justify-content-between">
                                                 <button type="button" class="btn btn-secondary" onclick="goToPage({{ $index + 1 }})">
-                                                    <i class="fa fa-arrow-left"></i> Previous
+                                                    <i class="bi bi-arrow-left-short"></i> Previous
                                                 </button>
                                                 <button type="button" class="btn btn-primary" onclick="goToPage({{ $index + 3 }})">
-                                                    Next <i class="fa fa-arrow-right"></i>
+                                                    Next <i class="bi bi-arrow-right-short"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -327,10 +327,10 @@
                                             <div class="row mt-4">
                                                 <div class="col-12 d-flex justify-content-between align-items-center">
                                                     <button type="button" class="btn btn-secondary" onclick="goToPage(8)">
-                                                        <i class="fa fa-arrow-left"></i> Previous
+                                                        <i class="bi bi-arrow-left-short"></i> Previous
                                                     </button>
                                                     <button type="submit" class="btn btn-success">
-                                                        <i class="fa fa-save"></i> Save Weekly Care Plan
+                                                        <i class="bi bi-floppy"></i> Save Weekly Care Plan
                                                     </button>
                                                 </div>
                                             </div>
@@ -359,7 +359,7 @@
             </div>
             <div class="col-md-1">
                 <button type="button" class="btn btn-sm btn-danger remove-custom-row">
-                    <i class="fa fa-times"></i>
+                    <i class="bi bi-x"></i>
                 </button>
             </div>
         </div>

@@ -365,9 +365,9 @@
                     const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
                     
                     fileSizeErrorMessage.innerHTML = `
-                        <strong>Form submission failed</strong><br>
-                        ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                        Please select a smaller file or compress your existing file.
+                        <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                        ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                        {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                     `;
                     fileSizeErrorModal.show();
                     return false;
@@ -603,9 +603,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
-                            Maximum allowed size is ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>${fieldLabel}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                            {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         
@@ -641,9 +641,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         return false;

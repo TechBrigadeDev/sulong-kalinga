@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Add Family | Care Worker</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/addUsers.css') }}">
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.careWorkerNavbar')
     @include('components.careWorkerSidebar')
     
@@ -18,9 +18,9 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <a href="{{ route('care-worker.families.index') }}" class="btn btn-secondary">
-                    <i class="bx bx-arrow-back"></i> Back
+                    <i class="bi bi-arrow-bar-left"></i> Back
                 </a>
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">ADD FAMILY MEMBER</div>
+                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">{{ T::translate('ADD FAMILY MEMBER', 'MAGDAGDAG NG MIYEMBRO NG PAMILYA')}}</div>
             </div>
             @if (session('success'))
                 <div class="alert alert-success">
@@ -44,37 +44,37 @@
                         <!-- Row 1: Personal Details -->
                         <div class="row mb-1 mt-3">
                             <div class="col-12">
-                                <h5 class="text-start">Personal Details</h5> <!-- Row Title -->
+                                <h5 class="text-start">{{ T::translate('Personal Details', 'Mga Personal na Detalye')}}</h5> <!-- Row Title -->
                             </div>
                         </div>
                         <div class="row mb-1">
                             <div class="col-md-3 relative">
-                                <label for="firstName" class="form-label">First Name<label style="color:red;"> * </label></label>
+                                <label for="firstName" class="form-label">{{ T::translate('First Name', 'Pangalan')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
-                                    placeholder="Enter first name" 
+                                    placeholder="{{ T::translate('Enter first name', 'Ilagay ang pangalan')}}" 
                                     value="{{ old('first_name') }}"
                                     required >
                                     
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
+                                <label for="lastName" class="form-label">{{ T::translate('Last Name', 'Apelyido')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
-                                        placeholder="Enter last name" 
+                                        placeholder="{{ T::translate('Enter last name', 'Ilagay ang apelyido')}}" 
                                         value="{{ old('last_name') }}"
                                         required >
                                         
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="gender" class="form-label">Gender</label>
+                                <label for="gender" class="form-label">{{ T::translate('Gender', 'Kasarian')}}</label>
                                 <select class="form-select" id="gender" name="gender">
-                                    <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select gender</option>
-                                    <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
-                                    <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
-                                    <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
+                                    <option value="" disabled {{ old('gender') ? '' : 'selected' }}>{{ T::translate('Select gender', 'Pumili ng kasarian')}}</option>
+                                    <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>{{ T::translate('Male', 'Lalaki')}}</option>
+                                    <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>{{ T::translate('Female', 'Babae')}}</option>
+                                    <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>{{ T::translate('Other', 'Iba pa')}}</option>
                                 </select>
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
+                                <label for="birthDate" class="form-label">{{ T::translate('Birthday', 'Kaarawan')}}<label style="color:red;"> * </label></label>
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ old('birth_date') }}" required onkeydown="return true">
                             </div>
                         </div>
@@ -83,28 +83,28 @@
                                 <label for="mobileNumber" class="form-label">Mobile Number<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <span class="input-group-text">+63</span>
-                                    <input type="text" class="form-control" id="mobileNumber" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="Enter mobile number" maxlength="11" required oninput="restrictToNumbers(this)" title="Must be 10 or 11digits.">
+                                    <input type="text" class="form-control" id="mobileNumber" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="{{ T::translate('Enter mobile number', 'Ilagay ang mobile number')}}" maxlength="11" required oninput="restrictToNumbers(this)" title="Must be 10 or 11digits.">
                                 </div>
                             </div>
                             <div class="col-md-3 relative">
                                 <label for="landlineNumber" class="form-label">Landline Number</label>
-                                <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="Enter Landline number" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
+                                <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="{{ T::translate('Enter Landline number', 'Ilagay ang landline number')}}" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="familyPhoto" class="form-label">Profile Picture</label>
+                                <label for="familyPhoto" class="form-label">{{ T::translate('Profile Picture', 'Litrato sa Profile')}}</label>
                                 <input type="file" class="form-control" id="familyPhoto" name="family_photo" accept="image/png, image/jpeg" capture="user">
-                                <small class="text-danger">Maximum file size: 7MB</small>
+                                <small class="text-danger">{{ T::translate('Maximum file size', 'Maximum na laki ng file')}}: 7MB</small>
                                 @if($errors->any())
-                                <small class="text-danger">Note: You need to select the file again after a validation error.</small>
+                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Tandaan: Pumili muli ng file pagkatapos nang validation error.')}}</small>
                                 @endif
                             </div>
                         </div>
                         <div class="row mb-1">
                             <!-- Change to dynamic -->
                             <div class="col-md-3 relative">
-                            <label for="relatedBeneficiary" class="form-label">Related Beneficiary<label style="color:red;"> * </label></label>
+                            <label for="relatedBeneficiary" class="form-label">{{ T::translate('Related Beneficiary', 'Kaugnay na Benepisyaryo')}}<label style="color:red;"> * </label></label>
                             <select class="form-select" id="relatedBeneficiary" name="relatedBeneficiary" required>
-                                <option value="" disabled {{ old('relatedBeneficiary') ? '' : 'selected' }}>Select a beneficiary</option>
+                                <option value="" disabled {{ old('relatedBeneficiary') ? '' : 'selected' }}>{{ T::translate('Select a beneficiary', 'Pumili ng Benepisyaryo')}}</option>
                                 @foreach ($beneficiaries as $beneficiary)
                                     <option value="{{ $beneficiary->beneficiary_id }}" {{ old('relatedBeneficiary') == $beneficiary->beneficiary_id ? 'selected' : '' }}>
                                         {{ $beneficiary->first_name }} {{ $beneficiary->last_name }}
@@ -113,22 +113,22 @@
                             </select>
                             </div>
                             <div class="col-md-3 relative">
-                                <label for="relationToBeneficiary" class="form-label">Relation to Beneficiary<label style="color:red;"> * </label></label>
+                                <label for="relationToBeneficiary" class="form-label">{{ T::translate('Relation to Beneficiary', 'Relasyon sa Benepisyaryo')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="relationToBeneficiary" name="relation_to_beneficiary" required>
-                                    <option value="" disabled {{ old('relation_to_beneficiary') ? '' : 'selected' }}>Select relation</option>
-                                    <option value="Son" {{ old('relation_to_beneficiary') == 'Son' ? 'selected' : '' }}>Son</option>
-                                    <option value="Daughter" {{ old('relation_to_beneficiary') == 'Daughter' ? 'selected' : '' }}>Daughter</option>
-                                    <option value="Spouse" {{ old('relation_to_beneficiary') == 'Spouse' ? 'selected' : '' }}>Spouse</option>
-                                    <option value="Sibling" {{ old('relation_to_beneficiary') == 'Sibling' ? 'selected' : '' }}>Sibling</option>
-                                    <option value="Grandchild" {{ old('relation_to_beneficiary') == 'Grandchild' ? 'selected' : '' }}>Grandchild</option>
-                                    <option value="Other" {{ old('relation_to_beneficiary') == 'Other' ? 'selected' : '' }}>Other</option>
+                                    <option value="" disabled {{ old('relation_to_beneficiary') ? '' : 'selected' }}>{{ T::translate('Select relation', 'Pumili ng relasyon')}}</option>
+                                    <option value="Son" {{ old('relation_to_beneficiary') == 'Son' ? 'selected' : '' }}>{{ T::translate('Son', 'Anak na Lalaki')}}</option>
+                                    <option value="Daughter" {{ old('relation_to_beneficiary') == 'Daughter' ? 'selected' : '' }}>{{ T::translate('Daughter', 'Anak na Babae')}}</option>
+                                    <option value="Spouse" {{ old('relation_to_beneficiary') == 'Spouse' ? 'selected' : '' }}>{{ T::translate('Spouse', 'Asawa')}}</option>
+                                    <option value="Sibling" {{ old('relation_to_beneficiary') == 'Sibling' ? 'selected' : '' }}>{{ T::translate('Sibling', 'Kapatid')}}</option>
+                                    <option value="Grandchild" {{ old('relation_to_beneficiary') == 'Grandchild' ? 'selected' : '' }}>{{ T::translate('Grandchild', 'Apo')}}</option>
+                                    <option value="Other" {{ old('relation_to_beneficiary') == 'Other' ? 'selected' : '' }}>{{ T::translate('Other', 'Iba pa')}}</option>
                                 </select>
                             </div>
                             
                             <div class="col-md-3 relative">
-                                <label for="isPrimaryCaregiver" class="form-label">Is Primary Caregiver?<label style="color:red;"> * </label></label>
+                                <label for="isPrimaryCaregiver" class="form-label">{{ T::translate('Is Primary Caregiver', 'Ay Pangunahing Tagapag-alaga')}}?<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="isPrimaryCaregiver" name="is_primary_caregiver" required>
-                                    <option value="" disabled {{ old('is_primary_caregiver') !== null ? '' : 'selected' }}>Select an option</option>
+                                    <option value="" disabled {{ old('is_primary_caregiver') !== null ? '' : 'selected' }}>{{ T::translate('Select an option', 'Pumili ng Opsyon')}}</option>
                                     <option value="1" {{ old('is_primary_caregiver') == '1' ? 'selected' : '' }}>Yes</option>
                                     <option value="0" {{ old('is_primary_caregiver') == '0' ? 'selected' : '' }}>No</option>
                                 </select>
@@ -140,14 +140,14 @@
                         <!-- Row 2: Address -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Current Address</h5> <!-- Row Title -->
+                                <h5 class="text-start">{{ T::translate('Current Address', 'Kasalukuyang Tirahan:')}}</h5> <!-- Row Title -->
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <label for="addressDetails" class="form-label">House No., Street, Subdivision, Barangay, City, Province<label style="color:red;"> * </label></label>
+                                <label for="addressDetails" class="form-label">{{ T::translate('House No., Street, Subdivision, Barangay, City, Province', 'Numero ng Bahay, Kalye, Subdividsion, Barangay, Siyudad, Probinsya')}}<label style="color:red;"> * </label></label>
                                 <textarea class="form-control" id="addressDetails" name="address_details" 
-                                placeholder="Enter complete current address" 
+                                placeholder="{{ T::translate('Enter complete current address', 'Ilagay ang kumpletong tirahan')}}" 
                                 rows="2" 
                                 required 
                                 pattern="^[a-zA-Z0-9\s,.-]+$" 
@@ -160,7 +160,7 @@
                         <!-- Login Access -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Family Portal Login Access</h5>
+                                <h5 class="text-start">{{ T::translate('Family Portal Login Access', 'Login Access para sa Family Portal')}}</h5>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -169,7 +169,7 @@
                                 <label for="personalEmail" class="form-label">Email Address<label style="color:red;"> * </label></label>
                                 <input type="email" class="form-control" id="personalEmail" name="personal_email" 
                                     value="{{ old('personal_email') }}" 
-                                    placeholder="Enter email address" 
+                                    placeholder="{{ T::translate('nter email address', 'Ilagay ang email address')}}E" 
                                     required 
                                     pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" 
                                     title="Please enter a valid email address.">
@@ -179,7 +179,7 @@
                                 <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="password" name="account[password]" 
-                                        placeholder="Enter password" 
+                                        placeholder="{{ T::translate('Enter password', 'Ilagay ang passowrd')}}" 
                                         minlength="8" 
                                         required >
                                     <span class="input-group-text password-toggle" data-target="password">
@@ -190,10 +190,10 @@
 
                             <!-- Confirm Password -->
                             <div class="col-md-4">
-                                <label for="confirmPassword" class="form-label">Confirm Password<label style="color:red;"> * </label></label>
+                                <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumpirmahin ang Password')}}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" 
-                                        placeholder="Confirm password" 
+                                        placeholder="{{ T::translate('Confirm password', 'Kumpirmahin ang Password')}}" 
                                         required 
                                         title="Passwords must match.">
                                     <span class="input-group-text password-toggle" data-target="confirmPassword">
@@ -204,7 +204,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-12">
-                                <h6 class="text-start text-muted"><strong>Note:</strong> The family member will be able to log into the Family Portal using their email address and the password you set here. Their account will be connected to the selected beneficiary's portal account.</h6>
+                                <h6 class="text-start text-muted"><strong>{{ T::translate('Note', 'Tandaan')}}:</strong> {{ T::translate('The family member will be able to log into the Family Portal using their email address and the password you set here. Their account will be connected to the selected beneficiary\'s portal account.', 'Ang miyembro ng pamilya ay makakapag-log in sa Family Portal gamit ang kanilang email address at ang password na iyong itinakda dito. Ikokonekta ang kanilang account sa portal account ng napiling benepisyaryo.')}}</h6>
                             </div>
                         </div>
 
@@ -212,8 +212,8 @@
                         <div class="row mt-4">
                             <div class="col-12 d-flex justify-content-center align-items-center">
                                 <button type="submit" class="btn btn-success btn-lg d-flex align-items-center" id="saveBeneficiaryButton">
-                                    <i class='bx bx-save me-2' style="font-size: 24px;"></i>
-                                    Save Family Member
+                                    <i class='bi bi-floppy me-2' style="font-size: 24px;"></i>
+                                    {{ T::translate('Save Family Member', 'I-save ang Miyembro ng Pamilya')}}
                                 </button>
                             </div>
                         </div>
@@ -228,11 +228,11 @@
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="saveSuccessModalLabel">Success</h5>
+                    <h5 class="modal-title" id="saveSuccessModalLabel">{{ T::translate('Success', 'Tagumpay')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <p>Family Member has been successfully saved!</p>
+                    <p>{{ T::translate('Family Member has been successfully saved', 'Ang miyembro ng pamilya ay matagumpay na nai-save')}}!</p>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
@@ -246,7 +246,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">{{ T::translate('File Size Error', 'Error sa file size')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -256,7 +256,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>
@@ -352,9 +352,9 @@
                 const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
                 
                 fileSizeErrorMessage.innerHTML = `
-                    <strong>Form submission failed</strong><br>
-                    Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
-                    Please select a smaller file or compress your existing file.
+                    <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                    {{ T::translate('Profile Picture', 'Litrato ng Profile')}} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} 7MB.<br>
+                    {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                 `;
                 fileSizeErrorModal.show();
                 return false;
@@ -439,9 +439,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Set error message and show modal
                     fileSizeErrorMessage.innerHTML = `
-                        <strong>Profile Picture</strong> file is too large (${fileSizeMB}MB).<br>
-                        Maximum allowed size is 7MB.<br>
-                        Please select a smaller file or compress your existing file.
+                        <strong>{{ T::translate('Profile Picture', 'Litrato ng Profile')}}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                        {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} 7MB.<br>
+                        {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                     `;
                     fileSizeErrorModal.show();
                     
@@ -470,9 +470,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Set error message and show modal
                 fileSizeErrorMessage.innerHTML = `
-                    <strong>Form submission failed</strong><br>
-                    Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
-                    Please select a smaller file or compress your existing file.
+                    <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                    {{ T::translate('Profile Picture', 'Litrato ng Profile')}} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} 7MB.<br>
+                    {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                 `;
                 fileSizeErrorModal.show();
                 return false;

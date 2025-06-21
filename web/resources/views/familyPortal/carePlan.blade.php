@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -184,14 +183,17 @@
     </style>
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.familyPortalNavbar')
     @include('components.familyPortalSidebar')
 
     <div class="home-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="text-left">CARE PLAN OVERVIEW</div>
+            <div class="text-left">{{ T::translate('CARE PLAN OVERVIEW', 'OVERVIEW NG CARE PLAN')}}</div>
             <a href="{{ route(Auth::guard('beneficiary')->check() ? 'beneficiary.care.plan.index' : 'family.care.plan.index') }}" class="btn btn-primary">
-                <i class="bi bi-list-check"></i> View Care Plans
+                <i class="bi bi-list-check"></i> {{ T::translate('View Care Plans', 'Tingnan ang Care Plan')}}
             </a>
         </div>
         <div class="container-fluid">
@@ -210,15 +212,15 @@
                             <h4 class="beneficiary-name">{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}</h4>
                             <div class="d-flex flex-wrap">
                                 <div class="beneficiary-meta-item me-3">
-                                    <span class="beneficiary-meta-label">Age:</span>
+                                    <span class="beneficiary-meta-label">{{ T::translate('Age', 'Edad')}}:</span>
                                     {{ \Carbon\Carbon::parse($beneficiary->birthday)->age }} years
                                 </div>
                                 <div class="beneficiary-meta-item me-3">
-                                    <span class="beneficiary-meta-label">Gender:</span>
+                                    <span class="beneficiary-meta-label">{{ T::translate('Gender', 'Kasarian')}}:</span>
                                     {{ $beneficiary->gender }}
                                 </div>
                                 <div class="beneficiary-meta-item">
-                                    <span class="beneficiary-meta-label">Category:</span>
+                                    <span class="beneficiary-meta-label">{{ T::translate('Category', 'Kategorya')}}:</span>
                                     {{ $beneficiary->category->category_name ?? 'N/A' }}
                                 </div>
                             </div>
@@ -232,18 +234,18 @@
                         <div class="card-header d-flex justify-content-between align-items-center p-3">
                             <strong>Filters</strong>
                             <button type="submit" class="btn btn-sm btn-primary" form="filterForm">
-                                <i class="bi bi-funnel-fill"></i> Apply Filters
+                                <i class="bi bi-funnel-fill"></i> {{ T::translate('Apply Filters', 'I-Apply ang Pagsala')}}
                             </button>
                         </div>
                         <div class="card-body p-2">
                             <form id="filterForm" action="{{ route(Auth::guard('beneficiary')->check() ? 'beneficiary.care.plan.allCarePlans' : 'family.care.plan.allCarePlans') }}" method="GET">
                                 <div class="row g-2 align-items-center">
                                     <div class="col-md-4">
-                                        <label for="timeRange" class="form-label">Time Range:</label>
+                                        <label for="timeRange" class="form-label">{{ T::translate('Time Range', 'Saklaw na Oras')}}:</label>
                                         <select class="form-select" id="timeRange" name="time_range">
-                                            <option value="weeks" {{ $selectedTimeRange == 'weeks' ? 'selected' : '' }}>Monthly</option>
-                                            <option value="months" {{ $selectedTimeRange == 'months' ? 'selected' : '' }}>Range of Months</option>
-                                            <option value="year" {{ $selectedTimeRange == 'year' ? 'selected' : '' }}>Yearly</option>
+                                            <option value="weeks" {{ $selectedTimeRange == 'weeks' ? 'selected' : '' }}>{{ T::translate('Monthly', 'Buwanan')}}</option>
+                                            <option value="months" {{ $selectedTimeRange == 'months' ? 'selected' : '' }}>{{ T::translate('Range of Months', 'Hanay ng mga Buwan')}}</option>
+                                            <option value="year" {{ $selectedTimeRange == 'year' ? 'selected' : '' }}>{{ T::translate('Yearly', 'Taunan')}}</option>
                                         </select>
                                     </div>
                                     
@@ -251,7 +253,7 @@
                                     <div class="col-md-8" id="weekFilterContainer" style="{{ $selectedTimeRange != 'weeks' ? 'display: none;' : '' }}">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <label for="monthSelect" class="form-label">Select Month:</label>
+                                                <label for="monthSelect" class="form-label">{{ T::translate('Select Month', 'Pumili ng Buwan')}}:</label>
                                                 <select class="form-select" id="monthSelect" name="month">
                                                     @for($m = 1; $m <= 12; $m++)
                                                         <option value="{{ $m }}" {{ $selectedMonth == $m ? 'selected' : '' }}>
@@ -261,7 +263,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-6">
-                                                <label for="yearSelect" class="form-label">Year:</label>
+                                                <label for="yearSelect" class="form-label">{{ T::translate('Year', 'Pumili ng Taon')}}:</label>
                                                 <select class="form-select" id="yearSelect" name="year">
                                                     @foreach($availableYears as $year)
                                                         <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
@@ -277,7 +279,7 @@
                                     <div class="col-md-8" id="monthRangeFilterContainer" style="{{ $selectedTimeRange != 'months' ? 'display: none;' : '' }}">
                                         <div class="row">
                                             <div class="col-md-4">
-                                                <label for="startMonthSelect" class="form-label">Start Month:</label>
+                                                <label for="startMonthSelect" class="form-label">{{ T::translate('Start Month', 'Simula')}}:</label>
                                                 <select class="form-select" id="startMonthSelect" name="start_month">
                                                     @for($m = 1; $m <= 12; $m++)
                                                         <option value="{{ $m }}" {{ $selectedStartMonth == $m ? 'selected' : '' }}>
@@ -287,7 +289,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-4">
-                                                <label for="endMonthSelect" class="form-label">End Month:</label>
+                                                <label for="endMonthSelect" class="form-label">{{ T::translate('End Month', 'Pagtatapos')}}:</label>
                                                 <select class="form-select" id="endMonthSelect" name="end_month">
                                                     @for($m = 1; $m <= 12; $m++)
                                                         <option value="{{ $m }}" {{ $selectedEndMonth == $m ? 'selected' : '' }}>
@@ -297,7 +299,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-4">
-                                                <label for="rangeYearSelect" class="form-label">Year:</label>
+                                                <label for="rangeYearSelect" class="form-label">{{ T::translate('Year', 'Taon')}}:</label>
                                                 <select class="form-select" id="rangeYearSelect" name="year">
                                                     @foreach($availableYears as $year)
                                                         <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
@@ -334,7 +336,7 @@
                                 <div class="card-body summary-card">
                                     <i class="bi bi-clock-history text-primary mb-2" style="font-size: 2rem;"></i>
                                     <div class="value">{{ $totalCareTime }}</div>
-                                    <div class="label text-muted">Total Care Time ({{ $dateRangeLabel }})</div>
+                                    <div class="label text-muted">{{ T::translate('Total Care Time', 'Kabuuang Oras ng Pangangalaga')}} ({{ $dateRangeLabel }})</div>
                                 </div>
                             </div>
                         </div>
@@ -343,7 +345,7 @@
                                 <div class="card-body summary-card">
                                     <i class="bi bi-file-earmark-medical text-primary mb-2" style="font-size: 2rem;"></i>
                                     <div class="value">{{ $totalCarePlans }}</div>
-                                    <div class="label text-muted">Care Plans Created ({{ $dateRangeLabel }})</div>
+                                    <div class="label text-muted">{{ T::translate('Care Plans Created', 'Nalikhang Care Plan')}} ({{ $dateRangeLabel }})</div>
                                 </div>
                             </div>
                         </div>
@@ -363,7 +365,7 @@
                         
                         <!-- Absolutely centered title with more breathing room -->
                         <div class="position-absolute start-0 end-0 top-50 translate-middle-y px-5">
-                            <h5 class="mb-0 text-center">Care Services Summary</h5>
+                            <h5 class="mb-0 text-center">{{ T::translate('Care Services Summary', 'Buod ng Serbisyo ng Pangangalaga')}}</h5>
                         </div>
                         
                         <!-- Right arrow at edge -->
@@ -391,9 +393,9 @@
                                                                 </th>
                                                             </tr>
                                                             <tr>
-                                                                <th>Intervention</th>
-                                                                <th>Duration</th>
-                                                                <th>% of Category</th>
+                                                                <th>{{ T::translate('Intervention', 'Interbensyon')}}</th>
+                                                                <th>{{ T::translate('Duration', 'Oras')}}</th>
+                                                                <th>{{ T::translate('% of Category', '% ng Kategorya')}}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -418,13 +420,13 @@
                                                             @endforeach
                                                             @if(empty($categoryData['interventions']))
                                                                 <tr>
-                                                                    <td colspan="3" class="text-center">No interventions recorded</td>
+                                                                    <td colspan="3" class="text-center">{{ T::translate('No interventions recorded', 'Walang interbensyon ang naitala')}}</td>
                                                                 </tr>
                                                             @endif
                                                         </tbody>
                                                         <tfoot>
                                                             <tr class="table-light">
-                                                                <th colspan="2" class="text-end">Category Total:</th>
+                                                                <th colspan="2" class="text-end">{{ T::translate('Category Total', 'Kabuuang Kategorya')}}:</th>
                                                                 <th>{{ $categoryData['total_duration_display'] ?? '0 min' }}</th>
                                                             </tr>
                                                         </tfoot>
@@ -439,7 +441,7 @@
                                 </div>
                             @else
                                 <div class="alert alert-info">
-                                    No care services recorded for this period.
+                                    {{ T::translate('No care services recorded for this period.', 'Walang serbisyong pangangalaga ang naitala sa panahon na ito.')}}
                                 </div>
                             @endif
                         </div>
@@ -453,7 +455,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="card h-100">
                                 <div class="card-header">
-                                    <h5 class="mb-0">Medical Conditions</h5>
+                                    <h5 class="mb-0">{{ T::translate('Medical Conditions', 'Medikal na Kondisyon')}}</h5>
                                 </div>
                                 <div class="card-body">
                                     @if(count($medicalConditions) > 0)
@@ -466,7 +468,7 @@
                                         </ul>
                                     @else
                                         <div class="alert alert-info">
-                                            No medical conditions recorded.
+                                            {{ T::translate('No medical conditions recorded.', 'Walang medikal na kondisyon ang naitala')}}
                                         </div>
                                     @endif
                                 </div>
@@ -477,7 +479,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="card h-100">
                                 <div class="card-header">
-                                    <h5 class="mb-0">Recent Illnesses</h5>
+                                    <h5 class="mb-0">{{ T::translate('Recent Illnesses', 'Kamakailang sakit')}}</h5>
                                 </div>
                                 <div class="card-body">
                                     @if(count($illnesses) > 0)
@@ -490,7 +492,7 @@
                                         </ul>
                                     @else
                                         <div class="alert alert-info">
-                                            No illnesses recorded for this period.
+                                            {{ T::translate('No illnesses recorded for this period.', 'Walang sakit ang naitala sa panahon na ito.')}}
                                         </div>
                                     @endif
                                 </div>
@@ -503,14 +505,14 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Vital Signs History</h5>
+                            <h5 class="mb-0">{{ T::translate('Vital Signs History', 'Kasaysayan ng Vital Signs')}}</h5>
                         </div>
                         <div class="card-body">
                             @if(count($chartLabels ?? []) > 0)
                                 <div class="row">
                                     <!-- Blood Pressure Chart -->
                                     <div class="col-md-6 mb-4">
-                                        <h6 class="text-center">Blood Pressure</h6>
+                                        <h6 class="text-center">{{ T::translate('Blood Pressure', 'Presyon ng Dugo')}}</h6>
                                         <div class="chart-container">
                                             <canvas id="bloodPressureChart"></canvas>
                                         </div>
@@ -518,7 +520,7 @@
                                     
                                     <!-- Heart Rate Chart -->
                                     <div class="col-md-6 mb-4">
-                                        <h6 class="text-center">Heart Rate (bpm)</h6>
+                                        <h6 class="text-center">{{ T::translate('Heart Rate', 'Bilis ng Puso')}} (bpm)</h6>
                                         <div class="chart-container">
                                             <canvas id="heartRateChart"></canvas>
                                         </div>
@@ -526,7 +528,7 @@
                                     
                                     <!-- Respiratory Rate Chart -->
                                     <div class="col-md-6 mb-4">
-                                        <h6 class="text-center">Respiratory Rate (breaths/min)</h6>
+                                        <h6 class="text-center">{{ T::translate('Respiratory Rate', 'Bilis ng Paghinga')}} (breaths/min)</h6>
                                         <div class="chart-container">
                                             <canvas id="respiratoryRateChart"></canvas>
                                         </div>
@@ -534,7 +536,7 @@
                                     
                                     <!-- Temperature Chart -->
                                     <div class="col-md-6 mb-4">
-                                        <h6 class="text-center">Body Temperature (°C)</h6>
+                                        <h6 class="text-center">{{ T::translate('Body Temperature', 'Temperatura ng Katawan')}} (°C)</h6>
                                         <div class="chart-container">
                                             <canvas id="temperatureChart"></canvas>
                                         </div>
@@ -542,7 +544,7 @@
                                 </div>
                             @else
                                 <div class="alert alert-info">
-                                    No vital signs data available for this period.
+                                    {{ T::translate('No vital signs data available for this period.', 'Walang datos vital signs ang available para sa panahong ito.')}}
                                 </div>
                             @endif
                         </div>

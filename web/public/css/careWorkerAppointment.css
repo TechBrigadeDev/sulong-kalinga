@@ -198,6 +198,7 @@
         .event-worker {
             font-weight: 600;
             font-size: 0.85rem;
+            line-height: 1.3;
             white-space: normal !important;
         }
         
@@ -210,7 +211,12 @@
         .fc-daygrid-event-dot {
             display: none; /* Hide default event dots */
         }
-        
+        a.fc-daygrid-event .fc-daygrid-block-event .fc-h-event .fc-event .fc-event-start .fc-event-end .fc-event-past .fc-daygrid-event {
+            white-space-collapse: collapse;
+            text-wrap-mode: nowrap;
+            white-space: nowrap;
+        }
+
         /* Action Buttons */
         .action-buttons {
             display: flex;
