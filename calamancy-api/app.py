@@ -1574,7 +1574,11 @@ def generate_tagalog_summary_with_openai(text, doc_type="assessment"):
     prompt = (
         f"Buodin mo ang sumusunod na {doc_type} sa Tagalog. "
         "Gamitin ang malinaw at propesyonal na wika. "
-        "Isama ang pinakamahalagang impormasyon at gawing executive summary:\n\n"
+        "Simulan ang executive summary sa isang maikling pambungad na nagpapaliwanag ng layunin ng ulat. "
+        "Isulat ang buod na hindi lalampas sa 9 na pangungusap. "
+        "Tiyaking ang buod ay direkta, at nakatuon lamang sa pinakamahalagang impormasyon. "
+        "Tapusin ang executive summary sa isang malinaw na konklusyon. "
+        "Huwag magdagdag ng detalye na wala sa orihinal na teksto.\n\n"
         f"{text}\n\nExecutive Summary:"
     )
 
@@ -1582,7 +1586,7 @@ def generate_tagalog_summary_with_openai(text, doc_type="assessment"):
         model="gpt-4.1-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.4,
-        max_tokens=2000
+        max_tokens=1500
     )
 
     # Log token usage

@@ -11,6 +11,16 @@
     <link rel="stylesheet" href="{{ asset('css/nlpUI.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        #assessmentSummaryDisplay, #evaluationSummaryDisplay {
+            white-space: pre-line;
+        }
+
+        .section-editor {
+            min-height: 80px;
+            height: 120px;
+            resize: vertical;
+        }
+
         :root {
             --primary-purple: #6f42c1;
             --primary-teal: #20c997;
@@ -195,7 +205,7 @@
 
     <div class="home-section">
         <div class="page-header">
-            <i class="bi bi-stars me-2"></i>NLP-POWERED REPORT SUMMARY
+            <i class="bi bi-stars me-2"></i>calamanCy-POWERED REPORT SUMMARY
         </div>
         
         <div class="container-fluid">
@@ -290,7 +300,7 @@
                                     <h6 class="section-title">Original Assessment</h6>
                                 </div>
                                 <div class="mb-4">
-                                    <div class="form-control bg-light" style="min-height: 150px; max-height: 300px; overflow-y: auto;" id="originalAssessment"></div>
+                                    <div class="form-control bg-light" style="min-height: 300px; max-height: 600px; overflow-y: auto;" id="originalAssessment"></div>
                                 </div>
                                 
                                 <div class="text-end">
@@ -313,10 +323,9 @@
                                         </div>
                                     </div>
                                     
+                                    <div id="assessmentSummaryDraft" style="display:none;"></div>
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
-                                         <div id="assessmentSummaryDraft" style="display:none;"></div>
-                                         <div class="mt-2">
                                     </div>
 
                                     <!-- New translation section -->
@@ -900,7 +909,7 @@
                 }
                 
                 // Show loading modal
-                $('#loadingText').text('Generating AI Summary...');
+                $('#loadingText').text('Generating Summary...');
                 $('#loadingProgressBar').css('width', '0%');
                 $('#loadingModal').modal('show');
                 
@@ -982,7 +991,7 @@
                 }
                 
                 // Show loading modal
-                $('#loadingText').text('Generating AI Summary...');
+                $('#loadingText').text('Generating Summary...');
                 $('#loadingProgressBar').css('width', '0%');
                 $('#loadingModal').modal('show');
                 
@@ -1485,7 +1494,7 @@
                             $('#evaluationTranslationDraft').text(response.translatedText); // or #evaluationTranslationDraft
                             displayTranslatedSections('evaluation', response.translatedSections); // or 'evaluation'
                             $('#evaluationTranslationSection').show(); // or #evaluationTranslationSection
-                        }, 500);
+                        }, 100000);
                     },
                     error: function(xhr) {
                         clearInterval(progressInterval);
@@ -1546,7 +1555,7 @@
                             <h6 class="mb-0">${sectionTitle}</h6>
                         </div>
                         <div class="card-body py-2">
-                            <p class="mb-0 fst-italic">${value}</p>
+                            <textarea class="form-control section-editor translation-editor mb-2" data-section="${key}">${value}</textarea>
                         </div>
                     </div>`;
                     
