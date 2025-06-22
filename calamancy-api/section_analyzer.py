@@ -103,6 +103,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
         
         "kalagayan_mental": [
             # More specific mental health patterns
+            r'(mental state|mental status|cognitive|pag-iisip|memory|confusion|nalilito|kalimutan|naguguluhan|depression|anxiety|mood|emosyon|emotional)',
             r'(nagpapakita|nagpapahiwatig) ng (signs|sintomas) ng (depression|anxiety|dementia)',
             r'(kalimutan|nakakalimutan|nalilimutan) (niya|nila|nya) (kung|ang)',
             r'(nalilito|confused|naguguluhan) (siya|sila) (tungkol sa|kapag|sa)',
@@ -510,8 +511,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             "deodorant", "cologne", "pabango", "presentable", "malinis na kasuotan", 
             "independent", "nakakaya", "needs help", "nangangailangan ng tulong"
         ]
-    } 
-    
+    }
      # Initialize scoring for each sentence-section pair with improved weights
     sentence_scores = {}
     for i, (sent, doc) in enumerate(zip(sentences, sentence_docs)):
@@ -984,6 +984,8 @@ def extract_sections_for_evaluation(sentences):
         
         "mobility_function": [
             # Mobility patterns
+            r'(walker|wheelchair|cane|tungkod|mobility aid|assistive device|gait|paglalakad|paggalaw|mobility)',
+            r'(gumamit|gamitin|iminungkahi|inirerekomenda|recommended|suggested) (ang|siya|niya|ni lolo|ni lola)? (walker|wheelchair|cane|tungkod|mobility aid|assistive device)',
             r'(assistive devices?|mobility aids?|tulong sa paggalaw)',
             r'(walker|wheelchair|silya de gulong|tungkod|cane)',
             r'(gait pattern|pattern ng paglalakad|paglalakad)',
@@ -1113,6 +1115,8 @@ def extract_sections_for_evaluation(sentences):
         
         "vital_signs_measurements": [
             # Vital signs monitoring patterns
+            r'(blood pressure|BP|systolic|diastolic|mm Hg|vital signs|pulse|heart rate|respiratory rate|oxygen saturation|SpO2)',
+            r'(pag-check|pinapa-check|sinusukat|monitor|napapansin) (ang|kanyang|niya|ni lolo|ni lola)? (blood pressure|BP|vital signs|pulse|heart rate|respiratory rate|oxygen saturation|SpO2)',
             r'(vital signs?|vital measurements?|mahahalagang sukatan)',
             r'(blood pressure|presyon|BP)',
             r'(temperature|temperatura)',
@@ -1606,7 +1610,8 @@ def post_process_summary(summary):
         'mag-isangpagtitipon': 'mag-isang pagtitipon',
         'pangmatagalangansakit': 'pangmatagalang ansakit',
         'pangmatagalangsakit': 'pangmatagalang sakit',
-        'ngayon ay': 'ngayon ay'
+        'ngayon ay': 'ngayon ay',
+        'isa\'t i': 'isa\'t isa',
     }
     
     # Apply all specific word fixes

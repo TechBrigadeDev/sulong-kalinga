@@ -794,7 +794,7 @@
                         
                         // Use sections if available
                         if (carePlan.assessment_summary_sections) {
-                            displaySummarySections('assessment', carePlan.assessment_summary_sections);
+                            displaySummarySections('assessment', normalizeSectionsForDisplay(carePlan.assessment_summary_sections));
                         }
                         
                         // Show translation if available
@@ -803,7 +803,7 @@
                             $('#assessmentTranslationSection').show();
                             
                             if (carePlan.assessment_translation_sections) {
-                                displayTranslatedSections('assessment', carePlan.assessment_translation_sections);
+                                displayTranslatedSections('assessment', normalizeSectionsForDisplay(carePlan.assessment_translation_sections));
                             }
                         } else {
                             $('#assessmentTranslationSection').hide();
@@ -818,7 +818,7 @@
                         $('#assessmentSummaryDraft').text(carePlan.assessment_summary_draft);
                         $('#assessmentSummaryDisplay').text(carePlan.assessment_summary_draft); // Add this
                         $('#assessmentFinalStatus').html('<span class="badge bg-warning">Draft</span>');
-                        displaySummarySections('assessment', carePlan.assessment_summary_sections);
+                        displaySummarySections('assessment', normalizeSectionsForDisplay(carePlan.assessment_summary_sections));
                         
                         // Show translation if available
                         if (carePlan.assessment_translation_draft) {
@@ -826,7 +826,7 @@
                             $('#assessmentTranslationSection').show();
                             
                             if (carePlan.assessment_translation_sections) {
-                                displayTranslatedSections('assessment', carePlan.assessment_translation_sections);
+                                displayTranslatedSections('assessment', normalizeSectionsForDisplay(carePlan.assessment_translation_sections));
                             }
                         } else {
                             $('#assessmentTranslationSection').hide();
@@ -847,7 +847,7 @@
                         
                         // Use sections if available
                         if (carePlan.evaluation_summary_sections) {
-                            displaySummarySections('evaluation', carePlan.evaluation_summary_sections);
+                            displaySummarySections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_summary_sections));
                         }
                         
                         // Show translation if available
@@ -856,7 +856,7 @@
                             $('#evaluationTranslationSection').show();
                             
                             if (carePlan.evaluation_translation_sections) {
-                                displayTranslatedSections('evaluation', carePlan.evaluation_translation_sections);
+                                displayTranslatedSections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_translation_sections));
                             }
                         } else {
                             $('#evaluationTranslationSection').hide();
@@ -870,7 +870,7 @@
                         $('#evaluationSummarySection').show();
                         $('#evaluationSummaryDraft').text(carePlan.evaluation_summary_draft);
                         $('#evaluationFinalStatus').html('<span class="badge bg-warning">Draft</span>');
-                        displaySummarySections('evaluation', carePlan.evaluation_summary_sections);
+                        displaySummarySections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_summary_sections));
                         
                         // Show translation if available
                         if (carePlan.evaluation_translation_draft) {
@@ -878,7 +878,7 @@
                             $('#evaluationTranslationSection').show();
                             
                             if (carePlan.evaluation_translation_sections) {
-                                displayTranslatedSections('evaluation', carePlan.evaluation_translation_sections);
+                                displayTranslatedSections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_translation_sections));
                             }
                         } else {
                             $('#evaluationTranslationSection').hide();
@@ -994,7 +994,7 @@
                             $('#assessmentSummaryDisplay').text(response.summary);
                             
                             if (response.sections && Object.keys(response.sections).length > 0) {
-                                displaySummarySections('assessment', response.sections);
+                                displaySummarySections('assessment', normalizeSectionsForDisplay(response.sections));
                             }
                             
                             $('#assessmentSummarySection').show();
@@ -1058,7 +1058,7 @@
                             
                             // Display summary and sections
                             $('#evaluationSummaryDraft').text(response.summary);
-                            displaySummarySections('evaluation', response.sections);
+                            displaySummarySections('evaluation', normalizeSectionsForDisplay(response.sections));
                             $('#evaluationSummaryDisplay').text(response.summary);  // Add this line
                             $('#evaluationSummarySection').show();
                             
@@ -1163,7 +1163,8 @@
                 
                  // Format for display - use orderedSections instead of Object.entries(sections)
                 orderedSections.forEach(([key, value]) => {
-                    if (value.trim()) {
+                    let valueStr = (typeof value === 'string') ? value : (value !== undefined && value !== null ? String(value) : '');
+                    if (valueStr.trim()) {
                         // Use the card style based on type
                         const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
                         
@@ -1181,12 +1182,10 @@
                                 <h6 class="mb-0">${sectionTitle}</h6>
                             </div>
                             <div class="card-body py-2">
-                                <p class="section-content mb-0" data-section="${key}">${value}</p>
-                                <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${value}</textarea>
+                                <p class="section-content mb-0" data-section="${key}">${valueStr}</p>
+                                <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${valueStr}</textarea>
                             </div>
                         </div>`;
-                        
-                        // Append to container
                         sectionContainer.append(sectionHtml);
                     }
                 });
@@ -1244,6 +1243,23 @@
                 }
             }
             
+            function normalizeSectionsForDisplay(sections) {
+                const normalized = {};
+                for (const [key, value] of Object.entries(sections)) {
+                    if (Array.isArray(value)) {
+                        // Join array items with line breaks for HTML display
+                        normalized[key] = value.join('<br>');
+                    } else if (typeof value === 'string') {
+                        normalized[key] = value;
+                    } else if (value !== undefined && value !== null) {
+                        normalized[key] = String(value);
+                    } else {
+                        normalized[key] = '';
+                    }
+                }
+                return normalized;
+            }
+
             // Save edited summary
             function saveEditedSummary(type) {
                 if (!currentCarePlanId) return;

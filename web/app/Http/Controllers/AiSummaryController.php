@@ -316,6 +316,14 @@ class AiSummaryController extends Controller
                 }
             }
 
+            // Detect gender from original Tagalog sections
+            $gender = $this->detectMainSubjectGender($request->sections);
+
+            // Harmonize pronouns in each translated section
+            foreach ($translatedSections as $key => $translatedText) {
+                $translatedSections[$key] = $this->harmonizePronouns($translatedText, $gender);
+            }
+
             // Save to database
             $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
             
@@ -417,6 +425,60 @@ class AiSummaryController extends Controller
             $text = preg_replace('/\b' . preg_quote($incorrect, '/') . '\b/i', $correct, $text);
         }
         
+        return $text;
+    }
+
+    private function detectMainSubjectGender($sections)
+    {
+        $text = implode(' ', $sections);
+        $text = strtolower($text);
+
+        // Add more as needed
+        $female_terms = ['lola', 'nanay', 'ginang', 'ate', 'mrs.', 'ms.'];
+        $male_terms = ['lolo', 'tatay', 'ginoong', 'kuya', 'mr.'];
+
+        foreach ($female_terms as $term) {
+            if (strpos($text, $term) !== false) {
+                return 'female';
+            }
+        }
+        foreach ($male_terms as $term) {
+            if (strpos($text, $term) !== false) {
+                return 'male';
+            }
+        }
+        // Default to neutral if not found
+        return 'neutral';
+    }
+
+    private function harmonizePronouns($text, $gender)
+    {
+        if ($gender === 'female') {
+            // Replace male pronouns with female
+            $patterns = [
+                '/\bHe\b/i' => 'She',
+                '/\bhe\b/i' => 'she',
+                '/\bHis\b/i' => 'Her',
+                '/\bhis\b/i' => 'her',
+                '/\bHim\b/i' => 'Her',
+                '/\bhim\b/i' => 'her',
+            ];
+        } elseif ($gender === 'male') {
+            // Replace female pronouns with male
+            $patterns = [
+                '/\bShe\b/i' => 'He',
+                '/\bshe\b/i' => 'he',
+                '/\bHer\b/i' => 'His',
+                '/\bher\b/i' => 'his',
+            ];
+        } else {
+            // Neutral: do nothing or use "they/their" if you want
+            $patterns = [];
+        }
+
+        foreach ($patterns as $pattern => $replacement) {
+            $text = preg_replace($pattern, $replacement, $text);
+        }
         return $text;
     }
 
