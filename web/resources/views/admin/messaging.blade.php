@@ -119,6 +119,82 @@
         .remove-file-btn:hover {
             background-color: rgba(0,0,0,0.7);
         }
+
+        #newChatModal .modal-content {
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(60, 72, 88, 0.18);
+            border: none;
+            background: #fff;
+        }
+
+        #newChatModal .modal-header {
+            border-bottom: none;
+            padding-bottom: 0.5rem;
+            background: linear-gradient(90deg, #4a6fa5 0%, #6b8cae 100%);
+            color: #fff;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+        }
+
+        #newChatModal .modal-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        #newChatModal .modal-body {
+            padding-top: 1.25rem;
+            padding-bottom: 1.25rem;
+        }
+
+        #newChatModal .list-group {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(60, 72, 88, 0.06);
+        }
+
+        #newChatModal .list-group-item {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2d3a4a;
+            padding: 0.85rem 1.25rem;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            background: #f8fafc;
+        }
+
+        #newChatModal .list-group-item + .list-group-item {
+            border-top: 1px solid #e9ecef;
+        }
+
+        #newChatModal .list-group-item:hover,
+        #newChatModal .list-group-item:focus {
+            background: #e3eefd;
+            color: #1a3b6d;
+        }
+
+        #newChatModal .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        #newChatModal .btn-close:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 575.98px) {
+            #newChatModal .modal-dialog {
+                margin: 1.5rem;
+            }
+            #newChatModal .modal-content {
+                border-radius: 12px;
+            }
+            #newChatModal .modal-header {
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+            }
+        }
     </style>
     
 </head>
@@ -150,14 +226,10 @@
                             </span>
                             <input type="text" class="form-control" id="conversationSearch" placeholder="Search conversations...">
                         </div>
-                        <div class="dropdown">
-                            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="newChatDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div>
+                            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#newChatModal">
                                 <i class="bi bi-plus-lg"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="newChatDropdown">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#newConversationModal">Private Message</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#newGroupModal">New Group</a></li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -196,6 +268,32 @@
         <button class="toggle-conversation-list">
             <i class="bi bi-chat-left-text-fill"></i>
         </button>
+
+        <!-- Modal for New Chat Options -->
+        <div class="modal fade" id="newChatModal" tabindex="-1" aria-labelledby="newChatModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newChatModalLabel">Start New Chat</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            <li>
+                                <a class="list-group-item list-group-item-action" href="#" data-bs-toggle="modal" data-bs-target="#newConversationModal" data-bs-dismiss="modal">
+                                    Private Message
+                                </a>
+                            </li>
+                            <li>
+                                <a class="list-group-item list-group-item-action" href="#" data-bs-toggle="modal" data-bs-target="#newGroupModal" data-bs-dismiss="modal">
+                                    New Group
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- New Private Conversation Modal -->
         <div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
