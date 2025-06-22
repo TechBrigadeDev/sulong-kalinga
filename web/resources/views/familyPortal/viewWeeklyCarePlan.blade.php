@@ -8,46 +8,11 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewWeeklyCareplan.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
-    <style>
-        /* Ensure scrolling works properly */
-        html, body {
-            height: 100%;
-            overflow-y: auto;
-        }
-        
-        /* Fix for home-section to ensure it's scrollable */
-        .home-section {
-            position: relative;
-            min-height: 100%;
-            height: auto;
-            transition: all 0.5s ease;
-            padding: 12px;
-            overflow-y: visible;
-        }
-        
-        /* Responsive adjustment when sidebar is closed */
-        .sidebar.close ~ .home-section {
-            left: 78px;
-            width: calc(100% - 78px);
-        }
-        
-        @media (max-width: 768px) {
-            .home-section {
-                width: 100%;
-                left: 0;
-            }
-            
-            .sidebar.close ~ .home-section {
-                left: 0;
-                width: 100%;
-            }
-        }
-    </style>
-
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.familyPortalNavbar')
     @include('components.familyPortalSidebar')
     
@@ -56,17 +21,17 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="acknowledgmentModalLabel">Confirm Acknowledgment</h5>
+                    <h5 class="modal-title" id="acknowledgmentModalLabel">{{ T::translate('Confirm Acknowledgment', 'Kumpirmahin ang Pagkilala')}}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p>By acknowledging this care plan for <strong>{{ $weeklyCareplan->beneficiary->first_name }} {{ $weeklyCareplan->beneficiary->last_name }}</strong>, you confirm that:</p>
                     <ul>
-                        <li>You have thoroughly reviewed all of the information in this care plan.</li>
-                        <li>You understand the assessment, care needs, and interventions outlined for your family member.</li>
-                        <li>You agree with the care plan as documented.</li>
+                        <li>{{ T::translate('Nasuri mo nang lubusan ang lahat ng impormasyon sa plano ng pangangalagang ito', 'Nasuri mo nang lubusan ang lahat ng impormasyon sa plano ng pangangalagang ito')}}.</li>
+                        <li>{{ T::translate('You understand the assessment, care needs, and interventions outlined', 'Nauunawaan mo ang pagtatasa, mga pangangailangan sa pangangalaga, at mga interbensyon na nakabalangkas')}}.</li>
+                        <li>{{ T::translate('You agree with the care plan as documented for your family member', 'Sumasang-ayon ka sa plano ng pangangalaga na dokumentado para sa miyembro ng iyong pamilya')}}.</li>
                     </ul>
-                    <p>This action will be recorded with your name, date, and time.</p>
+                    <p>{{ T::translate('This action will be recorded with your name, date, and time', 'Ang aksyon na ito ay itatala kasama ang iyong pangalan, petsa, at oras')}}.</p>
                     
                     <form id="acknowledgmentForm" method="POST" action="{{ route('family.care.plan.acknowledge', $weeklyCareplan->weekly_care_plan_id) }}">
                         @csrf
@@ -74,8 +39,8 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmAcknowledgment">I Acknowledge This Care Plan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+                    <button type="button" class="btn btn-primary" id="confirmAcknowledgment">{{ T::translate('I Acknowledge This Care Plan', 'Aking Kinikilala ang Care Plan na ito')}}</button>
                 </div>
             </div>
         </div>
@@ -83,20 +48,20 @@
 
     <div class="home-section">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <!-- Back Button -->
                 <a href="{{ route('family.care.plan.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Care Plans
+                    <i class="bi bi-arrow-left"></i> {{ T::translate('Back to Care Plans', 'Bumalik sa Care Plan')}}
                 </a>
 
                 <div class="mx-auto text-center" style="font-size: 20px; font-weight: bold;">
-                    WEEKLY CARE PLAN DETAILS
+                    {{ T::translate('WEEKLY CARE PLAN DETAILS', 'MGA DETALYE NG WEEKLY CARE PLAN')}}
                 </div>
 
                 <div>
                     @if(!$weeklyCareplan->acknowledged_by_beneficiary && !$weeklyCareplan->acknowledged_by_family)
                         <button type="button" class="btn btn-primary" id="acknowledgeBtn">
-                            <i class="bi bi-check-circle"></i> Acknowledge Care Plan
+                            <i class="bi bi-check-circle"></i> {{ T::translate('Acknowledge Care Plan', 'Kilalanin ang Care Plan')}}
                         </button>
                     @endif
                 </div>
@@ -115,45 +80,45 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            
+            <div class="row" id="home-content">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Beneficiary Information</h5>
+                    <h5 class="mb-0">{{ T::translate('Beneficiary Information', 'Impormasyong ng Benepisyaryo')}}</h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-2">
                         <div class="col-md-4">
-                            <label class="form-label">Beneficiary Name</label>
+                            <label class="form-label">{{ T::translate('Beneficiary Name', 'Pangalang ng Benepisyaryo')}}</label>
                             <input type="text" class="form-control" value="{{ $weeklyCareplan->beneficiary->first_name }} {{ $weeklyCareplan->beneficiary->last_name }}" readonly>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Age</label>
+                            <label class="form-label">{{ T::translate('Age', 'Edad')}}</label>
                             <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($weeklyCareplan->beneficiary->birthday)->age }} years old" readonly>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Birthdate</label>
+                            <label class="form-label">{{ T::translate('Birthdate', 'Petsa ng Kapanganakan')}}</label>
                             <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($weeklyCareplan->beneficiary->birthday)->format('M d, Y') }}" readonly>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Gender</label>
+                            <label class="form-label">{{ T::translate('Gender', 'Kasarian')}}</label>
                             <input type="text" class="form-control" value="{{ $weeklyCareplan->beneficiary->gender }}" readonly>
                         </div>
                     </div>
 
                     <div class="row mb-2">
                         <div class="col-md-4">
-                            <label class="form-label">Civil Status</label>
+                            <label class="form-label">{{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}</label>
                             <input type="text" class="form-control" value="{{ $weeklyCareplan->beneficiary->civil_status }}" readonly>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label">Address</label>
+                            <label class="form-label">{{ T::translate('Address', 'Tirahan')}}</label>
                             <input type="text" class="form-control" value="{{ $weeklyCareplan->beneficiary->street_address }}" readonly>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="form-label">Medical Conditions</label>
+                            <label class="form-label">{{ T::translate('Medical Conditions', 'Mga Medical na Kondisyon')}}</label>
                             <div class="border p-3 rounded bg-light">
                                 @php
                                     $medicalConditions = $weeklyCareplan->beneficiary->generalCarePlan->healthHistory->medical_conditions ?? null;
@@ -180,7 +145,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Illness</label>
+                            <label class="form-label">{{ T::translate('Illness', 'Mga Sakit')}}</label>
                             <div class="border p-3 rounded bg-light">
                                 @php
                                     $illnesses = $weeklyCareplan->illnesses ?? null;
@@ -212,66 +177,77 @@
             
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Assessment & Vital Signs</h5>
+                    <h5 class="mb-0">{{ T::translate('Assessment', 'Pagtatasa')}}</h5>
                     <div class="text-white">
                         <small>Date: {{ \Carbon\Carbon::parse($weeklyCareplan->date)->format('M d, Y') }}</small>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Assessment</label>
+                        <div class="col-md-12">
                             <div class="border p-3 rounded mb-3 bg-light">
                                 {!! nl2br(e($weeklyCareplan->assessment)) !!}
                             </div>
-                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ T::translate('Vital Signs & Photo Documentation', 'Vital Signs at Larawan sa Dokumentasyon')}}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Vital Signs</label>
+                            <table class="table table-sm table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th width="40%">{{ T::translate('Blood Pressure', 'Presyon ng Dugo')}}</th>
+                                        <td>{{ $weeklyCareplan->vitalSigns->blood_pressure ?? 'Not recorded' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ T::translate('Heart Rate', 'Bilis ng Pulso')}}</th>
+                                        <td>{{ $weeklyCareplan->vitalSigns->pulse_rate ? $weeklyCareplan->vitalSigns->pulse_rate.' bpm' : 'Not recorded' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ T::translate('Respiratory Rate', 'Bilis ng Paghinga')}}</th>
+                                        <td>{{ $weeklyCareplan->vitalSigns->respiratory_rate ? $weeklyCareplan->vitalSigns->respiratory_rate.' breaths/min' : 'Not recorded' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ T::translate('Temperature', 'Temperatura')}}</th>
+                                        <td>{{ $weeklyCareplan->vitalSigns->body_temperature ? $weeklyCareplan->vitalSigns->body_temperature.'°C' : 'Not recorded' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ T::translate('Photo', 'Larawan')}}</label>
+                            <div class="border p-2 d-flex justify-content-center align-items-center" style="height: 200px;">
+                                @if($weeklyCareplan->photo_path)
+                                    <img src="{{ asset('storage/' . $weeklyCareplan->photo_path) }}" alt="Care Plan Photo" class="img-fluid" style="max-height: 100%;">
+                                @else
+                                    <div class="text-center text-muted">No image available</div>
+                                @endif
+                            </div>
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ T::translate('Evaluation & Recommendations', 'Ebalwasyon at Rekomendasyon')}}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">                            
                             @if($weeklyCareplan->evaluation_recommendations)
-                                <label class="form-label">Evaluation & Recommendations</label>
                                 <div class="border p-3 rounded bg-light">
                                     {!! nl2br(e($weeklyCareplan->evaluation_recommendations)) !!}
                                 </div>
                             @endif
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="row mb-3">
-                                <div class="col-12">
-                                    <label class="form-label">Vital Signs</label>
-                                    <table class="table table-sm table-bordered">
-                                        <tbody>
-                                            <tr>
-                                                <th width="40%">Blood Pressure</th>
-                                                <td>{{ $weeklyCareplan->vitalSigns->blood_pressure ?? 'Not recorded' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Heart Rate</th>
-                                                <td>{{ $weeklyCareplan->vitalSigns->pulse_rate ? $weeklyCareplan->vitalSigns->pulse_rate.' bpm' : 'Not recorded' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Respiratory Rate</th>
-                                                <td>{{ $weeklyCareplan->vitalSigns->respiratory_rate ? $weeklyCareplan->vitalSigns->respiratory_rate.' breaths/min' : 'Not recorded' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Temperature</th>
-                                                <td>{{ $weeklyCareplan->vitalSigns->body_temperature ? $weeklyCareplan->vitalSigns->body_temperature.'°C' : 'Not recorded' }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-12">
-                                    <label class="form-label">Photo</label>
-                                    <div class="border p-2 d-flex justify-content-center align-items-center" style="height: 200px;">
-                                        @if($weeklyCareplan->photo_path)
-                                            <img src="{{ asset('storage/' . $weeklyCareplan->photo_path) }}" alt="Care Plan Photo" class="img-fluid" style="max-height: 100%;">
-                                        @else
-                                            <div class="text-center text-muted">No image available</div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -279,16 +255,16 @@
             
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Care Needs & Interventions</h5>
+                    <h5 class="mb-0">{{ T::translate('Care Needs & Interventions', 'Pangangailangan sa Pangangalaga at Interbensyon')}}</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-bordered mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th width="30%">Care Needs</th>
-                                    <th>Interventions Implemented</th>
-                                    <th width="15%">Duration (min)</th>
+                                    <th width="30%">{{ T::translate('Care Needs', 'Pangangailangan sa Pangangalaga')}}</th>
+                                    <th>{{ T::translate('Interventions Implemented', 'Isinagawang Interbensyon')}}</th>
+                                    <th width="15%">{{ T::translate('Duration', 'Oras')}} (min)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -345,17 +321,17 @@
 
                                 @if(count($displayedCategories) === 0)
                                     <tr>
-                                        <td colspan="3" class="text-center py-3">No interventions recorded for this care plan.</td>
+                                        <td colspan="3" class="text-center py-3">{{ T::translate('No interventions recorded for this care plan.', 'Walang interbensyon ang naitala para sa care plan na ito.')}}</td>
                                     </tr>
                                 @endif
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="2" class="text-end">Total Duration:</th>
+                                    <th colspan="2" class="text-end">{{ T::translate('Total Duration', 'Kabuuang Oras')}}:</th>
                                     <th>{{ number_format($totalMinutes, 2) }} min</th>
                                 </tr>
                                 <tr>
-                                    <th colspan="2" class="text-end">Acknowledgement Status:</th>
+                                    <th colspan="2" class="text-end">{{ T::translate('Acknowledgement Status', 'Status ng Pagkilala')}}:</th>
                                     <th>
                                         @if($weeklyCareplan->acknowledged_by_beneficiary)
                                             <span class="badge bg-success">
@@ -366,9 +342,9 @@
                                                 Acknowledged by {{ Auth::guard('family')->check() ? 'You' : 'Family' }}
                                             </span>
                                         @elseif($weeklyCareplan->acknowledgement_signature)
-                                            <span class="badge bg-success">Acknowledged</span>
+                                            <span class="badge bg-success">{{ T::translate('Acknowledged', 'Kinilala')}}</span>
                                         @else
-                                            <span class="badge bg-warning">Pending Acknowledgement</span>
+                                            <span class="badge bg-warning">{{ T::translate('Pending Acknowledgement', 'Nakabinbing Pagkilala')}}</span>
                                         @endif
                                     </th>
                                 </tr>
@@ -384,23 +360,24 @@
                 @endphp
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Acknowledgement Details</h5>
+                        <h5 class="mb-0">{{ T::translate('Acknowledgement Details', 'Detalye ng Pagkilala')}}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <p><strong>Acknowledged By:</strong> {{ $signatureData['name'] ?? 'Unknown' }}</p>
+                                <p><strong>{{ T::translate('Acknowledged By', 'Kinilala ni')}}:</strong> {{ $signatureData['name'] ?? 'Unknown' }}</p>
                             </div>
                             <div class="col-md-4">
                                 <p><strong>Role:</strong> {{ $signatureData['acknowledged_by'] ?? 'Unknown' }}</p>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Date:</strong> {{ isset($signatureData['date']) ? \Carbon\Carbon::parse($signatureData['date'])->format('M d, Y g:i A') : 'Unknown' }}</p>
+                                <p><strong>{{ T::translate('Date', 'Petsa')}}:</strong> {{ isset($signatureData['date']) ? \Carbon\Carbon::parse($signatureData['date'])->format('M d, Y g:i A') : 'Unknown' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             @endif
+        </div>
         </div>
     </div>
 

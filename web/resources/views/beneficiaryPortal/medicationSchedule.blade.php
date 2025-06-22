@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Medication Schedule</title>
+    <title>Medication Schedule | Beneficiary</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/familyPortalMedicationSchedule.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.beneficiaryPortalNavbar')
     @include('components.beneficiaryPortalSidebar')
 
     <div class="home-section">
-        <div class="text-left">MEDICATION SCHEDULE</div>
+        <div class="text-left">{{ T::translate('MEDICATION SCHEDULE', 'ISKEDYUL NG GAMOT')}}</div>
         <div class="container-fluid">
             <div class="row p-3" id="home-content">
                 <div class="col-12">
@@ -30,18 +32,18 @@
                         </div>
                         <div class="beneficiary-details">
                             <h3>{{ $beneficiary['name'] }}</h3>
-                            <p>{{ $beneficiary['age'] }} years old | {{ $beneficiary['gender'] }}</p>
+                            <p>{{ $beneficiary['age'] }} {{ T::translate('years old', 'taong gulang')}} | {{ $beneficiary['gender'] }}</p>
                         </div>
                     </div>
 
-                    <p class="last-updated">Last updated: {{ $lastUpdated['date'] }} at {{ $lastUpdated['time'] }}</p>
+                    <p class="last-updated">{{ T::translate('Last updated', 'Huling na-update')}}: {{ $lastUpdated['date'] }} at {{ $lastUpdated['time'] }}</p>
                     
                     <!-- Health Status Row -->
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card health-card">
                                 <div class="health-card-header">
-                                    <span><i class="bi bi-heart-pulse me-2"></i> Medical Conditions</span>
+                                    <span><i class="bi bi-heart-pulse me-2"></i> {{ T::translate('Medical Conditions', 'Mga Medikal na Kondisyon')}}</span>
                                 </div>
                                 <div class="health-card-body">
                                     @forelse($healthConditions as $condition)
@@ -50,8 +52,8 @@
                                         </div>
                                     @empty
                                         <div class="condition-item">
-                                            <div class="condition-name">No Medical Conditions</div>
-                                            <div class="condition-details">No chronic medical conditions on record</div>
+                                            <div class="condition-name">{{ T::translate('No Medical Conditions', 'Walang mga medikal na kondisyon')}}</div>
+                                            <div class="condition-details">{{ T::translate('No chronic medical conditions on record', 'Walang chronic na medikal na kondisyon sa tala')}}</div>
                                         </div>
                                     @endforelse
                                 </div>
@@ -60,7 +62,7 @@
                         <div class="col-md-6">
                             <div class="card health-card">
                                 <div class="health-card-header">
-                                    <span><i class="bi bi-shield-check me-2"></i> Immunizations</span>
+                                    <span><i class="bi bi-shield-check me-2"></i> {{ T::translate('Immunizations', 'Mga Bakuna')}}</span>
                                 </div>
                                 <div class="health-card-body">
                                     @forelse($immunizations as $immunization)
@@ -69,8 +71,8 @@
                                         </div>
                                     @empty
                                         <div class="condition-item">
-                                            <div class="condition-name">No Immunization Records</div>
-                                            <div class="condition-details">No immunization records currently available</div>
+                                            <div class="condition-name">{{ T::translate('No Immunization Records', 'Walang Tala ng mga Bakuna')}}</div>
+                                            <div class="condition-details">{{ T::translate('No immunization records currently available', 'Walang tala ng mga bakuna ang available sa kasalukuyan')}}</div>
                                         </div>
                                     @endforelse
                                 </div>
@@ -81,14 +83,14 @@
                     <!-- Medication Schedule -->
                     <div class="row mt-4">
                         <div class="col-12">
-                            <h4 class="mb-4" style="color: var(--text-dark); font-weight: 600;">Current Medications</h4>
+                            <h4 class="mb-4" style="color: var(--text-dark); font-weight: 600;">{{ T::translate('Current Medications', 'Kasalukuyang Gamot')}}</h4>
                         </div>
                         
                         <!-- Active Medications Card -->
                         <div class="col-12">
                             <div class="card medication-card">
                                 <div class="medication-header">
-                                    <div class="medication-patient">Active Medications</div>
+                                    <div class="medication-patient">{{ T::translate('Active Medications', 'Akitbong mga Gamot')}}</div>
                                 </div>
                                 <div class="medication-body">
                                     @forelse($activeMedications as $medication)
@@ -102,17 +104,17 @@
                                             </div>
                                             <div class="medication-details">
                                                 <div class="medication-detail">
-                                                    <i class="bi bi-calendar"></i> Started: {{ $medication['start_date'] }}
+                                                    <i class="bi bi-calendar"></i> {{ T::translate('Started', 'Nagsimula')}}: {{ $medication['start_date'] }}
                                                 </div>
                                                 <!-- Add enhanced dosage timing display -->
                                                 <div class="medication-detail timing-detail">
-                                                    <i class="bi bi-alarm"></i> Dosage times:
+                                                    <i class="bi bi-alarm"></i> {{ T::translate('Dosage times', 'Oras ng Dosis')}}:
                                                     <div class="timing-badges">
                                                         @foreach($medication['dosage_times'] as $time)
                                                             <span class="timing-badge {{ $time['with_food'] ? 'with-food' : 'without-food' }}">
                                                                 {{ $time['time'] }}
                                                                 @if($time['with_food'])
-                                                                    <i class="bi bi-egg-fried" title="Take with food">Take with food</i>
+                                                                    <i class="bi bi-egg-fried" title="Take with food">{{ T::translate('Take with food', 'May Pagkain')}}</i>
                                                                 @else
                                                                     <i class="bi bi-cup" title="Take on empty stomach"></i>
                                                                 @endif
@@ -120,7 +122,7 @@
                                                         @endforeach
                                                         @if($medication['as_needed'])
                                                             <span class="timing-badge as-needed">
-                                                                <i class="bi bi-stopwatch"></i> Take as needed
+                                                                <i class="bi bi-stopwatch"></i> {{ T::translate('Take as needed', 'Inumin kung kinakailangaan')}}
                                                             </span>
                                                         @endif
                                                     </div>
@@ -129,7 +131,7 @@
                                                     <i class="bi bi-droplet"></i> {{ $medication['administration'] }}
                                                 </div>
                                                 <div class="medication-detail">
-                                                    <i class="bi bi-prescription"></i> Recorded by {{ $medication['recorded_by'] }}
+                                                    <i class="bi bi-prescription"></i> {{ T::translate('Recorded by', 'Naitala ni')}} {{ $medication['recorded_by'] }}
                                                 </div>
                                                 @if($medication['special_instructions'])
                                                     <div class="medication-detail">
@@ -140,7 +142,7 @@
                                         </div>
                                     @empty
                                         <div class="p-4 text-center text-muted">
-                                            No active medications scheduled at this time.
+                                            {{ T::translate('No active medications scheduled at this time.', 'Walang akitbong iksedyul ng gamot sa ngayon')}}
                                         </div>
                                     @endforelse
                                 </div>
@@ -151,7 +153,7 @@
                         <div class="col-12 mt-4">
                             <div class="card medication-card">
                                 <div class="medication-header">
-                                    <div class="medication-patient">PRN (As Needed) Medications</div>
+                                    <div class="medication-patient">{{ T::translate('PRN (As Needed) Medications', 'PRN (Kung Kinakailangan) mga Gamot')}}</div>
                                 </div>
                                 <div class="medication-body">
                                     @forelse($prnMedications as $medication)
@@ -165,7 +167,7 @@
                                             </div>
                                             <div class="medication-details">
                                                 <div class="medication-detail">
-                                                    <i class="bi bi-calendar"></i> Started: {{ $medication['start_date'] }}
+                                                    <i class="bi bi-calendar"></i> {{ T::translate('Started', 'Nagsimula')}}: {{ $medication['start_date'] }}
                                                 </div>
                                                 <div class="medication-detail">
                                                     <i class="bi bi-capsule"></i> {{ $medication['remaining'] }}
@@ -174,7 +176,7 @@
                                                     <i class="bi bi-droplet"></i> {{ $medication['administration'] }}
                                                 </div>
                                                 <div class="medication-detail">
-                                                    <i class="bi bi-prescription"></i> Recorded by {{ $medication['recorded_by'] }}
+                                                    <i class="bi bi-prescription"></i> {{ T::translate('Recorded by', 'Naitala ni')}} {{ $medication['recorded_by'] }}
                                                 </div>
                                                 @if($medication['special_instructions'])
                                                     <div class="medication-detail">
@@ -185,7 +187,7 @@
                                         </div>
                                     @empty
                                         <div class="p-4 text-center text-muted">
-                                            No PRN (as needed) medications scheduled at this time.
+                                            {{ T::translate('No PRN (as needed) medications scheduled at this time.', 'Walang (PRN) na mga gamot ang naka-iskedyul sa ngayon')}}
                                         </div>
                                     @endforelse
                                 </div>

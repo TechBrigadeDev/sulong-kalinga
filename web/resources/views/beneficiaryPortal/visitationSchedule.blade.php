@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}"> 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     
@@ -147,11 +146,14 @@
     </style>
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.beneficiaryPortalNavbar')
     @include('components.beneficiaryPortalSidebar')
 
     <div class="home-section">
-        <div class="text-left">VISITATION SCHEDULE</div>
+        <div class="text-left">{{ T::translate('VISITATION SCHEDULE', 'ISKEDYUL NG PAGBISITA') }}</div>
         <div class="container-fluid">
             <div class="row" id="home-content">
                 <!-- Main Content Row with 2 columns -->
@@ -161,18 +163,18 @@
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">
-                                    <i class="bi bi-calendar3"></i> Visitation Calendar
+                                    <i class="bi bi-calendar3"></i> {{ T::translate('Visitation Calendar', 'Kalendaryo ng Pagbisita') }}
                                 </h5>
                                 <div class="calendar-view-toggle">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <button type="button" class="btn btn-outline-primary active" id="monthViewBtn">
-                                            <i class="bi bi-calendar-month"></i> Month
+                                            <i class="bi bi-calendar-month"></i> {{ T::translate('Month', 'Buwan') }}
                                         </button>
                                         <button type="button" class="btn btn-outline-primary" id="weekViewBtn">
-                                            <i class="bi bi-calendar-week"></i> Week
+                                            <i class="bi bi-calendar-week"></i> {{ T::translate('Week', 'Linggo') }}
                                         </button>
                                         <button type="button" class="btn btn-outline-primary" id="dayViewBtn">
-                                            <i class="bi bi-calendar-day"></i> Day
+                                            <i class="bi bi-calendar-day"></i> {{ T::translate('Day', 'Araw') }}
                                         </button>
                                     </div>
                                 </div>
@@ -190,7 +192,7 @@
                         <div class="card h-100">
                             <div class="card-header mb-0">
                                 <h5 class="mb-0">
-                                    <i class="bi bi-list-check"></i> Upcoming Visits
+                                    <i class="bi bi-list-check"></i> {{ T::translate('Upcoming Visits', 'Mga Nalalapit na Pagbisita') }}
                                 </h5>
                             </div>
                             <div class="card-body visits-column">
@@ -198,20 +200,20 @@
                                 <div class="schedule-filter mb-3">
                                     <div class="row">
                                         <div class="col-md-6 mb-2 mb-md-0">
-                                            <label for="statusFilter" class="form-label">Filter by Status</label>
+                                            <label for="statusFilter" class="form-label">{{ T::translate('Filter by Status', 'Salain ayon sa Status') }}</label>
                                             <select class="form-select" id="statusFilter">
-                                                <option value="all">All Visits</option>
-                                                <option value="scheduled">Scheduled</option>
-                                                <option value="completed">Completed</option>
-                                                <option value="canceled">Canceled</option>
+                                                <option value="all">{{ T::translate('All Visits', 'Lahat ng Pagbisita') }}</option>
+                                                <option value="scheduled">{{ T::translate('Scheduled', 'Naka-iskedyul') }}</option>
+                                                <option value="completed">{{ T::translate('Completed', 'Natapos') }}</option>
+                                                <option value="canceled">{{ T::translate('Canceled', 'Nakansela') }}</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="timeframeFilter" class="form-label">Timeframe</label>
+                                            <label for="timeframeFilter" class="form-label">{{ T::translate('Timeframe', 'Panahon') }}</label>
                                             <select class="form-select" id="timeframeFilter">
-                                                <option value="upcoming">Upcoming</option>
-                                                <option value="past">Past Visits</option>
-                                                <option value="all">All Visits</option>
+                                                <option value="upcoming">{{ T::translate('Upcoming', 'Nalalapit') }}</option>
+                                                <option value="past">{{ T::translate('Past Visits', 'Nakaraang Pagbisita') }}</option>
+                                                <option value="all">{{ T::translate('All Visits', 'Lahat ng Pagbisita') }}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -222,13 +224,13 @@
                                     <!-- Visits will be loaded here dynamically -->
                                     <div class="text-center py-4" id="loadingVisits">
                                         <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
+                                            <span class="visually-hidden">{{ T::translate('Loading', 'Naglo-load') }}...</span>
                                         </div>
-                                        <p class="mt-2">Loading visits...</p>
+                                        <p class="mt-2">{{ T::translate('Loading visits', 'Naglo-load ng mga Pagbisita') }}...</p>
                                     </div>
                                     <div class="text-center py-4 d-none" id="noVisitsMessage">
                                         <i class="bi bi-calendar-x" style="font-size: 2rem; color: #6c757d;"></i>
-                                        <p class="mt-2">No visits found with the selected filters.</p>
+                                        <p class="mt-2">{{ T::translate('No visits found with the selected filters', 'Walang nakitang pagbisita sa napiling pagsala') }}.</p>
                                     </div>
                                 </div>
                             </div>
@@ -244,39 +246,39 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="visitDetailsModalLabel">Visit Details</h5>
+                    <h5 class="modal-title" id="visitDetailsModalLabel">{{ T::translate('Visit Details', 'Detalye ng Pagbisita') }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="visit-details">
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Date:</span>
+                            <span class="schedule-detail-label">{{ T::translate('Date', 'Petsa') }}:</span>
                             <span class="schedule-detail-value" id="modalDate"></span>
                         </div>
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Time:</span>
+                            <span class="schedule-detail-label">{{ T::translate('Time', 'Oras') }}:</span>
                             <span class="schedule-detail-value" id="modalTime"></span>
                         </div>
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Visit Type:</span>
+                            <span class="schedule-detail-label">{{ T::translate('Visit Type', 'Uri ng Pagbisita') }}:</span>
                             <span class="schedule-detail-value" id="modalVisitType"></span>
                         </div>
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Care Worker:</span>
+                            <span class="schedule-detail-label">{{ T::translate('Care Worker', 'Tagapag-alaga') }}:</span>
                             <span class="schedule-detail-value" id="modalCareWorker"></span>
                         </div>
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Status:</span>
+                            <span class="schedule-detail-label">{{ T::translate('Status', 'Status') }}:</span>
                             <span class="schedule-detail-value" id="modalStatus"></span>
                         </div>
                         <div class="schedule-detail-item">
-                            <span class="schedule-detail-label">Notes:</span>
+                            <span class="schedule-detail-label">{{ T::translate('Notes', 'Tala') }}:</span>
                             <span class="schedule-detail-value" id="modalNotes"></span>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara') }}</button>
                 </div>
             </div>
         </div>
@@ -370,12 +372,12 @@
                     error: function(error) {
                         // Hide loading indicator and show error message
                         loadingElement.classList.add('d-none');
-                        console.error('Error loading upcoming visits:', error);
+                        console.error('{{ T::translate("Error loading upcoming visits", "Error sa paglo-load ng mga nalalapit na pagbisita") }}:', error);
                         
                         // Create and append error message
                         const errorMessage = document.createElement('div');
                         errorMessage.className = 'alert alert-danger';
-                        errorMessage.textContent = 'Error loading visits. Please try again.';
+                        errorMessage.textContent = '{{ T::translate("Error loading visits. Please try again.", "Error sa paglo-load ng pagbisita. Pakisubukan muli.") }}';
                         visitsListContainer.appendChild(errorMessage);
                     }
                 });
@@ -583,16 +585,16 @@
                                         console.log("Session check result:", response);
                                         
                                         if (!response.authenticated) {
-                                            alert("Your session has expired. Please log in again.");
+                                            alert("{{ T::translate('Your session has expired. Please log in again.', 'Ang iyong session ay nag-expire. Mangyaring mag-log in muli.') }}");
                                             window.location.href = "{{ route('login') }}";
                                         } else {
                                             // Session exists but still getting 401 - might be CSRF mismatch
-                                            alert("Authentication error. Please refresh the page.");
+                                            alert("{{ T::translate('Authentication error. Please refresh the page.', 'Error sa authentication. Mangyaring i-refresh ang pahina.') }}");
                                             location.reload();
                                         }
                                     },
                                     error: function() {
-                                        alert("Session verification failed. Please log in again.");
+                                        alert("{{ T::translate('Session verification failed. Please log in again.', 'Nabigo ang pag-verify ng session. Mangyaring mag-log in muli.') }}");
                                         window.location.href = "{{ route('login') }}";
                                     }
                                 });
@@ -630,11 +632,11 @@
                                 // Show the modal
                                 visitDetailsModal.show();
                             } else {
-                                console.error('Failed to fetch visit details');
+                                console.error('{{ T::translate("Failed to fetch visit details", "Nabigo sa pagkuha ng mga detalye ng pagbisita") }}');
                             }
                         },
                         error: function(error) {
-                            console.error('Error fetching visit details:', error);
+                            console.error('{{ T::translate("Error fetching visit details", "Error sa pagkuha ng mga detalye ng pagbisita") }}:', error);
                         }
                     });
                 },
@@ -774,15 +776,15 @@
                         
                         if (error.status === 401) {
                             // Redirect to login if unauthorized
-                            alert("Your session has expired. Please log in again.");
+                            alert("{{ T::translate('Your session has expired. Please log in again.', 'Ang iyong session ay nag-expire. Mangyaring mag-log in muli.') }}");
                             window.location.href = "{{ route('login') }}";
                         } else {
-                            console.error('Error loading upcoming visits:', error);
+                            console.error('{{ T::translate("Error loading upcoming visits", "Error sa paglo-load ng mga nalalapit na pagbisita") }}:', error);
                             
                             // Create and append error message
                             const errorMessage = document.createElement('div');
                             errorMessage.className = 'alert alert-danger';
-                            errorMessage.textContent = 'Error loading visits. Please try again.';
+                            errorMessage.textContent = '{{ T::translate("Error loading visits. Please try again.", "Error sa paglo-load ng mga pagbisita. Pakisubukan muli.") }}';
                             visitsListContainer.appendChild(errorMessage);
                         }
                     }
@@ -814,15 +816,15 @@
                 body.className = 'schedule-card-body';
                 
                 // Add time detail
-                const timeItem = createDetailItem('Time:', visit.time);
+                const timeItem = createDetailItem('{{ T::translate("Time", "Oras") }}:', visit.time);
                 body.appendChild(timeItem);
                 
                 // Add care worker detail
-                const careWorkerItem = createDetailItem('Care Worker:', visit.care_worker);
+                const careWorkerItem = createDetailItem('{{ T::translate("Care Worker", "Tagapag-alaga") }}:', visit.care_worker);
                 body.appendChild(careWorkerItem);
                 
                 // Add visit type detail
-                const visitTypeItem = createDetailItem('Visit Type:', visit.visit_type);
+                const visitTypeItem = createDetailItem('{{ T::translate("Visit Type", "Uri ng Pagbisita") }}:', visit.visit_type);
                 body.appendChild(visitTypeItem);
                 
                 // Add notes if available
@@ -837,7 +839,7 @@
                 
                 const viewDetailsBtn = document.createElement('button');
                 viewDetailsBtn.className = 'btn btn-sm btn-outline-primary';
-                viewDetailsBtn.innerHTML = '<i class="bi bi-info-circle me-1"></i> View Details';
+                viewDetailsBtn.innerHTML = '<i class="bi bi-info-circle me-1"></i> {{ T::translate("View Details", "Tingnan ang Detalye") }}';
                 viewDetailsBtn.addEventListener('click', function() {
                     // Fetch and show visit details in modal
                     $.ajax({
@@ -863,11 +865,11 @@
                                 // Show the modal
                                 visitDetailsModal.show();
                             } else {
-                                console.error('Failed to fetch visit details');
+                                console.error('{{ T::translate("Failed to fetch visit details", "Nabigo sa pagkuha ng mga detalye ng pagbisita") }}');
                             }
                         },
                         error: function(error) {
-                            console.error('Error fetching visit details:', error);
+                            console.error('{{ T::translate("Error fetching visit details", "Error sa pagkuha ng mga detalye ng pagbisita") }}:', error);
                         }
                     });
                 });

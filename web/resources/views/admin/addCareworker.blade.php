@@ -154,15 +154,15 @@
                                        oninput="validateEmail(this)">
                             </div>
                             <div class="col-md-4">
-                                <label for="mobileNumber" class="form-label">Mobile Number<label style="color:red;"> * </label></label>
+                                <label for="mobileNumber" class="form-label">{{ T::translate('Mobile Number', 'Numero sa Mobile')}}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <span class="input-group-text">+63</span>
-                                    <input type="text" class="form-control" id="mobileNumber" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="{{ T::translate('Enter mobile number', 'Ilagay ang mobile number') }}" maxlength="11" required oninput="restrictToNumbers(this)" title="Must be 10 or 11digits.">
+                                    <input type="text" class="form-control" id="mobileNumber" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="{{ T::translate('Enter mobile number', 'Ilagay ang numero sa mobile') }}" maxlength="11" required oninput="restrictToNumbers(this)" title="Must be 10 or 11digits.">
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <label for="landlineNumber" class="form-label">Landline Number</label>
-                                <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="{{ T::translate('Enter Landline number', 'Ilagay ang landline number') }}" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
+                                <label for="landlineNumber" class="form-label">{{ T::translate('Landline Number', 'Numero sa Landline')}}</label>
+                                <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number') }}" placeholder="{{ T::translate('Enter Landline number', 'Ilagay ang numero sa landline') }}" maxlength="10" oninput="restrictToNumbers(this)" title="Must be between 7 and 10 digits.">
                             </div>
                         </div>
 
@@ -186,7 +186,7 @@
 
                             <!-- For Government ID -->
                             <div class="col-md-4">
-                                <label for="governmentID" class="form-label">Government Issued ID</label>
+                                <label for="governmentID" class="form-label">{{ T::translate('Government Issued ID', 'ID mula sa Gobyerno')}}</label>
                                 <input type="file" class="form-control" id="governmentID" name="government_ID" accept=".jpg,.png">
                                 <small class="text-danger">{{ T::translate('Maximum file size: 7MB', 'Maximum na laki ng file: 7MB')}}</small>
                                 @if($errors->any())
@@ -224,7 +224,7 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">{{ T::translate('Care Worker Account Registration', 'Pagrerehistro ng Account ng Tagapag-alaga') }}</h5> <!-- Row Title -->
+                                <h5 class="text-start">{{ T::translate('Care Worker Account Registration', 'Pagrerehistro sa Account ng Tagapag-alaga') }}</h5> <!-- Row Title -->
                             </div>
                         </div>
                         <div class="row mb-1">
@@ -250,7 +250,7 @@
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumpirmahin ang Password') }}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm password" required>
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="{{ T::translate('Confirm password', 'Kumpirmahin ang Password')}}" required>
                                     <span class="input-group-text password-toggle" data-target="confirmPassword">
                                         <i class="bi bi-eye-slash"></i>
                                     </span>
@@ -365,9 +365,9 @@
                     const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
                     
                     fileSizeErrorMessage.innerHTML = `
-                        <strong>Form submission failed</strong><br>
-                        ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                        Please select a smaller file or compress your existing file.
+                        <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                        ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                        {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                     `;
                     fileSizeErrorModal.show();
                     return false;
@@ -603,9 +603,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
-                            Maximum allowed size is ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>${fieldLabel}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                            {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         
@@ -641,9 +641,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         return false;

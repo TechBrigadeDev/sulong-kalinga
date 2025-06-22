@@ -1,8 +1,12 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
+
 <div class="modal fade" id="deleteFamilyMemberModal" tabindex="-1" aria-labelledby="deleteFamilyMemberModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color:rgb(251, 68, 68);">
-                <h5 class="modal-title text-white" id="deleteFamilyMemberModalLabel">Confirm Family Member Deletion</h5>
+                <h5 class="modal-title text-white" id="deleteFamilyMemberModalLabel">{{ T::translate('Confirm Family Member Deletion', 'Kumpirmahin ang Pagtanggal ng Miyembro ng Pamilya') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -11,12 +15,12 @@
                 <div id="deleteConfirmation">
                     <p class="text-danger">
                         <i class="bi bi-exclamation-circle"></i> 
-                        <strong>Warning!</strong> You are about to delete this family member.
+                        <strong>{{ T::translate('Warning', 'Babala') }}!</strong> {{ T::translate('You are about to delete this family member.', 'Tatanggalin mo na ang miyembro ng pamilyang ito.') }}
                     </p>
-                    <p>Are you sure you want to permanently delete <span id="familyMemberNameToDelete" style="font-weight: bold;"></span>?</p>
+                    <p>{{ T::translate('Are you sure you want to permanently delete', 'Sigurado ka bang nais mong permanenteng tanggalin') }} <span id="familyMemberNameToDelete" style="font-weight: bold;"></span>?</p>
                     <div class="mb-3">
-                        <label for="familyMemberDeletePasswordInput" class="form-label">Enter Your Password to Confirm</label>
-                        <input type="password" class="form-control" id="familyMemberDeletePasswordInput" placeholder="Enter your password" required>
+                        <label for="familyMemberDeletePasswordInput" class="form-label">{{ T::translate('Enter Your Password to Confirm', 'Ilagay ang Iyong Password upang Kumpirmahin') }}</label>
+                        <input type="password" class="form-control" id="familyMemberDeletePasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password') }}" required>
                         <input type="hidden" id="familyMemberIdToDelete" value="">
                     </div>
                 </div>
@@ -24,15 +28,15 @@
                 <div id="deleteSuccess" class="d-none">
                     <p class="text-success">
                         <i class="bi bi-check-circle"></i>
-                        <strong>Success!</strong> The family member has been deleted successfully.
+                        <strong>{{ T::translate('Success', 'Tagumpay') }}!</strong> {{ T::translate('The family member has been deleted successfully.', 'Matagumpay na natanggal ang miyembro ng pamilya.') }}
                     </p>
-                    <p>You will be redirected to the family member list shortly.</p>
+                    <p>{{ T::translate('You will be redirected to the family member list shortly.', 'Ikaw ay maire-redirect sa listahan ng mga miyembro ng pamilya sa ilang sandali.') }}</p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">{{ T::translate('Cancel', 'I-Kansela') }}</button>
                 <button type="button" class="btn btn-danger" id="confirmFamilyMemberDeleteButton">
-                    <i class="bi bi-trash-fill"></i> Delete Family Member
+                    <i class="bi bi-trash-fill"></i> {{ T::translate('Delete Family Member', 'Tanggalin ang Miyembro ng Pamilya') }}
                 </button>
             </div>
         </div>
@@ -52,10 +56,10 @@ window.openDeleteFamilyMemberModal = function(id, name) {
     
     const confirmButton = document.getElementById('confirmFamilyMemberDeleteButton');
     confirmButton.disabled = false;
-    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
     confirmButton.classList.remove('d-none');
     
-    document.getElementById('cancelDeleteButton').textContent = 'Cancel';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate("Cancel", "I-Kansela") }}';
     
     // Show the modal
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteFamilyMemberModal'));
@@ -84,7 +88,7 @@ function showDependencyError(message, errorType) {
     let errorContent = `
         <div class="d-flex align-items-center mb-2">
             <i class="bi bi-exclamation-circle me-2" style="font-size: 1.5rem;"></i>
-            <strong>Unable to Delete</strong>
+            <strong>{{ T::translate('Unable to Delete', 'Hindi Matanggal') }}</strong>
         </div>
         <p>${message}</p>
     `;
@@ -93,15 +97,15 @@ function showDependencyError(message, errorType) {
     if (errorType === 'dependency_care_plans') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>We're sorry:</strong>
-                <p class="mt-2 mb-2">This family member has acknowledged weekly care plans and cannot be deleted for data integrity purposes.</p>
+                <strong>{{ T::translate("We're sorry", "Paumanhin") }}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('This family member has acknowledged weekly care plans and cannot be deleted for data integrity purposes.', 'Ang miyembro ng pamilyang ito ay may kinikilalang mga weekly care plan at hindi maaaring tanggalin para sa integridad ng datos.') }}</p>
             </div>
         `;
     } else if (errorType === 'dependency_audit') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>We're sorry:</strong>
-                <p class="mt-2 mb-2">This family member has records in the system that require audit history to be maintained.</p>
+                <strong>{{ T::translate("We're sorry", "Paumanhin") }}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('This family member has records in the system that require audit history to be maintained.', 'Ang miyembro ng pamilyang ito ay may mga rekord sa system na nangangailangan ng kasaysayan ng audit na mapanatili.') }}</p>
             </div>
         `;
     }
@@ -109,7 +113,7 @@ function showDependencyError(message, errorType) {
     messageElement.innerHTML = errorContent;
     
     // Change the cancel button text
-    document.getElementById('cancelDeleteButton').textContent = 'Close';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate("Close", "Isara") }}';
     
     // Hide the delete button
     document.getElementById('confirmFamilyMemberDeleteButton').classList.add('d-none');
@@ -120,7 +124,7 @@ function showSuccess() {
     document.getElementById('deleteConfirmation').classList.add('d-none');
     document.getElementById('deleteSuccess').classList.remove('d-none');
     document.getElementById('confirmFamilyMemberDeleteButton').classList.add('d-none');
-    document.getElementById('cancelDeleteButton').textContent = 'Close';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate("Close", "Isara") }}';
     
     // Use role-specific redirect route
     let redirectRoute = "/admin/families"; // Default for admin
@@ -148,13 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const familyMemberId = document.getElementById('familyMemberIdToDelete').value;
         
         if (!password) {
-            showError('Please enter your password to confirm deletion.');
+            showError('{{ T::translate("Please enter your password to confirm deletion.", "Mangyaring ilagay ang iyong password upang kumpirmahin ang pagtanggal.") }}');
             return;
         }
         
         // Show loading state
         this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ T::translate("Deleting...", "Tinatanggal...") }}';
         
         // First verify password via standard form submission
         let formData = new FormData();
@@ -203,50 +207,50 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (response.error_type) {
                                             showDependencyError(response.message, response.error_type);
                                         } else {
-                                            showError(response.message || 'Failed to delete family member.');
+                                            showError(response.message || '{{ T::translate("Failed to delete family member.", "Nabigong tanggalin ang miyembro ng pamilya.") }}');
                                             document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                                            document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                                            document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
                                         }
                                     }
                                 } catch (e) {
                                     console.error('Error parsing JSON response:', e);
-                                    showError('An unexpected error occurred. Please try again.');
+                                    showError('{{ T::translate("An unexpected error occurred. Please try again.", "Isang hindi inaasahang error ang naganap. Mangyaring subukan muli.") }}');
                                     document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                                    document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                                    document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
                                 }
                             } else {
-                                showError('Server error: ' + xhr2.status);
+                                showError('{{ T::translate("Server error", "Error sa server") }}: ' + xhr2.status);
                                 document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                                document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                                document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
                             }
                         };
                         xhr2.onerror = function() {
-                            showError('Network error. Please try again.');
+                            showError('{{ T::translate("Network error. Please try again.", "Error sa network. Mangyaring subukan muli.") }}');
                             document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                            document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                            document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
                         };
                         xhr2.send(deleteForm);
                     } else {
-                        showError('Incorrect password. Please try again.');
+                        showError('{{ T::translate("Incorrect password. Please try again.", "Maling password. Mangyaring subukan muli.") }}');
                         document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                        document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                        document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
                     }
                 } catch (e) {
                     console.error('Error parsing JSON response:', e);
-                    showError('An unexpected error occurred during password validation. Please try again.');
+                    showError('{{ T::translate("An unexpected error occurred during password validation. Please try again.", "Isang hindi inaasahang error ang naganap sa pag-validate ng password. Mangyaring subukan muli.") }}');
                     document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                    document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                    document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
                 }
             } else {
-                showError('Password validation failed. Please try again.');
+                showError('{{ T::translate("Password validation failed. Please try again.", "Nabigo ang pag-validate ng password. Mangyaring subukan muli.") }}');
                 document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-                document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+                document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
             }
         };
         xhr1.onerror = function() {
-            showError('Network error during password validation. Please try again.');
+            showError('{{ T::translate("Network error during password validation. Please try again.", "Error sa network habang nagva-validate ng password. Mangyaring subukan muli.") }}');
             document.getElementById('confirmFamilyMemberDeleteButton').disabled = false;
-            document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> Delete Family Member';
+            document.getElementById('confirmFamilyMemberDeleteButton').innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Family Member", "Tanggalin ang Miyembro ng Pamilya") }}';
         };
         xhr1.send(formData);
     });

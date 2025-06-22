@@ -11,7 +11,9 @@
 @else
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
 @endif
-
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="sidebar {{ $isMessagingView ? 'messaging-sidebar' : '' }}">
   <div class="logo-details" id="logoToggle">
     <i class="bi bi-list"></i>
@@ -38,9 +40,9 @@
       </div>
       <ul class="sub-menu">
         <li><a class="link_name">User Management</a></li>
-        <li><a href="{{ route('care-manager.beneficiaries.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiaries.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.beneficiaries.*') ? 'active' : '' }}">Beneficiary Profile</a></li>
-        <li><a href="{{ route('care-manager.families.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.families.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.families.*') ? 'active' : '' }}">Family Profile</a></li>
-        <li><a href="{{ route('care-manager.careworkers.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.careworkers.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.careworkers.*') ? 'active' : '' }}">Care Worker Profile</a></li>
+        <li><a href="{{ route('care-manager.beneficiaries.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiaries.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.beneficiaries.*') ? 'active' : '' }}">{{ T::translate('Beneficiary Profile', 'Profile ng Benepisyaryo')}}</a></li>
+        <li><a href="{{ route('care-manager.families.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.families.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.families.*') ? 'active' : '' }}">{{ T::translate('Family Profile', 'Profile ng Pamilya')}}</a></li>
+        <li><a href="{{ route('care-manager.careworkers.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.careworkers.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.careworkers.*') ? 'active' : '' }}">{{ T::translate('Care Worker Profile', 'Profile ng Tagapag-alaga')}}</a></li>
       </ul>
     </li>
     
@@ -54,8 +56,8 @@
       </div>
       <ul class="sub-menu">
         <li><a class="link_name">Report Management</a></li>
-        <li><a href="{{ route('care-manager.careworker.performance.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.careworker.performance.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.careworker.performance.*') ? 'active' : '' }}">Care Worker Performance</a></li>
-        <li><a href="{{ route('care-manager.health.monitoring.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.health.monitoring.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.health.monitoring.*') ? 'active' : '' }}">Health Monitoring</a></li>
+        <li><a href="{{ route('care-manager.careworker.performance.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.careworker.performance.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.careworker.performance.*') ? 'active' : '' }}">{{ T::translate('Care Worker Performance', 'Performance ng Tagapag-alaga')}}</a></li>
+        <li><a href="{{ route('care-manager.health.monitoring.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.health.monitoring.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.health.monitoring.*') ? 'active' : '' }}">{{ T::translate('Health Monitoring', 'Pagsubaybay sa Kalusugan')}}</a></li>
       </ul>
     </li>
     
@@ -63,13 +65,13 @@
       <div class="icon-link">
         <a class="parent-link">
           <i class="bi bi-clipboard-data"></i>
-          <span class="link_name">Care Records</span>
+          <span class="link_name">{{ T::translate('Care Records', 'Tala ng mga Pangangalaga')}}</span>
         </a>
         <i class="bi bi-chevron-down arrow"></i>
       </div>
       <ul class="sub-menu">
-        <li><a class="link_name">Care Records</a></li>
-        <li><a href="{{ route('care-manager.reports') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.reports') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.reports') ? 'active' : '' }}">Records Management</a></li>
+        <li><a class="link_name">{{ T::translate('Care Records', 'Tala ng mga Pangangalaga')}}</a></li>
+        <li><a href="{{ route('care-manager.reports') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.reports') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.reports') ? 'active' : '' }}">{{ T::translate('Records Management', 'Pamamahala sa mga Tala')}}</a></li>
         <li><a href="{{ route('care-manager.weeklycareplans.create') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.weeklycareplans.create') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.weeklycareplans.*') ? 'active' : '' }}">Weekly Care Plan</a></li>
       </ul>
     </li>
@@ -86,7 +88,7 @@
         <li><a class="link_name">Schedules & Appointments</a></li>
         <li><a href="{{ route('care-manager.careworker.appointments.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.careworker.appointments.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.careworker.appointments.*') ? 'active' : '' }}">Care Worker Appointment</a></li>
         <li><a href="{{ route('care-manager.internal-appointments.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.internal-appointments.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.internal-appointments.*') ? 'active' : '' }}">Internal Appointment</a></li>
-        <li><a href="{{ route('care-manager.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.medication.schedule.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.medication.schedule.*') ? 'active' : '' }}">Medication Schedule</a></li>
+        <li><a href="{{ route('care-manager.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.medication.schedule.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.medication.schedule.*') ? 'active' : '' }}">{{ T::translate('Medication Schedule', 'Iskedyul ng Gamot')}}</a></li>
       </ul>
     </li>
     
@@ -94,15 +96,15 @@
       <div class="icon-link">
         <a class="parent-link">
           <i class="bi bi-geo-alt"></i>
-          <span class="link_name">Location Tracking</span>
+          <span class="link_name">{{ T::translate('Location Tracking', 'Pagsubaybay sa Lokasyon')}}</span>
         </a>
         <i class="bi bi-chevron-down arrow"></i>
       </div>
       <ul class="sub-menu">
-        <li><a class="link_name">Location Tracking</a></li>
+        <li><a class="link_name">{{ T::translate('Location Tracking', 'Pagsubaybay sa Lokasyon')}}</a></li>
         <li>
           <a href="{{ route('care-manager.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiary-map') }}'; return false;" @endif>
-            Beneficiary Map
+            {{ T::translate('Beneficiary Map', 'Mapa ng Benepisyaryo')}}
           </a>
         </li>
         <li>
@@ -116,20 +118,20 @@
     <li class="{{ Request::routeIs('care-manager.emergency.request.*') ? 'active' : '' }}">
       <a href="{{ route('care-manager.emergency.request.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.emergency.request.index') }}'; return false;" @endif>
         <i class="bi bi-exclamation-triangle"></i>
-        <span class="link_name">Emergency & Request</span>
+        <span class="link_name">{{ T::translate('Emergency & Request', 'Emergency at Pakiusap')}}</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('care-manager.emergency.request.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.emergency.request.index') }}'; return false;" @endif>Emergency & Request</a></li>
+        <li><a class="link_name" href="{{ route('care-manager.emergency.request.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.emergency.request.index') }}'; return false;" @endif>{{ T::translate('Emergency & Request', 'Emergency at Pakiusap')}}</a></li>
       </ul>
     </li>
     
     <li class="{{ Request::routeIs('care-manager.municipalities.*') ? 'active' : '' }}">
       <a href="{{ route('care-manager.municipalities.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.municipalities.index') }}'; return false;" @endif>
         <i class="bi bi-map"></i>
-        <span class="link_name">Municipality Management</span>
+        <span class="link_name">{{ T::translate('Municipality Management', 'Pamamahala sa Munisipalidad')}}</span>
       </a>
       <ul class="sub-menu blank">
-        <li><a class="link_name" href="{{ route('care-manager.municipalities.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.municipalities.index') }}'; return false;" @endif>Municipality Management</a></li>
+        <li><a class="link_name" href="{{ route('care-manager.municipalities.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.municipalities.index') }}'; return false;" @endif>{{ T::translate('Municipality Management', 'Pamamahala sa Munisipalidad')}}</a></li>
       </ul>
     </li>
   </ul>

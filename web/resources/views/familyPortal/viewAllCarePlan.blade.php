@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewAllCareplan.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.familyPortalNavbar')
     @include('components.familyPortalSidebar')
 
@@ -19,17 +21,17 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="acknowledgmentModalLabel">Confirm Acknowledgment</h5>
+                    <h5 class="modal-title" id="acknowledgmentModalLabel">{{ T::translate('Confirm Acknowledgment', 'Kumpirmahin ang Pagkilala')}}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>By acknowledging this care plan, you confirm that:</p>
+                    <p>{{ T::translate('By acknowledging this care plan, you confirm that', 'Sa pamamagitan ng pagkilala sa care plan na it, kinukumpirma mo na')}}:</p>
                     <ul>
-                        <li>You have thoroughly reviewed all of the information in this care plan.</li>
-                        <li>You understand the assessment, care needs, and interventions outlined.</li>
-                        <li>You agree with the care plan as documented for your family member.</li>
+                        <li>{{ T::translate('Nasuri mo nang lubusan ang lahat ng impormasyon sa plano ng pangangalagang ito', 'Nasuri mo nang lubusan ang lahat ng impormasyon sa plano ng pangangalagang ito')}}.</li>
+                        <li>{{ T::translate('You understand the assessment, care needs, and interventions outlined', 'Nauunawaan mo ang pagtatasa, mga pangangailangan sa pangangalaga, at mga interbensyon na nakabalangkas')}}.</li>
+                        <li>{{ T::translate('You agree with the care plan as documented for your family member', 'Sumasang-ayon ka sa plano ng pangangalaga na dokumentado para sa miyembro ng iyong pamilya')}}.</li>
                     </ul>
-                    <p>This action will be recorded with your name, date, and time.</p>
+                    <p>{{ T::translate('This action will be recorded with your name, date, and time', 'Ang aksyon na ito ay itatala kasama ang iyong pangalan, petsa, at oras')}}.</p>
                     
                     <form id="acknowledgmentForm" method="POST" action="">
                         @csrf
@@ -37,8 +39,8 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmAcknowledgment">I Acknowledge This Care Plan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+                    <button type="button" class="btn btn-primary" id="confirmAcknowledgment">{{ T::translate('I Acknowledge This Care Plan', 'Aking Kinikilala ang Care Plan na ito')}}</button>
                 </div>
             </div>
         </div>
@@ -46,9 +48,9 @@
 
     <div class="home-section">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="text-left">CARE PLAN RECORDS</div>
+            <div class="text-left">{{ T::translate('CARE PLAN RECORDS', 'MGA TALA NG CARE PLAN')}}</div>
             <a href="{{ route('family.care.plan.allCarePlans') }}" class="btn btn-primary">
-                <i class="bi bi-bar-chart-line"></i> Care Plan Statistics
+                <i class="bi bi-bar-chart-line"></i> {{ T::translate('Care Plan Statistics', 'Istatistika ng Care Plan')}}
             </a>
         </div>
         
@@ -79,16 +81,16 @@
                                                 <i class="bi bi-search"></i>
                                             </span>
                                             <input type="text" name="search" class="form-control search-input"  
-                                                placeholder="Search by author or date..." value="{{ $search ?? '' }}">
+                                                placeholder="{{ T::translate('Search by author or date', 'Maghanap ayon sa may-akda o petsa')}}..." value="{{ $search ?? '' }}">
                                             <button type="submit" class="btn btn-primary">
-                                                <span class="d-none d-sm-inline">Search</span>
+                                                <span class="d-none d-sm-inline">{{ T::translate('Search', 'Maghanap')}}</span>
                                             </button>
                                         </div>
                                     </div>
                                     <div class="filter-container">
-                                        <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? 'all') == 'all' ? 'active' : '' }}" data-filter="all">All</button>
-                                        <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? '') == 'pending' ? 'active' : '' }}" data-filter="pending">Pending</button>
-                                        <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? '') == 'acknowledged' ? 'active' : '' }}" data-filter="acknowledged">Acknowledged</button>
+                                        <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? 'all') == 'all' ? 'active' : '' }}" data-filter="all">{{ T::translate('All', 'Lahat')}}</button>
+                                        <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? '') == 'pending' ? 'active' : '' }}" data-filter="pending">{{ T::translate('Pending', 'Nakabinbin')}}</button>
+                                        <button type="button" class="btn btn-outline-secondary filter-btn {{ ($filter ?? '') == 'acknowledged' ? 'active' : '' }}" data-filter="acknowledged">{{ T::translate('Acknowledged', 'Kinilala')}}</button>
                                     </div>
                                     <input type="hidden" name="filter" id="filterInput" value="{{ $filter ?? 'all' }}">
                                 </div>
@@ -103,10 +105,10 @@
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Author</th>
+                                                <th>{{ T::translate('Author', 'May-akda')}}</th>
                                                 <th>Status</th>
-                                                <th>Date Created</th>
-                                                <th>Actions</th>
+                                                <th>{{ T::translate('Date Created', 'Petsa ng Paglikha')}}</th>
+                                                <th>{{ T::translate('Actions', 'Aksyon')}}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -115,9 +117,9 @@
                                                     <td>{{ $plan->author->first_name }} {{ $plan->author->last_name }}</td>
                                                     <td>
                                                         @if($plan->acknowledged_by_beneficiary || $plan->acknowledged_by_family)
-                                                            <span class="status-badge status-acknowledged">Acknowledged</span>
+                                                            <span class="status-badge status-acknowledged">{{ T::translate('Acknowledged', 'Kinilala')}}</span>
                                                         @else
-                                                            <span class="status-badge status-pending">Pending Review</span>
+                                                            <span class="status-badge status-pending">{{ T::translate('Pending Review', 'Nakabinbing Pagsusuri')}}</span>
                                                         @endif
                                                     </td>
                                                     <td>{{ $plan->created_at->format('M d, Y') }}</td>
@@ -126,12 +128,12 @@
                                                             <button class="btn btn-sm btn-primary acknowledge-btn" 
                                                                 data-id="{{ $plan->weekly_care_plan_id }}"
                                                                 title="Acknowledge">
-                                                                Acknowledge
+                                                                {{ T::translate('Acknowledge', 'Kilalanin')}}
                                                             </button>
                                                         @endif
                                                         <a href="{{ route('family.care.plan.view', $plan->weekly_care_plan_id) }}" 
                                                             class="btn btn-sm btn-info" title="View Details">
-                                                            <i class="bi bi-eye"></i> View
+                                                            <i class="bi bi-eye"></i> {{ T::translate('View', 'Tingnan')}}
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -142,8 +144,8 @@
                             @else
                                 <div class="empty-state p-4 text-center">
                                     <i class="bi bi-file-earmark-text display-4 text-muted"></i>
-                                    <h4 class="mt-3">No Care Plans Found</h4>
-                                    <p class="text-muted">There are currently no care plan records available for your family member.</p>
+                                    <h4 class="mt-3">{{ T::translate('No Care Plans Found', 'Walang mga Care Plan ang nakita')}}</h4>
+                                    <p class="text-muted">{{ T::translate('There are currently no care plan records available for your family member', 'Kasalukuyang walang available na talaan ng care plan para sa miyembro ng iyong pamilya')}}.</p>
                                 </div>
                             @endif
                         </div>
@@ -206,7 +208,7 @@
                 }
                 
                 // Show loading indicator
-                tableContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+                tableContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">{{ T::translate('Loading', 'Naglo-load')}}...</span></div></div>';
                 
                 // Get the secure URL for the route
                 const baseUrl = window.location.pathname.includes('/family/') 
@@ -258,7 +260,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading care plans:', error);
-                    tableContainer.innerHTML = '<div class="alert alert-danger">Error loading care plans. Please refresh the page.</div>';
+                    tableContainer.innerHTML = '<div class="alert alert-danger">{{ T::translate('Error loading care plans. Please refresh the page.', 'Error sa paglo-load ng mga care plan. Mangyaring i-refresh ang page')}}</div>';
                 });
             }
 
@@ -317,7 +319,7 @@
                 // Add missing text to acknowledge buttons if needed
                 document.querySelectorAll('.acknowledge-btn').forEach(btn => {
                     if (!btn.innerHTML.trim()) {
-                        btn.innerHTML = '<i class="bi bi-check-circle"></i> Acknowledge';
+                        btn.innerHTML = '<i class="bi bi-check-circle"></i> {{ T::translate('Acknowledge', 'Kilalanin')}}';
                     }
                 });
             }

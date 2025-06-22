@@ -133,6 +133,10 @@ body {
     align-items: center;
 }
 
+.stat-card .card-body {
+    padding: 0 !important;
+}
+
 .stat-card-beneficiaries {
     background-color: var(--teal-50);
     border-left: 4px solid var(--teal-500);

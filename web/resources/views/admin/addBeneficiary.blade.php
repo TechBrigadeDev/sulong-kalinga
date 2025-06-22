@@ -117,7 +117,7 @@
                         <!-- Row 2: Address -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">{{ T::translate('Current Address', 'Kasalukayang Tahanan')}}<label style="color:red;"> * </label></h5> 
+                                <h5 class="text-start">{{ T::translate('Current Address', 'Kasalukayang Tirahan')}}<label style="color:red;"> * </label></h5> 
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -235,7 +235,7 @@
                         <!-- Care Needs Rows -->
                         <div class="row mb-2 align-items-center">
                             <div class="col-md-4">
-                                <label class="form-label">{{ T::translate('Mobility', 'Mobilidad')}}</label>
+                                <label class="form-label">{{ T::translate('Mobility', 'Kadaliang Kumilos')}}</label>
                             </div>
                             <div class="col-md-4">
                                 <textarea class="form-control" id="mobilityFrequency" name="frequency[mobility]" placeholder="{{ T::translate('Frequency', 'Dalas')}}" rows="2">{{ old('frequency.mobility') }}</textarea>
@@ -347,7 +347,7 @@
                         <!-- Mobility, Cognitive Function, Emotional Well-being -->
                         <div class="row mb-1">
                             <div class="col-md-4">
-                                <h5 class="text-start">{{ T::translate('Mobility', '')}}</h5>
+                                <h5 class="text-start">{{ T::translate('Mobility', 'Kadaliang Kumilos')}}</h5>
                                 <div class="mb-1">
                                     <label for="walkingAbility" class="form-label">{{ T::translate('Walking Ability', 'Kakayahan sa Paglalakad')}}</label>
                                     <textarea class="form-control" id="walkingAbility" name="mobility[walking_ability]" 
@@ -422,7 +422,7 @@
                                             title="Only letters, numbers, spaces, commas, periods, hyphens, and parentheses are allowed.">{{ old('emotional.social_interactions') }}</textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="emotionalSupport" class="form-label">{{ T::translate('Emotional Support Need', 'Pangangailangan ng Emosyonal na Suporta')}}</label>
+                                    <label for="emotionalSupport" class="form-label">{{ T::translate('Emotional Support Need', 'Pangangailangang Emosyonal na Suporta')}}</label>
                                     <textarea class="form-control" id="emotionalSupport" name="emotional[emotional_support]" 
                                             placeholder="{{ T::translate('Enter details about emotional support need', 'Ilagay aang detalye sa pangangailangan ng emosyonal na suporta')}}" rows="2" 
                                             pattern="^[A-Za-z0-9\s.,\-()'\"+’!?]+$"!?]+$" 
@@ -465,7 +465,7 @@
 
                             <!-- Mobile Number -->
                             <div class="col-md-3">
-                                <label for="emergencyMobileNumber" class="form-label">Mobile Number<label style="color:red;"> * </label></label>
+                                <label for="emergencyMobileNumber" class="form-label">{{ T::translate('Mobile Number', 'Numero sa Mobile')}}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <span class="input-group-text">+63</span>
                                     <input type="text" class="form-control" id="emergencyMobileNumber" name="emergency_contact[mobile]" 
@@ -497,7 +497,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label for="emergencyProcedures" class="form-label">{{ T::translate('Emergency Procedures', 'Estratihiya sa Emergency')}}<label style="color:red;"> * </label></label>
+                                <label for="emergencyProcedures" class="form-label">{{ T::translate('Emergency Procedures', 'Mga Pamamaraan sa Emergency')}}<label style="color:red;"> * </label></label>
                                 <textarea class="form-control" id="emergencyProcedures" name="emergency_plan[procedures]" 
                                         placeholder="{{ T::translate('Enter emergency procedures', 'Ilagay ang mga estratihiya sa emergency')}}" 
                                         rows="3" 
@@ -555,7 +555,7 @@
                         <!-- General Care Plan and Care Service Agreement File Upload -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">{{ T::translate('Documents and Signatures', 'Dokumento at Pirma')}}</h5> 
+                                <h5 class="text-start">{{ T::translate('Documents and Signatures', 'Mga Dokumento at Lagda')}}</h5> 
                             </div>
                         </div>
                         <div class="row mb-1">
@@ -566,7 +566,7 @@
                                     accept="image/png, image/jpeg" 
                                     title="Only PNG and JPEG images are allowed.">
                                 @if($errors->any())
-                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Note: Pumili muli ng file pagkatapos nang validation error.')}}</small>
+                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Tandaan: Pumili muli ng file pagkatapos nang validation error.')}}</small>
                                 @endif
                                 <small class="text-danger">{{ T::translate('Maximum file size: 7MB', 'Maximum na laki ng file: 7MB')}}</small>
                             </div>
@@ -584,25 +584,25 @@
 
                             <!-- Care Service Agreement -->
                             <div class="col-md-3">
-                                <label for="careServiceAgreement" class="form-label">{{ T::translate('Care Service Agreement', 'Kasunduan sa Serbisyo ng Pangangalaga')}}</label>
+                                <label for="careServiceAgreement" class="form-label">Care Service Agreement</label>
                                 <input type="file" class="form-control" id="careServiceAgreement" name="care_service_agreement" 
                                     accept=".pdf,.doc,.docx" 
                                     required 
                                     title="Only PDF, DOC, and DOCX files are allowed.">
                                 @if($errors->any())
-                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Note: Pumili muli ng file pagkatapos nang validation error.')}}</small>
+                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Tandaan: Pumili muli ng file pagkatapos nang validation error.')}}</small>
                                 @endif
                                 <small class="text-danger">{{ T::translate('Maximum file size: 5MB', 'Maximum na laki ng file: 5MB')}}</small>
                             </div>
 
                             <!-- General Careplan -->
                             <div class="col-md-3">
-                                <label for="generalCareplan" class="form-label">{{ T::translate('General Careplan', 'Pangkalahatang Plano sa Pag-aalaga')}}</label>
+                                <label for="generalCareplan" class="form-label">General Careplan</label>
                                 <input type="file" class="form-control" id="generalCareplan" name="general_careplan" 
                                     accept=".pdf,.doc,.docx" 
                                     title="Only PDF, DOC, and DOCX files are allowed.">
                                 @if($errors->any())
-                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Note: Pumili muli ng file pagkatapos nang validation error.')}}</small>
+                                <small class="text-danger">{{ T::translate('Note: You need to select the file again after a validation error.', 'Tandaan: Pumili muli ng file pagkatapos nang validation error.')}}</small>
                                 @endif
                                 <small class="text-danger">{{ T::translate('Maximum file size: 5MB', 'Maximum na laki ng file: 5MB')}}</small>
                             </div>
@@ -616,7 +616,7 @@
                                     <div class="col-md-12">
                                         <div class="form-group mt-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label>{{ T::translate('Beneficiary Signature', 'Pirma ng Benepisyaryo')}}</label>
+                                                <label>{{ T::translate('Beneficiary Signature', 'Lagda ng Benepisyaryo')}}</label>
                                                 <button type="button" id="clear-signature-1" class="btn btn-danger btn-sm">{{ T::translate('Clear', 'Burahin')}}</button>
                                             </div>
                                             <div id="signature-pad-1" class="signature-pad">
@@ -627,12 +627,12 @@
                                         </div>
                                     </div>
                                 @if($errors->any())
-                                <small class="text-danger">{{ T::translate('Note: You need to upload/sign again after a validation error.', 'Mag-upload/Pumirma muli pagkatapos ng validation error')}}</small>
+                                <small class="text-danger">{{ T::translate('Note: You need to upload/sign again after a validation error.', 'Tandaan: Mag-upload/Pumirma muli pagkatapos ng validation error')}}</small>
                                 @endif
                                 </div>
                                 <div class="row mb-1">
                                     <div class="col-md-12">
-                                        <label for="beneficiarySignatureUpload" class="form-label">{{ T::translate('Upload Beneficiary Signature', 'Mag-upload ng Pirma nang Benepisyaryo')}}</label>
+                                        <label for="beneficiarySignatureUpload" class="form-label">{{ T::translate('Upload Beneficiary Signature', 'Mag-upload ng Lagda nang Benepisyaryo')}}</label>
                                         <input type="file" class="form-control" id="beneficiarySignatureUpload" name="beneficiary_signature_upload" accept="image/png, image/jpeg">
                                     </div>
                                 </div>
@@ -646,7 +646,7 @@
                                     <div class="col-md-12">
                                         <div class="form-group mt-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label>{{ T::translate('Care Worker Signature', 'Pirma ng Tagapag-alaga')}}</label>
+                                                <label>{{ T::translate('Care Worker Signature', 'Lagda ng Tagapag-alaga')}}</label>
                                                 <button type="button" id="clear-signature-2" class="btn btn-danger btn-sm">{{ T::translate('Clear', 'Burahin')}}</button>
                                             </div>
                                             <div id="signature-pad-2" class="signature-pad">
@@ -657,12 +657,12 @@
                                         </div>
                                     </div>
                                 @if($errors->any())
-                                <small class="text-danger">{{ T::translate('Note: You need to upload/sign again after a validation error.', 'Mag-upload/Pumirma muli pagkatapos ng validation error')}}</small>
+                                <small class="text-danger">{{ T::translate('Note: You need to upload/sign again after a validation error.', 'Tandaan: Mag-upload/Pumirma muli pagkatapos ng validation error')}}</small>
                                 @endif
                                 </div>
                                 <div class="row mb-1">
                                     <div class="col-md-12">
-                                        <label for="careWorkerSignatureUpload" class="form-label">{{ T::translate('Upload Care Worker Signature', 'Mag-upload ng Pirma nang Tagapag-alaga')}}</label>
+                                        <label for="careWorkerSignatureUpload" class="form-label">{{ T::translate('Upload Care Worker Signature', 'Mag-upload ng Lagda nang Tagapag-alaga')}}</label>
                                         <input type="file" class="form-control" id="careWorkerSignatureUpload" name="care_worker_signature_upload" accept="image/png, image/jpeg">
                                     </div>
                                 </div>
@@ -694,7 +694,7 @@
                             <div class="col-md-3">
                                 <label for="password" class="form-label">Password<label style="color:red;"> * </label></label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter password" required minlength="8" 
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="{{ T::translate('Enter password', 'Ilagay ang password')}}" required minlength="8" 
                                         title="{{ T::translate('Password must be at least 8 characters long.', 'Ang password ay dapat hindi bababa sa 8 karakter.')}}">
                                     <span class="input-group-text password-toggle" data-target="password">
                                         <i class="bi bi-eye-slash"></i>
@@ -1166,9 +1166,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
-                            Maximum allowed size is ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>${fieldLabel}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                            {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         
@@ -1204,9 +1204,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                     }
@@ -1252,7 +1252,7 @@
                 const lastName = lastNameInput.value.trim();
                 
                 if (!firstName || !lastName) {
-                    usernamePreview.value = "Username will be generated from name fields";
+                    usernamePreview.value = "{{ T::translate('Username will be generated from name fields', 'Ang username ay mabubuo mula sa mga field ng Pangalan')}}";
                     return;
                 }
                 
@@ -1341,7 +1341,7 @@ function geocodeAddress() {
             document.getElementById('latitude').value = location.lat();
             document.getElementById('longitude').value = location.lng();
         } else {
-            alert('Geocode was not successful for the following reason: ' + status);
+            alert('{{ T::translate('Geocode was not successful for the following reason:', 'Ang Geocode ay hindi matagaumpay dahil sa mga sumusunod:')}} ' + status);
         }
     });
 }

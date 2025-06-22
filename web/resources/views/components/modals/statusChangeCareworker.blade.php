@@ -1,23 +1,26 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="statusChangeCareworkerModal" tabindex="-1" aria-labelledby="statusChangeCareworkerModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="statusChangeCareworkerModalLabel">Confirm Status Change</h5>
+                <h5 class="modal-title" id="statusChangeCareworkerModalLabel">{{ T::translate('Confirm Status Change', 'Kumpirmahin ang Pagbabago sa Status')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="careworkerStatusChangeMessage" class="alert d-none" role="alert"></div>
-                <p>Are you sure you want to change the status of this <span id="careworkerEntityType" style="font-weight: bold;"></span>?</p>
+                <p>{{ T::translate('Are you sure you want to change the status of this', 'Sigurado ka bang nais mong baguhin ang status na ito')}} <span id="careworkerEntityType" style="font-weight: bold;"></span>?</p>
                 <form id="statusChangeCareworkerForm">
                     <div class="mb-3">
-                        <label for="careworkerPasswordInput" class="form-label">Enter Password to Confirm</label>
-                        <input type="password" class="form-control" id="careworkerPasswordInput" placeholder="Enter your password" required>
+                        <label for="careworkerPasswordInput" class="form-label">{{ T::translate('Enter Password to Confirm', 'Ilagay ang Password upang Kumpirmahin')}}</label>
+                        <input type="password" class="form-control" id="careworkerPasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang password')}}" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmCareworkerStatusChangeButton">Confirm</button>
+                <button type="button" class="btn btn-primary" id="confirmCareworkerStatusChangeButton">{{ T::translate('Confirm', 'Kumpirmahin')}}</button>
             </div>
         </div>
     </div>
@@ -56,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
             messageElement.classList.add("d-none");
 
             if (!enteredPassword) {
-                messageElement.textContent = "Please enter your password to confirm the status change.";
+                messageElement.textContent = "{{ T::translate('Please enter your password to confirm the status change.', 'Mangyaring ilagay ang password upang kumpirmahin ang pagbabago sa status.')}}";
                 messageElement.classList.remove("d-none", "alert-success");
                 messageElement.classList.add("alert-danger");
                 return;
@@ -96,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Status update failed');
+                            throw new Error('{{ T::translate('Status update failed', 'Nabigo ang pag-update sa Status')}}');
                         }
                         return response.json();
                     })
@@ -138,14 +141,14 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     })
                 } else {
-                    messageElement.textContent = "Invalid password. Please try again.";
+                    messageElement.textContent = "{{ T::translate('Invalid password. Please try again.', 'Mali ang password. Pakisubukan muli.')}}";
                     messageElement.classList.remove("d-none", "alert-success");
                     messageElement.classList.add("alert-danger");
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                messageElement.textContent = "An error occurred. Please try again.";
+                messageElement.textContent = "{{ T::translate('An error occurred. Please try again.', 'Isang error ang naganap. Pakisubukan muli.')}}";
                 messageElement.classList.remove("d-none", "alert-success");
                 messageElement.classList.add("alert-danger");
             });
@@ -167,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function () {
         statusChangeCareworkerModalElement.addEventListener("hidden.bs.modal", function () {
             if (selectedCareworkerStatusElement && previousCareworkerStatusValue !== null) {
                 // Revert the dropdown to its previous value if the modal is cancelled
-                selectedCareworkerStatusElement.value = previousCareworkerStatusValue === 'Active' ? 'active' : 'inactive';
+                selectedCareworkerStatusElement.value = previousCareworkerStatusValue === 'Active' ? '{{ T::translate('Active', 'Aktibo')}}' : '{{ T::translate('Inactive', 'Di-Aktibo')}}';
                 location.reload(); // Refresh the page if the modal is cancelled
             }
         });

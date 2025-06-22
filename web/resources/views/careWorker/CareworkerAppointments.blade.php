@@ -7,536 +7,22 @@
     <title>Care Worker Scheduling</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ asset('css/careWorkerAppointment.css') }}">
     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/timegrid/main.min.js"></script>
-
-
-    <style>
-        /* Card Design */
-        .modal-header-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            border: 1px solid rgba(0,0,0,0.07);
-            margin-bottom: 1.5rem;
-        }
-        
-        .card-header {
-            padding: 0.8rem 1.25rem;
-            background-color: #f8f9fc;
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-        
-        .section-heading {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #333;
-            margin-bottom: 0;
-        }
-        
-        #calendar-container {
-            height: 650px; /* Fixed height - adjust as needed */
-            overflow-y: auto; /* Enable vertical scrolling */
-            overflow-x: auto; /* Keep horizontal scrolling */
-            border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 0;
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-
-        /* Make table cells more stable during scroll */
-        .fc-scrollgrid-sync-table {
-            width: 100% !important;
-        }
-
-        /* Fix event rendering during scroll */
-        .fc-event {
-            position: relative !important;
-            z-index: 10;
-            overflow: hidden;
-        }
-
-        /* Fix for the day headers to stay consistent */
-        .fc .fc-col-header {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: white;
-            border-bottom: 1px solid #ddd;
-        }
-
-        /* Improve row stability during scrolling */
-        .fc-daygrid-body {
-            width: 100% !important;
-        }
-
-        .fc-daygrid-day-frame {
-            min-height: 100px; /* Ensure consistent cell height */
-        }
-
-        /* Add subtle scroll shadow effect */
-        #calendar-container::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
-            pointer-events: none;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
-
-        /* Optional: Improve scrollbar appearance */
-        #calendar-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        #calendar-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        #calendar-container::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        #calendar-container::-webkit-scrollbar-thumb:hover {
-            background: #a0a0a0;
-        }
-        
-        /* Make sure the calendar itself doesn't have a fixed height */
-        #calendar {
-            background-color: white;
-            min-width: 800px; /* Keep minimum width */
-            height: auto !important; /* Override any fixed height */
-        }
-        
-        /* Event Styling */
-        .fc-event {
-            cursor: pointer;
-            border: none !important;
-            padding: 4px 6px;
-            margin-bottom: 2px;
-            border-radius: 6px;
-        }
-        
-        .fc-event.open-time {
-            border-left: 4px solid rgb(201, 20, 59) !important;
-            background-color: #dc3545 !important;
-            color: #333;
-        }
-        
-        .fc-event-main {
-            display: flex;
-            flex-direction: column;
-            padding: 4px 0;
-        }
-        
-        .event-worker {
-            font-weight: 600;
-            font-size: 0.85rem;
-            white-space: normal !important;
-        }
-        
-        .event-details {
-            font-size: 0.75rem;
-            line-height: 1.3;
-            white-space: normal !important;
-        }
-        
-        .fc-daygrid-event-dot {
-            display: none; /* Hide default event dots */
-        }
-        
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .action-btn {
-            padding: 0.6rem;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.2s ease-in-out;
-        }
-        
-        .action-btn i {
-            margin-right: 8px;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        /* Search Bar Enhancements */
-        .search-container {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-        
-        .search-container i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-            transition: opacity 0.2s ease;
-        }
-        
-        .search-container .search-input:focus + i,
-        .search-container .search-input:not(:placeholder-shown) + i {
-            opacity: 0;
-        }
-        
-        .search-input {
-            padding-left: 35px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-        }
-        
-        /* Fix for search placeholder */
-        .search-input::placeholder {
-            color: #a0a5aa;
-        }
-        
-        /* Appointment Details Panel */
-        .details-container {
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .details-header {
-            padding: 0.8rem 1.25rem;
-            background-color: #4e73df;
-            color: white;
-        }
-        
-        .details-body {
-            padding: 1rem;
-            background-color: white;
-            border: 1px solid rgba(0,0,0,0.07);
-            border-top: none;
-        }
-        
-        .detail-section {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-        }
-        
-        .detail-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .section-title {
-            font-weight: 600;
-            color: #4e73df;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            margin-right: 8px;
-        }
-        
-        .detail-item {
-            margin-bottom: 0.4rem;
-            display: flex;
-        }
-        
-        .detail-label {
-            font-weight: 500;
-            width: 80px;
-            font-size: 0.85rem;
-            color: #666;
-        }
-        
-        .detail-value {
-            font-size: 0.85rem;
-            flex: 1;
-        }
-        
-        /* Open time indicator */
-        .open-time-indicator {
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.7rem;
-            font-weight: 500;
-            margin-top: 2px;
-        }
-        
-        .open-time-indicator i {
-            margin-right: 3px;
-        }
-        
-        /* Dropdown select styling */
-        .select-container {
-            position: relative;
-        }
-        
-        .select-container::after {
-            content: "";
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid #666;
-            pointer-events: none;
-        }
-        
-        .select-container select {
-            padding-right: 25px;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-        }
-        
-        /* Modal Enhancements */
-        .modal-content {
-            border: none;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            background-color: #4e73df;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-bottom: none;
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .modal-footer {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-        }
-        
-        /* Form Enhancements */
-        .form-label {
-            font-weight: 500;
-            font-size: 0.9rem;
-            margin-bottom: 0.4rem;
-            color: #495057;
-        }
-        
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-        
-        .form-control {
-            border-radius: 6px;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #ced4da;
-        }
-        
-        .form-control:focus {
-            border-color: #4e73df;
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-        }
-        
-        /* Day Checkboxes */
-        .day-checkboxes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        
-        .day-checkbox {
-            flex: 0 0 calc(25% - 8px);
-            position: relative;
-        }
-        
-        .day-checkbox input {
-            position: absolute;
-            opacity: 0;
-        }
-        
-        .day-checkbox label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 4px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.8rem;
-            width: 100%;
-            text-align: center;
-        }
-        
-        .day-checkbox input:checked + label {
-            background-color: #4e73df;
-            border-color: #4e73df;
-            color: white;
-        }
-
-        .note-1{
-            padding: 0.1rem, 0rem, 0.75rem, 0rem;
-        }
-        
-        /* Time Input Group */
-        .time-input-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .time-input {
-            flex: 1;
-        }
-        
-        .time-separator {
-            font-weight: bold;
-            color: #495057;
-        }
-        
-        /* Open Time checkbox */
-        .open-time-container {
-            margin-top: 0.5rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid #dee2e6;
-        }
-        
-        /* Action Buttons in Modal */
-        .modal-action-btn {
-            padding: 0.5rem 1.5rem;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-        
-        .btn-schedule {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-        
-        .btn-schedule:hover {
-            background-color: #3a5fc8;
-            border-color: #3a5fc8;
-        }
-        
-        /* Responsive Adjustments */
-        @media (max-width: 767.98px) {
-            .day-checkbox {
-                flex: 0 0 calc(33.333% - 8px);
-            }
-            
-            .fc-toolbar-title {
-                font-size: 1.1rem !important;
-            }
-            
-            .fc-button {
-                font-size: 0.8rem;
-                padding: 0.3rem 0.5rem;
-            }
-            
-            .action-btn {
-                font-size: 0.85rem;
-            }
-        }
-        
-        @media (max-width: 575.98px) {
-            .day-checkbox {
-                flex: 0 0 calc(50% - 8px);
-            }
-            
-            .detail-label {
-                width: 70px;
-            }
-        }
-        
-        /* FullCalendar Customizations */
-        .fc .fc-toolbar.fc-header-toolbar {
-            margin-bottom: 1.2rem;
-        }
-        
-        .fc .fc-button-primary {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-        
-        .fc .fc-button-primary:hover {
-            background-color: #3a5fc8;
-            border-color: #3a5fc8;
-        }
-        
-        .fc .fc-button-primary:disabled {
-            background-color: #6c8ae4;
-            border-color: #6c8ae4;
-        }
-        
-        .fc .fc-button-primary:not(:disabled).fc-button-active, 
-        .fc .fc-button-primary:not(:disabled):active {
-            background-color: #3a5fc8;
-            border-color: #3a5fc8;
-        }
-        
-        .fc-daygrid-day-number {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .fc-col-header-cell-cushion {
-            font-weight: 600;
-        }
-        
-        /* Open Time / All Day Events */
-        .fc-daygrid-block-event .fc-event-time {
-            font-weight: 600;
-        }
-        
-        /* Tooltip Styling */
-        .tooltip-inner {
-            max-width: 300px;
-            padding: 10px 12px;
-            text-align: left;
-            background-color: #343a40;
-            border-radius: 6px;
-        }
-    </style>
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.careWorkerNavbar')
     @include('components.careWorkerSidebar')
 
     <div class="home-section">
-        <div class="text-left">CARE WORKER SCHEDULING</div>
+        <div class="text-left">{{ T::translate('CARE WORKER SCHEDULING', 'PAG-IISKEDYUL NG CARE WORKER')}}</div>
         <div class="container-fluid">
             <div class="row p-3" id="home-content">
                 <!-- Main content area -->
@@ -547,11 +33,11 @@
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="section-heading">
-                                        <i class="bi bi-calendar3"></i> Appointment Calendar
+                                        <i class="bi bi-calendar3"></i> {{ T::translate('Appointment Calendar', 'Kalendaryo ng Appointment')}}
                                     </h5>
                                     <div class="calendar-actions d-flex gap-2">
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="toggleWeekView">
-                                            <i class="bi bi-calendar-week"></i> Week View
+                                            <i class="bi bi-calendar-week"></i> {{ T::translate('Week View', 'Lingguhang Tingnan')}}
                                         </button>
                                     </div>
                                 </div>
@@ -559,7 +45,7 @@
                                     <div id="calendar-container">
                                         <div id="calendar-loading-indicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
                                             <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
+                                                <span class="visually-hidden">{{ T::translate('Loading', 'Naglo-load')}}...</span>
                                             </div>
                                         </div>
                                         <div id="calendar" class="p-3"></div>
@@ -572,7 +58,7 @@
                         <div class="col-lg-4 col-md-5">
                             <!-- Search Bar -->
                             <div class="search-container">
-                                <input type="text" id="searchInput" class="form-control search-input" placeholder="     Search appointments..." aria-label="Search appointments">
+                                <input type="text" id="searchInput" class="form-control search-input" placeholder="     {{ T::translate('Search appointments', 'Maghanap ng mga appointment')}}..." aria-label="Search appointments">
                                 <i class="bi bi-search"></i>
                             </div>
                             
@@ -580,13 +66,13 @@
                             <div class="card details-container">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="section-heading mb-0">
-                                        <i class="bi bi-info-circle"></i> Appointment Details
+                                        <i class="bi bi-info-circle"></i> {{ T::translate('Appointment Details', 'Mga Detalye ng Appointment')}}
                                     </h5>
                                 </div>
                                 <div class="card-body" id="appointmentDetails">
                                     <div class="text-center text-muted py-4">
                                         <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                                        <p class="mt-3 mb-0">Select an appointment to view details</p>
+                                        <p class="mt-3 mb-0">{{ T::translate('Select an appointment to view details', 'Pumili ng Appointment upang makita ang mga detalye')}}</p>
                                     </div>
                                 </div>
                             </div>
@@ -609,7 +95,7 @@
                     <p id="errorMessage"></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>
@@ -684,7 +170,7 @@
                         document.getElementById('calendar-loading-indicator').style.display = 'none';
                     }
                     failureCallback({ message: "Request timed out" });
-                    showErrorModal('Loading took too long. Try viewing a smaller date range or reset the calendar.');
+                    showErrorModal('{{ T::translate('Loading took too long. Try viewing a smaller date range or reset the calendar.', 'Masyadong tumagal ang paglo-load. Subukang tumingin ng mas maliit na hanay ng petsa o i-reset ang kalendaryo.')}}');
                 }, 15000); // 15 seconds timeout
                 
                 $.ajax({
@@ -773,7 +259,7 @@
                     if (isFlexibleTime) {
                         eventEl.innerHTML = `
                             <div class="event-title">${arg.event.title}</div>
-                            <div class="open-time-indicator"><i class="bi bi-clock"></i> Flexible Time</div>
+                            <div class="open-time-indicator"><i class="bi bi-clock"></i> {{ T::translate('Flexible Time', 'Flexible na Oras')}}</div>
                         `;
                     } else {
                         const startTime = arg.event.start ? new Date(arg.event.start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
@@ -793,7 +279,7 @@
                     if (isFlexibleTime) {
                         eventEl.innerHTML = `
                             <div class="event-title">${arg.event.title}</div>
-                            <div class="open-time-indicator"><i class="bi bi-clock"></i> Flexible Time</div>
+                            <div class="open-time-indicator"><i class="bi bi-clock"></i> {{ T::translate('Flexible Time', 'Flexible na Oras')}}</div>
                             <div class="event-details">${arg.event.extendedProps.visit_type}</div>
                         `;
                     } else {
@@ -823,7 +309,7 @@
             const resetButton = document.createElement('button');
             resetButton.type = 'button';
             resetButton.className = 'btn btn-sm btn-outline-secondary';
-            resetButton.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
+            resetButton.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> {{ T::translate('Reset', 'I-reset')}}';
             // Update reset button code (should be around line 564 in your full file)
             resetButton.addEventListener('click', function() {
                 // Show loading indicator
@@ -870,7 +356,7 @@
                 method: 'GET',
                 success: function(response) {
                     if (response.success && response.beneficiaries && response.beneficiaries.length > 0) {
-                        beneficiarySelect.innerHTML = '<option value="">Select Beneficiary</option>';
+                        beneficiarySelect.innerHTML = '<option value="">{{ T::translate('Select Beneficiary', 'Pumili ng Benepisyaryo')}}</option>';
                         
                         response.beneficiaries.forEach(function(beneficiary) {
                             const option = document.createElement('option');
@@ -881,7 +367,7 @@
                     }
                 },
                 error: function(xhr) {
-                    console.error('Failed to load beneficiaries:', xhr);
+                    console.error('{{ T::translate('Failed to load beneficiaries', 'Nabigong i-load ang mga benepisyaryo')}}:', xhr);
                 }
             });
         }
@@ -906,16 +392,16 @@
                     method: 'GET',
                     success: function(response) {
                         if (response.success && response.beneficiary) {
-                            document.getElementById('beneficiaryAddress').value = response.beneficiary.address || 'Not Available';
-                            document.getElementById('beneficiaryPhone').value = response.beneficiary.phone || 'Not Available';
+                            document.getElementById('beneficiaryAddress').value = response.beneficiary.address || '{{ T::translate('Not Available', 'Hindi Available')}}';
+                            document.getElementById('beneficiaryPhone').value = response.beneficiary.phone || '{{ T::translate('Not Available', 'Hindi Available')}}';
                         } else {
-                            document.getElementById('beneficiaryAddress').value = 'Not Available';
-                            document.getElementById('beneficiaryPhone').value = 'Not Available';
+                            document.getElementById('beneficiaryAddress').value = '{{ T::translate('Not Available', 'Hindi Available')}}';
+                            document.getElementById('beneficiaryPhone').value = '{{ T::translate('Not Available', 'Hindi Available')}}';
                         }
                     },
                     error: function(xhr) {
-                        document.getElementById('beneficiaryAddress').value = 'Error loading details';
-                        document.getElementById('beneficiaryPhone').value = 'Error loading details';
+                        document.getElementById('beneficiaryAddress').value = '{{ T::translate('Error loading details', 'Error sa pagload ng mga detalye')}}';
+                        document.getElementById('beneficiaryPhone').value = '{{ T::translate('Error loading details', 'Error sa pagload ng mga detalye')}}';
                         console.error('Failed to load beneficiary details:', xhr);
                     }
                 });
@@ -934,11 +420,11 @@
                 if (currentView === 'dayGridMonth') {
                     currentView = 'timeGridWeek';
                     calendar.changeView('timeGridWeek');
-                    toggleWeekButton.innerHTML = '<i class="bi bi-calendar-month"></i> Month View';
+                    toggleWeekButton.innerHTML = '<i class="bi bi-calendar-month"></i> {{ T::translate('Month View', 'Buwanang Tingnan')}}';
                 } else {
                     currentView = 'dayGridMonth';
                     calendar.changeView('dayGridMonth');
-                    toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                    toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> {{ T::translate('Week View', 'Lungguhang Tingnan')}}';
                 }
             });
         }
@@ -954,28 +440,28 @@
             if (appointmentDetailsEl) {
                 appointmentDetailsEl.innerHTML = `
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-person-fill"></i> Beneficiary</div>
+                        <div class="section-title"><i class="bi bi-person-fill"></i> {{ T::translate('Beneficiary', 'Benepisyaryo')}}</div>
                         <div class="detail-value">${event.extendedProps.beneficiary}</div>
                     </div>
                     
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-person-badge-fill"></i> Care Worker</div>
+                        <div class="section-title"><i class="bi bi-person-badge-fill"></i> {{ T::translate('Care Worker', 'Tagapag-alaga')}}</div>
                         <div class="detail-value">${event.extendedProps.care_worker}</div>
                     </div>
                     
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-calendar-date-fill"></i> Visit Details</div>
+                        <div class="section-title"><i class="bi bi-calendar-date-fill"></i> {{ T::translate('Visit Details', 'Mga Detalye ng Pagbisita')}}</div>
                         <div class="detail-item">
-                            <div class="detail-label">Date:</div>
+                            <div class="detail-label">{{ T::translate('Date', 'Petsa')}}:</div>
                             <div class="detail-value">${formattedDate}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Time:</div>
+                            <div class="detail-label">{{ T::translate('Time', 'Oras')}}:</div>
                             <div class="detail-value">${event.extendedProps.is_flexible_time ? 'Flexible Time' : 
                                 (formatTime(event.start) + ' - ' + formatTime(event.end))}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Type:</div>
+                            <div class="detail-label">{{ T::translate('Type', 'Uri')}}:</div>
                             <div class="detail-value">${event.extendedProps.visit_type}</div>
                         </div>
                         <div class="detail-item">
@@ -985,19 +471,19 @@
                     </div>
                     
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-geo-alt-fill"></i> Location</div>
-                        <div class="detail-value">${event.extendedProps.address || 'Not Available'}</div>
+                        <div class="section-title"><i class="bi bi-geo-alt-fill"></i> {{ T::translate('Location', 'Lokasyon')}}</div>
+                        <div class="detail-value">${event.extendedProps.address || '{{ T::translate('Not Available', 'Hindi Available')}}'}</div>
                     </div>
 
                     <!-- Add confirmation status section -->
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-check-circle"></i> Care Plan Status</div>
+                        <div class="section-title"><i class="bi bi-check-circle"></i> {{ T::translate('Care Plan Status', 'Status ng Care Plan')}}</div>
                         ${event.extendedProps.has_weekly_care_plan ? `
                             <div class="detail-item">
                                 <div class="detail-label">Beneficiary: </div>
                                 <div class="detail-value">
                                     <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
-                                        ${event.extendedProps.confirmed_by_beneficiary ? 'Confirmed' : 'Not Confirmed'}
+                                        ${event.extendedProps.confirmed_by_beneficiary ? '{{ T::translate('Confirmed', 'Nakumpirma')}}' : '{{ T::translate('Not Confirmed', 'Hindi Nakumpirma')}}'}
                                     </span>
                                 </div>
                             </div>
@@ -1005,33 +491,33 @@
                                 <div class="detail-label">Family: </div>
                                 <div class="detail-value">
                                     <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
-                                        ${event.extendedProps.confirmed_by_family ? 'Confirmed' : 'Not Confirmed'}
+                                        ${event.extendedProps.confirmed_by_family ? '{{ T::translate('Confirmed', 'Nakumpirma')}}' : '{{ T::translate('Not Confirmed', 'Hindi Nakumpirma')}}'}
                                     </span>
                                 </div>
                             </div>
                             <div class="detail-item">
-                                <div class="detail-label">Confirmed On: </div>
+                                <div class="detail-label">{{ T::translate('Confirmed On', 'Nakumpirma sa')}}: </div>
                                 <div class="detail-value">
-                                    ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : 'Not confirmed yet'}
+                                    ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : '{{ T::translate('Not confirmed yet', 'Hindi pa nakumpirma')}}'}
                                 </div>
                             </div>
                         ` : `
                             <div class="detail-value text-muted">
-                                <i class="bi bi-info-circle me-1"></i> No care plan has been created yet for this visit.
+                                <i class="bi bi-info-circle me-1"></i> {{ T::translate('No care plan has been created yet for this visit.', 'Walang care plan ang nagawa para sa pagbisita na ito.')}}
                             </div>
                         `}
                     </div>
                     
                     ${event.extendedProps.notes ? `
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-journal-text"></i> Notes</div>
+                        <div class="section-title"><i class="bi bi-journal-text"></i> {{ T::translate('Notes', 'Mga Tala')}}</div>
                         <div class="detail-value">${event.extendedProps.notes}</div>
                     </div>
                     ` : ''}
                     
                     ${event.extendedProps.cancel_reason ? `
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-exclamation-triangle-fill"></i> Cancellation Reason</div>
+                        <div class="section-title"><i class="bi bi-exclamation-triangle-fill"></i> {{ T::translate('Cancellation Reason', 'Dahilan sa Pagkansela')}}</div>
                         <div class="detail-value">${event.extendedProps.cancel_reason}</div>
                     </div>
                     ` : ''}

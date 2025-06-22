@@ -20,7 +20,7 @@
                 <a href="{{ route('admin.families.index') }}" class="btn btn-secondary">
                     <i class="bi bi-arrow-bar-left"></i> {{ T::translate('Back', 'Bumalik') }}
                 </a>
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">ADD FAMILY MEMBER</div>
+                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">{{ T::translate('ADD FAMILY MEMBER', 'MAGDAGDAG NG MIYEMBRO NG PAMILYA')}}</div>
             </div>
             @if (session('success'))
                 <div class="alert alert-success">
@@ -188,10 +188,10 @@
 
                             <!-- Confirm Password -->
                             <div class="col-md-4">
-                                <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumprimahin ang Password') }}<label style="color:red;"> * </label></label>
+                                <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumpirmahin ang Password') }}<label style="color:red;"> * </label></label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" 
-                                        placeholder="{{ T::translate('Confirm password', 'Kumprimahin ang Password') }}" 
+                                        placeholder="{{ T::translate('Confirm password', 'Kumpirmahin ang Password') }}" 
                                         required 
                                         title="Passwords must match.">
                                     <span class="input-group-text password-toggle" data-target="confirmPassword">
@@ -281,9 +281,9 @@
                 const fileSizeErrorMessage = document.getElementById('fileSizeErrorMessage');
                 
                 fileSizeErrorMessage.innerHTML = `
-                    <strong>Form submission failed</strong><br>
-                    Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
-                    Please select a smaller file or compress your existing file.
+                    <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                    {{ T::translate('Profile Picture', 'Litrato ng Profile')}} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} 7MB.<br>
+                    {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                 `;
                 fileSizeErrorModal.show();
                 return false;
@@ -360,9 +360,9 @@
                             
                             // Set error message and show modal
                             fileSizeErrorMessage.innerHTML = `
-                                <strong>Profile Picture</strong> file is too large (${fileSizeMB}MB).<br>
-                                Maximum allowed size is 7MB.<br>
-                                Please select a smaller file or compress your existing file.
+                                <strong>{{ T::translate('Profile Picture', 'Litrato ng Profile')}}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                                {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} 7MB.<br>
+                                {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                             `;
                             fileSizeErrorModal.show();
                             
@@ -391,9 +391,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            Profile Picture (${fileSizeMB}MB) exceeds the maximum size of 7MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            {{ T::translate('Profile Picture', 'Litrato ng Profile')}} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} 7MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         return false;

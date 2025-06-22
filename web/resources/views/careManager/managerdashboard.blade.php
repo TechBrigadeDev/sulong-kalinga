@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Care Manager Dashboard</title>
+    <title>Dashboard | Care Manager</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard2.css') }}">
@@ -90,16 +90,16 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="welcomeBackModalLabel">Welcome Back!</h5>
+                    <h5 class="modal-title" id="welcomeBackModalLabel">{{ T::translate('Welcome Back!', 'Maligayang Pagbabalik!') }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
                     <i class='bi bi-gem display-4 text-primary mb-3'></i>
-                    <h4>Hello, {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}!</h4>
-                    <p>Welcome back to your Care Manager Dashboard.</p>
+                    <h4>{{ T::translate('Hello,', 'Kamusta,') }} {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}!</h4>
+                    <p>{{ T::translate('Welcome back to your Care Manager Dashboard.', 'Maligayang pagbabalik sa iyong Care Manager Dashboard.') }}</p>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Get Started</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">{{ T::translate('Get Started', 'Magsimula') }}</button>
                 </div>
             </div>
         </div>
@@ -113,16 +113,16 @@
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-beneficiaries">
                         <div class="card-body">
-                            <div class="label">Total Beneficiaries</div>
+                            <div class="label">{{ T::translate('Total Beneficiaries', 'Kabuuang Benepisyaryo') }}</div>
                             <div class="value">{{ number_format($beneficiaryStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
                                     <div class="sub-value" style="color: var(--teal-600)">{{ number_format($beneficiaryStats['active']) }}</div>
-                                    <div class="sub-label">Active</div>
+                                    <div class="sub-label">{{ T::translate('Active', 'Aktibo') }}</div>
                                 </div>
                                 <div class="sub-stat">
                                     <div class="sub-value" style="color: var(--slate-500)">{{ number_format($beneficiaryStats['inactive']) }}</div>
-                                    <div class="sub-label">Inactive</div>
+                                    <div class="sub-label">{{ T::translate('Inactive', 'Hindi Aktibo') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -132,16 +132,16 @@
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-workers">
                         <div class="card-body">
-                            <div class="label">Total Care Workers</div>
+                            <div class="label">{{ T::translate('Total Care Workers', 'Kabuuang Care Workers') }}</div>
                             <div class="value">{{ number_format($careWorkerStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
                                     <div class="sub-value" style="color: var(--indigo-600)">{{ number_format($careWorkerStats['active']) }}</div>
-                                    <div class="sub-label">Active</div>
+                                    <div class="sub-label">{{ T::translate('Active', 'Aktibo') }}</div>
                                 </div>
                                 <div class="sub-stat">
                                     <div class="sub-value" style="color: var(--slate-500)">{{ number_format($careWorkerStats['inactive']) }}</div>
-                                    <div class="sub-label">Inactive</div>
+                                    <div class="sub-label">{{ T::translate('Inactive', 'Hindi Aktibo') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -151,16 +151,16 @@
                 <div class="col-12 col-sm-6 col-lg-4">
                     <div class="card stat-card stat-card-requests">
                         <div class="card-body">
-                            <div class="label">Requests Today</div>
+                            <div class="label">{{ T::translate('Requests Today', 'Mga Pakiusap Ngayon') }}</div>
                             <div class="value">{{ number_format($requestStats['total']) }}</div>
                             <div class="sub-stats">
                                 <div class="sub-stat">
                                     <div class="sub-value" style="color: var(--rose-600)">{{ number_format($requestStats['emergency']) }}</div>
-                                    <div class="sub-label">Emergency</div>
+                                    <div class="sub-label">{{ T::translate('Emergency', 'Emergency') }}</div>
                                 </div>
                                 <div class="sub-stat">
                                     <div class="sub-value" style="color: var(--amber-600)">{{ number_format($requestStats['service']) }}</div>
-                                    <div class="sub-label">Service</div>
+                                    <div class="sub-label">{{ T::translate('Service', 'Serbisyo') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -171,8 +171,8 @@
                 <div class="col-12 col-lg-6">
                     <div class="card">
                         <div class="card-header">
-                            <span>Emergency & Service Requests</span>
-                            <a href="{{ route('care-manager.emergency.request.index') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                            <span>{{ T::translate('Emergency & Service Requests', 'Emergency at Mga Pakiusap na Serbisyo') }}</span>
+                            <a href="{{ route('care-manager.emergency.request.index') }}" class="see-all">{{ T::translate('See All', 'Tingnan Lahat') }} <i class="bi bi-chevron-right"></i></a>
                         </div>
                         <div class="card-body p-0">
                             <div class="emergency-request-container">
@@ -208,7 +208,7 @@
                                 @empty
                                     <div class="notification-card p-3 text-center">
                                         <i class="bi bi-inbox-fill text-secondary" style="font-size: 1.25rem;"></i>
-                                        <p class="mt-2 mb-0">{{ T::translate('No requests found.', 'Walang nahanap na kahilingan.') }}</p>
+                                        <p class="mt-2 mb-0">{{ T::translate('No requests found.', 'Walang nahanap na mga pakiusap.') }}</p>
                                     </div>
                                 @endforelse
                             </div>
@@ -219,8 +219,8 @@
                 <div class="col-12 col-lg-6">
                     <div class="card">
                         <div class="card-header">
-                            <span>Upcoming Visitations</span>
-                            <a href="{{ route('care-manager.careworker.appointments.index') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                            <span>{{ T::translate('Upcoming Visitations', 'Mga Darating na Pagbisita') }}</span>
+                            <a href="{{ route('care-manager.careworker.appointments.index') }}" class="see-all">{{ T::translate('See All', 'Tingnan Lahat') }} <i class="bi bi-chevron-right"></i></a>
                         </div>
                         <div class="card-body">
                             @forelse($upcomingVisitations as $visit)
@@ -229,7 +229,7 @@
                                         <div class="schedule-time">{{ $visit['date_display'] }}, {{ $visit['time'] }}</div>
                                         <span class="badge {{ $visit['status_class'] }}">{{ $visit['visit_type'] }}</span>
                                     </div>
-                                    <div class="schedule-details">{{ $visit['visit_type'] }} for {{ $visit['beneficiary_name'] }}</div>
+                                    <div class="schedule-details">{{ $visit['visit_type'] }} {{ T::translate('for', 'para kay') }} {{ $visit['beneficiary_name'] }}</div>
                                     <div class="schedule-details">{{ T::translate('Assigned to', 'Itinalaga kay') }}: {{ $visit['assigned_to'] }}</div>
                                 </div>
                             @empty
@@ -245,8 +245,8 @@
                 <div class="col-12 col-lg-5">
                     <div class="card">
                         <div class="card-header">
-                            <span>Care Worker Performance</span>
-                            <a href="{{ route('care-manager.careworker.performance.index') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                            <span>{{ T::translate('Care Worker Performance', 'Pagganap ng Care Worker') }}</span>
+                            <a href="{{ route('care-manager.careworker.performance.index') }}" class="see-all">{{ T::translate('See All', 'Tingnan Lahat') }} <i class="bi bi-chevron-right"></i></a>
                         </div>
                         <div class="card-body">
                             @forelse($careWorkerPerformance as $worker)
@@ -278,8 +278,8 @@
                 <div class="col-12 col-lg-7">
                     <div class="card">
                         <div class="card-header">
-                            <span>Recent Weekly Care Plans</span>
-                            <a href="{{ route('care-manager.reports') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+                            <span>{{ T::translate('Recent Weekly Care Plans', 'Mga Kamakailang Weekly Care Plans') }}</span>
+                            <a href="{{ route('care-manager.reports') }}" class="see-all">{{ T::translate('See All', 'Tingnan Lahat') }} <i class="bi bi-chevron-right"></i></a>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">

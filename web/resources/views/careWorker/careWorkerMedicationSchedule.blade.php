@@ -4,528 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Medication Schedule</title>
+    <title>Medication Schedule | Care Worker</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <style>
-        /* Card Design */
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            border: 1px solid rgba(0,0,0,0.07);
-            margin-bottom: 1.5rem;
-        }
-        
-        .card-header {
-            padding: 0.8rem 1.25rem;
-            background-color: #f8f9fc;
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-        
-        .section-heading {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #333;
-            margin-bottom: 0;
-        }
-        
-        /* Search Bar Enhancements */
-        .search-container {
-            position: relative;
-            margin-bottom: 1rem;
-            display: flex;
-        }
-        
-        .search-container i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-            transition: opacity 0.2s ease;
-        }
-        
-        .search-container .search-input:focus + i,
-        .search-container .search-input:not(:placeholder-shown) + i {
-            opacity: 0;
-        }
-        
-        .search-input {
-            padding-left: 35px;
-            border-radius: 6px 0 0 6px;
-            border: 1px solid #dee2e6;
-            border-right: none;
-            height: 38px;
-            flex: 1;
-        }
-        
-        .search-btn {
-            border-radius: 0 6px 6px 0;
-            background-color: #4e73df;
-            color: white;
-            border: none;
-            padding: 0 15px;
-        }
-        
-        /* Filter Bar */
-        .filter-bar {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-        
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .filter-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 0;
-            white-space: nowrap;
-        }
-        
-        /* Select dropdown styling */
-        .select-container {
-            position: relative;
-        }
-        
-        .select-container::after {
-            content: "";
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid #666;
-            pointer-events: none;
-        }
-        
-        .select-container select {
-            padding-right: 30px;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            min-width: 120px;
-        }
-        
-        /* Table Styling */
-        .table-responsive {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            margin-bottom: 1rem;
-        }
-        
-        .table {
-            margin-bottom: 0;
-            table-layout: fixed; /* Control column widths */
-            width: 100%;
-        }
-        
-        .table thead {
-            background-color: #4e73df;
-            color: white;
-        }
-        
-        .table thead th {
-            font-weight: 500;
-            border-bottom: none;
-            padding: 12px 15px;
-        }
-        
-        .table tbody tr:nth-of-type(odd) {
-            background-color: #f8f9fc;
-        }
-        
-        .table td {
-            vertical-align: middle;
-            padding: 12px 15px;
-        }
-        
-        /* Default behavior - allow wrapping for desktop */
-        .table td, .table th {
-            vertical-align: middle;
-            word-wrap: break-word;
-            white-space: normal;
-            overflow: hidden;
-        }
-        
-        /* Column widths for desktop */
-        .table .col-beneficiary {
-            width: 25%;
-        }
-        
-        .table .col-medication {
-            width: 15%;
-        }
-        
-        .table .col-schedule {
-            width: 20%;
-        }
-        
-        .table .col-instructions {
-            width: 23%;
-        }
-        
-        .table .col-status {
-            width: 10%;
-        }
-        
-        .table .col-actions {
-            width: 10%;
-        }
-        
-        /* Medication time badges */
-        .badge-time {
-            background-color: #e8f4fd;
-            color: #0d6efd;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.75rem;
-            margin-right: 6px;
-            margin-bottom: 4px;
-            display: inline-block;
-            border: 1px solid rgba(13, 110, 253, 0.2);
-            white-space: nowrap; /* Never wrap badges */
-        }
-        
-        /* Beneficiary row styling */
-        .beneficiary-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: #2e59d9;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 0;
-            border-bottom: 2px solid #e0e4ff;
-            margin-bottom: 8px;
-            letter-spacing: 0.01em;
-        }
-
-        .beneficiary-icon {
-            color: white;
-            font-size: 1rem;
-            background-color: #4e73df;
-            padding: 5px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-        }
-
-        /* Add a subtle highlight to the entire beneficiary row */
-        .beneficiary-start {
-            border-top: 3px solid #e6e9ff;
-            box-shadow: 0 2px 4px rgba(78, 115, 223, 0.1);
-        }
-        
-        .medication-info {
-            font-weight: 500;
-        }
-        
-        .medication-info .dosage {
-            color: #6c757d;
-            font-weight: normal;
-            font-size: 0.85rem;
-        }
-        
-        .medication-type {
-            display: inline-block;
-            background-color: #f1f3f9;
-            color: #4e73df;
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            margin-top: 4px;
-        }
-        
-        .medical-info {
-            color: #555;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin-top: 10px;
-        }
-        
-        .medical-info strong {
-            color: #4e73df;
-        }
-        
-        .medical-info-item {
-            margin-bottom: 5px;
-            white-space: normal; /* Allow these to wrap always */
-        }
-        
-        /* Action buttons */
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            margin-right: 5px;
-        }
-        
-        /* Pagination styling */
-        .pagination {
-            margin-top: 1rem;
-            justify-content: center;
-        }
-        
-        .page-item.active .page-link {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-        
-        .page-link {
-            color: #4e73df;
-            padding: 0.4rem 0.75rem;
-            font-size: 0.9rem;
-        }
-        
-        /* Improved divider */
-        .beneficiary-divider td {
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        /* Status badge styling */
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            display: inline-block;
-            text-align: center;
-            min-width: 80px;
-            white-space: nowrap; /* Never wrap status badges */
-        }
-        
-        .status-active {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .status-paused {
-            background-color: #fff8e1;
-            color: #f57f17;
-        }
-        
-        .status-completed {
-            background-color: #e0e0e0;
-            color: #616161;
-        }
-        
-        /* Special instructions formatting */
-        .special-instructions {
-            font-style: italic;
-            color: #555;
-            font-size: 0.9rem;
-            white-space: normal; /* Always allow these to wrap */
-        }
-
-        /* Medication Modal Styling */
-        .time-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            background-color: #f8f9fc;
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        .time-group .form-check-input {
-            margin-right: 8px;
-        }
-
-        .time-group .form-check {
-            margin-bottom: 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .time-group .form-check-label {
-            margin-bottom: 0;
-        }
-
-        .time-input {
-            width: 120px;
-            margin: 0 10px;
-        }
-
-        .time-group .form-check-input:checked {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-label {
-            font-weight: 500;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .form-label i {
-            color: #4e73df;
-        }
-
-        .modal-header {
-            background-color: #4e73df;
-            color: white;
-        }
-
-        .modal-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-
-        /* Allergy alert styling */
-        #allergiesAlert {
-            padding: 8px 12px;
-            margin-bottom: 15px;
-            border-left: 4px solid #f57f17;
-        }
-
-        hr {
-            margin: 20px 0;
-            color: #e0e0e0;
-        }
-
-        /* Status toggle switch styling */
-        .form-switch .form-check-input {
-            width: 40px;
-        }
-
-        .form-switch .form-check-input:checked {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-
-        /* Mobile-specific styles */
-        @media (max-width: 992px) {
-            .filter-bar {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 10px;
-            }
-            
-            .filter-group {
-                width: 100%;
-            }
-            
-            .filter-group .form-select {
-                width: 100%;
-            }
-            
-            /* Table specific mobile styles */
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .table {
-                min-width: 800px; /* Force horizontal scroll on mobile */
-                table-layout: auto; /* Let columns expand as needed on mobile */
-            }
-            
-            /* Prevent text wrapping on mobile for better horizontal scrolling */
-            .table td, .table th {
-                white-space: nowrap;
-            }
-            
-            /* Exception for instructions - always allow wrapping */
-            .table .col-instructions {
-                white-space: normal;
-            }
-            
-            .beneficiary-name {
-                font-size: 0.9rem;
-            }
-            
-            .badge-time {
-                font-size: 0.7rem;
-                padding: 3px 8px;
-            }
-
-            .times-container {
-                display: flex;
-                flex-wrap: wrap;
-            }
-
-            /* Make table header sticky for better UX during scrolling */
-            .table thead {
-                position: sticky;
-                top: 0;
-                z-index: 1;
-            }
-            
-            /* Set minimum widths for mobile view */
-            .table .col-beneficiary {
-                min-width: 220px;
-            }
-            
-            .table .col-medication {
-                min-width: 150px;
-            }
-            
-            .table .col-schedule {
-                min-width: 200px;
-            }
-            
-            .table .col-instructions {
-                min-width: 200px;
-            }
-            
-            .table .col-status {
-                min-width: 100px;
-            }
-            
-            .table .col-actions {
-                min-width: 100px;
-            }
-        }
-    </style>
-
+    <link rel="stylesheet" href="{{ asset('css/medicationSchedule.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.careWorkerNavbar')
     @include('components.careWorkerSidebar')
 
     <div class="home-section">
-        <div class="text-left">MEDICATION SCHEDULE</div>
+        <div class="text-left">{{ T::translate('MEDICATION SCHEDULE', 'ISKEDYUL NG GAMOT') }}</div>
         <div class="container-fluid">
             <div class="row p-3" id="home-content">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="section-heading">
-                                <i class="bi bi-capsule"></i> Medication Schedule Management
+                                <i class="bi bi-capsule"></i> {{ T::translate('Medication Schedule Management', 'Pamamahala ng Iskedyul ng Gamot') }}
                             </h5>
                             <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
-                                <i class="bi bi-plus-lg me-2"></i> New Schedule
+                                <i class="bi bi-plus-lg me-2"></i> {{ T::translate('New Schedule', 'Bagong Iskedyul') }}
                             </button>
                         </div>
                         <div class="card-body">
@@ -535,10 +38,10 @@
                                     <form action="{{ route('care-worker.medication.schedule.index') }}" method="GET" id="searchForm">
                                         <div class="search-container">
                                             <input type="text" class="form-control search-input" id="scheduleSearch" name="search" 
-                                                placeholder="Enter beneficiary name or medication name..." value="{{ $search }}">
+                                                placeholder="{{ T::translate('Enter beneficiary name or medication name...', 'Ilagay ang pangalan nang benepisyaro o gamot...') }}" value="{{ $search }}">
                                             <i class="bi bi-search"></i>
                                             <button type="submit" class="search-btn">
-                                                <i class="bi bi-search"></i>Search
+                                                <i class="bi bi-search"></i>{{ T::translate('Search', 'Maghanap') }}
                                             </button>
                                         </div>
                                         <input type="hidden" name="status" value="{{ $statusFilter }}">
@@ -548,26 +51,26 @@
                                 <div class="col-md-6">
                                     <div class="filter-bar">
                                         <div class="filter-group">
-                                            <label class="filter-label">Status:</label>
+                                            <label class="filter-label">Status</label>
                                             <div class="select-container">
                                                 <select class="form-select" id="statusFilter" name="status" onchange="applyFilters()">
-                                                    <option value="all" {{ $statusFilter == 'all' ? 'selected' : '' }}>All</option>
-                                                    <option value="active" {{ $statusFilter == 'active' ? 'selected' : '' }}>Active</option>
-                                                    <option value="paused" {{ $statusFilter == 'paused' ? 'selected' : '' }}>Paused</option>
-                                                    <option value="completed" {{ $statusFilter == 'completed' ? 'selected' : '' }}>Completed</option>
+                                                    <option value="all" {{ $statusFilter == 'all' ? 'selected' : '' }}>{{ T::translate('All', 'Lahat') }}</option>
+                                                    <option value="active" {{ $statusFilter == 'active' ? 'selected' : '' }}>{{ T::translate('Active', 'Aktibo') }}</option>
+                                                    <option value="paused" {{ $statusFilter == 'paused' ? 'selected' : '' }}>{{ T::translate('Paused', 'Nakahinto') }}</option>
+                                                    <option value="completed" {{ $statusFilter == 'completed' ? 'selected' : '' }}>{{ T::translate('Completed', 'Natapos') }}</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="filter-group">
-                                            <label class="filter-label">Period:</label>
+                                            <label class="filter-label">{{ T::translate('Period:', 'Panahon:') }}</label>
                                             <div class="select-container">
                                                 <select class="form-select" id="timeFilter" name="period" onchange="applyFilters()">
-                                                    <option value="all" {{ $periodFilter == 'all' ? 'selected' : '' }}>All</option>
-                                                    <option value="morning" {{ $periodFilter == 'morning' ? 'selected' : '' }}>Morning</option>
-                                                    <option value="afternoon" {{ $periodFilter == 'afternoon' ? 'selected' : '' }}>Afternoon</option>
-                                                    <option value="evening" {{ $periodFilter == 'evening' ? 'selected' : '' }}>Evening</option>
+                                                    <option value="all" {{ $periodFilter == 'all' ? 'selected' : '' }}>{{ T::translate('All', 'Lahat') }}</option>
+                                                    <option value="morning" {{ $periodFilter == 'morning' ? 'selected' : '' }}>{{ T::translate('Morning', 'Umaga') }}</option>
+                                                    <option value="afternoon" {{ $periodFilter == 'afternoon' ? 'selected' : '' }}>{{ T::translate('Afternoon', 'Hapon') }}</option>
+                                                    <option value="evening" {{ $periodFilter == 'evening' ? 'selected' : '' }}>{{ T::translate('Evening', 'Gabi') }}</option>
                                                     <option value="night" {{ $periodFilter == 'night' ? 'selected' : '' }}>Night</option>
-                                                    <option value="as_needed" {{ $periodFilter == 'as_needed' ? 'selected' : '' }}>As Needed</option>
+                                                    <option value="as_needed" {{ $periodFilter == 'as_needed' ? 'selected' : '' }}>{{ T::translate('As Needed', 'Kung Kinakailangan') }}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -588,12 +91,12 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="col-beneficiary">Beneficiary</th>
-                                            <th class="col-medication">Medication</th>
-                                            <th class="col-schedule">Schedule</th>
-                                            <th class="col-instructions">Special Instructions</th>
+                                            <th class="col-beneficiary">{{ T::translate('Beneficiary', 'Benepisyaryo') }}</th>
+                                            <th class="col-medication">{{ T::translate('Medication', 'Gamot') }}</th>
+                                            <th class="col-schedule">{{ T::translate('Schedule', 'Iskedyul') }}</th>
+                                            <th class="col-instructions">{{ T::translate('Special Instructions', 'Espesyal na Tagubilin') }}</th>
                                             <th class="col-status">Status</th>
-                                            <th class="col-actions">Actions</th>
+                                            <th class="col-actions">{{ T::translate('Actions', 'Aksyon') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -609,25 +112,25 @@
                                                 if ($schedule->morning_time) {
                                                     $times[] = '<span class="badge-time"><i class="bi bi-sunrise"></i> ' . 
                                                         \Carbon\Carbon::parse($schedule->morning_time)->format('h:i A') . 
-                                                        ($schedule->with_food_morning ? ' (with food)' : '') . '</span>';
+                                                        ($schedule->with_food_morning ? ' '.T::translate('(with food)', '(may pagkain)') : '') . '</span>';
                                                 }
                                                 if ($schedule->noon_time) {
                                                     $times[] = '<span class="badge-time"><i class="bi bi-sun"></i> ' . 
                                                         \Carbon\Carbon::parse($schedule->noon_time)->format('h:i A') . 
-                                                        ($schedule->with_food_noon ? ' (with food)' : '') . '</span>';
+                                                        ($schedule->with_food_noon ? ' '.T::translate('(with food)', '(may pagkain)') : '') . '</span>';
                                                 }
                                                 if ($schedule->evening_time) {
                                                     $times[] = '<span class="badge-time"><i class="bi bi-sunset"></i> ' . 
                                                         \Carbon\Carbon::parse($schedule->evening_time)->format('h:i A') . 
-                                                        ($schedule->with_food_evening ? ' (with food)' : '') . '</span>';
+                                                        ($schedule->with_food_evening ? ' '.T::translate('(with food)', '(may pagkain)') : '') . '</span>';
                                                 }
                                                 if ($schedule->night_time) {
                                                     $times[] = '<span class="badge-time"><i class="bi bi-moon"></i> ' . 
                                                         \Carbon\Carbon::parse($schedule->night_time)->format('h:i A') . 
-                                                        ($schedule->with_food_night ? ' (with food)' : '') . '</span>';
+                                                        ($schedule->with_food_night ? ' '.T::translate('(with food)', '(may pagkain)') : '') . '</span>';
                                                 }
                                                 if ($schedule->as_needed) {
-                                                    $times[] = '<span class="badge-time"><i class="bi bi-alarm"></i> As needed</span>';
+                                                    $times[] = '<span class="badge-time"><i class="bi bi-alarm"></i> '.T::translate('As needed', 'Kung kinakailangan').'</span>';
                                                 }
                                             @endphp
                                             
@@ -637,22 +140,22 @@
                                                     @if($isNewBeneficiary)
                                                         <div class="beneficiary-name">
                                                             <i class="bi bi-person-fill beneficiary-icon"></i>
-                                                            {{ $schedule->beneficiary ? $schedule->beneficiary->first_name . ' ' . $schedule->beneficiary->last_name : 'Unknown Beneficiary' }}
+                                                            {{ $schedule->beneficiary ? $schedule->beneficiary->first_name . ' ' . $schedule->beneficiary->last_name : T::translate('Unknown Beneficiary', 'Hindi kilalang Benepisyaryo') }}
                                                         </div>
                                                         
                                                         @if($schedule->beneficiary && $schedule->beneficiary->generalCarePlan && $schedule->beneficiary->generalCarePlan->healthHistory)
                                                             <div class="medical-info">
                                                                 <div class="medical-info-item">
-                                                                    <strong>Condition:</strong> 
-                                                                    {{ $schedule->beneficiary->generalCarePlan->healthHistory->formatted_conditions ?? 'No data' }}
+                                                                    <strong>{{ T::translate('Condition:', 'Kondisyon:') }}</strong> 
+                                                                    {{ $schedule->beneficiary->generalCarePlan->healthHistory->formatted_conditions ?? T::translate('No data', 'Walang data') }}
                                                                 </div>
                                                                 <div class="medical-info-item">
-                                                                    <strong>Immunizations:</strong> 
-                                                                    {{ $schedule->beneficiary->generalCarePlan->healthHistory->formatted_immunizations ?? 'No data' }}
+                                                                    <strong>{{ T::translate('Immunizations:', 'Mga Bakuna:') }}</strong> 
+                                                                    {{ $schedule->beneficiary->generalCarePlan->healthHistory->formatted_immunizations ?? T::translate('No data', 'Walang data') }}
                                                                 </div>
                                                                 <div class="medical-info-item">
-                                                                    <strong>Allergies:</strong> 
-                                                                    {{ $schedule->beneficiary->generalCarePlan->healthHistory->formatted_allergies ?? 'No data' }}
+                                                                    <strong>{{ T::translate('Allergies:', 'Alerhiya:') }}</strong> 
+                                                                    {{ $schedule->beneficiary->generalCarePlan->healthHistory->formatted_allergies ?? T::translate('No data', 'Walang data') }}
                                                                 </div>
                                                             </div>
                                                         @endif
@@ -691,7 +194,7 @@
                                                             {{ $schedule->special_instructions }}
                                                         </div>
                                                     @else
-                                                        <span class="text-muted">No special instructions</span>
+                                                        <span class="text-muted">{{ T::translate('No special instructions', 'Walang espesyal na tagubilin') }}</span>
                                                     @endif
                                                 </td>
                                                 
@@ -706,7 +209,7 @@
                                                 <td>
                                                     <div class="d-flex">
                                                         <button class="btn btn-sm btn-primary action-btn me-1 edit-btn" 
-                                                            title="Edit" 
+                                                            title="{{ T::translate('Edit', 'I-edit') }}" 
                                                             data-id="{{ $schedule->medication_schedule_id }}">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
@@ -715,7 +218,7 @@
                                                             data-beneficiary="{{ $schedule->beneficiary->first_name }} {{ $schedule->beneficiary->last_name }}"
                                                             data-medication="{{ $schedule->medication_name }}"
                                                             data-dosage="{{ $schedule->dosage }}"
-                                                            title="Delete schedule">
+                                                            title="{{ T::translate('Delete schedule', 'Tanggalin ang iskedyul') }}">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </div>
@@ -728,7 +231,7 @@
                                                 <td colspan="6" class="text-center py-4">
                                                     <div class="text-muted">
                                                         <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
-                                                        <p class="mt-2">No medication schedules found.</p>
+                                                        <p class="mt-2">{{ T::translate('No medication schedules found.', 'Walang nakitang iskedyul ng gamot.') }}</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -756,7 +259,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addScheduleModalLabel">
-                        <i class="bi bi-calendar-plus"></i> Add New Medication Schedule
+                        <i class="bi bi-calendar-plus"></i> {{ T::translate('Add New Medication Schedule', 'Magdagdag ng Bagong Iskedyul ng Gamot') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -764,7 +267,7 @@
                     
                     <!-- Error Alert for Validation -->
                     <div id="modalErrors" class="alert alert-danger" style="{{ $errors->any() ? '' : 'display: none;' }}">
-                        <strong>Please correct the following errors:</strong>
+                        <strong>{{ T::translate('Please correct the following:', 'Maaring itama ang sumusunod:') }}</strong>
                         <ul>
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -777,12 +280,12 @@
                         <!-- Beneficiary Selection -->
                         <div class="form-group">
                             <label for="beneficiarySelect" class="form-label">
-                                <i class="bi bi-person-fill"></i> Beneficiary
+                                <i class="bi bi-person-fill"></i> {{ T::translate('Beneficiary', 'Benepisyaryo') }}
                             </label>
                             <div class="beneficiary-select-container">
                                 <div class="select-container">
                                     <select class="form-select" id="beneficiarySelect" name="beneficiary_id" required>
-                                        <option value="" disabled {{ old('beneficiary_id') ? '' : 'selected' }}>Select a beneficiary</option>
+                                        <option value="" disabled {{ old('beneficiary_id') ? '' : 'selected' }}>{{ T::translate('Select a beneficiary', 'Pumili ng Benepisyaryo') }}</option>
                                         @foreach($beneficiaries as $beneficiary)
                                             <option value="{{ $beneficiary['id'] }}" 
                                                 data-allergies="{{ $beneficiary['allergies'] }}"
@@ -801,71 +304,71 @@
                         <div class="alert alert-warning d-flex align-items-center" role="alert" id="allergiesAlert" style="display: none !important;">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
                             <div>
-                                <strong>Allergies:</strong> <span id="allergiesContent">None on record</span>
+                                <strong>{{ T::translate('Allergies:', 'Alerhiya:') }}</strong> <span id="allergiesContent">{{ T::translate('None on record', 'Wala sa record') }}</span>
                             </div>
                         </div>
                         
                         <!-- Medication Details -->
                         <hr>
-                        <h6 class="fw-bold mb-3">Medication Details</h6>
+                        <h6 class="fw-bold mb-3">{{ T::translate('Medication Details', 'Mga Detalye ng Gamot') }}</h6>
                         
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group">
                                     <label for="medicationName" class="form-label">
-                                        <i class="bi bi-capsule"></i> Medication Name
+                                        <i class="bi bi-capsule"></i> {{ T::translate('Medication Name', 'Pangalan ng Gamot') }}
                                     </label>
                                     <input type="text" class="form-control" id="medicationName" name="medication_name" 
-                                        placeholder="Enter medication name" required value="{{ old('medication_name') }}">
+                                        placeholder="{{ T::translate('Enter medication name', 'Ilagay ang pangalan ng gamot') }}" required value="{{ old('medication_name') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="dosage" class="form-label">
-                                        <i class="bi bi-diagram-3"></i> Dosage
+                                        <i class="bi bi-diagram-3"></i> {{ T::translate('Dosage', 'Dosis') }}
                                     </label>
                                     <input type="text" class="form-control" id="dosage" name="dosage" 
-                                        placeholder="e.g., 500mg" required value="{{ old('dosage') }}">
+                                        placeholder="{{ T::translate('e.g., 500mg', 'hal., 500mg') }}" required value="{{ old('dosage') }}">
                                 </div>
                             </div>
                         </div>
                         
                         <div class="form-group">
                             <label for="medicationType" class="form-label">
-                                <i class="bi bi-archive"></i> Medication Type
+                                <i class="bi bi-archive"></i> {{ T::translate('Medication Type', 'Uri ng Gamot') }}
                             </label>
                             <div class="select-container">
                                 <select class="form-select" id="medicationType" name="medication_type" required>
-                                    <option value="" disabled {{ old('medication_type') ? '' : 'selected' }}>Select medication type</option>
-                                    <option value="tablet" {{ old('medication_type') == 'tablet' ? 'selected' : '' }}>Tablet</option>
-                                    <option value="capsule" {{ old('medication_type') == 'capsule' ? 'selected' : '' }}>Capsule</option>
-                                    <option value="liquid" {{ old('medication_type') == 'liquid' ? 'selected' : '' }}>Liquid</option>
-                                    <option value="injection" {{ old('medication_type') == 'injection' ? 'selected' : '' }}>Injection</option>
-                                    <option value="inhaler" {{ old('medication_type') == 'inhaler' ? 'selected' : '' }}>Inhaler</option>
-                                    <option value="topical" {{ old('medication_type') == 'topical' ? 'selected' : '' }}>Topical</option>
-                                    <option value="drops" {{ old('medication_type') == 'drops' ? 'selected' : '' }}>Drops</option>
-                                    <option value="other" {{ old('medication_type') == 'other' ? 'selected' : '' }}>Other</option>
+                                    <option value="" disabled {{ old('medication_type') ? '' : 'selected' }}>{{ T::translate('Select medication type', 'Pumili ng Uri ng Gamot') }}</option>
+                                    <option value="tablet" {{ old('medication_type') == 'tablet' ? 'selected' : '' }}>{{ T::translate('Tablet', 'Tableta') }}</option>
+                                    <option value="capsule" {{ old('medication_type') == 'capsule' ? 'selected' : '' }}>{{ T::translate('Capsule', 'Kapsula') }}</option>
+                                    <option value="liquid" {{ old('medication_type') == 'liquid' ? 'selected' : '' }}>{{ T::translate('Liquid', 'Likido') }}</option>
+                                    <option value="injection" {{ old('medication_type') == 'injection' ? 'selected' : '' }}>{{ T::translate('Injection', 'Iniksyon') }}</option>
+                                    <option value="inhaler" {{ old('medication_type') == 'inhaler' ? 'selected' : '' }}>{{ T::translate('Inhaler', 'Inhaler') }}</option>
+                                    <option value="topical" {{ old('medication_type') == 'topical' ? 'selected' : '' }}>{{ T::translate('Topical', 'Topikal') }}</option>
+                                    <option value="drops" {{ old('medication_type') == 'drops' ? 'selected' : '' }}>{{ T::translate('Drops', 'Patak') }}</option>
+                                    <option value="other" {{ old('medication_type') == 'other' ? 'selected' : '' }}>{{ T::translate('Other', 'Iba pa') }}</option>
                                 </select>
                             </div>
                         </div>
                         
                         <!-- Schedule Times -->
                         <hr>
-                        <h6 class="fw-bold mb-3">Schedule Times</h6>
+                        <h6 class="fw-bold mb-3">{{ T::translate('Schedule Times', 'Oras ng Iskedyul') }}</h6>
                         
                         <!-- Morning -->
                         <div class="time-group">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="morningSwitch" 
                                     name="morning_time" {{ old('morning_time') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="morningSwitch">Morning</label>
+                                <label class="form-check-label" for="morningSwitch">{{ T::translate('Morning', 'Umaga') }}</label>
                             </div>
                             <input type="time" class="form-control time-input" id="morningTime" 
                                 name="morning_time_value" value="{{ old('morning_time_value', '08:00') }}">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="morningWithFood" 
                                     name="with_food_morning" {{ old('with_food_morning') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="morningWithFood">With food</label>
+                                <label class="form-check-label" for="morningWithFood">{{ T::translate('With food', 'May Pagkain') }}</label>
                             </div>
                         </div>
         
@@ -874,14 +377,14 @@
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="noonSwitch" 
                                     name="noon_time" {{ old('noon_time') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="noonSwitch">Afternoon</label>
+                                <label class="form-check-label" for="noonSwitch">{{ T::translate('Afternoon', 'Hapon') }}</label>
                             </div>
                             <input type="time" class="form-control time-input" id="noonTime" 
                                 name="noon_time_value" value="{{ old('noon_time_value', '13:00') }}">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="noonWithFood" 
                                     name="with_food_noon" {{ old('with_food_noon') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="noonWithFood">With food</label>
+                                <label class="form-check-label" for="noonWithFood">{{ T::translate('With food', 'May Pagkain') }}</label>
                             </div>
                         </div>
                         
@@ -890,14 +393,14 @@
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="eveningSwitch" 
                                     name="evening_time" {{ old('evening_time') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="eveningSwitch">Evening</label>
+                                <label class="form-check-label" for="eveningSwitch">{{ T::translate('Evening', 'Gabi') }}</label>
                             </div>
                             <input type="time" class="form-control time-input" id="eveningTime" 
                                 name="evening_time_value" value="{{ old('evening_time_value', '18:00') }}">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="eveningWithFood" 
                                     name="with_food_evening" {{ old('with_food_evening') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="eveningWithFood">With food</label>
+                                <label class="form-check-label" for="eveningWithFood">{{ T::translate('With food', 'May Pagkain') }}</label>
                             </div>
                         </div>
                         
@@ -913,7 +416,7 @@
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="nightWithFood" 
                                     name="with_food_night" {{ old('with_food_night') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="nightWithFood">With food</label>
+                                <label class="form-check-label" for="nightWithFood">{{ T::translate('With food', 'May Pagkain') }}</label>
                             </div>
                         </div>
                         
@@ -922,20 +425,20 @@
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="asNeededSwitch" 
                                     name="as_needed" value="1" {{ old('as_needed') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="asNeededSwitch">As needed (PRN)</label>
+                                <label class="form-check-label" for="asNeededSwitch">{{ T::translate('As needed (PRN)', 'Kung Kinakailangan (PRN)') }}</label>
                             </div>
                             <div class="text-muted ms-auto" style="font-size: 0.85rem;">
-                                <i class="bi bi-info-circle"></i> No fixed time
+                                <i class="bi bi-info-circle"></i> {{ T::translate('No fixed time', 'Walang takdang oras') }}
                             </div>
                         </div>
                         
                         <!-- Additional Instructions -->
                         <div class="form-group mt-3">
                             <label for="instructions" class="form-label">
-                                <i class="bi bi-journal-text"></i> Special Instructions
+                                <i class="bi bi-journal-text"></i> {{ T::translate('Special Instructions', 'Espesyal na Tagubilin') }}
                             </label>
                             <textarea class="form-control" id="instructions" name="special_instructions" rows="3" 
-                                placeholder="Enter any special instructions for administration...">{{ old('special_instructions') }}</textarea>
+                                placeholder="{{ T::translate('Enter any special instructions for administration...', 'Maglagay ng anumang espesyal na tagubilin para sa pangangasiwa...') }}">{{ old('special_instructions') }}</textarea>
                         </div>
                         
                         <!-- Duration -->
@@ -943,7 +446,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="startDate" class="form-label">
-                                        <i class="bi bi-calendar-check"></i> Start Date
+                                        <i class="bi bi-calendar-check"></i> {{ T::translate('Start Date', 'Petsa ng Simula') }}
                                     </label>
                                     <input type="date" class="form-control" id="startDate" name="start_date" 
                                         required value="{{ old('start_date') }}">
@@ -952,7 +455,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="endDate" class="form-label">
-                                        <i class="bi bi-calendar-x"></i> End Date (Optional)
+                                        <i class="bi bi-calendar-x"></i> {{ T::translate('End Date (Optional)', 'Petsa ng Pagtatapos (Opsyonal)') }}
                                     </label>
                                     <input type="date" class="form-control" id="endDate" name="end_date" 
                                         value="{{ old('end_date') }}">
@@ -962,9 +465,9 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'Kanselahin') }}</button>
                     <button type="submit" form="addScheduleForm" class="btn btn-primary" id="saveScheduleBtn">
-                        <i class="bi bi-check-lg me-1"></i> Save Medication Schedule
+                        <i class="bi bi-check-lg me-1"></i> {{ T::translate('Save Medication Schedule', 'I-Save ang Iskedyul ng Gamot') }}
                     </button>
                 </div>
             </div>
@@ -977,14 +480,14 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editScheduleModalLabel">
-                        <i class="bi bi-calendar-check"></i> Edit Medication Schedule
+                        <i class="bi bi-calendar-check"></i> {{ T::translate('Edit Medication Schedule', 'I-Edit ang Iskedyul ng Gamot') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Error Alert for Validation -->
                     <div id="editModalErrors" class="alert alert-danger" style="{{ $errors->any() && session('show_edit_modal') ? '' : 'display: none;' }}">
-                        <strong>Please correct the following errors:</strong>
+                        <strong>{{ T::translate('Please correct the following:', 'Maaring itama ang sumusunod:') }}</strong>
                         <ul>
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -1000,12 +503,12 @@
                         <!-- Beneficiary Selection -->
                         <div class="form-group">
                             <label for="editBeneficiarySelect" class="form-label">
-                                <i class="bi bi-person-fill"></i> Beneficiary
+                                <i class="bi bi-person-fill"></i> {{ T::translate('Beneficiary', 'Benepisyaryo') }}
                             </label>
                             <div class="beneficiary-select-container">
                                 <div class="select-container">
                                     <select class="form-select" id="editBeneficiarySelect" name="beneficiary_id" required>
-                                        <option value="" disabled>Select a beneficiary</option>
+                                        <option value="" disabled>{{ T::translate('Select a beneficiary', 'Pumili ng Benepisyaryo') }}</option>
                                         @foreach($beneficiaries as $beneficiary)
                                             <option value="{{ $beneficiary['id'] }}" 
                                                 data-allergies="{{ $beneficiary['allergies'] }}"
@@ -1023,29 +526,29 @@
                         <div class="alert alert-warning d-flex align-items-center" role="alert" id="editAllergiesAlert" style="display: none !important;">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
                             <div>
-                                <strong>Allergies:</strong> <span id="editAllergiesContent">None on record</span>
+                                <strong>{{ T::translate('Allergies:', 'Alerhiya:') }}</strong> <span id="editAllergiesContent">{{ T::translate('None on record', 'Wala sa record') }}</span>
                             </div>
                         </div>
                         
                         <!-- Medication Details -->
                         <hr>
-                        <h6 class="fw-bold mb-3">Medication Details</h6>
+                        <h6 class="fw-bold mb-3">{{ T::translate('Medication Details', 'Detalye ng Gamot') }}</h6>
                         
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group">
                                     <label for="editMedicationName" class="form-label">
-                                        <i class="bi bi-capsule"></i> Medication Name
+                                        <i class="bi bi-capsule"></i> {{ T::translate('Medication Name', 'Pangalan ng Gamot') }}
                                     </label>
-                                    <input type="text" class="form-control" id="editMedicationName" name="medication_name" placeholder="Enter medication name" required>
+                                    <input type="text" class="form-control" id="editMedicationName" name="medication_name" placeholder="{{ T::translate('Enter medication name', 'Ilagay ang pangalan ng gamot') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="editDosage" class="form-label">
-                                        <i class="bi bi-diagram-3"></i> Dosage
+                                        <i class="bi bi-diagram-3"></i> {{ T::translate('Dosage', 'Dosis') }}
                                     </label>
-                                    <input type="text" class="form-control" id="editDosage" name="dosage" placeholder="e.g., 500mg" required>
+                                    <input type="text" class="form-control" id="editDosage" name="dosage" placeholder="{{ T::translate('e.g., 500mg', 'hal., 500mg') }}" required>
                                 </div>
                             </div>
                         </div>
@@ -1054,19 +557,19 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="editMedicationType" class="form-label">
-                                        <i class="bi bi-archive"></i> Medication Type
+                                        <i class="bi bi-archive"></i> {{ T::translate('Medication Type', 'Uri ng Gamot') }}
                                     </label>
                                     <div class="select-container">
                                         <select class="form-select" id="editMedicationType" name="medication_type" required>
-                                            <option value="" disabled>Select medication type</option>
-                                            <option value="tablet">Tablet</option>
-                                            <option value="capsule">Capsule</option>
-                                            <option value="liquid">Liquid</option>
-                                            <option value="injection">Injection</option>
-                                            <option value="inhaler">Inhaler</option>
-                                            <option value="topical">Topical</option>
-                                            <option value="drops">Drops</option>
-                                            <option value="other">Other</option>
+                                            <option value="" disabled>{{ T::translate('Select medication type', 'Pumili ng Uri ng Gamot') }}</option>
+                                            <option value="tablet">{{ T::translate('Tablet', 'Tableta') }}</option>
+                                            <option value="capsule">{{ T::translate('Capsule', 'Kapsula') }}</option>
+                                            <option value="liquid">{{ T::translate('Liquid', 'Likido') }}</option>
+                                            <option value="injection">{{ T::translate('Injection', 'Iniksyon') }}</option>
+                                            <option value="inhaler">{{ T::translate('Inhaler', 'Inhaler') }}</option>
+                                            <option value="topical">{{ T::translate('Topical', 'Topikal') }}</option>
+                                            <option value="drops">{{ T::translate('Drops', 'Patak') }}</option>
+                                            <option value="other">{{ T::translate('Other', 'Iba pa') }}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1078,9 +581,9 @@
                                     </label>
                                     <div class="select-container">
                                         <select class="form-select" id="editStatus" name="status" required>
-                                            <option value="active">Active</option>
-                                            <option value="paused">Paused</option>
-                                            <option value="completed">Completed</option>
+                                            <option value="active">{{ T::translate('Active', 'Aktibo') }}</option>
+                                            <option value="paused">{{ T::translate('Paused', 'Nakahinto') }}</option>
+                                            <option value="completed">{{ T::translate('Completed', 'Natapos') }}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1089,18 +592,18 @@
                         
                         <!-- Schedule Times -->
                         <hr>
-                        <h6 class="fw-bold mb-3">Schedule Times</h6>
+                        <h6 class="fw-bold mb-3">{{ T::translate('Schedule Times', 'Mga Oras ng Iskedyul') }}</h6>
                         
                         <div class="time-group">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="editMorningSwitch" name="morning_time">
-                                <label class="form-check-label" for="editMorningSwitch">Morning</label>
+                                <label class="form-check-label" for="editMorningSwitch">{{ T::translate('Morning', 'Umaga') }}</label>
                             </div>
                             <input type="time" class="form-control time-input" id="editMorningTime" name="morning_time_value" value="08:00">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="editMorningWithFood" name="with_food_morning">
                                 <label class="form-check-label" for="editMorningWithFood">
-                                    With food
+                                    {{ T::translate('With food', 'May Pagkain') }}
                                 </label>
                             </div>
                         </div>
@@ -1108,13 +611,13 @@
                         <div class="time-group">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="editNoonSwitch" name="noon_time">
-                                <label class="form-check-label" for="editNoonSwitch">Afternoon</label>
+                                <label class="form-check-label" for="editNoonSwitch">{{ T::translate('Afternoon', 'Hapon') }}</label>
                             </div>
                             <input type="time" class="form-control time-input" id="editNoonTime" name="noon_time_value" value="13:00">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="editNoonWithFood" name="with_food_noon">
                                 <label class="form-check-label" for="editNoonWithFood">
-                                    With food
+                                    {{ T::translate('With food', 'May Pagkain') }}
                                 </label>
                             </div>
                         </div>
@@ -1122,13 +625,13 @@
                         <div class="time-group">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="editEveningSwitch" name="evening_time">
-                                <label class="form-check-label" for="editEveningSwitch">Evening</label>
+                                <label class="form-check-label" for="editEveningSwitch">{{ T::translate('Evening', 'Gabi') }}</label>
                             </div>
                             <input type="time" class="form-control time-input" id="editEveningTime" name="evening_time_value" value="18:00">
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="editEveningWithFood" name="with_food_evening">
                                 <label class="form-check-label" for="editEveningWithFood">
-                                    With food
+                                    {{ T::translate('With food', 'May Pagkain') }}
                                 </label>
                             </div>
                         </div>
@@ -1142,7 +645,7 @@
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" value="1" id="editNightWithFood" name="with_food_night">
                                 <label class="form-check-label" for="editNightWithFood">
-                                    With food
+                                    {{ T::translate('With food', 'May Pagkain') }}
                                 </label>
                             </div>
                         </div>
@@ -1150,20 +653,20 @@
                         <div class="time-group">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" id="editAsNeededSwitch" name="as_needed" value="1">
-                                <label class="form-check-label" for="editAsNeededSwitch">As needed (PRN)</label>
+                                <label class="form-check-label" for="editAsNeededSwitch">{{ T::translate('As needed (PRN)', 'Kung Kinakailangan (PRN)') }}</label>
                             </div>
                             <div class="text-muted ms-auto" style="font-size: 0.85rem;">
-                                <i class="bi bi-info-circle"></i> No fixed time
+                                <i class="bi bi-info-circle"></i> {{ T::translate('No fixed time', 'Walang takdang oras') }}
                             </div>
                         </div>
                         
                         <!-- Additional Instructions -->
                         <div class="form-group mt-3">
                             <label for="editInstructions" class="form-label">
-                                <i class="bi bi-journal-text"></i> Special Instructions
+                                <i class="bi bi-journal-text"></i> {{ T::translate('Special Instructions', 'Espesyal na Tagubilin') }}
                             </label>
                             <textarea class="form-control" id="editInstructions" name="special_instructions" rows="3" 
-                                placeholder="Enter any special instructions for administration..."></textarea>
+                                placeholder="{{ T::translate('Enter any special instructions for administration...', 'Maglagay ng anumang espesyal na tagubilin para sa pangangasiwa...') }}"></textarea>
                         </div>
                         
                         <!-- Duration -->
@@ -1171,7 +674,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="editStartDate" class="form-label">
-                                        <i class="bi bi-calendar-check"></i> Start Date
+                                        <i class="bi bi-calendar-check"></i> {{ T::translate('Start Date', 'Petsa ng Simula') }}
                                     </label>
                                     <input type="date" class="form-control" id="editStartDate" name="start_date" required>
                                 </div>
@@ -1179,7 +682,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="editEndDate" class="form-label">
-                                        <i class="bi bi-calendar-x"></i> End Date (Optional)
+                                        <i class="bi bi-calendar-x"></i> {{ T::translate('End Date (Optional)', 'Petsa ng Pagtatapos (Opsyonal)') }}
                                     </label>
                                     <input type="date" class="form-control" id="editEndDate" name="end_date">
                                 </div>
@@ -1188,9 +691,9 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'Kanselahin') }}</button>
                     <button type="submit" form="editScheduleForm" class="btn btn-primary" id="updateScheduleBtn">
-                        <i class="bi bi-check-lg me-1"></i> Update Medication Schedule
+                        <i class="bi bi-check-lg me-1"></i> {{ T::translate('Update Medication Schedule', 'I-update ang Iskedyul ng Gamot') }}
                     </button>
                 </div>
             </div>
@@ -1203,13 +706,13 @@
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title" id="deleteMedicationModalLabel">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ T::translate('Confirm Deletion', 'Kumpirmahin ang Pagtanggal') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div id="deleteModalErrors" class="alert alert-danger" style="display: none;">
-                        <strong>Please correct the following errors:</strong>
+                        <strong>{{ T::translate('Please correct the following:', 'Maaring itama ang sumusunod:') }}</strong>
                         <ul></ul>
                     </div>
                     
@@ -1218,27 +721,27 @@
                         <input type="hidden" name="medication_id" id="delete_medication_id">
                         
                         <div class="medication-info-display mb-3 p-3 border rounded bg-light">
-                            <h6 class="mb-2">Medication details:</h6>
-                            <div><strong>Beneficiary:</strong> <span id="delete_beneficiary_name"></span></div>
-                            <div><strong>Medication:</strong> <span id="delete_medication_name"></span></div>
-                            <div><strong>Dosage:</strong> <span id="delete_medication_dosage"></span></div>
+                            <h6 class="mb-2">{{ T::translate('Medication details:', 'Detalye ng gamot:') }}</h6>
+                            <div><strong>{{ T::translate('Beneficiary:', 'Benepisyaryo:') }}</strong> <span id="delete_beneficiary_name"></span></div>
+                            <div><strong>{{ T::translate('Medication:', 'Gamot:') }}</strong> <span id="delete_medication_name"></span></div>
+                            <div><strong>{{ T::translate('Dosage:', 'Dosis:') }}</strong> <span id="delete_medication_dosage"></span></div>
                         </div>
                         
                         <div class="alert alert-warning">
                             <i class="bi bi-lightbulb-fill me-2"></i>
-                            <strong>Consider an alternative:</strong> If the medication course is simply complete, you can 
-                            <a href="#" id="editInsteadLink" class="alert-link">edit the schedule</a> and change its status to "Completed" instead of deleting it.
+                            <strong>{{ T::translate('Consider an alternative:', 'Isipin ang alternatibo:') }}</strong> {{ T::translate('If the medication course is simply complete, you can ', 'Kung kumpleto lang ang kurso ng gamot, magagawa mo ') }}
+                            <a href="#" id="editInsteadLink" class="alert-link">{{ T::translate('edit the schedule', 'i-edit ang iskedyul') }}</a> {{ T::translate('and change its status to "Completed" instead of deleting it.', 'at baguhin ang status nito sa "Natapos" sa halip na tanggalin ito.') }}
                         </div>
                         
                         <div class="alert alert-danger">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <strong>Warning:</strong> This action cannot be undone. Deleting this medication schedule will permanently remove it from the system's records and from the beneficiary's view.
+                            <strong>{{ T::translate('Warning:', 'Babala:') }}</strong> {{ T::translate('This action cannot be undone. Deleting this medication schedule will permanently remove it from the system\'s records and from the beneficiary\'s view.', 'Ang aksyon na ito ay hindi maaaring i-undo. Ang pagtanggal sa iskedyul ng gamot na ito ay permanenteng mag-aalis nito sa mga talaan ng system at mula sa pananaw ng benepisyaryo.') }}
                         </div>
                         
-                        <p>Please enter your password to confirm deletion:</p>
+                        <p>{{ T::translate('Please enter your password to confirm deletion:', 'Maaring ilagay ang iyo\'ng password upang kumpirmahin ang pagtanggal:') }}</p>
                         
                         <div class="mb-3">
-                            <label for="confirmation_password" class="form-label">Your Password</label>
+                            <label for="confirmation_password" class="form-label">{{ T::translate('Your Password', 'Ang Iyo\'ng Password') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
                                 <input type="password" class="form-control" id="confirmation_password" name="password" required>
@@ -1246,20 +749,20 @@
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
-                            <div class="form-text">Enter your password to confirm this action</div>
+                            <div class="form-text">{{ T::translate('Enter your password to confirm this action', 'Ilagay ang iyo\'ng password upang kumpirmahin ang aksyon') }}</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="delete_reason" class="form-label">Reason for deletion <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="delete_reason" name="reason" rows="2" placeholder="Please provide a reason for deleting this medication schedule" required></textarea>
-                            <div class="form-text">This will be included in notifications sent to the beneficiary and family members</div>
+                            <label for="delete_reason" class="form-label">{{ T::translate('Reason for deletion', 'Dahilan sa Pagtanggal') }} <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="delete_reason" name="reason" rows="2" placeholder="{{ T::translate('Please provide a reason for deleting this medication schedule', 'Maaring magbigay nang dahilan sa pagtanggal ng iskedyul ng gamot na ito') }}" required></textarea>
+                            <div class="form-text">{{ T::translate('This will be included in notifications sent to the beneficiary and family members', 'Ito ay isasama sa mga abiso na ipinadala sa benepisyaryo at mga miyembro ng pamilya') }}</div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'Kanselahin') }}</button>
                     <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i> Delete Medication Schedule
+                        <i class="bi bi-trash me-1"></i> {{ T::translate('Delete Medication Schedule', 'Tanggalin ang Iskedyul ng Gamot') }}
                     </button>
                 </div>
             </div>
@@ -1347,7 +850,7 @@
             document.querySelector('[data-bs-target="#addScheduleModal"]').addEventListener('click', function() {
                 // First, clear any errors
                 document.getElementById('modalErrors').style.display = 'none';
-                document.getElementById('modalErrors').innerHTML = '<strong>Please correct the following errors:</strong>';
+                document.getElementById('modalErrors').innerHTML = '<strong>{{ T::translate('Please correct the following:', 'Maaring itama ang sumusunod:') }}</strong>';
                 
                 // Reset form to clear any values
                 const form = document.getElementById('addScheduleForm');
@@ -1412,7 +915,7 @@
             // Client-side validation for medication name and dosage
             document.getElementById('medicationName').addEventListener('input', function() {
                 if (this.value && !isNaN(this.value) && this.value.trim() !== '') {
-                    this.setCustomValidity('Medication name cannot be purely numeric');
+                    this.setCustomValidity('{{ T::translate('Medication name cannot be purely numeric', 'Ang pangalan ng gamot ay hindi maaaring puro numero') }}');
                 } else {
                     this.setCustomValidity('');
                 }
@@ -1420,7 +923,7 @@
 
             document.getElementById('dosage').addEventListener('input', function() {
                 if (this.value && !isNaN(this.value) && this.value.trim() !== '') {
-                    this.setCustomValidity('Dosage must include units (e.g., 500mg, 10ml)');
+                    this.setCustomValidity('{{ T::translate('Dosage must include units (e.g., 500mg, 10ml)', 'Ang dosis ay dapat maglaman ng mga unit (hal., 500mg, 10ml)') }}');
                 } else {
                     this.setCustomValidity('');
                 }
@@ -1589,7 +1092,7 @@
                     let errorExists = false;
                     const existingErrors = errorList.querySelectorAll('li');
                     existingErrors.forEach(item => {
-                        if (item.textContent.includes('Please select at least one schedule time')) {
+                        if (item.textContent.includes('{{ T::translate('Please select at least one schedule time', 'Maaring pumimli ng kahit isang oras ng iskedyul') }}')) {
                             errorExists = true;
                         }
                     });
@@ -1597,7 +1100,7 @@
                     // Add the error if it doesn't exist
                     if (!errorExists) {
                         const errorItem = document.createElement('li');
-                        errorItem.textContent = 'Please select at least one schedule time or "As Needed".';
+                        errorItem.textContent = '{{ T::translate('Please select at least one schedule time or "As Needed".', 'Maaring pumili ng kahit isang oras ng iskedyul o "Kung Kinakailangan"') }}';
                         errorList.appendChild(errorItem);
                     }
                     
@@ -1681,7 +1184,7 @@
                     })
                     .catch(error => {
                         console.error('Error fetching medication schedule:', error);
-                        alert('Failed to load medication schedule data. Please try again.');
+                        alert('{{ T::translate('Failed to load medication schedule data. Please try again.', 'Nabigong i-load ang datos ng iskedyul ng gamot. Pakisubukan muli.') }}');
                     });
             }
             
@@ -1902,7 +1405,7 @@
                     errorList.innerHTML = '';
                     
                     const errorItem = document.createElement('li');
-                    errorItem.textContent = 'No changes were made to the medication schedule.';
+                    errorItem.textContent = '{{ T::translate('No changes were made to the medication schedule.', 'Walang pagbabago na ginawa sa iskedyul ng gamot.') }}';
                     errorList.appendChild(errorItem);
                     
                     return false;
@@ -1925,7 +1428,7 @@
                     errorList.innerHTML = '';
                     
                     const errorItem = document.createElement('li');
-                    errorItem.textContent = 'The medication name cannot be purely numeric.';
+                    errorItem.textContent = '{{ T::translate('The medication name cannot be purely numeric.', 'Ang pangalan ng gamot ay hindi maaaring puro numero.') }}';
                     errorList.appendChild(errorItem);
                     return false;
                 }
@@ -1947,7 +1450,7 @@
                     errorList.innerHTML = '';
                     
                     const errorItem = document.createElement('li');
-                    errorItem.textContent = 'The dosage must include units (e.g., 500mg, 10ml).';
+                    errorItem.textContent = '{{ T::translate('The dosage must include units (e.g., 500mg, 10ml).', 'Ang dosis ay dapat maglaman ng mga unit (hal., 500mg, 10ml).') }}';
                     errorList.appendChild(errorItem);
                     return false;
                 }
@@ -1975,7 +1478,7 @@
                     errorList.innerHTML = '';
                     
                     const errorItem = document.createElement('li');
-                    errorItem.textContent = 'Please select at least one schedule time or "As Needed".';
+                    errorItem.textContent = '{{ T::translate('Please select at least one schedule time or "As Needed".', 'Maaring pumili ng kahit isang oras ng iskedyul o "Kung Kinakailangan".') }}';
                     errorList.appendChild(errorItem);
                     
                     return false;
@@ -2086,7 +1589,7 @@
                 // Basic validation
                 if (!password) {
                     errorDisplay.style.display = '';
-                    errorDisplay.querySelector('ul').innerHTML = '<li>Password is required to confirm deletion.</li>';
+                    errorDisplay.querySelector('ul').innerHTML = '<li>{{ T::translate('Password is required to confirm deletion.', 'Password ay kinakailangan upang kumpirmahin ang pagtanggal.') }}</li>';
                     return;
                 }
 
@@ -2094,7 +1597,7 @@
                 if (!reason) {
                     hasErrors = true;
                     errorDisplay.style.display = '';
-                    errorDisplay.querySelector('ul').innerHTML += '<li>Please provide a reason for deletion.</li>';
+                    errorDisplay.querySelector('ul').innerHTML += '<li>{{ T::translate('Please provide a reason for deletion.', 'Maaring magbigay nang dahilan sa pagtanggal.') }}</li>';
                 }
 
                 if (hasErrors) {
@@ -2118,13 +1621,13 @@
                     } else {
                         // Password is invalid, show error
                         errorDisplay.style.display = '';
-                        errorDisplay.querySelector('ul').innerHTML = '<li>The password you entered is incorrect.</li>';
+                        errorDisplay.querySelector('ul').innerHTML = '<li>{{ T::translate('The password you entered is incorrect.', 'Ang password na iyong inilagay ay hindi tama.') }}</li>';
                     }
                 })
                 .catch(error => {
                     console.error('Error validating password:', error);
                     errorDisplay.style.display = '';
-                    errorDisplay.querySelector('ul').innerHTML = '<li>An error occurred while validating your password. Please try again.</li>';
+                    errorDisplay.querySelector('ul').innerHTML = '<li>{{ T::translate('An error occurred while validating your password. Please try again.', 'May naganap na error habang pinapatunayan ang iyong password. Pakisubukan muli.') }}</li>';
                 });
             });
         });

@@ -7,290 +7,23 @@
     <title>Emergency Notices & Service Requests</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/emergencyAndService.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        :root {
-            --base-font-size: clamp(0.875rem, 2.5vw, 1rem);
-            --heading-font-size: clamp(1.25rem, 3.5vw, 1.5rem);
-            --section-title-size: clamp(1rem, 2.8vw, 1.25rem);
-            --card-title-size: clamp(1rem, 2.5vw, 1.125rem);
-            --small-text-size: clamp(0.75rem, 2vw, 0.875rem);
-            --tab-font-size: clamp(0.875rem, 2vw, 1.125rem);
-        }
-
-        body {
-            font-size: var(--base-font-size);
-        }
-
-        .notification-card {
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-        .notification-card:hover {
-            transform: translateY(-3px);
-        }
-        .emergency-card {
-            border-left: 5px solid #dc3545;
-        }
-        .request-card {
-            border-left: 5px solid #0d6efd;
-        }
-        .notification-time {
-            font-size: var(--small-text-size);
-            color: #6c757d;
-        }
-        .section-title {
-            border-bottom: 2px solid #dee2e6;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            font-size: var(--section-title-size);
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-        }
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .history-btn {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            font-size: var(--small-text-size);
-        }
-        .history-btn:hover {
-            background-color: #5a6268;
-        }
-        .history-btn.active {
-            background-color: #0d6efd;
-        }
-        .tab-content {
-            padding: 20px 0;
-        }
-        .nav-tabs {
-            border-bottom: 2px solid #dee2e6;
-            justify-content: center;
-        }
-        .nav-tabs .nav-link {
-            font-size: var(--tab-font-size);
-            padding: 10px 20px;
-            color: #495057;
-            border: none;
-            margin: 0 5px;
-            border-radius: 5px 5px 0 0;
-            transition: all 0.3s;
-        }
-        .nav-tabs .nav-link:hover {
-            color: #0d6efd;
-            background-color: #f8f9fa;
-            border-color: transparent;
-        }
-        .nav-tabs .nav-link.active {
-            font-weight: 600;
-            color: #0d6efd;
-            background-color: white;
-            border-bottom: 3px solid #0d6efd;
-        }
-        .main-content {
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        .card-title {
-            font-size: var(--card-title-size);
-            margin-bottom: 0.5rem;
-        }
-        .btn-sm {
-            font-size: var(--small-text-size);
-            padding: 0.25rem 0.5rem;
-        }
-        .info-item {
-            margin-bottom: 0.5rem;
-        }
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-        }
-
-        /* Mobile tabs for main content */
-        @media (max-width: 767.98px) {
-            .desktop-view {
-                display: none;
-            }
-            .mobile-tabs {
-                display: block;
-            }
-            .nav-tabs .nav-link {
-                padding: 8px 12px;
-            }
-        }
-        @media (min-width: 768px) {
-            .mobile-tabs {
-                display: none;
-            }
-            .desktop-view {
-                display: flex;
-            }
-            .nav-tabs .nav-link {
-                padding: 12px 24px;
-            }
-        }
-
-        /* Custom styles */
-        .home-content {
-            background-color: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-        }
-        .notification-card {
-            transition: all 0.2s ease;
-            border-left-width: 4px;
-            border: 1px solid #dee2e6;
-            margin-bottom: 1rem;
-        }
-        .notification-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
-        }
-        .emergency-card {
-            border-left-color: #dc3545;
-        }
-        .request-card {
-            border-left-color: #0d6efd;
-        }
-        .pending-card {
-            border-left-color: #ffc107;
-        }
-        .info-label {
-            min-width: 120px;
-            color: #6c757d;
-        }
-        .nav-tabs .nav-link {
-            font-size: clamp(0.875rem, 1.2vw, 1rem);
-            padding: 0.75rem 1rem;
-        }
-        .section-header {
-            font-size: clamp(0.875rem, 1.2vw, 1rem);
-            font-weight: 600;
-            padding: 1rem 1.25rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .card-header-custom {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-        /* Timeline styling */
-        .timeline-indicator {
-            position: relative;
-            width: 20px;
-        }
-        .timeline-badge {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            position: absolute;
-            top: 5px;
-            left: 0;
-        }
-        .timeline-content {
-            border-left: 1px solid #dee2e6;
-            padding-left: 15px;
-            flex: 1;
-        }
-        .timeline-item:last-child .timeline-content {
-            border-left-color: transparent;
-        }
-        @media (max-width: 991.98px) {
-            .main-content-column {
-                order: 1;
-            }
-            .pending-column {
-                order: 2;
-                margin-top: 1.5rem;
-            }
-        }
-        @media (max-width: 575.98px) {
-            .info-label {
-                min-width: 100%;
-                margin-bottom: 0.25rem;
-            }
-            .nav-tabs .nav-link {
-                padding: 0.5rem 0.75rem;
-            }
-        }
-
-        .card-footer-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 1rem;
-            border-top: 1px solid rgba(0,0,0,0.05);
-            padding-top: 0.75rem;
-        }
-        
-        .card-footer-actions .btn-group {
-            white-space: nowrap;
-        }
-        
-        .card-body {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .card-content {
-            flex-grow: 1;
-        }
-
-        .clickable-card {
-            cursor: pointer;
-        }
-
-        /* Prevent text selection when clicking */
-        .clickable-card:not(.btn) {
-            user-select: none;
-        }
-
-        /* Hover effect */
-        .clickable-card:hover {
-            background-color: rgba(0, 0, 0, 0.01);
-        }
-
-        #successAlert {
-            margin: 0 15px 15px 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #28a745;
-        }
-
-        #successAlert .btn-close:focus {
-            box-shadow: none;
-            outline: none;
-        }
-    </style>
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="page-header">
-            <div class="text-left">EMERGENCY AND SERVICE REQUEST</div>
+            <div class="text-left">{{ T::translate('EMERGENCY AND SERVICE REQUEST', 'MGA EMERGENCY AT PAKIUSAP NA SERBISYO')}}</div>
             <a href="{{ route('care-manager.emergency.request.viewHistory') }}"></a>
                 <button class="history-btn" id="historyToggle" onclick="window.location.href='/care-manager/emergency-request/view-history'">
-                    <i class="bi bi-clock-history me-1"></i> View History
+                    <i class="bi bi-clock-history me-1"></i> {{ T::translate('View History', 'Tingnan ang Kasaysayan')}}
                 </button>
             </a>
         </div>
@@ -298,7 +31,7 @@
         <!-- Add this success alert container -->
         <div id="successAlert" class="alert alert-success alert-dismissible fade show d-none" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
-            <span id="successAlertMessage">Action completed successfully!</span>
+            <span id="successAlertMessage">{{ T::translate('Action completed successfully!', 'Matagumpay na nakumpleto ang aksyon!')}}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         
@@ -311,12 +44,12 @@
                                 <ul class="nav nav-tabs px-3" id="requestTypeTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="emergency-tab" data-bs-toggle="tab" data-bs-target="#emergency" type="button" role="tab">
-                                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> Emergency
+                                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> {{ T::translate('Emergency', 'Mga Emergency')}}
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button" role="tab">
-                                            <i class="bi bi-hand-thumbs-up-fill text-primary me-2"></i> Service Request
+                                            <i class="bi bi-hand-thumbs-up-fill text-primary me-2"></i> {{ T::translate('Service Request', 'Pakiusap na Serbisyo')}}
                                         </button>
                                     </li>
                                 </ul>
@@ -329,11 +62,11 @@
                                                 <div class="card-body">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <h5 class="card-title fw-bold mb-0 text-dark">{{ $notice->beneficiary->first_name }} {{ $notice->beneficiary->last_name }}</h5>
-                                                        <span class="badge bg-danger bg-opacity-10 text-danger">New</span>
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger">{{ T::translate('New', 'Bago')}}</span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Address:</span>
+                                                        <span class="info-label">{{ T::translate('Address:', 'Tirahan')}}</span>
                                                         <span>{{ $notice->beneficiary->street_address }} ({{ $notice->beneficiary->barangay->barangay_name }}, {{ $notice->beneficiary->municipality->municipality_name }})</span>
                                                     </div>
                                                     
@@ -343,17 +76,17 @@
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Emergency Contact: </span>
+                                                        <span class="info-label">{{ T::translate('Emergency Contact:', 'Emergency Contact:')}} </span>
                                                         <span class="ms-2">{{ $notice->beneficiary->emergency_contact_name }} ({{ $notice->beneficiary->emergency_contact_relation }}) {{ $notice->beneficiary->emergency_contact_mobile }}</span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Emergency Type: </span>
+                                                        <span class="info-label">{{ T::translate('Emergency Type:', 'Uri ng Emergency')}} </span>
                                                         <span class="ms-2"><span class="badge" style="background-color: {{ $notice->emergencyType->color_code }}">{{ $notice->emergencyType->name }}</span></span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-3">
-                                                        <span class="info-label">Message: </span>
+                                                        <span class="info-label">{{ T::translate('Message:', 'Mensahe')}} </span>
                                                         <span>{{ Str::limit($notice->message, 100) }}</span>
                                                     </div>
                                                     
@@ -361,10 +94,10 @@
                                                         <small class="text-muted">{{ \Carbon\Carbon::parse($notice->created_at)->diffForHumans() }}</small>
                                                         <div class="btn-group">
                                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewEmergencyDetails({{ $notice->notice_id }})">
-                                                                <i class="bi bi-eye me-1"></i> View
+                                                                <i class="bi bi-eye me-1"></i> {{ T::translate('View', 'Tingnan')}}
                                                             </button>
                                                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="openRespondEmergencyModal({{ $notice->notice_id }})">
-                                                                <i class="bi bi-reply me-1"></i> Respond
+                                                                <i class="bi bi-reply me-1"></i> {{ T::translate('Respond', 'Tumugon')}}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -373,8 +106,8 @@
                                         @empty
                                             <div class="empty-state">
                                                 <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
-                                                <h5 class="mt-3">No New Emergency Notices</h5>
-                                                <p>There are no new emergency notices at the moment.</p>
+                                                <h5 class="mt-3">{{ T::translate('No New Emergency Notices', 'Walang mga bagong emergency notice')}}</h5>
+                                                <p>{{ T::translate('There are no new emergency notices at the moment.', 'Walang bagong emergency notice sa ngayon.')}}</p>
                                             </div>
                                         @endforelse
                                     </div>
@@ -386,26 +119,26 @@
                                                 <div class="card-body">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <h5 class="card-title fw-bold mb-0 text-dark">{{ $request->beneficiary->first_name }} {{ $request->beneficiary->last_name }}</h5>
-                                                        <span class="badge bg-primary bg-opacity-10 text-primary">New</span>
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ T::translate('New', 'Bago')}}</span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Service Type:</span>
+                                                        <span class="info-label">{{ T::translate('Service Type:', 'Uri ng Serbisyo:')}}</span>
                                                         <span><span class="badge" style="background-color: {{ $request->serviceType->color_code }}">{{ $request->serviceType->name }}</span></span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Requested Date:</span>
+                                                        <span class="info-label">{{ T::translate('Requested Date:', 'Petsa ng Pakiusap:')}}</span>
                                                         <span>{{ \Carbon\Carbon::parse($request->service_date)->format('M d, Y') }}</span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Requested Time:</span>
+                                                        <span class="info-label">{{ T::translate('Requested Time:', 'Oras ng Pakiusap:')}}</span>
                                                         <span>{{ $request->service_time ? \Carbon\Carbon::parse($request->service_time)->format('h:i A') : 'Flexible' }}</span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-3">
-                                                        <span class="info-label">Message:</span>
+                                                        <span class="info-label">{{ T::translate('Message:', 'Mensahe:')}}</span>
                                                         <span>{{ Str::limit($request->message, 100) }}</span>
                                                     </div>
                                                     
@@ -413,10 +146,10 @@
                                                         <small class="text-muted">{{ \Carbon\Carbon::parse($request->created_at)->diffForHumans() }}</small>
                                                         <div class="btn-group">
                                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewServiceRequestDetails({{ $request->service_request_id }})">
-                                                                <i class="bi bi-eye me-1"></i> View
+                                                                <i class="bi bi-eye me-1"></i> {{ T::translate('View', 'Tingnan')}}
                                                             </button>
                                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openHandleServiceRequestModal({{ $request->service_request_id }})">
-                                                                <i class="bi bi-reply me-1"></i> Handle
+                                                                <i class="bi bi-reply me-1"></i> {{ T::translate('Handle', 'I-Handle')}}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -425,8 +158,8 @@
                                         @empty
                                             <div class="empty-state">
                                                 <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
-                                                <h5 class="mt-3">No New Service Requests</h5>
-                                                <p>There are no new service requests at the moment.</p>
+                                                <h5 class="mt-3">{{ T::translate('No New Service Requests', 'Walang mga bagong Pakisap na Serbisyo')}}</h5>
+                                                <p>{{ T::translate('There are no new service requests at the moment.', 'Walang mga bagong pakiusap na serbisyo sa ngayon.')}}</p>
                                             </div>
                                         @endforelse
                                     </div>
@@ -440,7 +173,7 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header-custom">
                                 <h5 class="card-title mb-0 section-header text-warning">
-                                    <i class="bi bi-hourglass-split me-2"></i>Pending/In Progress
+                                    <i class="bi bi-hourglass-split me-2"></i>{{ T::translate('Pending/In Progress', 'Nakabinbin/Isinasagawa')}}
                                 </h5>
                             </div>
                             <div class="card-body p-3">
@@ -453,32 +186,32 @@
                                                 <div class="card-content">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <h6 class="fw-bold mb-0 text-dark">{{ $notice->beneficiary->first_name }} {{ $notice->beneficiary->last_name }}</h6>
-                                                        <span class="badge bg-info bg-opacity-10 text-info">In Progress</span>
+                                                        <span class="badge bg-info bg-opacity-10 text-info">{{ T::translate('In Progress', 'Isinasagawa')}}</span>
                                                     </div>
                                                     
                                                     @if($notice->action_taken_by)
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Responded:</span>
+                                                        <span class="info-label">{{ T::translate('Responded:', 'Tinugunan:')}}</span>
                                                         <span>{{ $notice->actionTakenBy ? $notice->actionTakenBy->first_name . ' ' . $notice->actionTakenBy->last_name : 'Unknown' }}</span>
                                                     </div>
                                                     @endif
                                                     
                                                     <div class="d-flex flex-wrap mb-3">
-                                                        <span class="info-label">Type:</span>
+                                                        <span class="info-label">{{ T::translate('Type:', 'Uri:')}}</span>
                                                         <span><span class="badge" style="background-color: {{ $notice->emergencyType->color_code }}">{{ $notice->emergencyType->name }}</span></span>
                                                     </div>
                                                 </div>
                                                 
                                                 <div class="card-footer-actions">
                                                     <small class="text-muted">
-                                                        <i class="bi bi-clock me-1"></i> Started {{ \Carbon\Carbon::parse($notice->action_taken_at)->diffForHumans() }}
+                                                        <i class="bi bi-clock me-1"></i> {{ T::translate('Started', 'Sinimulan')}} {{ \Carbon\Carbon::parse($notice->action_taken_at)->diffForHumans() }}
                                                     </small>
                                                     <div class="btn-group" onclick="event.stopPropagation()">
                                                         <button class="btn btn-sm btn-outline-primary" onclick="openRespondEmergencyModal({{ $notice->notice_id }})">
-                                                            <i class="bi bi-pencil-square me-1"></i> Update
+                                                            <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Update', 'I-update')}}
                                                         </button>
                                                         <button class="btn btn-sm btn-outline-success" onclick="openResolveEmergencyModal({{ $notice->notice_id }})">
-                                                            <i class="bi bi-check-circle me-1"></i> Resolve
+                                                            <i class="bi bi-check-circle me-1"></i> {{ T::translate('Resolve', 'Lutasin')}}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -487,8 +220,8 @@
                                     @empty
                                         <div class="empty-state">
                                             <i class="bi bi-hourglass text-muted" style="font-size: 2rem;"></i>
-                                            <h6 class="mt-3">No Active Emergencies</h6>
-                                            <p class="small">No in-progress emergency notices at the moment.</p>
+                                            <h6 class="mt-3">{{ T::translate('No Active Emergencies', 'Walang Aktibong Emergencies.')}}</h6>
+                                            <p class="small">{{ T::translate('No in-progress emergency notices at the moment.', 'Walang isinasagawa na emergency notice sa ngayon.')}}</p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -501,7 +234,7 @@
                                                 <div class="card-content">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <h6 class="fw-bold mb-0 text-dark">{{ $request->beneficiary->first_name }} {{ $request->beneficiary->last_name }}</h6>
-                                                        <span class="badge bg-success bg-opacity-10 text-success">Approved</span>
+                                                        <span class="badge bg-success bg-opacity-10 text-success">{{ T::translate('Approved', 'Naaprubahan')}}</span>
                                                     </div>
 
                                                     <div class="d-flex flex-wrap mb-2">
@@ -509,12 +242,12 @@
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-1">
-                                                        <span class="info-label">Approved:</span>
+                                                        <span class="info-label">{{ T::translate('Approved:', 'Naaprubahan:')}}</span>
                                                         <span>{{ $request->actionTakenBy ? $request->actionTakenBy->first_name . ' ' . $request->actionTakenBy->last_name : 'Unknown' }}</span>
                                                     </div>
                                                     
                                                     <div class="d-flex flex-wrap mb-3">
-                                                        <span class="info-label">Assigned To:</span>
+                                                        <span class="info-label">{{ T::translate('Assigned To:', 'Itinalaga kay:')}}</span>
                                                         <span>{{ $request->careWorker ? $request->careWorker->first_name . ' ' . $request->careWorker->last_name : 'Not assigned' }}</span>
                                                     </div>
                                                 </div>
@@ -525,10 +258,10 @@
                                                     </small>
                                                     <div class="btn-group" onclick="event.stopPropagation()">
                                                         <button class="btn btn-sm btn-outline-primary" onclick="openHandleServiceRequestModal({{ $request->service_request_id }})">
-                                                            <i class="bi bi-pencil-square me-1"></i> Update
+                                                            <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Update', 'I-update')}}
                                                         </button>
                                                         <button class="btn btn-sm btn-outline-success" onclick="openCompleteServiceRequestModal({{ $request->service_request_id }})">
-                                                            <i class="bi bi-check-circle me-1"></i> Complete
+                                                            <i class="bi bi-check-circle me-1"></i> {{ T::translate('Complete', 'Natapos')}}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -537,8 +270,8 @@
                                     @empty
                                         <div class="empty-state">
                                             <i class="bi bi-hourglass text-muted" style="font-size: 2rem;"></i>
-                                            <h6 class="mt-3">No Active Service Requests</h6>
-                                            <p class="small">No approved service requests at the moment.</p>
+                                            <h6 class="mt-3">{{ T::translate('No Active Service Requests', 'Walang mga Aktibong Pakiusap na Serbisyo')}}</h6>
+                                            <p class="small">{{ T::translate('No approved service requests at the moment.', 'Walang naaprubahan na mga pakiusap na serbisyo sa ngayon.')}}</p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -555,7 +288,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
         <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="respondEmergencyModalLabel"><i class="bi bi-exclamation-triangle-fill"></i> Respond to Emergency</h5>
+            <h5 class="modal-title" id="respondEmergencyModalLabel"><i class="bi bi-exclamation-triangle-fill"></i> {{ T::translate('Respond to Emergency', 'Tumugon sa Emergency')}}</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -574,40 +307,40 @@
             </div>
             
             <div class="mb-3">
-                <label for="updateType" class="form-label">Response Type</label>
+                <label for="updateType" class="form-label">{{ T::translate('Response Type', 'Uri ng Tugon')}}</label>
                 <select class="form-select" id="updateType" name="update_type" required>
-                <option value="response">Emergency Response</option>
-                <option value="resolution">Resolve Emergency</option>
-                <option value="note">Add Note Only</option>
+                <option value="response">{{ T::translate('Emergency Response', 'Tugon na Emergency')}}</option>
+                <option value="resolution">{{ T::translate('Resolve Emergency', 'Lutasin ang Emergency')}}</option>
+                <option value="note">{{ T::translate('Add Note Only', 'Magdagdag lamang ng tala ')}}</option>
                 </select>
                  <small id="resolutionWarning" class="text-danger d-none mt-1">
-                <i class="bi bi-exclamation-circle"></i> Resolving will archive this emergency and move it to history.
+                <i class="bi bi-exclamation-circle"></i> {{ T::translate('Resolving will archive this emergency and move it to history.', 'Ang pagresolba ay mag-aarchive ng emergency na ito at ililipat ito sa kasaysayan.')}}
                 </small>
             </div>
 
             <div class="mb=3">
                 <small class="text-primary mt-1">
-                    <i class="bi bi-info-circle-fill"></i> Adding notes will only be visible to all COSE Staff Members and will not be seen by beneficiaries and their family members.
+                    <i class="bi bi-info-circle-fill"></i> {{ T::translate('Adding notes will only be visible to all COSE Staff Members and will not be seen by beneficiaries and their family members.', 'Ang pagdaragdag ng mga tala ay makikita lamang ng lahat ng mga Miyembro ng COSE Staff at hindi makikita ng mga benepisyaryo at kanilang mga miyembro ng pamilya.')}}
                 </small>
             </div>
             <br>
             
             <div class="mb-3">
-                <label for="responseMessage" class="form-label">Response Message</label>
+                <label for="responseMessage" class="form-label">{{ T::translate('Response Message', 'Tugon na Mensahe')}}</label>
                 <textarea class="form-control" id="responseMessage" name="message" rows="4" placeholder="Enter your response message" required></textarea>
             </div>
             
             <div class="password-confirmation d-none mb-3">
                 <div class="alert alert-warning">
-                <i class="bi bi-shield-lock"></i> This action requires password confirmation
+                <i class="bi bi-shield-lock"></i> {{ T::translate('This action requires password confirmation', 'Ang aksiyong ito ay nangangailangan ng kumpirmasyon ng password')}}
                 </div>
-                <label for="confirmPassword" class="form-label">Your Password</label>
-                <input type="password" class="form-control" id="confirmPassword" name="password" placeholder="Enter your password">
-                <div class="invalid-feedback">Incorrect password</div>
+                <label for="confirmPassword" class="form-label">{{ T::translate('Your Password', 'Iyong Password')}}</label>
+                <input type="password" class="form-control" id="confirmPassword" name="password" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password')}}">
+                <div class="invalid-feedback">{{ T::translate('Incorrect password', 'Mali ang password')}}</div>
             </div>
             
             <div class="previous-updates d-none mb-4">
-                <h6 class="border-bottom pb-2">Previous Updates</h6>
+                <h6 class="border-bottom pb-2">{{ T::translate('Previous Updates', 'Nakaraang mga Update')}}</h6>
                 <div id="updateHistoryContainer">
                 <!-- Previous updates will be loaded here -->
                 </div>
@@ -615,8 +348,8 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" id="submitEmergencyResponse">Submit Response</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+            <button type="button" class="btn btn-danger" id="submitEmergencyResponse">{{ T::translate('Submit Response', 'Isumite ang Tugon')}}</button>
         </div>
         </div>
     </div>
@@ -627,7 +360,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
         <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="handleServiceRequestModalLabel"><i class="bi bi-hand-thumbs-up"></i> Handle Service Request</h5>
+            <h5 class="modal-title" id="handleServiceRequestModalLabel"><i class="bi bi-hand-thumbs-up"></i> {{ T::translate('Handle Service Request', 'I-Handle ang Pakiusap na Serbisyo')}}</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -643,61 +376,61 @@
                 <div class="text-muted mb-2" id="requestDateTime">Loading...</div>
                 <div class="border-top pt-2 mt-2" id="requestMessage">Loading...</div>
                 <div class="mt-2">
-                    <strong>Requested Date:</strong> <span id="requestedServiceDate">Loading...</span>
+                    <strong>{{ T::translate('Requested Date:', 'Petsa ng Pakiusap:')}}</strong> <span id="requestedServiceDate">Loading...</span>
                 </div>
                 </div>
             </div>
             
             <div class="mb-3">
-                <label for="serviceUpdateType" class="form-label">Action</label>
+                <label for="serviceUpdateType" class="form-label">{{ T::translate('Action', 'Aksyon')}}</label>
                 <select class="form-select" id="serviceUpdateType" name="update_type" required>
-                <option value="approval">Approve Request</option>
-                <option value="rejection">Reject Request</option>
-                <option value="completion">Mark as Completed</option>
-                <option value="note">Add Note Only</option>
+                <option value="approval">{{ T::translate('Approve Request', 'Aprubahan ang Pakiusap')}}</option>
+                <option value="rejection">{{ T::translate('Reject Request', 'Tanggihan ang Pakiusap')}}</option>
+                <option value="completion">{{ T::translate('Mark as Completed', 'Markahan Bilang Nakumpleto')}}</option>
+                <option value="note">{{ T::translate('Add Note Only', 'Magdagdag lamang ng Tala')}}</option>
                 </select>
                 <small id="completionWarning" class="text-danger d-none mt-1">
-                    <i class="bi bi-exclamation-circle"></i> Completing will archive this service request and move it to history. Approve and process a request first before marking it complete, or reject it.
+                    <i class="bi bi-exclamation-circle"></i> {{ T::translate('Completing will archive this service request and move it to history. Approve and process a request first before marking it complete, or reject it.', 'Ang pagkumpleto ay mag-aarchive ng pakiusap na serbisyo at ililipat ito sa kasaysayan. Aprubahan at iproseso muna ang isang pakiusap bago markahan itong kumpleto, o tanggihan ito.')}}
                 </small>
                 <small id="rejectionWarning" class="text-danger d-none mt-1">
-                    <i class="bi bi-exclamation-circle"></i> Rejecting will archive this service request and move it to history.
+                    <i class="bi bi-exclamation-circle"></i> {{ T::translate('Rejecting will archive this service request and move it to history.', 'Ang pagtanggi ay mag-aarchive ng pakiusap na serbisyo at ililipat ito sa kasaysayan.')}}
                 </small>
                 <small id="approvalWarning" class="text-danger d-none mt-1">
-                    <i class="bi bi-exclamation-circle"></i> Cannot re-approve an already approved request.
+                    <i class="bi bi-exclamation-circle"></i> {{ T::translate('Cannot re-approve an already approved request.', 'Hindi maaaring muling aprubahan ang isang pakiusap na naaprubahan na.')}}
                 </small>
             </div>
 
             <div class="mb=3">
                 <small class="text-primary mt-1">
-                    <i class="bi bi-info-circle-fill"></i> Adding notes will only be visible to all COSE Staff Members and will not be seen by beneficiaries and their family members.
+                    <i class="bi bi-info-circle-fill"></i> {{ T::translate('Adding notes will only be visible to all COSE Staff Members and will not be seen by beneficiaries and their family members.', 'Ang pagdaragdag ng mga tala ay makikita lamang ng lahat ng mga Miyembro ng COSE Staff at hindi makikita ng mga benepisyaryo at kanilang mga miyembro ng pamilya.')}}
                 </small>
             </div>
             <br>
             
             <div class="mb-3 care-worker-options">
-                <label for="serviceCareWorkerId" class="form-label">Assign Care Worker</label>
+                <label for="serviceCareWorkerId" class="form-label">{{ T::translate('Assign Care Worker', 'Magtalaga ng Care Worker')}}</label>
                 <select class="form-select" id="serviceCareWorkerId" name="care_worker_id">
-                <option value="">-- Select Care Worker --</option>
+                <option value="">-- {{ T::translate('Select Care Worker', 'Pumili ng Care Worker')}} --</option>
                 <!-- Will be populated with care workers -->
                 </select>
             </div>
             
             <div class="mb-3">
-                <label for="serviceResponseMessage" class="form-label">Message</label>
+                <label for="serviceResponseMessage" class="form-label">{{ T::translate('Message', 'Mensahe')}}</label>
                 <textarea class="form-control" id="serviceResponseMessage" name="message" rows="4" placeholder="Enter your response message" required></textarea>
             </div>
             
             <div class="service-password-confirmation d-none mb-3">
                 <div class="alert alert-warning">
-                <i class="bi bi-shield-lock"></i> This action requires password confirmation
+                <i class="bi bi-shield-lock"></i> {{ T::translate('This action requires password confirmation', 'Ang aksiyong ito ay nangangailangan ng kumpirmasyon ng password')}}
                 </div>
-                <label for="serviceConfirmPassword" class="form-label">Your Password</label>
-                <input type="password" class="form-control" id="serviceConfirmPassword" name="password" placeholder="Enter your password">
-                <div class="invalid-feedback">Incorrect password</div>
+                <label for="serviceConfirmPassword" class="form-label">{{ T::translate('Your Password', 'Iyong Password')}}</label>
+                <input type="password" class="form-control" id="serviceConfirmPassword" name="password" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password')}}">
+                <div class="invalid-feedback">{{ T::translate('Incorrect password', 'Mali ang password')}}</div>
             </div>
             
             <div class="service-previous-updates d-none mb-4">
-                <h6 class="border-bottom pb-2">Previous Updates</h6>
+                <h6 class="border-bottom pb-2">{{ T::translate('Previous Updates', 'Nakaraang mga Update')}}</h6>
                 <div id="serviceUpdateHistoryContainer">
                 <!-- Previous updates will be loaded here -->
                 </div>
@@ -705,8 +438,8 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="submitServiceResponse">Submit</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela')}}</button>
+            <button type="button" class="btn btn-primary" id="submitServiceResponse">{{ T::translate('Submit', 'I-Sumite')}}</button>
         </div>
         </div>
     </div>
@@ -717,7 +450,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
         <div class="modal-header bg-secondary text-white">
-            <h5 class="modal-title" id="emergencyDetailsModalLabel"><i class="bi bi-info-circle"></i> Emergency Details</h5>
+            <h5 class="modal-title" id="emergencyDetailsModalLabel"><i class="bi bi-info-circle"></i> {{ T::translate('Emergency Details', 'Mga Detalye ng Emergency')}}</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -726,15 +459,15 @@
             </div>
             
             <div class="updates-history mt-4">
-            <h6 class="border-bottom pb-2">Updates History</h6>
+            <h6 class="border-bottom pb-2">{{ T::translate('Updates History', 'Kasaysayan ng mga Update')}}</h6>
             <div id="emergencyUpdatesTimeline">
                 <!-- Updates will be loaded here -->
             </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="respondToEmergencyBtn">Respond</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
+            <button type="button" class="btn btn-primary" id="respondToEmergencyBtn">{{ T::translate('Respond', 'Tumugon')}}</button>
         </div>
         </div>
     </div>
@@ -745,7 +478,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
         <div class="modal-header bg-secondary text-white">
-            <h5 class="modal-title" id="serviceRequestDetailsModalLabel"><i class="bi bi-info-circle"></i> Service Request Details</h5>
+            <h5 class="modal-title" id="serviceRequestDetailsModalLabel"><i class="bi bi-info-circle"></i> {{ T::translate('Service Request Details', 'Detalye ng mga Pakiusap na Serbisyo')}}</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -754,15 +487,15 @@
             </div>
             
             <div class="updates-history mt-4">
-            <h6 class="border-bottom pb-2">Updates History</h6>
+            <h6 class="border-bottom pb-2">{{ T::translate('Updates History', 'Kasaysayan ng mga Update')}}</h6>
             <div id="serviceUpdatesTimeline">
                 <!-- Updates will be loaded here -->
             </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="handleServiceRequestBtn">Respond</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
+            <button type="button" class="btn btn-primary" id="handleServiceRequestBtn">{{ T::translate('Respond', 'Tumugon')}}</button>
         </div>
         </div>
     </div>
@@ -804,7 +537,7 @@
         // ===== EMERGENCY NOTICE HANDLERS =====
         function viewEmergencyDetails(noticeId) {
             // Show loading state
-            $('#emergencyDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            $('#emergencyDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ T::translate('Loading details...', 'Naglo-load ng mga detalye...')}}</p></div>');
             
             // Open the modal
             $('#emergencyDetailsModal').modal('show');
@@ -827,14 +560,14 @@
                             $('#respondToEmergencyBtn').show();
                         } else {
                             // For care workers, show remind button instead
-                            $('#respondToEmergencyBtn').text('Send Reminder').removeClass('btn-primary').addClass('btn-info');
+                            $('#respondToEmergencyBtn').text('{{ T::translate('Send Reminder', 'Magpadala ng Paalala')}}').removeClass('btn-primary').addClass('btn-info');
                         }
                     } else {
-                        $('#emergencyDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                        $('#emergencyDetailsContent').html(`<div class="alert alert-danger">{{ T::translate('Error loading details:', 'Error sa pag-load ng mga detalye:')}} ${response.message}</div>`);
                     }
                 },
                 error: function() {
-                    $('#emergencyDetailsContent').html('<div class="alert alert-danger">Failed to load emergency details. Please try again.</div>');
+                    $('#emergencyDetailsContent').html('<div class="alert alert-danger">{{ T::translate('Failed to load emergency details. Please try again.', 'Nabigong i-load ang mga detalye ng emergency. Mangyaring subukan ulit.')}}</div>');
                 }
             });
         }
@@ -853,7 +586,7 @@
                         }
                     },
                     error: function() {
-                        alert('Failed to load emergency details. Please try again.');
+                        alert('{{ T::translate('Failed to load emergency details. Please try again.', 'Nabigong i-load ang mga detalye ng emergency. Mangyaring subukan ulit.')}}');
                     }
                 });
             } else if (currentEmergency) {
@@ -870,7 +603,7 @@
             
             // Format date
             const createdDate = new Date(emergency.created_at);
-            $('#emergencyDateTime').text(`Reported on: ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()}`);
+            $('#emergencyDateTime').text(`{{ T::translate('Reported on:', 'I-ulat noong:')}} ${createdDate.toLocaleDateString()} {{ T::translate('at', 'sa')}} ${createdDate.toLocaleTimeString()}`);
             
             // Message
             $('#emergencyMessage').text(emergency.message);
@@ -949,11 +682,11 @@
         // Helper function to format update type
         function formatUpdateType(updateType) {
             switch(updateType) {
-                case 'response': return 'Response';
-                case 'status_change': return 'Status Change';
-                case 'assignment': return 'Assignment';
-                case 'resolution': return 'Resolution';
-                case 'note': return 'Note';
+                case 'response': return '{{ T::translate('Response', 'Tugon')}}';
+                case 'status_change': return '{{ T::translate('Status Change', 'Pagbabago ng Katayuan')}}';
+                case 'assignment': return '{{ T::translate('Assignment', 'Pagtalaga')}}';
+                case 'resolution': return '{{ T::translate('Resolution', 'Resolusyon')}}';
+                case 'note': return '{{ T::translate('Note', 'Tala')}}';
                 default: return updateType;
             }
         }
@@ -970,7 +703,7 @@
             }
             
             // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...');
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ T::translate('Submitting...', 'Isinumite...')}}');
             
             // Submit form
             $.ajax({
@@ -982,7 +715,7 @@
                 success: function(response) {
                     if (response.success) {
                         // Show success message
-                        toastr.success('Emergency response submitted successfully');
+                        toastr.success('{{ T::translate('Emergency response submitted successfully', 'Matagumpay na na-isumite ang tugon sa emergency')}}');
                         
                         // Close modal
                         $('#respondEmergencyModal').modal('hide');
@@ -990,7 +723,7 @@
                         // Show prominent success message if it was a resolution
                         if ($('#updateType').val() === 'resolution') {
                             const beneficiaryName = $('#emergencyBeneficiaryName').text();
-                            const message = `Emergency for ${beneficiaryName} has been successfully resolved.`;
+                            const message = `{{ T::translate('Emergency for', 'Ang emergency para kay')}} ${beneficiaryName} {{ T::translate('has been successfully resolved.', 'ay matagumpay na nalutas.')}}`;
                             showSuccessAlert(message);
                         }
                         
@@ -1000,7 +733,7 @@
                         }, 1500);
                     } else {
                         // Show error message
-                        toastr.error(response.message || 'Failed to submit response');
+                        toastr.error(response.message || '{{ T::translate('Failed to submit response', 'Nabigong isumite ang tugon')}}');
                         
                         // If password error
                         if (response.errors && response.errors.password) {
@@ -1011,7 +744,7 @@
                 },
                 error: function(xhr) {
                     // Parse error response
-                    let errorMessage = 'Failed to submit response';
+                    let errorMessage = '{{ T::translate('Failed to submit response', 'Nabigong isumite ang tugon')}}';
                     try {
                         const response = JSON.parse(xhr.responseText);
                         if (response.errors && response.errors.password) {
@@ -1027,7 +760,7 @@
                 },
                 complete: function() {
                     // Reset button state
-                    $('#submitEmergencyResponse').prop('disabled', false).html('Submit Response');
+                    $('#submitEmergencyResponse').prop('disabled', false).html('{{ T::translate('Submit Response', 'Isumite ang Tugon')}}');
                 }
             });
         });
@@ -1060,7 +793,7 @@
             if (serviceActionType) {
                 // Show success message if not already shown
                 if (!storedMessage) {
-                    const message = `Service request has been ${serviceActionType} successfully.`;
+                    const message = `{{ T::translate('Service request has been', 'Ang pakiusap na serbisyo ay')}} ${serviceActionType} {{ T::translate('successfully.', 'matagumpay.')}}`;
                     showSuccessAlert(message);
                 }
                 // Clear the stored action type
@@ -1077,12 +810,23 @@
                 
                 // Basic validation
                 if (!message) {
-                    toastr.error('Please enter a response message');
+                    toastr.error('{{ T::translate('Please enter a response message', 'Mangyaring maglagay ng mensahe sa pagtugon')}}');
+                    return;
+                }
+
+                 // Add care worker validation for approval
+                if (updateType === 'approval' && !careWorkerId) {
+                    toastr.error('{{ T::translate('Please assign a care worker when approving a service request', 'Mangyaring magtalaga ng care worker kapag inaaprubahan ang pakiusap na serbisyo')}}');
+                    // Highlight the select box to indicate it needs attention
+                    $('#serviceCareWorkerId').addClass('is-invalid');
                     return;
                 }
                 
+                // Clear any previous validation error styling
+                $('#serviceCareWorkerId').removeClass('is-invalid');
+                
                 // Show loading state
-                $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+                $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ T::translate('Processing...', 'Pinoproseso...')}}');
                 $(this).prop('disabled', true);
                 
                 // Create form data
@@ -1115,7 +859,7 @@
                     success: function(response) {
                         if (response.success) {
                             // Toast notification (existing)
-                            toastr.success('Service request updated successfully');
+                            toastr.success('{{ T::translate('Service request updated successfully', 'Matagumpay na na-update ang pakiusap na serbisyo')}}');
                             
                             // Close modal
                             $('#handleServiceRequestModal').modal('hide');
@@ -1126,8 +870,8 @@
                             // Show prominent success message for completion or rejection
                             if (updateType === 'completion' || updateType === 'rejection') {
                                 const beneficiaryName = $('#requestBeneficiaryName').text();
-                                const actionType = updateType === 'completion' ? 'completed' : 'rejected';
-                                const message = `Service request for ${beneficiaryName} has been ${actionType} successfully.`;
+                                const actionType = updateType === 'completion' ? '{{ T::translate('completed', 'nakumpleto')}}' : '{{ T::translate('rejected', 'tinanggihan')}}';
+                                const message = `{{ T::translate('Service request for', 'Ang pakiusap na serbisyo para kay')}} ${beneficiaryName} {{ T::translate('has been', 'ay')}} ${actionType} {{ T::translate('successfully.', 'matagumpay.')}}`;
                                 showSuccessAlert(message);
                                 
                                 // Store the action type for checking after reload
@@ -1139,13 +883,13 @@
                                 location.reload();
                             }, 1000);
                         } else {
-                            toastr.error(response.message || 'Failed to update service request');
-                            $('#submitServiceResponse').html('Submit');
+                            toastr.error(response.message || '{{ T::translate('Failed to update service request', 'Nabigong i-update ang pakiusap na serbisyo')}}');
+                            $('#submitServiceResponse').html('{{ T::translate('Submit', 'I-Sumite')}}');
                             $('#submitServiceResponse').prop('disabled', false);
                         }
                     },
                     error: function(xhr) {
-                        let errorMessage = 'Failed to update service request';
+                        let errorMessage = '{{ T::translate('Failed to update service request', 'Nabigong i-update ang pakiusap na serbisyo')}}';
                         
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             const errors = xhr.responseJSON.errors;
@@ -1154,7 +898,7 @@
                             if (errors.password) {
                                 $('#serviceConfirmPassword').addClass('is-invalid');
                                 $('.service-password-confirmation .invalid-feedback').text(errors.password[0]).show();
-                                errorMessage = 'Password is incorrect. Please try again.';
+                                errorMessage = '{{ T::translate('Password is incorrect. Please try again.', 'Mali ang password. Mangyaring subukan muli.')}}';
                             } else {
                                 // Handle other validation errors
                                 const firstError = Object.values(errors)[0];
@@ -1165,7 +909,7 @@
                         }
                         
                         toastr.error(errorMessage);
-                        $('#submitServiceResponse').html('Submit');
+                        $('#submitServiceResponse').html('{{ T::translate('Submit', 'I-Sumite')}}');
                         $('#submitServiceResponse').prop('disabled', false);
                     }
                 });
@@ -1185,7 +929,7 @@
         // ===== SERVICE REQUEST HANDLERS =====
         function viewServiceRequestDetails(requestId) {
             // Show loading state
-            $('#serviceRequestDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading details...</p></div>');
+            $('#serviceRequestDetailsContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ T::translate('Loading details...', 'Naglo-load ng mga detalye...')}}</p></div>');
             
             // Open the modal
             $('#serviceRequestDetailsModal').modal('show');
@@ -1208,14 +952,14 @@
                             $('#handleServiceRequestBtn').show();
                         } else {
                             // For care workers, show remind button instead
-                            $('#handleServiceRequestBtn').text('Send Reminder').removeClass('btn-primary').addClass('btn-info');
+                            $('#handleServiceRequestBtn').text('{{ T::translate('Send Reminder', 'Magpadala ng Paalala')}}').removeClass('btn-primary').addClass('btn-info');
                         }
                     } else {
-                        $('#serviceRequestDetailsContent').html(`<div class="alert alert-danger">Error loading details: ${response.message}</div>`);
+                        $('#serviceRequestDetailsContent').html(`<div class="alert alert-danger">{{ T::translate('Error loading details:', 'Error sa pag-load ng mga detalye:')}} ${response.message}</div>`);
                     }
                 },
                 error: function() {
-                    $('#serviceRequestDetailsContent').html('<div class="alert alert-danger">Failed to load service request details. Please try again.</div>');
+                    $('#serviceRequestDetailsContent').html('<div class="alert alert-danger">{{ T::translate('Failed to load service request details. Please try again.', 'Nabigong i-load ang mga detalye ng pakiusap na serbisyo. Mangyaring subukan muli.')}}</div>');
                 }
             });
         }
@@ -1228,21 +972,21 @@
                 url: "/care-manager/emergency-request/care-workers",
                 method: 'GET',
                 success: function(response) {
-                    console.log("Care workers loaded:", response); // Debug line
+                    console.log("{{ T::translate('Care workers loaded:', 'Mga tagapag-alaga na-load:')}}", response); // Debug line
                     if (response.success && response.care_workers) {
-                        let options = '<option value="">-- Select Care Worker --</option>';
+                        let options = '<option value="">-- {{ T::translate('Select Care Worker', 'Pumili ng Tagapag-alaga')}} --</option>';
                         response.care_workers.forEach(worker => {
                             options += `<option value="${worker.id}">${worker.first_name} ${worker.last_name}</option>`;
                         });
                         $('#serviceCareWorkerId').html(options);
                     } else {
-                        console.error("Failed to load care workers:", response.message);
-                        $('#serviceCareWorkerId').html('<option value="">No care workers available</option>');
+                        console.error("{{ T::translate('Failed to load care workers:', 'Nabigong i-load ang mga tagapag-alaga:')}}", response.message);
+                        $('#serviceCareWorkerId').html('<option value="">{{ T::translate('No care workers available', 'Walang mga tagapag-alaga ang available')}}</option>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error loading care workers:", error);
-                    $('#serviceCareWorkerId').html('<option value="">Error loading care workers</option>');
+                    console.error("{{ T::translate('Error loading care workers:', 'Error sa pag-load ng mga tagapag-alaga:')}}", error);
+                    $('#serviceCareWorkerId').html('<option value="">{{ T::translate('Error loading care workers', 'Error sa pag-loading ng mga tagapag-alaga')}}</option>');
                 }
             });
         }
@@ -1268,7 +1012,7 @@
             }
             
             // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Archiving...');
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ T::translate('Archiving...', 'Nag-a-archive...')}}');
             
             // Submit form
             $.ajax({
@@ -1280,7 +1024,7 @@
                 success: function(response) {
                     if (response.success) {
                         // Show success message
-                        toastr.success('Record archived successfully');
+                        toastr.success('{{ T::translate('Record archived successfully', 'Ang tala ay matagumpay na na-archive')}}');
                         
                         // Close modal
                         $('#archiveRecordModal').modal('hide');
@@ -1291,7 +1035,7 @@
                         }, 1500);
                     } else {
                         // Show error message
-                        toastr.error(response.message || 'Failed to archive record');
+                        toastr.error(response.message || '{{ T::translate('Failed to archive record', 'Nabigong i-archive ang tala')}}');
                         
                         // If password error
                         if (response.errors && response.errors.password) {
@@ -1301,7 +1045,7 @@
                 },
                 error: function(xhr) {
                     // Parse error response
-                    let errorMessage = 'Failed to archive record';
+                    let errorMessage = '{{ T::translate('Failed to archive record', 'Nabigong i-archive ang tala')}}';
                     try {
                         const response = JSON.parse(xhr.responseText);
                         if (response.errors && response.errors.password) {
@@ -1316,18 +1060,10 @@
                 },
                 complete: function() {
                     // Reset button state
-                    $('#submitArchiveRecord').prop('disabled', false).html('Archive');
+                    $('#submitArchiveRecord').prop('disabled', false).html('{{ T::translate('Archive', 'I-archive')}}');
                 }
             });
         });
-
-        // Care Worker Send Reminder Function
-        function openSendReminderModal(recordId, recordType) {
-            $('#reminderRecordId').val(recordId);
-            $('#reminderRecordType').val(recordType);
-            $('#reminderMessage').val('');
-            $('#sendReminderModal').modal('show');
-        }
 
         // Initialize tooltips
         $(function () {
@@ -1360,7 +1096,7 @@
                         }
                     },
                     error: function() {
-                        alert('Failed to load service request details. Please try again.');
+                        alert('{{ T::translate('Failed to load service request details. Please try again.', 'Nabigong i-load ang mga detalye ng pakiusap na serbisyo. Mangyaring subukan muli.')}}');
                     }
                 });
             } else if (currentServiceRequest) {
@@ -1377,7 +1113,7 @@
             
             // Format date
             const createdDate = new Date(request.created_at);
-            $('#requestDateTime').text(`Requested on: ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()}`);
+            $('#requestDateTime').text(`{{ T::translate('Requested on:', 'Hiniling noong:')}} ${createdDate.toLocaleDateString()} {{ T::translate('at', 'sa')}} ${createdDate.toLocaleTimeString()}`);
             
             // Service date
             const serviceDate = new Date(request.service_date);
@@ -1442,7 +1178,7 @@
                 
                 // Check if request is already approved
                 if (updateType === 'approval' && currentServiceRequest && currentServiceRequest.status === 'approved') {
-                    $('#approvalWarning').removeClass('d-none').text('This service request is already approved. Please choose a different action.');
+                    $('#approvalWarning').removeClass('d-none').text('{{ T::translate('This service request is already approved. Please choose a different action.', 'Ang pakiusap na serbisyo ay naaprubahan na. Mangyaring pumili ng ibang aksyon.')}}');
                     $('#submitServiceResponse').prop('disabled', true);
                 }
             }
@@ -1454,7 +1190,7 @@
                 
                 // Check if the service request is in an approvable state
                 if (currentServiceRequest && currentServiceRequest.status !== 'approved') {
-                    $('#statusValidationWarning').removeClass('d-none').text('Only approved service requests can be marked as completed.');
+                    $('#statusValidationWarning').removeClass('d-none').text('{{ T::translate('Only approved service requests can be marked as completed.', 'Ang mga naaprubahang pakiusap na serbisyo lamang ang maaaring markahan bilang natapos.')}}');
                     $('#submitServiceResponse').prop('disabled', true);
                 }
             }
@@ -1488,13 +1224,13 @@
         function renderEmergencyDetails(emergency) {
             let content = `
                 <div class="mb-4">
-                    <h5 class="border-bottom pb-2">Emergency Information</h5>
+                    <h5 class="border-bottom pb-2">{{ T::translate('Emergency Information', 'Impormasyon ng Emergency')}}</h5>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Beneficiary:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Beneficiary:', 'Benepisyaryo:')}}</div>
                         <div class="col-md-8">${emergency.beneficiary.first_name} ${emergency.beneficiary.last_name}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Address:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Address:', 'Tirahan:')}}</div>
                         <div class="col-md-8">${emergency.beneficiary.street_address} (${emergency.beneficiary.barangay.barangay_name}, ${emergency.beneficiary.municipality.municipality_name})</div>
                     </div>
                     <div class="row mb-2">
@@ -1506,7 +1242,7 @@
                         <div class="col-md-8">${emergency.beneficiary.emergency_contact_name || 'Not provided'} ${emergency.beneficiary.emergency_contact_name ? `(${emergency.beneficiary.emergency_contact_relation}) - ${emergency.beneficiary.emergency_contact_mobile}` : ''}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Type:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Type:', 'Uri:')}}</div>
                         <div class="col-md-8"><span class="badge me-2" style="background-color: ${emergency.emergency_type.color_code}">${emergency.emergency_type.name}</span></div>
                     </div>
                     <div class="row mb-2">
@@ -1514,11 +1250,11 @@
                         <div class="col-md-8">${formatStatus(emergency.status)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Created:', 'Nalikha:')}}</div>
                         <div class="col-md-8">${formatDateTime(emergency.created_at)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Message:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Message:', 'Mensahe:')}}</div>
                         <div class="col-md-8">${emergency.message}</div>
                     </div>
                 </div>
@@ -1552,7 +1288,7 @@
                 
                 $('#emergencyUpdatesTimeline').html(updatesHtml);
             } else {
-                $('#emergencyUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+                $('#emergencyUpdatesTimeline').html('<p class="text-muted">{{ T::translate('No updates yet', 'Wala pang mga update')}}</p>');
             }
         }
 
@@ -1560,13 +1296,13 @@
         function renderServiceRequestDetails(request) {
             let content = `
                 <div class="mb-4">
-                    <h5 class="border-bottom pb-2">Service Request Information</h5>
+                    <h5 class="border-bottom pb-2">{{ T::translate('Service Request Information', 'Impormasyon ng Pakiusap na Serbisyo')}}</h5>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Beneficiary:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Beneficiary:', 'Benepisyaryo:')}}</div>
                         <div class="col-md-8">${request.beneficiary.first_name} ${request.beneficiary.last_name}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Service Type:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Service Type:', 'Uri ng Serbisyo:')}}</div>
                         <div class="col-md-8"><span class="badge" style="background-color: ${request.service_type.color_code}">${request.service_type.name}</span></div>
                     </div>
                     <div class="row mb-2">
@@ -1574,19 +1310,19 @@
                         <div class="col-md-8">${formatStatus(request.status)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Requested Date:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Requested Date:', 'Petsa ng Pakiusap:')}}</div>
                         <div class="col-md-8">${formatDate(request.service_date)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Requested Time:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Requested Time:', 'Oras ng Pakiusap:')}}</div>
                         <div class="col-md-8">${request.service_time ? formatTime(request.service_time) : 'Not Specified'}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Created:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Created:', 'Nalikha:')}}</div>
                         <div class="col-md-8">${formatDateTime(request.created_at)}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-md-4 fw-bold">Message:</div>
+                        <div class="col-md-4 fw-bold">{{ T::translate('Message:', 'Mensahe:')}}</div>
                         <div class="col-md-8">${request.message}</div>
                     </div>
                 </div>
@@ -1620,7 +1356,7 @@
                 
                 $('#serviceUpdatesTimeline').html(updatesHtml);
             } else {
-                $('#serviceUpdatesTimeline').html('<p class="text-muted">No updates yet</p>');
+                $('#serviceUpdatesTimeline').html('<p class="text-muted">{{ T::translate('No updates yet', 'Wala pang mga update')}}</p>');
             }
         }
 
@@ -1650,12 +1386,12 @@
 
         function formatStatus(status) {
             switch(status) {
-                case 'new': return '<span class="badge bg-danger">New</span>';
-                case 'in_progress': return '<span class="badge bg-info">In Progress</span>';
-                case 'approved': return '<span class="badge bg-success">Approved</span>';
-                case 'rejected': return '<span class="badge bg-danger">Rejected</span>';
-                case 'completed': return '<span class="badge bg-primary">Completed</span>';
-                case 'resolved': return '<span class="badge bg-success">Resolved</span>';
+                case 'new': return '<span class="badge bg-danger">{{ T::translate('New' ,'Bago')}}</span>';
+                case 'in_progress': return '<span class="badge bg-info">{{ T::translate('In Progress' ,'Isinasagawa')}}</span>';
+                case 'approved': return '<span class="badge bg-success">{{ T::translate('Approved' ,'Na-aprubahan')}}</span>';
+                case 'rejected': return '<span class="badge bg-danger">{{ T::translate('Rejected' ,'Tinaggihan')}}</span>';
+                case 'completed': return '<span class="badge bg-primary">{{ T::translate('Completed' ,'Natapos')}}</span>';
+                case 'resolved': return '<span class="badge bg-success">{{ T::translate('Resolved' ,'Nalutas')}}</span>';
                 case 'archived': return '<span class="badge bg-secondary">Archived</span>';
                 default: return `<span class="badge bg-secondary">${status}</span>`;
             }
@@ -1673,14 +1409,14 @@
                         
                         // Pre-select resolution
                         $('#updateType').val('resolution').trigger('change');
-                        $('#responseMessage').val('Emergency has been resolved.');
+                        $('#responseMessage').val('{{ T::translate('Emergency has been resolved' ,'Ang emergency ay nalutas na.')}}.');
                         
                         // Show modal
                         $('#respondEmergencyModal').modal('show');
                     }
                 },
                 error: function() {
-                    toastr.error('Failed to load emergency details. Please try again.');
+                    toastr.error('{{ T::translate('Failed to load emergency details. Please try again.' ,'Nabigong i-load ang mga detalye ng emergency. Pakisubukan muli.')}}');
                 }
             });
         }
@@ -1695,7 +1431,7 @@
                         
                         // Validate if the request can be completed
                         if (currentServiceRequest.status !== 'approved') {
-                            toastr.error('Only approved service requests can be marked as completed.');
+                            toastr.error('{{ T::translate('Only approved service requests can be marked as completed' ,'Tanging ang mga na-aprubang pakiusap na serbisyo lamang ang maaring markahan ng natapos.')}}.');
                             return;
                         }
                         
@@ -1703,14 +1439,14 @@
                         
                         // Pre-select completion
                         $('#serviceUpdateType').val('completion').trigger('change');
-                        $('#serviceResponseMessage').val('Service request has been completed successfully.');
+                        $('#serviceResponseMessage').val('{{ T::translate('Service request has been completed successfully' ,'Ang pakiusap na serbisyo ay matagumpay na natapos.')}}.');
                         
                         // Show modal
                         $('#handleServiceRequestModal').modal('show');
                     }
                 },
                 error: function() {
-                    toastr.error('Failed to load service request details. Please try again.');
+                    toastr.error('{{ T::translate('Failed to load service request details. Please try again.' ,'Nabigong i-load ang mga detalye ng pakiusap na serbisyo. Pakisubukan muli.')}}');
                 }
             });
         }
@@ -1729,8 +1465,6 @@
                 sessionStorage.setItem('generalSuccessMessage', message);
             }
         }
-        
-
     </script>
 </body>
 </html>
