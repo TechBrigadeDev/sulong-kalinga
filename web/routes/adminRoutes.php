@@ -330,6 +330,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:administrator'])->pre
         Route::get('/', [ShiftHistoryController::class, 'index'])->name('index');
         // Route::get('/archived', [ShiftHistoryController::class, 'archived'])->name('archived');
         Route::get('/shift-details/{shiftId}', [ShiftHistoryController::class, 'shiftDetails'])->name('shiftDetails');
+        Route::get('/{shiftId}/export-pdf', [ShiftHistoryController::class, 'exportShiftPdf'])->name('exportPdf');
     });
 
 });
