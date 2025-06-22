@@ -5,642 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <title>Internal Appointments</title>
+    <title>Internal Appointmet | Manager</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ asset('css/internalAppointment.css') }}">
     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
-    <style>
-
-        /* Add these styles to your CSS section to ensure checkboxes are visible */
-        .attendee-option {
-            padding: 8px 12px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: background-color 0.15s ease;
-        }
-        
-        .attendee-option:hover {
-            background-color: #f0f4ff;
-        }
-        
-        .attendee-option.selected {
-            background-color: #e9ecff;
-        }
-        
-        .attendee-checkbox {
-            margin-right: 10px;
-            min-width: 16px;
-            min-height: 16px;
-            opacity: 1 !important;
-            position: static !important;
-            pointer-events: auto !important;
-            visibility: visible !important;
-            display: inline-block !important;
-            border: 1px solid #adb5bd;
-        }
-
-        /* Card Design */
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            border: 1px solid rgba(0,0,0,0.07);
-            margin-bottom: 1.5rem;
-        }
-        
-        .card-header {
-            padding: 0.8rem 1.25rem;
-            background-color: #f8f9fc;
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-        
-        .section-heading {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #333;
-            margin-bottom: 0;
-        }
-        
-        /* Calendar Enhancements */
-        #calendar-container {
-            border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            overflow-x: auto; /* Enable horizontal scrolling */
-            position: relative;
-        }
-        
-        #calendar {
-            background-color: white;
-            min-height: 600px;
-            min-width: 800px; /* Set minimum width to ensure functionality */
-        }
-        
-        /* Event Styling */
-        .fc-event {
-            cursor: pointer;
-            border: none !important;
-            padding: 4px 6px;
-            margin-bottom: 2px;
-            border-radius: 6px;
-        }
-        
-        .fc-event-main {
-            display: flex;
-            flex-direction: column;
-            padding: 4px 0;
-        }
-        
-        .event-title {
-            font-weight: 600;
-            font-size: 0.85rem;
-            white-space: normal !important;
-            line-height: 1.3;
-        }
-        
-        .event-details {
-            font-size: 0.75rem;
-            line-height: 1.3;
-            white-space: normal !important;
-        }
-        
-        .event-time {
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.7rem;
-            font-weight: 500;
-            margin-top: 2px;
-        }
-        
-        .event-time i {
-            margin-right: 3px;
-        }
-        
-        .fc-daygrid-event-dot {
-            display: none; /* Hide default event dots */
-        }
-        
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .action-btn {
-            padding: 0.6rem;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.2s ease-in-out;
-        }
-        
-        .action-btn i {
-            margin-right: 8px;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        /* Search Bar Enhancements */
-        .search-container {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-        
-        .search-container i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-            transition: opacity 0.2s ease;
-        }
-        
-        .search-container .search-input:focus + i,
-        .search-container .search-input:not(:placeholder-shown) + i {
-            opacity: 0;
-        }
-        
-        .search-input {
-            padding-left: 35px;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-        }
-        
-        /* Fix for search placeholder */
-        .search-input::placeholder {
-            color: #a0a5aa;
-        }
-        
-        /* Appointment Details Panel */
-        .details-container {
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .details-header {
-            padding: 0.8rem 1.25rem;
-            background-color: #4e73df;
-            color: white;
-        }
-        
-        .detail-section {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-        }
-        
-        .detail-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .section-title {
-            font-weight: 600;
-            color: #4e73df;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            margin-right: 8px;
-        }
-        
-        .detail-item {
-            margin-bottom: 0.4rem;
-            display: flex;
-        }
-        
-        .detail-label {
-            font-weight: 500;
-            width: 100px;
-            font-size: 0.85rem;
-            color: #666;
-        }
-        
-        .detail-value {
-            font-size: 0.85rem;
-            flex: 1;
-        }
-        
-        /* Attendees Multi-Select */
-        .attendees-container {
-            position: relative;
-            margin-bottom: 1.2rem;
-        }
-        
-        .attendees-input-container {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            padding: 0.5rem;
-            background-color: #fff;
-            min-height: 42px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            cursor: text;
-        }
-        
-        .attendees-input-container:focus-within {
-            border-color: #4e73df;
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-        }
-        
-        .attendee-tag {
-            background-color: #e9ecef;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            padding: 2px 8px;
-            font-size: 0.8rem;
-        }
-        
-        .attendee-remove {
-            margin-left: 6px;
-            cursor: pointer;
-            color: #6c757d;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .attendee-remove:hover {
-            color: #dc3545;
-        }
-        
-        .attendees-input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 0.9rem;
-            min-width: 100px;
-        }
-        
-        .attendees-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: #fff;
-            border: 1px solid #ced4da;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .attendee-option {
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
-        
-        .attendee-option:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .attendee-checkbox {
-            margin-right: 8px;
-        }
-        
-        .attendee-option.selected {
-            background-color: #e9ecef;
-        }
-        
-        .other-field-container {
-            display: none;
-            margin-top: 1rem;
-        }
-        
-        /* Dropdown select styling */
-        .select-container {
-            position: relative;
-        }
-        
-        .select-container::after {
-            content: "";
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid #666;
-            pointer-events: none;
-        }
-        
-        .select-container select {
-            padding-right: 25px;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-        }
-        
-        /* Modal Enhancements */
-        .modal-content {
-            border: none;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            background-color: #4e73df;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-bottom: none;
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .modal-footer {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .attendees-container {
-            position: relative;
-            margin-bottom: 1.2rem;
-        }
-
-        .attendees-input-container {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            padding: 0.5rem;
-            background-color: #fff;
-            min-height: 42px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            cursor: text;
-        }
-
-        .attendees-input-container.disabled {
-            background-color: #f8f9fa;
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .attendees-input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 0.9rem;
-            min-width: 100px;
-            background-color: transparent;
-        }
-
-        .attendees-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: #fff;
-            border: 1px solid #ced4da;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-
-        .dropdown-section {
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-        }
-
-        .dropdown-header {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-        }
-
-        .attendee-option {
-            padding: 6px 12px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .attendee-option:hover {
-            background-color: #f8f9fa;
-        }
-
-        .attendee-checkbox {
-            margin-right: 8px;
-        }
-
-        .attendee-tag {
-            background-color: #e9ecef;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            padding: 2px 8px;
-            font-size: 0.8rem;
-        }
-
-        .attendee-remove {
-            margin-left: 6px;
-            cursor: pointer;
-            color: #6c757d;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .attendee-remove:hover {
-            color: #dc3545;
-        }
-        
-        /* Form Enhancements */
-        .form-label {
-            font-weight: 500;
-            font-size: 0.9rem;
-            margin-bottom: 0.4rem;
-            color: #495057;
-        }
-        
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-        
-        .form-control {
-            border-radius: 6px;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #ced4da;
-        }
-        
-        .form-control:focus {
-            border-color: #4e73df;
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-        }
-        
-        /* Responsive Adjustments */
-        @media (max-width: 767.98px) {
-            .fc-toolbar-title {
-                font-size: 1.1rem !important;
-            }
-            
-            .fc-button {
-                font-size: 0.8rem;
-                padding: 0.3rem 0.5rem;
-            }
-            
-            .action-btn {
-                font-size: 0.85rem;
-            }
-        }
-        
-        @media (max-width: 575.98px) {
-            .detail-label {
-                width: 85px;
-            }
-        }
-        
-        /* FullCalendar Customizations */
-        .fc .fc-toolbar.fc-header-toolbar {
-            margin-bottom: 1.2rem;
-        }
-        
-        .fc .fc-button-primary {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-        
-        .fc .fc-button-primary:hover {
-            background-color: #3a5fc8;
-            border-color: #3a5fc8;
-        }
-        
-        .fc .fc-button-primary:disabled {
-            background-color: #6c8ae4;
-            border-color: #6c8ae4;
-        }
-        
-        .fc .fc-button-primary:not(:disabled).fc-button-active, 
-        .fc .fc-button-primary:not(:disabled):active {
-            background-color: #3a5fc8;
-            border-color: #3a5fc8;
-        }
-        
-        .fc-daygrid-day-number {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .fc-col-header-cell-cushion {
-            font-weight: 600;
-        }
-        
-        /* Tooltip Styling */
-        .tooltip-inner {
-            max-width: 300px;
-            padding: 10px 12px;
-            text-align: left;
-            background-color: #343a40;
-            border-radius: 6px;
-        }
-        
-       /* Color coding for different appointment types */
-        .event-quarterly-feedback {
-            background-color: #4e73df !important;
-            border-color: #4668cc !important;
-        }
-
-        .event-skills-enhancement {
-            background-color: #1cc88a !important;
-            border-color: #19b77d !important;
-        }
-
-        .event-council {
-            background-color: #36b9cc !important;
-            border-color: #31a8ba !important;
-        }
-
-        .event-health-board {
-            background-color: #f6c23e !important;
-            border-color: #e4b138 !important;
-        }
-
-        .event-liga {
-            background-color: #e74a3b !important;
-            border-color: #d93a2b !important;
-        }
-
-        .event-hmo {
-            background-color: #6f42c1 !important;
-            border-color: #643ab0 !important;
-        }
-
-        .event-assessment {
-            background-color: #fd7e14 !important;
-            border-color: #e77014 !important;
-        }
-
-        .event-careplan {
-            background-color: #20c997 !important;
-            border-color: #1cb888 !important;
-        }
-
-        .event-team {
-            background-color: #3949ab !important;
-            border-color: #303f9f !important;
-        }
-
-        .event-mentoring {
-            background-color: #ec407a !important;
-            border-color: #d81b60 !important;
-        }
-
-        .event-other {
-            background-color: #a435f0 !important;
-            border-color: #9922e8 !important;
-        }
-
-        .fc-event.canceled {
-            opacity: 0.7;
-            background-color: #6c757d !important;  /* Gray color for canceled */
-            border-color: #6c757d !important;
-            color: white !important;
-            text-decoration: line-through;
-        }
-
-        .fc-event.canceled .fc-event-title {
-            text-decoration: line-through;
-        }
-
-    </style>
 </head>
 <body>
+
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
 
     <div class="home-section">
-        <div class="text-left">INTERNAL APPOINTMENTS</div>
+        <div class="text-left">{{ T::translate('INTERNAL APPOINTMENTS', 'MGA INTERNAL NA APPOINTMENT') }}</div>
         <div class="container-fluid">
             <div class="row p-3" id="home-content">
                 <!-- Main content area -->
@@ -653,22 +35,22 @@
                             <div id="calendar-spinner" class="calendar-loading-overlay">
                                 <div class="spinner-container">
                                     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                                        <span class="visually-hidden">Loading...</span>
+                                        <span class="visually-hidden">{{ T::translate('Loading', 'Naglo-load') }}...</span>
                                     </div>
-                                    <p class="mt-2 text-primary">Loading appointments...</p>
+                                    <p class="mt-2 text-primary">{{ T::translate('Loading appointments', 'Naglo-load ng mga appointment') }}...</p>
                                 </div>
                             </div>
 
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="section-heading">
-                                        <i class="bi bi-calendar3"></i> Internal Appointment Calendar
+                                        <i class="bi bi-calendar3"></i> {{ T::translate('Internal Appointment Calendar', 'Kalendaryo ng mga Internal na Appointment') }}
                                     </h5>
                                     <div class="calendar-actions d-flex gap-2">
                                         <button type="button" class="btn btn-sm btn-outline-secondary" id="resetCalendarButton">
-                                            <i class="bi bi-arrow-clockwise"></i> Reset
+                                            <i class="bi bi-arrow-clockwise"></i> {{ T::translate('Reset', 'I-reset') }}
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="toggleWeekView">
-                                            <i class="bi bi-calendar-week"></i> Week View
+                                            <i class="bi bi-calendar-week"></i> {{ T::translate('Week View', 'Lingguhang Tingnan') }}
                                         </button>
                                     </div>
                                 </div>
@@ -684,20 +66,20 @@
                         <div class="col-lg-4 col-md-5">
                             <!-- Search Bar -->
                             <div class="search-container">
-                                <input type="text" class="form-control search-input" placeholder="     Search appointments..." aria-label="Search appointments">
+                                <input type="text" class="form-control search-input" placeholder="     {{ T::translate('Search appointments', 'Maghanap ng mga appointment') }}..." aria-label="{{ T::translate('Search appointments', 'Maghanap ng mga appointment') }}">
                                 <i class="bi bi-search"></i>
                             </div>
                             
                             <!-- Action Buttons -->
                             <div class="action-buttons mb-4">
                                 <button type="button" class="btn btn-primary action-btn" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
-                                    <i class="bi bi-plus-circle"></i> Schedule New Appointment
+                                    <i class="bi bi-plus-circle"></i> {{ T::translate('Schedule New Appointment', 'Mag-iskedyul ng Bagong Appointment') }}
                                 </button>
                                 <button type="button" class="btn btn-outline-warning action-btn" id="editAppointmentButton" disabled>
-                                    <i class="bi bi-pencil-square"></i> Edit Selected Appointment
+                                    <i class="bi bi-pencil-square"></i> {{ T::translate('Edit Selected Appointment', 'I-edit ang Napiling Appointment') }}
                                 </button>
                                 <button type="button" class="btn btn-outline-danger action-btn" id="deleteAppointmentButton" disabled>
-                                    <i class="bi bi-trash3"></i> Cancel Selected Appointment
+                                    <i class="bi bi-trash3"></i> {{ T::translate('Cancel Selected Appointment', 'Kanselahin ang Napiling Appointment') }}
                                 </button>
                             </div>
                             
@@ -705,13 +87,13 @@
                             <div class="card details-container">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="section-heading mb-0">
-                                        <i class="bi bi-info-circle"></i> Appointment Details
+                                        <i class="bi bi-info-circle"></i> {{ T::translate('Appointment Details', 'Detalye ng Appointment') }}
                                     </h5>
                                 </div>
                                 <div class="card-body" id="appointmentDetails">
                                     <div class="text-center text-muted py-4">
                                         <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                                        <p class="mt-3 mb-0">Select an appointment to view details</p>
+                                        <p class="mt-3 mb-0">{{ T::translate('Select an appointment to view details', 'Pumili ng appointment upang makita ang detalye') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -726,12 +108,12 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addAppointmentModalLabel">Add Appointment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="addAppointmentModalLabel">{{ T::translate('Add Appointment', 'Magdagdag ng Appointment') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ T::translate('Close', 'Isara') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div id="modalErrorContainer" class="alert alert-danger mb-3" style="display: none;">
-                        <h6 class="alert-heading mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following:</h6>
+                        <h6 class="alert-heading mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ T::translate('Please correct the following', 'Mangyaring itama ang sumusunod') }}:</h6>
                         <ul id="modalErrorList" class="mb-0 ms-3">
                             <!-- Errors will be inserted here dynamically -->
                         </ul>
@@ -739,8 +121,7 @@
                     
                     <div id="recurringWarningMessage" class="alert alert-warning mb-3" style="display: none;">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Note:</strong> Editing a recurring appointment will only affect this and future occurrences. 
-                        Past occurrences will remain unchanged. You cannot change a recurring appointment to a single appointment or vice versa.
+                        <strong>{{ T::translate('Note', 'Paalala') }}:</strong> {{ T::translate('Editing a recurring appointment will only affect this and future occurrences. Past occurrences will remain unchanged. You cannot change a recurring appointment to a single appointment or vice versa.', 'Ang pag-edit ng umuulit na appointment ay makakaapekto lamang dito at sa mga mangyayari sa hinaharap. Ang mga nakaraang pangyayari ay mananatiling hindi magbabago. Hindi mo mababago ang umuulit na appointment sa isang solong appointment o kabaliktaran.') }}
                     </div>
                     <form id="addAppointmentForm">
                         <input type="hidden" id="appointmentId" name="appointment_id" value="">
@@ -749,15 +130,15 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="appointmentTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                                    <label for="appointmentTitle" class="form-label">{{ T::translate('Title', 'Pamagat') }} <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="appointmentTitle" name="title" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="appointmentType" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <label for="appointmentType" class="form-label">{{ T::translate('Type', 'Uri') }} <span class="text-danger">*</span></label>
                                     <select class="form-control" id="appointmentType" name="appointment_type_id" required>
-                                        <option value="">Select type</option>
+                                        <option value="">{{ T::translate('Select type', 'Pumili ng uri') }}</option>
                                         @foreach($appointmentTypes as $type)
                                         <option value="{{ $type->appointment_type_id }}">{{ $type->type_name }}</option>
                                         @endforeach
@@ -768,20 +149,20 @@
                         
                         <!-- Other type details -->
                         <div class="form-group mb-3" id="otherTypeContainer" style="display: none;">
-                            <label for="otherAppointmentType" class="form-label">Specify Other Type <span class="text-danger">*</span></label>
+                            <label for="otherAppointmentType" class="form-label">{{ T::translate('Specify Other Type', 'Tukuyin ang Iba pang Uri') }} <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="otherAppointmentType" name="other_type_details">
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="appointmentDate" class="form-label">Date <span class="text-danger">*</span></label>
+                                    <label for="appointmentDate" class="form-label">{{ T::translate('Date', 'Petsa') }} <span class="text-danger">*</span></label>
                                     <input type="date" class="form-control" id="appointmentDate" name="date" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="appointmentPlace" class="form-label">Location <span class="text-danger">*</span></label>
+                                    <label for="appointmentPlace" class="form-label">{{ T::translate('Location', 'Lokasyon') }} <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="appointmentPlace" name="meeting_location" required>
                                 </div>
                             </div>
@@ -791,7 +172,7 @@
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="flexibleTimeCheck" name="is_flexible_time">
                             <label class="form-check-label" for="flexibleTimeCheck">
-                                Flexible time (no specific start/end time)
+                                {{ T::translate('Flexible time (no specific start/end time)', 'Flexible na oras (walang tiyak na oras ng pagsisimula/pagtatapos)') }}
                             </label>
                         </div>
                         
@@ -799,13 +180,13 @@
                         <div id="timeFieldsContainer" class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="appointmentTime" class="form-label">Start Time</label>
+                                    <label for="appointmentTime" class="form-label">{{ T::translate('Start Time', 'Oras ng Simula') }}</label>
                                     <input type="time" class="form-control" id="appointmentTime" name="start_time">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="appointmentEndTime" class="form-label">End Time</label>
+                                    <label for="appointmentEndTime" class="form-label">{{ T::translate('End Time', 'Oras ng Pagtatapos') }}</label>
                                     <input type="time" class="form-control" id="appointmentEndTime" name="end_time">
                                 </div>
                             </div>
@@ -816,63 +197,63 @@
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="recurringCheck" name="is_recurring">
                                 <label class="form-check-label" for="recurringCheck">
-                                    Recurring appointment
+                                    {{ T::translate('Recurring appointment', 'Umuulit na Appointment') }}
                                 </label>
                             </div>
 
                             <div id="recurringOptions" class="border rounded p-3 mb-3" style="display: none;">
                                 <div class="mb-3">
-                                    <label class="form-label">Recurrence Pattern</label>
+                                    <label class="form-label">{{ T::translate('Recurrence Pattern', 'Pattern ng Pag-ulit') }}</label>
                                     <div class="form-check">
                                         <input class="form-check-input pattern-radio" type="radio" name="pattern_type" id="patternDaily" value="daily">
-                                        <label class="form-check-label" for="patternDaily">Daily</label>
+                                        <label class="form-check-label" for="patternDaily">{{ T::translate('Daily', 'Araw-araw') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input pattern-radio" type="radio" name="pattern_type" id="patternWeekly" value="weekly" checked>
-                                        <label class="form-check-label" for="patternWeekly">Weekly</label>
+                                        <label class="form-check-label" for="patternWeekly">{{ T::translate('Weekly', 'Lingguhan') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input pattern-radio" type="radio" name="pattern_type" id="patternMonthly" value="monthly">
-                                        <label class="form-check-label" for="patternMonthly">Monthly</label>
+                                        <label class="form-check-label" for="patternMonthly">{{ T::translate('Monthly', 'Buwanan') }}</label>
                                     </div>
                                 </div>
 
                                 <div class="mb-3" id="weeklyOptions">
-                                    <label class="form-label">Repeat on:</label>
+                                    <label class="form-label">{{ T::translate('Repeat on', 'Ulitin sa') }}:</label>
                                     <div class="d-flex flex-wrap">
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="0" id="daySunday">
-                                            <label class="form-check-label" for="daySunday">Sunday</label>
+                                            <label class="form-check-label" for="daySunday">{{ T::translate('Sunday', 'Linggo') }}</label>
                                         </div>
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="1" id="dayMonday">
-                                            <label class="form-check-label" for="dayMonday">Monday</label>
+                                            <label class="form-check-label" for="dayMonday">{{ T::translate('Monday', 'Lunes') }}</label>
                                         </div>
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="2" id="dayTuesday">
-                                            <label class="form-check-label" for="dayTuesday">Tuesday</label>
+                                            <label class="form-check-label" for="dayTuesday">{{ T::translate('Tuesday', 'Martes') }}</label>
                                         </div>
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="3" id="dayWednesday">
-                                            <label class="form-check-label" for="dayWednesday">Wednesday</label>
+                                            <label class="form-check-label" for="dayWednesday">{{ T::translate('Wednesday', 'Miyerkules') }}</label>
                                         </div>
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="4" id="dayThursday">
-                                            <label class="form-check-label" for="dayThursday">Thursday</label>
+                                            <label class="form-check-label" for="dayThursday">{{ T::translate('Thursday', 'Huwebes') }}</label>
                                         </div>
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="5" id="dayFriday">
-                                            <label class="form-check-label" for="dayFriday">Friday</label>
+                                            <label class="form-check-label" for="dayFriday">{{ T::translate('Friday', 'Biyernes') }}</label>
                                         </div>
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" name="day_of_week[]" value="6" id="daySaturday">
-                                            <label class="form-check-label" for="daySaturday">Saturday</label>
+                                            <label class="form-check-label" for="daySaturday">{{ T::translate('Saturday', 'Sabado') }}</label>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="recurrenceEnd" class="form-label">End Date</label>
+                                    <label for="recurrenceEnd" class="form-label">{{ T::translate('End Date', 'Petsa ng Pagtatapos') }}</label>
                                     <input type="date" class="form-control" id="recurrenceEnd" name="recurrence_end">
                                 </div>
                             </div>
@@ -880,19 +261,19 @@
                         
                         <!-- Attendees Section -->
                         <div class="form-group mb-4">
-                            <label class="form-label">Attendees</label>
+                            <label class="form-label">{{ T::translate('Attendees', 'Mga Dadalo') }}</label>
                             
                             <!-- COSE Staff Attendees -->
                             <div class="mb-3">
-                                <label class="form-label fw-medium">COSE Staff</label>
+                                <label class="form-label fw-medium">{{ T::translate('COSE Staff', 'Tauhan ng COSE') }}</label>
                                 <div class="attendees-container">
                                     <div class="attendees-input-container" id="staffAttendees">
                                         <!-- Selected staff attendees will appear here as tags -->
-                                        <input type="text" class="attendees-input" id="staffSearch" placeholder="Type to search for staff...">
+                                        <input type="text" class="attendees-input" id="staffSearch" placeholder="{{ T::translate('Type to search for staff', 'Mag-type upang maghanap ng tauhan') }}...">
                                     </div>
                                     <div class="attendees-dropdown staff-dropdown" id="staffDropdown">
                                         <div class="dropdown-section">
-                                            <div class="dropdown-header">Administrators</div>
+                                            <div class="dropdown-header">{{ T::translate('Administrators', 'Mga Administrator') }}</div>
                                             @foreach($usersByRole['administrators'] as $admin)
                                             <div class="attendee-option" data-id="{{ $admin->id }}" data-type="cose_user">
                                                 <input type="checkbox" class="attendee-checkbox" name="participants[cose_user][]" value="{{ $admin->id }}">
@@ -901,7 +282,7 @@
                                             @endforeach
                                         </div>
                                         <div class="dropdown-section">
-                                            <div class="dropdown-header">Care Managers</div>
+                                            <div class="dropdown-header">{{ T::translate('Care Managers', 'Mga Tagapangasiwa ng Pangangalaga') }}</div>
                                             @foreach($usersByRole['care_managers'] as $manager)
                                             <div class="attendee-option" data-id="{{ $manager->id }}" data-type="cose_user">
                                                 <input type="checkbox" class="attendee-checkbox" name="participants[cose_user][]" value="{{ $manager->id }}">
@@ -910,7 +291,7 @@
                                             @endforeach
                                         </div>
                                         <div class="dropdown-section">
-                                            <div class="dropdown-header">Care Workers</div>
+                                            <div class="dropdown-header">{{ T::translate('Care Workers', 'Mga Tagapag-alaga') }}</div>
                                             @foreach($usersByRole['care_workers'] as $worker)
                                             <div class="attendee-option" data-id="{{ $worker->id }}" data-type="cose_user">
                                                 <input type="checkbox" class="attendee-checkbox" name="participants[cose_user][]" value="{{ $worker->id }}">
@@ -924,10 +305,10 @@
                             
                             <!-- Beneficiary Attendees (disabled by default) -->
                             <div class="mb-3">
-                                <label class="form-label fw-medium">Beneficiaries</label>
+                                <label class="form-label fw-medium">{{ T::translate('Beneficiaries', 'Benepisyaryo') }}</label>
                                 <div class="attendees-container">
                                     <div class="attendees-input-container disabled" id="beneficiaryAttendees">
-                                        <input type="text" class="attendees-input" id="beneficiarySearch" placeholder="Type to search for beneficiaries..." disabled>
+                                        <input type="text" class="attendees-input" id="beneficiarySearch" placeholder="{{ T::translate('Type to search for beneficiaries', 'Mag-type upang maghanap ng benepisyaryo') }}..." disabled>
                                     </div>
                                     <div class="attendees-dropdown beneficiary-dropdown" id="beneficiaryDropdown">
                                         @isset($beneficiaries)
@@ -944,10 +325,10 @@
                             
                             <!-- Family Member Attendees (disabled by default) -->
                             <div class="mb-3">
-                                <label class="form-label fw-medium">Family Members</label>
+                                <label class="form-label fw-medium">{{ T::translate('Family Members', 'Miyembro ng Pamilya') }}</label>
                                 <div class="attendees-container">
                                     <div class="attendees-input-container disabled" id="familyAttendees">
-                                        <input type="text" class="attendees-input" id="familySearch" placeholder="Type to search for family members..." disabled>
+                                        <input type="text" class="attendees-input" id="familySearch" placeholder="{{ T::translate('Type to search for family members', 'Mag-type upang maghanap ng miyembro ng pamilya') }}..." disabled>
                                     </div>
                                     <div class="attendees-dropdown family-dropdown" id="familyDropdown">
                                         @isset($familyMembers)
@@ -965,27 +346,26 @@
                         
                         <!-- Notes -->
                         <div class="form-group mb-3">
-                            <label for="appointmentNotes" class="form-label">Notes</label>
+                            <label for="appointmentNotes" class="form-label">{{ T::translate('Notes', 'Mga Tala') }}</label>
                             <textarea class="form-control" id="appointmentNotes" name="notes" rows="3"></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="submitAppointment"><i class="bi bi-plus-circle"></i> Create Appointment</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'Ikansela') }}</button>
+                    <button type="button" class="btn btn-primary" id="submitAppointment"><i class="bi bi-plus-circle"></i> {{ T::translate('Create Appointment', 'Gumawa ng Appointment') }}</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Cancellation Modal -->
-    <!-- Update the cancelModal to match careworker styling -->
     <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="cancelModalLabel"><i class="bi bi-trash-fill"></i> Cancel Appointment</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="cancelModalLabel"><i class="bi bi-trash-fill"></i> {{ T::translate('Cancel Appointment', 'Ikansela ang Appointment') }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ T::translate('Close', 'Isara') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-4">
@@ -993,35 +373,35 @@
                     </div>
                     
                     <div id="recurringCancelOptions" class="mb-3 border rounded p-3 bg-light" style="display:none;">
-                        <p class="mb-2"><strong>Cancellation Options:</strong></p>
+                        <p class="mb-2"><strong>{{ T::translate('Cancellation Options', 'Pagpipilian sa Pagkansela') }}:</strong></p>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="cancelOption" id="cancelSingle" value="single" checked>
                             <label class="form-check-label" for="cancelSingle">
-                                Cancel only this occurrence
+                                {{ T::translate('Cancel only this occurrence', 'Kanselahin lamang ang pagkakataong ito') }}
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="cancelOption" id="cancelFuture" value="future">
                             <label class="form-check-label" for="cancelFuture">
-                                Cancel this and all future occurrences
+                                {{ T::translate('Cancel this and all future occurrences', 'Kanselahin ito at lahat ng susunod na pagkakataon') }}
                             </label>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="cancelReason" class="form-label">Reason for Cancellation</label>
-                        <textarea class="form-control" id="cancelReason" rows="3" placeholder="Please provide a reason for cancellation..."></textarea>
+                        <label for="cancelReason" class="form-label">{{ T::translate('Reason for Cancellation', 'Dahilan sa Pagkansela') }}</label>
+                        <textarea class="form-control" id="cancelReason" rows="3" placeholder="{{ T::translate('Please provide a reason for cancellation', 'Mangyaring magbigay ng dahilan para sa pagkansela') }}..."></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="cancelPassword" class="form-label">Confirm your password</label>
-                        <input type="password" class="form-control" id="cancelPassword" placeholder="Enter your password">
+                        <label for="cancelPassword" class="form-label">{{ T::translate('Confirm your password', 'Kumpirmahin ang iyong password') }}</label>
+                        <input type="password" class="form-control" id="cancelPassword" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password') }}">
                         <div id="passwordError" class="text-danger mt-1"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-danger" id="confirmCancel">Confirm Cancellation</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara') }}</button>
+                    <button type="button" class="btn btn-danger" id="confirmCancel">{{ T::translate('Confirm Cancellation', 'Kumpirmahin ang Pagkansela') }}</button>
                 </div>
             </div>
         </div>
@@ -1052,10 +432,10 @@
                 resetAppointmentForm();
                 
                 // Reset modal title
-                document.getElementById('addAppointmentModalLabel').innerHTML = '<i class="bi bi-plus-circle"></i> Add New Appointment';
+                document.getElementById('addAppointmentModalLabel').innerHTML = '<i class="bi bi-plus-circle"></i> {{ T::translate('Add New Appointment', 'Magdagdag ng Bagong Appointment') }}';
                 
                 // Reset submit button text
-                document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
+                document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-plus-circle"></i> {{ T::translate('Create Appointment', 'Gumawa ng Appointment') }}';
                 
                 // Clear any appointment ID
                 document.getElementById('appointmentId').value = '';
@@ -1071,7 +451,7 @@
                 // Remove any lock icon added during edit
                 const checkboxLabel = recurringCheckbox.nextElementSibling;
                 if (checkboxLabel) {
-                    checkboxLabel.textContent = 'Recurring appointment'; // Reset to original text
+                    checkboxLabel.textContent = '{{ T::translate('Recurring appointment', 'Umuulit na Appointment') }}';
                 }
                 
                 // Clear current event selection
@@ -1091,10 +471,10 @@
                 resetAppointmentForm();
                 
                 // Reset modal title to "Add New Appointment"
-                document.getElementById('appointmentModalLabel').innerHTML = '<i class="bi bi-plus-circle"></i> Add New Appointment';
+                document.getElementById('appointmentModalLabel').innerHTML = '<i class="bi bi-plus-circle"></i> {{ T::translate('Add New Appointment', 'Magdagdag ng Bagong Appointment') }}';
                 
                 // Reset submit button text
-                document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
+                document.getElementById('submitAppointment').innerHTML = '<i class="bi bi-plus-circle"></i> {{ T::translate('Create Appointment', 'Gumawa ng Appointment') }}';
 
                 // Reset appointment ID to ensure we're in "create" mode
                 document.getElementById('appointmentId').value = '';
@@ -1258,12 +638,12 @@
             }
             
             // Show spinner during reset
-            showCalendarSpinner('Resetting calendar...');
+            showCalendarSpinner('{{ T::translate('Resetting calendar', 'Ini-reset ang kalendaryo') }}...');
             
             // Reset calendar view to month if not already
             if (currentView !== 'dayGridMonth') {
                 calendar.changeView('dayGridMonth');
-                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> {{ T::translate('Week View', 'Lingguhang Tingnan') }}';
                 currentView = 'dayGridMonth';
             }
             
@@ -1285,14 +665,14 @@
             appointmentDetailsEl.innerHTML = `
                 <div class="text-center text-muted py-4">
                     <i class="bi bi-calendar-event" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                    <p class="mt-3 mb-0">Select an appointment to view details</p>
+                    <p class="mt-3 mb-0">{{ T::translate('Select an appointment to view details', 'Pumili ng appointment upang makita ang detalye') }}</p>
                 </div>
             `;
 
              // Hide spinner when done
             setTimeout(() => {
                 hideCalendarSpinner();
-                showToast('Success', 'Calendar reset successfully', 'success');
+                showToast('{{ T::translate('Success', 'Tagumpay') }}', '{{ T::translate('Calendar reset successfully', 'Matagumpay na na-reset ang kalendaryo') }}', 'success');
             }, 300);
         });
 
@@ -1334,7 +714,7 @@
                             <i class="bi ${iconClass} me-2"></i>
                             <strong>${title}</strong> ${message ? ': ' + message : ''}
                         </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="{{ T::translate('Close', 'Isara') }}"></button>
                     </div>
                 </div>
             `;
@@ -1455,7 +835,7 @@
                 const id = option.dataset.id;
                 const type = option.dataset.type;
                 const nameEl = option.querySelector('span');
-                const name = nameEl ? nameEl.textContent : 'Unknown';
+                const name = nameEl ? nameEl.textContent : '{{ T::translate('Unknown', 'Hindi Kilala') }}';
                 
                 // Handle selection status
                 if (checkbox.checked) {
@@ -1543,7 +923,7 @@
             },
             eventDisplay: 'block',
             events: function(info, successCallback, failureCallback) {
-                showCalendarSpinner('Loading appointments...');
+                showCalendarSpinner('{{ T::translate('Loading appointments', 'Naglo-load ng mga appointment') }}...');
                 // Fetch events from server based on date range
                 fetch('/care-manager/internal-appointments/get-appointments?start=' + info.startStr + '&end=' + info.endStr + '&view_type=' + currentView, {
                     method: 'GET',
@@ -1554,7 +934,7 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Failed to load appointments');
+                        throw new Error('{{ T::translate('Failed to load appointments', 'Nabigong i-load ang mga appointment') }}');
                     }
                     return response.json();
                 })
@@ -1567,7 +947,7 @@
                         eventCache.clear();
 
                         // Keep spinner visible during filtering with message
-                        showCalendarSpinner('Filtering appointments...');
+                        showCalendarSpinner('{{ T::translate('Filtering appointments', 'Pagsasala ng mga appointment') }}...');
                         
                         // Give calendar time to render the events
                         setTimeout(() => {
@@ -1582,12 +962,12 @@
                     hideCalendarSpinner();
                 })
                 .catch(error => {
-                    console.error('Error loading appointments:', error);
+                    console.error('{{ T::translate('Error loading appointments', 'Error sa pag-load ng mga appointment') }}:', error);
                     failureCallback(error);
                     hideCalendarSpinner();
             
                     // Show error message
-                    showToast('Error', 'Failed to load appointments', 'error');
+                    showToast('{{ T::translate('Error', 'Error') }}', '{{ T::translate('Failed to load appointments', 'Nabigong i-load ang mga appointment') }}', 'error');
                 });
             },
             eventContent: function(arg) {
@@ -1596,7 +976,7 @@
                 const startTime = event.start ? event.start.toLocaleTimeString([], timeFormat) : '';
                 const endTime = event.end ? event.end.toLocaleTimeString([], timeFormat) : '';
                 const isFlexibleTime = event.extendedProps.is_flexible_time;
-                const timeText = isFlexibleTime ? 'Flexible' : (startTime && endTime ? `${startTime} - ${endTime}` : startTime);
+                const timeText = isFlexibleTime ? '{{ T::translate('Flexible', 'Flexible') }}' : (startTime && endTime ? `${startTime} - ${endTime}` : startTime);
                 
                 let eventEl = document.createElement('div');
                 eventEl.className = 'fc-event-main';
@@ -1606,7 +986,7 @@
                     eventEl.innerHTML = `
                         <div class="event-title">${event.title}</div>
                         <div class="event-details">
-                            <div class="event-time"><i class="bi bi-clock"></i> ${isFlexibleTime ? 'Flexible' : startTime}</div>
+                            <div class="event-time"><i class="bi bi-clock"></i> ${isFlexibleTime ? '{{ T::translate('Flexible', 'Flexible') }}' : startTime}</div>
                         </div>
                     `;
                 } else {
@@ -1614,8 +994,8 @@
                     eventEl.innerHTML = `
                         <div class="event-title">${event.title}</div>
                         <div class="event-details">
-                            <div class="event-time"><i class="bi bi-clock"></i> ${isFlexibleTime ? 'Flexible' : timeText}</div>
-                            <div class="event-location"><i class="bi bi-geo-alt"></i> ${event.extendedProps.meeting_location || 'No location'}</div>
+                            <div class="event-time"><i class="bi bi-clock"></i> ${isFlexibleTime ? '{{ T::translate('Flexible', 'Flexible') }}' : timeText}</div>
+                            <div class="event-location"><i class="bi bi-geo-alt"></i> ${event.extendedProps.meeting_location || '{{ T::translate('No location', 'Walang lokasyon') }}'}</div>
                         </div>
                     `;
                 }
@@ -1637,12 +1017,12 @@
                     const startTime = event.start ? event.start.toLocaleTimeString([], timeFormat) : '';
                     const endTime = event.end ? event.end.toLocaleTimeString([], timeFormat) : '';
                     
-                    const timeText = isFlexibleTime ? 'Flexible Scheduling' : 
+                    const timeText = isFlexibleTime ? '{{ T::translate('Flexible Scheduling', 'Flexible na Iskedyul') }}' : 
                         (startTime && endTime ? `${startTime} - ${endTime}` : startTime);
                     
                     let tooltipTitle = `${event.title}\n` +
-                                `Time: ${timeText}\n` +
-                                `Location: ${event.extendedProps.meeting_location || ''}`;
+                                `{{ T::translate('Time', 'Oras') }}: ${timeText}\n` +
+                                `{{ T::translate('Location', 'Lokasyon') }}: ${event.extendedProps.meeting_location || ''}`;
                     
                     // Apply tooltip
                     arg.el.setAttribute('data-bs-toggle', 'tooltip');
@@ -1656,7 +1036,7 @@
                 
                 // Only show spinner for initial page load or if we have an active search
                 if (currentSearchTerm) {
-                    showCalendarSpinner('Loading appointments...');
+                    showCalendarSpinner('{{ T::translate('Loading appointments', 'Naglo-load ng mga appointment') }}...');
                 }
             },
             eventClick: function(info) {
@@ -1676,7 +1056,7 @@
                         `<li>${p.name} ${p.is_organizer ? '<span class="badge bg-info">Organizer</span>' : ''}</li>`
                     ).join('');
                 } else {
-                    attendeesList = '<li>No attendees specified</li>';
+                    attendeesList = '<li>{{ T::translate('No attendees specified', 'Walang tinukoy na mga dadalo') }}</li>';
                 }
                 
                 // Check if recurring
@@ -1685,19 +1065,19 @@
                 if (isRecurring && event.extendedProps.recurring_pattern) {
                     const pattern = event.extendedProps.recurring_pattern;
                     const patternTypes = {
-                        'daily': 'Daily',
-                        'weekly': 'Weekly',
-                        'monthly': 'Monthly'
+                        'daily': '{{ T::translate('Daily', 'Araw-araw') }}',
+                        'weekly': '{{ T::translate('Weekly', 'Lingguhan') }}',
+                        'monthly': '{{ T::translate('Monthly', 'Buwanan') }}'
                     };
                     
                     recurringInfo = `
                     <div class="detail-item">
-                        <span class="detail-label">Recurrence:</span>
-                        <span class="detail-value">${patternTypes[pattern.type] || 'Custom'}</span>
+                        <span class="detail-label">{{ T::translate('Recurrence', 'Pag-ulit') }}:</span>
+                        <span class="detail-value">${patternTypes[pattern.type] || '{{ T::translate('Custom', 'Pasadyang') }}'}</span>
                     </div>
                     ${pattern.recurrence_end ? `
                     <div class="detail-item">
-                        <span class="detail-label">Until:</span>
+                        <span class="detail-label">{{ T::translate('Until', 'Hanggang') }}:</span>
                         <span class="detail-value">${new Date(pattern.recurrence_end).toLocaleDateString()}</span>
                     </div>
                     ` : ''}`;
@@ -1705,15 +1085,15 @@
                 
                 appointmentDetailsEl.innerHTML = `
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-calendar-event"></i> Appointment</div>
+                        <div class="section-title"><i class="bi bi-calendar-event"></i> {{ T::translate('Appointment', 'Appointment') }}</div>
                         <h5 class="mb-2">${event.title}</h5>
                         <div class="detail-item">
-                            <span class="detail-label">Type:</span>
+                            <span class="detail-label">{{ T::translate('Type', 'Uri') }}:</span>
                             <span class="detail-value">${event.extendedProps.type}</span>
                         </div>
                         ${event.extendedProps.other_type_details ? `
                         <div class="detail-item">
-                            <span class="detail-label">Details:</span>
+                            <span class="detail-label">{{ T::translate('Details', 'Detalye') }}:</span>
                             <span class="detail-value">${event.extendedProps.other_type_details}</span>
                         </div>
                         ` : ''}
@@ -1730,39 +1110,39 @@
                     </div>
                     
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-clock"></i> Schedule</div>
+                        <div class="section-title"><i class="bi bi-clock"></i> {{ T::translate('Schedule', 'Iskedyul') }}</div>
                         <div class="detail-item">
-                            <span class="detail-label">Date:</span>
-                            <span class="detail-value">${event.start ? event.start.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not specified'}</span>
+                            <span class="detail-label">{{ T::translate('Date', 'Petsa') }}:</span>
+                            <span class="detail-value">${event.start ? event.start.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '{{ T::translate('Not specified', 'Hindi tinukoy') }}'}</span>
                         </div>
                         ${!event.extendedProps.is_flexible_time ? `
                             <div class="detail-item">
-                                <span class="detail-label">Time:</span>
+                                <span class="detail-label">{{ T::translate('Time', 'Oras') }}:</span>
                                 <span class="detail-value">${event.start ? event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''} - ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</span>
                             </div>
                             ` : `
                             <div class="detail-item">
-                                <span class="detail-label">Time:</span>
-                                <span class="detail-value"><span class="badge bg-info">Flexible Scheduling</span></span>
+                                <span class="detail-label">{{ T::translate('Time', 'Oras') }}:</span>
+                                <span class="detail-value"><span class="badge bg-info">{{ T::translate('Flexible Scheduling', 'Flexible na Iskedyul') }}</span></span>
                             </div>
                             `}
                         <div class="detail-item">
-                            <span class="detail-label">Location:</span>
-                            <span class="detail-value">${event.extendedProps.meeting_location || 'Not specified'}</span>
+                            <span class="detail-label">{{ T::translate('Location', 'Lokasyon') }}:</span>
+                            <span class="detail-value">${event.extendedProps.meeting_location || '{{ T::translate('Not specified', 'Hindi tinukoy') }}'}</span>
                         </div>
                         ${recurringInfo}
                     </div>
                     
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-people"></i> Attendees</div>
+                        <div class="section-title"><i class="bi bi-people"></i> {{ T::translate('Attendees', 'Mga Dadalo') }}</div>
                         <ul class="mb-0 ps-3">
                             ${attendeesList}
                         </ul>
                     </div>
                     
                     <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-journal-text"></i> Notes</div>
-                        <p class="mb-0">${event.extendedProps.notes || 'No notes available'}</p>
+                        <div class="section-title"><i class="bi bi-journal-text"></i> {{ T::translate('Notes', 'Mga Tala') }}</div>
+                        <p class="mb-0">${event.extendedProps.notes || '{{ T::translate('No notes available', 'Walang available na mga tala') }}'}</p>
                     </div>
                 `;
 
@@ -1776,8 +1156,8 @@
                 
                 // Add visual indicator if buttons are disabled due to status
                 if (!isEditable) {
-                    editButton.title = `Cannot edit ${status} appointments`;
-                    deleteButton.title = `Cannot cancel ${status} appointments`;
+                    editButton.title = `{{ T::translate('Cannot edit', 'Hindi maaaring i-edit') }} ${status} {{ T::translate('appointments', 'mga appointment') }}`;
+                    deleteButton.title = `{{ T::translate('Cannot cancel', 'Hindi maaaring kanselahin') }} ${status} {{ T::translate('appointments', 'mga appointment') }}`;
                 } else {
                     editButton.title = '';
                     deleteButton.title = '';
@@ -1791,11 +1171,11 @@
         toggleWeekButton.addEventListener('click', function() {
             if (currentView === 'dayGridMonth') {
                 calendar.changeView('timeGridWeek');
-                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-month"></i> Month View';
+                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-month"></i> {{ T::translate('Month View', 'Buwanang Tingnan') }}';
                 currentView = 'timeGridWeek';
             } else {
                 calendar.changeView('dayGridMonth');
-                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> {{ T::translate('Week View', 'Lingguhang Tingnan') }}';
                 currentView = 'dayGridMonth';
             }
         });
@@ -1881,11 +1261,11 @@
             // Reset submit button
             const submitButton = document.getElementById('submitAppointment');
             if (submitButton) {
-                submitButton.innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
+                submitButton.innerHTML = '<i class="bi bi-plus-circle"></i> {{ T::translate('Create Appointment', 'Gumawa ng Appointment') }}';
             }
         }
         
-                // Search functionality
+        // Search functionality
         const searchInput = document.querySelector('.search-input');
         if (searchInput) {
             let searchTimeout = null;
@@ -1895,7 +1275,7 @@
             searchSpinner.className = 'search-spinner';
             searchSpinner.innerHTML = `
                 <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Searching...</span>
+                    <span class="visually-hidden">{{ T::translate('Searching', 'Naghahanap') }}...</span>
                 </div>
             `;
             document.querySelector('.search-container').appendChild(searchSpinner);
@@ -1928,7 +1308,7 @@
                 // Force browser to repaint spinner before continuing
                 if (this.value.length > 1) {
                     // Show the calendar spinner
-                    showCalendarSpinner('Searching appointments...');
+                    showCalendarSpinner('{{ T::translate('Searching appointments', 'Naghahanap ng mga appointment') }}...');
                     
                     // Force a browser reflow/repaint to ensure spinner is visible
                     document.getElementById('calendar-spinner').getBoundingClientRect();
@@ -2058,14 +1438,14 @@
                 
                 // Show feedback if no matches and search term is significant
                 if (matchCount === 0 && searchTerm.length >= 2 && !isApplyingStoredSearch) {
-                    showToast('Search', 'No appointments match your search criteria', 'info');
+                    showToast('{{ T::translate('Search', 'Paghahanap') }}', '{{ T::translate('No appointments match your search criteria', 'Walang appointment na tumutugma sa iyong pamantayan sa paghahanap') }}', 'info');
                 }
             }
         }
 
 
 
-        function showCalendarSpinner(message = 'Loading appointments...') {
+        function showCalendarSpinner(message = '{{ T::translate('Loading appointments', 'Naglo-load ng mga appointment') }}...') {
             const spinner = document.getElementById('calendar-spinner');
             if (spinner) {
                 // Update message if provided
@@ -2149,7 +1529,7 @@
                 // Set modal title
                 const modalTitle = document.getElementById('addAppointmentModalLabel');
                 if (modalTitle) {
-                    modalTitle.textContent = 'Edit Appointment';
+                    modalTitle.textContent = '{{ T::translate('Edit Appointment', 'I-Edit ang Appointment')}}';
                 } else {
                     console.warn('Modal title element not found');
                 }
@@ -2204,13 +1584,13 @@
                 if (isEditing) {
                     const recurringCheckbox = document.getElementById('recurringCheck');
                     recurringCheckbox.disabled = true;
-                    recurringCheckbox.title = "Converting between recurring and non-recurring is not supported";
+                    recurringCheckbox.title = "{{ T::translate('Converting between recurring and non-recurring is not supported', 'Hindi sinusuportahan ang pag-convert sa pagitan ng umuulit at hindi umuulit') }}";
                     
                     // Add visual indicator next to the checkbox
                     const checkboxLabel = recurringCheckbox.nextElementSibling;
                     if (checkboxLabel) {
                         // Add lock icon to indicate it's locked
-                        checkboxLabel.innerHTML += ' <i class="bi bi-lock-fill text-secondary" title="Cannot be changed"></i>';
+                        checkboxLabel.innerHTML += ' <i class="bi bi-lock-fill text-secondary" title="{{ T::translate('Cannot be changed', 'Hindi maaring mabago')}}"></i>';
                     }
                 }
 
@@ -2238,9 +1618,9 @@
                         const defaultRadio = document.querySelector('input[name="pattern_type"][value="weekly"]');
                         if (defaultRadio) {
                             defaultRadio.checked = true;
-                            console.log("Defaulted to weekly pattern");
+                            console.log("{{ T::translate('Defaulted to weekly pattern', 'Ibinalik sa lingguhang pattern')}}");
                         } else {
-                            console.error("Could not find any pattern radio buttons");
+                            console.error("{{ T::translate('Could not find any pattern radio buttons', 'Walang nahanap na mga pattern na radio button')}}");
                         }
                     }
                     
@@ -2463,8 +1843,8 @@
                 
                 if (!startTime || !endTime) {
                     showModalErrors([
-                        !startTime ? 'Start time is required when flexible time is not selected.' : null,
-                        !endTime ? 'End time is required when flexible time is not selected.' : null
+                        !startTime ? '{{ T::translate('Start time is required when flexible time is not selected', 'Ang oras ng simula ay kinakailangan kapag ang flexible time ay di-napili')}}.' : null,
+                        !endTime ? '{{ T::translate('End time is required when flexible time is not selected', 'Ang oras ng pagtatapos ay kailangan kapag ang flexible time ay di-napili')}}.' : null
                     ].filter(Boolean));
                     
                     // Reset button state and prevent form submission
@@ -2531,7 +1911,7 @@
                             showModalErrors([xhr.responseJSON.message]);
                         }
                     } else {
-                        showModalErrors(['An error occurred while saving the appointment. Please try again.']);
+                        showModalErrors(['{{ T::translate('An error occurred while saving the appointment. Please try again.', 'May error na naganap habang sine-save ang appointment. Pakisubukan muli.')}}']);
                     }
 
                     // Always re-enable the button on error
@@ -2657,7 +2037,7 @@
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 500) {
-                        throw new Error('Server error: The server encountered an issue. Please try again later.');
+                        throw new Error('{{ T::translate('Server error: The server encountered an issue. Please try again later.', 'Error sa server: Ang server ay nakatagpo ng isyu. Pakisubukan muli mamamaya.') }}');
                     } else if (response.status === 422) {
                         return response.json().then(data => {
                             throw new Error(data.message || 'Validation error. Please check your input.');
@@ -2672,14 +2052,14 @@
                 bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
                 
                 // Show success message
-                showToast('Success', data.message || 'Appointment cancelled successfully', 'success');
+                showToast('Success', data.message || '{{ T::translate('Appointment cancelled successfully', 'Ang appointment ay matagumpay na na-kansela')}}', 'success');
                 
                 // Update the calendar
                 calendar.refetchEvents();
                 
                 // Clear the details panel
                 if (appointmentDetailsEl) {
-                    appointmentDetailsEl.innerHTML = '<div class="alert alert-info">Select an appointment to view details</div>';
+                    appointmentDetailsEl.innerHTML = '<div class="alert alert-info">{{ T::translate('Select an appointment to view details', 'Pumili ng appointment upang makita ang detalye')}}</div>';
                 }
                 
                 // Clear current event selection
@@ -2689,7 +2069,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Error', error.message || 'An unexpected error occurred', 'danger');
+                showToast('Error', error.message || '{{ T::translate('An unexpected error occurred', 'Isang hindi inaasahang error ang naganap')}}', 'danger');
             })
             .finally(() => {
                 // Reset button state

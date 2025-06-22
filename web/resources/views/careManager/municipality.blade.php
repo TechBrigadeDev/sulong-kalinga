@@ -6,22 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Municipality & Barangay Information</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/municipality.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
-    
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
 
     <div class="home-section">
-        <div class="text-left">MUNICIPALITY & BARANGAY INFORMATION</div>
+        <div class="text-left">{{ T::translate('MUNICIPALITY & BARANGAY INFORMATION', 'MUNISIPALIDAD AT IMPORASYONG NG BARANGAY')}}</div>
 
         <!-- Display success and error messages -->
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bx bx-check-circle me-2"></i>
+                <i class="bi bi-check-circle me-2"></i>
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -29,7 +30,7 @@
 
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bx bx-error-circle me-2"></i>
+                <i class="bi bi-exclamation-circle me-2"></i>
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -42,11 +43,11 @@
                 <div class="col-12 col-md-6 mb-2">
                     <div class="input-group">
                         <span class="input-group-text">
-                            <i class="bx bx-search-alt"></i>
+                            <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" class="form-control" placeholder="Search barangay or municipality..." id="searchBar">
+                        <input type="text" class="form-control" placeholder="{{ T::translate('Search barangay or municipality', 'Maghanap ng barangay o munisipalidad')}}..." id="searchBar">
                         <button class="btn btn-primary" type="button" id="searchButton">
-                            Search
+                            {{ T::translate('Search', 'Maghanap')}}
                         </button>
                     </div>
                 </div>
@@ -55,10 +56,10 @@
                 <div class="col-12 col-md-6 mb-2">
                     <div class="input-group">
                         <span class="input-group-text">
-                            <i class="bx bx-filter-alt"></i>
+                            <i class="bi bi-funnel"></i>
                         </span>
                         <select class="form-select" id="filterDropdown">
-                            <option value="">All Municipalities</option>
+                            <option value="">{{ T::translate('All Municipalities', 'Lahat ng Munisipalidad')}}</option>
                             @foreach($municipalities as $municipality)
                                 <option value="{{ $municipality->municipality_id }}">{{ $municipality->municipality_name }}</option>
                             @endforeach
@@ -71,8 +72,8 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="alert alert-info">
-                        <i class="bx bx-info-circle me-2"></i>
-                        This is a read-only view. For changes to municipalities or barangays, please contact an administrator.
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ T::translate('This is a read-only view. For changes to municipalities or barangays, please contact an administrator.', 'Ang page na ito ay maaring basahin lamang. Para sa mga pagbabago sa mga Munisipalidad o mga Barangay, Mangyaring i-contact ang administartor.')}}
                     </div>
                 </div>
             </div>
@@ -83,9 +84,9 @@
                         <table class="table table-striped w-100 align-middle">
                             <thead>
                                 <tr>
-                                    <th scope="col">Municipality</th>
-                                    <th scope="col">Barangay</th>
-                                    <th scope="col">Beneficiaries</th>
+                                    <th scope="col">{{ T::translate('Municipality', 'Munisipalidad')}}</th>
+                                    <th scope="col">{{ T::translate('Barangay', 'Baranagy')}}</th>
+                                    <th scope="col">{{ T::translate('Beneficiaries', 'Benepisyaryo')}}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -97,7 +98,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center">No barangays found</td>
+                                        <td colspan="3" class="text-center">{{ T::translate('No barangays found', 'Walang barangay ang nakita')}}</td>
                                     </tr>
                                 @endforelse
                             </tbody>

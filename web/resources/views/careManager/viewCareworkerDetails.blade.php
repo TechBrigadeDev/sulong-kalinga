@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Care Worke Profile Detals | Manager</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/careworkerProfilesDetails.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
@@ -20,20 +23,20 @@
             <!-- Header with Action Buttons -->
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-2">
                 <a href="{{ route('care-manager.careworkers.index') }}" class="btn btn-secondary desktop-back-btn align-self-start align-self-md-center">
-                    <i class="bi bi-arrow-left"></i> Back
+                    <i class="bi bi-arrow-left"></i> {{ T::translate('Back', 'Bumalik')}}
                 </a>
                 <h4 class="mb-0 text-center" style="font-size: 20px; font-weight: bold; padding: 10px;">
-                    Care Worker Profile Details
+                    {{ T::translate('CARE WORKER PROFILE DETAILS', 'MGA DETALYE SA PROFILE NG TAGAPAG-ALAGA')}}
                 </h4>
                 <div class="d-flex justify-content-center w-100 justify-content-md-end gap-2 header-buttons">
                     <a href="{{ route('care-manager.careworkers.index') }}" class="btn btn-secondary mobile-back-btn" style="height: 33px;">
-                        <i class="bi bi-arrow-left"></i> Back
+                        <i class="bi bi-arrow-left"></i> {{ T::translate('Back', 'Bumalik')}}
                     </a>
                     <a href="{{ route('care-manager.careworkers.edit', $careworker->id) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-square me-1"></i> Edit
+                        <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit', 'I-Edit')}}
                     </a>
                     <button type="button" class="btn btn-danger" onclick="openDeleteCareworkerModal('{{ $careworker->id }}', '{{ $careworker->first_name }} {{ $careworker->last_name }}')">
-                        <i class="bi bi-trash me-1"></i> Delete
+                        <i class="bi bi-trash me-1"></i> {{ T::translate('Delete', 'Tanggalin')}}
                     </button>
                 </div>
             </div>
@@ -46,7 +49,7 @@
                             <div class="card-body p-4">
                                 <div class="row align-items-center">
                                     <div class="col-md-3 text-center mb-4 mb-md-0">
-                                        <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" alt="Profile Photo">
+                                        <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" alt="Profile Photo"
                                             alt="Profile Picture" 
                                             class="img-fluid rounded-circle profile-img">
                                     </div>
@@ -58,14 +61,14 @@
                                                 </h3>
                                                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                                     <span class="badge rounded-pill bg-light text-dark">
-                                                        <i class="bi bi-person-badge me-1"></i> Care Worker
+                                                        <i class="bi bi-person-badge me-1"></i> {{ T::translate('Care Worker', 'Tagapag-alaga')}}
                                                     </span>
                                                     <span class="badge rounded-pill {{ $careworker->status == 'Active' ? 'badge-active' : 'badge-inactive' }}">
                                                         {{ $careworker->status }}
                                                     </span>
                                                 </div>
                                                 <p class="text-muted mt-2 mb-0">
-                                                    <i class="bi bi-calendar3 me-1"></i> Member since {{ $careworker->status_start_date->format('F j, Y') }}
+                                                    <i class="bi bi-calendar3 me-1"></i> {{ T::translate('Member since', 'Miyembro magmula')}} {{ $careworker->status_start_date->format('F j, Y') }}
                                                 </p>
                                             </div>
                                             <div class="mt-2 mt-md-0">
@@ -73,8 +76,8 @@
                                                         name="status" 
                                                         id="statusSelect{{ $careworker->id }}" 
                                                         onchange="openStatusChangeCareworkerModal(this, 'Care Worker', {{ $careworker->id }}, '{{ $careworker->status }}')">
-                                                    <option value="Active" {{ $careworker->status == 'Active' ? 'selected' : '' }}>Active</option>
-                                                    <option value="Inactive" {{ $careworker->status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                                    <option value="Active" {{ $careworker->status == 'Active' ? 'selected' : '' }}>{{ T::translate('Active', 'Aktibo')}}</option>
+                                                    <option value="Inactive" {{ $careworker->status == 'Inactive' ? 'selected' : '' }}>{{ T::translate('Inactive', 'Di-Aktibo')}}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -90,48 +93,48 @@
                     <div class="col-lg-8">
                         <div class="detail-card card mb-4">
                             <div class="card-header detail-card-header">
-                                <i class="bi bi-person-circle me-2"></i>Personal Information
+                                <i class="bi bi-person-circle me-2"></i>{{ T::translate('Personal Information', 'Personal na Impormasyon')}}
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="detail-item">
-                                            <div class="detail-label">Educational Background</div>
+                                            <div class="detail-label">{{ T::translate('Educational Background', 'Background Pang-Edukasyon')}}</div>
                                             <div class="detail-value">{{$careworker->educational_background ?? 'N/A'}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Birthday</div>
+                                            <div class="detail-label">{{ T::translate('Birthday', 'Kaarawan')}}</div>
                                             <div class="detail-value">{{$careworker->birthday->format('F j, Y')}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Gender</div>
+                                            <div class="detail-label">{{ T::translate('Gender', 'Kasarian')}}</div>
                                             <div class="detail-value">{{$careworker->gender ?? 'N/A'}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Civil Status</div>
+                                            <div class="detail-label">{{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}</div>
                                             <div class="detail-value">{{$careworker->civil_status ?? 'N/A'}}</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="detail-item">
-                                            <div class="detail-label">Religion</div>
+                                            <div class="detail-label">{{ T::translate('Religion', 'Relihiyon')}}</div>
                                             <div class="detail-value">{{$careworker->religion ?? 'N/A'}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Nationality</div>
+                                            <div class="detail-label">{{ T::translate('Nationality', 'Nasyonalidad')}}</div>
                                             <div class="detail-value">{{$careworker->nationality ?? 'N/A'}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Assigned Municipality</div>
+                                            <div class="detail-label">{{ T::translate('Assigned Municipality', 'Nakatalagang Munisipalidad')}}</div>
                                             <div class="detail-value">{{$careworker->municipality->municipality_name}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Assigned Care Manager</div>
+                                            <div class="detail-label">{{ T::translate('Assigned Care Manager', 'Nakatalagang Care Manager')}}</div>
                                             <div class="detail-value">
                                                 @if($careworker->assignedCareManager)
                                                     {{ $careworker->assignedCareManager->first_name }} {{ $careworker->assignedCareManager->last_name }}
                                                 @else
-                                                    <span class="text-muted">Unassigned</span>
+                                                    <span class="text-muted">{{ T::translate('Unassigned', 'Di-nakatalaga')}}</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -148,21 +151,21 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="detail-item">
-                                            <div class="detail-label">Email Address</div>
+                                            <div class="detail-label">{{ T::translate('Email Address', 'Email Address')}}</div>
                                             <div class="detail-value">{{$careworker->email}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Mobile Number</div>
+                                            <div class="detail-label">{{ T::translate('Mobile Number', 'Numero sa Mobile')}}</div>
                                             <div class="detail-value">{{$careworker->mobile}}</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="detail-item">
-                                            <div class="detail-label">Landline Number</div>
+                                            <div class="detail-label">{{ T::translate('Landline Number', 'Numero sa Landline')}}</div>
                                             <div class="detail-value">{{$careworker->landline ?? 'N/A'}}</div>
                                         </div>
                                         <div class="detail-item">
-                                            <div class="detail-label">Current Address</div>
+                                            <div class="detail-label">{{ T::translate('Current Address', 'Kasalukuyang Tirahan')}}</div>
                                             <div class="detail-value">{{$careworker->address}}</div>
                                         </div>
                                     </div>
@@ -175,24 +178,24 @@
                     <div class="col-lg-4">
                         <div class="detail-card card mb-4">
                             <div class="card-header detail-card-header">
-                                <i class="bi bi-file-earmark-text me-2"></i>Documents
+                                <i class="bi bi-file-earmark-text me-2"></i>{{ T::translate('Documents', 'Mga Dokumento')}}
                             </div>
                             <div class="card-body">
                                 <div class="detail-item">
-                                    <div class="detail-label">Government Issued ID</div>
+                                    <div class="detail-label">{{ T::translate('Government Issued ID', 'ID mula sa Gobyerno')}}</div>
                                     <div class="detail-value">
                                         @if($governmentIdUrl)
-                                            <a href="{{ $governmentIdUrl }}" target="_blank">Download Government ID</a>
+                                            <a href="{{ $governmentIdUrl }}" target="_blank">{{ T::translate('Download', 'I-Download')}}</a>
                                         @else
                                             N/A
                                         @endif
                                     </div>
                                 </div>
                                 <div class="detail-item">
-                                    <div class="detail-label">Resume / CV</div>
+                                    <div class="detail-label">{{ T::translate('Resume / CV', 'Resume / CV')}}</div>
                                     <div class="detail-value">
                                         @if($resumeUrl)
-                                            <a href="{{ $resumeUrl }}" target="_blank">Download Resume</a>
+                                            <a href="{{ $resumeUrl }}" target="_blank">{{ T::translate('Download', 'I-Download')}}</a>
                                         @else
                                             N/A
                                         @endif
@@ -203,19 +206,19 @@
                         
                         <div class="detail-card card mb-4">
                             <div class="card-header detail-card-header">
-                                <i class="bi bi-card-checklist me-2"></i>Government ID Numbers
+                                <i class="bi bi-card-checklist me-2"></i>{{ T::translate('Government ID Numbers', 'Mga Numero ng ID mula sa Gobyerno')}}
                             </div>
                             <div class="card-body">
                                 <div class="detail-item">
-                                    <div class="detail-label">SSS ID Number</div>
+                                    <div class="detail-label">{{ T::translate('SSS ID Number', 'Numero ng SSS ID')}}</div>
                                     <div class="detail-value">{{$careworker->sss_id_number ?? 'N/A'}}</div>
                                 </div>
                                 <div class="detail-item">
-                                    <div class="detail-label">PhilHealth ID Number</div>
+                                    <div class="detail-label">{{ T::translate('PhilHealth ID Number', 'Numero ng PhilHealth ID')}}</div>
                                     <div class="detail-value">{{$careworker->philhealth_id_number ?? 'N/A'}}</div>
                                 </div>
                                 <div class="detail-item">
-                                    <div class="detail-label">Pag-Ibig ID Number</div>
+                                    <div class="detail-label">{{ T::translate('Pag-Ibig ID Number', 'Numero ng Pag-Ibig ID')}}</div>
                                     <div class="detail-value">{{$careworker->pagibig_id_number ?? 'N/A'}}</div>
                                 </div>
                             </div>
@@ -226,13 +229,13 @@
                 <!-- Managed Beneficiaries Section -->
                 <div class="row mt-4">
                     <div class="col-12">
-                        <h4 class="section-title"><i class="bi bi-people me-2"></i>Managed Beneficiaries</h4>
+                        <h4 class="section-title"><i class="bi bi-people me-2"></i>{{ T::translate('Managed Beneficiaries', 'Mga Pinangasiwaang Benepisyaryo')}}</h4>
                         
                         @if($beneficiaries->isEmpty())
                             <div class="empty-state">
                                 <i class="bi bi-person-x fa-3x mb-3" style="color: var(--medium-gray);"></i>
-                                <h5>No Beneficiaries Assigned</h5>
-                                <p class="mb-0">This care worker is not currently managing any beneficiaries.</p>
+                                <h5>{{ T::translate('No Beneficiaries Assigned', 'Walang mga Nakatalagang Benepisyaryo')}}</h5>
+                                <p class="mb-0">{{ T::translate('This care worker is not currently managing any beneficiaries.', 'Ang Tagapag-alaga na ito ay hindi nangangasiwa sa kahit anong benepisyaryo sa kasalukuyan.')}}</p>
                             </div>
                         @else
                             <div class="row">

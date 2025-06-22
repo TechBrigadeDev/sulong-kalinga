@@ -170,7 +170,7 @@
                             <div class="card expense-card mt-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="card-title mb-0">{{ T::translate('Budget Kasaysayan', 'Kasaysayan ng Badyet')}}</h5>
+                                        <h5 class="card-title mb-0">{{ T::translate('Budget History', 'Kasaysayan ng Badyet')}}</h5>
                                         <button class="btn btn-sm btn-outline-primary" id="viewFullHistoryBtn">
                                             <i class="bi bi-clock-history"></i> {{ T::translate('Full History', 'Buong Kasaysayan')}}
                                         </button>

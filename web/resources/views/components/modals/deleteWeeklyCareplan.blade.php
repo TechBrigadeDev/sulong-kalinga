@@ -1,9 +1,13 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
+
 <!-- Weekly Care Plan Delete Modal (Password Confirmation) -->
 <div class="modal fade" id="deleteWeeklyCarePlanModal" tabindex="-1" aria-labelledby="deleteWeeklyCarePlanModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color:rgb(251, 68, 68);">
-                <h5 class="modal-title text-white" id="deleteWeeklyCarePlanModalLabel">Confirm Deletion with Password</h5>
+                <h5 class="modal-title text-white" id="deleteWeeklyCarePlanModalLabel">{{ T::translate('Confirm Deletion with Password', 'Kumpirmahin ang Pagtanggal gamit ang Password') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="weeklyCarePlanModalBodyContent">
@@ -12,21 +16,21 @@
                 <div id="deleteConfirmation">
                     <p class="text-danger">
                         <i class="bi bi-exclamation-circle"></i> 
-                        <strong>Final Warning!</strong> This action cannot be undone.
+                        <strong>{{ T::translate('Final Warning!', 'Huling Babala!') }}</strong> {{ T::translate('This action cannot be undone.', 'Hindi na mababawi ang aksyon na ito.') }}
                     </p>
-                    <p>You are about to permanently delete the weekly care plan for <span id="beneficiaryNameToDelete" style="font-weight: bold;"></span>.</p>
-                    <p><strong>This action cannot be undone and all data will be permanently lost.</strong></p>
+                    <p>{{ T::translate('You are about to permanently delete the weekly care plan for', 'Tatanggalin mo na ang weekly care plan para kay') }} <span id="beneficiaryNameToDelete" style="font-weight: bold;"></span>.</p>
+                    <p><strong>{{ T::translate('This action cannot be undone and all data will be permanently lost.', 'Hindi na mababawi ang aksyon na ito at ang lahat ng datos ay permanenteng mawawala.') }}</strong></p>
                     <div class="mb-3">
-                        <label for="weeklyCarePlanDeletePasswordInput" class="form-label">Enter Your Password to Confirm</label>
-                        <input type="password" class="form-control" id="weeklyCarePlanDeletePasswordInput" placeholder="Enter your password" required>
+                        <label for="weeklyCarePlanDeletePasswordInput" class="form-label">{{ T::translate('Enter Your Password to Confirm', 'Ilagay ang Iyong Password upang Kumpirmahin') }}</label>
+                        <input type="password" class="form-control" id="weeklyCarePlanDeletePasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password') }}" required>
                         <input type="hidden" id="weeklyCarePlanIdToDelete" value="">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">{{ T::translate('Cancel', 'I-Kansela') }}</button>
                 <button type="button" class="btn btn-danger" id="confirmWeeklyCarePlanDeleteButton">
-                    <i class="bi bi-trash-fill"></i> Delete Weekly Care Plan
+                    <i class="bi bi-trash-fill"></i> {{ T::translate('Delete Weekly Care Plan', 'Tanggalin ang Weekly Care Plan') }}
                 </button>
             </div>
         </div>
@@ -46,13 +50,13 @@ window.openPasswordConfirmationModal = function(id, name) {
         <div id="deleteConfirmation">
             <p class="text-danger">
                 <i class="bi bi-exclamation-circle"></i> 
-                <strong>Final Warning!</strong> This action cannot be undone.
+                <strong>{{ T::translate('Final Warning!', 'Huling Babala!') }}</strong> {{ T::translate('This action cannot be undone.', 'Hindi na mababawi ang aksyon na ito.') }}
             </p>
-            <p>You are about to permanently delete the weekly care plan for <span id="beneficiaryNameToDelete" style="font-weight: bold;"></span>.</p>
-            <p><strong>This action cannot be undone and all data will be permanently lost.</strong></p>
+            <p>{{ T::translate('You are about to permanently delete the weekly care plan for', 'Tatanggalin mo na ang weekly care plan para kay') }} <span id="beneficiaryNameToDelete" style="font-weight: bold;"></span>.</p>
+            <p><strong>{{ T::translate('This action cannot be undone and all data will be permanently lost.', 'Hindi na mababawi ang aksyon na ito at ang lahat ng datos ay permanenteng mawawala.') }}</strong></p>
             <div class="mb-3">
-                <label for="weeklyCarePlanDeletePasswordInput" class="form-label">Enter Your Password to Confirm</label>
-                <input type="password" class="form-control" id="weeklyCarePlanDeletePasswordInput" placeholder="Enter your password" required>
+                <label for="weeklyCarePlanDeletePasswordInput" class="form-label">{{ T::translate('Enter Your Password to Confirm', 'Ilagay ang Iyong Password upang Kumpirmahin') }}</label>
+                <input type="password" class="form-control" id="weeklyCarePlanDeletePasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password') }}" required>
                 <input type="hidden" id="weeklyCarePlanIdToDelete" value="">
             </div>
         </div>
@@ -65,10 +69,10 @@ window.openPasswordConfirmationModal = function(id, name) {
     // Reset buttons
     const confirmButton = document.getElementById('confirmWeeklyCarePlanDeleteButton');
     confirmButton.disabled = false;
-    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Weekly Care Plan';
+    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Weekly Care Plan", "Tanggalin ang Weekly Care Plan") }}';
     confirmButton.style.display = 'inline-block';
     
-    document.getElementById('cancelDeleteButton').textContent = 'Cancel';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate("Cancel", "I-Kansela") }}';
     
     // Show the modal
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteWeeklyCarePlanModal'));
@@ -104,14 +108,14 @@ function showWeeklyCarePlanSuccess() {
             <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
         </div>
         <p class="text-success text-center">
-            <strong>Success!</strong> The weekly care plan has been deleted successfully.
+            <strong>{{ T::translate('Success!', 'Tagumpay!') }}</strong> {{ T::translate('The weekly care plan has been deleted successfully.', 'Matagumpay na natanggal ang weekly care plan.') }}
         </p>
-        <p class="text-center">You will be redirected to the reports page shortly.</p>
+        <p class="text-center">{{ T::translate('You will be redirected to the reports page shortly.', 'Ikaw ay maire-redirect sa pahina ng mga report sa ilang sandali.') }}</p>
     `;
     
     // Hide delete button and update cancel button
     document.getElementById('confirmWeeklyCarePlanDeleteButton').style.display = 'none';
-    document.getElementById('cancelDeleteButton').textContent = 'Close';
+    document.getElementById('cancelDeleteButton').textContent = '{{ T::translate("Close", "Isara") }}';
     
     // Set timeout to redirect to the reports page
     setTimeout(function() {
@@ -141,13 +145,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const weeklyCarePlanId = idInput.value;
         
         if (!password) {
-            showWeeklyCarePlanError('Please enter your password to confirm deletion.');
+            showWeeklyCarePlanError('{{ T::translate("Please enter your password to confirm deletion.", "Mangyaring ilagay ang iyong password upang kumpirmahin ang pagtanggal.") }}');
             return;
         }
         
         // Show loading state
         this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ T::translate("Deleting...", "Tinatanggal...") }}';
         
         // Send delete request with CSRF token and password
         fetch(`{{ Auth::user()->role_id == 2 ? '/care-manager' : '/admin' }}/weekly-care-plans/${weeklyCarePlanId}`, {
@@ -166,11 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (contentType && contentType.includes('application/json')) {
                     // If it's JSON, parse the error
                     return response.json().then(errorData => {
-                        throw new Error(errorData.message || 'Server error');
+                        throw new Error(errorData.message || '{{ T::translate("Server error", "Error sa server") }}');
                     });
                 } else {
                     // Not JSON, likely HTML error page
-                    throw new Error(`Server error: ${response.status}`);
+                    throw new Error(`{{ T::translate("Server error", "Error sa server") }}: ${response.status}`);
                 }
             }
             
@@ -184,16 +188,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 showWeeklyCarePlanSuccess();
             } else {
                 // Show the specific error message from the server
-                showWeeklyCarePlanError(data.message || 'Failed to delete weekly care plan.');
+                showWeeklyCarePlanError(data.message || '{{ T::translate("Failed to delete weekly care plan.", "Nabigong tanggalin ang weekly care plan.") }}');
                 this.disabled = false;
-                this.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Weekly Care Plan';
+                this.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Weekly Care Plan", "Tanggalin ang Weekly Care Plan") }}';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showWeeklyCarePlanError(error.message || 'An unexpected error occurred. Please try again.');
+            showWeeklyCarePlanError(error.message || '{{ T::translate("An unexpected error occurred. Please try again.", "Isang hindi inaasahang error ang naganap. Mangyaring subukan muli.") }}');
             this.disabled = false;
-            this.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Weekly Care Plan';
+            this.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate("Delete Weekly Care Plan", "Tanggalin ang Weekly Care Plan") }}';
         });
     });
 });

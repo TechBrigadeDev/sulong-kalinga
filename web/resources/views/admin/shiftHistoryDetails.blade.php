@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="{{ asset('css/shiftHistoryDetails.css') }}">
 </head>
 <body>
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     
@@ -17,19 +20,19 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-2 gap-0">
                 <!-- Back button for large screens -->
                 <a href="{{ route('admin.shift.histories.index') }}" class="btn btn-secondary btn-sm d-none d-md-inline-flex">
-                    <i class="bi bi-arrow-left me-2"></i>Back
+                    <i class="bi bi-arrow-left me-2"></i>{{ T::translate('Back', 'Bumalik')}}
                 </a>
                 
                 <!-- Centered title -->
                 <div class="flex-grow-1 text-center">
-                    <div class="text-center" style="font-size: 20px; font-weight: bold; padding: 10px;">SHIFT DETAILS</div>
+                    <div class="text-center" style="font-size: 20px; font-weight: bold; padding: 10px;">{{ T::translate('SHIFT DETAILS', 'DETALYE NG SHIFT')}}</div>
                 </div>
                 
                 <!-- Action buttons container -->
                 <div class="d-flex action-buttons">
                     <!-- Back button for small screens -->
                     <a href="{{ route('admin.shift.histories.index') }}" class="btn btn-secondary btn-sm d-inline-flex d-md-none">
-                        <i class="bi bi-arrow-left me-2"></i>Back
+                        <i class="bi bi-arrow-left me-2"></i>{{ T::translate('Back', 'BUmalik')}}
                     </a>
                     <button class="btn btn-primary btn-sm">
                         <i class="bi bi-download me-2"></i>Export Report
@@ -41,35 +44,33 @@
                     <!-- Shift Information Card -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Shift Information</h5>
+                            <h5 class="mb-0">{{ T::translate('Shift Information', 'Impormasyon ng Shift')}}</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="detail-grid">
                                         <div class="detail-row">
-                                            <div class="detail-label">Care Worker:</div>
-                                            <div class="detail-value" id="detail-care-worker">
-                                                {{ $shift->careWorker->first_name ?? '' }} {{ $shift->careWorker->last_name ?? '' }}
-                                            </div>
+                                            <div class="detail-label">{{ T::translate('Care Worker:', 'Tagapag-alaga:')}}</div>
+                                            <div class="detail-value" id="detail-care-worker">John Smith</div>
                                         </div>
                                         <div class="detail-row">
-                                            <div class="detail-label">Date:</div>
-                                            <div class="detail-value" id="detail-date">
-                                                {{ \Carbon\Carbon::parse($shift->time_in)->format('M d, Y') }}
-                                            </div>
+                                            <div class="detail-label">{{ T::translate('Date:', 'Petsa:')}}</div>
+                                            <div class="detail-value" id="detail-date">May 20, 2025</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">{{ T::translate('Shift Time:', 'Oras ng Shift')}}</div>
+                                            <div class="detail-value" id="detail-shift-time">08:00 AM - 04:00 PM</div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="detail-grid">
-                                        <!-- <div class="detail-row">
-                                            <div class="detail-label">Municipality:</div>
-                                            <div class="detail-value" id="detail-municipality">
-                                                {{ $shift->careWorker->municipality ?? '-' }}
-                                            </div>
-                                        </div> -->
-                                        <!-- <div class="detail-row">
+                                        <div class="detail-row">
+                                            <div class="detail-label">{{ T::translate('Municipality:', 'Munisipalidad:')}}</div>
+                                            <div class="detail-value" id="detail-municipality">Mondragon</div>
+                                        </div>
+                                        <div class="detail-row">
                                             <div class="detail-label">Status:</div>
                                             <div class="detail-value">
                                                 @if($shift->status === 'completed')
@@ -89,21 +90,8 @@
                                             </div>
                                         </div>
                                         <div class="detail-row">
-                                            <div class="detail-label">Total Hours:</div>
-                                            <div class="detail-value" id="detail-total-hours">
-                                                @if($shift->time_out)
-                                                    @php
-                                                        $start = \Carbon\Carbon::parse($shift->time_in);
-                                                        $end = \Carbon\Carbon::parse($shift->time_out);
-                                                        $totalMinutes = $start->diffInMinutes($end);
-                                                        $hours = floor($totalMinutes / 60);
-                                                        $minutes = $totalMinutes % 60;
-                                                    @endphp
-                                                    {{ $hours }} hours{{ $minutes > 0 ? ' ' . $minutes . ' minutes' : '' }}
-                                                @else
-                                                    In Progress
-                                                @endif
-                                            </div>
+                                            <div class="detail-label">{{ T::translate('Total Hours:', 'Kabuuang Oras:')}}</div>
+                                            <div class="detail-value" id="detail-total-hours">8 hours</div>
                                         </div>
                                     </div>
                                 </div>
@@ -114,17 +102,15 @@
                     <!-- Location History Card -->
                     <div class="card shadow-sm">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Location History</h5>
+                            <h5 class="mb-0">{{ T::translate('Location History', 'Kasaysayan ng Lokasyon')}}</h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th style="width: 20%">Time</th>
-                                            <th style="width: 40%">Location</th>
-                                            <th style="width: 20%">Event</th>
-                                            <th style="width: 20%">Visitation</th>
+                                            <th style="width: 25%">{{ T::translate('Time', 'Oras')}}</th>
+                                            <th style="width: 75%">{{ T::translate('Location', 'Lokasyon')}}</th>
                                         </tr>
                                     </thead>
                                     <tbody id="history-table-body">

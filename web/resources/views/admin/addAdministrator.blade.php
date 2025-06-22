@@ -184,7 +184,7 @@
                                 @endif
                             </div>
                             <div class="col-md-4">
-                                <label for="governmentID" class="form-label">Government Issued ID</label>
+                                <label for="governmentID" class="form-label">{{ T::translate('Government Issued ID', 'ID Galing sa Gobyerno')}}</label>
                                 <input type="file" class="form-control" id="governmentID" name="government_ID" accept=".jpg,.png">
                                  <small class="text-danger">{{ T::translate('Maximum file size: 7MB', 'Maximum na laki ng file: 7MB')}}</small>
                                 @if($errors->any())
@@ -219,7 +219,7 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">{{ T::translate('Administrator Account Registration', 'Pagrerehistro ng Account ng Administrator') }}</h5> <!-- Row Title -->
+                                <h5 class="text-start">{{ T::translate('Administrator Account Registration', 'Pagrerehistro sa Account ng Administrator') }}</h5> <!-- Row Title -->
                             </div>
                         </div>
                         <div class="row mb-1">
@@ -266,7 +266,7 @@
                             <div class="col-12 d-flex justify-content-center align-items-center">
                                 <button type="submit" class="btn btn-success btn-lg d-flex align-items-center">
                                     <i class="bi bi-floppy" style="padding-right: 10px;"></i>
-                                    Save Administrator
+                                    {{ T::translate('Save Administrator', 'I-Save ang Administrator')}}
                                 </button>
                             </div>
                         </div>
@@ -344,9 +344,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
-                            Maximum allowed size is ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>${fieldLabel}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                            {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         
@@ -375,9 +375,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                     }

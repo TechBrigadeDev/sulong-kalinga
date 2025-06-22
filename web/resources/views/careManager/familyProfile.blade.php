@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Family Management | Dashboard</title>
+    <title>Family Profiles | Manager</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/profilepages.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
@@ -14,8 +14,12 @@
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
     
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <div class="home-section">
-        <div class="text-left">FAMILY OR RELATIVE PROFILES</div>
+        <div class="text-left">{{ T::translate('FAMILY OR RELATIVE PROFILES', 'PROFILE NG PAMILYA O KA-ANAK') }}</div>
         <div class="container-fluid">
             <div class="row" id="home-content">
                 <div class="card-container">
@@ -23,7 +27,7 @@
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="bi bi-check-circle-fill me-2"></i>
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ T::translate('Close', 'Isara') }}"></button>
                     </div>
                     @endif
                     
@@ -36,9 +40,9 @@
                                         <span class="input-group-text">
                                             <i class="bi bi-search"></i>
                                         </span>
-                                        <input type="text" class="form-control" name="search" placeholder="Search family members..." id="searchBar" value="{{ request('search') }}">
+                                        <input type="text" class="form-control" name="search" placeholder="{{ T::translate('Search family members...', 'Maghanap ng mga kapamilya...') }}" id="searchBar" value="{{ request('search') }}">
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                            <i class="bi bi-search"></i> <span class="d-none d-sm-inline">{{ T::translate('Search', 'Maghanap') }}</span>
                                         </button>
                                     </div>
                                 </form>
@@ -48,7 +52,7 @@
                             <div>
                                 <div class="dropdown">
                                     <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                        <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export', 'I-export') }}</span>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                         <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</a></li>
@@ -61,7 +65,7 @@
                             <div>
                                 <a href="{{ route('care-manager.families.create') }}" class="w-100">
                                     <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                        <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Add Family</span>
+                                        <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Add Family', 'Magdagdag ng Pamilya') }}</span>
                                     </button>
                                 </a>
                             </div>
@@ -85,10 +89,10 @@
                                     <th scope="col" class="checkbox-cell">
                                         <input type="checkbox" id="selectAll" />
                                     </th>
-                                    <th scope="col">Full Name</th>
-                                    <th scope="col">Mobile Number</th>
-                                    <th scope="col">Registered Beneficiary</th>
-                                    <th scope="col">Actions</th>
+                                    <th scope="col">{{ T::translate('Full Name', 'Buong Pangalan') }}</th>
+                                    <th scope="col">{{ T::translate('Mobile Number', 'Numero sa Mobile') }}</th>
+                                    <th scope="col">{{ T::translate('Registered Beneficiary', 'Nakarehistrong Benepisyaryo') }}</th>
+                                    <th scope="col">{{ T::translate('Actions', 'Mga Aksyon') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -105,11 +109,11 @@
                                                 <form action="{{ route('care-manager.families.view') }}" method="POST" style="display:inline;">
                                                     @csrf
                                                     <input type="hidden" name="family_member_id" value="{{ $family_member->family_member_id }}">
-                                                    <button type="submit" class="btn btn-link" title="View Details">
+                                                    <button type="submit" class="btn btn-link" title="{{ T::translate('View Details', 'Tingnan ang Detalye') }}">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
                                                 </form>
-                                                <a href="{{ route('care-manager.families.edit', $family_member->family_member_id) }}" class="btn btn-link" title="Edit">
+                                                <a href="{{ route('care-manager.families.edit', $family_member->family_member_id) }}" class="btn btn-link" title="{{ T::translate('Edit', 'I-edit') }}">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
                                             </div>
@@ -121,8 +125,8 @@
                         @else
                         <div class="empty-state">
                             <i class="bi bi-people"></i>
-                            <h4>No family members found</h4>
-                            <p class="text-muted">Try adjusting your search criteria</p>
+                            <h4>{{ T::translate('No family members found', 'Walang nahanap na mga kapamilya') }}</h4>
+                            <p class="text-muted">{{ T::translate('Try adjusting your search criteria', 'Subukang ayusin ang iyong pamantayan sa paghahanap') }}</p>
                         </div>
                         @endif
                     </div>

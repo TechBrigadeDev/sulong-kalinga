@@ -11,7 +11,9 @@
 @else
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
 @endif
-
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="sidebar {{ $isMessagingView ? 'messaging-sidebar' : '' }}">
   <div class="logo-details" id="logoToggle">
     <i class="bi bi-people-fill"></i>
@@ -32,7 +34,7 @@
     <li class="{{ Request::routeIs('beneficiary.visitation.schedule.*') ? 'active' : '' }}">
       <a href="{{ route('beneficiary.visitation.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.visitation.schedule.index') }}'; return false;" @endif>
         <i class="bi bi-calendar-check"></i>
-        <span class="link_name">Visitation Schedule</span>
+        <span class="link_name">{{ T::translate('Visitation Schedule', 'Iskedyul ng Pagbisita')}}</span>
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('beneficiary.visitation.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.visitation.schedule.index') }}'; return false;" @endif>Visitation Schedule</a></li>
@@ -42,7 +44,7 @@
     <li class="{{ Request::routeIs('beneficiary.medication.schedule.*') ? 'active' : '' }}">
       <a href="{{ route('beneficiary.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.medication.schedule.index') }}'; return false;" @endif>
         <i class="bi bi-capsule"></i>
-        <span class="link_name">Medication Schedule</span>
+        <span class="link_name">{{ T::translate('Medication Schedule', 'Iskedyul ng Gamot')}}</span>
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('beneficiary.medication.schedule.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.medication.schedule.index') }}'; return false;" @endif>Medication Schedule</a></li>
@@ -52,7 +54,7 @@
     <li class="{{ Request::routeIs('beneficiary.emergency.service.*') ? 'active' : '' }}">
       <a href="{{ route('beneficiary.emergency.service.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.emergency.service.index') }}'; return false;" @endif>
         <i class="bi bi-clipboard2-pulse"></i>
-        <span class="link_name">Emergency & Service Requests</span>
+        <span class="link_name">{{ T::translate('Emergency & Service Requests', 'Emergency at Pakiusap na Serbisyo')}}</span>
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('beneficiary.emergency.service.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.emergency.service.index') }}'; return false;" @endif>Emergency & Service Requests</a></li>
@@ -72,7 +74,7 @@
     <li class="{{ Request::routeIs('beneficiary.member.*') ? 'active' : '' }}">
       <a href="{{ route('beneficiary.member.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.member.index') }}'; return false;" @endif>
         <i class="bi bi-people-fill"></i>
-        <span class="link_name">Family Members</span>
+        <span class="link_name">{{ T::translate('Family Members', 'Mga Miyembro ng Pamilya')}}</span>
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('beneficiary.member.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.member.index') }}'; return false;" @endif>Family Members</a></li>
@@ -89,7 +91,7 @@
       </ul>
     </li>
     
-    <li class="{{ Request::routeIs('beneficiary.messaging.*') ? 'active' : '' }}">
+    <!-- <li class="{{ Request::routeIs('beneficiary.messaging.*') ? 'active' : '' }}">
       <a href="{{ route('beneficiary.messaging.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.messaging.index') }}'; return false;" @endif>
         <i class="bi bi-chat-dots"></i>
         <span class="link_name">Messages</span>
@@ -97,7 +99,7 @@
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('beneficiary.messaging.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('beneficiary.messaging.index') }}'; return false;" @endif>Messages</a></li>
       </ul>
-    </li>
+    </li> -->
   </ul>
 </div>
 

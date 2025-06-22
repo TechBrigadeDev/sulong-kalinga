@@ -1,9 +1,12 @@
 <!-- filepath: c:\xampp\htdocs\sulong_kalinga\resources\views\components\modals\deleteBarangay.blade.php -->
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="deleteBarangayModal" tabindex="-1" aria-labelledby="deleteBarangayModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color:rgb(251, 68, 68);">
-                <h5 class="modal-title text-white" id="deleteBarangayModalLabel">Confirm Barangay Deletion</h5>
+                <h5 class="modal-title text-white" id="deleteBarangayModalLabel">{{ T::translate('Confirm Barangay Deletion', 'Kumpirmahin ang Pagtanggal ng Barangay')}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="barangayModalBodyContent">
@@ -12,20 +15,20 @@
                 <div id="deleteConfirmation">
                     <p class="text-danger">
                         <i class="bi bi-exclamation-circle"></i> 
-                        <strong>Warning!</strong> You are about to delete this barangay.
+                        <strong>{{ T::translate('Warning', '')}}!</strong> {{ T::translate('You are about to delete this barangay.', 'Tatanggalin mo na itong barangay.')}}
                     </p>
-                    <p>Are you sure you want to permanently delete <span id="barangayNameToDelete" style="font-weight: bold;"></span>?</p>
+                    <p>{{ T::translate('Are you sure you want to permanently delete', 'Sigurado ka bang nais mong permanenteng tanggalin')}} <span id="barangayNameToDelete" style="font-weight: bold;"></span>?</p>
                     <div class="mb-3">
-                        <label for="barangayDeletePasswordInput" class="form-label">Enter Your Password to Confirm</label>
-                        <input type="password" class="form-control" id="barangayDeletePasswordInput" placeholder="Enter your password" required>
+                        <label for="barangayDeletePasswordInput" class="form-label">{{ T::translate('Enter Your Password to Confirm', 'Ilagay ang Iyong Password to Kumpirmahin')}}</label>
+                        <input type="password" class="form-control" id="barangayDeletePasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password')}}" required>
                         <input type="hidden" id="barangayIdToDelete" value="">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelDeleteButton">{{ T::translate('Cancel', 'I-Kansela')}}</button>
                 <button type="button" class="btn btn-danger" id="confirmBarangayDeleteButton">
-                    <i class="bi bi-trash-fill"></i> Delete Barangay
+                    <i class="bi bi-trash-fill"></i> {{ T::translate('Delete Barangay', 'Tanggalin ang Barangay')}}
                 </button>
             </div>
         </div>
@@ -45,12 +48,12 @@ window.openDeleteBarangayModal = function(id, name) {
         <div id="deleteConfirmation">
             <p class="text-danger">
                 <i class="bi bi-exclamation-circle"></i> 
-                <strong>Warning!</strong> You are about to delete this barangay.
+                <strong>Warning!</strong> {{ T::translate('You are about to delete this barangay.', 'Tatanggalin mo na ang barangay na ito.')}}
             </p>
-            <p>Are you sure you want to permanently delete <span id="barangayNameToDelete" style="font-weight: bold;"></span>?</p>
+            <p>{{ T::translate('Are you sure you want to permanently delete', 'Sigurado ka bang nais mong permanenteng tanggalin')}} <span id="barangayNameToDelete" style="font-weight: bold;"></span>?</p>
             <div class="mb-3">
-                <label for="barangayDeletePasswordInput" class="form-label">Enter Your Password to Confirm</label>
-                <input type="password" class="form-control" id="barangayDeletePasswordInput" placeholder="Enter your password" required>
+                <label for="barangayDeletePasswordInput" class="form-label">{{ T::translate('Enter Your Password to Confirm', 'Ilagay ang iyong Password upang Kumpirmahin')}}</label>
+                <input type="password" class="form-control" id="barangayDeletePasswordInput" placeholder="{{ T::translate('Enter your password', 'Ilagay ang iyong password')}}" required>
                 <input type="hidden" id="barangayIdToDelete" value="">
             </div>
         </div>
@@ -63,7 +66,7 @@ window.openDeleteBarangayModal = function(id, name) {
     // Reset buttons
     const confirmButton = document.getElementById('confirmBarangayDeleteButton');
     confirmButton.disabled = false;
-    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Barangay';
+    confirmButton.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Barangay', 'Tanggalin ang Barangay')}}';
     confirmButton.style.display = 'inline-block';
     
     document.getElementById('cancelDeleteButton').textContent = 'Cancel';
@@ -101,7 +104,7 @@ function showDependencyError(message, errorType) {
         <div class="alert alert-danger">
             <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-exclamation-circle me-2" style="font-size: 1.5rem;"></i>
-                <strong>Unable to Delete</strong>
+                <strong>{{ T::translate('Unable to Delete', 'Hindi Matanggal')}}</strong>
             </div>
             <p>${message}</p>
     `;
@@ -110,33 +113,33 @@ function showDependencyError(message, errorType) {
     if (errorType === 'dependency_beneficiaries') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>Required Action:</strong>
-                <p class="mt-2 mb-2">Before deleting this barangay, you need to reassign or remove all beneficiaries assigned to it.</p>
+                <strong>{{ T::translate('Required Action', 'Kinakailangang Aksyon')}}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('Before deleting this barangay, you need to reassign or remove all beneficiaries assigned to it.', 'Bago tanggalin ang barangay na ito, kailangan mong italaga o tanggalin ang lahat ng mga benepisyaryo na nakatalaga dito.')}}</p>
                 <ol class="mt-2 mb-0">
-                    <li>Go to the <a href="{{ route('admin.beneficiaries.index') }}">Beneficiary List</a>, filter by this barangay</li>
-                    <li>Edit each beneficiary to assign them to a different barangay</li>
-                    <li>Once all beneficiaries are reassigned, you can delete this barangay</li>
+                    <li>{{ T::translate('Go to the', 'Pumunta sa')}} <a href="{{ route('admin.beneficiaries.index') }}">{{ T::translate('Beneficiary List', 'Listahan ng Benepisyaryo')}}</a>, {{ T::translate('filter by this barangay', 'salain ayon sa barangay na ito')}}</li>
+                    <li>{{ T::translate('Edit each beneficiary to assign them to a different barangay', 'I-Edit ang bawat isang benepisyaryo upang italaga sila sa ibang barangay')}}</li>
+                    <li>{{ T::translate('Once all beneficiaries are reassigned, you can delete this barangay', 'Kapag na-reassign na ang lahat ng benepisyaryo, maaari mong tanggalin ang barangay na ito')}}</li>
                 </ol>
             </div>
         `;
     } else if (errorType === 'last_barangay') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>System Requirement:</strong>
-                <p class="mt-2 mb-2">This is the only remaining barangay for its municipality. Each municipality must have at least one barangay.</p>
+                <strong>{{ T::translate('System Requirement', 'Kinakailangan ng System')}}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('This is the only remaining barangay for its municipality. Each municipality must have at least one barangay.', 'Ito na lang ang natitirang barangay para sa munisipyo nito. Ang bawat munisipalidad ay dapat magkaroon ng kahit isang barangay.')}}</p>
                 <ol class="mt-2 mb-0">
-                    <li>Before deleting this barangay, add another barangay to this municipality</li>
-                    <li>Click on "Add Barangay" and create at least one more barangay</li>
-                    <li>Once another barangay exists, you can delete this one</li>
+                    <li>{{ T::translate('Before deleting this barangay, add another barangay to this municipality', 'Bago tanggalin ang barangay na ito, magdagdag ng isa pang barangay sa munisipalidad na ito')}}</li>
+                    <li>{{ T::translate('Click on "Add Barangay" and create at least one more barangay', 'Pindutin ang \"Magdagdag ng Barangay\" at lumikha ng kahit isa pang barangay')}}</li>
+                    <li>{{ T::translate('Once another barangay exists, you can delete this one', 'Kapag may isa pang barangay, maaari mong tanggalin ang isang ito')}}</li>
                 </ol>
             </div>
         `;
     } else if (errorType === 'permission_denied') {
         errorContent += `
             <div class="mt-2 border-top pt-2">
-                <strong>Permission Denied:</strong>
-                <p class="mt-2 mb-2">Only administrators with sufficient permissions can delete barangays.</p>
-                <p>Please contact a system administrator if you need this barangay removed.</p>
+                <strong>{{ T::translate('Permission Denied', 'Tinanggihan ang Pahintulot')}}:</strong>
+                <p class="mt-2 mb-2">{{ T::translate('Only administrators with sufficient permissions can delete barangays.', 'Tanging ang mga administrador na may sapat na pahintulot ang maaaring magtanggal ng mga barangay.')}}</p>
+                <p>{{ T::translate('Please contact a system administrator if you need this barangay removed.', 'Mangyaring makipag-ugnayan sa isang system administrator kung kailangan mong alisin ang barangay na ito.')}}</p>
             </div>
         `;
     }
@@ -164,9 +167,9 @@ function showSuccess() {
             <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
         </div>
         <p class="text-success text-center">
-            <strong>Success!</strong> The barangay has been deleted successfully.
+            <strong>{{ T::translate('Success', '')}}!</strong> {{ T::translate('', '')}}The barangay has been deleted successfully.
         </p>
-        <p class="text-center">The page will reload shortly.</p>
+        <p class="text-center">{{ T::translate('The page will reload shortly', 'Ang page ay magre-reload sa ilang sandali')}}.</p>
     `;
     
     // Hide delete button and update cancel button
@@ -196,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const barangayId = idInput.value;
         
         if (!password) {
-            showError('Please enter your password to confirm deletion.');
+            showError('{{ T::translate('Please enter your password to confirm deletion', 'Mangyaring ilagay ang iyong password upang kumpirmahin ang pagtanggal')}}.');
             return;
         }
         
@@ -226,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     showError(data.message || 'Failed to delete barangay.');
                     this.disabled = false;
-                    this.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Barangay';
+                    this.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Barangay', 'Tanggalin ang Barangay')}}';
                 }
             }
         })
@@ -234,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
             showError('An unexpected error occurred. Please try again.');
             this.disabled = false;
-            this.innerHTML = '<i class="bi bi-trash-fill"></i> Delete Barangay';
+            this.innerHTML = '<i class="bi bi-trash-fill"></i> {{ T::translate('Delete Barangay', 'Tanggalin ang Barangay')}}';
         });
     });
 });

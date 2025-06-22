@@ -10,7 +10,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
     
@@ -40,7 +42,7 @@
                     <div class="viewProfile">
                         <div class="row mb-2">
                             <div class="col-12 text-center">
-                                <h4 class="mb-0"><i class="bi bi-person-badge me-2" style="color: var(--complement-1);"></i>USER PROFILE</h4>
+                                <h4 class="mb-0"><i class="bi bi-person-badge me-2" style="color: var(--complement-1);"></i>{{ T::translate('USER PROFILE', 'PROFILE NG USER')}}</h4>
                             </div>
                         </div>
                         
@@ -54,7 +56,7 @@
                                         <a href="javascript:void(0)"><i class="bi bi-telephone me-1"></i>Contact</a>
                                     </li>
                                     <li class="breadcrumb-item {{ session('activeTab') == 'settings' ? 'active' : '' }}" data-section="settings">
-                                        <a href="javascript:void(0)"><i class="bi bi-gear me-1"></i>Settings</a>
+                                        <a href="javascript:void(0)"><i class="bi bi-gear me-1"></i>{{ T::translate('Settings', 'Mga Setting')}}</a>
                                     </li>
                                 </ol>
                             </nav>
@@ -70,7 +72,7 @@
                                         <img src="{{ asset('images/defaultProfile.png') }}" alt="Profile Photo" class="profile-photo">
                                     @endif
                                     <h5 class="user-name">{{ $user->first_name }} {{ $user->last_name }}</h5>
-                                    <p class="member-since"><i class="bi bi-calendar-event me-1"></i>Member since: {{ $memberSince }}</p>
+                                    <p class="member-since"><i class="bi bi-calendar-event me-1"></i>{{ T::translate('Member since', 'Miyembro magmula')}}: {{ $memberSince }}</p>
                                     <p class="mb-2">
                                         <span class="badge badge-status {{ $user->status == 'Active' ? 'badge-active' : 'badge-inactive' }}">
                                             <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>{{ $user->status }}
@@ -82,26 +84,26 @@
                                 <div class="col-md-8">
                                     <div class="profile-header">
                                         <i class="bi bi-person-lines-fill"></i>
-                                        <h5>Personal Information</h5>
+                                        <h5>{{ T::translate('Personal Information', 'Personal na Impormasyon')}}</h5>
                                     </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="info-card">
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-person"></i>Full Name:</div>
+                                                    <div class="info-label"><i class="bi bi-person"></i>{{ T::translate('Full Name', 'Buong Pangalan')}}:</div>
                                                     <div class="info-value">{{ $user->first_name }} {{ $user->last_name }}</div>
                                                 </div>
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-calendar"></i>Date of Birth:</div>
+                                                    <div class="info-label"><i class="bi bi-calendar"></i>{{ T::translate('Date of Birth', 'Petsa ng Kanganakan')}}:</div>
                                                     <div class="info-value">{{ $formattedBirthday ?? 'Not specified' }}</div>
                                                 </div>
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-gender-ambiguous"></i>Gender:</div>
+                                                    <div class="info-label"><i class="bi bi-gender-ambiguous"></i>{{ T::translate('Gender', 'Kasarian')}}:</div>
                                                     <div class="info-value">{{ $user->gender ?? 'Not specified' }}</div>
                                                 </div>
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-globe"></i>Nationality:</div>
+                                                    <div class="info-label"><i class="bi bi-globe"></i>{{ T::translate('Nationality', 'Munisipalidad')}}:</div>
                                                     <div class="info-value">{{ $user->nationality ?? 'Not specified' }}</div>
                                                 </div>
                                             </div>
@@ -110,15 +112,15 @@
                                         <div class="col-md-6">
                                             <div class="info-card">
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-heart"></i>Marital Status:</div>
+                                                    <div class="info-label"><i class="bi bi-heart"></i>{{ T::translate('Marital Status', 'Katayuan sa Pag-aasawa')}}:</div>
                                                     <div class="info-value">{{ $user->civil_status ?? 'Not specified' }}</div>
                                                 </div>
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-mortarboard"></i>Educational Background:</div>
+                                                    <div class="info-label"><i class="bi bi-mortarboard"></i>{{ T::translate('Educational Background', 'BAckground Pang-Edukasyon')}}:</div>
                                                     <div class="info-value">{{ $user->educational_background ?? 'Not specified' }}</div>
                                                 </div>
                                                 <div class="info-row">
-                                                    <div class="info-label"><i class="bi bi-house-door"></i>Religion:</div>
+                                                    <div class="info-label"><i class="bi bi-house-door"></i>{{ T::translate('Religion', 'Relihiyon')}}:</div>
                                                     <div class="info-value">{{ $user->religion ?? 'Not specified' }}</div>
                                                 </div>
                                             </div>
@@ -139,11 +141,11 @@
                                 <div class="col-md-6">
                                     <div class="info-card">
                                         <div class="info-row">
-                                            <div class="info-label"><i class="bi bi-envelope-at"></i>Work Email:</div>
+                                            <div class="info-label"><i class="bi bi-envelope-at"></i>{{ T::translate('Work Email', 'Email sa Trabaho')}}:</div>
                                             <div class="info-value">{{ $user->email }}</div>
                                         </div>
                                         <div class="info-row">
-                                            <div class="info-label"><i class="bi bi-envelope"></i>Personal Email:</div>
+                                            <div class="info-label"><i class="bi bi-envelope"></i>{{ T::translate('Personal Email', 'Personal na Email')}}:</div>
                                             <div class="info-value">{{ $user->personal_email ?? 'Not specified' }}</div>
                                         </div>
                                     </div>
@@ -160,7 +162,7 @@
                                             <div class="info-value">{{ $user->landline ?? 'Not specified' }}</div>
                                         </div>
                                         <div class="info-row">
-                                            <div class="info-label"><i class="bi bi-geo-alt"></i>Address:</div>
+                                            <div class="info-label"><i class="bi bi-geo-alt"></i>{{ T::translate('Address', 'Tirahan')}}:</div>
                                             <div class="info-value">{{ $user->address }}</div>
                                         </div>
                                     </div>
@@ -172,7 +174,7 @@
                         <div class="profile-section {{ session('activeTab') == 'settings' ? 'active' : '' }}" id="settings-section" style="display: none;">
                             <div class="profile-header">
                                 <i class="bi bi-shield-lock"></i>
-                                <h5>Account Settings</h5>
+                                <h5>{{ T::translate('Account Settings', 'Mga Setting ng Account')}}</h5>
                             </div>
                             
                             <div class="row">
@@ -183,7 +185,7 @@
                                             <div class="info-value">{{ $user->email }}</div>
                                         </div>
                                         <div class="info-row">
-                                            <div class="info-label"><i class="bi bi-shield-check"></i>Account Status:</div>
+                                            <div class="info-label"><i class="bi bi-shield-check"></i>{{ T::translate('Account Status', 'Status ng Account')}}:</div>
                                             <div class="info-value">
                                                 <span class="badge badge-status {{ $user->status == 'Active' ? 'badge-active' : 'badge-inactive' }}">
                                                     <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>{{ $user->status }}
@@ -213,42 +215,42 @@
                             
                             <div class="d-flex justify-content-end mt-4 gap-2">
                                 <button class="btn btn-primary" id="updateEmailBtn">
-                                    <i class="bi bi-envelope-arrow-up me-2"></i>Update Email
+                                    <i class="bi bi-envelope-arrow-up me-2"></i>{{ T::translate('Update Email', 'I-Update ang Email')}}
                                 </button>
                                 <button class="btn btn-primary" id="updatePasswordBtn">
-                                    <i class="bi bi-key me-2"></i>Update Password
+                                    <i class="bi bi-key me-2"></i>{{ T::translate('Update Password', 'I-Update ang Password')}}
                                 </button>
                             </div>
                             
                             <!-- Update Email Form -->
                             <div class="form-section" id="updateEmailForm" style="display: none;">
-                                <h6><i class="bi bi-envelope-arrow-up"></i>Update Email Address</h6>
+                                <h6><i class="bi bi-envelope-arrow-up"></i>{{ T::translate('Update Email Address', 'I-Update ang Email Address')}}</h6>
                                 <form action="/care-manager/update-email" method="POST">
                                     @csrf
                                     <div class="mb-3">
-                                        <label for="current_email" class="form-label"><i class="bi bi-envelope me-1"></i>Current Email</label>
+                                        <label for="current_email" class="form-label"><i class="bi bi-envelope me-1"></i>{{ T::translate('Current Email', 'Kasalukuyang Email')}}</label>
                                         <input type="email" class="form-control" value="{{ $user->email }}" disabled>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="account_email" class="form-label"><i class="bi bi-envelope-plus me-1"></i>New Email</label>
-                                        <input type="email" class="form-control" id="account_email" name="account_email" placeholder="Enter new email address" value="{{ old('account_email') }}" required>
+                                        <label for="account_email" class="form-label"><i class="bi bi-envelope-plus me-1"></i>{{ T::translate('New Email', 'Bagong Email')}}</label>
+                                        <input type="email" class="form-control" id="account_email" name="account_email" placeholder="{{ T::translate('Enter new email address', 'Ilagay ang bagong email address')}}" value="{{ old('account_email') }}" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="current_password_for_email" class="form-label"><i class="bi bi-lock me-1"></i>Current Password</label>
+                                        <label for="current_password_for_email" class="form-label"><i class="bi bi-lock me-1"></i>{{ T::translate('Current Password', 'Kasalukuyang Password')}}</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="current_password_for_email" name="current_password" placeholder="Enter your password to confirm" required>
+                                            <input type="password" class="form-control" id="current_password_for_email" name="current_password" placeholder="{{ T::translate('Enter your password to confirm', 'Ilagay ang iyong password upang kumpirmahin')}}" required>
                                             <span class="input-group-text password-toggle" data-target="current_password_for_email">
                                                 <i class="bi bi-eye-slash"></i>
                                             </span>
                                         </div>
-                                        <small class="form-text text-muted">For security, please enter your current password to confirm this change.</small>
+                                        <small class="form-text text-muted">{{ T::translate('For security, please enter your current password to confirm this change.', 'Para sa seguridad, mangyaring ilagay ang iyong kasalukuyang password upang kumpirmahin ang pagbabagong ito.')}}</small>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2">
                                         <button type="button" class="btn btn-outline-secondary" id="cancelEmailUpdateBtn">
-                                            <i class="bi bi-x-circle me-1"></i>Cancel
+                                            <i class="bi bi-x-circle me-1"></i>{{ T::translate('Cancel', 'I-Kansela')}}
                                         </button>
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-check-circle me-1"></i>Save Changes
+                                            <i class="bi bi-check-circle me-1"></i>{{ T::translate('Save Changes', 'I-save ang mga Pagbabago')}}
                                         </button>
                                     </div>
                                 </form>
@@ -256,31 +258,31 @@
                             
                             <!-- Update Password Form -->
                             <div class="form-section" id="updatePasswordForm" style="display: none;">
-                                <h6><i class="bi bi-key"></i>Update Password</h6>
+                                <h6><i class="bi bi-key"></i>{{ T::translate('Update Password', 'I-Update ang Password')}}</h6>
                                 <form action="/care-manager/update-password" method="POST">
                                     @csrf
                                     <div class="mb-3">
-                                        <label for="current_password" class="form-label"><i class="bi bi-lock me-1"></i>Current Password</label>
+                                        <label for="current_password" class="form-label"><i class="bi bi-lock me-1"></i>{{ T::translate('Current Password', 'Kasalukuyang Password')}}</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="current_password" name="current_password" placeholder="Enter current password" required>
+                                            <input type="password" class="form-control" id="current_password" name="current_password" placeholder="{{ T::translate('Enter current password', 'Ilagay ang kasalukuyang password')}}" required>
                                             <span class="input-group-text password-toggle" data-target="current_password">
                                                 <i class="bi bi-eye-slash"></i>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="account_password" class="form-label"><i class="bi bi-key me-1"></i>New Password</label>
+                                        <label for="account_password" class="form-label"><i class="bi bi-key me-1"></i>{{ T::translate('New Password', 'Bagong Password')}}</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="account_password" name="account_password" placeholder="Enter new password" required>
+                                            <input type="password" class="form-control" id="account_password" name="account_password" placeholder="{{ T::translate('Enter new password', 'Ilagay ang bagong password')}}" required>
                                             <span class="input-group-text password-toggle" data-target="account_password">
                                                 <i class="bi bi-eye-slash"></i>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="account_password_confirmation" class="form-label"><i class="bi bi-key-fill me-1"></i>Confirm Password</label>
+                                        <label for="account_password_confirmation" class="form-label"><i class="bi bi-key-fill me-1"></i>{{ T::translate('Confirm Password', 'Kumpirmahin ang Password')}}</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" id="account_password_confirmation" name="account_password_confirmation" placeholder="Confirm new password" required>
+                                            <input type="password" class="form-control" id="account_password_confirmation" name="account_password_confirmation" placeholder="{{ T::translate('Confirm new password', 'Ilagay ang bagong password')}}" required>
                                             <span class="input-group-text password-toggle" data-target="account_password_confirmation">
                                                 <i class="bi bi-eye-slash"></i>
                                             </span>
@@ -288,10 +290,10 @@
                                     </div>
                                     <div class="d-flex justify-content-end gap-2">
                                         <button type="button" class="btn btn-outline-secondary" id="cancelPasswordUpdateBtn">
-                                            <i class="bi bi-x-circle me-1"></i>Cancel
+                                            <i class="bi bi-x-circle me-1"></i>{{ T::translate('Cancel', 'I-Kansela')}}
                                         </button>
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-check-circle me-1"></i>Save Changes
+                                            <i class="bi bi-check-circle me-1"></i>{{ T::translate('Save Changes', 'I-save ang mga Pagbabago')}}
                                         </button>
                                     </div>
                                 </form>

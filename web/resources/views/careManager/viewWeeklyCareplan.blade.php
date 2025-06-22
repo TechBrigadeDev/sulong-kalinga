@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Care Plan | Dashboard</title>
+    <title>Weekly Care Plan Details | Manager</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewWeeklyCareplan.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
 </head>
 <body>
+
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
 
     @include('components.careManagerNavbar')
     @include('components.careManagerSidebar')
@@ -19,22 +23,22 @@
         <div class="container-fluid">
             <div class="d-flex align-items-center flex-wrap mb-2 header-content">
                 <a href="{{ route('care-manager.reports') }}" class="btn btn-secondary btn-sm btn-action d-none d-md-inline-flex">
-                    <i class="bi bi-arrow-left me-1"></i> Back
+                    <i class="bi bi-arrow-left me-1"></i> {{ T::translate('Back', 'Bumalik')}}
                 </a>
                 
                 <div class="text-center flex-grow-1" style="font-weight: bold; font-size: 20px; padding: 10px;">
-                    Weekly Care Plan Details
+                    {{ T::translate('WEEKLY CAREP PLAN DETAILS', 'MGA DETALYE NG WEEKLY CARE PLAN') }}
                 </div>
                 
                 <div class="d-flex gap-2 action-buttons">
                     <a href="{{ route('care-manager.reports') }}" class="btn btn-secondary btn-sm btn-action d-inline-flex d-md-none">
-                        <i class="bi bi-arrow-left me-1"></i> Back
+                        <i class="bi bi-arrow-left me-1"></i> {{ T::translate('Back', 'Bumalik')}}
                     </a>
                     <a href="{{ route('care-manager.weeklycareplans.edit', $weeklyCareplan->weekly_care_plan_id) }}" class="btn btn-primary btn-sm btn-action">
-                        <i class="bi bi-pencil-square me-1"></i> Edit
+                        <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit', 'I-Edit')}}
                     </a>
                     <button type="button" class="btn btn-danger btn-sm btn-action" onclick="openInitialDeleteModal('{{ $weeklyCareplan->weekly_care_plan_id }}', '{{ $weeklyCareplan->beneficiary->first_name }} {{ $weeklyCareplan->beneficiary->last_name }}')">
-                        <i class="bi bi-trash me-1"></i> Delete
+                        <i class="bi bi-trash me-1"></i> {{ T::translate('Delete', 'Tanggalin')}}
                     </button>
                 </div>
             </div>
@@ -43,7 +47,7 @@
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-check-circle-fill me-2"></i>
-                        <strong>Success!</strong> {{ session('success') }}
+                        <strong>{{ T::translate('Success!', 'Tagumpay!')}}</strong> {{ session('success') }}
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -53,14 +57,14 @@
                 <!-- Personal Details Card -->
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-person-vcard-fill icon-secondary me-2"></i>Personal Details</h5>
+                        <h5 class="mb-0"><i class="bi bi-person-vcard-fill icon-secondary me-2"></i>{{ T::translate('Personal Details', 'Personal na Detalye')}}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Beneficiary Name
+                                        {{ T::translate('Beneficiary Name', 'Pangalan ng Benepisyaryo')}}
                                     </div>
                                     <div class="detail-value">{{ $weeklyCareplan->beneficiary->first_name }} {{ $weeklyCareplan->beneficiary->last_name }}</div>
                                 </div>
@@ -68,15 +72,15 @@
                             <div class="col-md-2">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Age
+                                        {{ T::translate('Age', 'Edad')}}
                                     </div>
-                                    <div class="detail-value">{{ \Carbon\Carbon::parse($weeklyCareplan->beneficiary->birthday)->age }} years old</div>
+                                    <div class="detail-value">{{ \Carbon\Carbon::parse($weeklyCareplan->beneficiary->birthday)->age }} {{ T::translate('years old', 'taong gulang')}}</div>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Birthdate
+                                        {{ T::translate('Birthdate', 'Petsa ng Kapanganakan')}}
                                     </div>
                                     <div class="detail-value">{{ $weeklyCareplan->beneficiary->birthday }}</div>
                                 </div>
@@ -84,7 +88,7 @@
                             <div class="col-md-3">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Gender
+                                        {{ T::translate('Gender', 'Kasarian')}}
                                     </div>
                                     <div class="detail-value">{{ $weeklyCareplan->beneficiary->gender }}</div>
                                 </div>
@@ -95,7 +99,7 @@
                             <div class="col-md-4">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Civil Status
+                                        {{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}
                                     </div>
                                     <div class="detail-value">{{ $weeklyCareplan->beneficiary->civil_status }}</div>
                                 </div>
@@ -103,7 +107,7 @@
                             <div class="col-md-8">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Address
+                                        {{ T::translate('Address', 'Address')}}
                                     </div>
                                     <div class="detail-value">{{ $weeklyCareplan->beneficiary->street_address }}</div>
                                 </div>
@@ -114,7 +118,7 @@
                             <div class="col-md-6">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Medical Conditions
+                                        {{ T::translate('Medical Conditions', 'Kondisyong Medikal')}}
                                     </div>
                                     <div class="detail-value">
                                         @php
@@ -138,7 +142,7 @@
                             <div class="col-md-6">
                                 <div class="detail-group">
                                     <div class="detail-label">
-                                        Illness
+                                        {{ T::translate('Illness', 'Sakit')}}
                                     </div>
                                     <div class="detail-value">
                                         @php
@@ -162,16 +166,16 @@
                 <!-- Assessment Section -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clipboard2-check-fill icon-secondary me-2"></i>Assessment</h5>
+                        <h5 class="mb-0"><i class="bi bi-clipboard2-check-fill icon-secondary me-2"></i>{{ T::translate('Assessment', 'Pagtatasa')}}</h5>
                     </div>
                     <div class="card-body">
                         <div class="detail-group">
                             <div class="detail-label">
                                 <i class="bi bi-journal-text icon-primary"></i>
-                                Assessment Notes
+                                {{ T::translate('Assessment Notes', 'Mga Tala ng Pagtatasa')}}
                             </div>
                             <div class="detail-value" style="min-height: 80px;">
-                                {{ $weeklyCareplan->assessment ?? 'No assessment recorded' }}
+                                {{ $weeklyCareplan->assessment ?? T::translate('No assessment recorded', 'Walang assessment na naitala') }}
                             </div>
                         </div>
                     </div>
@@ -180,41 +184,41 @@
                 <!-- Vitals and Photo Section -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-heart-pulse-fill icon-secondary me-2"></i>Vital Signs & Photo Documentation</h5>
+                        <h5 class="mb-0"><i class="bi bi-heart-pulse-fill icon-secondary me-2"></i>{{ T::translate('Vital Signs & Photo Documentation', 'Vital Signs at Photo Documentation')}}</h5>
                     </div>
                     <div class="card-body vitals-photo-container">
                         <div class="vitals-col">
                             <div class="detail-group">
                                 <div class="detail-label">
                                     <i class="bi bi-activity icon-primary"></i>
-                                    Vital Signs
+                                    {{ T::translate('Vital Signs', 'Vital Signs')}}
                                 </div>
                                 <div class="vital-signs-container">
                                     <div class="vital-sign">
                                         <span class="vital-label">
                                             <i class="bi bi-speedometer2"></i>
-                                            Blood Pressure
+                                            {{ T::translate('Blood Pressure', 'Presyon ng Dugo')}}
                                         </span>
                                         <span class="vital-value">{{ $weeklyCareplan->vitalSigns->blood_pressure ?? 'N/A' }}</span>
                                     </div>
                                     <div class="vital-sign">
                                         <span class="vital-label">
                                             <i class="bi bi-thermometer-half"></i>
-                                            Body Temperature
+                                            {{ T::translate('Body Temperature', 'Temperatura ng Katawan')}}
                                         </span>
                                         <span class="vital-value">{{ $weeklyCareplan->vitalSigns->body_temperature ?? 'N/A' }}</span>
                                     </div>
                                     <div class="vital-sign">
                                         <span class="vital-label">
                                             <i class="bi bi-heart-pulse"></i>
-                                            Pulse Rate
+                                            {{ T::translate('Pulse Rate', 'Bilis ng Puso')}}
                                         </span>
                                         <span class="vital-value">{{ $weeklyCareplan->vitalSigns->pulse_rate ?? 'N/A' }}</span>
                                     </div>
                                     <div class="vital-sign">
                                         <span class="vital-label">
                                             <i class="bi bi-lungs-fill"></i>
-                                            Respiratory Rate
+                                            {{ T::translate('Respiratory Rate', 'Bilis ng Paghinga')}}
                                         </span>
                                         <span class="vital-value">{{ $weeklyCareplan->vitalSigns->respiratory_rate ?? 'N/A' }}</span>
                                     </div>
@@ -226,7 +230,7 @@
                             <div class="detail-group">
                                 <div class="detail-label">
                                     <i class="bi bi-camera-fill icon-primary"></i>
-                                    Photo Documentation
+                                    {{ T::translate('Photo Documentation', 'Photo Documentation')}}
                                 </div>
                                 <div class="photo-container">
                                     @if($weeklyCareplan->photo_path)
@@ -234,7 +238,7 @@
                                     @else
                                         <div class="text-center text-muted">
                                             <i class="bi bi-image" style="font-size: 2rem; opacity: 0.5;"></i>
-                                            <p class="mt-2">No image available</p>
+                                            <p class="mt-2">{{ T::translate('No image available', 'Walang larawan na available')}}</p>
                                         </div>
                                     @endif
                                 </div>
@@ -246,7 +250,7 @@
                 <!-- Evaluation Section -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clipboard2-data-fill icon-secondary me-2"></i>Evaluation and Recommendations</h5>
+                        <h5 class="mb-0"><i class="bi bi-clipboard2-data-fill icon-secondary me-2"></i>{{ T::translate('Evaluation and Recommendations', 'Ebalwasyon at Rekomendasyon')}}</h5>
                     </div>
                     <div class="card-body">
                         <div class="detail-group">
@@ -255,7 +259,7 @@
                                     <i class="bi bi-chat-square-text-fill icon-secondary me-2"></i>
                                     {{ $weeklyCareplan->evaluation_recommendations }}
                                 @else
-                                    No evaluation recorded
+                                    {{ T::translate('No evaluation recorded', 'Walang ebalwasyon na naitala')}}
                                 @endif
                             </div>
                         </div>
@@ -265,7 +269,7 @@
                 <!-- Care Needs and Interventions Section -->
                 <div class="card mt-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clipboard2-plus-fill icon-secondary me-2"></i>Care Plan Interventions</h5>
+                        <h5 class="mb-0"><i class="bi bi-clipboard2-plus-fill icon-secondary me-2"></i>{{ T::translate('Care Plan Interventions', 'Mga Interbensyong Isinagawa')}}</h5>
                     </div>
                     <div class="card-body">
                         @foreach($categories as $category)
@@ -291,7 +295,7 @@
                                             </span>
                                             <span class="time-badge">
                                                 <i class="bi bi-clock-history"></i>
-                                                {{ $intervention->duration_minutes }} min
+                                                {{ $intervention->duration_minutes }} {{ T::translate('min', 'min')}}
                                             </span>
                                         </div>
                                     @endforeach
@@ -302,11 +306,11 @@
                                             <span>
                                                 <i class="bi bi-stars icon-accent" style="font-size: 0.8rem;"></i>
                                                 {{ $custom->intervention_description }}
-                                                <span class="custom-badge">Custom</span>
+                                                <span class="custom-badge">{{ T::translate('Custom', 'Custom')}}</span>
                                             </span>
                                             <span class="time-badge">
                                                 <i class="bi bi-clock-history"></i>
-                                                {{ $custom->duration_minutes }} min
+                                                {{ $custom->duration_minutes }} {{ T::translate('min', 'min')}}
                                             </span>
                                         </div>
                                     @endforeach
@@ -316,30 +320,30 @@
                         
                         <div class="total-time">
                             <i class="bi bi-stopwatch-fill icon-primary"></i>
-                            Total Care Time: 
+                            {{ T::translate('Total Care Time:', 'Kabuuang Oras ng Pangangalaga:')}} 
                             @php
                                 $standardMinutes = (float)$interventionsByCategory->flatten()->sum('duration_minutes') ?? 0;
                                 $customMinutes = (float)$customInterventions->sum('duration_minutes') ?? 0;
                                 $totalMinutes = $standardMinutes + $customMinutes;
                                 $formattedTotal = number_format($totalMinutes, 2);
                             @endphp
-                            <strong>{{ $formattedTotal }} minutes</strong>
+                            <strong>{{ $formattedTotal }} {{ T::translate('minutes', 'minuto')}}</strong>
                         </div>
                         
                         <div class="acknowledgement">
                             @if($weeklyCareplan->acknowledged_by_beneficiary && $weeklyCareplan->acknowledgedByBeneficiary)
                                 <i class="bi bi-check-circle-fill icon-secondary"></i> 
-                                <strong>Acknowledged by:</strong> {{ $weeklyCareplan->acknowledgedByBeneficiary->first_name }} {{ $weeklyCareplan->acknowledgedByBeneficiary->last_name }} (Beneficiary)
+                                <strong>{{ T::translate('Acknowledged by:', 'Kinilala ni:')}}</strong> {{ $weeklyCareplan->acknowledgedByBeneficiary->first_name }} {{ $weeklyCareplan->acknowledgedByBeneficiary->last_name }} ({{ T::translate('Beneficiary', 'Benepisyaryo')}})
                             @elseif($weeklyCareplan->acknowledged_by_family && $weeklyCareplan->acknowledgedByFamily)
                                 <i class="bi bi-check-circle-fill icon-secondary"></i> 
-                                <strong>Acknowledged by:</strong> {{ $weeklyCareplan->acknowledgedByFamily->first_name }} {{ $weeklyCareplan->acknowledgedByFamily->last_name }} (Family Member)
+                                <strong>{{ T::translate('Acknowledged by:', 'Kinilala ni:')}}</strong> {{ $weeklyCareplan->acknowledgedByFamily->first_name }} {{ $weeklyCareplan->acknowledgedByFamily->last_name }} ({{ T::translate('Family Member', 'Miyembro ng Pamilya')}})
                             @elseif($weeklyCareplan->acknowledgement_signature)
                                 <i class="bi bi-check-circle-fill icon-secondary"></i> 
-                                <strong>Acknowledged with signature</strong>
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#signatureModal">(View)</a>
+                                <strong>{{ T::translate('Acknowledged with signature', 'Kinilala ng may lagda')}}</strong>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#signatureModal">({{ T::translate('View', 'Tingnan')}})</a>
                             @else
                                 <i class="bi bi-exclamation-circle-fill icon-accent"></i> 
-                                <strong>Not Acknowledged</strong>
+                                <strong>{{ T::translate('Not Acknowledged', 'Di-Kinilala')}}</strong>
                             @endif
                         </div>
                     </div>
@@ -351,34 +355,34 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-header bg-success text-white">
-                                        <h5 class="mb-0">Acknowledgement Details</h5>
+                                        <h5 class="mb-0">{{ T::translate('Acknowledgement Details', 'Detalye ng Pagkilala')}}</h5>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             @if($weeklyCareplan->acknowledged_by_beneficiary && $weeklyCareplan->acknowledgedByBeneficiary)
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Acknowledged By:</strong></p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Acknowledged By:', 'Kinilala Ni:')}}</strong></p>
                                                     <p>{{ $weeklyCareplan->acknowledgedByBeneficiary->first_name }} {{ $weeklyCareplan->acknowledgedByBeneficiary->last_name }}</p>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Role:</strong></p>
-                                                    <p>Beneficiary</p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Role:', 'Papel:')}}</strong></p>
+                                                    <p>{{ T::translate('Beneficiary', 'Benepisyaryo')}}</p>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Date:</strong></p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Date:', 'Petsa:')}}</strong></p>
                                                     <p>{{ \Carbon\Carbon::parse($weeklyCareplan->beneficiary_acknowledged_at)->format('M d, Y g:i A') }}</p>
                                                 </div>
                                             @elseif($weeklyCareplan->acknowledged_by_family && $weeklyCareplan->acknowledgedByFamily)
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Acknowledged By:</strong></p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Acknowledged By:', 'Kinilala Ni:')}}</strong></p>
                                                     <p>{{ $weeklyCareplan->acknowledgedByFamily->first_name }} {{ $weeklyCareplan->acknowledgedByFamily->last_name }}</p>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Role:</strong></p>
-                                                    <p>Family Member</p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Role:', 'Papel:')}}</strong></p>
+                                                    <p>{{ T::translate('Family Member', 'Miyembro ng Pamilya')}}</p>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Date:</strong></p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Date:', 'Petsa:')}}</strong></p>
                                                     <p>{{ \Carbon\Carbon::parse($weeklyCareplan->family_acknowledged_at)->format('M d, Y g:i A') }}</p>
                                                 </div>
                                             @elseif($weeklyCareplan->acknowledgement_signature)
@@ -386,21 +390,21 @@
                                                     $signatureData = json_decode($weeklyCareplan->acknowledgement_signature, true);
                                                 @endphp
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Acknowledged By:</strong></p>
-                                                    <p>{{ $signatureData['name'] ?? 'Unknown' }}</p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Acknowledged By:', 'Kinilala Ni:')}}</strong></p>
+                                                    <p>{{ $signatureData['name'] ?? T::translate('Unknown', 'Hindi Kilala') }}</p>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Role:</strong></p>
-                                                    <p>{{ $signatureData['acknowledged_by'] ?? 'Unknown' }}</p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Role:', 'Papel:')}}</strong></p>
+                                                    <p>{{ $signatureData['acknowledged_by'] ?? T::translate('Unknown', 'Hindi Kilala') }}</p>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <p class="mb-1"><strong>Date:</strong></p>
-                                                    <p>{{ isset($signatureData['date']) ? \Carbon\Carbon::parse($signatureData['date'])->format('M d, Y g:i A') : 'Unknown' }}</p>
+                                                    <p class="mb-1"><strong>{{ T::translate('Date:', 'Petsa:')}}</strong></p>
+                                                    <p>{{ isset($signatureData['date']) ? \Carbon\Carbon::parse($signatureData['date'])->format('M d, Y g:i A') : T::translate('Unknown', 'Hindi Kilala') }}</p>
                                                 </div>
                                                 
                                                 @if(isset($signatureData['signature']))
                                                     <div class="col-12 mt-3">
-                                                        <p class="mb-1"><strong>Signature:</strong></p>
+                                                        <p class="mb-1"><strong>{{ T::translate('Signature:', 'Lagda:')}}</strong></p>
                                                         <div class="border p-3">
                                                             <img src="{{ $signatureData['signature'] }}" alt="Signature" class="img-fluid" style="max-height: 100px;">
                                                         </div>
@@ -409,11 +413,9 @@
                                             @endif
                                             
                                             <div class="col-12 mt-3">
-                                                <p class="mb-1"><strong>Acknowledgement Statement:</strong></p>
+                                                <p class="mb-1"><strong>{{ T::translate('Acknowledgement Statement:', 'Pahayag sa Pagkilala:')}}</strong></p>
                                                 <p class="fst-italic">
-                                                    "By acknowledging this care plan, the person named above confirms they have thoroughly reviewed
-                                                    all of the information in this care plan, understand the assessment, care needs, and interventions
-                                                    outlined for the beneficiary, and agree with the care plan as documented."
+                                                    "{{ T::translate('By acknowledging this care plan, the person named above confirms they have thoroughly reviewed all of the information in this care plan, understand the assessment, care needs, and interventions outlined for the beneficiary, and agree with the care plan as documented.', 'Sa pamamagitan ng pagkilala sa care plan na ito, ang taong pinangalanan sa itaas ay kumpirmadong lubusang nirepaso ang lahat ng impormasyon sa care plan na ito, nauunawaan ang assessment, pangangailangan ng pangangalaga, at mga interbensyon na nakabalangkas para sa benepisyaryo, at sumasang-ayon sa care plan gaya ng nakadokumento.')}}"
                                                 </p>
                                             </div>
                                         </div>
@@ -426,10 +428,10 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-header bg-warning text-white">
-                                        <h5 class="mb-0">Acknowledgement Pending</h5>
+                                        <h5 class="mb-0">{{ T::translate('Acknowledgement Pending', 'Nakabinbin ang Pagkilala')}}</h5>
                                     </div>
                                     <div class="card-body">
-                                        <p>This care plan has not been acknowledged yet by the beneficiary or family member.</p>
+                                        <p>{{ T::translate('This care plan has not been acknowledged yet by the beneficiary or family member.', 'Ang care plan na ito ay hindi pa kinikilala ng benepisyaryo o miyembro ng pamilya.')}}</p>
                                     </div>
                                 </div>
                             </div>

@@ -8,7 +8,9 @@
     <link rel="stylesheet" href="{{ asset('css/addUsers.css') }}">
 </head>
 <body>
-
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
     @include('components.adminNavbar')
     @include('components.adminSidebar')
     
@@ -20,10 +22,10 @@
                     @csrf
                     <input type="hidden" name="administrator_id" value="{{ $administrator->id }}">
                     <button type="submit" class="btn btn-secondary original-back-btn">
-                        <i class="bx bx-arrow-back"></i> Back
+                        <i class="bi bi-arrow-bar-left"></i> {{ T::translate('Back', 'Bumalik')}}
                     </button>
                 </form>
-                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">EDIT ADMINISTRATOR PROFILE</div>
+                <div class="mx-auto text-center" style="flex-grow: 1; font-weight: bold; font-size: 20px;">{{ T::translate('EDIT ADMINISTRATOR PROFILE', 'I-EDIT ANG PROFILE NG ADMINISTRATOR')}}</div>
             </div>
             @if (session('success'))
                 <div class="alert alert-success">
@@ -50,12 +52,12 @@
                         <!-- Personal Details -->
                         <div class="row mb-1 mt-3">
                             <div class="col-12">
-                                <h5 class="text-start">Personal Details</h5>
+                                <h5 class="text-start">{{ T::translate('Personal Details', 'Personal na Detalye')}}</h5>
                             </div>
                         </div>
                         <div class="row mb-1">
                             <div class="col-md-3">
-                                <label for="firstName" class="form-label">First Name<label style="color:red;"> * </label></label>
+                                <label for="firstName" class="form-label">{{ T::translate('First Name', 'Pangalan')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="firstName" name="first_name" 
                                     placeholder="Enter first name" 
                                     value="{{ old('first_name', $administrator->first_name) }}" 
@@ -63,7 +65,7 @@
                                     
                             </div>
                             <div class="col-md-3">
-                                <label for="lastName" class="form-label">Last Name<label style="color:red;"> * </label></label>
+                                <label for="lastName" class="form-label">{{ T::translate('Last Name', 'Apelyido')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                     placeholder="Enter last name" 
                                     value="{{ old('last_name', $administrator->last_name) }}" 
@@ -75,47 +77,47 @@
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" value="{{ $administrator->birth_date }}" required>
                             </div> -->
                             <div class="col-md-3">
-                                <label for="birthDate" class="form-label">Birthday<label style="color:red;"> * </label></label>
+                                <label for="birthDate" class="form-label">{{ T::translate('Birthday', 'Kaarawan')}}<label style="color:red;"> * </label></label>
                                 <input type="date" class="form-control" id="birthDate" name="birth_date" 
                                     value="{{ old('birth_date', $birth_date) }}" required>
                             </div>
                             <div class="col-md-3">
-                                <label for="gender" class="form-label">Gender</label>
+                                <label for="gender" class="form-label">{{ T::translate('Gender', 'Kasarian')}}</label>
                                 <select class="form-control" id="gender" name="gender">
-                                    <option value="Male" {{ old('gender', $administrator->gender) == 'Male' ? 'selected' : '' }}>Male</option>
-                                    <option value="Female" {{ old('gender', $administrator->gender) == 'Female' ? 'selected' : '' }}>Female</option>
-                                    <option value="Other" {{ old('gender', $administrator->gender) == 'Other' ? 'selected' : '' }}>Other</option>
+                                    <option value="Male" {{ old('gender', $administrator->gender) == 'Male' ? 'selected' : '' }}>{{ T::translate('Male', 'Lalaki')}}</option>
+                                    <option value="Female" {{ old('gender', $administrator->gender) == 'Female' ? 'selected' : '' }}>{{ T::translate('Female', 'Babae')}}</option>
+                                    <option value="Other" {{ old('gender', $administrator->gender) == 'Other' ? 'selected' : '' }}>{{ T::translate('Other', 'Iba pa')}}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3">
-                                <label for="civilStatus" class="form-label">Civil Status</label>
+                                <label for="civilStatus" class="form-label">{{ T::translate('Civil Status', 'Katayuan sa Pag-aasawa')}}</label>
                                 <select class="form-select" id="civilStatus" name="civil_status">
-                                    <option value="" disabled>Select civil status</option>
-                                    <option value="Single" {{ old('civil_status', $administrator->civil_status) == 'Single' ? 'selected' : '' }}>Single</option>
-                                    <option value="Married" {{ old('civil_status', $administrator->civil_status) == 'Married' ? 'selected' : '' }}>Married</option>
-                                    <option value="Widowed" {{ old('civil_status', $administrator->civil_status) == 'Widowed' ? 'selected' : '' }}>Widowed</option>
-                                    <option value="Divorced" {{ old('civil_status', $administrator->civil_status) == 'Divorced' ? 'selected' : '' }}>Divorced</option>
+                                    <option value="" disabled>{{ T::translate('Select civil status', 'Pumili ng Katayuan')}}</option>
+                                    <option value="Single" {{ old('civil_status', $administrator->civil_status) == 'Single' ? 'selected' : '' }}>{{ T::translate('Single', 'Walang Asawa')}}</option>
+                                    <option value="Married" {{ old('civil_status', $administrator->civil_status) == 'Married' ? 'selected' : '' }}>{{ T::translate('Married', 'May Asawa')}}</option>
+                                    <option value="Widowed" {{ old('civil_status', $administrator->civil_status) == 'Widowed' ? 'selected' : '' }}>{{ T::translate('Widowed', 'Balo')}}</option>
+                                    <option value="Divorced" {{ old('civil_status', $administrator->civil_status) == 'Divorced' ? 'selected' : '' }}>{{ T::translate('Divorced', 'Diborsyado')}}</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="religion" class="form-label">Religion</label>
+                                <label for="religion" class="form-label">{{ T::translate('Religion', 'Relihiyon')}}</label>
                                 <input type="text" class="form-control" id="religion" name="religion" placeholder="Enter religion" value="{{ old('religion', $administrator->religion) }}" pattern="^[a-zA-Z\s]*$" title="Only alphabets and spaces are allowed.">
                             </div>
                             <div class="col-md-3">
-                                <label for="nationality" class="form-label">Nationality</label>
+                                <label for="nationality" class="form-label">{{ T::translate('Nationality', 'Nasyonalidad')}}</label>
                                 <input type="text" class="form-control" id="nationality" name="nationality" placeholder="Enter nationality" value="{{ old('nationality', $administrator->nationality) }}" pattern="^[a-zA-Z\s]*$" title="Only alphabets and spaces are allowed.">
                             </div>
                             <div class="col-md-3">
-                                <label for="educationalBackground" class="form-label">Educational Background</label>
+                                <label for="educationalBackground" class="form-label">{{ T::translate('Educational Background', 'Background Pang-Edukasyon')}}</label>
                                 <select class="form-select" id="educationalBackground" name="educational_background" required>
-                                    <option value="" disabled {{ old('educational_background', $administrator->educational_background ?? '') ? '' : 'selected' }}>Select educational background</option>
-                                    <option value="Elementary Graduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'Elementary Graduate' ? 'selected' : '' }}>Elementary Graduate</option>
-                                    <option value="High School Undergraduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'High School Undergraduate' ? 'selected' : '' }}>High School Undergraduate</option>
-                                    <option value="High School Graduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'High School Graduate' ? 'selected' : '' }}>High School Graduate</option>
-                                    <option value="Vocational/Technical Course" {{ old('educational_background', $administrator->educational_background ?? '') == 'Vocational/Technical Course' ? 'selected' : '' }}>Vocational/Technical Course</option>
-                                    <option value="College Undergraduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'College Undergraduate' ? 'selected' : '' }}>College Undergraduate</option>
+                                    <option value="" disabled {{ old('educational_background', $administrator->educational_background ?? '') ? '' : 'selected' }}>{{ T::translate('Select educational background', 'Pumili ng background')}}</option>
+                                    <option value="Elementary Graduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'Elementary Graduate' ? 'selected' : '' }}>{{ T::translate('Elementary Graduate', 'Nakatapos ng Elementarya')}}</option>
+                                    <option value="High School Undergraduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'High School Undergraduate' ? 'selected' : '' }}>{{ T::translate('', '')}}{{ T::translate('High School Undergraduate', 'Hindi nakatapos ng Hayskul')}}</option>
+                                    <option value="High School Graduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'High School Graduate' ? 'selected' : '' }}>{{ T::translate('High School Graduate', 'Nakatapos ng Hayskul')}}</option>
+                                    <option value="Vocational/Technical Course" {{ old('educational_background', $administrator->educational_background ?? '') == 'Vocational/Technical Course' ? 'selected' : '' }}>{{ T::translate('Vocational/Technical Course', 'Bokasyonal/Teknikal na Kurso')}}</option>
+                                    <option value="College Undergraduate" {{ old('educational_background', $administrator->educational_background ?? '') == 'College Undergraduate' ? 'selected' : '' }}>{{ T::translate('College Undergraduate', 'Hindi nakatapos ng Kolehiyo')}}</option>
                                     <option value="Bachelor's Degree" {{ old('educational_background', $administrator->educational_background ?? '') == "Bachelor's Degree" ? 'selected' : '' }}>Bachelor's Degree</option>
                                     <option value="Master's Degree" {{ old('educational_background', $administrator->educational_background ?? '') == "Master's Degree" ? 'selected' : '' }}>Master's Degree</option>
                                     <option value="Doctorate Degree" {{ old('educational_background', $administrator->educational_background ?? '') == 'Doctorate Degree' ? 'selected' : '' }}>Doctorate Degree</option>
@@ -128,12 +130,12 @@
                         <!-- Current Address -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Current Address</h5>
+                                <h5 class="text-start">{{ T::translate('Current Address', 'Kasalukuyang Tirahan')}}</h5>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <label for="addressDetails" class="form-label">House No., Street, Subdivision, Barangay, City, Province<label style="color:red;"> * </label></label>
+                                <label for="addressDetails" class="form-label">{{ T::translate('House No., Street, Subdivision, Barangay, City, Province', 'Numero ng Bahay, Kalye, Subdivision, Barangay, Siyudad, Probinsya')}}<label style="color:red;"> * </label></label>
                                 <textarea class="form-control" id="addressDetails" name="address_details" rows="2" required>{{ old('address_details', $administrator->address) }}</textarea>
                             </div>
                         </div>
@@ -141,7 +143,7 @@
                         <!-- Contact Information -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Contact Information</h5>
+                                <h5 class="text-start">{{ T::translate('Contact Information', 'Impormasyon sa Contact')}}</h5>
                             </div>
                         </div>
 
@@ -149,15 +151,15 @@
 
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label for="personalEmail" class="form-label">Personal Email Address<label style="color:red;"> * </label></label>
+                                <label for="personalEmail" class="form-label">{{ T::translate('Personal Email Address', 'Personal na Email Address')}}<label style="color:red;"> * </label></label>
                                 <input type="email" class="form-control" id="personalEmail" name="personal_email" value="{{ old('personal_email', $administrator->personal_email) }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label for="mobileNumber" class="form-label">Mobile Number<label style="color:red;"> * </label></label>
+                                <label for="mobileNumber" class="form-label">{{ T::translate('Mobile Number', 'Numero ng Mobile')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="mobileNumber" name="mobile_number" value="{{ old('mobile_number', ltrim($administrator->mobile, '+63')) }}" required oninput="restrictToNumbers(this)" maxlength="10" placeholder="Enter mobile number">
                             </div>
                             <div class="col-md-4">
-                                <label for="landlineNumber" class="form-label">Landline Number</label>
+                                <label for="landlineNumber" class="form-label">{{ T::translate('Landline Number', 'Numero ng Landline')}}</label>
                                 <input type="text" class="form-control" id="landlineNumber" name="landline_number" value="{{ old('landline_number', $administrator->landline) }}" oninput="restrictToNumbers(this)" maxlength="10" placeholder="Enter landline number">
                             </div>
                         </div>
@@ -167,44 +169,44 @@
                         <!-- Documents -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Documents Upload</h5> <!-- Row Title -->
+                                <h5 class="text-start">{{ T::translate('Documents Upload', 'Mag-upload ng mga Dokumento')}}</h5> <!-- Row Title -->
                             </div>
                         </div>
                         <div class="row mb-1">
                             <div class="col-md-4">
-                                <label for="administratorPhoto" class="form-label">Administrator Photo</label>
+                                <label for="administratorPhoto" class="form-label">{{ T::translate('Administrator Photo', 'Litrato ng Administrator')}}</label>
                                 <input type="file" class="form-control" id="administratorPhoto" name="administrator_photo" accept="image/png, image/jpeg">
-                                 <small class="text-danger">Maximum file size: 7MB</small>
+                                 <small class="text-danger">{{ T::translate('Maximum file size: 7MB', 'Maximum na laki ng file: 7MB')}}</small>
                                 @if($administrator->photo)
                                     <small class="text-muted" title="{{ basename($administrator->photo) }}">
                                         Current file: {{ strlen(basename($administrator->photo)) > 30 ? substr(basename($administrator->photo), 0, 30) . '...' : basename($administrator->photo) }}
                                     </small>
                                 @else
-                                    <small class="text-muted">No file uploaded</small>
+                                    <small class="text-muted">{{ T::translate('No file uploaded', 'Walang file na na-upload')}}</small>
                                 @endif
                             </div>
                             <div class="col-md-4">
-                                <label for="governmentID" class="form-label">Government Issued ID</label>
+                                <label for="governmentID" class="form-label">{{ T::translate('Government Issued ID', 'ID Galing sa Gobyerno')}}</label>
                                 <input type="file" class="form-control" id="governmentID" name="government_ID" accept=".jpg,.png">
-                                 <small class="text-danger">Maximum file size: 7MB</small>
+                                 <small class="text-danger">{{ T::translate('Maximum file size: 7MB', 'Maximum na laki ng file: 7MB')}}</small>
                                 @if($administrator->government_issued_id)
                                     <small class="text-muted" title="{{ basename($administrator->government_issued_id) }}">
                                         Current file: {{ strlen(basename($administrator->government_issued_id)) > 30 ? substr(basename($administrator->government_issued_id), 0, 30) . '...' : basename($administrator->government_issued_id) }}
                                     </small>
                                 @else
-                                    <small class="text-muted">No file uploaded</small>
+                                    <small class="text-muted">{{ T::translate('No file uploaded', 'Walang file na na-upload')}}</small>
                                 @endif
                             </div>
                             <div class="col-md-4">
                                 <label for="resume" class="form-label">Resume / CV</label>
                                 <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx">
-                                <small class="text-danger">Maximum file size: 5MB</small>
+                                <small class="text-danger">{{ T::translate('Maximum file size: 5MB', 'Maximum na laki ng file: 5MB')}}</small>
                                 @if($administrator->cv_resume)
                                     <small class="text-muted" title="{{ basename($administrator->cv_resume) }}">
                                         Current file: {{ strlen(basename($administrator->cv_resume)) > 30 ? substr(basename($administrator->cv_resume), 0, 30) . '...' : basename($administrator->cv_resume) }}
                                     </small>
                                 @else
-                                    <small class="text-muted">No file uploaded</small>
+                                    <small class="text-muted">{{ T::translate('No file uploaded', 'Walang file na na-upload')}}</small>
                                 @endif
                             </div>
                         </div>
@@ -228,27 +230,27 @@
                         <!-- Account Registration -->
                         <div class="row mb-1">
                             <div class="col-12">
-                                <h5 class="text-start">Administrator Account Registration</h5>
+                                <h5 class="text-start">{{ T::translate('Administrator Account Registration', 'Pagrerehistro sa Account ng Administrator')}}</h5>
                             </div>
                         </div>
                         <div class="row mb-1">
-                            <div class="col-md-4">
-                                <label for="email" class="form-label">Work Email Address</label>
+                            <div class="col-md-3">
+                                <label for="email" class="form-label">{{ T::translate('Work Email Address', 'Email Address sa Trabaho')}}</label>
                                 <input type="email" class="form-control" id="email" name="account[email]" value="{{ old('account.email', $administrator->email) }}" required placeholder="Enter work email">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <label for="password" class="form-label">Password</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="Enter new password (leave blank to keep current)">
+                                    <input type="password" class="form-control" id="password" name="account[password]" placeholder="{{ T::translate('Enter new password (leave blank to keep current)', 'Ilagay ang bagong password (iwanang blangko upang panatilihin ang kasalukuyan)')}}">
                                     <span class="input-group-text password-toggle" data-target="password">
                                         <i class="bi bi-eye-slash"></i>
                                     </span>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumpirmahin ang Password')}}</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="Confirm new password">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="{{ T::translate('Confirm new password', 'Kumpirmahin ang bagong password')}}" required>
                                     <span class="input-group-text password-toggle" data-target="confirmPassword">
                                         <i class="bi bi-eye-slash"></i>
                                     </span>
@@ -257,9 +259,9 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-4 position-relative">
-                                <label for="organization_Roles" class="form-label">Organization Roles</label>
+                                <label for="organization_Roles" class="form-label">{{ T::translate('Organization Roles', 'Mga Role sa Organisasyon')}}</label>
                                 <select class="form-select" id="Organization_RolesDropdown" name="Organization_Roles" required>
-                                    <option value="" disabled {{ !isset($administrator->organization_role_id) ? 'selected' : '' }}>Select organization role</option>
+                                    <option value="" disabled {{ !isset($administrator->organization_role_id) ? 'selected' : '' }}>{{ T::translate('Select organization role', 'Pumili ng Role')}}</option>
                                     <option value="2" {{ old('Organization_Roles', $administrator->organization_role_id) == 2 ? 'selected' : '' }}>Project Coordinator</option>
                                     <option value="3" {{ old('Organization_Roles', $administrator->organization_role_id) == 3 ? 'selected' : '' }}>MEAL Coordinator</option>
                                 </select>
@@ -269,8 +271,8 @@
                         <div class="row mt-4">
                             <div class="col-12 d-flex justify-content-center align-items-center">
                                 <button type="submit" class="btn btn-success btn-lg d-flex align-items-center">
-                                    <i class='bx bx-save me-2' style="font-size: 24px;"></i>
-                                    Save Changes
+                                    <i class='bi bi-arrow-bar-left me-2' style="font-size: 24px;"></i>
+                                    {{ T::translate('Save Changes', 'I-Save ang mga Pagbabago')}}
                                 </button>
                             </div>
                         </div>
@@ -285,7 +287,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="fileSizeErrorModalLabel">File Size Error</h5>
+                    <h5 class="modal-title" id="fileSizeErrorModalLabel">{{ T::translate('File Size Error', 'Error sa File Size')}}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -295,7 +297,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Close', 'Isara')}}</button>
                 </div>
             </div>
         </div>
@@ -330,9 +332,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>${fieldLabel}</strong> file is too large (${fileSizeMB}MB).<br>
-                            Maximum allowed size is ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>${fieldLabel}</strong> {{ T::translate('file is too large', 'masyadong malaki ang file')}} (${fileSizeMB}MB).<br>
+                            {{ T::translate('Maximum allowed size is', 'Ang maximum na pinapayagang laki ay')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                         
@@ -361,9 +363,9 @@
                         
                         // Set error message and show modal
                         fileSizeErrorMessage.innerHTML = `
-                            <strong>Form submission failed</strong><br>
-                            ${fieldLabel} (${fileSizeMB}MB) exceeds the maximum size of ${maxSizeMB}MB.<br>
-                            Please select a smaller file or compress your existing file.
+                            <strong>{{ T::translate('Form submission failed', 'Nabigo ang pag-sumite ng form')}}</strong><br>
+                            ${fieldLabel} (${fileSizeMB}MB) {{ T::translate('exceeds the maximum size of', 'lumampas sa maximum na laki na')}} ${maxSizeMB}MB.<br>
+                            {{ T::translate('Please select a smaller file or compress your existing file.', 'Mangyaring pumili ng mas maliit na file o i-compress ang iyong umiiral na file.')}}
                         `;
                         fileSizeErrorModal.show();
                     }

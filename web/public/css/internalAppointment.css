@@ -56,7 +56,7 @@
             border-radius: 8px;
             background-color: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            padding: 1rem;
+            
             margin-bottom: 1.5rem;
             overflow-x: auto; /* Enable horizontal scrolling */
             position: relative;
@@ -65,7 +65,6 @@
         #calendar {
             background-color: white;
             min-height: 600px;
-            min-width: 800px; /* Set minimum width to ensure functionality */
         }
         
         /* Event Styling */

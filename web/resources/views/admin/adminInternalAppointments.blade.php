@@ -1172,11 +1172,11 @@
         toggleWeekButton.addEventListener('click', function() {
             if (currentView === 'dayGridMonth') {
                 calendar.changeView('timeGridWeek');
-                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-month"></i> Month View';
+                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-month"></i> {{ T::translate ('Month View', 'Buwanang Tingnan')}}';
                 currentView = 'timeGridWeek';
             } else {
                 calendar.changeView('dayGridMonth');
-                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> Week View';
+                toggleWeekButton.innerHTML = '<i class="bi bi-calendar-week"></i> {{ T::translate('Week View', 'Lingguhang Tingnan')}}';
                 currentView = 'dayGridMonth';
             }
         });
@@ -1266,7 +1266,7 @@
             // Reset submit button
             const submitButton = document.getElementById('submitAppointment');
             if (submitButton) {
-                submitButton.innerHTML = '<i class="bi bi-plus-circle"></i> Create Appointment';
+                submitButton.innerHTML = '<i class="bi bi-plus-circle"></i> {{ T::translate('Create Appointment', 'Gumawa ng Appointment')}}';
             }
         }
         
@@ -1919,7 +1919,7 @@
                             showModalErrors([xhr.responseJSON.message]);
                         }
                     } else {
-                        showModalErrors(['An error occurred while saving the appointment. Please try again.']);
+                        showModalErrors(['{{ T::translate('An error occurred while saving the appointment. Please try again.', 'May naganap na error habang sine-save ang appointment. Pakisubukan muli.') }}']);
                     }
 
                     // Always re-enable the button on error
@@ -2045,7 +2045,7 @@
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 500) {
-                        throw new Error('Server error: The server encountered an issue. Please try again later.');
+                        throw new Error('{{ T::translate('Server error: The server encountered an issue. Please try again later.', 'Error sa Server: May naganap na isyu sa server. Pakisubukan muli mamaya.') }}');
                     } else if (response.status === 422) {
                         return response.json().then(data => {
                             throw new Error(data.message || 'Validation error. Please check your input.');
@@ -2067,7 +2067,7 @@
                 
                 // Clear the details panel
                 if (appointmentDetailsEl) {
-                    appointmentDetailsEl.innerHTML = '<div class="alert alert-info">Select an appointment to view details</div>';
+                    appointmentDetailsEl.innerHTML = '<div class="alert alert-info">{{ T::translate('Select an appointment to view details', 'Pumili ng appointment upang makita ang detalye')}}</div>';
                 }
                 
                 // Clear current event selection

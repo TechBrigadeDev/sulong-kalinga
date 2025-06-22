@@ -1,12 +1,15 @@
+@php
+use App\Helpers\TranslationHelper as T;
+@endphp
 <div class="modal fade" id="editGcpRedirectModal" tabindex="-1" aria-labelledby="editGcpRedirectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background-color:#0d6efd;">
                 <h5 class="modal-title text-white" id="editGcpRedirectModalLabel">
                     @if(Auth::user()->role_id == 3)
-                        Redirecting to Update Beneficiary
+                        {{ T::translate('Redirecting to Update Beneficiary', 'Nagre-redirect sa Pag-update ng Benepisyaryo') }}
                     @else
-                        Redirecting to Edit Beneficiary
+                        {{ T::translate('Redirecting to Edit Beneficiary', 'Nagre-redirect sa Pag-edit ng Benepisyaryo') }}
                     @endif
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -15,30 +18,30 @@
                 <div class="mb-4">
                     <i class="bi bi-pencil-square text-primary" style="font-size: 3rem;"></i>
                 </div>
-                <h5>General Care Plan Editing Information</h5>
-                <p>The General Care Plan is incorporated directly into the beneficiary profile.</p>
+                <h5>{{ T::translate('General Care Plan Editing Information', 'Impormasyon sa Pag-edit ng General Care Plan') }}</h5>
+                <p>{{ T::translate('The General Care Plan is incorporated directly into the beneficiary profile.', 'Ang General Care Plan ay direktang nakapaloob sa profile ng benepisyaryo.') }}</p>
                 
                 @if(Auth::user()->role_id == 3)
-                <p>As a Care Worker, you can update certain details about your assigned beneficiaries, including some elements of their General Care Plan.</p>
-                <p class="text-info"><small>Note: You cannot change beneficiary status or delete beneficiaries.</small></p>
+                <p>{{ T::translate('As a Care Worker, you can update certain details about your assigned beneficiaries, including some elements of their General Care Plan.', 'Bilang Care Worker, maaari mong i-update ang ilang detalye tungkol sa iyong mga nakatalagang benepisyaryo, kasama ang ilang elemento ng kanilang General Care Plan.') }}</p>
+                <p class="text-info"><small>{{ T::translate('Note: You cannot change beneficiary status or delete beneficiaries.', 'Paalala: Hindi mo maaaring baguhin ang status ng benepisyaryo o tanggalin ang mga benepisyaryo.') }}</small></p>
                 @elseif(Auth::user()->role_id == 2)
-                <p>As a Care Manager, you have full editing capabilities for the General Care Plans of all beneficiaries.</p>
+                <p>{{ T::translate('As a Care Manager, you have full editing capabilities for the General Care Plans of all beneficiaries.', 'Bilang Care Manager, mayroon kang buong kakayahan sa pag-edit ng General Care Plans ng lahat ng benepisyaryo.') }}</p>
                 @else
-                <p>As an Administrator, you have full control over all General Care Plan information.</p>
+                <p>{{ T::translate('As an Administrator, you have full control over all General Care Plan information.', 'Bilang Administrator, mayroon kang kumpletong kontrol sa lahat ng impormasyon ng General Care Plan.') }}</p>
                 @endif
                 
-                <p>You will be redirected to the Edit Beneficiary page where you can modify the General Care Plan information.</p>
+                <p>{{ T::translate('You will be redirected to the Edit Beneficiary page where you can modify the General Care Plan information.', 'Ikaw ay maire-redirect sa pahina ng Pag-edit ng Benepisyaryo kung saan maaari mong baguhin ang impormasyon ng General Care Plan.') }}</p>
                 
                 <div class="progress mt-4">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
                 </div>
                 
-                <p class="mt-3 mb-0">Redirecting in <span id="editGcpCountdown">5</span> seconds...</p>
+                <p class="mt-3 mb-0">{{ T::translate('Redirecting in', 'Nagre-redirect sa') }} <span id="editGcpCountdown">5</span> {{ T::translate('seconds...', 'segundo...') }}</p>
                 <input type="hidden" id="editGcpBeneficiaryId" value="">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="editGcpNowButton">Go Now</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ T::translate('Cancel', 'I-Kansela') }}</button>
+                <button type="button" class="btn btn-primary" id="editGcpNowButton">{{ T::translate('Go Now', 'Pumunta Ngayon') }}</button>
             </div>
         </div>
     </div>
@@ -76,7 +79,7 @@ function openEditGcpRedirectModal(beneficiaryId) {
     // Check permissions for care workers
     @if(Auth::user()->role_id == 3)
     if (!canEditBeneficiary(beneficiaryId)) {
-        alert('You do not have permission to edit this beneficiary. You can only edit beneficiaries assigned to you.');
+        alert('{{ T::translate('You do not have permission to edit this beneficiary. You can only edit beneficiaries assigned to you.', 'Wala kang pahintulot na i-edit ang benepisyaryong ito. Maaari mo lamang i-edit ang mga benepisyaryong itinalaga sa iyo.') }}');
         return;
     }
     @endif

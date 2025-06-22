@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Care Worker | Beneficiary Profiles</title>
+    <title>Beneficiary Profile | Care Worker</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/workerBeneficiaryTable.css') }}">
@@ -14,8 +14,12 @@
     @include('components.careWorkerNavbar')
     @include('components.careWorkerSidebar')
     
+    @php
+    use App\Helpers\TranslationHelper as T;
+    @endphp
+
     <div class="home-section">
-        <div class="text-left">BENEFICIARY PROFILES</div>
+        <div class="text-left">{{ T::translate('BENEFICIARY PROFILES', 'MGA PROFILE NG BENEPISYARYO') }}</div>
         <div class="container-fluid">
             <div class="row" id="home-content">
         
@@ -31,7 +35,7 @@
             <!-- Information Alert -->
             <div class="alert alert-info alert-dismissible fade show">
                 <i class="bi bi-info-circle me-2"></i>
-                You can view and edit beneficiary details, but only administrators and care managers can change a beneficiary's status.
+                {{ T::translate('You can view and edit beneficiary details, but only administrators and care managers can change a beneficiary\'s status.', 'Maaari mong tingnan at i-edit ang mga detalye ng benepisyaryo, ngunit ang mga administrator at care manager lamang ang maaaring magbago ng status ng isang benepisyaryo.') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
@@ -44,9 +48,9 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                <input type="text" class="form-control" name="search" placeholder="Search beneficiaries..." id="searchBar" value="{{ request('search') }}">
+                                <input type="text" class="form-control" name="search" placeholder="{{ T::translate('Search beneficiaries...', 'Maghanap ng mga benepisyaryo...') }}" id="searchBar" value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                                    <i class="bi bi-search"></i> <span class="d-none d-sm-inline">{{ T::translate('Search', 'Maghanap') }}</span>
                                 </button>
                             </div>
                     </div>
@@ -58,10 +62,10 @@
                                 <i class="bi bi-funnel"></i>
                             </span>
                             <select class="form-select" name="filter" id="filterDropdown" onchange="this.form.submit()">
-                                <option value="" {{ request('filter') ? '' : 'selected' }}>Filter by</option>
-                                <option value="category" {{ request('filter') == 'category' ? 'selected' : '' }}>Category</option>
-                                <option value="status" {{ request('filter') == 'status' ? 'selected' : '' }}>Status</option>
-                                <option value="municipality" {{ request('filter') == 'municipality' ? 'selected' : '' }}>Municipality</option>
+                                <option value="" {{ request('filter') ? '' : 'selected' }}>{{ T::translate('Filter by', 'Salain ayon sa') }}</option>
+                                <option value="category" {{ request('filter') == 'category' ? 'selected' : '' }}>{{ T::translate('Category', 'Kategorya') }}</option>
+                                <option value="status" {{ request('filter') == 'status' ? 'selected' : '' }}>{{ T::translate('Status', 'Status') }}</option>
+                                <option value="municipality" {{ request('filter') == 'municipality' ? 'selected' : '' }}>{{ T::translate('Municipality', 'Munisipalidad') }}</option>
                             </select>
                         </div>
                     </div>
@@ -71,7 +75,7 @@
                     <div>
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Export</span>
+                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export', 'I-export') }}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                 <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</a></li>
@@ -84,7 +88,7 @@
                     <div>
                         <a href="{{ route('care-worker.beneficiaries.create') }}" class="w-100">
                             <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">Add Beneficiary</span>
+                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Add Beneficiary', 'Magdagdag ng Benepisyaryo') }}</span>
                             </button>
                         </a>
                     </div>
@@ -108,13 +112,13 @@
                             <th scope="col" class="checkbox-cell">
                                 <input type="checkbox" id="selectAll" />
                             </th>
-                            <th scope="col">Full Name</th>
-                            <th scope="col">Category</th>
-                            <th scope="col">Mobile</th>
-                            <th scope="col">Barangay</th>
-                            <th scope="col">Municipality</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col">{{ T::translate('Full Name', 'Buong Pangalan') }}</th>
+                            <th scope="col">{{ T::translate('Category', 'Kategorya') }}</th>
+                            <th scope="col">{{ T::translate('Mobile', 'Mobile') }}</th>
+                            <th scope="col">{{ T::translate('Barangay', 'Barangay') }}</th>
+                            <th scope="col">{{ T::translate('Municipality', 'Munisipalidad') }}</th>
+                            <th scope="col">{{ T::translate('Status', 'Status') }}</th>
+                            <th scope="col">{{ T::translate('Actions', 'Mga Aksyon') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -130,7 +134,7 @@
                                 <td>{{ $beneficiary->municipality->municipality_name }}</td>
                                 <td>
                                     <span class="badge {{ $beneficiary->status->status_name == 'Active' ? 'bg-success' : 'bg-secondary' }}">
-                                        {{ $beneficiary->status->status_name }}
+                                        {{ $beneficiary->status->status_name == 'Active' ? T::translate('Active', 'Aktibo') : T::translate('Inactive', 'Hindi Aktibo') }}
                                     </span>
                                 </td>
                                 <td>
@@ -139,11 +143,11 @@
                                         <form action="{{ route('care-worker.beneficiaries.view-details') }}" method="POST" style="display:inline;">
                                             @csrf
                                             <input type="hidden" name="beneficiary_id" value="{{ $beneficiary->beneficiary_id }}">
-                                            <button type="submit" class="btn btn-link" title="View Details">
+                                            <button type="submit" class="btn btn-link" title="{{ T::translate('View Details', 'Tingnan ang Detalye') }}">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </form>
-                                        <a href="{{ route('care-worker.beneficiaries.edit', $beneficiary->beneficiary_id) }}" class="btn btn-link" title="Edit">
+                                        <a href="{{ route('care-worker.beneficiaries.edit', $beneficiary->beneficiary_id) }}" class="btn btn-link" title="{{ T::translate('Edit', 'I-edit') }}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>
@@ -155,8 +159,8 @@
                 @else
                 <div class="empty-state">
                     <i class="bi bi-people"></i>
-                    <h4>No beneficiaries found</h4>
-                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                    <h4>{{ T::translate('No beneficiaries found', 'Walang nahanap na mga benepisyaryo') }}</h4>
+                    <p class="text-muted">{{ T::translate('Try adjusting your search or filter criteria', 'Subukang ayusin ang iyong paghahanap o pamantayan sa pagsala') }}</p>
                 </div>
                 @endif
             </div>
