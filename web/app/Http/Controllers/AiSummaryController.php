@@ -329,18 +329,18 @@ class AiSummaryController extends Controller
             
             if ($request->type === 'assessment') {
                 $carePlan->assessment_translation_sections = $translatedSections;
-                // Also save the combined text for compatibility
-                $carePlan->assessment_translation_draft = implode("\n\n", array_values($translatedSections));
+                // Save only the executive summary translation as the draft
+                $carePlan->assessment_translation_draft = $translatedSections['full_summary'] ?? '';
             } else {
                 $carePlan->evaluation_translation_sections = $translatedSections;
-                $carePlan->evaluation_translation_draft = implode("\n\n", array_values($translatedSections));
+                $carePlan->evaluation_translation_draft = $translatedSections['full_summary'] ?? '';
             }
             
             $carePlan->save();
 
             return response()->json([
                 'translatedSections' => $translatedSections,
-                'translatedText' => implode("\n\n", array_values($translatedSections))
+                'translatedText' => $translatedSections['full_summary'] ?? ''
             ]);
         } catch (\Exception $e) {
             \Log::error("Translation error: " . $e->getMessage());
@@ -454,7 +454,7 @@ class AiSummaryController extends Controller
     private function harmonizePronouns($text, $gender)
     {
         if ($gender === 'female') {
-            // Replace male pronouns with female
+            // Replace with more consistent patterns
             $patterns = [
                 '/\bHe\b/i' => 'She',
                 '/\bhe\b/i' => 'she',
@@ -462,20 +462,25 @@ class AiSummaryController extends Controller
                 '/\bhis\b/i' => 'her',
                 '/\bHim\b/i' => 'Her',
                 '/\bhim\b/i' => 'her',
+                '/\bFather\b/i' => 'Mother', // Add name replacements
+                '/\bDad\b/i' => 'Mom',
+                '/\bgrandfather\b/i' => 'grandmother',
             ];
         } elseif ($gender === 'male') {
-            // Replace female pronouns with male
             $patterns = [
                 '/\bShe\b/i' => 'He',
                 '/\bshe\b/i' => 'he',
                 '/\bHer\b/i' => 'His',
                 '/\bher\b/i' => 'his',
+                '/\bMother\b/i' => 'Father', // Add name replacements
+                '/\bMom\b/i' => 'Dad',
+                '/\bgrandmother\b/i' => 'grandfather',
             ];
         } else {
-            // Neutral: do nothing or use "they/their" if you want
             $patterns = [];
         }
 
+        // Apply all replacements
         foreach ($patterns as $pattern => $replacement) {
             $text = preg_replace($pattern, $replacement, $text);
         }

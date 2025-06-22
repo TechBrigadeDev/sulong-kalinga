@@ -6,6 +6,9 @@ import sys
 import numpy
 import calamancy
 import spacy
+import httpx
+import os
+from openai import OpenAI
 
 # Import our custom modules
 from text_processor import clean_and_normalize_text, split_into_sentences, enhance_measurement_references
@@ -15,6 +18,15 @@ from section_analyzer import extract_sections_improved, extract_sections_for_eva
 from summary_generator import create_multi_section_summary, create_simple_summary
 
 app = Flask(__name__)
+
+# Create a client that explicitly has no proxies
+http_client = httpx.Client(proxies=None)
+
+# Use this client for OpenAI
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    http_client=http_client
+)
 
 try:
     import numpy
@@ -1558,32 +1570,57 @@ def health_check():
         "pipeline": nlp.pipe_names
     })
 
+def generate_tagalog_summary_with_openai(text, doc_type="assessment"):
+    prompt = (
+        f"Buodin mo ang sumusunod na {doc_type} sa Tagalog. "
+        "Gamitin ang malinaw at propesyonal na wika. "
+        "Isama ang pinakamahalagang impormasyon at gawing executive summary:\n\n"
+        f"{text}\n\nExecutive Summary:"
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.4,
+        max_tokens=2000
+    )
+
+    # Log token usage
+    if hasattr(response, "usage") and response.usage:
+        print(f"OpenAI token usage: prompt={response.usage.prompt_tokens}, completion={response.usage.completion_tokens}, total={response.usage.total_tokens}")
+
+    # Remove "Executive Summary:" heading if present
+    summary = response.choices[0].message.content.strip()
+    if summary.lower().startswith("executive summary:"):
+        summary = summary[len("executive summary:"):].lstrip()
+    return summary
+
 @app.route('/summarize', methods=['POST'])
 def summarize_text():
-    """Summarize Tagalog text using methods with enhanced context detection and section synthesis"""
+    """Summarize Tagalog text using calamancy for sectioning and OpenAI for executive summary."""
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
-        
+
     data = request.json
     text = data.get('text', '')
     doc_type = data.get('type', '')
-    
+
     if not text:
         return jsonify({"error": "Empty text provided"}), 400
-    
+
     try:
         start_time = time.time()
-        
+
         # Clean and normalize the text
         cleaned_text = clean_and_normalize_text(text)
-        
+
         # Process text with calamancy
         doc = nlp(cleaned_text)
-        
+
         # Extract original sentences
         sentences = split_into_sentences(cleaned_text)
         print(f"Found {len(sentences)} sentences in text")
-        
+
         # Extract entities
         try:
             entities = []
@@ -1597,143 +1634,66 @@ def summarize_text():
         except Exception as e:
             print(f"Entity extraction error: {e}")
             entities = []
-        
-        # Extract key medical terms using our improved function
+
+        # Extract key medical terms
         try:
             key_terms = extract_important_terms(cleaned_text, count=5, doc_type=doc_type)
         except Exception as e:
             print(f"Term extraction error: {e}")
             key_terms = []
-        
-        # Extract sections
+
+        # Extract sections using calamancy (no length limits)
         try:
             if doc_type.lower() == "evaluation":
-                # Use specialized evaluation section extraction
                 sections = extract_sections_for_evaluation(sentences)
             else:
-                # Use general section extraction for assessments
                 sections = extract_sections_improved(sentences, doc_type)
-            
+
+            # Ensure all section values are strings (join lists with newlines)
             if isinstance(sections, dict):
                 for k, v in sections.items():
                     if isinstance(v, list):
-                        # Join list items with a space or newline
                         sections[k] = "\n".join(str(item) for item in v)
-            
-            # Create document context analysis for enhanced summarization
+                    elif v is None:
+                        sections[k] = ""
+                    else:
+                        sections[k] = str(v)
+
             doc_context = analyze_document_context(sections, doc_type)
-        
+
         except Exception as e:
             print(f"Section extraction error: {e}")
             traceback.print_exc()
             sections = {}
             doc_context = {"priority_sections": [], "key_entities": {}, "cross_section_themes": []}
 
-        # Add section mapping to document context for better sentence transitions
-        doc_context["sentence_section_map"] = {}
-        
-        # Generate enhanced summary with improved context detection
+        # Generate Tagalog executive summary using OpenAI
         try:
-            # Extract cross-section entities for better context
-            section_elements = {}
-            for section_name, section_content in sections.items():
-                section_elements[section_name] = extract_structured_elements(section_content, section_name)
-                
-            cross_section_entities = identify_cross_section_entities(section_elements)
-            doc_context["cross_section_entities"] = cross_section_entities
-            
-            # Generate the enhanced summary with all our improvements
-            summary_result = create_multi_section_summary(doc, sections, doc_type)
-            summary = summary_result["summary"]
-            sections = summary_result.get("sections", sections)
-            
-            # Check for important information that might be missing from the summary
-            # This helps ensure specific key details are included
-            important_medical_info = []
-            for ent in doc.ents:
-                if ent.label_ in ["DISEASE", "SYMPTOM", "COGNITIVE"] and len(ent.text) > 3:
-                    important_medical_info.append(ent.text)
-            
-            for term in important_medical_info[:3]:  # Check top 3 important terms
-                if term not in summary.lower() and len(term) > 3:
-                    # Find which section this term belongs to
-                    for section_name, section_content in sections.items():
-                        if isinstance(section_content, list):
-                            section_content = " ".join(str(item) for item in section_content)
-                        if term.lower() in section_content.lower():
-                            # Extract a relevant sentence containing this term
-                            section_sents = split_into_sentences(section_content)
-                            for sent in section_sents:
-                                if term.lower() in sent.lower():
-                                    # Find a good transition phrase based on semantic relationship
-                                    relationship = get_contextual_relationship(summary, sent, doc_context, -1, -1)
-                                    transition = choose_context_aware_transition(summary, sent, relationship)
-                                    
-                                    # Add the information with proper context
-                                    additional_detail = sent
-                                    if len(additional_detail) > 150:  # Trim if too long
-                                        # Find a good break point
-                                        break_point = additional_detail.find(",", 100)
-                                        if break_point > 0:
-                                            additional_detail = additional_detail[:break_point+1]
-                                    
-                                    # Add to summary if not already too long
-                                    if len(summary) < 400:  # Keep summary reasonable
-                                        # Ensure proper capitalization after transition
-                                        next_sentence = additional_detail
-                                        if next_sentence[0].isupper():
-                                            next_sentence = next_sentence[0].lower() + next_sentence[1:]
-                                        summary = summary + " " + transition + next_sentence
-                                    break
-            
-            # Final sanity check - if summary is still too short, use fallback
-            if len(summary) < 50:
-                main_subject = extract_main_subject(doc)
-                if doc_type.lower() == "assessment":
-                    summary = f"{main_subject} ay nangangailangan ng komprehensibong pagsusuri."
-                else:
-                    summary = "Inirerekomenda ang pagkonsulta para sa karagdagang pagsusuri at paggamot."
-                    
+            summary = generate_tagalog_summary_with_openai(text, doc_type)
         except Exception as e:
-            print(f"Summary generation error: {e}")
+            print(f"OpenAI summary generation error: {e}")
             traceback.print_exc()
-            
-            # Fall back to simple summary if enhanced fails
-            try:
-                summary = create_simple_summary(doc, sections, doc_type)
-            except Exception as e:
-                print(f"Simple summary generation error: {e}")
-                
-                # Last resort emergency fallback
-                if doc_type.lower() == "assessment":
-                    summary = "Ang pasyente ay nangangailangan ng karagdagang pagsusuri para sa kanyang kondisyon."
-                else:
-                    summary = "Inirerekomenda ang pagkonsulta para sa karagdagang pagsusuri at paggamot."
-        
-        # Final summary refinement
-        if summary and len(summary) > 20:
-            # Ensure proper punctuation and spacing
-            summary = re.sub(r'\s+', ' ', summary)  # Fix multiple spaces
-            summary = re.sub(r'\s([,.;:])', r'\1', summary)  # Fix spacing before punctuation
-            
-            # Ensure first letter is capitalized
-            if summary[0].islower():
-                summary = summary[0].upper() + summary[1:]
-                
-            # Ensure sentence ends with proper punctuation
-            if not summary[-1] in ['.', '!', '?']:
-                summary += '.'
-        
-        # Ensure all section values are strings
+            summary = "Hindi matagumpay ang AI executive summary. Mangyaring subukan muli."
+
+        # # Final summary refinement (optional)
+        # if summary and len(summary) > 20:
+        #     summary = re.sub(r'\s+', ' ', summary)
+        #     summary = re.sub(r'\s([,.;:])', r'\1', summary)
+        #     if summary[0].islower():
+        #         summary = summary[0].upper() + summary[1:]
+        #     if not summary[-1] in ['.', '!', '?']:
+        #         summary += '.'
+
+        # Ensure all section values are strings (again, for safety)
         sections = {k: str(v) if v is not None else "" for k, v in sections.items()}
 
         # Calculate processing statistics
         processing_time = round((time.time() - start_time) * 1000)
         compression_ratio = round(len(text) / len(summary)) if len(summary) > 0 else 0
-        
+
         return jsonify({
             "summary": summary,
-            "sections": sections,  # Full sections (now containing up to 5 sentences)
+            "sections": sections,
             "sentence_count": len(sentences),
             "entities": entities,
             "key_medical_terms": key_terms,
