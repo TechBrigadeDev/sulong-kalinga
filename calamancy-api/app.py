@@ -6,16 +6,27 @@ import sys
 import numpy
 import calamancy
 import spacy
+import httpx
+import os
+from openai import OpenAI
 
 # Import our custom modules
 from text_processor import clean_and_normalize_text, split_into_sentences, enhance_measurement_references
 from entity_extractor import extract_key_elements, extract_important_terms, extract_structured_elements, extract_main_subject
 from context_analyzer import analyze_document_context, extract_measurement_context, identify_cross_section_entities, get_relevant_entities_for_section, get_semantic_relationship, get_contextual_relationship, determine_optimal_section_order
 from section_analyzer import extract_sections_improved, extract_sections_for_evaluation
-from summary_generator import create_enhanced_multi_section_summary, create_simple_summary
-from summary_generator import choose_context_aware_transition
+from summary_generator import create_multi_section_summary, create_simple_summary
 
 app = Flask(__name__)
+
+# Create a client that explicitly has no proxies
+http_client = httpx.Client(proxies=None)
+
+# Use this client for OpenAI
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    http_client=http_client
+)
 
 try:
     import numpy
@@ -45,6 +56,12 @@ medical_patterns = [
     {"label": "PER", "pattern": "doktor"},
     {"label": "PER", "pattern": "nurse"},
     {"label": "PER", "pattern": "physical therapist"},
+    {"label": "PER", "pattern": "Kuya"},
+    {"label": "PER", "pattern": "Ate"},
+    {"label": "PER", "pattern": "Tito"},
+    {"label": "PER", "pattern": "Tita"},
+    {"label": "PER", "pattern": "kasambahay"},
+    {"label": "PER", "pattern": "bantay"},
     
     # Body Parts
     {"label": "BODY_PART", "pattern": "dibdib"},
@@ -90,6 +107,17 @@ medical_patterns = [
     {"label": "BODY_PART", "pattern": "gulugod"},
     {"label": "BODY_PART", "pattern": "sacrum"},
     {"label": "BODY_PART", "pattern": "heels"},
+    {"label": "BODY_PART", "pattern": "palad"},
+    {"label": "BODY_PART", "pattern": "talampakan"},
+    {"label": "BODY_PART", "pattern": "kuko"},
+    {"label": "BODY_PART", "pattern": "buto"},
+    {"label": "BODY_PART", "pattern": "baga"},
+    {"label": "BODY_PART", "pattern": "gallbladder"},
+    {"label": "BODY_PART", "pattern": "lapay"},
+    {"label": "BODY_PART", "pattern": "pancreas"},
+    {"label": "BODY_PART", "pattern": "bituka"},
+    {"label": "BODY_PART", "pattern": "intestines"},
+    {"label": "BODY_PART", "pattern": "balat"},
 
     # Diseases and Conditions
     {"label": "DISEASE", "pattern": "diabetes"},
@@ -128,6 +156,29 @@ medical_patterns = [
     {"label": "DISEASE", "pattern": "Parkinson's disease"},
     {"label": "DISEASE", "pattern": "glaucoma"},
     {"label": "DISEASE", "pattern": "cataracts"},
+    {"label": "DISEASE", "pattern": "asthma"},
+    {"label": "DISEASE", "pattern": "hika"},
+    {"label": "DISEASE", "pattern": "tuberculosis"},
+    {"label": "DISEASE", "pattern": "TB"},
+    {"label": "DISEASE", "pattern": "cancer"},
+    {"label": "DISEASE", "pattern": "kanser"},
+    {"label": "DISEASE", "pattern": "palsy"},
+    {"label": "DISEASE", "pattern": "paralysis"},
+    {"label": "DISEASE", "pattern": "epilepsy"},
+    {"label": "DISEASE", "pattern": "seizure"},
+    {"label": "DISEASE", "pattern": "convulsion"},
+    {"label": "DISEASE", "pattern": "pneumonia"},
+    {"label": "DISEASE", "pattern": "hepatitis"},
+    {"label": "DISEASE", "pattern": "cirrhosis"},
+    {"label": "DISEASE", "pattern": "gout"},
+    {"label": "DISEASE", "pattern": "hyperuricemia"},
+    {"label": "DISEASE", "pattern": "hypoglycemia"},
+    {"label": "DISEASE", "pattern": "hyperlipidemia"},
+    {"label": "DISEASE", "pattern": "dyslipidemia"},
+    {"label": "DISEASE", "pattern": "COPD"},
+    {"label": "DISEASE", "pattern": "chronic kidney disease"},
+    {"label": "DISEASE", "pattern": "CKD"},
+    {"label": "DISEASE", "pattern": "renal failure"},
     
     # Symptoms
     {"label": "SYMPTOM", "pattern": "sakit"},
@@ -189,6 +240,75 @@ medical_patterns = [
     {"label": "SYMPTOM", "pattern": "significant fluctuations"},
     {"label": "SYMPTOM", "pattern": "mataas na blood sugar"},
     {"label": "SYMPTOM", "pattern": "sundowning syndrome"},
+    {"label": "SYMPTOM", "pattern": "pananakit"},
+    {"label": "SYMPTOM", "pattern": "pamamaga"},
+    {"label": "SYMPTOM", "pattern": "pamamanhid"},
+    {"label": "SYMPTOM", "pattern": "pag-ubo"},
+    {"label": "SYMPTOM", "pattern": "pagbahing"},
+    {"label": "SYMPTOM", "pattern": "pagkawala ng gana"},
+    {"label": "SYMPTOM", "pattern": "pagkawala ng panlasa"},
+    {"label": "SYMPTOM", "pattern": "pagkawala ng pang-amoy"},
+    {"label": "SYMPTOM", "pattern": "pagkawala ng lakas"},
+    {"label": "SYMPTOM", "pattern": "pagkawala ng malay"},
+    {"label": "SYMPTOM", "pattern": "pagkawala ng balanse"},
+    {"label": "SYMPTOM", "pattern": "madaling mapagod"},
+    {"label": "SYMPTOM", "pattern": "madaling mahilo"},
+    {"label": "SYMPTOM", "pattern": "madaling magutom"},
+    {"label": "SYMPTOM", "pattern": "madaling mauhaw"},
+    {"label": "SYMPTOM", "pattern": "madaling mapagod"},
+    {"label": "SYMPTOM", "pattern": "madalas na pag-ihi"},
+    {"label": "SYMPTOM", "pattern": "madalas na pagdumi"},
+    {"label": "SYMPTOM", "pattern": "madalas na pagkahilo"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng ulo"},
+    {"label": "SYMPTOM", "pattern": "madalas na pagkapagod"},
+    {"label": "SYMPTOM", "pattern": "madalas na pag-ubo"},
+    {"label": "SYMPTOM", "pattern": "madalas na pagbahing"},
+    {"label": "SYMPTOM", "pattern": "madalas na pagduduwal"},
+    {"label": "SYMPTOM", "pattern": "madalas na pagsusuka"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng tiyan"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng kasukasuan"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng likod"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng binti"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng tuhod"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng balakang"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng balikat"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng leeg"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng dibdib"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng puso"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng ulo"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng mata"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng tenga"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng bibig"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng labi"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng mukha"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng ngipin"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng batok"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng ulo"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng utak"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng leeg"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng braso"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng balikat"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng baywang"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng lungs"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng baga"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng atay"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng kidney"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng bato"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng lower back"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng joints"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng bladder"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng pantog"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng balat"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng quadriceps"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng kalamnan"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng tissue"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng arteries"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng ugat"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng spinal cord"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng gulugod"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng sacrum"},
+    {"label": "SYMPTOM", "pattern": "madalas na pananakit ng heels"},
+
     
     # Measurements
     {"label": "MEASUREMENT", "pattern": "mg/dL"},
@@ -214,6 +334,17 @@ medical_patterns = [
     {"label": "MEASUREMENT", "pattern": "25-30 grams"},
     {"label": "MEASUREMENT", "pattern": "60 grams"},
     {"label": "MEASUREMENT", "pattern": "oxygen saturation"},
+    {"label": "MEASUREMENT", "pattern": "mmHg"},
+    {"label": "MEASUREMENT", "pattern": "bpm"},
+    {"label": "MEASUREMENT", "pattern": "beats per minute"},
+    {"label": "MEASUREMENT", "pattern": "pulse rate"},
+    {"label": "MEASUREMENT", "pattern": "temperature"},
+    {"label": "MEASUREMENT", "pattern": "body temperature"},
+    {"label": "MEASUREMENT", "pattern": "°C"},
+    {"label": "MEASUREMENT", "pattern": "°F"},
+    {"label": "MEASUREMENT", "pattern": "oxygen level"},
+    {"label": "MEASUREMENT", "pattern": "systolic"},
+    {"label": "MEASUREMENT", "pattern": "diastolic"},
     
     # Foods and Diet
     {"label": "FOOD", "pattern": "kanin"},
@@ -242,6 +373,134 @@ medical_patterns = [
     {"label": "FOOD", "pattern": "cookies"},
     {"label": "FOOD", "pattern": "protein"},
     {"label": "FOOD", "pattern": "lean proteins"},
+    {"label": "FOOD", "pattern": "adobo"},
+    {"label": "FOOD", "pattern": "sinangag"},
+    {"label": "FOOD", "pattern": "tinola"},
+    {"label": "FOOD", "pattern": "sinigang"},
+    {"label": "FOOD", "pattern": "nilaga"},
+    {"label": "FOOD", "pattern": "sardinas"},
+    {"label": "FOOD", "pattern": "tuyo"},
+    {"label": "FOOD", "pattern": "longganisa"},
+    {"label": "FOOD", "pattern": "tocino"},
+    {"label": "FOOD", "pattern": "hotdog"},
+    {"label": "FOOD", "pattern": "itlog"},
+    {"label": "FOOD", "pattern": "egg"},
+    {"label": "FOOD", "pattern": "gatas"},
+    {"label": "FOOD", "pattern": "milk"},
+    {"label": "FOOD", "pattern": "kape"},
+    {"label": "FOOD", "pattern": "coffee"},
+    {"label": "FOOD", "pattern": "saging"},
+    {"label": "FOOD", "pattern": "banana"},
+    {"label": "FOOD", "pattern": "mangga"},
+    {"label": "FOOD", "pattern": "mango"},
+    {"label": "FOOD", "pattern": "pakwan"},
+    {"label": "FOOD", "pattern": "watermelon"},
+    {"label": "FOOD", "pattern": "kamote"},
+    {"label": "FOOD", "pattern": "sweet potato"},
+    {"label": "FOOD", "pattern": "mais"},
+    {"label": "FOOD", "pattern": "corn"},
+    {"label": "FOOD", "pattern": "pandesal"},
+    {"label": "FOOD", "pattern": "champorado"},
+    {"label": "FOOD", "pattern": "ginataan"},
+    {"label": "FOOD", "pattern": "biko"},
+    {"label": "FOOD", "pattern": "puto"},
+    {"label": "FOOD", "pattern": "kutsinta"},
+    {"label": "FOOD", "pattern": "lechon"},
+    {"label": "FOOD", "pattern": "chicken"},
+    {"label": "FOOD", "pattern": "manok"},
+    {"label": "FOOD", "pattern": "baboy"},
+    {"label": "FOOD", "pattern": "pork"},
+    {"label": "FOOD", "pattern": "beef"},
+    {"label": "FOOD", "pattern": "baka"},
+    {"label": "FOOD", "pattern": "tinapa"},
+    {"label": "FOOD", "pattern": "dried fish"},
+    {"label": "FOOD", "pattern": "ampalaya"},
+    {"label": "FOOD", "pattern": "bitter gourd"},
+    {"label": "FOOD", "pattern": "malunggay"},
+    {"label": "FOOD", "pattern": "moringa"},
+    {"label": "FOOD", "pattern": "kalabasa"},
+    {"label": "FOOD", "pattern": "squash"},
+    {"label": "FOOD", "pattern": "sitaw"},
+    {"label": "FOOD", "pattern": "string beans"},
+    {"label": "FOOD", "pattern": "patola"},
+    {"label": "FOOD", "pattern": "sponge gourd"},
+    {"label": "FOOD", "pattern": "labanos"},
+    {"label": "FOOD", "pattern": "radish"},
+    {"label": "FOOD", "pattern": "pechay"},
+    {"label": "FOOD", "pattern": "bok choy"},
+    {"label": "FOOD", "pattern": "carrots"},
+    {"label": "FOOD", "pattern": "carrot"},
+    {"label": "FOOD", "pattern": "patatas"},
+    {"label": "FOOD", "pattern": "potato"},
+    {"label": "FOOD", "pattern": "okra"},
+    {"label": "FOOD", "pattern": "eggplant"},
+    {"label": "FOOD", "pattern": "talong"},
+    {"label": "FOOD", "pattern": "tomato"},
+    {"label": "FOOD", "pattern": "kamatis"},
+    {"label": "FOOD", "pattern": "onion"},
+    {"label": "FOOD", "pattern": "sibuyas"},
+    {"label": "FOOD", "pattern": "garlic"},
+    {"label": "FOOD", "pattern": "bawang"},
+    {"label": "FOOD", "pattern": "salt"},
+    {"label": "FOOD", "pattern": "asin"},
+    {"label": "FOOD", "pattern": "sugar"},
+    {"label": "FOOD", "pattern": "asukal"},
+    {"label": "FOOD", "pattern": "oil"},
+    {"label": "FOOD", "pattern": "mantika"},
+    {"label": "FOOD", "pattern": "vinegar"},
+    {"label": "FOOD", "pattern": "suka"},
+    {"label": "FOOD", "pattern": "soy sauce"},
+    {"label": "FOOD", "pattern": "toyo"},
+    {"label": "FOOD", "pattern": "fish sauce"},
+    {"label": "FOOD", "pattern": "patis"},
+    {"label": "FOOD", "pattern": "spaghetti"},
+    {"label": "FOOD", "pattern": "pasta"},
+    {"label": "FOOD", "pattern": "macaroni"},
+    {"label": "FOOD", "pattern": "cheese"},
+    {"label": "FOOD", "pattern": "gatas ng kalabaw"},
+    {"label": "FOOD", "pattern": "carabao milk"},
+    {"label": "FOOD", "pattern": "taho"},
+    {"label": "FOOD", "pattern": "sago"},
+    {"label": "FOOD", "pattern": "gulaman"},
+    {"label": "FOOD", "pattern": "halo-halo"},
+    {"label": "FOOD", "pattern": "ice cream"},
+    {"label": "FOOD", "pattern": "sabaw"},
+    {"label": "FOOD", "pattern": "broth"},
+    {"label": "FOOD", "pattern": "soup"},
+    {"label": "FOOD", "pattern": "sinigang na baboy"},
+    {"label": "FOOD", "pattern": "sinigang na isda"},
+    {"label": "FOOD", "pattern": "sinigang na hipon"},
+    {"label": "FOOD", "pattern": "fried rice"},
+    {"label": "FOOD", "pattern": "fried fish"},
+    {"label": "FOOD", "pattern": "fried chicken"},
+    {"label": "FOOD", "pattern": "fried egg"},
+    {"label": "FOOD", "pattern": "boiled egg"},
+    {"label": "FOOD", "pattern": "hard boiled egg"},
+    {"label": "FOOD", "pattern": "soft boiled egg"},
+    {"label": "FOOD", "pattern": "scrambled egg"},
+    {"label": "FOOD", "pattern": "omelette"},
+    {"label": "FOOD", "pattern": "lugaw na may itlog"},
+    {"label": "FOOD", "pattern": "goto"},
+    {"label": "FOOD", "pattern": "arroz caldo"},
+    {"label": "FOOD", "pattern": "champorado"},
+    {"label": "FOOD", "pattern": "turon"},
+    {"label": "FOOD", "pattern": "banana cue"},
+    {"label": "FOOD", "pattern": "camote cue"},
+    {"label": "FOOD", "pattern": "pancit"},
+    {"label": "FOOD", "pattern": "pancit canton"},
+    {"label": "FOOD", "pattern": "pancit bihon"},
+    {"label": "FOOD", "pattern": "pancit palabok"},
+    {"label": "FOOD", "pattern": "pancit luglug"},
+    {"label": "FOOD", "pattern": "pancit malabon"},
+    {"label": "FOOD", "pattern": "pancit habhab"},
+    {"label": "FOOD", "pattern": "pancit miki"},
+    {"label": "FOOD", "pattern": "pancit lomi"},
+    {"label": "FOOD", "pattern": "pancit sotanghon"},
+    {"label": "FOOD", "pattern": "pancit canton"},
+    {"label": "FOOD", "pattern": "pancit guisado"},
+    {"label": "FOOD", "pattern": "pancit bato"},
+    {"label": "FOOD", "pattern": "pancit cabagan"},
+    {"label": "FOOD", "pattern": "pancit batil patong"},
     
     # Medical equipment and aids
     {"label": "MEDICAL", "pattern": "wheelchair"},
@@ -266,6 +525,65 @@ medical_patterns = [
     {"label": "MEDICAL", "pattern": "pill organizer"},
     {"label": "MEDICAL", "pattern": "compression stockings"},
     {"label": "MEDICAL", "pattern": "hoyer lift"},
+    {"label": "MEDICAL", "pattern": "nebulizer"},
+    {"label": "MEDICAL", "pattern": "oxygen tank"},
+    {"label": "MEDICAL", "pattern": "pulse oximeter"},
+    {"label": "MEDICAL", "pattern": "blood pressure monitor"},
+    {"label": "MEDICAL", "pattern": "BP monitor"},
+    {"label": "MEDICAL", "pattern": "thermometer"},
+    {"label": "MEDICAL", "pattern": "digital thermometer"},
+    {"label": "MEDICAL", "pattern": "stethoscope"},
+    {"label": "MEDICAL", "pattern": "suction machine"},
+    {"label": "MEDICAL", "pattern": "feeding tube"},
+    {"label": "MEDICAL", "pattern": "nasogastric tube"},
+    {"label": "MEDICAL", "pattern": "catheter"},
+    {"label": "MEDICAL", "pattern": "urinal"},
+    {"label": "MEDICAL", "pattern": "bedpan"},
+    {"label": "MEDICAL", "pattern": "IV stand"},
+    {"label": "MEDICAL", "pattern": "infusion pump"},
+    {"label": "MEDICAL", "pattern": "air mattress"},
+    {"label": "MEDICAL", "pattern": "anti-decubitus mattress"},
+    {"label": "MEDICAL", "pattern": "transfer board"},
+    {"label": "MEDICAL", "pattern": "transfer belt"},
+    {"label": "MEDICAL", "pattern": "mobility scooter"},
+    {"label": "MEDICAL", "pattern": "prosthesis"},
+    {"label": "MEDICAL", "pattern": "orthopedic shoes"},
+    {"label": "MEDICAL", "pattern": "support brace"},
+    {"label": "MEDICAL", "pattern": "neck brace"},
+    {"label": "MEDICAL", "pattern": "back brace"},
+    {"label": "MEDICAL", "pattern": "splint"},
+    {"label": "MEDICAL", "pattern": "cast"},
+    {"label": "MEDICAL", "pattern": "medical gloves"},
+    {"label": "MEDICAL", "pattern": "face mask"},
+    {"label": "MEDICAL", "pattern": "surgical mask"},
+    {"label": "MEDICAL", "pattern": "disposable gown"},
+    {"label": "MEDICAL", "pattern": "alcohol swab"},
+    {"label": "MEDICAL", "pattern": "sterile gauze"},
+    {"label": "MEDICAL", "pattern": "bandage"},
+    {"label": "MEDICAL", "pattern": "elastic bandage"},
+    {"label": "MEDICAL", "pattern": "medical tape"},
+    {"label": "MEDICAL", "pattern": "pill cutter"},
+    {"label": "MEDICAL", "pattern": "medicine cup"},
+    {"label": "MEDICAL", "pattern": "medicine spoon"},
+    {"label": "MEDICAL", "pattern": "inhaler"},
+    {"label": "MEDICAL", "pattern": "walker with wheels"},
+    {"label": "MEDICAL", "pattern": "crutches"},
+    {"label": "MEDICAL", "pattern": "bed rail"},
+    {"label": "MEDICAL", "pattern": "emergency call button"},
+    {"label": "MEDICAL", "pattern": "medical alert bracelet"},
+    {"label": "MEDICAL", "pattern": "hearing amplifier"},
+    {"label": "MEDICAL", "pattern": "magnifying glass"},
+    {"label": "MEDICAL", "pattern": "adaptive utensils"},
+    {"label": "MEDICAL", "pattern": "reacher"},
+    {"label": "MEDICAL", "pattern": "grabber tool"},
+    {"label": "MEDICAL", "pattern": "shower bench"},
+    {"label": "MEDICAL", "pattern": "toilet safety frame"},
+    {"label": "MEDICAL", "pattern": "bedside table"},
+    {"label": "MEDICAL", "pattern": "overbed table"},
+    {"label": "MEDICAL", "pattern": "compression pump"},
+    {"label": "MEDICAL", "pattern": "medical ice pack"},
+    {"label": "MEDICAL", "pattern": "hot water bag"},
+    {"label": "MEDICAL", "pattern": "cooling pad"},
     
     # Treatments and interventions
     {"label": "TREATMENT", "pattern": "medication"},
@@ -294,6 +612,109 @@ medical_patterns = [
     {"label": "TREATMENT", "pattern": "swallowing exercises"},
     {"label": "TREATMENT", "pattern": "cognitive stimulation"},
     {"label": "TREATMENT", "pattern": "balance training"},
+    {"label": "TREATMENT", "pattern": "chemotherapy"},
+    {"label": "TREATMENT", "pattern": "radiation therapy"},
+    {"label": "TREATMENT", "pattern": "immunotherapy"},
+    {"label": "TREATMENT", "pattern": "occupational rehabilitation"},
+    {"label": "TREATMENT", "pattern": "speech-language therapy"},
+    {"label": "TREATMENT", "pattern": "nutritional counseling"},
+    {"label": "TREATMENT", "pattern": "psychotherapy"},
+    {"label": "TREATMENT", "pattern": "group therapy"},
+    {"label": "TREATMENT", "pattern": "cognitive behavioral therapy"},
+    {"label": "TREATMENT", "pattern": "CBT"},
+    {"label": "TREATMENT", "pattern": "pain relief"},
+    {"label": "TREATMENT", "pattern": "pain control"},
+    {"label": "TREATMENT", "pattern": "hydration therapy"},
+    {"label": "TREATMENT", "pattern": "IV fluids"},
+    {"label": "TREATMENT", "pattern": "oral rehydration"},
+    {"label": "TREATMENT", "pattern": "blood transfusion"},
+    {"label": "TREATMENT", "pattern": "surgery"},
+    {"label": "TREATMENT", "pattern": "minor surgery"},
+    {"label": "TREATMENT", "pattern": "major surgery"},
+    {"label": "TREATMENT", "pattern": "wound dressing"},
+    {"label": "TREATMENT", "pattern": "debridement"},
+    {"label": "TREATMENT", "pattern": "cast immobilization"},
+    {"label": "TREATMENT", "pattern": "splinting"},
+    {"label": "TREATMENT", "pattern": "antiviral therapy"},
+    {"label": "TREATMENT", "pattern": "antifungal therapy"},
+    {"label": "TREATMENT", "pattern": "antiparasitic therapy"},
+    {"label": "TREATMENT", "pattern": "bronchodilator therapy"},
+    {"label": "TREATMENT", "pattern": "inhalation therapy"},
+    {"label": "TREATMENT", "pattern": "nebulization"},
+    {"label": "TREATMENT", "pattern": "vaccination"},
+    {"label": "TREATMENT", "pattern": "immunization"},
+    {"label": "TREATMENT", "pattern": "oral medication"},
+    {"label": "TREATMENT", "pattern": "topical medication"},
+    {"label": "TREATMENT", "pattern": "injection"},
+    {"label": "TREATMENT", "pattern": "subcutaneous injection"},
+    {"label": "TREATMENT", "pattern": "intravenous injection"},
+    {"label": "TREATMENT", "pattern": "intramuscular injection"},
+    {"label": "TREATMENT", "pattern": "nasal spray"},
+    {"label": "TREATMENT", "pattern": "eye drops"},
+    {"label": "TREATMENT", "pattern": "ear drops"},
+    {"label": "TREATMENT", "pattern": "oral care"},
+    {"label": "TREATMENT", "pattern": "mouth care"},
+    {"label": "TREATMENT", "pattern": "mobility training"},
+    {"label": "TREATMENT", "pattern": "gait training"},
+    {"label": "TREATMENT", "pattern": "range of motion exercises"},
+    {"label": "TREATMENT", "pattern": "stretching exercises"},
+    {"label": "TREATMENT", "pattern": "strengthening exercises"},
+    {"label": "TREATMENT", "pattern": "fall prevention program"},
+    {"label": "TREATMENT", "pattern": "smoking cessation"},
+    {"label": "TREATMENT", "pattern": "alcohol cessation"},
+    {"label": "TREATMENT", "pattern": "stress management"},
+    {"label": "TREATMENT", "pattern": "relaxation techniques"},
+    {"label": "TREATMENT", "pattern": "mindfulness"},
+    {"label": "TREATMENT", "pattern": "music therapy"},
+    {"label": "TREATMENT", "pattern": "art therapy"},
+    {"label": "TREATMENT", "pattern": "pet therapy"},
+    {"label": "TREATMENT", "pattern": "occupational adaptation"},
+    {"label": "TREATMENT", "pattern": "environmental modification"},
+    {"label": "TREATMENT", "pattern": "assistive technology"},
+    {"label": "TREATMENT", "pattern": "telemedicine"},
+    {"label": "TREATMENT", "pattern": "telehealth"},
+    {"label": "TREATMENT", "pattern": "home care"},
+    {"label": "TREATMENT", "pattern": "respite care"},
+    {"label": "TREATMENT", "pattern": "case management"},
+    {"label": "TREATMENT", "pattern": "care coordination"},
+    {"label": "TREATMENT", "pattern": "patient education"},
+    {"label": "TREATMENT", "pattern": "family education"},
+    {"label": "TREATMENT", "pattern": "health coaching"},
+    {"label": "TREATMENT", "pattern": "nutritional support"},
+    {"label": "TREATMENT", "pattern": "tube feeding"},
+    {"label": "TREATMENT", "pattern": "parenteral nutrition"},
+    {"label": "TREATMENT", "pattern": "oral supplements"},
+    {"label": "TREATMENT", "pattern": "fluid therapy"},
+    {"label": "TREATMENT", "pattern": "antipyretic therapy"},
+    {"label": "TREATMENT", "pattern": "antihypertensive therapy"},
+    {"label": "TREATMENT", "pattern": "antidiabetic therapy"},
+    {"label": "TREATMENT", "pattern": "antidepressant therapy"},
+    {"label": "TREATMENT", "pattern": "antipsychotic therapy"},
+    {"label": "TREATMENT", "pattern": "anticoagulant therapy"},
+    {"label": "TREATMENT", "pattern": "antiplatelet therapy"},
+    {"label": "TREATMENT", "pattern": "anticholinergic therapy"},
+    {"label": "TREATMENT", "pattern": "anticonvulsant therapy"},
+    {"label": "TREATMENT", "pattern": "antihistamine therapy"},
+    {"label": "TREATMENT", "pattern": "antirheumatic therapy"},
+    {"label": "TREATMENT", "pattern": "antigout therapy"},
+    {"label": "TREATMENT", "pattern": "antiviral prophylaxis"},
+    {"label": "TREATMENT", "pattern": "antibiotic prophylaxis"},
+    {"label": "TREATMENT", "pattern": "rehydration"},
+    {"label": "TREATMENT", "pattern": "fluid replacement"},
+    {"label": "TREATMENT", "pattern": "nutritional rehabilitation"},
+    {"label": "TREATMENT", "pattern": "psychosocial support"},
+    {"label": "TREATMENT", "pattern": "counseling support"},
+    {"label": "TREATMENT", "pattern": "peer support"},
+    {"label": "TREATMENT", "pattern": "support group"},
+    {"label": "TREATMENT", "pattern": "spiritual care"},
+    {"label": "TREATMENT", "pattern": "pastoral care"},
+    {"label": "TREATMENT", "pattern": "bereavement support"},
+    {"label": "TREATMENT", "pattern": "grief support"},
+    {"label": "TREATMENT", "pattern": "end-of-life care"},
+    {"label": "TREATMENT", "pattern": "comfort care"},
+    {"label": "TREATMENT", "pattern": "symptom management"},
+    {"label": "TREATMENT", "pattern": "advance care planning"},
+    {"label": "TREATMENT", "pattern": "goals of care discussion"},
     
     # Medications
     {"label": "MEDICATION", "pattern": "diuretic"},
@@ -317,6 +738,74 @@ medical_patterns = [
     {"label": "MEDICATION", "pattern": "aspirin"},
     {"label": "MEDICATION", "pattern": "paracetamol"},
     {"label": "MEDICATION", "pattern": "antibiotic"},
+    {"label": "MEDICATION", "pattern": "antipyretic"},
+    {"label": "MEDICATION", "pattern": "antihistamine"},
+    {"label": "MEDICATION", "pattern": "antipsychotic"},
+    {"label": "MEDICATION", "pattern": "anticonvulsant"},
+    {"label": "MEDICATION", "pattern": "antiplatelet"},
+    {"label": "MEDICATION", "pattern": "anticoagulant"},
+    {"label": "MEDICATION", "pattern": "antifungal"},
+    {"label": "MEDICATION", "pattern": "antiviral"},
+    {"label": "MEDICATION", "pattern": "bronchodilator"},
+    {"label": "MEDICATION", "pattern": "corticosteroid"},
+    {"label": "MEDICATION", "pattern": "steroid"},
+    {"label": "MEDICATION", "pattern": "antacid"},
+    {"label": "MEDICATION", "pattern": "proton pump inhibitor"},
+    {"label": "MEDICATION", "pattern": "PPI"},
+    {"label": "MEDICATION", "pattern": "laxative"},
+    {"label": "MEDICATION", "pattern": "antidiarrheal"},
+    {"label": "MEDICATION", "pattern": "antispasmodic"},
+    {"label": "MEDICATION", "pattern": "anticholinergic"},
+    {"label": "MEDICATION", "pattern": "NSAID"},
+    {"label": "MEDICATION", "pattern": "opioid"},
+    {"label": "MEDICATION", "pattern": "morphine"},
+    {"label": "MEDICATION", "pattern": "tramadol"},
+    {"label": "MEDICATION", "pattern": "gabapentin"},
+    {"label": "MEDICATION", "pattern": "omeprazole"},
+    {"label": "MEDICATION", "pattern": "amoxicillin"},
+    {"label": "MEDICATION", "pattern": "clopidogrel"},
+    {"label": "MEDICATION", "pattern": "atorvastatin"},
+    {"label": "MEDICATION", "pattern": "simvastatin"},
+    {"label": "MEDICATION", "pattern": "amlodipine"},
+    {"label": "MEDICATION", "pattern": "losartan"},
+    {"label": "MEDICATION", "pattern": "gabapentin"},
+    {"label": "MEDICATION", "pattern": "furosemide"},
+    {"label": "MEDICATION", "pattern": "salbutamol"},
+    {"label": "MEDICATION", "pattern": "albuterol"},
+    {"label": "MEDICATION", "pattern": "glibenclamide"},
+    {"label": "MEDICATION", "pattern": "glimepiride"},
+    {"label": "MEDICATION", "pattern": "hydrochlorothiazide"},
+    {"label": "MEDICATION", "pattern": "metoprolol"},
+    {"label": "MEDICATION", "pattern": "bisoprolol"},
+    {"label": "MEDICATION", "pattern": "carvedilol"},
+    {"label": "MEDICATION", "pattern": "levothyroxine"},
+    {"label": "MEDICATION", "pattern": "omeprazole"},
+    {"label": "MEDICATION", "pattern": "pantoprazole"},
+    {"label": "MEDICATION", "pattern": "azithromycin"},
+    {"label": "MEDICATION", "pattern": "cefuroxime"},
+    {"label": "MEDICATION", "pattern": "cephalexin"},
+    {"label": "MEDICATION", "pattern": "co-amoxiclav"},
+    {"label": "MEDICATION", "pattern": "erythromycin"},
+    {"label": "MEDICATION", "pattern": "lincomycin"},
+    {"label": "MEDICATION", "pattern": "salinex"},
+    {"label": "MEDICATION", "pattern": "multivitamins"},
+    {"label": "MEDICATION", "pattern": "vitamin B complex"},
+    {"label": "MEDICATION", "pattern": "vitamin C"},
+    {"label": "MEDICATION", "pattern": "iron supplement"},
+    {"label": "MEDICATION", "pattern": "folic acid"},
+    {"label": "MEDICATION", "pattern": "gamot"},
+    {"label": "MEDICATION", "pattern": "tableta"},
+    {"label": "MEDICATION", "pattern": "kapsula"},
+    {"label": "MEDICATION", "pattern": "syrup"},
+    {"label": "MEDICATION", "pattern": "gamot sa hika"},
+    {"label": "MEDICATION", "pattern": "gamot sa diabetes"},
+    {"label": "MEDICATION", "pattern": "gamot sa altapresyon"},
+    {"label": "MEDICATION", "pattern": "gamot sa sakit ng ulo"},
+    {"label": "MEDICATION", "pattern": "gamot sa lagnat"},
+    {"label": "MEDICATION", "pattern": "gamot sa ubo"},
+    {"label": "MEDICATION", "pattern": "gamot sa sipon"},
+    {"label": "MEDICATION", "pattern": "gamot sa allergy"},
+    {"label": "MEDICATION", "pattern": "gamot sa sakit ng tiyan"},
     
     # Healthcare professionals
     {"label": "HEALTHCARE_PROF", "pattern": "doktor"},
@@ -340,7 +829,81 @@ medical_patterns = [
     {"label": "HEALTHCARE_PROF", "pattern": "dentist"},
     {"label": "HEALTHCARE_PROF", "pattern": "podiatrist"},
     {"label": "HEALTHCARE_PROF", "pattern": "caregiver"},
-    {"label": "HEALTHCARE_PROF", "pattern": "tagapag-alaga"}
+    {"label": "HEALTHCARE_PROF", "pattern": "tagapag-alaga"},
+    {"label": "HEALTHCARE_PROF", "pattern": "midwife"},
+    {"label": "HEALTHCARE_PROF", "pattern": "comadrona"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medical technologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medtech"},
+    {"label": "HEALTHCARE_PROF", "pattern": "phlebotomist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "radiologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "x-ray technician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "ultrasound technician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "respiratory therapist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "speech pathologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "social worker"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medical social worker"},
+    {"label": "HEALTHCARE_PROF", "pattern": "psychotherapist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "oncologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "pulmonologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "nephrologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "gastroenterologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "surgeon"},
+    {"label": "HEALTHCARE_PROF", "pattern": "general practitioner"},
+    {"label": "HEALTHCARE_PROF", "pattern": "family doctor"},
+    {"label": "HEALTHCARE_PROF", "pattern": "family physician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "pediatrician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "obstetrician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "gynecologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "OB-GYN"},
+    {"label": "HEALTHCARE_PROF", "pattern": "dermatologist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "orthopedic surgeon"},
+    {"label": "HEALTHCARE_PROF", "pattern": "rehab doctor"},
+    {"label": "HEALTHCARE_PROF", "pattern": "rehabilitation physician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "physiatrist"},
+    {"label": "HEALTHCARE_PROF", "pattern": "emergency physician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "paramedic"},
+    {"label": "HEALTHCARE_PROF", "pattern": "EMT"},
+    {"label": "HEALTHCARE_PROF", "pattern": "barangay health worker"},
+    {"label": "HEALTHCARE_PROF", "pattern": "BHW"},
+    {"label": "HEALTHCARE_PROF", "pattern": "health aide"},
+    {"label": "HEALTHCARE_PROF", "pattern": "nursing aide"},
+    {"label": "HEALTHCARE_PROF", "pattern": "nursing assistant"},
+    {"label": "HEALTHCARE_PROF", "pattern": "care aide"},
+    {"label": "HEALTHCARE_PROF", "pattern": "rehab aide"},
+    {"label": "HEALTHCARE_PROF", "pattern": "dietary aide"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medical assistant"},
+    {"label": "HEALTHCARE_PROF", "pattern": "attending physician"},
+    {"label": "HEALTHCARE_PROF", "pattern": "consultant"},
+    {"label": "HEALTHCARE_PROF", "pattern": "resident doctor"},
+    {"label": "HEALTHCARE_PROF", "pattern": "intern"},
+    {"label": "HEALTHCARE_PROF", "pattern": "fellow"},
+    {"label": "HEALTHCARE_PROF", "pattern": "clinic staff"},
+    {"label": "HEALTHCARE_PROF", "pattern": "hospital staff"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medical director"},
+    {"label": "HEALTHCARE_PROF", "pattern": "chief nurse"},
+    {"label": "HEALTHCARE_PROF", "pattern": "head nurse"},
+    {"label": "HEALTHCARE_PROF", "pattern": "nurse supervisor"},
+    {"label": "HEALTHCARE_PROF", "pattern": "nurse manager"},
+    {"label": "HEALTHCARE_PROF", "pattern": "nurse practitioner"},
+    {"label": "HEALTHCARE_PROF", "pattern": "registered nurse"},
+    {"label": "HEALTHCARE_PROF", "pattern": "RN"},
+    {"label": "HEALTHCARE_PROF", "pattern": "licensed practical nurse"},
+    {"label": "HEALTHCARE_PROF", "pattern": "LPN"},
+    {"label": "HEALTHCARE_PROF", "pattern": "licensed vocational nurse"},
+    {"label": "HEALTHCARE_PROF", "pattern": "LVN"},
+    {"label": "HEALTHCARE_PROF", "pattern": "clinical instructor"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medical intern"},
+    {"label": "HEALTHCARE_PROF", "pattern": "medical fellow"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng puso"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng mata"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng buto"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng bata"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng babae"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng balat"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng baga"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng bato"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng tiyan"},
+    {"label": "HEALTHCARE_PROF", "pattern": "doktor ng utak"},
 ]
 additional_patterns = [
     # Social Relationships
@@ -363,6 +926,46 @@ additional_patterns = [
     {"label": "SOCIAL_REL", "pattern": "family"},
     {"label": "SOCIAL_REL", "pattern": "kamag-anak"},
     {"label": "SOCIAL_REL", "pattern": "relative"},
+        {"label": "SOCIAL_REL", "pattern": "kapatid"},           # sibling
+    {"label": "SOCIAL_REL", "pattern": "kuya"},              # older brother
+    {"label": "SOCIAL_REL", "pattern": "ate"},               # older sister
+    {"label": "SOCIAL_REL", "pattern": "bunso"},             # youngest child
+    {"label": "SOCIAL_REL", "pattern": "pinsan"},            # cousin
+    {"label": "SOCIAL_REL", "pattern": "cousin"},
+    {"label": "SOCIAL_REL", "pattern": "biyenan"},           # parent-in-law
+    {"label": "SOCIAL_REL", "pattern": "mother-in-law"},
+    {"label": "SOCIAL_REL", "pattern": "father-in-law"},
+    {"label": "SOCIAL_REL", "pattern": "manugang"},          # son/daughter-in-law
+    {"label": "SOCIAL_REL", "pattern": "son-in-law"},
+    {"label": "SOCIAL_REL", "pattern": "daughter-in-law"},
+    {"label": "SOCIAL_REL", "pattern": "bayaw"},             # brother-in-law
+    {"label": "SOCIAL_REL", "pattern": "brother-in-law"},
+    {"label": "SOCIAL_REL", "pattern": "hipag"},             # sister-in-law
+    {"label": "SOCIAL_REL", "pattern": "sister-in-law"},
+    {"label": "SOCIAL_REL", "pattern": "lolo"},              # grandfather
+    {"label": "SOCIAL_REL", "pattern": "grandfather"},
+    {"label": "SOCIAL_REL", "pattern": "lola"},              # grandmother
+    {"label": "SOCIAL_REL", "pattern": "grandmother"},
+    {"label": "SOCIAL_REL", "pattern": "tiyo"},              # uncle
+    {"label": "SOCIAL_REL", "pattern": "uncle"},
+    {"label": "SOCIAL_REL", "pattern": "tiya"},              # aunt
+    {"label": "SOCIAL_REL", "pattern": "aunt"},
+    {"label": "SOCIAL_REL", "pattern": "inaanak"},           # godchild
+    {"label": "SOCIAL_REL", "pattern": "godchild"},
+    {"label": "SOCIAL_REL", "pattern": "ninong"},            # godfather
+    {"label": "SOCIAL_REL", "pattern": "godfather"},
+    {"label": "SOCIAL_REL", "pattern": "ninang"},            # godmother
+    {"label": "SOCIAL_REL", "pattern": "godmother"},
+    {"label": "SOCIAL_REL", "pattern": "kasambahay"},        # household helper
+    {"label": "SOCIAL_REL", "pattern": "helper"},
+    {"label": "SOCIAL_REL", "pattern": "kasosyo"},           # partner (business/life)
+    {"label": "SOCIAL_REL", "pattern": "partner"},
+    {"label": "SOCIAL_REL", "pattern": "kaibigan sa trabaho"}, # work friend
+    {"label": "SOCIAL_REL", "pattern": "workmate"},
+    {"label": "SOCIAL_REL", "pattern": "kapwa"},             # fellow
+    {"label": "SOCIAL_REL", "pattern": "neighbor's child"},
+    {"label": "SOCIAL_REL", "pattern": "barkada"},           # peer group/friends
+    {"label": "SOCIAL_REL", "pattern": "peer"},
     
     # Social Settings and Activities
     {"label": "SOCIAL_ACT", "pattern": "simbahan"},
@@ -967,32 +1570,61 @@ def health_check():
         "pipeline": nlp.pipe_names
     })
 
+def generate_tagalog_summary_with_openai(text, doc_type="assessment"):
+    prompt = (
+        f"Buodin mo ang sumusunod na {doc_type} sa Tagalog. "
+        "Gamitin ang malinaw at propesyonal na wika. "
+        "Simulan ang executive summary sa isang maikling pambungad na nagpapaliwanag ng layunin ng ulat. "
+        "Isulat ang buod na hindi lalampas sa 9 na pangungusap. "
+        "Tiyaking ang buod ay direkta, at nakatuon lamang sa pinakamahalagang impormasyon. "
+        "Tapusin ang executive summary sa isang malinaw na konklusyon. "
+        "Huwag magdagdag ng detalye na wala sa orihinal na teksto.\n\n"
+        f"{text}\n\nExecutive Summary:"
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.4,
+        max_tokens=1500
+    )
+
+    # Log token usage
+    if hasattr(response, "usage") and response.usage:
+        print(f"OpenAI token usage: prompt={response.usage.prompt_tokens}, completion={response.usage.completion_tokens}, total={response.usage.total_tokens}")
+
+    # Remove "Executive Summary:" heading if present
+    summary = response.choices[0].message.content.strip()
+    if summary.lower().startswith("executive summary:"):
+        summary = summary[len("executive summary:"):].lstrip()
+    return summary
+
 @app.route('/summarize', methods=['POST'])
 def summarize_text():
-    """Summarize Tagalog text using methods with enhanced context detection and section synthesis"""
+    """Summarize Tagalog text using calamancy for sectioning and OpenAI for executive summary."""
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
-        
+
     data = request.json
     text = data.get('text', '')
     doc_type = data.get('type', '')
-    
+
     if not text:
         return jsonify({"error": "Empty text provided"}), 400
-    
+
     try:
         start_time = time.time()
-        
+
         # Clean and normalize the text
         cleaned_text = clean_and_normalize_text(text)
-        
+
         # Process text with calamancy
         doc = nlp(cleaned_text)
-        
+
         # Extract original sentences
         sentences = split_into_sentences(cleaned_text)
         print(f"Found {len(sentences)} sentences in text")
-        
+
         # Extract entities
         try:
             entities = []
@@ -1006,130 +1638,66 @@ def summarize_text():
         except Exception as e:
             print(f"Entity extraction error: {e}")
             entities = []
-        
-        # Extract key medical terms using our improved function
+
+        # Extract key medical terms
         try:
             key_terms = extract_important_terms(cleaned_text, count=5, doc_type=doc_type)
         except Exception as e:
             print(f"Term extraction error: {e}")
             key_terms = []
-        
-        # Extract sections
+
+        # Extract sections using calamancy (no length limits)
         try:
             if doc_type.lower() == "evaluation":
-                # Use specialized evaluation section extraction
                 sections = extract_sections_for_evaluation(sentences)
             else:
-                # Use general section extraction for assessments
                 sections = extract_sections_improved(sentences, doc_type)
-            
-            # Create document context analysis for enhanced summarization
+
+            # Ensure all section values are strings (join lists with newlines)
+            if isinstance(sections, dict):
+                for k, v in sections.items():
+                    if isinstance(v, list):
+                        sections[k] = "\n".join(str(item) for item in v)
+                    elif v is None:
+                        sections[k] = ""
+                    else:
+                        sections[k] = str(v)
+
             doc_context = analyze_document_context(sections, doc_type)
-                
+
         except Exception as e:
             print(f"Section extraction error: {e}")
             traceback.print_exc()
             sections = {}
             doc_context = {"priority_sections": [], "key_entities": {}, "cross_section_themes": []}
-        
-        # Add section mapping to document context for better sentence transitions
-        doc_context["sentence_section_map"] = {}
-        
-        # Generate enhanced summary with improved context detection
+
+        # Generate Tagalog executive summary using OpenAI
         try:
-            # Extract cross-section entities for better context
-            section_elements = {}
-            for section_name, section_content in sections.items():
-                section_elements[section_name] = extract_structured_elements(section_content, section_name)
-                
-            cross_section_entities = identify_cross_section_entities(section_elements)
-            doc_context["cross_section_entities"] = cross_section_entities
-            
-            # Generate the enhanced summary with all our improvements
-            summary = create_enhanced_multi_section_summary(doc, sections, doc_type)
-            
-            # Check for important information that might be missing from the summary
-            # This helps ensure specific key details are included
-            important_medical_info = []
-            for ent in doc.ents:
-                if ent.label_ in ["DISEASE", "SYMPTOM", "COGNITIVE"] and len(ent.text) > 3:
-                    important_medical_info.append(ent.text)
-            
-            for term in important_medical_info[:3]:  # Check top 3 important terms
-                if term not in summary.lower() and len(term) > 3:
-                    # Find which section this term belongs to
-                    for section_name, section_content in sections.items():
-                        if term.lower() in section_content.lower():
-                            # Extract a relevant sentence containing this term
-                            section_sents = split_into_sentences(section_content)
-                            for sent in section_sents:
-                                if term.lower() in sent.lower():
-                                    # Find a good transition phrase based on semantic relationship
-                                    relationship = get_contextual_relationship(summary, sent, doc_context, -1, -1)
-                                    transition = choose_context_aware_transition(summary, sent, relationship)
-                                    
-                                    # Add the information with proper context
-                                    additional_detail = sent
-                                    if len(additional_detail) > 150:  # Trim if too long
-                                        # Find a good break point
-                                        break_point = additional_detail.find(",", 100)
-                                        if break_point > 0:
-                                            additional_detail = additional_detail[:break_point+1]
-                                    
-                                    # Add to summary if not already too long
-                                    if len(summary) < 400:  # Keep summary reasonable
-                                        # Ensure proper capitalization after transition
-                                        next_sentence = additional_detail
-                                        if next_sentence[0].isupper():
-                                            next_sentence = next_sentence[0].lower() + next_sentence[1:]
-                                        summary = summary + " " + transition + next_sentence
-                                    break
-            
-            # Final sanity check - if summary is still too short, use fallback
-            if len(summary) < 50:
-                main_subject = extract_main_subject(doc)
-                if doc_type.lower() == "assessment":
-                    summary = f"{main_subject} ay nangangailangan ng komprehensibong pagsusuri."
-                else:
-                    summary = "Inirerekomenda ang pagkonsulta para sa karagdagang pagsusuri at paggamot."
-                    
+            summary = generate_tagalog_summary_with_openai(text, doc_type)
         except Exception as e:
-            print(f"Summary generation error: {e}")
+            print(f"OpenAI summary generation error: {e}")
             traceback.print_exc()
-            
-            # Fall back to simple summary if enhanced fails
-            try:
-                summary = create_simple_summary(doc, sections, doc_type)
-            except Exception as e:
-                print(f"Simple summary generation error: {e}")
-                
-                # Last resort emergency fallback
-                if doc_type.lower() == "assessment":
-                    summary = "Ang pasyente ay nangangailangan ng karagdagang pagsusuri para sa kanyang kondisyon."
-                else:
-                    summary = "Inirerekomenda ang pagkonsulta para sa karagdagang pagsusuri at paggamot."
-        
-        # Final summary refinement
-        if summary and len(summary) > 20:
-            # Ensure proper punctuation and spacing
-            summary = re.sub(r'\s+', ' ', summary)  # Fix multiple spaces
-            summary = re.sub(r'\s([,.;:])', r'\1', summary)  # Fix spacing before punctuation
-            
-            # Ensure first letter is capitalized
-            if summary[0].islower():
-                summary = summary[0].upper() + summary[1:]
-                
-            # Ensure sentence ends with proper punctuation
-            if not summary[-1] in ['.', '!', '?']:
-                summary += '.'
-        
+            summary = "Hindi matagumpay ang AI executive summary. Mangyaring subukan muli."
+
+        # # Final summary refinement (optional)
+        # if summary and len(summary) > 20:
+        #     summary = re.sub(r'\s+', ' ', summary)
+        #     summary = re.sub(r'\s([,.;:])', r'\1', summary)
+        #     if summary[0].islower():
+        #         summary = summary[0].upper() + summary[1:]
+        #     if not summary[-1] in ['.', '!', '?']:
+        #         summary += '.'
+
+        # Ensure all section values are strings (again, for safety)
+        sections = {k: str(v) if v is not None else "" for k, v in sections.items()}
+
         # Calculate processing statistics
         processing_time = round((time.time() - start_time) * 1000)
         compression_ratio = round(len(text) / len(summary)) if len(summary) > 0 else 0
-        
+
         return jsonify({
             "summary": summary,
-            "sections": sections,  # Full sections (now containing up to 5 sentences)
+            "sections": sections,
             "sentence_count": len(sentences),
             "entities": entities,
             "key_medical_terms": key_terms,
@@ -1154,471 +1722,6 @@ def summarize_text():
             "sentence_count": 0
         })
 
-def generate_concise_summary(doc, analysis, max_sentences=3, is_assessment=False, is_evaluation=False):
-    """Generate a truly concise summary focused on key health findings"""
-    # Use our enhanced analysis to generate summary
-    sentences = analysis["sentences"]
-    
-    # If text is already short, return as is
-    if len(sentences) <= 2:
-        return doc.text
-    
-    # Build health aspects based on our analysis
-    health_aspects = []
-    
-    # Add mobility information if available
-    if analysis["mobility_mentioned"] and analysis["mobility_sentences"]:
-        if "assistive device" in " ".join(analysis["mobility_sentences"]).lower():
-            health_aspects.append("Gumagamit ng assistive device para sa paglalakad.")
-        elif "nangangatal" in " ".join(analysis["mobility_sentences"]).lower():
-            health_aspects.append("May panginginig sa katawan.")
-        elif any(term in " ".join(analysis["mobility_sentences"]).lower() for term in ["hirap", "mahinay"]):
-            health_aspects.append("Nahihirapan sa paggalaw at paglalakad.")
-        else:
-            health_aspects.append(analysis["mobility_sentences"][0])
-    
-    # Add pain information if available
-    if analysis["pain_mentioned"] and analysis["pain_sentences"]:
-        # Try to identify body part with pain
-        pain_text = " ".join(analysis["pain_sentences"]).lower()
-        body_part_found = False
-        
-        for part_key, variations in BODY_PARTS.items():
-            if any(term in pain_text.lower() for term in variations):
-                health_aspects.append(f"May nararamdamang sakit sa {part_key}.")
-                body_part_found = True
-                break
-                
-        if not body_part_found:
-            # If no specific body part found
-            health_aspects.append("May nararamdamang sakit.")
-    
-    # Add sensory issues if found
-    if "vision" in analysis["sensory_issues"]:
-        health_aspects.append("May problema sa paningin.")
-        
-    if "hearing" in analysis["sensory_issues"]:
-        health_aspects.append("May kahirapan sa pandinig.")
-    
-    # Add emotional state if found
-    if "depressed" in analysis["emotional_state"]:
-        health_aspects.append("Nakararanas ng kalungkutan o depresyon.")
-        
-    if "anxious" in analysis["emotional_state"]:
-        health_aspects.append("May pagkabalisa o takot.")
-    
-    # Ensure we have at least one aspect
-    if not health_aspects and sentences:
-        health_aspects.append(sentences[0])
-    
-    # Limit to max_sentences
-    if len(health_aspects) > max_sentences:
-        health_aspects = health_aspects[:max_sentences]
-    
-    return " ".join(health_aspects)
-
-def extract_distinct_sections_improved(sentences, is_assessment=False, is_evaluation=False):
-    """Extract distinct sections using improved preprocessed sentences"""
-    print(f"Processing {len(sentences)} preprocessed sentences")
-    
-    # Define output categories based on document type
-    if is_assessment:
-        categories = {
-            "kalagayan_pangkatawan": [],  # Physical condition
-            "mga_sintomas": [],           # Symptoms
-            "pangangailangan": []         # Needs/requirements
-        }
-    elif is_evaluation:
-        categories = {
-            "pagbabago": [],              # Changes/progress
-            "mga_hakbang": [],            # Steps taken
-            "rekomendasyon": []           # Recommendations
-        }
-    else:
-        categories = {
-            "kalagayan": [],              # General condition
-            "obserbasyon": [],            # Observations
-            "rekomendasyon": []           # Recommendations
-        }
-    
-    # Track which sentences have been assigned
-    assigned = set()
-    
-    # Try to use classifier if it's available
-    if classifier_model is not None:
-        try:
-            for i, sent in enumerate(sentences):
-                if i in assigned:
-                    continue
-                
-                # Predict category using our classifier
-                category = classify_sentence(sent, classifier_model, is_assessment, is_evaluation)
-                if category in categories:
-                    categories[category].append(sent)
-                    assigned.add(i)
-                    print(f"Classifier assigned: '{sent[:30]}...' -> {category}")
-        except Exception as e:
-            print(f"Error using classifier: {e}")
-    
-    # Process sentences using rule-based method for those not classified by ML
-    for i, sent in enumerate(sentences):
-        if i in assigned:
-            continue
-            
-        sent_lower = sent.lower()
-        
-        if is_assessment:
-            # Physical condition indicators
-            if any(term in sent_lower for term in ["malakas", "mahina", "hirap", "assistive", "paglalakad", "pag-upo", 
-                                                 "nangangatal", "pabagsak", "pagkatumba"]):
-                categories["kalagayan_pangkatawan"].append(sent)
-                assigned.add(i)
-                
-            # Symptoms indicators  
-            elif any(term in sent_lower for term in ["masakit", "sumasakit", "kirot", "daing", "malabo", "kuko", 
-                                                   "naduduwal", "nagsusuka", "matalas", "panginginig"]):
-                categories["mga_sintomas"].append(sent)
-                assigned.add(i)
-                
-            # Needs indicators
-            elif any(term in sent_lower for term in ["kailangan", "pangangailangan", "pension", "pera", "gatas", 
-                                                   "tinapay", "mainit", "magpahangin", "araw", "isama", "apo"]):
-                categories["pangangailangan"].append(sent)
-                assigned.add(i)
-                
-        elif is_evaluation:
-            # Changes/progress indicators
-            if any(term in sent_lower for term in ["ngayon", "naging", "pagbuti", "pagkatapos", "matapos", 
-                                                 "pagbabago", "bumuti", "lumala"]):
-                categories["pagbabago"].append(sent)
-                assigned.add(i)
-                
-            # Steps taken indicators
-            elif any(term in sent_lower for term in ["ginawa", "isinagawa", "tinulungan", "inilagay", "binigyan", 
-                                                   "pinakita", "nagturo", "nagamot"]):
-                categories["mga_hakbang"].append(sent)
-                assigned.add(i)
-                
-            # Recommendation indicators
-            elif any(term in sent_lower for term in ["dapat", "kailangan", "inirerekumenda", "iminumungkahi", 
-                                                   "makabubuting", "mabuting", "magsagawa"]):
-                categories["rekomendasyon"].append(sent)
-                assigned.add(i)
-    
-    # Distribute any remaining sentences to ensure coverage
-    for i, sent in enumerate(sentences):
-        if i not in assigned:
-            if is_assessment:
-                # Find section with fewest sentences
-                min_category = min(categories.keys(), key=lambda k: len(categories[k]))
-                categories[min_category].append(sent)
-            elif is_evaluation:
-                # Default to recommendations for unassigned evaluation sentences
-                categories["rekomendasyon"].append(sent)
-            else:
-                # Default to observations for general text
-                if "obserbasyon" in categories:
-                    categories["obserbasyon"].append(sent) 
-    
-    # Combine sentences in each category
-    result = {}
-    for category, sents in categories.items():
-        if sents:  # Only include non-empty categories
-            result[category] = " ".join(sents)
-    
-    return result
-
-def extract_key_concerns_improved(analysis, doc=None):
-    """
-    Extract key concerns using our enhanced analysis with non-medical aspects
-    
-    Args:
-        analysis: Analysis data from text preprocessing
-        doc: Optional spaCy Doc object for deeper analysis
-        
-    Returns:
-        Dictionary of concerns
-    """
-    concerns = {}
-    
-    # Use our enhanced analysis to populate medical concerns
-    if analysis["mobility_mentioned"]:
-        concerns["mobility_issues"] = True
-        if analysis["mobility_sentences"]:
-            concerns["mobility_details"] = analysis["mobility_sentences"][0]
-    
-    if analysis["pain_mentioned"]:
-        concerns["pain_reported"] = True
-        if analysis["pain_sentences"]:
-            concerns["pain_details"] = analysis["pain_sentences"][0]
-    
-    if "vision" in analysis["sensory_issues"]:
-        concerns["vision_problems"] = True
-    
-    if "hearing" in analysis["sensory_issues"]:
-        concerns["hearing_problems"] = True
-    
-    if analysis["emotional_state"]:
-        concerns["emotional_concerns"] = analysis["emotional_state"]
-    
-    # Additional specific checks from original text
-    text = analysis["normalized_text"].lower()
-    
-    # Check for fall risk
-    if any(term in text for term in ["tumba", "natumba", "nahulog", "nadapa"]):
-        concerns["fall_risk"] = True
-    
-    # Non-medical concerns from doc content
-    if doc is not None:
-        # Financial concerns
-        if any(term in text for term in ["pension", "pera", "wala", "ubos", "gastos", "mahal"]):
-            concerns["financial_concerns"] = True
-            # Extract financial details
-            for sent in doc.sents:
-                if any(term in sent.text.lower() for term in ["pension", "pera", "wala", "ubos", "gastos", "mahal"]):
-                    concerns["financial_details"] = sent.text
-                    break
-        
-        # Social support assessment
-        if "pamangkin" in text or "anak" in text or "apo" in text:
-            # Assess quality of social support
-            negative_indicators = ["iniwan", "wala", "hindi", "ayaw", "busy"]
-            positive_indicators = ["kasama", "tulong", "suporta", "mahal", "malapit"]
-            
-            neg_count = sum(1 for term in negative_indicators if term in text)
-            pos_count = sum(1 for term in positive_indicators if term in text)
-            
-            if neg_count > pos_count:
-                concerns["social_support"] = "Poor"
-            elif pos_count > 0:
-                concerns["social_support"] = "Good"
-            else:
-                concerns["social_support"] = "Present but quality unclear"
-    
-    # Nutrition concerns
-    if any(term in text for term in ["hindi kumakain", "pagbaba ng timbang", "payat", 
-                                    "mataba", "naduduwal", "nasusuka", "timbang"]):
-        concerns["nutrition_concerns"] = True
-    
-    # Environmental concerns
-    if any(term in text for term in ["mainit", "malamig", "init", "lamig"]):
-        concerns["environmental_concerns"] = True
-    
-    # Daily activity concerns
-    if any(term in text for term in ["hirap gawin", "hindi na nagagawa", "nahihirapan", 
-                                    "tulong", "tulungan", "gawain"]):
-        concerns["daily_activity_concerns"] = True
-    
-    return {
-        "concerns": concerns
-    }
-
-def classify_sentences(sentences, is_assessment=False, is_evaluation=False):
-    """
-    Classify sentences into categories based on Tagalog linguistic patterns.
-    This is a heuristic-based classifier for medical/caregiving texts.
-    """
-    categories = defaultdict(list)
-    
-    # 1. MANUAL SENTENCE SPLITTING - more reliable than spaCy for Tagalog
-    import re
-    manual_sentences = re.split(r'(?<=[.!?])\s+', text)
-    manual_sentences = [s.strip() for s in manual_sentences if s.strip()]
-    
-    print(f"Manually split into {len(manual_sentences)} sentences")
-    
-    # Define output categories based on document type
-    if is_assessment:
-        categories = {
-            "kalagayan_pangkatawan": [],  # Physical condition
-            "mga_sintomas": [],           # Symptoms
-            "pangangailangan": []         # Needs/requirements
-        }
-    elif is_evaluation:
-        categories = {
-            "pagbabago": [],              # Changes/progress
-            "mga_hakbang": [],            # Steps taken
-            "rekomendasyon": []           # Recommendations
-        }
-    else:
-        categories = {
-            "kalagayan": [],              # General condition
-            "obserbasyon": [],            # Observations
-            "rekomendasyon": []           # Recommendations
-        }
-    
-    # Track which sentences have been assigned
-    assigned = set()
-    
-    # 2. EXPLICIT HANDLING FOR TREMOR/PENSION EXAMPLE
-    if is_assessment and "nangangatal" in text.lower() and "pension" in text.lower():
-        print("Identified tremor and pension assessment example")
-        
-        # MANUALLY CATEGORIZE SENTENCES FOR THIS SPECIFIC EXAMPLE
-        for i, sent in enumerate(manual_sentences):
-            sent_lower = sent.lower()
-            
-            # PHYSICAL CONDITION - about tremors
-            if "nangangatal" in sent_lower or "lasing" in sent_lower or "malakas pa" in sent_lower:
-                categories["kalagayan_pangkatawan"].append(sent)
-                assigned.add(i)
-                print(f"(1) Added to physical condition: {sent[:30]}...")
-                
-            # SYMPTOMS - about pain and nails  
-            elif "masakit" in sent_lower or "balikat" in sent_lower or "daing" in sent_lower or "kuko" in sent_lower or "mahahaba" in sent_lower:
-                categories["mga_sintomas"].append(sent)
-                assigned.add(i)
-                print(f"(2) Added to symptoms: {sent[:30]}...")
-                
-            # NEEDS - about pension and food
-            elif "pension" in sent_lower or "pera" in sent_lower or "pambili" in sent_lower or "tinapay" in sent_lower or "gatas" in sent_lower:
-                categories["pangangailangan"].append(sent)
-                assigned.add(i)
-                print(f"(3) Added to needs: {sent[:30]}...")
-    
-    # 3. EXPLICIT HANDLING FOR ASSISTIVE DEVICE/MOBILITY/NAUSEA EXAMPLE
-    elif is_assessment and ("assistive device" in text.lower() or "naduduwal" in text.lower()):
-        print("Identified assistive device and nausea assessment")
-        
-        for i, sent in enumerate(manual_sentences):
-            sent_lower = sent.lower()
-            
-            if i in assigned:
-                continue
-                
-            # PHYSICAL CONDITION - mobility issues
-            if "hirap" in sent_lower and ("pag-upo" in sent_lower or "paglalakad" in sent_lower):
-                categories["kalagayan_pangkatawan"].append(sent)
-                assigned.add(i)
-                
-            # SYMPTOMS - nausea, vomiting, nails
-            elif any(term in sent_lower for term in ["naduduwal", "nagsusuka", "kumain", "kuko", "matalas"]):
-                categories["mga_sintomas"].append(sent)
-                assigned.add(i)
-                
-            # NEEDS - heat, air, family
-            elif any(term in sent_lower for term in ["mainit", "magpahangin", "araw", "isama", "apo"]):
-                categories["pangangailangan"].append(sent)
-                assigned.add(i)
-    
-    # 4. GENERIC CATEGORIZATION FOR OTHER TEXTS
-    else:
-        # Distribute sentences by content keywords
-        for i, sent in enumerate(manual_sentences):
-            if i in assigned:
-                continue
-                
-            sent_lower = sent.lower()
-            
-            if is_assessment:
-                # For assessments
-                if any(term in sent_lower for term in ["malakas", "mahina", "hirap", "assistive", "paglalakad", "pag-upo"]):
-                    categories["kalagayan_pangkatawan"].append(sent)
-                    assigned.add(i)
-                elif any(term in sent_lower for term in ["masakit", "sumasakit", "daing", "malabo", "kuko"]):
-                    categories["mga_sintomas"].append(sent)
-                    assigned.add(i)
-                elif any(term in sent_lower for term in ["kailangan", "pangangailangan", "pension", "pera"]):
-                    categories["pangangailangan"].append(sent)
-                    assigned.add(i)
-    
-    # 5. DISTRIBUTE REMAINING SENTENCES
-    print(f"Initially assigned {len(assigned)} of {len(manual_sentences)} sentences")
-    
-    for i, sent in enumerate(manual_sentences):
-        if i not in assigned:
-            print(f"Unassigned sentence: {sent[:30]}...")
-            
-            # Find the best category
-            if is_assessment:
-                if len(categories["kalagayan_pangkatawan"]) == 0:
-                    categories["kalagayan_pangkatawan"].append(sent)
-                elif len(categories["mga_sintomas"]) == 0:
-                    categories["mga_sintomas"].append(sent)
-                elif len(categories["pangangailangan"]) == 0:
-                    categories["pangangailangan"].append(sent)
-                else:
-                    # Add to smallest category
-                    min_category = min(["kalagayan_pangkatawan", "mga_sintomas", "pangangailangan"], 
-                                     key=lambda c: len(categories[c]))
-                    categories[min_category].append(sent)
-            elif is_evaluation:
-                # Similar logic for evaluation documents
-                min_category = min(["pagbabago", "mga_hakbang", "rekomendasyon"], 
-                                 key=lambda c: len(categories[c]) if c in categories else 999)
-                if min_category in categories:
-                    categories[min_category].append(sent)
-            else:
-                # For general documents
-                min_category = min(["kalagayan", "obserbasyon", "rekomendasyon"], 
-                                 key=lambda c: len(categories[c]) if c in categories else 999)
-                if min_category in categories:
-                    categories[min_category].append(sent)
-            
-            assigned.add(i)
-    
-    # 6. ENSURE NO EMPTY SECTIONS - if any section is empty, add content
-    for category in categories:
-        if not categories[category] and manual_sentences:
-            # Find an unassigned sentence or use the first one
-            categories[category].append(manual_sentences[0])
-    
-    # 7. CONVERT TO FINAL FORMAT
-    result = {}
-    for category, sents in categories.items():
-        if sents:  # Only include non-empty categories
-            result[category] = " ".join(sents)
-            print(f"Final {category} has {len(sents)} sentences: {result[category][:30]}...")
-    
-    return result
-
-def extract_key_concerns(doc):
-    """Extract key medical concerns from the text"""
-    text = doc.text.lower()
-    concerns = {}
-    
-    # Check for mobility issues
-    if any(term in text for term in ["hirap", "mahinay", "mahina", "paglalakad", "pag-upo", 
-                                    "nangangatal", "assistive device", "pabagsak"]):
-        concerns["mobility_issues"] = True
-        
-    # Check for vision problems
-    if any(term in text for term in ["malabo", "mata", "paningin"]):
-        concerns["vision_problems"] = True
-        
-    # Check for hearing problems
-    if any(term in text for term in ["malalim", "pandinig", "tenga"]):
-        concerns["hearing_problems"] = True
-        
-    # Check for pain issues
-    if any(term in text for term in ["masakit", "sumasakit", "kirot", "daing"]):
-        concerns["pain_reported"] = True
-        
-        # Identify pain location
-        for part in BODY_PARTS:
-            if part in text:
-                concerns["pain_location"] = part
-                break
-    
-    # Check for fall risk
-    if any(term in text for term in ["tumba", "natumba", "nahulog", "nadapa"]):
-        concerns["fall_risk"] = True
-        
-    # Check for financial concerns
-    if any(term in text for term in ["pension", "pera", "wala", "ubos"]):
-        concerns["financial_concerns"] = True
-        
-    # Check for social support
-    if "pamangkin" in text or "anak" in text:
-        if "hindi" in text and "iniwan" in text:
-            concerns["social_support"] = "Good"
-        elif "iniwan" in text:
-            concerns["social_support"] = "Poor"
-    
-    return {
-        "concerns": concerns
-    }
-
 if __name__ == '__main__':
     print("Starting Flask server...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

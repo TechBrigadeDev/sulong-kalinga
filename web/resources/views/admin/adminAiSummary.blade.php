@@ -11,6 +11,16 @@
     <link rel="stylesheet" href="{{ asset('css/nlpUI.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        #assessmentSummaryDisplay, #evaluationSummaryDisplay {
+            white-space: pre-line;
+        }
+
+        .section-editor {
+            min-height: 80px;
+            height: 120px;
+            resize: vertical;
+        }
+
         :root {
             --primary-purple: #6f42c1;
             --primary-teal: #20c997;
@@ -195,7 +205,7 @@
 
     <div class="home-section">
         <div class="page-header">
-            <i class="bi bi-stars me-2"></i>NLP-POWERED REPORT SUMMARY
+            <i class="bi bi-stars me-2"></i>calamanCy-POWERED REPORT SUMMARY
         </div>
         
         <div class="container-fluid">
@@ -290,7 +300,7 @@
                                     <h6 class="section-title">Original Assessment</h6>
                                 </div>
                                 <div class="mb-4">
-                                    <div class="form-control bg-light" style="min-height: 150px; max-height: 300px; overflow-y: auto;" id="originalAssessment"></div>
+                                    <div class="form-control bg-light" style="min-height: 300px; max-height: 600px; overflow-y: auto;" id="originalAssessment"></div>
                                 </div>
                                 
                                 <div class="text-end">
@@ -305,18 +315,17 @@
                                     <div class="section-header-teal">
                                         <h6 class="section-title">Assessment Summary</h6>
                                     </div>
+
+                                    <div class="card mb-3 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold"><i class="bi bi-file-text me-2"></i>Executive Summary</h6>
+                                            <div id="assessmentSummaryDisplay" class="p-2 bg-light rounded"></div>
+                                        </div>
+                                    </div>
                                     
+                                    <div id="assessmentSummaryDraft" style="display:none;"></div>
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
-                                         <div id="assessmentSummaryDraft" style="display:none;"></div>
-                                         <div class="mt-2">
-                                            <button class="btn btn-success" id="finalizeAssessmentSummary" onclick="finalizeSummary('assessment')">
-                                                <i class="bi bi-check-circle"></i> Use Summary as Final
-                                            </button>
-                                        </div>
-                                        <button class="btn btn-sm btn-outline-success" id="useAssessmentTranslation">
-                                            <i class="bi bi-check-circle"></i> Use Translation as Final
-                                        </button>
                                     </div>
 
                                     <!-- New translation section -->
@@ -325,9 +334,6 @@
                                         <div id="assessmentTranslationDraft" class="fst-italic"></div>
                                         <div class="mt-2">
                                         </div>
-                                        <button class="btn btn-sm btn-outline-success" id="useAssessmentTranslation">
-                                            <i class="bi bi-check-circle"></i> Use Translation as Final
-                                        </button>
                                     </div>
                                     
                                     <div class="text-end">
@@ -344,15 +350,6 @@
                                     
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
-                                    </div>
-                                    
-                                    <div class="text-end">
-                                        <button class="btn btn-outline-secondary action-btn" id="editAssessmentSummary">
-                                            <i class="bi bi-pencil me-1"></i> Edit
-                                        </button>
-                                        <button class="btn btn-success action-btn" id="saveAssessmentSummary" style="display: none;">
-                                            <i class="bi bi-check-lg me-1"></i> Save
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -384,6 +381,13 @@
                                     <div class="section-header-purple">
                                         <h6 class="section-title">Evaluation Summary</h6>
                                     </div>
+
+                                    <div class="card mb-3 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold"><i class="bi bi-file-text me-2"></i>Executive Summary</h6>
+                                            <div id="evaluationSummaryDisplay" class="p-2 bg-light rounded"></div>
+                                        </div>
+                                    </div>
                                     
                                     <div id="evaluationSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
@@ -401,21 +405,6 @@
                                         <div id="evaluationTranslationDraft" class="fst-italic"></div>
                                         <div class="mt-2">
                                         </div>
-                                        <button class="btn btn-sm btn-outline-success" id="useEvaluationTranslation">
-                                            <i class="bi bi-check-circle"></i> Use Translation as Final
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="text-end">
-                                        <button class="btn btn-outline-secondary action-btn" id="editEvaluationSummary">
-                                            <i class="bi bi-pencil me-1"></i> Edit
-                                        </button>
-                                        <button id="translateEvaluationSummary" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-translate"></i> Translate
-                                        </button>
-                                        <button class="btn btn-success action-btn" id="saveEvaluationSummary" style="display: none;">
-                                            <i class="bi bi-check-lg me-1"></i> Save
-                                        </button>
                                     </div>
                                     
                                     <div class="text-end">
@@ -496,79 +485,69 @@
             // For Assessment translation
             $('#translateAssessmentSummary').off('click').click(function() {
                 if (!currentCarePlanId) return;
-                
-                const sections = {};
-                let hasContent = false;
-                
+
                 // Collect all section texts
+                const sections = {};
                 $('#assessmentSummarySections .section-content').each(function() {
                     const section = $(this).data('section');
                     const content = $(this).text();
                     if (content && content.trim() !== '') {
                         sections[section] = content;
-                        hasContent = true;
                     }
                 });
-                
-                // Add the full summary if sections are empty
-                if (!hasContent && $('#assessmentSummaryDraft').text().trim()) {
-                    sections['full_summary'] = $('#assessmentSummaryDraft').text();
-                    hasContent = true;
+
+                // Always include the executive summary as 'full_summary'
+                const summaryText = $('#assessmentSummaryDraft').text().trim();
+                if (summaryText) {
+                    sections['full_summary'] = summaryText;
                 }
-                
-                if (!hasContent) {
-                    alert('No assessment summary available to translate.');
+
+                if (!summaryText && Object.keys(sections).length === 0) {
+                    alert('No assessment summary or sections available to translate.');
                     return;
                 }
-                
+
                 // Show loading UI
-                $('#loadingText').text('Translating sections to English...');
+                $('#loadingText').text('Translating to English...');
                 $('#loadingProgressBar').css('width', '0%');
                 $('#loadingModal').modal('show');
-                
+
                 // Progress animation
                 let progress = 0;
                 const progressInterval = setInterval(() => {
                     progress += 3;
                     $('#loadingProgressBar').css('width', `${progress}%`);
-                    
                     if (progress >= 90) {
                         clearInterval(progressInterval);
                     }
                 }, 150);
-                
-                // Make request to translate sections
+
+                // Make request to translate both summary and sections
                 $.ajax({
                     url: '/admin/ai-summary/translate-sections',
                     type: 'POST',
                     data: {
                         sections: sections,
                         weekly_care_plan_id: currentCarePlanId,
-                        type: 'assessment',
+                        type: 'assessment', // or 'evaluation'
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
                         clearInterval(progressInterval);
                         $('#loadingProgressBar').css('width', '100%');
-                        
                         setTimeout(() => {
                             $('#loadingModal').modal('hide');
-                            
-                            // Update traditional translation draft
-                            $('#assessmentTranslationDraft').text(response.translatedText);
-                            
-                            // Display section-by-section translations
-                            displayTranslatedSections('assessment', response.translatedSections);
-                            
-                            // Show the translation section
-                            $('#assessmentTranslationSection').show();
+                            // Update translation draft and section translations
+                            $('#assessmentTranslationDraft').text(response.translatedText); // or #evaluationTranslationDraft
+                            displayTranslatedSections('assessment', response.translatedSections); // or 'evaluation'
+                            $('#assessmentTranslationSection').show(); // or #evaluationTranslationSection
                         }, 500);
                     },
                     error: function(xhr) {
                         clearInterval(progressInterval);
                         $('#loadingModal').modal('hide');
-                        console.error('Error translating sections:', xhr);
-                        alert('Failed to translate sections. Please try again.');
+                        console.error('Error translating:', xhr);
+                        alert('Failed to translate. Please try again.');
                     }
                 });
             });
@@ -775,11 +754,12 @@
                     if (carePlan.assessment_summary_final) {
                         $('#assessmentSummarySection').show();
                         $('#assessmentSummaryDraft').text(carePlan.assessment_summary_final);
+                        $('#assessmentSummaryDisplay').text(carePlan.assessment_summary_final); // Add this
                         $('#assessmentFinalStatus').html('<span class="badge bg-success">Finalized</span>');
                         
                         // Use sections if available
                         if (carePlan.assessment_summary_sections) {
-                            displaySummarySections('assessment', carePlan.assessment_summary_sections);
+                            displaySummarySections('assessment', normalizeSectionsForDisplay(carePlan.assessment_summary_sections));
                         }
                         
                         // Show translation if available
@@ -788,7 +768,7 @@
                             $('#assessmentTranslationSection').show();
                             
                             if (carePlan.assessment_translation_sections) {
-                                displayTranslatedSections('assessment', carePlan.assessment_translation_sections);
+                                displayTranslatedSections('assessment', normalizeSectionsForDisplay(carePlan.assessment_translation_sections));
                             }
                         } else {
                             $('#assessmentTranslationSection').hide();
@@ -801,8 +781,9 @@
                     else if (carePlan.assessment_summary_draft) {
                         $('#assessmentSummarySection').show();
                         $('#assessmentSummaryDraft').text(carePlan.assessment_summary_draft);
+                        $('#assessmentSummaryDisplay').text(carePlan.assessment_summary_draft); // Add this
                         $('#assessmentFinalStatus').html('<span class="badge bg-warning">Draft</span>');
-                        displaySummarySections('assessment', carePlan.assessment_summary_sections);
+                        displaySummarySections('assessment', normalizeSectionsForDisplay(carePlan.assessment_summary_sections));
                         
                         // Show translation if available
                         if (carePlan.assessment_translation_draft) {
@@ -810,7 +791,7 @@
                             $('#assessmentTranslationSection').show();
                             
                             if (carePlan.assessment_translation_sections) {
-                                displayTranslatedSections('assessment', carePlan.assessment_translation_sections);
+                                displayTranslatedSections('assessment', normalizeSectionsForDisplay(carePlan.assessment_translation_sections));
                             }
                         } else {
                             $('#assessmentTranslationSection').hide();
@@ -831,7 +812,7 @@
                         
                         // Use sections if available
                         if (carePlan.evaluation_summary_sections) {
-                            displaySummarySections('evaluation', carePlan.evaluation_summary_sections);
+                            displaySummarySections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_summary_sections));
                         }
                         
                         // Show translation if available
@@ -840,7 +821,7 @@
                             $('#evaluationTranslationSection').show();
                             
                             if (carePlan.evaluation_translation_sections) {
-                                displayTranslatedSections('evaluation', carePlan.evaluation_translation_sections);
+                                displayTranslatedSections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_translation_sections));
                             }
                         } else {
                             $('#evaluationTranslationSection').hide();
@@ -854,7 +835,7 @@
                         $('#evaluationSummarySection').show();
                         $('#evaluationSummaryDraft').text(carePlan.evaluation_summary_draft);
                         $('#evaluationFinalStatus').html('<span class="badge bg-warning">Draft</span>');
-                        displaySummarySections('evaluation', carePlan.evaluation_summary_sections);
+                        displaySummarySections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_summary_sections));
                         
                         // Show translation if available
                         if (carePlan.evaluation_translation_draft) {
@@ -862,7 +843,7 @@
                             $('#evaluationTranslationSection').show();
                             
                             if (carePlan.evaluation_translation_sections) {
-                                displayTranslatedSections('evaluation', carePlan.evaluation_translation_sections);
+                                displayTranslatedSections('evaluation', normalizeSectionsForDisplay(carePlan.evaluation_translation_sections));
                             }
                         } else {
                             $('#evaluationTranslationSection').hide();
@@ -928,7 +909,7 @@
                 }
                 
                 // Show loading modal
-                $('#loadingText').text('Generating AI Summary...');
+                $('#loadingText').text('Generating Summary...');
                 $('#loadingProgressBar').css('width', '0%');
                 $('#loadingModal').modal('show');
                 
@@ -975,9 +956,10 @@
                             
                             // Update BOTH elements with the summary text
                             $('#assessmentSummaryDraft').text(response.summary);  // ADD THIS LINE
+                            $('#assessmentSummaryDisplay').text(response.summary);
                             
                             if (response.sections && Object.keys(response.sections).length > 0) {
-                                displaySummarySections('assessment', response.sections);
+                                displaySummarySections('assessment', normalizeSectionsForDisplay(response.sections));
                             }
                             
                             $('#assessmentSummarySection').show();
@@ -1009,7 +991,7 @@
                 }
                 
                 // Show loading modal
-                $('#loadingText').text('Generating AI Summary...');
+                $('#loadingText').text('Generating Summary...');
                 $('#loadingProgressBar').css('width', '0%');
                 $('#loadingModal').modal('show');
                 
@@ -1041,7 +1023,8 @@
                             
                             // Display summary and sections
                             $('#evaluationSummaryDraft').text(response.summary);
-                            displaySummarySections('evaluation', response.sections);
+                            displaySummarySections('evaluation', normalizeSectionsForDisplay(response.sections));
+                            $('#evaluationSummaryDisplay').text(response.summary);  // Add this line
                             $('#evaluationSummarySection').show();
                             
                             // Save the generated summary
@@ -1060,48 +1043,124 @@
             function displaySummarySections(type, sections) {
                 if (!sections) return;
                 
-                // IMPORTANT: Save summary text before clearing the container
-                const summaryText = $(`#${type}SummaryDraft`).text();
-                
-                let container = $(`#${type}SummarySections`);
-                container.empty();
-                
-                Object.entries(sections).forEach(([key, value]) => {
-                    let sectionTitle = key.replace('_', ' ');
-                    sectionTitle = sectionTitle.charAt(0).toUpperCase() + sectionTitle.slice(1);
+                const sectionContainer = $(`#${type}SummarySections`);
+                sectionContainer.empty();
+
+                // Define comprehensive section names mapping for both assessment and evaluation
+                const sectionNames = {
+                    // Assessment sections
+                    'mga_sintomas': 'Symptoms',
+                    'kalagayan_pangkatawan': 'Physical Condition',
+                    'kalagayan_mental': 'Mental State',
+                    'aktibidad': 'Activities',
+                    'kalagayan_social': 'Social Observation',
+                    'pain_discomfort': 'Pain & Discomfort',
+                    'hygiene': 'Hygiene & Self-Care',
+                    'medical_history': 'Medical History',
                     
-                    let sectionIcon = '';
-                    switch(key) {
-                        case 'vital_signs': sectionIcon = 'bi-heart-pulse'; break;
-                        case 'symptoms': sectionIcon = 'bi-thermometer-half'; break;
-                        case 'observations': sectionIcon = 'bi-eye'; break;
-                        case 'findings': sectionIcon = 'bi-search'; break;
-                        case 'recommendations': sectionIcon = 'bi-lightbulb'; break;
-                        case 'treatment': sectionIcon = 'bi-capsule'; break;
-                        case 'follow_up': sectionIcon = 'bi-calendar-check'; break;
-                        default: sectionIcon = 'bi-card-text';
+                    // Evaluation sections
+                    'pangunahing_rekomendasyon': 'Key Recommendations',
+                    'mga_hakbang': 'Action Steps',
+                    'pangangalaga': 'Care Needs',
+                    'pagbabago_sa_pamumuhay': 'Lifestyle Changes',
+                    'safety_risk_factors': 'Safety & Risk Factors',
+                    'nutrisyon_at_pagkain': 'Nutrition & Diet',
+                    'kalusugan_ng_bibig': 'Oral Health',
+                    'mobility_function': 'Mobility & Function',
+                    'kalagayan_ng_tulog': 'Sleep Management',
+                    'pamamahala_ng_gamot': 'Medication Management',
+                    'suporta_ng_pamilya': 'Family Support',
+                    'preventive_health': 'Preventive Health',
+                    'vital_signs_measurements': 'Vital Signs',
+
+                    // Overflow Section
+                    'additional_information': 'Additional Important Information'
+                };
+
+                // Define comprehensive section icons mapping
+                const sectionIcons = {
+                    // Assessment sections
+                    'mga_sintomas': 'bi-thermometer-half',
+                    'kalagayan_pangkatawan': 'bi-person',
+                    'kalagayan_mental': 'bi-brain',
+                    'aktibidad': 'bi-clipboard-check',
+                    'kalagayan_social': 'bi-people',
+                    'pain_discomfort': 'bi-exclamation-triangle',
+                    'hygiene': 'bi-droplet',
+                    'medical_history': 'bi-journal-medical',
+                    
+                    // Evaluation sections
+                    'pangunahing_rekomendasyon': 'bi-star-fill',
+                    'mga_hakbang': 'bi-list-check',
+                    'pangangalaga': 'bi-heart-pulse',
+                    'pagbabago_sa_pamumuhay': 'bi-arrow-repeat',
+                    'safety_risk_factors': 'bi-shield-exclamation',
+                    'nutrisyon_at_pagkain': 'bi-egg-fried',
+                    'kalusugan_ng_bibig': 'bi-emoji-smile',
+                    'mobility_function': 'bi-person-walking',
+                    'kalagayan_ng_tulog': 'bi-moon-stars',
+                    'pamamahala_ng_gamot': 'bi-capsule',
+                    'suporta_ng_pamilya': 'bi-people-fill',
+                    'preventive_health': 'bi-umbrella',
+                    'vital_signs_measurements': 'bi-activity',
+
+                    'additional_information': 'bi-info-circle-fill'  // Using an info icon for additional info
+                };
+
+                // Format section names for display and handle underscore replacement
+                const formatSectionName = (name) => {
+                    // First check if we have a predefined name
+                    if (sectionNames[name]) {
+                        return sectionNames[name];
                     }
-                    
-                    // Use different card style based on type
-                    const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
-                    
-                    let sectionHtml = `
-                    <div class="card mb-3 ${cardClass}">
-                        <div class="card-header py-2 bg-light d-flex align-items-center">
-                            <i class="bi ${sectionIcon} me-2"></i>
-                            <h6 class="mb-0">${sectionTitle}</h6>
-                        </div>
-                        <div class="card-body py-2">
-                            <p class="section-content mb-0" data-section="${key}">${value}</p>
-                            <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${value}</textarea>
-                        </div>
-                    </div>`;
-                    
-                    container.append(sectionHtml);
+                    // Otherwise, format the name by replacing underscores with spaces and capitalizing
+                    return name.replace(/_/g, ' ')
+                        .replace(/\b\w/g, c => c.toUpperCase()); // Capitalize first letter of each word
+                };
+
+                // NEW: Sort sections to ensure additional_information is always last
+                const orderedSections = Object.entries(sections).sort(([keyA], [keyB]) => {
+                    // If either key is 'additional_information', sort accordingly
+                    if (keyA === 'additional_information') return 1;  // Move to end
+                    if (keyB === 'additional_information') return -1; // Keep others before
+                    return 0; // Maintain existing order for other sections
+                });
+                
+                 // Format for display - use orderedSections instead of Object.entries(sections)
+                orderedSections.forEach(([key, value]) => {
+                    let valueStr = (typeof value === 'string') ? value : (value !== undefined && value !== null ? String(value) : '');
+                    if (valueStr.trim()) {
+                        // Use the card style based on type
+                        const cardClass = type === 'assessment' ? 'section-card-teal' : 'section-card-purple';
+                        
+                        // Get icon for this section
+                        const sectionIcon = sectionIcons[key] || 'bi-card-text'; // Default icon if not found
+                        
+                        // Get formatted section name
+                        const sectionTitle = formatSectionName(key);
+                        
+                        // Generate HTML for section
+                        let sectionHtml = `
+                        <div class="card mb-3 ${cardClass}">
+                            <div class="card-header py-2 bg-light d-flex align-items-center">
+                                <i class="bi ${sectionIcon} me-2"></i>
+                                <h6 class="mb-0">${sectionTitle}</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <p class="section-content mb-0" data-section="${key}">${valueStr}</p>
+                                <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${valueStr}</textarea>
+                            </div>
+                        </div>`;
+                        sectionContainer.append(sectionHtml);
+                    }
                 });
 
-                 // Re-add the draft with the SAVED text, not the now-empty text
-                container.append(`<div id="${type}SummaryDraft" style="display:none;">${summaryText}</div>`);
+                // Get the summary text ONCE and reuse it
+                const summaryText = $(`#${type}SummaryDraft`).text();
+                if (summaryText) {
+                    // Use sectionContainer consistently
+                    sectionContainer.append(`<div id="${type}SummaryDraft" style="display:none;">${summaryText}</div>`);
+                }
             }
             
             // Edit assessment summary
@@ -1149,6 +1208,23 @@
                 }
             }
             
+            function normalizeSectionsForDisplay(sections) {
+                const normalized = {};
+                for (const [key, value] of Object.entries(sections)) {
+                    if (Array.isArray(value)) {
+                        // Join array items with line breaks for HTML display
+                        normalized[key] = value.join('<br>');
+                    } else if (typeof value === 'string') {
+                        normalized[key] = value;
+                    } else if (value !== undefined && value !== null) {
+                        normalized[key] = String(value);
+                    } else {
+                        normalized[key] = '';
+                    }
+                }
+                return normalized;
+            }
+
             // Save edited summary
             function saveEditedSummary(type) {
                 if (!currentCarePlanId) return;
@@ -1166,7 +1242,11 @@
                 
                 // Get the main summary text
                 let summaryText = $(`#${type}SummaryDraftEditor`).val();
-                
+
+                // Update both the hidden draft and visible display
+                $(`#${type}SummaryDraft`).text(summaryText);
+                $(`#${type}SummaryDisplay`).text(summaryText); // Add this line
+                            
                 // Show loading modal
                 $('#loadingText').text('Saving changes...');
                 $('#loadingProgressBar').css('width', '0%');
@@ -1354,33 +1434,76 @@
                 });
             }
 
-            // For Evaluation translation (same pattern)
+            // For Evaluation translation
             $('#translateEvaluationSummary').off('click').click(function() {
                 if (!currentCarePlanId) return;
-                
+
+                // Get executive summary
+                // Always include the executive summary as 'full_summary'
+                const summaryText = $('#assessmentSummaryDraft').text().trim();
+                if (summaryText) {
+                    sections['full_summary'] = summaryText;
+                }
+
+                // Collect all section texts
                 const sections = {};
-                let hasContent = false;
-                
                 $('#evaluationSummarySections .section-content').each(function() {
                     const section = $(this).data('section');
                     const content = $(this).text();
                     if (content && content.trim() !== '') {
                         sections[section] = content;
-                        hasContent = true;
                     }
                 });
-                
-                if (!hasContent && $('#evaluationSummaryDraft').text().trim()) {
-                    sections['full_summary'] = $('#evaluationSummaryDraft').text();
-                    hasContent = true;
-                }
-                
-                if (!hasContent) {
-                    alert('No evaluation summary available to translate.');
+
+                if (!summaryText && Object.keys(sections).length === 0) {
+                    alert('No evaluation summary or sections available to translate.');
                     return;
                 }
-            });
 
+                // Show loading UI
+                $('#loadingText').text('Translating to English...');
+                $('#loadingProgressBar').css('width', '0%');
+                $('#loadingModal').modal('show');
+
+                // Progress animation
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 3;
+                    $('#loadingProgressBar').css('width', `${progress}%`);
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                }, 150);
+
+                // Make request to translate both summary and sections
+                $.ajax({
+                    url: '/admin/ai-summary/translate-sections',
+                    type: 'POST',
+                    data: {
+                        sections: sections,
+                        weekly_care_plan_id: currentCarePlanId,
+                        type: 'evaluation', // or 'evaluation'
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        clearInterval(progressInterval);
+                        $('#loadingProgressBar').css('width', '100%');
+                        setTimeout(() => {
+                            $('#loadingModal').modal('hide');
+                            // Update translation draft and section translations
+                            $('#evaluationTranslationDraft').text(response.translatedText); // or #evaluationTranslationDraft
+                            displayTranslatedSections('evaluation', response.translatedSections); // or 'evaluation'
+                            $('#evaluationTranslationSection').show(); // or #evaluationTranslationSection
+                        }, 100000);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        $('#loadingModal').modal('hide');
+                        console.error('Error translating:', xhr);
+                        alert('Failed to translate. Please try again.');
+                    }
+                });
+            });
         }
 
             function displayTranslatedSections(type, sections) {
@@ -1432,7 +1555,7 @@
                             <h6 class="mb-0">${sectionTitle}</h6>
                         </div>
                         <div class="card-body py-2">
-                            <p class="mb-0 fst-italic">${value}</p>
+                            <textarea class="form-control section-editor translation-editor mb-2" data-section="${key}">${value}</textarea>
                         </div>
                     </div>`;
                     
