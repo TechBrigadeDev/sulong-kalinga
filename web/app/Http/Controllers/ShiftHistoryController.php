@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Shift;
 use App\Models\User;
+use App\Exports\ShiftReportExport;
+use PDF; // Add this at the top if using barryvdh/laravel-dompdf
 
 class ShiftHistoryController extends Controller
 {
@@ -138,5 +140,22 @@ class ShiftHistoryController extends Controller
         $c = 2 * atan2(sqrt($a), sqrt(1-$a));
 
         return $earthRadius * $c;
+    }
+
+    public function exportShiftPdf($shiftId)
+    {
+        $export = new \App\Exports\ShiftReportExport($shiftId);
+        $view = $export->view();
+
+        // Get shift for filename details
+        $shift = \App\Models\Shift::with('careWorker')->findOrFail($shiftId);
+        $date = \Carbon\Carbon::parse($shift->time_in)->format('Y-m-d');
+        $name = trim(($shift->careWorker->first_name ?? '') . '_' . ($shift->careWorker->last_name ?? ''));
+        $name = preg_replace('/[^A-Za-z0-9_]/', '', $name); // Remove special chars
+
+        $filename = "Shift_Report_{$date}_{$name}.pdf";
+
+        $pdf = \PDF::loadHTML($view->render());
+        return $pdf->download($filename);
     }
 }
