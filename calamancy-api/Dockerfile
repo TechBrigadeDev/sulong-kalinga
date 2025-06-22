@@ -36,6 +36,10 @@ RUN pip install \
 COPY model_installer.py ./
 RUN python model_installer.py
 
+# Install OpenAI Python client
+RUN pip install openai==1.14.3
+RUN pip install httpx==0.27.0
+
 # Copy application files
 COPY *.py ./
 

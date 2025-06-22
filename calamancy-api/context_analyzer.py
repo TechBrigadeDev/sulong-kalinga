@@ -639,8 +639,97 @@ def get_semantic_relationship(content1, content2):
     else:
         return "neutral"
     
+def detect_health_narrative_patterns(prev_content, next_content):
+    """Detect specific health narrative patterns in adjacent content pieces with enhanced evaluation patterns."""
+    combined_text = f"{prev_content} {next_content}".lower()
+    
+    # Symptom-to-condition pattern
+    symptom_condition_pattern = any(term in prev_content.lower() for term in [
+        "sintomas", "symptoms", "nakakaramdam", "sumasakit", "masakit", "nagpapakita"
+    ]) and any(term in next_content.lower() for term in [
+        "diagnosis", "kondisyon", "condition", "disease", "disorder", "karamdaman", "sakit"
+    ])
+    if symptom_condition_pattern:
+        return "symptom_to_condition"
+    
+    # Condition-to-treatment pattern
+    condition_treatment_pattern = any(term in prev_content.lower() for term in [
+        "kondisyon", "condition", "diagnosis", "disease", "disorder", "sakit", "karamdaman"
+    ]) and any(term in next_content.lower() for term in [
+        "treatment", "therapy", "intervention", "medication", "gamot", "lunas", "paggamot"
+    ])
+    if condition_treatment_pattern:
+        return "condition_to_treatment"
+    
+    # Pain-to-medication pattern
+    pain_medication_pattern = any(term in prev_content.lower() for term in [
+        "sakit", "pain", "masakit", "pananakit", "kirot", "nararamdaman", "sumasakit"
+    ]) and any(term in next_content.lower() for term in [
+        "medication", "gamot", "pain relief", "pain management", "analgesic", "pampakalma"
+    ])
+    if pain_medication_pattern:
+        return "pain_to_medication"
+    
+    # Cause-to-effect pattern in health context
+    cause_effect_pattern = any(term in combined_text for term in [
+        "sanhi", "caused by", "nagdudulot", "resulting in", "dahil sa", "dahilan ng", 
+        "because of", "kaya", "kung kaya't", "leads to", "humahantong sa"
+    ])
+    if cause_effect_pattern:
+        return "causation"
+    
+    # Mental-physical connection pattern
+    mental_physical_pattern = any(term in prev_content.lower() for term in [
+        "anxiety", "depression", "stress", "worry", "mental", "emotional", "kabalisahan",
+        "pagkabalisa", "kalungkutan", "pag-aalala", "kaisipan", "emosyon", "damdamin"
+    ]) and any(term in next_content.lower() for term in [
+        "physical symptoms", "stomach", "headache", "tension", "sipon", "sakit ng ulo", 
+        "pananakit ng tiyan", "pagkahilo", "hirap huminga", "palpitations", "insomnia"
+    ])
+    if mental_physical_pattern:
+        return "mental_physical_connection"
+    
+    # Check for recommendation pattern following assessment
+    if any(term in prev_content.lower() for term in ["observed", "assessed", "found", "nakita", "napansin"]) and \
+       any(term in next_content.lower() for term in ["recommended", "advised", "suggested", "inirerekomenda", "iminumungkahi"]):
+        return "assessment_to_recommendation"
+    
+    # Check for implementation following recommendation
+    if any(term in prev_content.lower() for term in ["recommended", "advised", "inirerekomenda", "iminumungkahi"]) and \
+       any(term in next_content.lower() for term in ["implement", "apply", "administer", "isagawa", "ipatupad"]):
+        return "recommendation_to_implementation"
+    
+    # Check for safety precaution pattern
+    safety_precaution_pattern = any(term in combined_text for term in [
+        "upang maiwasan ang", "to prevent", "para makaiwas sa", "to avoid", 
+        "risk reduction", "pagbawas ng panganib", "safety measure", "hakbang pangkaligtasan"
+    ])
+    if safety_precaution_pattern:
+        return "safety_precaution"
+    
+    # Check for evaluation outcome pattern
+    evaluation_outcome_pattern = any(term in combined_text for term in [
+        "as a result", "bilang resulta", "outcome of", "resulta ng", 
+        "improved", "bumuti", "declined", "lumala", "no change", "walang pagbabago"
+    ])
+    if evaluation_outcome_pattern:
+        return "evaluation_outcome"
+    
+    # Check for education-response pattern (common in evaluations)
+    education_pattern = any(term in prev_content.lower() for term in [
+        "tinuruan", "taught", "explained", "ipinaliwanag", "educated", "showed", "ipinakita"
+    ]) and any(term in next_content.lower() for term in [
+        "understood", "naintindihan", "learned", "natuto", "demonstrated", "ipinakita", 
+        "was able to", "nagawa niya", "can now", "kaya na niyang"
+    ])
+    if education_pattern:
+        return "education_response"
+    
+    # Return None if no patterns match
+    return None
+
 def get_contextual_relationship(prev_content, next_content, doc_context, prev_idx, next_idx):
-    """Determine the contextual relationship between sentences with enhanced Filipino context awareness."""
+    """Determine the contextual relationship between sentences with improved Filipino context awareness."""
     # Start with basic semantic relationship
     basic_relationship = get_semantic_relationship(prev_content, next_content)
     
@@ -651,11 +740,16 @@ def get_contextual_relationship(prev_content, next_content, doc_context, prev_id
         
         # If moving to a new section, relationship is often topical shift
         if prev_section != next_section:
-            # UPDATED: Include new sections in relationship detection
+            # UPDATED WITH NEW EVALUATION SECTIONS
+            
+            # Call the already defined health narrative patterns function
+            health_pattern = detect_health_narrative_patterns(prev_content, next_content)
+            if health_pattern:
+                return health_pattern
             
             # Action-oriented content transitions
             if next_section in ["mga_hakbang", "pangangalaga", "pangunahing_rekomendasyon", 
-                            "pamamahala_ng_gamot", "safety_risk_factors"]:
+                              "pamamahala_ng_gamot", "safety_risk_factors"]:
                 return "action"  # Moving to action-oriented content
                 
             # Contextual information transitions  
@@ -684,9 +778,43 @@ def get_contextual_relationship(prev_content, next_content, doc_context, prev_id
             elif next_section == "medical_history":
                 return "background"  # Medical history provides background context
                 
+            # NEW: Medication to oral health relationship
+            elif next_section == "kalusugan_ng_bibig" and prev_section == "pamamahala_ng_gamot":
+                return "specific_application"  # Oral health as specific application of medication management
+                
+            # NEW: Safety to mobility relationship
+            elif (next_section == "mobility_function" and prev_section == "safety_risk_factors") or \
+                 (next_section == "safety_risk_factors" and prev_section == "mobility_function"):
+                return "related_concern"  # Safety and mobility are closely related concerns
+                
+            # NEW: Sleep to mental health relationship
+            elif (next_section == "kalagayan_mental" and prev_section == "kalagayan_ng_tulog") or \
+                 (next_section == "kalagayan_ng_tulog" and prev_section == "kalagayan_mental"):
+                return "interdependent"  # Sleep and mental health are interdependent
+                
+            # NEW: Nutrition to preventive health
+            elif (next_section == "preventive_health" and prev_section == "nutrisyon_at_pagkain"):
+                return "preventative_measure"  # Nutrition as preventive health measure
+                
+            # NEW: Vital signs to medication management
+            elif (next_section == "pamamahala_ng_gamot" and prev_section == "vital_signs_measurements"):
+                return "monitoring_adjustment"  # Vital signs monitoring for medication adjustment
+
+            # Medical history transitions
+            elif next_section == "medical_history" and prev_section in ["mga_sintomas", "kalagayan_pangkatawan"]:
+                return "background"  # Medical history provides background context
+
+            # Add a new relationship type
+            elif prev_section == "medical_history" and next_section in ["pamamahala_ng_gamot", "preventive_health"]:
+                return "risk_basis"  # Medical history as basis for treatment/prevention decisions
+
             else:
                 return "topical_shift"  # General shift in topic
     
+    # NEW: Check for health narrative patterns that might span multiple sections
+    if detect_health_narrative_patterns(prev_content, next_content):
+        return detect_health_narrative_patterns(prev_content, next_content)
+
     # NEW: Check for question-answer pattern (common in assessment narratives)
     question_indicators = ["?", "kumusta", "paano", "bakit", "kailan", "saan", "sino", "ano", 
                            "how", "why", "when", "where", "who", "what"]
@@ -769,12 +897,13 @@ def determine_optimal_section_order(doc_context, doc_type):
     """Determine the optimal order of sections based on enhanced document context analysis."""
     # Default orders based on document type
     if doc_type.lower() == "assessment":
-        # Updated default order with all new assessment sections
+        # Assessment order (already updated)
         default_order = [
             "mga_sintomas",                # Symptoms - high priority
-            "kalagayan_pangkatawan",       # Physical condition
+            "kalagayan_pangkatawan",       # Physical condition,
+            "medical_history",             # Medical history background - moved up for logical flow
             "pain_discomfort",             # Pain/discomfort
-            "vital_signs_measurements",     # Vital signs
+            "vital_signs_measurements",    # Vital signs
             "kalagayan_mental",            # Mental/cognitive state
             "kalagayan_ng_tulog",          # Sleep pattern
             "mobility_function",           # Mobility capabilities
@@ -784,17 +913,26 @@ def determine_optimal_section_order(doc_context, doc_type):
             "suporta_ng_pamilya",          # Family support
             "pamamahala_ng_gamot",         # Medication management
             "medical_history",             # Medical history background
-            "hygiene_habits",              # Hygiene habits
+            "hygiene",                      # Hygiene habits
             "preventive_health"            # Preventive health measures
         ]
-    else:  # Evaluation document order
-        default_order = ["pangunahing_rekomendasyon", "safety_risk_factors",
-                         "mga_hakbang", "mobility_function",
-                         "pamamahala_ng_gamot", "nutrisyon_at_pagkain",
-                         "kalusugan_ng_bibig", "kalagayan_ng_tulog",
-                         "kalagayan_mental", "suporta_ng_pamilya", 
-                         "pangangalaga", "preventive_health",
-                         "vital_signs_measurements", "pagbabago_sa_pamumuhay"]
+    else:  # Evaluation document - improved order based on clinical logic
+        default_order = [
+            "pangunahing_rekomendasyon",   # Key recommendations - always first
+            "safety_risk_factors",         # Safety concerns - high priority 
+            "mga_hakbang",                 # Action steps
+            "mobility_function",           # Mobility and function
+            "pamamahala_ng_gamot",         # Medication management
+            "nutrisyon_at_pagkain",        # Nutrition and diet
+            "kalusugan_ng_bibig",          # Oral health
+            "kalagayan_ng_tulog",          # Sleep management
+            "kalagayan_mental",            # Mental/emotional support
+            "suporta_ng_pamilya",          # Family support
+            "pangangalaga",                # Care needs
+            "preventive_health",           # Preventive measures
+            "vital_signs_measurements",    # Vital signs monitoring
+            "pagbabago_sa_pamumuhay"       # Lifestyle changes
+        ]
     
     # NEW: Consider severity when ordering assessment sections
     severity_trend = doc_context.get("severity_trend")
@@ -872,3 +1010,38 @@ def determine_optimal_section_order(doc_context, doc_type):
             default_order.insert(2, "kalagayan_social")
     
     return default_order
+
+def detect_oral_medication_context(text):
+    """Determine if text is about oral medication vs oral/dental health."""
+    # Dental/oral health specific terms
+    dental_terms = [
+        "ngipin", "teeth", "tooth", "gums", "gilagid", "dentist", "dentista", 
+        "pagsesepilyo", "toothbrush", "floss", "pustiso", "dentures", 
+        "dental checkup", "cavity", "cavities", "filling", "root canal"
+    ]
+    
+    # Medication specific terms that might include "oral"
+    medication_terms = [
+        "oral medication", "oral tablet", "oral capsule", "oral solution",
+        "oral suspension", "oral drug", "oral administration", "oral dosage",
+        "oral route", "oral formulation"
+    ]
+    
+    # Count dental vs medication terms
+    dental_count = sum(1 for term in dental_terms if term.lower() in text.lower())
+    medication_count = sum(1 for term in medication_terms if term.lower() in text.lower())
+    
+    # Check for medication education context
+    medication_education = any(phrase in text.lower() for phrase in [
+        "explanation sheet", "medication guide", "drug information",
+        "patient education", "side effects", "benefits versus risks",
+        "package insert", "medication fears", "misconceptions"
+    ])
+    
+    # Determine the predominant context
+    if medication_count > dental_count or medication_education:
+        return "medication"
+    elif dental_count > 0:
+        return "dental"
+    else:
+        return "neutral"
