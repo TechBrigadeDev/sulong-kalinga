@@ -205,6 +205,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::prefix('shift-histories')->name('shift.histories.')->group(function () {
             Route::get('/', [ShiftHistoryController::class, 'index'])->name('index');
             Route::get('/shift-details/{shiftId}', [ShiftHistoryController::class, 'shiftDetails'])->name('shiftDetails');
+            Route::get('/{shiftId}/export-pdf', [ShiftHistoryController::class, 'exportShiftPdf'])->name('exportPdf');
         });
 
         //Beneficiary Map

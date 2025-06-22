@@ -634,7 +634,7 @@ class VisitationController extends Controller
             $visitation->beneficiary_id = $request->beneficiary_id;
             $visitation->visitation_date = $request->visitation_date;
             $visitation->visit_type = $request->visit_type;
-            $visitation->is_flexible_time = $request->has('is_flexible_time');
+            $visitation->is_flexible_time = $request->input('is_flexible_time') ? 1 : 0;
             $visitation->start_time = $request->is_flexible_time ? null : $request->start_time;
             $visitation->end_time = $request->is_flexible_time ? null : $request->end_time;
             $visitation->notes = $request->notes;
@@ -1134,9 +1134,9 @@ class VisitationController extends Controller
             $visitation->beneficiary_id = $request->beneficiary_id;
             $visitation->visitation_date = $request->visitation_date;
             $visitation->visit_type = $request->visit_type;
-            $visitation->is_flexible_time = $request->has('is_flexible_time') && $request->is_flexible_time;
-            $visitation->start_time = $request->is_flexible_time ? null : $request->start_time;
-            $visitation->end_time = $request->is_flexible_time ? null : $request->end_time;
+            $visitation->is_flexible_time = $request->input('is_flexible_time') ? 1 : 0;
+            $visitation->start_time = $visitation->is_flexible_time ? null : $request->start_time;
+            $visitation->end_time = $visitation->is_flexible_time ? null : $request->end_time;
             $visitation->notes = $request->notes;
             $visitation->updated_at = now();
             $visitation->save();
