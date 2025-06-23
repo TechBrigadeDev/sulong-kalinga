@@ -7,7 +7,8 @@
     <title>Admin | Beneficiary Profiles</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/profilePages.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/profilepages.css') }}">
+
 </head>
 <body>
 
