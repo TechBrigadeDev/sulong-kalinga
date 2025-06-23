@@ -343,6 +343,7 @@
   .home-section {
     left: 78px;
     width: calc(100% - 78px);
+    z-index: 1 !important;
   }
 
   .sidebar.close ~ .home-section {
