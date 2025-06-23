@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewWeeklyCareplan.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     @php
@@ -295,10 +296,15 @@
                                             <tr>
                                                 @php $totalMinutes += $intervention->duration_minutes; @endphp
                                                 <td class="interventions-column">
-                                                    @if($intervention->intervention)
+                                                    <!-- @if($intervention->intervention)
                                                         {{ $intervention->intervention->intervention_description }}
                                                     @else
                                                         {{ $intervention->intervention_description ?? 'Unnamed Intervention' }}
+                                                    @endif -->
+                                                    @if(!empty($useTagalog) && $useTagalog && isset($tagalogInterventions[$intervention->intervention_id]))
+                                                        {{ $tagalogInterventions[$intervention->intervention_id]->t_intervention_description }}
+                                                    @else
+                                                        {{ $intervention->intervention_description }}
                                                     @endif
                                                 </td>
                                                 <td class="text-center">{{ number_format($intervention->duration_minutes, 2) }}</td>
