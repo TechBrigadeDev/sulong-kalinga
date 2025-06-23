@@ -255,33 +255,35 @@ use App\Helpers\TranslationHelper as T;
 
     // Handle clicks on parent items in collapsed mode to show flyouts
     document.querySelectorAll('.nav-links li.dropdown .parent-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        // Only toggle flyouts if sidebar is collapsed
-        if (sidebar.classList.contains('close')) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          const parentLi = this.closest('li');
-          
-          // Close all other open flyouts first
-          document.querySelectorAll('.nav-links li.showFlyout').forEach(item => {
-            if (item !== parentLi) {
-              item.classList.remove('showFlyout');
-            }
-          });
-          
-          // Toggle this flyout
-          parentLi.classList.toggle('showFlyout');
-          
-          // Position the flyout at the correct vertical position
-          if (parentLi.classList.contains('showFlyout')) {
-            const subMenu = parentLi.querySelector('.sub-menu');
-            if (subMenu) {
-              const rect = parentLi.getBoundingClientRect();
-              subMenu.style.top = rect.top + 'px';
+      ['click', 'touchstart'].forEach(evt => {
+        link.addEventListener(evt, function(e) {
+          // Only toggle flyouts if sidebar is collapsed
+          if (sidebar.classList.contains('close')) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const parentLi = this.closest('li');
+
+            // Close all other open flyouts first
+            document.querySelectorAll('.nav-links li.showFlyout').forEach(item => {
+              if (item !== parentLi) {
+                item.classList.remove('showFlyout');
+              }
+            });
+
+            // Toggle this flyout
+            parentLi.classList.toggle('showFlyout');
+
+            // Position the flyout at the correct vertical position
+            if (parentLi.classList.contains('showFlyout')) {
+              const subMenu = parentLi.querySelector('.sub-menu');
+              if (subMenu) {
+                const rect = parentLi.getBoundingClientRect();
+                subMenu.style.top = rect.top + 'px';
+              }
             }
           }
-        }
+        });
       });
     });
     
