@@ -18,7 +18,7 @@ use App\Models\VitalSigns;
 use App\Models\Notification;
 use App\Models\FamilyMember;
 use App\Models\User;
-
+use App\Models\InterventionTagalog; 
 use App\Services\LogService;
 use App\Services\UploadService;
 use App\Enums\LogType;
@@ -458,7 +458,7 @@ class WeeklyCareController extends Controller
             ->join('interventions as i', 'wpi.intervention_id', '=', 'i.intervention_id')
             ->where('wpi.weekly_care_plan_id', $id)
             ->whereNotNull('wpi.intervention_id')
-            ->select('i.intervention_description', 'wpi.duration_minutes', 'i.care_category_id')
+            ->select('i.intervention_id', 'i.intervention_description', 'wpi.duration_minutes', 'i.care_category_id')
             ->get();
         
         $interventionsByCategory = $standardInterventions->groupBy('care_category_id');
@@ -470,6 +470,20 @@ class WeeklyCareController extends Controller
         
         $categories = CareCategory::all();
         
+        // --- Language toggle logic ---
+        // Get the language toggle variable (adjust as needed for your app)
+        $useTagalog = \App\Models\LanguagePreference::where('user_type', 'cose_user')
+        ->where('user_id', $user->id)
+        ->exists();
+
+        // Get all intervention_ids used in this care plan
+        $interventionIds = $standardInterventions->pluck('intervention_id')->unique()->toArray();
+
+        // Fetch Tagalog interventions and map by intervention_id
+        $tagalogInterventions = InterventionTagalog::whereIn('t_intervention_id', $interventionIds)
+            ->get()
+            ->keyBy('t_intervention_id');
+
         // Generate temporary photo URL using UploadService
         $photoUrl = null;
         if ($weeklyCareplan->photo_path) {
@@ -491,7 +505,9 @@ class WeeklyCareController extends Controller
             'interventionsByCategory',
             'customInterventions',
             'categories',
-            'photoUrl'
+            'photoUrl',
+            'tagalogInterventions',
+            'useTagalog'
         ));
     }
 
