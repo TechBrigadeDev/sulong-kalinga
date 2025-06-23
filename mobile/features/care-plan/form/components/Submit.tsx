@@ -228,10 +228,21 @@ const SubmitCarePlanForm = () => {
             showToastable({
                 message: `${errorText}`,
                 status: "danger",
-                duration: 6000,
+                duration: 3000,
+                swipeDirection: "right",
             });
         }
     };
+
+    const isDisabled =
+        formState.isSubmitting ||
+        isPending ||
+        isUpdating;
+
+    const isLoading =
+        formState.isSubmitting ||
+        isPending ||
+        isUpdating;
 
     const onPress = async () => {
         if (formState.isSubmitting) {
@@ -258,12 +269,9 @@ const SubmitCarePlanForm = () => {
             }}
             onPress={onPress}
             themeInverse
-            disabled={
-                formState.isSubmitting ||
-                isPending
-            }
+            disabled={isDisabled}
         >
-            {formState.isSubmitting && (
+            {isLoading && (
                 <View>
                     <Spinner size="small" />
                 </View>

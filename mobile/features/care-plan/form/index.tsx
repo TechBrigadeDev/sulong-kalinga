@@ -55,7 +55,11 @@ const Form = ({ record }: Props) => {
         resetStep,
     } = useCarePlanFormStore();
 
-    const form = useCarePlanForm();
+    const { reset: formReset, getValues } =
+        useCarePlanForm();
+
+    const formHasValues =
+        Object.keys(getValues()).length > 0;
 
     // Helper function to map interventions for each category
     const mapInterventions = (
@@ -96,14 +100,13 @@ const Form = ({ record }: Props) => {
     };
 
     useEffect(() => {
-        setRecord(record ? record : null);
-        console.log({
-            record,
-        });
-
         if (record) {
-            form.reset({
+            console.log("setting");
+            setRecord(record);
+            formReset({
                 personalDetails: {
+                    beneficiaryId:
+                        record.beneficiary.beneficiary_id.toString(),
                     illness:
                         record.illnesses?.join(
                             ", ",
@@ -158,10 +161,14 @@ const Form = ({ record }: Props) => {
                 },
             });
         } else {
-            form.reset();
+            formReset();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [record, setRecord]);
+    }, [
+        record,
+        setRecord,
+        formReset,
+        formHasValues,
+    ]);
 
     // Reset step when component unmounts or user navigates away
     useFocusEffect(

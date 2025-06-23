@@ -1,7 +1,7 @@
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { useCarePlanFormStore } from "features/care-plan/form/store";
 import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
-import { useGetBeneficiaries } from "features/user-management/management.hook";
+import { useGetBeneficiary } from "features/user-management/management.hook";
 import { IBeneficiary } from "features/user-management/management.type";
 import { Info } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -109,68 +109,56 @@ export const PersonalDetails = ({
 
 const Beneficiary = () => {
     const { record } = useCarePlanFormStore();
-    const { data: beneficiaries } =
-        useGetBeneficiaries({
-            limit: 9999,
-        });
 
-    const { control, reset } = useCarePlanForm();
+    console.log(
+        "beneficiary record:",
+        record?.beneficiary,
+    );
+    const { data: currentBeneficiary } =
+        useGetBeneficiary(
+            record?.beneficiary?.beneficiary_id.toString(),
+        );
+
+    const { control, getValues } =
+        useCarePlanForm();
+
+    const currentBeneficiaryId = getValues(
+        "personalDetails.beneficiaryId",
+    );
+
+    // const defaultBeneficiary = useMemo(() => {
+    //     if (
+    //         currentBeneficiary?.beneficiary_id.toString() !==
+    //         currentBeneficiaryId
+    //     ) {
+    //         return null;
+    //     }
+
+    //     return currentBeneficiary;
+    // }, [
+    //     currentBeneficiary,
+    //     currentBeneficiaryId,
+    // ]);
+
     const [
         selectedBeneficiary,
         setSelectedBeneficiary,
     ] = useState<IBeneficiary | null>(null);
 
     useEffect(() => {
-        if (!beneficiaries) return;
-
-        const currentBeneficiaryId =
-            record?.beneficiary.beneficiary_id;
-        const currentBeneficiaryIdx =
-            beneficiaries.pages
-                .flatMap((page) => page.data)
-                .findIndex(
-                    (beneficiary) =>
-                        beneficiary.beneficiary_id ===
-                        currentBeneficiaryId,
-                );
-
-        if (!record?.beneficiary) {
-            setSelectedBeneficiary(null);
-            reset({
-                personalDetails: {
-                    beneficiaryId: "",
-                },
-            });
-        } else if (currentBeneficiaryIdx === -1) {
+        if (
+            currentBeneficiary?.beneficiary_id.toString() ===
+            currentBeneficiaryId
+        ) {
             setSelectedBeneficiary(
-                beneficiaries.pages[0].data[0] ||
-                    null,
+                currentBeneficiary,
             );
-            reset({
-                personalDetails: {
-                    beneficiaryId:
-                        beneficiaries.pages[0].data[0]?.beneficiary_id.toString() ||
-                        "",
-                },
-            });
-        } else if (currentBeneficiaryIdx >= 0) {
-            const selected =
-                beneficiaries.pages.flatMap(
-                    (page) => page.data,
-                )[currentBeneficiaryIdx];
-            setSelectedBeneficiary(selected);
-            reset({
-                personalDetails: {
-                    beneficiaryId:
-                        selected.beneficiary_id.toString() ||
-                        "",
-                },
-            });
+        } else {
+            setSelectedBeneficiary(null);
         }
     }, [
-        beneficiaries,
-        reset,
-        record?.beneficiary,
+        currentBeneficiary,
+        currentBeneficiaryId,
     ]);
 
     // get age from beneficiary.birthdate
