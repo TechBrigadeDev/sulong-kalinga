@@ -117,6 +117,43 @@ class CarePlanController extends Controller {
             throw error;
         }
     }
+
+    async patchCarePlan(
+        id: string,
+        data: CarePlanFormData,
+    ) {
+        if (!id) {
+            throw new Error(
+                "ID is required to patch a care plan",
+            );
+        }
+
+        try {
+            const apiData =
+                await mapCarePlanFormToApiData(
+                    data,
+                );
+
+            const response = await this.api.patch(
+                `/weekly-care-plans/${id}`,
+                apiData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data",
+                    },
+                },
+            );
+
+            return response.data;
+        } catch (error) {
+            console.error(
+                "Error patching care plan:",
+                error,
+            );
+            throw error;
+        }
+    }
 }
 
 export const carePlanController =

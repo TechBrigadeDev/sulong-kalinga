@@ -1,7 +1,11 @@
 import { useRouter } from "expo-router";
 import { useCarePlanForm } from "features/care-plan/form/form";
+import { useCarePlanFormStore } from "features/care-plan/form/store";
 import { CarePlanFormData } from "features/care-plan/form/type";
-import { useSubmitCarePlanForm } from "features/care-plan/hook";
+import {
+    usePatchCarePlan,
+    usePostCarePlan,
+} from "features/care-plan/hook";
 import {
     SubmitErrorHandler,
     SubmitHandler,
@@ -17,23 +21,46 @@ import {
 const SubmitCarePlanForm = () => {
     const router = useRouter();
 
-    const { mutateAsync, isPending } =
-        useSubmitCarePlanForm({
-            onError: async (error) => {
-                console.error(
-                    "Error submitting care plan form:",
-                    error,
-                );
-                showToastable({
-                    message:
-                        "An error occurred while submitting the care plan. Please try again.",
-                    status: "danger",
-                    duration: 4000,
-                });
-            },
-        });
+    const {
+        mutateAsync: postCarePlan,
+        isPending,
+    } = usePostCarePlan({
+        onError: async (error) => {
+            console.error(
+                "Error submitting care plan form:",
+                error,
+            );
+            showToastable({
+                message:
+                    "An error occurred while submitting the care plan. Please try again.",
+                status: "danger",
+                duration: 4000,
+            });
+        },
+    });
+
+    const {
+        mutateAsync: patchCarePlan,
+        isPending: isUpdating,
+    } = usePatchCarePlan({
+        onError: async (error) => {
+            console.error(
+                "Error updating care plan form:",
+                error,
+            );
+            showToastable({
+                message:
+                    "An error occurred while updating the care plan. Please try again.",
+                status: "danger",
+                duration: 4000,
+            });
+        },
+    });
+
     const { handleSubmit, formState, reset } =
         useCarePlanForm();
+
+    const { record } = useCarePlanFormStore();
 
     const onSubmit: SubmitHandler<
         CarePlanFormData
@@ -44,7 +71,14 @@ const SubmitCarePlanForm = () => {
         );
 
         try {
-            await mutateAsync(data);
+            if (record?.id) {
+                await patchCarePlan({
+                    id: record.id.toString(),
+                    data,
+                });
+            } else {
+                await postCarePlan(data);
+            }
 
             reset();
             router.back();
@@ -234,7 +268,10 @@ const SubmitCarePlanForm = () => {
                     <Spinner size="small" />
                 </View>
             )}
-            <Text>Save Weekly Care Plan</Text>
+            <Text>
+                {record?.id ? "Edit" : "Create"}{" "}
+                Weekly Care Plan
+            </Text>
         </Button>
     );
 };

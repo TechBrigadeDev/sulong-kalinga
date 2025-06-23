@@ -4,6 +4,7 @@ import {
 } from "@tanstack/react-query";
 import { QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
+import { showToastable } from "react-native-toastable";
 
 import { carePlanController } from ".";
 import { CarePlanFormData } from "./form/type";
@@ -12,7 +13,7 @@ import {
     IInterventionCategory,
 } from "./interface";
 
-export const useSubmitCarePlanForm = (props: {
+export const usePostCarePlan = (props: {
     onError?: (error: Error) => Promise<void>;
 }) => {
     const { token } = authStore();
@@ -30,6 +31,47 @@ export const useSubmitCarePlanForm = (props: {
             const response =
                 await carePlanController.postCarePlan(
                     data,
+                );
+            return response;
+        },
+        onError: (error) => {
+            if (props.onError) {
+                props.onError(error);
+            }
+        },
+    });
+};
+
+export const usePatchCarePlan = (props: {
+    onError?: (error: Error) => Promise<void>;
+}) => {
+    const { token } = authStore();
+
+    if (!token) {
+        throw new Error(
+            "User is not authenticated",
+        );
+    }
+
+    return useMutation({
+        mutationFn: async (props: {
+            id?: string;
+            data: CarePlanFormData;
+        }) => {
+            if (!props.id) {
+                showToastable({
+                    message:
+                        "ID is required to patch a care plan",
+                    status: "danger",
+                    duration: 4000,
+                });
+                return;
+            }
+
+            const response =
+                await carePlanController.patchCarePlan(
+                    props.id,
+                    props.data,
                 );
             return response;
         },

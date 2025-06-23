@@ -1,5 +1,9 @@
 import { useGetBeneficiaries } from "features/user-management/management.hook";
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 import {
     Adapt,
     Input,
@@ -18,19 +22,19 @@ interface SelectBeneficiaryProps {
     ) => void;
     placeholder?: string;
     searchPlaceholder?: string;
+    defaultValue?: IBeneficiary | null;
 }
 
 const SelectBeneficiary = ({
     onValueChange,
-    placeholder = "Choose a beneficiary",
+    placeholder:
+        _placeholder = "Choose a beneficiary",
     searchPlaceholder = "Search beneficiaries...",
+    defaultValue: _defaultValue = null,
 }: SelectBeneficiaryProps) => {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] =
         useState("");
-
-    const [beneficiary, setBeneficiary] =
-        useState<IBeneficiary | null>(null);
 
     // Debounce search to avoid too many API calls
     useEffect(() => {
@@ -51,24 +55,59 @@ const SelectBeneficiary = ({
         search: debouncedSearch,
     });
 
-    // Handle search input change
-    const handleSearchChange = (
-        value: string,
-    ) => {
-        setSearch(value);
-    };
-
     // Get all beneficiaries from all pages
-    const allBeneficiaries =
-        data?.pages?.flatMap(
-            (page) => page.data,
-        ) || [];
+    const allBeneficiaries = useMemo(() => {
+        return (
+            data?.pages?.flatMap(
+                (page) => page.data,
+            ) || []
+        );
+    }, [data]);
 
     // Handle loading more data
     const handleLoadMore = () => {
         if (hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
         }
+    };
+
+    const [beneficiary, setBeneficiary] =
+        useState<string | null>(
+            _defaultValue?.beneficiary_id?.toString() ||
+                null,
+        );
+
+    const currentBeneficiary = useMemo(() => {
+        if (_defaultValue) {
+            return _defaultValue;
+        }
+
+        return allBeneficiaries.find(
+            (b) =>
+                b.beneficiary_id.toString() ===
+                beneficiary,
+        );
+    }, [
+        _defaultValue,
+        allBeneficiaries,
+        beneficiary,
+    ]);
+
+    useEffect(() => {
+        // Set initial value if provided
+        if (_defaultValue) {
+            setBeneficiary(
+                _defaultValue.beneficiary_id?.toString() ||
+                    null,
+            );
+        }
+    }, [_defaultValue]);
+
+    // Handle search input change
+    const handleSearchChange = (
+        value: string,
+    ) => {
+        setSearch(value);
     };
 
     // Render footer with loading indicator for pagination
@@ -153,9 +192,19 @@ const SelectBeneficiary = ({
         );
     };
 
+    const [placeholder] = useState(
+        currentBeneficiary
+            ? `${currentBeneficiary.first_name} ${currentBeneficiary.last_name}`
+            : _placeholder,
+    );
+
     return (
         <Select
-            value={beneficiary?.beneficiary_id?.toString()}
+            defaultValue={
+                currentBeneficiary?.beneficiary_id?.toString() ||
+                undefined
+            }
+            value={beneficiary?.toString()}
             onValueChange={(value) => {
                 const selectedBeneficiary =
                     allBeneficiaries.find(
@@ -165,10 +214,11 @@ const SelectBeneficiary = ({
                     ) || null;
 
                 setBeneficiary(
-                    selectedBeneficiary,
+                    selectedBeneficiary?.beneficiary_id?.toString() ||
+                        null,
                 );
                 onValueChange(
-                    selectedBeneficiary,
+                    selectedBeneficiary || null,
                 );
             }}
         >
