@@ -72,8 +72,6 @@
                                             <th scope="col">{{ T::translate('Care Worker', 'Tagapag-alaga')}}</th>
                                             <th scope="col">{{ T::translate('Date', 'Petsa')}}</th>
                                             <th scope="col">{{ T::translate('Shift Time', 'Oras ng Shift')}}</th>
-                                            <th scope="col">{{ T::translate('Municipality', 'Munisipalidad')}}</th>
-                                            <th scope="col">Status</th>
                                             <th scope="col" class="text-center">{{ T::translate('Actions', 'Aksyon')}}</th>
                                         </tr>
                                     </thead>
