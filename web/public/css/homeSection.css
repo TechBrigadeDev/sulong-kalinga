@@ -1,5 +1,6 @@
 .home-section .container-fluid {
   height: calc(100% - 50px);
+  padding: 0 !important;
 }
 
 .text-left {
