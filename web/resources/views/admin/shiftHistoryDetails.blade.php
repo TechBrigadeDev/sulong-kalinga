@@ -91,10 +91,19 @@
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-hover">
-                                    <thead>
+                                    <!-- <thead>
                                         <tr>
                                             <th style="width: 25%">{{ T::translate('Time', 'Oras')}}</th>
                                             <th style="width: 75%">{{ T::translate('Location', 'Lokasyon')}}</th>
+                                            
+                                        </tr>
+                                    </thead> -->
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 20%">{{ T::translate('Time', 'Oras')}}</th>
+                                            <th style="width: 40%">{{ T::translate('Location', 'Lokasyon')}}</th>
+                                            <th style="width: 20%">{{ T::translate('Event', 'Kaganapan')}}</th>
+                                            <th style="width: 20%">{{ T::translate('Visitation', 'Pagbisita')}}</th>
                                         </tr>
                                     </thead>
                                     <tbody id="history-table-body">
