@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Models\Notification;
 use App\Models\CareCategory;
 use App\Models\HealthHistory;
+use App\Models\Intervention; 
+use App\Models\InterventionTagalog; 
 use App\Models\WeeklyCarePlanInterventions;
 use Carbon\Carbon;
 
@@ -552,6 +554,38 @@ class FamilyPortalCarePlanController extends Controller
                     $interventionsByCategory[$categoryId]->push($intervention);
                 }
             }
+
+            // --- Language toggle logic ---
+            // Get the language toggle variable (adjust as needed for your app)
+            if ($userType === 'beneficiary') {
+                $useTagalog = \App\Models\LanguagePreference::where('user_type', 'beneficiary')
+                    ->where('user_id', $userId)
+                    ->exists();
+            } else {
+                $useTagalog = \App\Models\LanguagePreference::where('user_type', 'family_member')
+                    ->where('user_id', $userId)
+                    ->exists();
+            }
+
+            // Collect all standard interventions (with intervention_id)
+            $standardInterventions = $weeklyCareplan->interventions->whereNotNull('intervention_id');
+
+            // Get all intervention_ids used in this care plan
+            $interventionIds = $standardInterventions->pluck('intervention_id')->unique()->toArray();
+
+            // Fetch Tagalog interventions and map by intervention_id
+            $tagalogInterventions = InterventionTagalog::whereIn('t_intervention_id', $interventionIds)
+                ->get()
+                ->keyBy('t_intervention_id');
+
+            // Get all intervention_ids used in this care plan
+            $interventionIds = $standardInterventions->pluck('intervention_id')->unique()->toArray();
+
+            // Fetch Tagalog interventions and map by intervention_id
+            $tagalogInterventions = InterventionTagalog::whereIn('t_intervention_id', $interventionIds)
+                ->get()
+                ->keyBy('t_intervention_id');
+
             
             // Get custom interventions (without intervention_id)
             $customInterventions = $weeklyCareplan->interventions
@@ -569,7 +603,9 @@ class FamilyPortalCarePlanController extends Controller
                 'categories' => $categories,
                 'interventionsByCategory' => $interventionsByCategory,
                 'customInterventions' => $customInterventions,
-                'userId' => $userId
+                'userId' => $userId,
+                'tagalogInterventions' => $tagalogInterventions,
+                'useTagalog' => $useTagalog
             ]);
         } catch (\Exception $e) {
             Log::error('Error viewing weekly care plan: ' . $e->getMessage());
