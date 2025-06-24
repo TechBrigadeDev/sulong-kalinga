@@ -66,9 +66,40 @@ class PasswordResetController extends Controller
             'email' => $email,
             'type' => $userType
         ]);
-        
-        Mail::to($email)->send(new PasswordResetMail($resetUrl, $user));
-        
+
+        // Render the email HTML using your Blade view
+        $htmlContent = view('emails.password-reset', [
+            'resetUrl' => $resetUrl,
+            'user' => $user
+        ])->render();
+
+        // Send email via Brevo API
+        $response = Http::withHeaders([
+            'accept' => 'application/json',
+            'api-key' => env('BREVO_API_KEY'),
+            'content-type' => 'application/json',
+        ])->post('https://api.brevo.com/v3/smtp/email', [
+            'sender' => [
+                'name' => 'COSE MHCS',
+                'email' => 'noreply@cosemhcs.org.ph',
+            ],
+            'to' => [
+                [
+                    'email' => $email,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                ]
+            ],
+            'subject' => 'Reset Your Password',
+            'htmlContent' => $htmlContent,
+        ]);
+
+        // Optionally, handle errors
+        if (!$response->successful()) {
+            // Log or handle the error as needed
+            return redirect()->back()
+                ->withErrors(['email' => 'Failed to send password reset email. Please try again later.']);
+        }
+
         $userName = $user->first_name . ' ' . $user->last_name;
         $this->logService->createLog(
             $userType === 'cose' ? 'user' : 'family_member',
