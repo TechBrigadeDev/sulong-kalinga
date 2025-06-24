@@ -224,7 +224,7 @@ class RecordsManagementApiController extends Controller
             'photo' => 'sometimes|nullable|image|max:4096',
             // Vital signs
             'blood_pressure' => 'sometimes|required|string|regex:/^\d{2,3}\/\d{2,3}$/',
-            'body_temperature' => 'sometimes|required|numeric|between:35,42',
+            'body_temperature' => 'sometimes|required|numeric|between:29,42',
             'pulse_rate' => 'sometimes|required|integer|between:40,200',
             'respiratory_rate' => 'sometimes|required|integer|between:8,40',
             // Interventions
