@@ -40,7 +40,7 @@ class WeeklyCarePlanApiController extends Controller
             'beneficiary_id' => 'required|exists:beneficiaries,beneficiary_id',
             'assessment' => 'required|string|min:20|max:5000',
             'blood_pressure' => 'required|string|regex:/^\d{2,3}\/\d{2,3}$/',
-            'body_temperature' => 'required|numeric|between:35,42',
+            'body_temperature' => 'required|numeric|between:29,42',
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
             'evaluation_recommendations' => 'required|string|min:20|max:5000',
@@ -66,7 +66,7 @@ class WeeklyCarePlanApiController extends Controller
             'blood_pressure.regex' => 'Blood pressure must be in format 120/80',
 
             'body_temperature.required' => 'Body temperature is required',
-            'body_temperature.between' => 'Body temperature must be between 35°C and 42°C',
+            'body_temperature.between' => 'Body temperature must be between 29°C and 42°C',
 
             'pulse_rate.required' => 'Pulse rate is required',
             'pulse_rate.between' => 'Pulse rate must be between 40 and 200',
@@ -139,15 +139,15 @@ class WeeklyCarePlanApiController extends Controller
             $firstName = $beneficiary ? $beneficiary->first_name : 'unknown';
             $lastName = $beneficiary ? $beneficiary->last_name : 'unknown';
             $uniqueIdentifier = time() . '_' . \Illuminate\Support\Str::random(5);
-            $photoPath = "testing";
-            // $photoPath = $this->uploadService->upload(
-            //     $request->file('photo'),
-            //     'spaces-private',
-            //     'uploads/weekly_care_plan_photos',
-            //     [
-            //         'filename' => $firstName . '_' . $lastName . '_weeklycare_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
-            //     ]
-            // );
+            // $photoPath = "testing";
+            $photoPath = $this->uploadService->upload(
+                $request->file('photo'),
+                'spaces-private',
+                'uploads/weekly_care_plan_photos',
+                [
+                    'filename' => $firstName . '_' . $lastName . '_weeklycare_' . $uniqueIdentifier . '.' . $request->file('photo')->getClientOriginalExtension()
+                ]
+            );
 
             // 4. Save Weekly Care Plan
             $wcp = WeeklyCarePlan::create([
