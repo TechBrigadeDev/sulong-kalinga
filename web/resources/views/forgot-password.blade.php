@@ -70,7 +70,11 @@
                         {{ session('status') }}
                     </div>
                 @endif
-                
+
+                <div class="alert alert-info mb-3" style="font-size: 0.95rem;">
+                    <strong>Note for Beneficiaries:</strong> Please contact your care worker or COSE staff to reset your password.
+                </div>
+                            
                 <form action="{{ route('password.email') }}" method="POST">
                     @csrf
                     <div class="mb-3">
