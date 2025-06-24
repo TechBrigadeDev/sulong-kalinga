@@ -292,6 +292,19 @@
                                                 <i class="bi bi-eye-slash"></i>
                                             </span>
                                         </div>
+                                        <!-- Password Strength Meter & Checklist -->
+                                        <div id="password-strength-container" style="display:none; margin-top:10px;">
+                                            <div id="password-strength-label" style="font-size:13px; font-weight:bold; margin-bottom:4px;"></div>
+                                            <div id="password-strength-meter" style="height:8px; border-radius:4px; background:#e9ecef; margin-bottom:8px;">
+                                                <div id="password-strength-bar" style="height:100%; width:0%; background:#dc3545; border-radius:4px; transition:width 0.3s;"></div>
+                                            </div>
+                                            <ul id="password-checklist" style="list-style:none; padding-left:0; font-size:13px;">
+                                                <li id="pw-length" style="color:#dc3545;">&#10007; At least 8 characters</li>
+                                                <li id="pw-uppercase" style="color:#dc3545;">&#10007; At least one uppercase letter</li>
+                                                <li id="pw-lowercase" style="color:#dc3545;">&#10007; At least one lowercase letter</li>
+                                                <li id="pw-number" style="color:#dc3545;">&#10007; At least one number</li>
+                                                <li id="pw-special" style="color:#dc3545;">&#10007; At least one special character</li>                                            </ul>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label for="account_password_confirmation" class="form-label"><i class="bi bi-key-fill me-1"></i>{{ T::translate('Confirm Password', 'Kumpirmahin ang Password')}}</label>
@@ -301,6 +314,9 @@
                                                 <i class="bi bi-eye-slash"></i>
                                             </span>
                                         </div>
+                                        <ul id="password-checklist" style="list-style:none; padding-left:0; font-size:13px; margin-top:8px;">
+                                                <li id="pw-match" style="color:#dc3545;">&#10007; Passwords match</li>
+                                        </ul>
                                     </div>
                                     <div class="d-flex justify-content-end gap-2">
                                         <button type="button" class="btn btn-outline-secondary" id="cancelPasswordUpdateBtn">
@@ -427,6 +443,78 @@
                 }
             });
         });
+
+        // Password Meter & Checklist for Update Password
+        function checkPasswordStrength(password) {
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            return score;
+        }
+
+        function updatePasswordChecklist() {
+            const pw = document.getElementById('account_password').value;
+            const confirm = document.getElementById('account_password_confirmation').value;
+
+            // Show/hide meter
+            const meterContainer = document.getElementById('password-strength-container');
+            if (pw.length > 0 || confirm.length > 0) {
+                meterContainer.style.display = 'block';
+            } else {
+                meterContainer.style.display = 'none';
+            }
+
+            // Checklist
+            document.getElementById('pw-length').style.color = pw.length >= 8 ? '#198754' : '#dc3545';
+            document.getElementById('pw-length').innerHTML = (pw.length >= 8 ? '&#10003;' : '&#10007;') + ' At least 8 characters';
+
+            document.getElementById('pw-uppercase').style.color = /[A-Z]/.test(pw) ? '#198754' : '#dc3545';
+            document.getElementById('pw-uppercase').innerHTML = (/[A-Z]/.test(pw) ? '&#10003;' : '&#10007;') + ' At least one uppercase letter';
+
+            document.getElementById('pw-lowercase').style.color = /[a-z]/.test(pw) ? '#198754' : '#dc3545';
+            document.getElementById('pw-lowercase').innerHTML = (/[a-z]/.test(pw) ? '&#10003;' : '&#10007;') + ' At least one lowercase letter';
+
+            document.getElementById('pw-number').style.color = /[0-9]/.test(pw) ? '#198754' : '#dc3545';
+            document.getElementById('pw-number').innerHTML = (/[0-9]/.test(pw) ? '&#10003;' : '&#10007;') + ' At least one number';
+
+            document.getElementById('pw-special').style.color = /[^A-Za-z0-9]/.test(pw) ? '#198754' : '#dc3545';
+            document.getElementById('pw-special').innerHTML = (/[^A-Za-z0-9]/.test(pw) ? '&#10003;' : '&#10007;') + ' At least one special character';
+
+            const match = pw.length > 0 && pw === confirm;
+            document.getElementById('pw-match').style.color = match ? '#198754' : '#dc3545';
+            document.getElementById('pw-match').innerHTML = (match ? '&#10003;' : '&#10007;') + ' Passwords match';
+
+            // Meter
+            const score = checkPasswordStrength(pw);
+            const bar = document.getElementById('password-strength-bar');
+            bar.style.width = (score * 20) + '%';
+            if (score <= 2) {
+                bar.style.background = '#dc3545';
+            } else if (score === 3 || score === 4) {
+                bar.style.background = '#ffc107';
+            } else {
+                bar.style.background = '#198754';
+            }
+
+            const label = document.getElementById('password-strength-label');
+            if (score <= 2) {
+                label.textContent = 'Weak';
+                label.style.color = '#dc3545';
+            } else if (score === 3 || score === 4) {
+                label.textContent = 'Fair';
+                label.style.color = '#ffc107';
+            } else {
+                label.textContent = 'Strong';
+                label.style.color = '#198754';
+            }
+        }
+
+        document.getElementById('account_password').addEventListener('input', updatePasswordChecklist);
+        document.getElementById('account_password_confirmation').addEventListener('input', updatePasswordChecklist);
+
     </script>
 </body>
 </html>
