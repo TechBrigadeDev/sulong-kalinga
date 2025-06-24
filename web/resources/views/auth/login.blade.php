@@ -219,6 +219,7 @@
 <body>
 
     @include('components.navbar')
+    
 
     <div class="overlay">
         <div class="login-container">
