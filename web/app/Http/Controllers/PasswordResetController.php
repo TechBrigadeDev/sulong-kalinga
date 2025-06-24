@@ -18,10 +18,12 @@ use App\Enums\LogType;
 class PasswordResetController extends Controller
 {
     protected $logService;
+    protected $zohoTokenService;
 
-    public function __construct(LogService $logService)
+    public function __construct(LogService $logService, ZohoTokenService $zohoTokenService)
     {
         $this->logService = $logService;
+        $this->zohoTokenService = $zohoTokenService;
     }
 
     public function showForgotPasswordForm()
@@ -74,29 +76,30 @@ class PasswordResetController extends Controller
             'user' => $user
         ])->render();
 
-        // Send email via Brevo API
+        // Send email via ZeptoMail API
         $response = Http::withHeaders([
-            'accept' => 'application/json',
-            'api-key' => env('BREVO_API_KEY'),
-            'content-type' => 'application/json',
-        ])->post('https://api.brevo.com/v3/smtp/email', [
-            'sender' => [
-                'name' => 'COSE MHCS',
-                'email' => 'noreply@cosemhcs.org.ph',
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Zoho-enczapikey ' . env('ZEPTO_API_KEY'),
+        ])->post('https://api.zeptomail.com/v1.1/email', [
+            'from' => [
+                'address' => env('ZEPTO_FROM_ADDRESS'),
+                'name' => env('ZEPTO_FROM_NAME'),
             ],
             'to' => [
                 [
-                    'email' => $email,
-                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'email_address' => [
+                        'address' => $email,
+                        'name' => $user->first_name ?? 'User'
+                    ]
                 ]
             ],
             'subject' => 'Reset Your Password',
-            'htmlContent' => $htmlContent,
+            'htmlbody' => $htmlContent,
+            // Optional: 'track_opens' => true, 'track_clicks' => true,
         ]);
 
-        // Optionally, handle errors
         if (!$response->successful()) {
-            // Log or handle the error as needed
             return redirect()->back()
                 ->withErrors(['email' => 'Failed to send password reset email. Please try again later.']);
         }
