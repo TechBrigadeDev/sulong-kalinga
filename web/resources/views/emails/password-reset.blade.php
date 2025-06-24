@@ -24,8 +24,8 @@
         }
         .button {
             display: inline-block;
-            background-color: #0d6efd;
-            color: white;
+            border: 1px solid #0d6efd;
+            color: #0d6efd;
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 5px;
