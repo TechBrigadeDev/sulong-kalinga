@@ -49,7 +49,7 @@
         <p>Please click the button below to reset your password:</p>
         
         <div style="text-align: center;">
-            <a href="{{ $resetUrl }}" class="button">Reset Password</a>
+            <a href="{!! $resetUrl !!}" class="button">Reset Password</a>
         </div>
         
         <p>If you did not request a password reset, no further action is required.</p>
@@ -58,7 +58,7 @@
         
         <div class="footer">
             <p>If you're having trouble clicking the button, copy and paste the URL below into your web browser:</p>
-            <p>{{ $resetUrl }}</p>
+            <p>{!! $resetUrl !!}</p>
         </div>
     </div>
 </body>
