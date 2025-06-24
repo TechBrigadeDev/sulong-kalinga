@@ -132,14 +132,6 @@ class ReportController extends Controller {
             );
         }
 
-        log(
-            JSON.stringify(
-                validate.data,
-                null,
-                2,
-            ),
-            "\nWCP Record Data",
-        );
         return validate.data;
     }
 }

@@ -1,11 +1,14 @@
 import { useCarePlanForm } from "features/care-plan/form/form";
+import { useCarePlanFormStore } from "features/care-plan/form/store";
 import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
+import { useGetBeneficiary } from "features/user-management/management.hook";
 import { IBeneficiary } from "features/user-management/management.type";
 import { Info } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller } from "react-hook-form";
 import {
     Card,
+    H4,
     Input,
     Label,
     ScrollView,
@@ -105,11 +108,58 @@ export const PersonalDetails = ({
 };
 
 const Beneficiary = () => {
-    const { control } = useCarePlanForm();
+    const { record } = useCarePlanFormStore();
+
+    console.log(
+        "beneficiary record:",
+        record?.beneficiary,
+    );
+    const { data: currentBeneficiary } =
+        useGetBeneficiary(
+            record?.beneficiary?.beneficiary_id.toString(),
+        );
+
+    const { control, getValues } =
+        useCarePlanForm();
+
+    const currentBeneficiaryId = getValues(
+        "personalDetails.beneficiaryId",
+    );
+
+    // const defaultBeneficiary = useMemo(() => {
+    //     if (
+    //         currentBeneficiary?.beneficiary_id.toString() !==
+    //         currentBeneficiaryId
+    //     ) {
+    //         return null;
+    //     }
+
+    //     return currentBeneficiary;
+    // }, [
+    //     currentBeneficiary,
+    //     currentBeneficiaryId,
+    // ]);
+
     const [
         selectedBeneficiary,
         setSelectedBeneficiary,
     ] = useState<IBeneficiary | null>(null);
+
+    useEffect(() => {
+        if (
+            currentBeneficiary?.beneficiary_id.toString() ===
+            currentBeneficiaryId
+        ) {
+            setSelectedBeneficiary(
+                currentBeneficiary,
+            );
+        } else {
+            setSelectedBeneficiary(null);
+        }
+    }, [
+        currentBeneficiary,
+        currentBeneficiaryId,
+    ]);
 
     // get age from beneficiary.birthdate
     const age = selectedBeneficiary
@@ -119,11 +169,12 @@ const Beneficiary = () => {
           ).getFullYear()
         : "";
 
-    return (
-        <YStack gap="$1">
-            <Label htmlFor="beneficiary">
-                Select Beneficiary *
-            </Label>
+    const Input = () =>
+        record?.beneficiary ? (
+            <H4>
+                {record.beneficiary.full_name}
+            </H4>
+        ) : (
             <Controller
                 control={control}
                 name="personalDetails.beneficiaryId"
@@ -132,7 +183,13 @@ const Beneficiary = () => {
                     fieldState,
                 }) => (
                     <>
+                        <Label htmlFor="beneficiary">
+                            Select Beneficiary *
+                        </Label>
                         <SelectBeneficiary
+                            defaultValue={
+                                selectedBeneficiary
+                            }
                             onValueChange={(
                                 beneficiary,
                             ) => {
@@ -162,6 +219,10 @@ const Beneficiary = () => {
                     </>
                 )}
             />
+        );
+    return (
+        <YStack gap="$1">
+            <Input />
             {selectedBeneficiary && (
                 <YStack gap="$2" mt="$2">
                     <Text>Age: {age}</Text>
