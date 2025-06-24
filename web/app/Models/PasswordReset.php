@@ -9,7 +9,7 @@ class PasswordReset extends Model
 {
     use HasFactory;
     
-    const TOKEN_EXPIRY_HOURS = 24;
+    const TOKEN_EXPIRY_HOURS = 1;
     
     protected $table = 'password_resets';
     public $timestamps = false;

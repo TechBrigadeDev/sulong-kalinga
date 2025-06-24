@@ -53,9 +53,9 @@
         </div>
         
         <p>If you did not request a password reset, no further action is required.</p>
-        
-        <p>This password reset link will expire in 24 hours.</p>
-        
+
+        <p>This password reset link will expire in 1 hour.</p>
+
         <div class="footer">
             <p>If you're having trouble clicking the button, copy and paste the URL below into your web browser:</p>
             <p>{!! $resetUrl !!}</p>
