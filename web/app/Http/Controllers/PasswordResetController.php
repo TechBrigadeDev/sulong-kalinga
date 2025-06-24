@@ -18,12 +18,10 @@ use App\Enums\LogType;
 class PasswordResetController extends Controller
 {
     protected $logService;
-    protected $zohoTokenService;
 
-    public function __construct(LogService $logService, ZohoTokenService $zohoTokenService)
+    public function __construct(LogService $logService)
     {
         $this->logService = $logService;
-        $this->zohoTokenService = $zohoTokenService;
     }
 
     public function showForgotPasswordForm()
