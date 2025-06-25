@@ -1148,16 +1148,34 @@
 
                 const status = event.extendedProps.status?.toLowerCase() || '';
                 const isEditable = status !== 'completed' && status !== 'canceled';
-                
-                // Enable edit and delete buttons only if event is editable
-                // First check if can_edit property is true, then check if status allows editing
+
+                // Enable edit button only if editable as before
                 editButton.disabled = !event.extendedProps.can_edit || !isEditable;
-                deleteButton.disabled = !event.extendedProps.can_edit || !isEditable;
-                
+
+                // Determine if scheduled or completed
+                const isScheduled = status === 'scheduled';
+                const isCompleted = status === 'completed';
+                const isFuture = event.start && event.start > new Date();
+
+                // Cancel button logic
+                if (event.extendedProps.can_edit && (isScheduled || isCompleted)) {
+                    deleteButton.disabled = false;
+                    if (isScheduled && isFuture) {
+                        // Future scheduled appointment
+                        deleteButton.innerHTML = '<i class="bi bi-trash3"></i>{{ T::translate("Cancel Selected Appointment", "Kanselahin ang Napiling Appointment") }}';
+                    } else {
+                        // Past/present scheduled or completed appointment
+                        deleteButton.innerHTML = '<i class="bi bi-x-circle"></i>{{ T::translate("Mark as Canceled", "Markahan Bilang Kinansela") }}';
+                    }
+                } else {
+                    deleteButton.disabled = true;
+                    deleteButton.innerHTML = '<i class="bi bi-trash3"></i>{{ T::translate("Cancel Selected Appointment", "Kanselahin ang Napiling Appointment") }}';
+                }
+
                 // Add visual indicator if buttons are disabled due to status
                 if (!isEditable) {
-                    editButton.title = `{{ T::translate('Cannot edit', 'Hindi maaaring i-edit') }} ${status} {{ T::translate('appointments', 'mga appointment') }}`;
-                    deleteButton.title = `{{ T::translate('Cannot cancel', 'Hindi maaaring kanselahin') }} ${status} {{ T::translate('appointments', 'mga appointment') }}`;
+                    editButton.title = `Cannot edit ${status} appointments`;
+                    deleteButton.title = `Cannot cancel ${status} appointments`;
                 } else {
                     editButton.title = '';
                     deleteButton.title = '';
