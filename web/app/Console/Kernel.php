@@ -15,7 +15,9 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\GenerateVisitationOccurrences::class,
         Commands\SendAppointmentReminders::class, // Add the new command here
-        Commands\SendInternalAppointmentReminders::class
+        Commands\SendInternalAppointmentReminders::class,
+        Commands\SendMedicationReminders::class,
+        Commands\SendExactTimeMedicationReminders::class,
     ];
 
     /**
@@ -64,6 +66,12 @@ class Kernel extends ConsoleKernel
                  ->sundays()
                  ->at('02:00')
                  ->description('Optimize database tables');
+        
+        $schedule->command('medications:send-reminders morning')->dailyAt('07:00');  // 7 AM for morning meds
+        $schedule->command('medications:send-reminders noon')->dailyAt('11:30');     // 11:30 AM for noon meds
+        $schedule->command('medications:send-reminders evening')->dailyAt('17:00');  // 5 PM for evening meds
+        $schedule->command('medications:send-reminders night')->dailyAt('20:00');    // 8 PM for night meds
+        $schedule->command('medications:send-exact-reminders')->everyTwoMinutes();
     }
 
     /**
