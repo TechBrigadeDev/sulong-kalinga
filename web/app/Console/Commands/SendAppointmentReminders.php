@@ -195,30 +195,26 @@ class SendAppointmentReminders extends Command
                 ]);
             }
             
-            // Notify beneficiary if they have portal access
-            if ($beneficiary->portal_account_id) {
+            // Notify beneficiary
+            Notification::create([
+                'user_id' => $beneficiary->beneficiary_id,
+                'user_type' => 'beneficiary',
+                'message_title' => $title,
+                'message' => $message,
+                'date_created' => now(),
+                'is_read' => false
+            ]);
+
+            // Notify family members
+            foreach ($familyMembers as $familyMember) {
                 Notification::create([
-                    'user_id' => $beneficiary->beneficiary_id,
-                    'user_type' => 'beneficiary',
+                    'user_id' => $familyMember->family_member_id,
+                    'user_type' => 'family_member',
                     'message_title' => $title,
                     'message' => $message,
                     'date_created' => now(),
                     'is_read' => false
                 ]);
-            }
-            
-            // Notify family members
-            foreach ($familyMembers as $familyMember) {
-                if ($familyMember->portal_account_id) {
-                    Notification::create([
-                        'user_id' => $familyMember->family_member_id,
-                        'user_type' => 'family_member',
-                        'message_title' => $title,
-                        'message' => $message,
-                        'date_created' => now(),
-                        'is_read' => false
-                    ]);
-                }
             }
             
             $this->info("Sent reminder notifications for appointment between care worker {$careWorker->first_name} and beneficiary {$beneficiary->first_name} on {$dateFormatted}");
