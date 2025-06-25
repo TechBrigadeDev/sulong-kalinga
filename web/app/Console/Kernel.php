@@ -34,7 +34,7 @@ class Kernel extends ConsoleKernel
                  ->description('Generate upcoming visitation occurrences')
                  ->emailOutputOnFailure(env('ADMIN_EMAIL'));
         
-                 // Add this to your existing schedules
+        // Add this to your existing schedules
         $schedule->command('appointments:send-internal-reminders')
                 ->dailyAt('08:00')
                 ->withoutOverlapping();
