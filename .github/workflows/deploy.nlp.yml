@@ -1,0 +1,123 @@
+# .github/workflows/deploy.nlp.yml
+name: Deploy NLP Services
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to deploy (calamancy-api, libretranslate, or both)"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - calamancy-api
+          - libretranslate
+          - both
+      environment:
+        description: "Deployment environment (test, prod)"
+        required: true
+        default: "test"
+        type: choice
+        options:
+          - test
+          - prod
+  push:
+    branches:
+      - test
+      - main
+    paths:
+      - 'calamancy-api/**'
+      - 'libretranslate/**'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      calamancy-changed: ${{ steps.changes.outputs.calamancy }}
+      libretranslate-changed: ${{ steps.changes.outputs.libretranslate }}
+      deploy-environment: ${{ steps.env.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed services
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ github.event.inputs.service }}" in
+              "calamancy-api")
+                echo "calamancy=true" >> $GITHUB_OUTPUT
+                echo "libretranslate=false" >> $GITHUB_OUTPUT
+                ;;
+              "libretranslate")
+                echo "calamancy=false" >> $GITHUB_OUTPUT
+                echo "libretranslate=true" >> $GITHUB_OUTPUT
+                ;;
+              "both")
+                echo "calamancy=true" >> $GITHUB_OUTPUT
+                echo "libretranslate=true" >> $GITHUB_OUTPUT
+                ;;
+            esac
+          else
+            # Check for changes in push events
+            if git diff --name-only HEAD~1 HEAD | grep -q "^calamancy-api/"; then
+              echo "calamancy=true" >> $GITHUB_OUTPUT
+            else
+              echo "calamancy=false" >> $GITHUB_OUTPUT
+            fi
+            
+            if git diff --name-only HEAD~1 HEAD | grep -q "^libretranslate/"; then
+              echo "libretranslate=true" >> $GITHUB_OUTPUT
+            else
+              echo "libretranslate=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          else
+            echo "environment=test" >> $GITHUB_OUTPUT
+          fi
+
+  deploy-calamancy:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.calamancy-changed == 'true'
+    uses: ./.github/workflows/deploy.nlp.service.yml
+    with:
+      service: calamancy-api
+      environment: ${{ needs.detect-changes.outputs.deploy-environment }}
+      image_tag: ${{ github.sha }}
+      port: 5000
+    secrets:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      DISCORD_PIPELINE_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
+      CONTAINER_PASSWORD: ${{ secrets.NLP_CONTAINER_PASSWORD }}
+      DEPLOY_HOST: ${{ secrets.NLP_HOST }}
+      CALAMANCY_ENVARS: ${{ secrets.CALAMANCY_ENVARS }}
+
+  deploy-libretranslate:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.libretranslate-changed == 'true'
+    uses: ./.github/workflows/deploy.nlp.service.yml
+    with:
+      service: libretranslate
+      environment: ${{ needs.detect-changes.outputs.deploy-environment }}
+      image_tag: ${{ github.sha }}
+      port: 5051
+    secrets:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      DISCORD_PIPELINE_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
+      CONTAINER_PASSWORD: ${{ secrets.NLP_CONTAINER_PASSWORD }}
+      DEPLOY_HOST: ${{ secrets.NLP_HOST }}
+      LIBRETRANSLATE_ENVARS: ${{ secrets.LIBRETRANSLATE_ENVARS }}
