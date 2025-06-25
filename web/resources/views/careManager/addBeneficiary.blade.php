@@ -57,6 +57,12 @@
                                         required >
                             </div>
                             <div class="col-md-3 relative">
+                                <label for="middleName" class="form-label">{{ T::translate('Middle Name', 'Gitnang Pangalan')}}</label>
+                                <input type="text" class="form-control" id="middleName" name="middle_name" 
+                                        value="{{ old('middle_name') }}"
+                                        placeholder="{{ T::translate('Enter middle name', 'Ilagay ang Gitnang Pangalan')}}">
+                            </div>
+                            <div class="col-md-3 relative">
                                 <label for="lastName" class="form-label">{{ T::translate('Last Name', 'Apelyido')}}<label style="color:red;"> * </label></label>
                                 <input type="text" class="form-control" id="lastName" name="last_name" 
                                         value="{{ old('last_name') }}"
