@@ -126,8 +126,8 @@ jobs:
           sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh \
             -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<'EOF'
             export DEBIAN_FRONTEND=noninteractive
-            sudo apt-get update -y
-            sudo apt-get install --no-install-recommends -y docker.io
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
           EOF
 
       - name: Parse environment variables for calamancy-api
