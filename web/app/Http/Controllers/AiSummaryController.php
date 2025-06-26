@@ -67,6 +67,7 @@ class AiSummaryController extends Controller
 
         try {
             // Fix the URL by ensuring we're targeting the /summarize endpoint
+            // Latest fix in calamancy api url is using nlp_host variable link after latest successful deploy @ June 27 2025 7:13AM
             $baseUrl = env('CALAMANCY_API_URL', 'http://calamancy-api:5000');
             $apiUrl = rtrim($baseUrl, '/') . '/summarize'; 
             \Log::info("Calling CalamanCy API at: " . $apiUrl);
