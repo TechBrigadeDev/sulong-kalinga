@@ -1,5 +1,6 @@
 .home-section .container-fluid {
   height: calc(100% - 50px);
+  padding: 0 !important;
 }
 
 .text-left {
@@ -19,6 +20,7 @@
   width: calc(100% - 310px);
   transition: all 0.5s ease;
   overflow-x: hidden;
+  z-index: 1; /* Add this line */
 }
 
 .home-section .home-content .bx-menu,

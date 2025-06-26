@@ -97,9 +97,8 @@ function RootLayoutNav() {
                         <Stack.Screen
                             name="scheduling"
                             options={{
-                                title: "Scheduling",
-                                headerTitle:
-                                    "Scheduling",
+                                headerShown:
+                                    false,
                             }}
                         />
                     </Stack.Protected>

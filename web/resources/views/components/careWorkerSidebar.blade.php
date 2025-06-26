@@ -87,7 +87,7 @@ use App\Helpers\TranslationHelper as T;
       <ul class="sub-menu">
         <li><a class="link_name">{{ T::translate('Location Tracking', 'Pagsubaybay sa Lokasyon')}}</a></li>
         <li>
-          <a href="{{ route('care-worker.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-worker.beneficiary-map') }}'; return false;" @endif>
+          <a href="{{ route('care-worker.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-worker.beneficiary.map.index') }}'; return false;" @endif>
             {{ T::translate('Beneficiary Map', 'Mapa ng Benepisyaryo')}}
           </a>
         </li>

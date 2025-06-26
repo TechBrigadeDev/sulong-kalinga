@@ -52,6 +52,7 @@ export const wcpRecordsResponseSchema = z.object({
 });
 
 const wcpBeneficiarySchema = z.object({
+    beneficiary_id: z.number(),
     full_name: z.string(),
     address: z.string(),
     medical_conditions: z.string().nullable(),
@@ -82,16 +83,13 @@ export const wcpRecordSchema = z.object({
     interventions: z.array(
         z.object({
             wcp_intervention_id: z.number(),
-            weekly_care_plan_id: z.number(),
             intervention_id: z
                 .number()
                 .nullable(),
             care_category_id: z
                 .number()
                 .nullable(),
-            intervention_description: z
-                .string()
-                .nullable(),
+            description: z.string().nullable(),
             duration_minutes: z.string(),
             implemented: z.boolean(),
         }),

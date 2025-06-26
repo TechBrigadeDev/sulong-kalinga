@@ -72,8 +72,6 @@
                                             <th scope="col">{{ T::translate('Care Worker', 'Tagapag-alaga')}}</th>
                                             <th scope="col">{{ T::translate('Date', 'Petsa')}}</th>
                                             <th scope="col">{{ T::translate('Shift Time', 'Oras ng Shift')}}</th>
-                                            <th scope="col">{{ T::translate('Municipality', 'Munisipalidad')}}</th>
-                                            <th scope="col">Status</th>
                                             <th scope="col" class="text-center">{{ T::translate('Actions', 'Aksyon')}}</th>
                                         </tr>
                                     </thead>
@@ -97,7 +95,7 @@
                                                         <a href="{{ route('admin.shift.histories.shiftDetails', ['shiftId' => $shift->id]) }}">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        <a href="#" title="Download Report">
+                                                        <a href="{{ route('admin.shift.histories.exportPdf', ['shiftId' => $shift->id]) }}" title="Download Report" target="_blank">
                                                             <i class="bi bi-download"></i>
                                                         </a>
                                                     </div>
@@ -114,7 +112,7 @@
                             
                             @if($shifts->hasPages())
                                 <nav aria-label="Page navigation" class="mt-4">
-                                    {{ $shifts->withQueryString()->links() }}
+                                    {{ $shifts->withQueryString()->links('pagination::bootstrap-5') }}
                                 </nav>
                             @endif
                         </div>

@@ -12,7 +12,7 @@ class CreatePasswordResetsTable extends Migration
             $table->id();
             $table->string('email')->index();
             $table->string('token');
-            $table->enum('user_type', ['cose', 'portal']);
+            $table->enum('user_type', ['cose', 'family']);
             $table->timestamp('created_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('used_at')->nullable();

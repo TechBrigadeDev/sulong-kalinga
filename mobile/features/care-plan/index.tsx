@@ -117,6 +117,78 @@ class CarePlanController extends Controller {
             throw error;
         }
     }
+
+    async patchCarePlan(
+        id: string,
+        data: CarePlanFormData,
+    ) {
+        if (!id) {
+            throw new Error(
+                "ID is required to patch a care plan",
+            );
+        }
+
+        try {
+            const apiData =
+                await mapCarePlanFormToApiData(
+                    data,
+                );
+
+            const response = await this.api.patch(
+                `/weekly-care-plans/${id}`,
+                apiData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data",
+                    },
+                },
+            );
+
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.response?.status) {
+                    case HttpStatusCode.Forbidden:
+                        showToastable({
+                            message:
+                                error.response
+                                    .data
+                                    .message ||
+                                "You are not authorized to perform this action.",
+                            status: "danger",
+                            duration: 4000,
+                        });
+                        break;
+                    case HttpStatusCode.NotFound:
+                        console.log(
+                            "Care plan not found:",
+                            error.response?.data,
+                        );
+                        showToastable({
+                            message:
+                                "Care plan not found.",
+                            status: "danger",
+                            duration: 4000,
+                        });
+                        return;
+                    default:
+                        toastServerError({
+                            data: JSON.stringify(
+                                data,
+                                null,
+                                2,
+                            ),
+                            error: error.response
+                                ?.data,
+                            status: error.response
+                                ?.status,
+                        });
+                }
+                return;
+            }
+        }
+    }
 }
 
 export const carePlanController =

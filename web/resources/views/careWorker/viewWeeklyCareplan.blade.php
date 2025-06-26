@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewWeeklyCareplan.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
@@ -293,7 +294,11 @@
                                         <div class="intervention-item">
                                             <span>
                                                 <i class="bi bi-check-circle-fill icon-secondary" style="font-size: 0.8rem;"></i>
-                                                {{ $intervention->intervention_description }}
+                                                @if(!empty($useTagalog) && $useTagalog && isset($tagalogInterventions[$intervention->intervention_id]))
+                                                    {{ $tagalogInterventions[$intervention->intervention_id]->t_intervention_description }}
+                                                @else
+                                                    {{ $intervention->intervention_description }}
+                                                @endif
                                             </span>
                                             <span class="time-badge">
                                                 <i class="bi bi-clock-history"></i>

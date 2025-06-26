@@ -242,9 +242,11 @@
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
                                         <div class="beneficiary-card card h-100">
                                             <div class="d-flex justify-content-center align-items-center p-3" style="height: 120px;">
-                                            <img src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" alt="Profile Photo">
-                                                    class="beneficiary-img img-fluid" 
-                                                    alt="{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}">
+                                            <img 
+                                                src="{{ $photoUrl ?? asset('images/defaultProfile.png') }}" 
+                                                class="beneficiary-img img-fluid" 
+                                                alt="{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}"
+                                            >
                                             </div>
                                             <div class="card-body text-center p-3">
                                                 <h6 class="card-title mb-0">{{ $beneficiary->first_name }} {{ $beneficiary->last_name }}</h6>

@@ -56,6 +56,8 @@ class AiSummaryController extends Controller
 
     public function summarize(Request $request)
     {
+        set_time_limit(90);
+
         $request->validate([
             'text' => 'required|string',
             'type' => 'required|in:assessment,evaluation',
@@ -314,23 +316,31 @@ class AiSummaryController extends Controller
                 }
             }
 
+            // Detect gender from original Tagalog sections
+            $gender = $this->detectMainSubjectGender($request->sections);
+
+            // Harmonize pronouns in each translated section
+            foreach ($translatedSections as $key => $translatedText) {
+                $translatedSections[$key] = $this->harmonizePronouns($translatedText, $gender);
+            }
+
             // Save to database
             $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
             
             if ($request->type === 'assessment') {
                 $carePlan->assessment_translation_sections = $translatedSections;
-                // Also save the combined text for compatibility
-                $carePlan->assessment_translation_draft = implode("\n\n", array_values($translatedSections));
+                // Save only the executive summary translation as the draft
+                $carePlan->assessment_translation_draft = $translatedSections['full_summary'] ?? '';
             } else {
                 $carePlan->evaluation_translation_sections = $translatedSections;
-                $carePlan->evaluation_translation_draft = implode("\n\n", array_values($translatedSections));
+                $carePlan->evaluation_translation_draft = $translatedSections['full_summary'] ?? '';
             }
             
             $carePlan->save();
 
             return response()->json([
                 'translatedSections' => $translatedSections,
-                'translatedText' => implode("\n\n", array_values($translatedSections))
+                'translatedText' => $translatedSections['full_summary'] ?? ''
             ]);
         } catch (\Exception $e) {
             \Log::error("Translation error: " . $e->getMessage());
@@ -415,6 +425,65 @@ class AiSummaryController extends Controller
             $text = preg_replace('/\b' . preg_quote($incorrect, '/') . '\b/i', $correct, $text);
         }
         
+        return $text;
+    }
+
+    private function detectMainSubjectGender($sections)
+    {
+        $text = implode(' ', $sections);
+        $text = strtolower($text);
+
+        // Add more as needed
+        $female_terms = ['lola', 'nanay', 'ginang', 'ate', 'mrs.', 'ms.'];
+        $male_terms = ['lolo', 'tatay', 'ginoong', 'kuya', 'mr.'];
+
+        foreach ($female_terms as $term) {
+            if (strpos($text, $term) !== false) {
+                return 'female';
+            }
+        }
+        foreach ($male_terms as $term) {
+            if (strpos($text, $term) !== false) {
+                return 'male';
+            }
+        }
+        // Default to neutral if not found
+        return 'neutral';
+    }
+
+    private function harmonizePronouns($text, $gender)
+    {
+        if ($gender === 'female') {
+            // Replace with more consistent patterns
+            $patterns = [
+                '/\bHe\b/i' => 'She',
+                '/\bhe\b/i' => 'she',
+                '/\bHis\b/i' => 'Her',
+                '/\bhis\b/i' => 'her',
+                '/\bHim\b/i' => 'Her',
+                '/\bhim\b/i' => 'her',
+                '/\bFather\b/i' => 'Mother', // Add name replacements
+                '/\bDad\b/i' => 'Mom',
+                '/\bgrandfather\b/i' => 'grandmother',
+            ];
+        } elseif ($gender === 'male') {
+            $patterns = [
+                '/\bShe\b/i' => 'He',
+                '/\bshe\b/i' => 'he',
+                '/\bHer\b/i' => 'His',
+                '/\bher\b/i' => 'his',
+                '/\bMother\b/i' => 'Father', // Add name replacements
+                '/\bMom\b/i' => 'Dad',
+                '/\bgrandmother\b/i' => 'grandfather',
+            ];
+        } else {
+            $patterns = [];
+        }
+
+        // Apply all replacements
+        foreach ($patterns as $pattern => $replacement) {
+            $text = preg_replace($pattern, $replacement, $text);
+        }
         return $text;
     }
 

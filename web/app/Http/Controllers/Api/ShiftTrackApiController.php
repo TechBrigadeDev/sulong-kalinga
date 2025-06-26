@@ -6,9 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Shift;
 use App\Models\ShiftTrack;
+use App\Services\NotificationService;
+use App\Models\VisitationOccurrence;
 
 class ShiftTrackApiController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Get all arrival/departure shift tracks for a specific shift.
      */
@@ -33,8 +42,11 @@ class ShiftTrackApiController extends Controller
     {
         $visitation = \App\Models\Visitation::findOrFail($request->visitation_id);
 
-        // Do not allow event if visitation is already completed
-        if ($visitation->status === 'completed') {
+        // Do not allow event if visitation is already completed (for non-recurring only)
+        // For recurring, allow as long as the occurrence is not completed
+        $hasRecurring = \App\Models\RecurringPattern::where('visitation_id', $visitation->visitation_id)->exists();
+
+        if (!$hasRecurring && $visitation->status === 'completed') {
             return response()->json([
                 'message' => 'Cannot log event for a visitation that is already completed.'
             ], 422);
@@ -60,9 +72,15 @@ class ShiftTrackApiController extends Controller
             return response()->json(['message' => 'Care worker does not match shift.'], 422);
         }
 
-        if ($visitation->visitation_date->format('Y-m-d') !== date('Y-m-d', strtotime($request->recorded_at))) {
+        // Always check occurrence, not parent visitation date
+        $occurrenceDate = date('Y-m-d', strtotime($request->recorded_at));
+        $occurrence = VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+            ->where('occurrence_date', $occurrenceDate)
+            ->first();
+
+        if (!$occurrence) {
             return response()->json([
-                'message' => 'Arrival/departure date does not match visitation date.'
+                'message' => 'No visitation occurrence found for this date.'
             ], 422);
         }
 
@@ -151,11 +169,41 @@ class ShiftTrackApiController extends Controller
             'synced' => true,
         ]);
 
-        // If departed, mark visitation as completed
+        // If departed, mark occurrence as completed, and parent only if not recurring
         if ($request->arrival_status === 'departed') {
-            $visitation->status = 'completed';
-            $visitation->save();
+            $occurrence->status = 'completed';
+            $occurrence->save();
+
+            if (!$hasRecurring) {
+                // Non-recurring: mark parent as completed
+                $visitation->status = 'completed';
+                $visitation->save();
+            } else {
+                // Recurring: check if all occurrences are completed or recurrence has ended
+                $remaining = \App\Models\VisitationOccurrence::where('visitation_id', $visitation->visitation_id)
+                    ->where('status', 'scheduled')
+                    ->count();
+
+                $recurringPattern = \App\Models\RecurringPattern::where('visitation_id', $visitation->visitation_id)->first();
+                $recurrenceEnd = $recurringPattern ? $recurringPattern->recurrence_end : null;
+                $today = now()->toDateString();
+
+                if ($remaining === 0 || ($recurrenceEnd && $today > $recurrenceEnd)) {
+                    $visitation->status = 'completed';
+                    $visitation->save();
+                }
+            }
         }
+
+        // --- Notify all care managers ---
+        $careWorkerName = $shift->careWorker->first_name . ' ' . $shift->careWorker->last_name;
+        $beneficiaryName = $visitation->beneficiary ? ($visitation->beneficiary->first_name . ' ' . $visitation->beneficiary->last_name) : '';
+        $statusText = ucfirst($request->arrival_status);
+
+        $title = "Care Worker {$statusText} at Visitation";
+        $message = "Care worker {$careWorkerName} has {$statusText} for beneficiary {$beneficiaryName}.";
+
+        $this->notificationService->notifyAllCareManagers($title, $message);
 
         return response()->json($track, 201);
     }

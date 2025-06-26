@@ -46,7 +46,7 @@ class RecordsManagementApiController extends Controller
         }
 
         $perPage = $request->input('per_page', 15);
-        $plans = $query->orderBy('date', 'desc')->paginate($perPage);
+        $plans = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -160,6 +160,7 @@ class RecordsManagementApiController extends Controller
                 'id' => $plan->weekly_care_plan_id,
                 'date' => $plan->date,
                 'beneficiary' => [
+                    'beneficiary_id' => $plan->beneficiary_id,
                     'full_name' => $beneficiaryFullName,
                     'address' => $address,
                     'medical_conditions' => $medicalConditions,
@@ -171,7 +172,28 @@ class RecordsManagementApiController extends Controller
                 'evaluation_recommendations' => $plan->evaluation_recommendations,
                 'illnesses' => $plan->illnesses ? json_decode($plan->illnesses) : [],
                 'vital_signs' => $plan->vitalSigns,
-                'interventions' => $plan->interventions,
+                'interventions' => $plan->interventions->map(function ($intervention) {
+                    // Try to get from the record, fallback to relation if missing
+                    $careCategoryId = $intervention->care_category_id;
+                    $description = $intervention->intervention_description;
+
+                    // If missing, get from related Intervention model
+                    if (!$careCategoryId && $intervention->intervention) {
+                        $careCategoryId = $intervention->intervention->care_category_id;
+                    }
+                    if (!$description && $intervention->intervention) {
+                        $description = $intervention->intervention->intervention_description;
+                    }
+
+                    return [
+                        'wcp_intervention_id' => $intervention->wcp_intervention_id,
+                        'intervention_id' => $intervention->intervention_id,
+                        'care_category_id' => $careCategoryId,
+                        'description' => $description,
+                        'duration_minutes' => $intervention->duration_minutes,
+                        'implemented' => $intervention->implemented,
+                    ];
+                }),
                 'photo_url' => $plan->photo_path
                     ? $this->uploadService->getTemporaryPrivateUrl($plan->photo_path, 30)
                     : null,
@@ -202,7 +224,7 @@ class RecordsManagementApiController extends Controller
             'photo' => 'sometimes|nullable|image|max:4096',
             // Vital signs
             'blood_pressure' => 'sometimes|required|string|regex:/^\d{2,3}\/\d{2,3}$/',
-            'body_temperature' => 'sometimes|required|numeric|between:35,42',
+            'body_temperature' => 'sometimes|required|numeric|between:29,42',
             'pulse_rate' => 'sometimes|required|integer|between:40,200',
             'respiratory_rate' => 'sometimes|required|integer|between:8,40',
             // Interventions
@@ -266,10 +288,14 @@ class RecordsManagementApiController extends Controller
                 // Remove old interventions
                 WeeklyCarePlanInterventions::where('weekly_care_plan_id', $plan->weekly_care_plan_id)->delete();
                 foreach ($request->selected_interventions as $idx => $interventionId) {
+                    $intervention = \App\Models\Intervention::find($interventionId);
                     WeeklyCarePlanInterventions::create([
                         'weekly_care_plan_id' => $plan->weekly_care_plan_id,
                         'intervention_id' => $interventionId,
+                        'care_category_id' => $intervention ? $intervention->care_category_id : null,
+                        'intervention_description' => $intervention ? $intervention->intervention_description : null,
                         'duration_minutes' => $request->duration_minutes[$idx] ?? null,
+                        'implemented' => true,
                     ]);
                 }
             }
@@ -344,6 +370,14 @@ class RecordsManagementApiController extends Controller
                 $user->id,
                 'Weekly Care Plan Updated',
                 'Your weekly care plan update was successful.'
+            );
+
+            // Notify all care managers
+            $this->notificationService->notifyAllCareManagers(
+                'Weekly Care Plan Updated',
+                $beneficiaryName
+                    ? "A weekly care plan for {$beneficiaryName} was updated."
+                    : "A weekly care plan was updated."
             );
 
             return response()->json([

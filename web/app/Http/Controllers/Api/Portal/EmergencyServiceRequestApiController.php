@@ -238,6 +238,11 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
+        $this->notificationService->notifyAllCareManagers(
+            'New Service Request Submitted',
+            "{$beneficiaryName} has submitted a new service request."
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Service request submitted.',
@@ -349,6 +354,11 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
+        $this->notificationService->notifyAllCareManagers(
+            'Service Request Updated',
+            "{$beneficiaryName} has updated a service request."
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Service request updated.',
@@ -454,6 +464,12 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
+        // Notify all care managers
+        $this->notificationService->notifyAllCareManagers(
+            'New Emergency Notice Submitted',
+            "{$beneficiaryName} has submitted a new emergency notice."
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Emergency notice submitted.',
@@ -498,6 +514,11 @@ class EmergencyServiceRequestApiController extends Controller
         );
 
         $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        $this->notificationService->notifyAllCareManagers(
+            'Emergency Notice Updated',
+            "{$beneficiaryName} has updated an emergency notice."
+        );
 
         // Notify assigned care worker and care manager
         if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
@@ -597,6 +618,11 @@ class EmergencyServiceRequestApiController extends Controller
 
         $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
 
+        $this->notificationService->notifyAllCareManagers(
+            'Emergency Notice Deleted',
+            "{$beneficiaryName} has deleted an emergency notice."
+        );
+
         // Notify assigned care worker and care manager
         if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
             $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
@@ -692,6 +718,11 @@ class EmergencyServiceRequestApiController extends Controller
         );
 
         $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
+
+        $this->notificationService->notifyAllCareManagers(
+            'Service Request Deleted',
+            "{$beneficiaryName} has deleted a service request."
+        );
 
         // Notify assigned care worker and care manager
         if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
@@ -830,6 +861,12 @@ class EmergencyServiceRequestApiController extends Controller
                 );
             }
         }
+
+        // Notify all care managers
+        $this->notificationService->notifyAllCareManagers(
+            $notificationTitle,
+            "{$notificationMessage} for {$beneficiaryName} was cancelled."
+        );
 
         // Notify the actor and all related parties
         if ($user->role_id == 4) {

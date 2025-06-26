@@ -1,0 +1,221 @@
+# .github/workflows/deploy.nlp.service.yml
+name: Deploy NLP Service
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        description: "Service name (calamancy-api or libretranslate)"
+        required: true
+        type: string
+      environment:
+        description: "Deployment environment (test, prod)"
+        required: true
+        type: string
+      image_tag:
+        description: "Docker image tag to deploy"
+        required: true
+        type: string
+      port:
+        description: "Port to expose the service on"
+        required: true
+        type: string
+    secrets:
+      DISCORD_BOT_TOKEN:
+        required: true
+        description: "Discord bot token for notifications"
+      DISCORD_PIPELINE_CHANNEL_ID:
+        required: true
+        description: "Discord channel ID for pipeline notifications"
+      DOCR_USERNAME:
+        required: true
+        description: "DigitalOcean Container Registry username"
+      DOCR_TOKEN:
+        required: true
+        description: "DigitalOcean Container Registry token"
+      CONTAINER_PASSWORD:
+        required: true
+        description: "Password for the NLP deployment server"
+      DEPLOY_HOST:
+        required: true
+        description: "Host for NLP deployment"
+      CALAMANCY_ENVARS:
+        required: false
+        description: "Environment variables for calamancy-api"
+      LIBRETRANSLATE_ENVARS:
+        required: false
+        description: "Environment variables for libretranslate"
+
+jobs:
+  build:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      API_URL: https://discord.com/api/v10/channels
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
+      DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
+      DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
+    steps:
+      - name: Notify Discord – Build Started
+        if: always()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🚀 Build started for **${{ inputs.service }}** (#${{ github.run_number }}) - ${{ inputs.environment }}\"}"
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to DOCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.DOCR_REGISTRY }}
+          username: ${{ secrets.DOCR_USERNAME }}
+          password: ${{ secrets.DOCR_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-${{ inputs.service }}:${{ inputs.image_tag }}
+          docker build -f ${{ inputs.service }}/Dockerfile -t "$IMAGE" ${{ inputs.service }}
+          docker push "$IMAGE"
+
+      - name: Notify Discord – Build Succeeded
+        if: success()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"✅ Build succeeded for **${{ inputs.service }}** (#${{ github.run_number }}) - ${{ inputs.environment }}\"}"
+
+      - name: Notify Discord – Build Failed
+        if: failure()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"❌ Build failed for **${{ inputs.service }}** (#${{ github.run_number }}) - ${{ inputs.environment }}\"}"
+
+  deploy:
+    needs: build
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      API_URL: https://discord.com/api/v10/channels
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_PIPELINE_CHANNEL_ID }}
+      DOCR_REGISTRY: ${{ vars.DOCR_REGISTRY }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      CONTAINER_PASSWORD: ${{ secrets.CONTAINER_PASSWORD }}
+    steps:
+      - name: Notify Discord – Deploy Started
+        if: always()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🚀 Deploy started for **${{ inputs.service }}** (#${{ github.run_number }}) to ${{ inputs.environment }}\"}"
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Run server setup script
+        run: |
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh \
+            -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<'EOF'
+            export DEBIAN_FRONTEND=noninteractive
+            sudo apt-get update -y
+            sudo apt-get install --no-install-recommends -y docker.io
+          EOF
+
+      - name: Parse environment variables for calamancy-api
+        if: inputs.service == 'calamancy-api'
+        shell: bash
+        run: |
+          echo "${{ secrets.CALAMANCY_ENVARS }}" > .env
+          ENV_ARGS=$(grep -v '^\s*#' .env \
+                     | grep -v '^\s*$' \
+                     | awk -F= '{printf "-e %s=\"%s\" ", $1, $2}')
+          echo "ENV_ARGS=$ENV_ARGS" >> $GITHUB_ENV
+          rm .env
+
+      - name: Parse environment variables for libretranslate
+        if: inputs.service == 'libretranslate'
+        shell: bash
+        run: |
+          echo "${{ secrets.LIBRETRANSLATE_ENVARS }}" > .env
+          ENV_ARGS=$(grep -v '^\s*#' .env \
+                     | grep -v '^\s*$' \
+                     | awk -F= '{printf "-e %s=\"%s\" ", $1, $2}')
+          echo "ENV_ARGS=$ENV_ARGS" >> $GITHUB_ENV
+          rm .env
+
+      - name: Deploy to Server
+        run: |
+          IMAGE=${{ vars.DOCR_REGISTRY }}/sulong-kalinga-${{ inputs.service }}:${{ inputs.image_tag }}
+          CONTAINER_NAME="sulong-${{ inputs.service }}"
+          sshpass -p "${{ secrets.CONTAINER_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} <<EOF
+            echo "${{ secrets.DOCR_TOKEN }}" | docker login ${{ vars.DOCR_REGISTRY }} \
+              --username ${{ secrets.DOCR_USERNAME }} --password-stdin
+            docker pull $IMAGE
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            docker container prune -f
+            docker image prune -f
+            docker run -d --restart unless-stopped --name $CONTAINER_NAME -p ${{ inputs.port }}:5000 \
+              $ENV_ARGS -e ENVIRONMENT="${{ inputs.environment }}" $IMAGE
+          EOF
+
+      - name: Health Check
+        shell: bash
+        run: |
+          HEALTH_URL="http://${{ secrets.DEPLOY_HOST }}:${{ inputs.port }}/health"
+          echo "Checking health at: $HEALTH_URL"
+          for i in 1 2 3 4 5; do
+            if curl --fail -s "$HEALTH_URL" || curl --fail -s "http://${{ secrets.DEPLOY_HOST }}:${{ inputs.port }}/"; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Health check attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🛑 Health check failed for **${{ inputs.service }}** ${{ inputs.environment }}\"}"
+          exit 1
+
+      - name: Prune old registry tags
+        env:
+          DO_API_TOKEN: ${{ secrets.DOCR_TOKEN }}
+          REGISTRY_NAME: "sulong-kalinga"
+          REPO_NAME: "sulong-kalinga-${{ inputs.service }}"
+          KEEP: ${{ inputs.image_tag }}
+        run: |
+          curl -sSL -X GET \
+            "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tags" \
+            -H "Authorization: Bearer ${DO_API_TOKEN}" \
+          | jq -r '.tags[].name' \
+          | grep -v "^${KEEP}$" \
+          | head -10 \
+          | xargs -I{} -n1 curl -sSL -X DELETE \
+            "https://api.digitalocean.com/v2/registry/${REGISTRY_NAME}/repository/${REPO_NAME}/tags/{}" \
+            -H "Authorization: Bearer ${DO_API_TOKEN}" || true
+
+      - name: Notify Discord – Deploy Succeeded
+        if: success()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"✅ Deploy succeeded for **${{ inputs.service }}** (#${{ github.run_number }}) to ${{ inputs.environment }}\"}"
+
+      - name: Notify Discord – Deploy Failed
+        if: failure()
+        run: |
+          curl -X POST "$API_URL/$DISCORD_CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"❌ Deploy failed for **${{ inputs.service }}** (#${{ github.run_number }}) to ${{ inputs.environment }}\"}"

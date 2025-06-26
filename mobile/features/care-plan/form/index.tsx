@@ -55,7 +55,11 @@ const Form = ({ record }: Props) => {
         resetStep,
     } = useCarePlanFormStore();
 
-    const form = useCarePlanForm();
+    const { reset: formReset, getValues } =
+        useCarePlanForm();
+
+    const formHasValues =
+        Object.keys(getValues()).length > 0;
 
     // Helper function to map interventions for each category
     const mapInterventions = (
@@ -71,7 +75,7 @@ const Form = ({ record }: Props) => {
             .map((intervention) => ({
                 id: intervention.wcp_intervention_id.toString(),
                 name:
-                    intervention.intervention_description ||
+                    intervention.description ||
                     "",
                 minutes:
                     parseFloat(
@@ -89,25 +93,20 @@ const Form = ({ record }: Props) => {
                 description:
                     intervention.intervention_id ===
                     null
-                        ? intervention.intervention_description ||
+                        ? intervention.description ||
                           undefined
                         : undefined,
             }));
     };
 
     useEffect(() => {
-        setRecord(record ? record : null);
-        console.log({
-            record,
-        });
-
         if (record) {
-            form.reset({
+            console.log("setting");
+            setRecord(record);
+            formReset({
                 personalDetails: {
-                    beneficiaryId: record
-                        .beneficiary.full_name
-                        ? "1"
-                        : "", // You may need to map this properly based on your beneficiary selection logic
+                    beneficiaryId:
+                        record.beneficiary.beneficiary_id.toString(),
                     illness:
                         record.illnesses?.join(
                             ", ",
@@ -129,30 +128,30 @@ const Form = ({ record }: Props) => {
                         record.vital_signs
                             .respiratory_rate,
                 },
-                // mobility: mapInterventions(
-                //     record,
-                //     1,
-                // ),
-                // cognitive: mapInterventions(
-                //     record,
-                //     7,
-                // ),
-                // selfSustainability:
-                //     mapInterventions(record, 8),
-                // diseaseTherapy: mapInterventions(
-                //     record,
-                //     9,
-                // ),
-                // socialContact: mapInterventions(
-                //     record,
-                //     10,
-                // ),
-                // outdoorActivity: mapInterventions(
-                //     record,
-                //     11,
-                // ),
-                // householdKeeping:
-                //     mapInterventions(record, 12),
+                mobility: mapInterventions(
+                    record,
+                    1, // Mobility
+                ),
+                cognitive: mapInterventions(
+                    record,
+                    2, // Cognitive/Communication (corrected from 7 to 2)
+                ),
+                selfSustainability:
+                    mapInterventions(record, 3), // Self-sustainability (corrected from 8 to 3)
+                diseaseTherapy: mapInterventions(
+                    record,
+                    4, // Disease/Therapy Handling (corrected from 9 to 4)
+                ),
+                socialContact: mapInterventions(
+                    record,
+                    5, // Daily life/Social contact (corrected from 10 to 5)
+                ),
+                outdoorActivity: mapInterventions(
+                    record,
+                    6, // Outdoor Activities (corrected from 11 to 6)
+                ),
+                householdKeeping:
+                    mapInterventions(record, 7), // Household Keeping (corrected from 12 to 7)
                 evaluation: {
                     pictureUri:
                         record.photo_url || "",
@@ -162,9 +161,14 @@ const Form = ({ record }: Props) => {
                 },
             });
         } else {
-            form.reset();
+            formReset();
         }
-    }, [record, setRecord]);
+    }, [
+        record,
+        setRecord,
+        formReset,
+        formHasValues,
+    ]);
 
     // Reset step when component unmounts or user navigates away
     useFocusEffect(

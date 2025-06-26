@@ -67,22 +67,6 @@
                                 <div class="col-md-6">
                                     <div class="detail-grid">
                                         <div class="detail-row">
-                                            <div class="detail-label">{{ T::translate('Municipality:', 'Munisipalidad:')}}</div>
-                                            <div class="detail-value" id="detail-municipality">Mondragon</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Status:</div>
-                                            <div class="detail-value">
-                                                @if($shift->status === 'completed')
-                                                    <span class="badge bg-success" id="detail-status-badge">Completed</span>
-                                                @elseif($shift->status === 'in_progress')
-                                                    <span class="badge bg-warning text-dark" id="detail-status-badge">In Progress</span>
-                                                @else
-                                                    <span class="badge bg-secondary" id="detail-status-badge">{{ ucfirst($shift->status) }}</span>
-                                                @endif
-                                            </div>
-                                        </div> -->
-                                        <div class="detail-row">
                                             <div class="detail-label">Shift Time:</div>
                                             <div class="detail-value" id="detail-shift-time">
                                                 {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
@@ -107,10 +91,19 @@
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-hover">
-                                    <thead>
+                                    <!-- <thead>
                                         <tr>
                                             <th style="width: 25%">{{ T::translate('Time', 'Oras')}}</th>
                                             <th style="width: 75%">{{ T::translate('Location', 'Lokasyon')}}</th>
+                                            
+                                        </tr>
+                                    </thead> -->
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 20%">{{ T::translate('Time', 'Oras')}}</th>
+                                            <th style="width: 40%">{{ T::translate('Location', 'Lokasyon')}}</th>
+                                            <th style="width: 20%">{{ T::translate('Event', 'Kaganapan')}}</th>
+                                            <th style="width: 20%">{{ T::translate('Visitation', 'Pagbisita')}}</th>
                                         </tr>
                                     </thead>
                                     <tbody id="history-table-body">

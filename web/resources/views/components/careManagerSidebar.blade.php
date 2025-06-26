@@ -102,11 +102,13 @@ use App\Helpers\TranslationHelper as T;
       </div>
       <ul class="sub-menu">
         <li><a class="link_name">{{ T::translate('Location Tracking', 'Pagsubaybay sa Lokasyon')}}</a></li>
-        <li>
-          <a href="{{ route('care-manager.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiary-map') }}'; return false;" @endif>
-            {{ T::translate('Beneficiary Map', 'Mapa ng Benepisyaryo')}}
-          </a>
-        </li>
+        @if(Route::has('care-manager.beneficiary.map.index'))
+          <li>
+            <a href="{{ route('care-manager.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiary-map') }}'; return false;" @endif>
+              {{ T::translate('Beneficiary Map', 'Mapa ng Benepisyaryo')}}
+            </a>
+          </li>
+        @endif
         <li>
           <a href="{{ route('care-manager.shift.histories.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.shift.histories.index') }}'; return false;" @endif class="{{ Request::routeIs('care-manager.shift.histories.*') ? 'active' : '' }}">
             Shift Histories
