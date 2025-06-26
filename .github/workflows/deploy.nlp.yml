@@ -101,7 +101,7 @@ jobs:
       DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
       DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
       CONTAINER_PASSWORD: ${{ secrets.NLP_CONTAINER_PASSWORD }}
-      DEPLOY_HOST: ${{ secrets.NLP_HOST }}
+      DEPLOY_HOST: ${{ vars.NLP_HOST }}
       CALAMANCY_ENVARS: ${{ secrets.CALAMANCY_ENVARS }}
 
   deploy-libretranslate:
@@ -119,5 +119,5 @@ jobs:
       DOCR_USERNAME: ${{ secrets.DOCR_USERNAME }}
       DOCR_TOKEN: ${{ secrets.DOCR_TOKEN }}
       CONTAINER_PASSWORD: ${{ secrets.NLP_CONTAINER_PASSWORD }}
-      DEPLOY_HOST: ${{ secrets.NLP_HOST }}
+      DEPLOY_HOST: ${{ vars.NLP_HOST }}
       LIBRETRANSLATE_ENVARS: ${{ secrets.LIBRETRANSLATE_ENVARS }}
