@@ -41,7 +41,7 @@ class CarePlanApiController extends Controller
         $result = $carePlans->map(function ($plan) use ($user) {
             // Get the care worker (author) full name from cose_users table
             $author = \App\Models\User::find($plan->created_by);
-            $authorName = $author ? trim($author->first_name . ' ' . $author->last_name) : nullz;
+            $authorName = $author ? trim($author->first_name . ' ' . $author->last_name) : null;
 
             // Determine status
             $status = ($plan->acknowledged_by_beneficiary || $plan->acknowledged_by_family)
