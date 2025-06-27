@@ -187,6 +187,7 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
         Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
         Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
+        Route::get('/partial-content', [EmergencyAndRequestController::class, 'partialContent'])->name('partial-content');
         
         // Data retrieval routes for modals
         Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');

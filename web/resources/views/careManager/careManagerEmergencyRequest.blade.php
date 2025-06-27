@@ -1466,5 +1466,90 @@
             }
         }
     </script>
+    <script>
+        // Variable to track if we're currently interacting with a modal
+        let isModalOpen = false;
+        
+        // Function to check if any Bootstrap modal is currently open
+        function checkIfModalOpen() {
+            return $('.modal.show').length > 0;
+        }
+        
+        // Set listeners for modal open/close events
+        $(document).on('shown.bs.modal', function() {
+            isModalOpen = true;
+        });
+        
+        $(document).on('hidden.bs.modal', function() {
+            isModalOpen = checkIfModalOpen();
+        });
+        
+        // Function to refresh content 
+        function refreshMainContent() {
+            // Don't refresh if a modal is open to avoid interrupting user interactions
+            if (isModalOpen) {
+                return;
+            }
+
+            // Remember which tab was active
+            let activeTabId = $('#requestTypeTab .nav-link.active').attr('id');
+            
+            // Add a subtle loading indicator
+            $('body').addClass('content-refreshing');
+            
+            $.get("{{ route('care-manager.emergency.request.partial-content') }}", function(html) {
+                $('#main-content-refreshable').html(html);
+                
+                // After re-activating the tab
+                if (activeTabId) {
+                    $('#' + activeTabId).tab('show');
+                    // Manually trigger the tab shown event handler logic
+                    const targetId = $('#' + activeTabId).attr('data-bs-target');
+                    if (targetId === '#service') {
+                        $('#emergency-pending-content').hide();
+                        $('#service-pending-content').show();
+                    } else {
+                        $('#emergency-pending-content').show();
+                        $('#service-pending-content').hide();
+                    }
+                }
+                
+                // Re-initialize tooltips
+                $('[data-bs-toggle="tooltip"]').tooltip();
+                
+                // Log refresh for debugging (can be removed in production)
+                console.log('Content refreshed at: ' + new Date().toLocaleTimeString());
+            }).always(function() {
+                // Remove loading state
+                $('body').removeClass('content-refreshing');
+            });
+        }
+        
+        // Start refreshing content every 10 seconds
+        let refreshInterval = setInterval(refreshMainContent, 10000);
+        
+        // Pause auto-refresh when a modal is open or user is interacting
+        $(document).on('show.bs.modal', function() {
+            clearInterval(refreshInterval);
+        });
+        
+        // Resume auto-refresh when all modals are closed
+        $(document).on('hidden.bs.modal', function() {
+            if (!checkIfModalOpen()) {
+                refreshInterval = setInterval(refreshMainContent, 10000);
+            }
+        });
+        
+        // Also pause refresh during form interactions
+        $(document).on('focus', 'input, textarea, select', function() {
+            clearInterval(refreshInterval);
+        });
+        
+        $(document).on('blur', 'input, textarea, select', function() {
+            if (!checkIfModalOpen()) {
+                refreshInterval = setInterval(refreshMainContent, 10000);
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1102,5 +1102,55 @@ class EmergencyAndRequestController extends Controller
         }
     }
 
+    public function partialContent()
+    {
+        $user = Auth::user();
+        $role = $user->role_id;
+        
+        // Get emergency notice data (only new and in_progress)
+        $emergencyNotices = EmergencyNotice::with(['beneficiary', 'emergencyType', 'sender', 'actionTakenBy', 'updates'])
+            ->whereIn('status', ['new', 'in_progress'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Get service request data (only new and approved)
+        $serviceRequests = ServiceRequest::with(['beneficiary', 'serviceType', 'sender', 'actionTakenBy', 'updates', 'careWorker'])
+            ->whereIn('status', ['new', 'approved'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Count statistics for display
+        $newEmergencyCount = $emergencyNotices->where('status', 'new')->count();
+        $inProgressEmergencyCount = $emergencyNotices->where('status', 'in_progress')->count();
+        
+        $newServiceRequestCount = $serviceRequests->where('status', 'new')->count();
+        $approvedServiceRequestCount = $serviceRequests->where('status', 'approved')->count();
+        
+        // Return view based on user role
+        if ($role === 1) {
+            // Admin view - return just the content part
+            return view('admin.emergencyRequestContent', compact(
+                'emergencyNotices',
+                'serviceRequests',
+                'newEmergencyCount',
+                'inProgressEmergencyCount',
+                'newServiceRequestCount',
+                'approvedServiceRequestCount'
+            ));
+        } elseif ($role === 2) {
+            // Care Manager view - return just the content part
+            return view('careManager.emergencyRequestContent', compact(
+                'emergencyNotices',
+                'serviceRequests',
+                'newEmergencyCount',
+                'inProgressEmergencyCount',
+                'newServiceRequestCount',
+                'approvedServiceRequestCount'
+            ));
+        }
+        
+        return response()->json(['error' => 'Invalid role'], 403);
+    }
+
 }
 
