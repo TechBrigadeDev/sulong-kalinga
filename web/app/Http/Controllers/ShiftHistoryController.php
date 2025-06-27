@@ -64,7 +64,7 @@ class ShiftHistoryController extends Controller
             ->values();
 
         // Define the radius (in meters) for "near beneficiary"
-        $radiusMeters = 700; // Reasonable for rural PH, see note below
+        $radiusMeters = 100; // Reasonable for rural PH, see note below
 
         // Add proximity check for each track
         $tracks = $tracks->map(function ($track) use ($radiusMeters) {
@@ -91,7 +91,7 @@ class ShiftHistoryController extends Controller
                         $lat,
                         $lng
                     );
-                    $proximity = $distance <= $radiusMeters ? 'Near Beneficiary (within 700 meters)' : 'Not Near Beneficiary (within 700 meters)';
+                    $proximity = $distance <= $radiusMeters ? 'Near Beneficiary (within 100 meters)' : 'Not Near Beneficiary (within 100 meters)';
                 }
             }
 
