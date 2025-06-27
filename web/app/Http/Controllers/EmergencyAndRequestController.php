@@ -1147,6 +1147,16 @@ class EmergencyAndRequestController extends Controller
                 'newServiceRequestCount',
                 'approvedServiceRequestCount'
             ));
+        } elseif ($role === 3) {
+            // Care Worker view - return just the content part
+            return view('careWorker.emergencyRequestContent', compact(
+                'emergencyNotices',
+                'serviceRequests',
+                'newEmergencyCount',
+                'inProgressEmergencyCount',
+                'newServiceRequestCount',
+                'approvedServiceRequestCount'
+            ));
         }
         
         return response()->json(['error' => 'Invalid role'], 403);
