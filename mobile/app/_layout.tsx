@@ -6,6 +6,10 @@ import { Toast } from "components/Toast";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import {
+    notificationHandler,
+    registerForPushNotificationsAsync,
+} from "~/lib/notification/service";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -24,6 +28,9 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+registerForPushNotificationsAsync();
+notificationHandler();
 
 export default function RootLayout() {
     const [loaded, error] = useFonts({
@@ -84,14 +91,6 @@ function RootLayoutNav() {
                                 animation: "fade",
                                 headerShown:
                                     false,
-                            }}
-                        />
-                        <Stack.Screen
-                            name="notifications/index"
-                            options={{
-                                title: "Notifications",
-                                headerTitle:
-                                    "Notifications",
                             }}
                         />
                         <Stack.Screen

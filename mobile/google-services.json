@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "693738219911",
+    "project_id": "sulong-kalinga-cose",
+    "storage_bucket": "sulong-kalinga-cose.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:693738219911:android:226ba722a7635b7dc9cb22",
+        "android_client_info": {
+          "package_name": "org.ph.cosemhcs.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFNrgOwMuvpIAS_EeNlQ_sRSpvebGZtfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
