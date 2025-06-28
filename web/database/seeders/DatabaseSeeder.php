@@ -2803,13 +2803,11 @@ class DatabaseSeeder extends Seeder
     private function generateExpenseTrackerData()
     {
         \Log::info('Generating expense tracker data...');
-        
-        // Generate expenses - create a reasonable number for a small organization
+
+        // Use factories for seeding
         \App\Models\Expense::factory()->count(40)->create();
-        
-        // Generate budget allocations - create 12 months of history plus a few future months
         \App\Models\BudgetAllocation::factory()->count(15)->create();
-        
+
         \Log::info('Expense tracker data generation complete');
     }
 
