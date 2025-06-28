@@ -208,8 +208,8 @@
     use App\Helpers\TranslationHelper as T;
     @endphp
 
-    @include('components.care-managerNavbar')
-    @include('components.care-managerSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="page-header">
