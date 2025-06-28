@@ -1,25 +1,26 @@
 import {
     Stack,
     useLocalSearchParams,
+    useRouter,
 } from "expo-router";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, YStack } from "tamagui";
+import { Button, View, YStack } from "tamagui";
 
 import CareWorkerList from "~/features/user-management/components/care-workers/list";
 import CareWorkerSearch from "~/features/user-management/components/care-workers/list/search";
 
 const CareWorkers = () => {
+    const router = useRouter();
     const params = useLocalSearchParams<{
         search?: string;
     }>();
 
-    // const router = useRouter();
-    // const handleAddCareWorker = () => {
-    //     router.push(
-    //         `/(tabs)/options/user-management/care-workers/add`,
-    //     );
-    // };
+    const handleAddCareWorker = () => {
+        router.push(
+            `/(tabs)/options/user-management/care-workers/add`,
+        );
+    };
     return (
         <SafeAreaView
             style={{
@@ -33,8 +34,8 @@ const CareWorkers = () => {
                 }}
             />
             <View style={style.container}>
-                <YStack gap="$4">
-                    {/* <Button
+                <YStack py="$4" gap="$4">
+                    <Button
                         size="$3"
                         theme="dark_blue"
                         onPressIn={
@@ -42,7 +43,7 @@ const CareWorkers = () => {
                         }
                     >
                         Add Care Worker
-                    </Button> */}
+                    </Button>
                     <CareWorkerSearch
                         search={params.search}
                     />

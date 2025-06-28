@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { isDev } from "common/env";
 import { PropsWithChildren } from "react";
 import {
     FormProvider,
@@ -18,22 +17,12 @@ export const CarePlanForm = ({
         defaultValues: {
             personalDetails: {
                 beneficiaryId: "",
-                illness: isDev
-                    ? "Stable condition with no acute issues."
-                    : "",
-                assessment: isDev
-                    ? "Patient is stable with no acute issues."
-                    : "",
-                bloodPressure: isDev
-                    ? "120/80"
-                    : "",
-                pulseRate: isDev ? 72 : undefined,
-                temperature: isDev
-                    ? 36.6
-                    : undefined,
-                respiratoryRate: isDev
-                    ? 16
-                    : undefined,
+                illness: "",
+                assessment: "",
+                bloodPressure: "",
+                pulseRate: undefined,
+                temperature: undefined,
+                respiratoryRate: undefined,
             },
             mobility: [],
             cognitive: [],
@@ -44,9 +33,7 @@ export const CarePlanForm = ({
             householdKeeping: [],
             evaluation: {
                 pictureUri: "",
-                recommendations: isDev
-                    ? "Continue current care plan with regular follow-ups."
-                    : "",
+                recommendations: "",
             },
         },
     });

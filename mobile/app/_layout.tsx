@@ -75,14 +75,6 @@ function RootLayoutNav() {
                             }}
                         />
                         <Stack.Screen
-                            name="wcp/index"
-                            options={{
-                                title: "Care Plan",
-                                headerTitle:
-                                    "Care Plan",
-                            }}
-                        />
-                        <Stack.Screen
                             name="messaging"
                             options={{
                                 animation: "fade",
@@ -95,6 +87,14 @@ function RootLayoutNav() {
                             options={{
                                 headerShown:
                                     false,
+                            }}
+                        />
+                        <Stack.Screen
+                            name="notification"
+                            options={{
+                                title: "Notifications",
+                                headerTitle:
+                                    "Notifications",
                             }}
                         />
                     </Stack.Protected>

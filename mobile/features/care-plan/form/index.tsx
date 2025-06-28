@@ -1,12 +1,10 @@
-import { useFocusEffect } from "@react-navigation/native";
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
-import { IRecordDetail } from "features/records/interface";
 import {
     ArrowLeft,
     ArrowRight,
 } from "lucide-react-native";
-import { useCallback, useEffect } from "react";
+import { useState } from "react";
 import {
     Button,
     View,
@@ -36,17 +34,17 @@ const FORM_STEPS = [
     { label: "Personal Details" },
     { label: "Mobility" },
     { label: "Cognitive/Communication" },
-    { label: "Self-sustainability" },
-    { label: "Disease/Therapy Handling" },
-    { label: "Daily life/Social contact" },
+    { label: "Self-Sustainability" },
+    { label: "Disease/Therapy" },
+    { label: "Social Contact" },
     { label: "Outdoor Activities" },
     { label: "Household Keeping" },
     { label: "Evaluation" },
 ];
 
-interface Props {
-    record?: IRecordDetail;
-}
+const WCPForm = () => {
+    const [currentStep, setCurrentStep] =
+        useState(0);
 
 const Form = ({ record }: Props) => {
     const { bottom } = useSafeAreaInsets();
@@ -232,7 +230,7 @@ const Form = ({ record }: Props) => {
         currentStep === FORM_STEPS.length - 1;
 
     return (
-        <>
+        <CarePlanForm>
             <YStack flex={1}>
                 <FormProgress
                     currentStep={currentStep}
@@ -308,14 +306,6 @@ const Form = ({ record }: Props) => {
                             .label,
                 }}
             />
-        </>
-    );
-};
-
-const WCPForm = (props: Props) => {
-    return (
-        <CarePlanForm>
-            <Form {...props} />
         </CarePlanForm>
     );
 };

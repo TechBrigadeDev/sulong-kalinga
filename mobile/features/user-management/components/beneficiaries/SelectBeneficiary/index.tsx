@@ -1,9 +1,5 @@
 import { useGetBeneficiaries } from "features/user-management/management.hook";
-import {
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
+import { useEffect, useState } from "react";
 import {
     Adapt,
     Input,
@@ -22,19 +18,19 @@ interface SelectBeneficiaryProps {
     ) => void;
     placeholder?: string;
     searchPlaceholder?: string;
-    defaultValue?: IBeneficiary | null;
 }
 
 const SelectBeneficiary = ({
     onValueChange,
-    placeholder:
-        _placeholder = "Choose a beneficiary",
+    placeholder = "Choose a beneficiary",
     searchPlaceholder = "Search beneficiaries...",
-    defaultValue: _defaultValue = null,
 }: SelectBeneficiaryProps) => {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] =
         useState("");
+
+    const [beneficiary, setBeneficiary] =
+        useState<IBeneficiary | null>(null);
 
     // Debounce search to avoid too many API calls
     useEffect(() => {
@@ -55,14 +51,18 @@ const SelectBeneficiary = ({
         search: debouncedSearch,
     });
 
+    // Handle search input change
+    const handleSearchChange = (
+        value: string,
+    ) => {
+        setSearch(value);
+    };
+
     // Get all beneficiaries from all pages
-    const allBeneficiaries = useMemo(() => {
-        return (
-            data?.pages?.flatMap(
-                (page) => page.data,
-            ) || []
-        );
-    }, [data]);
+    const allBeneficiaries =
+        data?.pages?.flatMap(
+            (page) => page.data,
+        ) || [];
 
     // Handle loading more data
     const handleLoadMore = () => {
@@ -211,11 +211,7 @@ const SelectBeneficiary = ({
 
     return (
         <Select
-            defaultValue={
-                currentBeneficiary?.beneficiary_id?.toString() ||
-                undefined
-            }
-            value={beneficiary?.toString()}
+            value={beneficiary?.beneficiary_id?.toString()}
             onValueChange={(value) => {
                 const selectedBeneficiary =
                     allBeneficiaries.find(
@@ -225,11 +221,10 @@ const SelectBeneficiary = ({
                     ) || null;
 
                 setBeneficiary(
-                    selectedBeneficiary?.beneficiary_id?.toString() ||
-                        null,
+                    selectedBeneficiary,
                 );
                 onValueChange(
-                    selectedBeneficiary || null,
+                    selectedBeneficiary,
                 );
             }}
         >

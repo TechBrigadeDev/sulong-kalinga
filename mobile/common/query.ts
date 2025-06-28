@@ -130,14 +130,10 @@ export const QK = {
         emergency: {
             getTypes:
                 "emergencyService/emergency/getTypes",
-            editRequest:
-                "emergencyService/emergency/editRequest",
         },
         service: {
             getTypes:
                 "emergencyService/service/getTypes",
-            editRequest:
-                "emergencyService/service/editRequest",
         },
     },
     visitations: {
@@ -151,9 +147,6 @@ export const QK = {
         ],
     },
     carePlan: {
-        getInterventions: () => [
-            "carePlan/getInterventions",
-        ],
         getCarePlans: () => [
             "carePlan/getCarePlans",
         ],
@@ -218,12 +211,6 @@ export const invalidateQK = async (
 
 export const cancelQK = async (key: string[]) => {
     await queryClient.cancelQueries({
-        queryKey: key,
-    });
-};
-
-export const resetQK = async (key: string[]) => {
-    await queryClient.resetQueries({
         queryKey: key,
     });
 };

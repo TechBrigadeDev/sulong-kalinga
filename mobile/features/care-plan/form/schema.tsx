@@ -80,10 +80,8 @@ export const interventionSchema = z.object({
             "Duration cannot exceed 999.99 minutes",
         ),
     isCustom: z.boolean().optional(),
-    // For standard interventions - database intervention_id
-    interventionId: z.number().optional(),
-    // For custom interventions - care_category_id
-    categoryId: z.number().optional(),
+    // For custom interventions
+    categoryId: z.string().optional(),
     description: z
         .string()
         .min(

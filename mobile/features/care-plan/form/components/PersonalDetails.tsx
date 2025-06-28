@@ -1,5 +1,4 @@
 import { useCarePlanForm } from "features/care-plan/form/form";
-import { useCarePlanFormStore } from "features/care-plan/form/store";
 import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
 import {
     useGetBeneficiaries,
@@ -15,7 +14,6 @@ import {
 import { Controller } from "react-hook-form";
 import {
     Card,
-    H4,
     Input,
     Label,
     ScrollView,
@@ -191,9 +189,6 @@ const Beneficiary = () => {
                     fieldState,
                 }) => (
                     <>
-                        <Label htmlFor="beneficiary">
-                            Select Beneficiary *
-                        </Label>
                         <SelectBeneficiary
                             defaultValue={
                                 selectedBeneficiary ||
@@ -247,10 +242,6 @@ const Beneficiary = () => {
                     </>
                 )}
             />
-        );
-    return (
-        <YStack gap="$1">
-            <Input />
             {selectedBeneficiary && (
                 <YStack gap="$2" mt="$2">
                     <Text>Age: {age}</Text>
