@@ -272,18 +272,6 @@
         text-decoration: underline;
     }
 
-    /* Notification badge on the bell icon */
-    .nav-notification-link {
-        position: relative;
-    }
-
-    .notification-count {
-        position: absolute;
-        top: 0;
-        right: -5px;
-        font-size: 0.65rem;
-    }
-
     /* Notification modal styles */
     .notification-modal .modal-body {
         padding: 1rem;

@@ -44,11 +44,13 @@
                         </li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link nav-notification-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link nav-notification-link" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="d-flex align-items-center gap-2">
                         <i class="bi bi-bell-fill"></i>
-                        <span>Notifications</span>
-                        <span class="badge bg-danger rounded-pill notification-count" style="display: none;"></span>
+                        <span class="d-none d-md-inline">Notifications</span>
+                        <span class="badge bg-danger rounded-pill notification-count" style="display: inline-block;"></span>
+                    </span>
                     </a>
                     <div class="dropdown-menu dropdown-notifications dropdown-menu-end p-0" aria-labelledby="notificationsDropdown">
                         <div class="dropdown-header d-flex justify-content-between align-items-center">
