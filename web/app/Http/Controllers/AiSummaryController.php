@@ -56,7 +56,7 @@ class AiSummaryController extends Controller
 
     public function summarize(Request $request)
     {
-        set_time_limit(90);
+        set_time_limit(600);
 
         $request->validate([
             'text' => 'required|string',
@@ -135,6 +135,10 @@ class AiSummaryController extends Controller
             'evaluation_summary_draft' => 'sometimes|nullable|string',
             'assessment_summary_sections' => 'sometimes|nullable|array',
             'evaluation_summary_sections' => 'sometimes|nullable|array',
+            'assessment_translation_draft' => 'sometimes|nullable|string',
+            'evaluation_translation_draft' => 'sometimes|nullable|string',
+            'assessment_translation_sections' => 'sometimes|nullable|array',
+            'evaluation_translation_sections' => 'sometimes|nullable|array',
         ]);
 
         \Log::info("Updating summary for care plan ID: {$id}");
@@ -161,6 +165,19 @@ class AiSummaryController extends Controller
         
         if ($request->has('evaluation_summary_sections')) {
             $carePlan->evaluation_summary_sections = $request->evaluation_summary_sections;
+        }
+
+        if ($request->filled('assessment_translation_draft')) {
+            $carePlan->assessment_translation_draft = $request->assessment_translation_draft;
+        }
+        if ($request->filled('evaluation_translation_draft')) {
+            $carePlan->evaluation_translation_draft = $request->evaluation_translation_draft;
+        }
+        if ($request->has('assessment_translation_sections')) {
+            $carePlan->assessment_translation_sections = $request->assessment_translation_sections;
+        }
+        if ($request->has('evaluation_translation_sections')) {
+            $carePlan->evaluation_translation_sections = $request->evaluation_translation_sections;
         }
         
         $carePlan->has_ai_summary = true;
@@ -209,6 +226,8 @@ class AiSummaryController extends Controller
 
     public function translate(Request $request)
     {
+        set_time_limit(600);
+
         $request->validate([
             'text' => 'required|string',
             'weekly_care_plan_id' => 'required|integer',
@@ -270,6 +289,8 @@ class AiSummaryController extends Controller
 
     public function translateSections(Request $request)
     {
+        set_time_limit(600);
+
         $request->validate([
             'sections' => 'required|array',
             'weekly_care_plan_id' => 'required|integer',
