@@ -10,7 +10,20 @@
         body {
             font-size: var(--base-font-size);
         }
-
+        .content-refreshing {
+            position: relative;
+        }
+        .content-refreshing #home-content::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.4);
+            pointer-events: none;
+            z-index: 100;
+        }
         .notification-card {
             border-radius: 10px;
             margin-bottom: 15px;

@@ -152,7 +152,8 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_worker'])->prefi
     Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
         Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
         Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
-        
+        Route::get('partial-content', [EmergencyAndRequestController::class, 'partialContent'])->name('partial-content');
+
         // Care workers can only view, not modify
         Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');
         Route::get('/service-request/{id}', [EmergencyAndRequestController::class, 'getServiceRequest'])->name('get.service');

@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${notification.is_read ? '' : '<span class="unread-indicator"></span>'}
                     </div>
                     <div class="notification-text ${truncate ? 'text-truncate' : ''}">
-                        ${notification.message}
+                        ${notification.message ? notification.message.replace(/\n/g, '<br>') : ''}
                     </div>
                     <div class="notification-meta">
                         <span class="notification-time">${timeAgo}</span>
