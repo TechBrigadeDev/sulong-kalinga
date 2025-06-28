@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.ph.cosemhcs.app",
+      "bundleIdentifier": "ph.org.cosemhcs.app",
       "googleServicesFile": "./GoogleService-Info.plist",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -38,7 +38,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "org.ph.cosemhcs.app",
+      "package": "ph.org.cosemhcs.app",
       "softwareKeyboardLayoutMode": "pan",
       "googleServicesFile": "./google-services.json",
       "permissions": [

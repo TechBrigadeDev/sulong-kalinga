@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>ph.org.cosemhcs</string>
+	<string>ph.org.cosemhcs.app</string>
 	<key>PROJECT_ID</key>
 	<string>sulong-kalinga-cose</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:693738219911:ios:4e8dbf0145574865c9cb22</string>
+	<string>1:693738219911:ios:6d89bd7b75bc7aa2c9cb22</string>
 </dict>
 </plist>

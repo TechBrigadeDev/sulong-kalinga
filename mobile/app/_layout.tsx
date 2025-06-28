@@ -6,15 +6,15 @@ import { Toast } from "components/Toast";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import {
-    notificationHandler,
-    registerForPushNotificationsAsync,
-} from "~/lib/notification/service";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import Providers from "~/components/Providers";
 import { authStore } from "~/features/auth/auth.store";
+import {
+    notificationHandler,
+    registerForPushNotificationsAsync,
+} from "~/lib/notification/service";
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -29,7 +29,6 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-registerForPushNotificationsAsync();
 notificationHandler();
 
 export default function RootLayout() {
@@ -61,12 +60,25 @@ function RootLayoutNav() {
         authStore((state) => state.token) !==
         null;
 
+    const register = async () => {
+        await Promise.all([
+            registerForPushNotificationsAsync(),
+        ]);
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            register();
+        }
+    }, [isAuthenticated]);
+
     return (
         <Providers>
             <GestureHandlerRootView
                 style={{ flex: 1 }}
             >
                 <Stack>
+                    <Stack.Screen name="login" />
                     <Stack.Protected
                         guard={isAuthenticated}
                     >
@@ -101,7 +113,6 @@ function RootLayoutNav() {
                             }}
                         />
                     </Stack.Protected>
-                    <Stack.Screen name="login" />
                 </Stack>
             </GestureHandlerRootView>
             <Dialogs />
