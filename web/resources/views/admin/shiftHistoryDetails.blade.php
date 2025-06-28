@@ -121,8 +121,8 @@
                                                         </span>
                                                         <br>
                                                         <span class="badge 
-                                                            @if($track->proximity === 'Near Beneficiary (within 700 meters)') bg-success
-                                                            @elseif($track->proximity === 'Not Near Beneficiary (within 700 meters)') bg-danger
+                                                            @if($track->proximity === 'Near Beneficiary (within 100 meters)') bg-success
+                                                            @elseif($track->proximity === 'Not Near Beneficiary (within 100 meters)') bg-danger
                                                             @else bg-secondary
                                                             @endif
                                                             " style="font-size: 0.85em;">
