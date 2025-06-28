@@ -1,5 +1,4 @@
 import Badge from "components/Bagde";
-import { useGetInterventions } from "features/care-plan/hook";
 import {
     Bath,
     CheckCircle,
@@ -34,8 +33,6 @@ interface CareInterventionsProps {
 export function CareInterventions({
     interventions,
 }: CareInterventionsProps) {
-    const {} = useGetInterventions();
-
     const categoryMap: Record<
         number,
         { name: string; IconComponent: any }

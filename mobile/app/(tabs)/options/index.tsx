@@ -3,9 +3,7 @@ import {
     Link as ExpoLink,
     LinkProps,
 } from "expo-router";
-import { authStore } from "features/auth/auth.store";
 import { isStaff } from "features/auth/auth.util";
-import NotificationButton from "features/notification/_components/NotificationButton";
 import { icons } from "lucide-react-native";
 import {
     StyleSheet,
@@ -26,16 +24,7 @@ import LogoutButton from "~/features/auth/components/logout/button";
 const Screen = () => {
     return (
         <View>
-            <Header
-                name="Options"
-                headerRight={() => (
-                    <NotificationButton
-                        color="black"
-                        items="center"
-                        rounded="$radius.true"
-                    />
-                )}
-            />
+            <Header name="Options" />
             <TabScroll
                 style={style.scroll}
                 contentContainerStyle={{
@@ -52,8 +41,7 @@ const Screen = () => {
 };
 
 const UserManagement = () => {
-    const { role } = authStore();
-    if (!isStaff() || !role) return null;
+    if (!isStaff()) return null;
 
     return (
         <Section>
@@ -69,27 +57,21 @@ const UserManagement = () => {
                     href="/options/user-management/family"
                     icon="UsersRound"
                 />
-                {role !== "care_worker" && (
-                    <Link
-                        label="Care Workers"
-                        href="/options/user-management/care-workers"
-                        icon="HeartHandshake"
-                    />
-                )}
-                {role === "admin" && (
-                    <>
-                        <Link
-                            label="Care Managers"
-                            href="/options/user-management/care-managers"
-                            icon="Smile"
-                        />
-                        <Link
-                            label="Administrators"
-                            href="/options/user-management/admins"
-                            icon="ShieldUser"
-                        />
-                    </>
-                )}
+                <Link
+                    label="Care Workers"
+                    href="/options/user-management/care-workers"
+                    icon="HeartHandshake"
+                />
+                <Link
+                    label="Care Managers"
+                    href="/options/user-management/care-managers"
+                    icon="Smile"
+                />
+                <Link
+                    label="Administrators"
+                    href="/options/user-management/admins"
+                    icon="ShieldUser"
+                />
             </Card>
         </Section>
     );

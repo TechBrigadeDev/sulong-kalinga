@@ -10,13 +10,7 @@ module.exports = defineConfig([
     eslintPluginPrettierRecommended,
     {
         files: ["**/*.{ts,tsx}"],
-        ignores: [
-            "dist/*",
-            "node_modules/*",
-            "android/*",
-            "ios/*",
-            ".expo/*",
-        ],
+        ignores: ["dist/*"],
         settings: {
             "import/resolver": {
                 node: {
@@ -32,7 +26,6 @@ module.exports = defineConfig([
             "simple-import-sort": simpleSort,
         },
         rules: {
-            "react/no-children-prop": "off",
             "import/no-unresolved": "error",
             "no-relative-import-paths/no-relative-import-paths":
                 [

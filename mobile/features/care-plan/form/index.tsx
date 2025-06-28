@@ -1,12 +1,10 @@
-import { useFocusEffect } from "@react-navigation/native";
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
-import { IRecordDetail } from "features/records/interface";
 import {
     ArrowLeft,
     ArrowRight,
 } from "lucide-react-native";
-import { useCallback, useEffect } from "react";
+import { useState } from "react";
 import {
     Button,
     View,
@@ -25,160 +23,23 @@ import { PersonalDetails } from "./components/PersonalDetails";
 import { SelfSustainability } from "./components/SelfSustainability";
 import { SocialContact } from "./components/SocialContact";
 import Submit from "./components/Submit";
-import {
-    CarePlanForm,
-    useCarePlanForm,
-} from "./form";
-import { useCarePlanFormStore } from "./store";
+import { CarePlanForm } from "./form";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
     { label: "Mobility" },
     { label: "Cognitive/Communication" },
-    { label: "Self-sustainability" },
-    { label: "Disease/Therapy Handling" },
-    { label: "Daily life/Social contact" },
+    { label: "Self-Sustainability" },
+    { label: "Disease/Therapy" },
+    { label: "Social Contact" },
     { label: "Outdoor Activities" },
     { label: "Household Keeping" },
     { label: "Evaluation" },
 ];
 
-interface Props {
-    record?: IRecordDetail;
-}
-
-const Form = ({ record }: Props) => {
-    const {
-        setRecord,
-        currentStep,
-        setCurrentStep,
-        resetStep,
-    } = useCarePlanFormStore();
-
-    const { reset: formReset, getValues } =
-        useCarePlanForm();
-
-    const formHasValues =
-        Object.keys(getValues()).length > 0;
-
-    // Helper function to map interventions for each category
-    const mapInterventions = (
-        record: IRecordDetail,
-        categoryId: number,
-    ) => {
-        return record.interventions
-            .filter(
-                (intervention) =>
-                    intervention.care_category_id ===
-                    categoryId,
-            )
-            .map((intervention) => ({
-                id: intervention.wcp_intervention_id.toString(),
-                name:
-                    intervention.description ||
-                    "",
-                minutes:
-                    parseFloat(
-                        intervention.duration_minutes,
-                    ) || 0,
-                isCustom:
-                    intervention.intervention_id ===
-                    null,
-                interventionId:
-                    intervention.intervention_id ||
-                    undefined,
-                categoryId:
-                    intervention.care_category_id ||
-                    undefined,
-                description:
-                    intervention.intervention_id ===
-                    null
-                        ? intervention.description ||
-                          undefined
-                        : undefined,
-            }));
-    };
-
-    useEffect(() => {
-        if (record) {
-            console.log("setting");
-            setRecord(record);
-            formReset({
-                personalDetails: {
-                    beneficiaryId:
-                        record.beneficiary.beneficiary_id.toString(),
-                    illness:
-                        record.illnesses?.join(
-                            ", ",
-                        ) || "",
-                    assessment:
-                        record.assessment || "",
-                    bloodPressure:
-                        record.vital_signs
-                            .blood_pressure,
-                    pulseRate:
-                        record.vital_signs
-                            .pulse_rate,
-                    temperature:
-                        parseFloat(
-                            record.vital_signs
-                                .body_temperature,
-                        ) || 36.5,
-                    respiratoryRate:
-                        record.vital_signs
-                            .respiratory_rate,
-                },
-                mobility: mapInterventions(
-                    record,
-                    1, // Mobility
-                ),
-                cognitive: mapInterventions(
-                    record,
-                    2, // Cognitive/Communication (corrected from 7 to 2)
-                ),
-                selfSustainability:
-                    mapInterventions(record, 3), // Self-sustainability (corrected from 8 to 3)
-                diseaseTherapy: mapInterventions(
-                    record,
-                    4, // Disease/Therapy Handling (corrected from 9 to 4)
-                ),
-                socialContact: mapInterventions(
-                    record,
-                    5, // Daily life/Social contact (corrected from 10 to 5)
-                ),
-                outdoorActivity: mapInterventions(
-                    record,
-                    6, // Outdoor Activities (corrected from 11 to 6)
-                ),
-                householdKeeping:
-                    mapInterventions(record, 7), // Household Keeping (corrected from 12 to 7)
-                evaluation: {
-                    pictureUri:
-                        record.photo_url || "",
-                    recommendations:
-                        record.evaluation_recommendations ||
-                        "",
-                },
-            });
-        } else {
-            formReset();
-        }
-    }, [
-        record,
-        setRecord,
-        formReset,
-        formHasValues,
-    ]);
-
-    // Reset step when component unmounts or user navigates away
-    useFocusEffect(
-        useCallback(() => {
-            return () => {
-                // Reset step when leaving this screen
-                resetStep();
-            };
-        }, [resetStep]),
-    );
+const WCPForm = () => {
+    const [currentStep, setCurrentStep] =
+        useState(0);
 
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {
@@ -221,7 +82,7 @@ const Form = ({ record }: Props) => {
         currentStep === FORM_STEPS.length - 1;
 
     return (
-        <>
+        <CarePlanForm>
             <YStack flex={1}>
                 <FormProgress
                     currentStep={currentStep}
@@ -230,7 +91,7 @@ const Form = ({ record }: Props) => {
                 />
 
                 <TabScroll flex={1}>
-                    <YStack gap="$4">
+                    <YStack gap="$4" p="$4">
                         {renderStep()}
                     </YStack>
                 </TabScroll>
@@ -293,14 +154,6 @@ const Form = ({ record }: Props) => {
                             .label,
                 }}
             />
-        </>
-    );
-};
-
-const WCPForm = (props: Props) => {
-    return (
-        <CarePlanForm>
-            <Form {...props} />
         </CarePlanForm>
     );
 };

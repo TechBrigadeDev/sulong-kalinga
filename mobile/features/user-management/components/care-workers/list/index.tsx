@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { careManagerListStore } from "features/user-management/components/care-managers/list/store";
 import { ICareWorker } from "features/user-management/management.type";
-import { Eye } from "lucide-react-native";
 import { RefreshControl } from "react-native";
 import {
     Button,
@@ -70,11 +69,11 @@ const CareWorkerCard = ({
         );
     };
 
-    // const onEdit = () => {
-    //     router.push(
-    //         `/(tabs)/options/user-management/care-workers/${id}/edit`,
-    //     );
-    // };
+    const onEdit = () => {
+        router.push(
+            `/(tabs)/options/user-management/care-workers/${id}/edit`,
+        );
+    };
 
     return (
         <Card
@@ -85,9 +84,6 @@ const CareWorkerCard = ({
             borderRadius={8}
             borderColor="#E9ECEF"
             borderWidth={1}
-            flexDirection="row"
-            items="center"
-            justify="space-between"
         >
             <View>
                 <Text
@@ -102,6 +98,7 @@ const CareWorkerCard = ({
                 style={{
                     flexDirection: "row",
                     gap: 8,
+                    marginTop: 12,
                 }}
             >
                 <Button
@@ -112,9 +109,9 @@ const CareWorkerCard = ({
                     onPress={onView}
                     variant="outlined"
                 >
-                    <Eye size={16} />
+                    View
                 </Button>
-                {/* <Button
+                <Button
                     size="$3"
                     bg="#E9ECEF"
                     color="#495057"
@@ -123,7 +120,7 @@ const CareWorkerCard = ({
                     variant="outlined"
                 >
                     Edit
-                </Button> */}
+                </Button>
             </View>
         </Card>
     );

@@ -17,7 +17,3 @@ export type IWCPRecords = z.infer<
 export type IWCPRecord = z.infer<
     typeof wcpRecordSchema
 >;
-
-export type IBeneficiary = z.infer<
-    typeof wcpRecordSchema.shape.beneficiary
->;

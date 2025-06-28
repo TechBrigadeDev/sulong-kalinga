@@ -1,122 +1,90 @@
-import { useEmergencyFormContext } from "features/portal/emergency-service/emergency/_components/form/form";
-import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
-import { IEmergencyServiceRequest } from "features/portal/emergency-service/type";
-import { useEffect, useState } from "react";
+import { useEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/form";
+import { IEmergencyForm } from "features/portal/emergency-service/emergency/_components/form/interface";
+import { useEmergencyRequest } from "features/portal/emergency-service/emergency/hook";
+import { SubmitErrorHandler } from "react-hook-form";
+import { showToastable } from "react-native-toastable";
 import { Button, Spinner } from "tamagui";
 
 const SubmitEmergency = () => {
-    const store = useEmergencyServiceStore();
-    const form = useEmergencyFormContext();
+    const form = useEmergencyForm();
+    const {
+        mutate: submitEmergencyRequest,
+        isPending: isSubmitting,
+    } = useEmergencyRequest();
 
-    const [currentRequest, setCurrentRequest] =
-        useState<IEmergencyServiceRequest | null>(
-            null,
-        );
-    const request = store.getState().request;
+    const onSuccess = async (
+        data: IEmergencyForm,
+    ) => {
+        try {
+            submitEmergencyRequest(data);
 
-    useEffect(() => {
-        if (
-            request &&
-            request.type === "emergency"
-        ) {
-            setCurrentRequest(request);
-            // form.reset({
-            //     message: request.description,
-            //     emergency_type_id:
-            //         request.emergency_type_id.toString(),
-            // });
-        } else {
-            setCurrentRequest(null);
+            showToastable({
+                title: "Request Submitted",
+                message:
+                    "Your emergency request has been submitted successfully.",
+                status: "success",
+            });
             form.reset({
                 message: "",
                 emergency_type_id: "",
             });
+        } catch (error) {
+            console.error(
+                "Error submitting form:",
+                error,
+            );
         }
-
-        store.subscribe(() => {
-            const updatedRequest =
-                store.getState().request;
-            if (updatedRequest) {
-                setCurrentRequest(updatedRequest);
-                form.reset({
-                    message:
-                        updatedRequest?.description,
-                    emergency_type_id:
-                        updatedRequest.emergency_type_id?.toString(),
-                });
-            } else {
-                setCurrentRequest(null);
-                form.reset({
-                    message: "",
-                    emergency_type_id: "",
-                });
-            }
-        });
-    }, [store, request, form]);
-
-    const isEditing =
-        currentRequest?.type === "emergency";
-
-    const resetForm = () => {
-        form.reset({
-            message: "",
-            emergency_type_id: "",
-        });
-        store.setState({
-            request: null,
-        });
     };
 
-    const Edit = () =>
-        isEditing && (
-            <Button
-                onPress={resetForm}
-                disabled={form.state.isSubmitting}
-                size="$5"
-                theme="red"
-                fontSize="$5"
-                fontWeight="600"
-            >
-                Reset
-            </Button>
+    const onError: SubmitErrorHandler<
+        IEmergencyForm
+    > = (errors) => {
+        // Handle form validation errors
+        console.error(
+            "Form submission errors:",
+            errors,
         );
+        // You can show a toast or alert with the error messages
+    };
+
+    const handleSubmit = async () => {
+        try {
+            await form.handleSubmit(
+                onSuccess,
+                onError,
+            )();
+        } catch (error) {
+            console.error(
+                "Error submitting form:",
+                error,
+            );
+        }
+    };
+
+    const disabled =
+        form.formState.isSubmitting ||
+        isSubmitting;
 
     return (
-        <form.Subscribe
-            selector={(state) => state}
+        <Button
+            onPress={handleSubmit}
+            disabled={disabled}
+            size="$5"
+            mt="$8"
+            theme="blue"
+            fontSize="$5"
+            fontWeight="600"
         >
-            {(state) => (
-                <>
-                    <Button
-                        onPress={
-                            form.handleSubmit
-                        }
-                        disabled={
-                            state.isSubmitting
-                        }
-                        size="$5"
-                        mt="$8"
-                        theme="light_blue"
-                        fontSize="$5"
-                        fontWeight="600"
-                    >
-                        {form.state
-                            .isSubmitting && (
-                            <Spinner
-                                size="small"
-                                mr="$2"
-                                color="$white1"
-                            />
-                        )}
-                        {currentRequest?.id
-                            ? "Update"
-                            : "Submit"}
-                        {form.state.isSubmitting}
-                    </Button>
-                    <Edit />
-                </>
-            )}
-        </form.Subscribe>
+            {form.formState.isSubmitting ||
+                (isSubmitting && (
+                    <Spinner
+                        size="small"
+                        mr="$2"
+                        color="$white1"
+                    />
+                ))}
+            Submit
+        </Button>
     );
 };
 

@@ -17,9 +17,11 @@ export const axiosClient = axios.create({
 
 axiosClient.interceptors.response.use(
     (response) => {
+        console.log("response",response)
         return response;
     },
     (error) => {
+        console.log("error",error)
         if (error instanceof AxiosError) {
             if (error.status === 401) {
                 const setToken =

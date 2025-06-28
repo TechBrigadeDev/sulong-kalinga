@@ -51,19 +51,10 @@ export const wcpRecordsResponseSchema = z.object({
     }),
 });
 
-const wcpBeneficiarySchema = z.object({
-    beneficiary_id: z.number(),
-    full_name: z.string(),
-    address: z.string(),
-    medical_conditions: z.string().nullable(),
-    illnesses: z.array(z.string()).nullable(),
-    civil_status: z.string(),
-});
-
 export const wcpRecordSchema = z.object({
     id: z.number(),
     date: z.string(),
-    beneficiary: wcpBeneficiarySchema,
+    beneficiary: z.string(),
     care_worker: z.string(),
     assessment: z.string().optional(),
     evaluation_recommendations: z
@@ -83,13 +74,14 @@ export const wcpRecordSchema = z.object({
     interventions: z.array(
         z.object({
             wcp_intervention_id: z.number(),
+            weekly_care_plan_id: z.number(),
             intervention_id: z
                 .number()
                 .nullable(),
-            care_category_id: z
-                .number()
+            care_category_id: z.number(),
+            intervention_description: z
+                .string()
                 .nullable(),
-            description: z.string().nullable(),
             duration_minutes: z.string(),
             implemented: z.boolean(),
         }),
@@ -97,8 +89,6 @@ export const wcpRecordSchema = z.object({
     photo_url: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
-    acknowledge_status: z.string(),
-    who_acknowledged: z.string().nullable(),
 });
 
 export const wcpRecordResponseSchema = z.object({

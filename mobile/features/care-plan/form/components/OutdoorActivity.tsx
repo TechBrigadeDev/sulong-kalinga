@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCarePlanForm } from "features/care-plan/form/form";
-import { useGetInterventions } from "features/care-plan/hook";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import {
@@ -19,8 +18,7 @@ export interface OutdoorActivityIntervention {
     name: string;
     minutes: number;
     isCustom?: boolean;
-    interventionId?: number; // Database intervention_id for standard interventions
-    categoryId?: number; // care_category_id for custom interventions
+    categoryId?: string;
     description?: string;
 }
 
@@ -34,6 +32,15 @@ interface OutdoorActivityProps {
         data: OutdoorActivityData,
     ) => void;
 }
+
+const DEFAULT_INTERVENTIONS = [
+    "Accompany on short walks in the neighborhood",
+    "Assist with gardening activities",
+    "Support participation in outdoor recreational activities",
+    "Help with shopping trips and errands",
+    "Encourage outdoor social activities",
+    "Facilitate visits to parks or natural areas",
+];
 
 export const OutdoorActivity = ({
     data: _data,
@@ -72,13 +79,11 @@ export const OutdoorActivity = ({
 
 const InterventionList = () => {
     const { control } = useCarePlanForm();
-    const { interventions } =
-        useGetInterventions();
 
     return (
         <Controller
             control={control}
-            name="outdoorActivity"
+            name="outdoorActivities"
             render={({ field, fieldState }) => (
                 <YStack gap="$3">
                     <Text
@@ -88,14 +93,15 @@ const InterventionList = () => {
                         Available Interventions
                     </Text>
 
-                    {interventions[
-                        "Outdoor Activities"
-                    ].map(
-                        (intervention, index) => (
+                    {DEFAULT_INTERVENTIONS.map(
+                        (
+                            interventionName,
+                            index,
+                        ) => (
                             <InterventionItem
                                 key={index}
-                                intervention={
-                                    intervention
+                                interventionName={
+                                    interventionName
                                 }
                                 interventions={
                                     field.value ||
@@ -127,10 +133,7 @@ const InterventionList = () => {
 };
 
 interface InterventionItemProps {
-    intervention: {
-        intervention_id: number;
-        intervention_description: string;
-    };
+    interventionName: string;
     interventions: OutdoorActivityIntervention[];
     onChange: (
         interventions: OutdoorActivityIntervention[],
@@ -138,15 +141,10 @@ interface InterventionItemProps {
 }
 
 const InterventionItem = ({
-    intervention,
+    interventionName,
     interventions,
     onChange,
 }: InterventionItemProps) => {
-    const interventionName =
-        intervention.intervention_description;
-    const interventionId =
-        intervention.intervention_id;
-
     const existingIntervention =
         interventions.find(
             (i) =>
@@ -169,12 +167,10 @@ const InterventionItem = ({
         } else {
             const newIntervention: OutdoorActivityIntervention =
                 {
-                    id: `outdoor_activity_${interventionId}_${Date.now()}`,
+                    id: Date.now().toString(),
                     name: interventionName,
-                    minutes: 1,
+                    minutes: 0,
                     isCustom: false,
-                    interventionId:
-                        interventionId,
                 };
             onChange([
                 ...interventions,
@@ -201,7 +197,7 @@ const InterventionItem = ({
     };
 
     return (
-        <XStack gap="$3" items="center">
+        <XStack gap="$3" ai="center">
             <Checkbox
                 checked={isChecked}
                 onCheckedChange={
@@ -222,10 +218,7 @@ const InterventionItem = ({
                     {interventionName}
                 </Text>
                 {isChecked && (
-                    <XStack
-                        gap="$2"
-                        items="center"
-                    >
+                    <XStack gap="$2" ai="center">
                         <Input
                             flex={1}
                             placeholder="Duration"
@@ -254,19 +247,13 @@ const InterventionItem = ({
 
 const CustomIntervention = () => {
     const { control } = useCarePlanForm();
-    const { getCategoryId } =
-        useGetInterventions();
     const [customText, setCustomText] =
         useState("");
-
-    // Get the care_category_id for Outdoor Activities category
-    const outdoorActivityCategoryId =
-        getCategoryId("Outdoor Activities");
 
     return (
         <Controller
             control={control}
-            name="outdoorActivity"
+            name="outdoorActivities"
             render={({ field }) => (
                 <YStack gap="$3">
                     <Text
@@ -293,13 +280,11 @@ const CustomIntervention = () => {
                                 ) {
                                     const newIntervention: OutdoorActivityIntervention =
                                         {
-                                            id: `custom_outdoor_activity_${Date.now()}_${Math.random()}`,
+                                            id: Date.now().toString(),
                                             name: customText.trim(),
-                                            minutes: 1,
+                                            minutes: 0,
                                             isCustom:
                                                 true,
-                                            categoryId:
-                                                outdoorActivityCategoryId,
                                         };
                                     field.onChange(
                                         [
@@ -388,16 +373,16 @@ const CustomInterventionItem = ({
     return (
         <XStack
             gap="$3"
-            items="center"
+            ai="center"
             p="$3"
             bg="gray"
-            rounded="$4"
+            br="$4"
         >
             <YStack flex={1} gap="$2">
                 <Text fontSize="$4">
                     {intervention.name}
                 </Text>
-                <XStack gap="$2" items="center">
+                <XStack gap="$2" ai="center">
                     <Input
                         flex={1}
                         placeholder="Duration"

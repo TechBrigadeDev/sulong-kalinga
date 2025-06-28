@@ -1,13 +1,10 @@
-import { AxiosError } from "axios";
 import { Controller } from "common/api";
-import { formatTime } from "common/date";
 import { log } from "common/debug";
 import { IRole } from "features/auth/auth.interface";
 import { portalPath } from "features/auth/auth.util";
-import { showToastable } from "react-native-toastable";
 import { z } from "zod";
 
-import { IServiceForm } from "./_components/form/interface";
+import { IServiceRequestForm } from "./form/schema";
 import { serviceTypes } from "./schema";
 
 class ServiceController extends Controller {
@@ -48,7 +45,7 @@ class ServiceController extends Controller {
 
     async postServiceRequest(
         role: IRole,
-        data: IServiceForm,
+        data: IServiceRequestForm,
     ) {
         try {
             const path = portalPath(
@@ -69,53 +66,6 @@ class ServiceController extends Controller {
             );
             throw new Error(
                 "Failed to submit service request",
-            );
-        }
-    }
-
-    async putServiceRequest(
-        role: IRole,
-        id: string,
-        data: IServiceForm,
-    ) {
-        try {
-            const path = portalPath(
-                role,
-                `/emergency-service/service/${id}`,
-            );
-
-            const response = await this.api.put(
-                path,
-                {
-                    ...data,
-                    service_time: formatTime(
-                        data.service_time,
-                        "HH:mm",
-                    ),
-                } as IServiceForm,
-            );
-
-            return response.data;
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                switch (error.status) {
-                    case 422:
-                        console.log(
-                            "Invalid data provided:",
-                            error.response?.data,
-                            data,
-                        );
-                        showToastable({
-                            message:
-                                "Invalid data provided. Please check your input and try again.",
-                            status: "danger",
-                            duration: 6000,
-                        });
-                        break;
-                }
-            }
-            throw new Error(
-                "Failed to update service request",
             );
         }
     }

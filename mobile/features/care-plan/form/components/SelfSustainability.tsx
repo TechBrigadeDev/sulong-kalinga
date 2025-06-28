@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCarePlanForm } from "features/care-plan/form/form";
-import { useGetInterventions } from "features/care-plan/hook";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import {
@@ -19,8 +18,7 @@ export interface SelfSustainabilityIntervention {
     name: string;
     minutes: number;
     isCustom?: boolean;
-    interventionId?: number; // Database intervention_id for standard interventions
-    categoryId?: number; // care_category_id for custom interventions
+    categoryId?: string;
     description?: string;
 }
 
@@ -34,6 +32,20 @@ interface SelfSustainabilityProps {
         data: SelfSustainabilityData,
     ) => void;
 }
+
+const DEFAULT_INTERVENTIONS = [
+    // Hygiene tasks
+    "Hand washing",
+    "Combing",
+    "Tooth brushing",
+    "Nail clipping",
+    "Changing clothes",
+    "Perineal care",
+    // Other tasks
+    "Bathing",
+    "Diaper Changing",
+    "Feeding",
+];
 
 export const SelfSustainability = ({
     data: _data,
@@ -72,8 +84,6 @@ export const SelfSustainability = ({
 
 const InterventionList = () => {
     const { control } = useCarePlanForm();
-    const { interventions } =
-        useGetInterventions();
 
     return (
         <Controller
@@ -88,14 +98,15 @@ const InterventionList = () => {
                         Available Interventions
                     </Text>
 
-                    {interventions[
-                        "Self-sustainability"
-                    ].map(
-                        (intervention, index) => (
+                    {DEFAULT_INTERVENTIONS.map(
+                        (
+                            interventionName,
+                            index,
+                        ) => (
                             <InterventionItem
                                 key={index}
-                                intervention={
-                                    intervention
+                                interventionName={
+                                    interventionName
                                 }
                                 interventions={
                                     field.value ||
@@ -127,10 +138,7 @@ const InterventionList = () => {
 };
 
 interface InterventionItemProps {
-    intervention: {
-        intervention_id: number;
-        intervention_description: string;
-    };
+    interventionName: string;
     interventions: SelfSustainabilityIntervention[];
     onChange: (
         interventions: SelfSustainabilityIntervention[],
@@ -138,15 +146,10 @@ interface InterventionItemProps {
 }
 
 const InterventionItem = ({
-    intervention,
+    interventionName,
     interventions,
     onChange,
 }: InterventionItemProps) => {
-    const interventionName =
-        intervention.intervention_description;
-    const interventionId =
-        intervention.intervention_id;
-
     const existingIntervention =
         interventions.find(
             (i) =>
@@ -171,12 +174,10 @@ const InterventionItem = ({
             // Add intervention
             const newIntervention: SelfSustainabilityIntervention =
                 {
-                    id: `self_sustainability_${interventionId}_${Date.now()}`,
+                    id: Date.now().toString(),
                     name: interventionName,
-                    minutes: 1,
+                    minutes: 0,
                     isCustom: false,
-                    interventionId:
-                        interventionId,
                 };
             onChange([
                 ...interventions,
@@ -203,7 +204,7 @@ const InterventionItem = ({
     };
 
     return (
-        <XStack gap="$3" items="center">
+        <XStack gap="$3" ai="center">
             <Checkbox
                 checked={isChecked}
                 onCheckedChange={
@@ -224,10 +225,7 @@ const InterventionItem = ({
                     {interventionName}
                 </Text>
                 {isChecked && (
-                    <XStack
-                        gap="$2"
-                        items="center"
-                    >
+                    <XStack gap="$2" ai="center">
                         <Input
                             flex={1}
                             placeholder="Duration"
@@ -291,7 +289,7 @@ const CustomIntervention = () => {
                                         {
                                             id: Date.now().toString(),
                                             name: customText.trim(),
-                                            minutes: 1,
+                                            minutes: 0,
                                             isCustom:
                                                 true,
                                         };
@@ -382,16 +380,16 @@ const CustomInterventionItem = ({
     return (
         <XStack
             gap="$3"
-            items="center"
+            ai="center"
             p="$3"
             bg="gray"
-            rounded="$4"
+            br="$4"
         >
             <YStack flex={1} gap="$2">
                 <Text fontSize="$4">
                     {intervention.name}
                 </Text>
-                <XStack gap="$2" items="center">
+                <XStack gap="$2" ai="center">
                     <Input
                         flex={1}
                         placeholder="Duration"
