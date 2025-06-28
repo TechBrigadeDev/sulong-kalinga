@@ -11,6 +11,9 @@ class AiSummaryController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->isCareManager()) {
+            return view('careManager.careManagerAiSummary');
+        }
         return view('admin.adminAiSummary');
     }
 
