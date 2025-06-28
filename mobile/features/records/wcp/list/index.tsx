@@ -137,10 +137,6 @@ const WCPRecordCard = ({
         );
     };
 
-    const onEditDetails = () => {
-        router.push(`/wcp/${record.id}/edit`);
-    };
-
     return (
         <Card
             theme="light"
@@ -187,7 +183,6 @@ const WCPRecordCard = ({
                         color="#495057"
                         borderColor="#DEE2E6"
                         variant="outlined"
-                        onPressIn={onEditDetails}
                     >
                         <SquarePen size={16} />
                     </Button>

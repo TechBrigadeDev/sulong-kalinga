@@ -1,4 +1,3 @@
-import { AxiosError } from "axios";
 import { Controller } from "common/api";
 import { log } from "common/debug";
 import { IRole } from "features/auth/auth.interface";
@@ -81,50 +80,6 @@ class EmergencyController extends Controller {
             );
             throw new Error(
                 "Failed to submit emergency request",
-            );
-        }
-    }
-
-    async putEmergencyRequest(
-        requestId: string,
-        data: IEmergencyForm,
-        role: IRole,
-    ) {
-        const path = portalPath(
-            role,
-            `/emergency-service/emergency/${requestId}`,
-        );
-
-        try {
-            const response = await this.api.put(
-                path,
-                data,
-            );
-
-            log(
-                "EmergencyController.putEmergencyRequest",
-                requestId,
-            );
-
-            return response.data;
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                switch (error.status) {
-                    case 422:
-                        console.log(
-                            error.response?.data,
-                        );
-                        showToastable({
-                            message:
-                                "Invalid data provided. Please check your input and try again.",
-                            status: "danger",
-                            duration: 6000,
-                        });
-                        break;
-                }
-            }
-            throw new Error(
-                "Failed to update emergency request",
             );
         }
     }

@@ -71,14 +71,6 @@ function RootLayoutNav() {
                             }}
                         />
                         <Stack.Screen
-                            name="wcp/index"
-                            options={{
-                                title: "Care Plan",
-                                headerTitle:
-                                    "Care Plan",
-                            }}
-                        />
-                        <Stack.Screen
                             name="messaging"
                             options={{
                                 animation: "fade",
@@ -87,18 +79,26 @@ function RootLayoutNav() {
                             }}
                         />
                         <Stack.Screen
-                            name="notifications/index"
+                            name="scheduling"
+                            options={{
+                                title: "Scheduling",
+                                headerTitle:
+                                    "Scheduling",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="(modals)"
+                            options={{
+                                headerShown:
+                                    false,
+                            }}
+                        />
+                        <Stack.Screen
+                            name="notification"
                             options={{
                                 title: "Notifications",
                                 headerTitle:
                                     "Notifications",
-                            }}
-                        />
-                        <Stack.Screen
-                            name="scheduling"
-                            options={{
-                                headerShown:
-                                    false,
                             }}
                         />
                     </Stack.Protected>

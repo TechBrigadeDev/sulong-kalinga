@@ -3,10 +3,7 @@ import { listResponseSchema } from "common/schema";
 import { IRole } from "features/auth/auth.interface";
 import { portalPath } from "features/auth/auth.util";
 
-import {
-    emergencyServiceHistorySchema,
-    emergencyServiceRequestSchema,
-} from "./schema";
+import { emergencyServiceRequestListSchema } from "./schema";
 
 class EmergencyServicenController extends Controller {
     async getActiveRequests(role: IRole) {
@@ -20,24 +17,15 @@ class EmergencyServicenController extends Controller {
 
             const validate =
                 await listResponseSchema(
-                    emergencyServiceRequestSchema,
+                    emergencyServiceRequestListSchema,
                 ).safeParseAsync(response.data);
 
             if (!validate.success) {
-                console.error(
-                    "Invalid response data",
-                    validate.error,
-                    response.data,
-                );
                 throw new Error(
                     "Invalid response data",
                 );
             }
 
-            console.log(
-                "Active emergency requests fetched successfully",
-                response.data,
-            );
             return validate.data;
         } catch (error) {
             console.error(
@@ -61,15 +49,10 @@ class EmergencyServicenController extends Controller {
 
             const validate =
                 await listResponseSchema(
-                    emergencyServiceHistorySchema,
+                    emergencyServiceRequestListSchema,
                 ).safeParseAsync(response.data);
 
             if (!validate.success) {
-                console.error(
-                    "Invalid response data",
-                    validate.error,
-                    response.data,
-                );
                 throw new Error(
                     "Invalid response data",
                 );

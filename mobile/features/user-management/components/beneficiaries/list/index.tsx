@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
 import { useGetBeneficiaries } from "features/user-management/management.hook";
-import { Eye } from "lucide-react-native";
 import { RefreshControl } from "react-native";
 import {
     Button,
@@ -131,11 +130,11 @@ const BeneficiaryCard = ({
         );
     };
 
-    // const onEdit = () => {
-    //     router.push(
-    //         `/(tabs)/options/user-management/beneficiaries/${beneficiary_id}/edit`,
-    //     );
-    // };
+    const onEdit = () => {
+        router.push(
+            `/(tabs)/options/user-management/beneficiaries/${beneficiary_id}/edit`,
+        );
+    };
 
     return (
         <Card
@@ -146,9 +145,6 @@ const BeneficiaryCard = ({
             borderRadius={8}
             borderColor="#E9ECEF"
             borderWidth={1}
-            flexDirection="row"
-            justify="space-between"
-            items="center"
         >
             <Text
                 fontSize="$6"
@@ -161,6 +157,7 @@ const BeneficiaryCard = ({
                 style={{
                     flexDirection: "row",
                     gap: 8,
+                    marginTop: 12,
                 }}
             >
                 <Button
@@ -171,9 +168,9 @@ const BeneficiaryCard = ({
                     onPress={onView}
                     variant="outlined"
                 >
-                    <Eye size={16} />
+                    View
                 </Button>
-                {/* <Button
+                <Button
                     size="$3"
                     bg="#E9ECEF"
                     color="#495057"
@@ -182,7 +179,7 @@ const BeneficiaryCard = ({
                     variant="outlined"
                 >
                     Edit
-                </Button> */}
+                </Button>
             </View>
         </Card>
     );

@@ -1,37 +1,31 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PropsWithChildren } from "react";
 import {
-    createFormHook,
-    createFormHookContexts,
-    formOptions,
-} from "@tanstack/react-form";
+    FormProvider,
+    useForm,
+    useFormContext,
+} from "react-hook-form";
 
-import EmergencyDescription from "./_components/Description";
-import EmergencyType from "./_components/EmergencyType";
-import SubmitEmergency from "./_components/Submit";
+import { IEmergencyForm } from "./interface";
 import { emergencyAssistanceFormSchema } from "./schema";
 
-export const emergencyFormOpts = formOptions({
-    validators: {
-        onChange: emergencyAssistanceFormSchema,
-    },
-});
-
-export const {
-    fieldContext: emergencyFieldContext,
-    formContext: emergencyFormContext,
-    useFieldContext: useEmergencyFieldContext,
-    useFormContext: useEmergencyFormContext,
-} = createFormHookContexts();
-
-export const { useAppForm: useEmergencyForm } =
-    createFormHook({
-        fieldContext: emergencyFieldContext,
-        formContext: emergencyFormContext,
-        fieldComponents: {
-            TypeField: EmergencyType,
-            DescriptionField:
-                EmergencyDescription,
-        },
-        formComponents: {
-            Submit: SubmitEmergency,
+export const EmergencyForm = ({
+    children,
+}: PropsWithChildren) => {
+    const form = useForm<IEmergencyForm>({
+        resolver: zodResolver(
+            emergencyAssistanceFormSchema,
+        ),
+        defaultValues: {
+            message: "",
         },
     });
+    return (
+        <FormProvider {...form}>
+            {children}
+        </FormProvider>
+    );
+};
+
+export const useEmergencyForm = () =>
+    useFormContext<IEmergencyForm>();

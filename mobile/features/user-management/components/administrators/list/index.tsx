@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { useGetAdministrators } from "features/user-management/management.hook";
 import { adminSchema } from "features/user-management/schema/admin";
-import { Eye } from "lucide-react-native";
 import { RefreshControl } from "react-native";
 import {
     Button,
@@ -69,11 +68,11 @@ const AdminCard = ({ item }: AdminCardProps) => {
         );
     };
 
-    // const onEdit = () => {
-    //     router.push(
-    //         `/(tabs)/options/user-management/admins/${id}/edit`,
-    //     );
-    // };
+    const onEdit = () => {
+        router.push(
+            `/(tabs)/options/user-management/admins/${id}/edit`,
+        );
+    };
 
     return (
         <Card
@@ -84,9 +83,6 @@ const AdminCard = ({ item }: AdminCardProps) => {
             borderRadius={8}
             borderColor="#E9ECEF"
             borderWidth={1}
-            flexDirection="row"
-            items="center"
-            justify="space-between"
         >
             <View>
                 <Text
@@ -108,6 +104,7 @@ const AdminCard = ({ item }: AdminCardProps) => {
                 style={{
                     flexDirection: "row",
                     gap: 8,
+                    marginTop: 12,
                 }}
             >
                 <Button
@@ -118,9 +115,9 @@ const AdminCard = ({ item }: AdminCardProps) => {
                     onPress={onView}
                     variant="outlined"
                 >
-                    <Eye size={16} />
+                    View
                 </Button>
-                {/* <Button
+                <Button
                     size="$3"
                     bg="#E9ECEF"
                     color="#495057"
@@ -129,7 +126,7 @@ const AdminCard = ({ item }: AdminCardProps) => {
                     variant="outlined"
                 >
                     Edit
-                </Button> */}
+                </Button>
             </View>
         </Card>
     );

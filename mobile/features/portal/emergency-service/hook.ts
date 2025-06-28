@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { QK, resetQK } from "common/query";
+import { QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
 import emergencyServiceController from "./api";
@@ -25,7 +25,7 @@ export const useEmergencyServiceRequests = () => {
 export const useEmergencyServiceRequestsHistory =
     () => {
         const { token, role } = authStore();
-        const query = useQuery({
+        return useQuery({
             queryKey:
                 QK.emergencyService.getRequestsHistory(),
             queryFn: async () => {
@@ -37,15 +37,4 @@ export const useEmergencyServiceRequestsHistory =
             },
             enabled: !!role && !!token,
         });
-
-        const reload = () => {
-            resetQK(
-                QK.emergencyService.getRequestsHistory(),
-            );
-        };
-
-        return {
-            ...query,
-            reload,
-        };
     };

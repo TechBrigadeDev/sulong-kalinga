@@ -89,7 +89,7 @@ const Assessment: React.FC<AssessmentProps> = ({
                                             size={
                                                 6
                                             }
-                                            color="#ef4444"
+                                            color="$red10"
                                         />
                                         <Text
                                             fontSize="$4"

@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import { IBeneficiary } from "features/records/type";
 import { careWorkerListStore } from "features/user-management/components/care-workers/list/store";
 import { Pressable } from "react-native";
 import {
@@ -12,7 +11,7 @@ import {
 
 export interface PersonalDetailsProps {
     data: {
-        beneficiary: IBeneficiary;
+        beneficiary: string;
         care_worker: string;
         plan_date: string;
     };
@@ -68,10 +67,7 @@ export function PersonalDetails({
                             fontWeight="600"
                             color="#495057"
                         >
-                            {
-                                data.beneficiary
-                                    .full_name
-                            }
+                            {data.beneficiary}
                         </Text>
                     </YStack>
 

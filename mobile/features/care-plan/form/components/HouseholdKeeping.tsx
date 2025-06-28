@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCarePlanForm } from "features/care-plan/form/form";
-import { useGetInterventions } from "features/care-plan/hook";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import {
@@ -19,8 +18,7 @@ export interface HouseholdKeepingIntervention {
     name: string;
     minutes: number;
     isCustom?: boolean;
-    interventionId?: number; // Database intervention_id for standard interventions
-    categoryId?: number; // care_category_id for custom interventions
+    categoryId?: string;
     description?: string;
 }
 
@@ -34,6 +32,15 @@ interface HouseholdKeepingProps {
         data: HouseholdKeepingData,
     ) => void;
 }
+
+const DEFAULT_INTERVENTIONS = [
+    "Light housekeeping and organizing",
+    "Assistance with laundry tasks",
+    "Help with meal preparation",
+    "Support with cleaning activities",
+    "Assistance with maintaining living spaces",
+    "Help with organizing personal belongings",
+];
 
 export const HouseholdKeeping = ({
     data: _data,
@@ -72,8 +79,6 @@ export const HouseholdKeeping = ({
 
 const InterventionList = () => {
     const { control } = useCarePlanForm();
-    const { interventions } =
-        useGetInterventions();
 
     return (
         <Controller
@@ -88,14 +93,15 @@ const InterventionList = () => {
                         Available Interventions
                     </Text>
 
-                    {interventions[
-                        "Household Keeping"
-                    ].map(
-                        (intervention, index) => (
+                    {DEFAULT_INTERVENTIONS.map(
+                        (
+                            interventionName,
+                            index,
+                        ) => (
                             <InterventionItem
                                 key={index}
-                                intervention={
-                                    intervention
+                                interventionName={
+                                    interventionName
                                 }
                                 interventions={
                                     field.value ||
@@ -127,10 +133,7 @@ const InterventionList = () => {
 };
 
 interface InterventionItemProps {
-    intervention: {
-        intervention_id: number;
-        intervention_description: string;
-    };
+    interventionName: string;
     interventions: HouseholdKeepingIntervention[];
     onChange: (
         interventions: HouseholdKeepingIntervention[],
@@ -138,15 +141,10 @@ interface InterventionItemProps {
 }
 
 const InterventionItem = ({
-    intervention,
+    interventionName,
     interventions,
     onChange,
 }: InterventionItemProps) => {
-    const interventionName =
-        intervention.intervention_description;
-    const interventionId =
-        intervention.intervention_id;
-
     const existingIntervention =
         interventions.find(
             (i) =>
@@ -169,12 +167,10 @@ const InterventionItem = ({
         } else {
             const newIntervention: HouseholdKeepingIntervention =
                 {
-                    id: `household_keeping_${interventionId}_${Date.now()}`,
+                    id: Date.now().toString(),
                     name: interventionName,
-                    minutes: 1,
+                    minutes: 0,
                     isCustom: false,
-                    interventionId:
-                        interventionId,
                 };
             onChange([
                 ...interventions,
@@ -201,7 +197,7 @@ const InterventionItem = ({
     };
 
     return (
-        <XStack gap="$3" items="center">
+        <XStack gap="$3" ai="center">
             <Checkbox
                 checked={isChecked}
                 onCheckedChange={
@@ -222,10 +218,7 @@ const InterventionItem = ({
                     {interventionName}
                 </Text>
                 {isChecked && (
-                    <XStack
-                        gap="$2"
-                        items="center"
-                    >
+                    <XStack gap="$2" ai="center">
                         <Input
                             flex={1}
                             placeholder="Duration"
@@ -254,14 +247,8 @@ const InterventionItem = ({
 
 const CustomIntervention = () => {
     const { control } = useCarePlanForm();
-    const { getCategoryId } =
-        useGetInterventions();
     const [customText, setCustomText] =
         useState("");
-
-    // Get the care_category_id for Household Keeping category
-    const householdKeepingCategoryId =
-        getCategoryId("Household Keeping");
 
     return (
         <Controller
@@ -293,13 +280,11 @@ const CustomIntervention = () => {
                                 ) {
                                     const newIntervention: HouseholdKeepingIntervention =
                                         {
-                                            id: `custom_household_keeping_${Date.now()}_${Math.random()}`,
+                                            id: Date.now().toString(),
                                             name: customText.trim(),
-                                            minutes: 1,
+                                            minutes: 0,
                                             isCustom:
                                                 true,
-                                            categoryId:
-                                                householdKeepingCategoryId,
                                         };
                                     field.onChange(
                                         [
@@ -388,16 +373,16 @@ const CustomInterventionItem = ({
     return (
         <XStack
             gap="$3"
-            items="center"
+            ai="center"
             p="$3"
             bg="gray"
-            rounded="$4"
+            br="$4"
         >
             <YStack flex={1} gap="$2">
                 <Text fontSize="$4">
                     {intervention.name}
                 </Text>
-                <XStack gap="$2" items="center">
+                <XStack gap="$2" ai="center">
                     <Input
                         flex={1}
                         placeholder="Duration"
