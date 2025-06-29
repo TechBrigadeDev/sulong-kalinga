@@ -100,6 +100,10 @@ const SubmitCarePlanForm = () => {
     const onError: SubmitErrorHandler<
         CarePlanFormData
     > = (errors) => {
+        console.log(
+            "Form submission errors:",
+            errors.personalDetails?.beneficiaryId,
+        );
         /**
          * {"personalDetails": {"pulseRate": {"message": "Pulse rate must be between 40 and 200", "ref": [Object], "type": "too_small"}}}
          */

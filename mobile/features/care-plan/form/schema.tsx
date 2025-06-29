@@ -156,7 +156,8 @@ export const carePlanFormSchema = z
         personalDetails: personalDetailsSchema,
         mobility: mobilitySchema,
         cognitive: cognitiveSchema,
-        selfSustainability: selfSustainabilitySchema,
+        selfSustainability:
+            selfSustainabilitySchema,
         diseaseTherapy: diseaseTherapySchema,
         socialContact: socialContactSchema,
         outdoorActivity: outdoorActivitySchema,
@@ -168,7 +169,8 @@ export const carePlanFormSchema = z
         const totalInterventions =
             (data.mobility?.length || 0) +
             (data.cognitive?.length || 0) +
-            (data.selfSustainability?.length || 0) +
+            (data.selfSustainability?.length ||
+                0) +
             (data.diseaseTherapy?.length || 0) +
             (data.socialContact?.length || 0) +
             (data.outdoorActivity?.length || 0) +

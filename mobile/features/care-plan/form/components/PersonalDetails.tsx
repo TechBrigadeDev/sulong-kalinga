@@ -133,20 +133,6 @@ const Beneficiary = () => {
         "personalDetails.beneficiaryId",
     );
 
-    // const defaultBeneficiary = useMemo(() => {
-    //     if (
-    //         currentBeneficiary?.beneficiary_id.toString() !==
-    //         currentBeneficiaryId
-    //     ) {
-    //         return null;
-    //     }
-
-    //     return currentBeneficiary;
-    // }, [
-    //     currentBeneficiary,
-    //     currentBeneficiaryId,
-    // ]);
-
     const [
         selectedBeneficiary,
         setSelectedBeneficiary,
@@ -160,8 +146,6 @@ const Beneficiary = () => {
             setSelectedBeneficiary(
                 currentBeneficiary,
             );
-        } else {
-            setSelectedBeneficiary(null);
         }
     }, [
         currentBeneficiary,
@@ -206,7 +190,7 @@ const Beneficiary = () => {
                         </Label>
                         <SelectBeneficiary
                             defaultValue={
-                                selectedBeneficiary?.beneficiary_id?.toString() ||
+                                selectedBeneficiary ||
                                 undefined
                             }
                             onValueChange={(
@@ -216,7 +200,7 @@ const Beneficiary = () => {
                                     allBeneficiaries.find(
                                         (b) =>
                                             b.beneficiary_id.toString() ===
-                                            beneficiary,
+                                            beneficiary?.beneficiary_id.toString(),
                                     );
 
                                 setSelectedBeneficiary(
@@ -225,8 +209,17 @@ const Beneficiary = () => {
                                 );
 
                                 field.onBlur();
+                                console.log(
+                                    "Selected beneficiary:",
+                                    selected,
+                                    allBeneficiaries.map(
+                                        (b) =>
+                                            b.beneficiary_id,
+                                    ),
+                                    beneficiary?.beneficiary_id,
+                                );
                                 field.onChange(
-                                    beneficiary ||
+                                    selected?.beneficiary_id.toString() ||
                                         null,
                                 );
                             }}

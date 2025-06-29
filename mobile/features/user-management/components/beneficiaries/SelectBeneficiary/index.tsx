@@ -18,11 +18,11 @@ import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface SelectBeneficiaryProps {
     onValueChange: (
-        beneficiary: string | null,
+        beneficiary: IBeneficiary | null,
     ) => void;
     placeholder?: string;
     searchPlaceholder?: string;
-    defaultValue?: string | null;
+    defaultValue?: IBeneficiary | null;
 }
 
 const SelectBeneficiary = ({
@@ -203,11 +203,11 @@ const SelectBeneficiary = ({
         );
     };
 
-    const [placeholder] = useState(
-        currentBeneficiary
+    const placeholder = useMemo(() => {
+        return currentBeneficiary
             ? `${currentBeneficiary.first_name} ${currentBeneficiary.last_name}`
-            : _placeholder,
-    );
+            : _placeholder;
+    }, [currentBeneficiary, _placeholder]);
 
     return (
         <Select
