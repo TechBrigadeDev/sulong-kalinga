@@ -1,10 +1,17 @@
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { useCarePlanFormStore } from "features/care-plan/form/store";
 import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
-import { useGetBeneficiary } from "features/user-management/management.hook";
+import {
+    useGetBeneficiaries,
+    useGetBeneficiary,
+} from "features/user-management/management.hook";
 import { IBeneficiary } from "features/user-management/management.type";
 import { Info } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 import { Controller } from "react-hook-form";
 import {
     Card,
@@ -169,6 +176,17 @@ const Beneficiary = () => {
           ).getFullYear()
         : "";
 
+    const { data: beneficiaries } =
+        useGetBeneficiaries();
+
+    const allBeneficiaries = useMemo(() => {
+        return (
+            beneficiaries?.pages?.flatMap(
+                (page) => page.data,
+            ) || []
+        );
+    }, [beneficiaries]);
+
     const Input = () =>
         record?.beneficiary ? (
             <H4>
@@ -188,17 +206,28 @@ const Beneficiary = () => {
                         </Label>
                         <SelectBeneficiary
                             defaultValue={
-                                selectedBeneficiary
+                                selectedBeneficiary?.beneficiary_id?.toString() ||
+                                undefined
                             }
                             onValueChange={(
                                 beneficiary,
                             ) => {
+                                const selected =
+                                    allBeneficiaries.find(
+                                        (b) =>
+                                            b.beneficiary_id.toString() ===
+                                            beneficiary,
+                                    );
+
                                 setSelectedBeneficiary(
-                                    beneficiary,
+                                    selected ||
+                                        null,
                                 );
+
+                                field.onBlur();
                                 field.onChange(
-                                    beneficiary?.beneficiary_id.toString() ||
-                                        "",
+                                    beneficiary ||
+                                        null,
                                 );
                             }}
                         />

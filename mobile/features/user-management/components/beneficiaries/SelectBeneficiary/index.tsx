@@ -18,11 +18,11 @@ import { IBeneficiary } from "~/features/user-management/management.type";
 
 interface SelectBeneficiaryProps {
     onValueChange: (
-        beneficiary: IBeneficiary | null,
+        beneficiary: string | null,
     ) => void;
     placeholder?: string;
     searchPlaceholder?: string;
-    defaultValue?: IBeneficiary | null;
+    defaultValue?: string | null;
 }
 
 const SelectBeneficiary = ({
@@ -71,9 +71,20 @@ const SelectBeneficiary = ({
         }
     };
 
+    const defaultValue = useMemo(() => {
+        const currentBeneficiary =
+            allBeneficiaries.find(
+                (b) =>
+                    b.beneficiary_id.toString() ===
+                    _defaultValue?.toString(),
+            );
+
+        return currentBeneficiary || null;
+    }, [allBeneficiaries, _defaultValue]);
+
     const [beneficiary, setBeneficiary] =
         useState<string | null>(
-            _defaultValue?.beneficiary_id?.toString() ||
+            defaultValue?.beneficiary_id?.toString() ||
                 null,
         );
 
@@ -95,13 +106,13 @@ const SelectBeneficiary = ({
 
     useEffect(() => {
         // Set initial value if provided
-        if (_defaultValue) {
+        if (defaultValue) {
             setBeneficiary(
-                _defaultValue.beneficiary_id?.toString() ||
+                defaultValue.beneficiary_id?.toString() ||
                     null,
             );
         }
-    }, [_defaultValue]);
+    }, [defaultValue]);
 
     // Handle search input change
     const handleSearchChange = (
