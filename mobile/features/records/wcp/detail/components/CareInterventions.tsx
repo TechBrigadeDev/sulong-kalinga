@@ -64,9 +64,9 @@ export function CareInterventions({
             (acc, intervention) => {
                 const categoryId =
                     intervention.care_category_id;
-                    
+
                 if (!categoryId) return acc;
-                
+
                 const categoryName =
                     categoryMap[categoryId]
                         ?.name || "OTHER";
