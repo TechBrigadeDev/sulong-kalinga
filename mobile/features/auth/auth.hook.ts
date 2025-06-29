@@ -27,8 +27,7 @@ export const useLogin = (params?: {
                         data.login,
                         data.password,
                     );
-                    console.log('zzzzzzzzzzzzzz')
-                    console.log(response)
+
                 if (!response.success) {
                     throw new Error(
                         "Login failed",
