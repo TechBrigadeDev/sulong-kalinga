@@ -101,12 +101,9 @@ export const interventionSchema = z.object({
         .optional(),
 });
 
-export const mobilitySchema = z
-    .array(interventionSchema)
-    .min(
-        1,
-        "Please select at least one intervention",
-    );
+export const mobilitySchema = z.array(
+    interventionSchema,
+);
 
 export const cognitiveSchema = z.array(
     interventionSchema,
@@ -154,14 +151,36 @@ export const evaluationSchema = z.object({
         ),
 });
 
-export const carePlanFormSchema = z.object({
-    personalDetails: personalDetailsSchema,
-    mobility: mobilitySchema,
-    cognitive: cognitiveSchema,
-    selfSustainability: selfSustainabilitySchema,
-    diseaseTherapy: diseaseTherapySchema,
-    socialContact: socialContactSchema,
-    outdoorActivity: outdoorActivitySchema,
-    householdKeeping: householdKeepingSchema,
-    evaluation: evaluationSchema,
-});
+export const carePlanFormSchema = z
+    .object({
+        personalDetails: personalDetailsSchema,
+        mobility: mobilitySchema,
+        cognitive: cognitiveSchema,
+        selfSustainability: selfSustainabilitySchema,
+        diseaseTherapy: diseaseTherapySchema,
+        socialContact: socialContactSchema,
+        outdoorActivity: outdoorActivitySchema,
+        householdKeeping: householdKeepingSchema,
+        evaluation: evaluationSchema,
+    })
+    .superRefine((data, ctx) => {
+        // Check if at least one intervention exists across all care categories
+        const totalInterventions =
+            (data.mobility?.length || 0) +
+            (data.cognitive?.length || 0) +
+            (data.selfSustainability?.length || 0) +
+            (data.diseaseTherapy?.length || 0) +
+            (data.socialContact?.length || 0) +
+            (data.outdoorActivity?.length || 0) +
+            (data.householdKeeping?.length || 0);
+
+        if (totalInterventions === 0) {
+            // Add error to the first care category field (mobility) to show the error message
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    "Please select at least one intervention from any care category",
+                path: ["mobility"],
+            });
+        }
+    });
