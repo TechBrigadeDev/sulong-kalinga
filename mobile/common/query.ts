@@ -179,9 +179,13 @@ export const QK = {
             "notification/getNotificationToken",
             role,
         ],
-        registerToken: (role: IRole) => [
+        registerToken: (
+            role: IRole,
+            token: string | null,
+        ) => [
             "notification/registerNotification",
-            role || "token",
+            role,
+            token,
         ],
     },
 };

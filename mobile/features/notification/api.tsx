@@ -137,6 +137,16 @@ class NotificationController extends Controller {
                             error.message,
                         );
                         break;
+                    case 404:
+                        switch (
+                            error.response?.data
+                                .message
+                        ) {
+                            case "No FCM token found for user":
+                                return null;
+                            default:
+                                break;
+                        }
                     default:
                         break;
                 }
@@ -151,16 +161,57 @@ class NotificationController extends Controller {
             );
         }
     }
-    async registerNotification(role: IRole) {
+    async registerNotification({
+        role,
+        token,
+    }: {
+        role: IRole;
+        token: string;
+    }) {
         const path = portalPath(
             role,
             "/fcm/register",
         );
 
-        console.log(
-            "Registering notification",
-            path,
-        );
+        try {
+            const response = await this.api.post(
+                path,
+                {
+                    token,
+                },
+            );
+            console.log(
+                "Notification token registered",
+                response.data,
+            );
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.status) {
+                    case 500:
+                        log(
+                            "Server error:",
+                            error.message,
+                        );
+                        break;
+                    default:
+                        log(
+                            "Error registering notification token:",
+                            error.response?.data,
+                            error.message,
+                        );
+                        break;
+                }
+            } else if (
+                error instanceof ZodError
+            ) {
+                log("Zod error:", error.errors);
+            }
+
+            throw new Error(
+                "Failed to register notification token",
+            );
+        }
     }
 }
 

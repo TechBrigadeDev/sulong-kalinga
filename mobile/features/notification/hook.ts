@@ -8,6 +8,7 @@ import { invalidateQK, QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
 import notificationController from "./api";
+import { registerForPushNotification } from "./service";
 
 const api = notificationController;
 
@@ -136,6 +137,7 @@ export const useRegisterNotification = () => {
     return useQuery({
         queryKey: QK.notification.registerToken(
             role!,
+            notificationToken,
         ),
         queryFn: async () => {
             if (!role) {
@@ -144,23 +146,37 @@ export const useRegisterNotification = () => {
                 );
             }
 
-            console.log(
-                "Registering notification with token",
-                notificationToken,
-            );
+            if (!notificationToken) {
+                const token =
+                    await registerForPushNotification();
 
-            return await api.registerNotification(
-                role,
-            );
+                if (!token) {
+                    throw new Error(
+                        "Failed to get notification token",
+                    );
+                }
+
+                console.log(
+                    "Register token:",
+                    token,
+                );
+
+                await api.registerNotification({
+                    role,
+                    token,
+                });
+            }
+
+            return "yellow";
         },
         enabled: !!role,
         staleTime: isDev
             ? Infinity
             : 1000 * 60 * 60 * 24,
-        ...(isDev
-            ? {
-                  refetchInterval: 5000,
-              }
-            : {}),
+        // ...(isDev
+        //     ? {
+        //           refetchInterval: 5000,
+        //       }
+        //     : {}),
     });
 };
