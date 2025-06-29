@@ -94,12 +94,19 @@ const SubmitCarePlanForm = () => {
                 "Error submitting form:",
                 error,
             );
+            throw new Error(
+                "Failed to submit care plan form",
+            );
         }
     };
 
     const onError: SubmitErrorHandler<
         CarePlanFormData
     > = (errors) => {
+        console.log(
+            "Form submission errors:",
+            errors.personalDetails?.beneficiaryId,
+        );
         /**
          * {"personalDetails": {"pulseRate": {"message": "Pulse rate must be between 40 and 200", "ref": [Object], "type": "too_small"}}}
          */
@@ -277,7 +284,9 @@ const SubmitCarePlanForm = () => {
                 </View>
             )}
             <Text>
-                {record?.id ? "Edit" : "Create"}{" "}
+                {record?.id
+                    ? "Edit"
+                    : "Create"}{" "}
                 Weekly Care Plan
             </Text>
         </Button>

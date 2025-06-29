@@ -1,11 +1,14 @@
 import {
     useInfiniteQuery,
     useMutation,
+    useQuery,
 } from "@tanstack/react-query";
+import { isDev } from "common/env";
 import { invalidateQK, QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
 import notificationController from "./api";
+import { registerForPushNotification } from "./service";
 
 const api = notificationController;
 
@@ -101,5 +104,79 @@ export const useReadAllNotifications = () => {
                 token!,
             ]);
         },
+    });
+};
+
+export const useGetNotificationToken = () => {
+    const { role } = authStore();
+
+    return useQuery({
+        queryKey: QK.notification.getToken(role!),
+        queryFn: async () => {
+            if (!role) {
+                throw new Error(
+                    "Role is not defined",
+                );
+            }
+
+            return await api.getNotificationToken(
+                role,
+            );
+        },
+        enabled: !!role,
+        staleTime: 1000 * 60 * 60 * 24,
+    });
+};
+
+export const useRegisterNotification = () => {
+    const { data: notificationToken } =
+        useGetNotificationToken();
+
+    const { role } = authStore();
+
+    return useQuery({
+        queryKey: QK.notification.registerToken(
+            role!,
+            notificationToken,
+        ),
+        queryFn: async () => {
+            if (!role) {
+                throw new Error(
+                    "Token is not defined",
+                );
+            }
+
+            if (!notificationToken) {
+                const token =
+                    await registerForPushNotification();
+
+                if (!token) {
+                    throw new Error(
+                        "Failed to get notification token",
+                    );
+                }
+
+                console.log(
+                    "Register token:",
+                    token,
+                );
+
+                await api.registerNotification({
+                    role,
+                    token,
+                });
+            }
+
+            return "yellow";
+        },
+        enabled: !!role,
+        staleTime: isDev
+            ? Infinity
+            : 1000 * 60 * 60 * 24,
+        // ...(isDev
+        //     ? {
+        //           refetchInterval: 5000,
+        //       }
+        //     : {}),
     });
 };

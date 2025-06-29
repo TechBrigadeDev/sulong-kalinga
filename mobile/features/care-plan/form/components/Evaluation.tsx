@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { Image as LucideImage } from "lucide-react-native";
+import { useEffect } from "react";
 import { Controller } from "react-hook-form";
 import {
     Button,
@@ -51,7 +52,8 @@ export const Evaluation = ({
 };
 
 const PictureUpload = () => {
-    const { control } = useCarePlanForm();
+    const { control, getValues } =
+        useCarePlanForm();
 
     const pickImage = async (
         onChange: (uri: string | null) => void,
@@ -156,7 +158,31 @@ const PictureUpload = () => {
 };
 
 const RecommendationsInput = () => {
-    const { control } = useCarePlanForm();
+    const { control, getValues, setValue } =
+        useCarePlanForm();
+
+    const currentRecommendations =
+        getValues("evaluation.recommendations") ||
+        "";
+
+    useEffect(() => {
+        // if the value exceeds 5000 characters,
+        // truncate it to the first 5000 characters
+        if (
+            currentRecommendations.length > 5000
+        ) {
+            const truncatedValue =
+                currentRecommendations.slice(
+                    0,
+                    5000,
+                );
+
+            setValue(
+                "evaluation.recommendations",
+                truncatedValue,
+            );
+        }
+    }, [currentRecommendations, setValue]);
 
     return (
         <Controller
@@ -179,6 +205,7 @@ const RecommendationsInput = () => {
                         }
                         multiline
                         numberOfLines={4}
+                        maxLength={5000}
                         textAlignVertical="top"
                     />
 

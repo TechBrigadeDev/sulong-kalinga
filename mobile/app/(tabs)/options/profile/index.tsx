@@ -1,3 +1,4 @@
+import LoadingScreen from "components/loaders/LoadingScreen";
 import { Stack } from "expo-router";
 import { useUserProfile } from "features/user/user.hook";
 import {
@@ -8,7 +9,15 @@ import {
 import ProfileSettings from "~/components/screens/Options/profile/Settings";
 
 const ProfileScreen = () => {
-    useUserProfile();
+    const { isLoading } = useUserProfile();
+
+    const Screen = () =>
+        isLoading ? (
+            <LoadingScreen />
+        ) : (
+            <ProfileSettings />
+        );
+
     return (
         <SafeAreaView style={style.container}>
             <Stack.Screen
@@ -17,7 +26,7 @@ const ProfileScreen = () => {
                     headerShown: true,
                 }}
             />
-            <ProfileSettings />
+            <Screen />
         </SafeAreaView>
     );
 };

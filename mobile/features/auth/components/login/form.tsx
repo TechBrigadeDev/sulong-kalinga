@@ -37,7 +37,9 @@ const LoginForm = () => {
             <Input
                 placeholder="Email or Username"
                 value={login}
-                onChangeText={setLogin}
+                onChangeText={(text) =>
+                    setLogin(text.trim())
+                }
                 style={styles.input}
             />
             <Input

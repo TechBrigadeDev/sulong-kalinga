@@ -52,8 +52,6 @@ const Contact = () => {
                 userData.emergency_contact_mobile;
         }
 
-        console.log(userData?.role, contactValue);
-
         if (!contactValue) return null;
         return (
             <OptionRow

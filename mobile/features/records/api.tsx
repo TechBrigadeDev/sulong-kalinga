@@ -132,6 +132,8 @@ class ReportController extends Controller {
             );
         }
 
+        log("Fetched WCP record:", validate.data);
+
         return validate.data;
     }
 }

@@ -60,6 +60,15 @@ const wcpBeneficiarySchema = z.object({
     civil_status: z.string(),
 });
 
+export const wcpInterventionSchema = z.object({
+    wcp_intervention_id: z.number(),
+    intervention_id: z.number().nullable(),
+    care_category_id: z.number().nullable(),
+    description: z.string().nullable(),
+    duration_minutes: z.string(),
+    implemented: z.boolean(),
+});
+
 export const wcpRecordSchema = z.object({
     id: z.number(),
     date: z.string(),
@@ -80,20 +89,7 @@ export const wcpRecordSchema = z.object({
         created_at: z.string(),
         updated_at: z.string(),
     }),
-    interventions: z.array(
-        z.object({
-            wcp_intervention_id: z.number(),
-            intervention_id: z
-                .number()
-                .nullable(),
-            care_category_id: z
-                .number()
-                .nullable(),
-            description: z.string().nullable(),
-            duration_minutes: z.string(),
-            implemented: z.boolean(),
-        }),
-    ),
+    interventions: wcpInterventionSchema.array(),
     photo_url: z.string(),
     created_at: z.string(),
     updated_at: z.string(),

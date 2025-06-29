@@ -29,6 +29,15 @@ axiosClient.interceptors.response.use(
 
                 switch (message) {
                     case "Unauthenticated.":
+                        console.warn(
+                            "Session expired, redirecting to login.",
+                            //path
+                            error.response
+                                ?.headers,
+                            error.request
+                                .responseURL,
+                        );
+                        // Clear the token and redirect to login
                         setToken(null);
                         showToastable({
                             title: "Session expired",

@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 
-export async function registerForPushNotificationsAsync() {
+export async function registerForPushNotification() {
     const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -20,10 +20,6 @@ export async function registerForPushNotificationsAsync() {
 
     const tokenData =
         await Notifications.getExpoPushTokenAsync();
-    console.log(
-        "Expo Push Token:",
-        tokenData.data,
-    );
     return tokenData.data;
 }
 

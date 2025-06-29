@@ -79,6 +79,9 @@ export const usePatchCarePlan = (props: {
             if (props.onError) {
                 props.onError(error);
             }
+            throw new Error(
+                "Failed to update care plan",
+            );
         },
     });
 };

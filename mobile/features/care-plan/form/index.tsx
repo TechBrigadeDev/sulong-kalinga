@@ -180,6 +180,15 @@ const Form = ({ record }: Props) => {
         }, [resetStep]),
     );
 
+    useEffect(() => {
+        return () => {
+            console.log(
+                "Form unmounted, resetting form state",
+            );
+            formReset({});
+        };
+    }, [formReset]);
+
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
@@ -229,7 +238,10 @@ const Form = ({ record }: Props) => {
                     setStep={setCurrentStep}
                 />
 
-                <TabScroll flex={1}>
+                <TabScroll
+                    flex={1}
+                    showScrollUp={false}
+                >
                     <YStack gap="$4">
                         {renderStep()}
                     </YStack>

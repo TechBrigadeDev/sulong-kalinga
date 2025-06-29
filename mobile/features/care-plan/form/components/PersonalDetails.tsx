@@ -1,10 +1,17 @@
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { useCarePlanFormStore } from "features/care-plan/form/store";
 import SelectBeneficiary from "features/user-management/components/beneficiaries/SelectBeneficiary";
-import { useGetBeneficiary } from "features/user-management/management.hook";
+import {
+    useGetBeneficiaries,
+    useGetBeneficiary,
+} from "features/user-management/management.hook";
 import { IBeneficiary } from "features/user-management/management.type";
 import { Info } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 import { Controller } from "react-hook-form";
 import {
     Card,
@@ -109,11 +116,6 @@ export const PersonalDetails = ({
 
 const Beneficiary = () => {
     const { record } = useCarePlanFormStore();
-
-    console.log(
-        "beneficiary record:",
-        record?.beneficiary,
-    );
     const { data: currentBeneficiary } =
         useGetBeneficiary(
             record?.beneficiary?.beneficiary_id.toString(),
@@ -126,24 +128,21 @@ const Beneficiary = () => {
         "personalDetails.beneficiaryId",
     );
 
-    // const defaultBeneficiary = useMemo(() => {
-    //     if (
-    //         currentBeneficiary?.beneficiary_id.toString() !==
-    //         currentBeneficiaryId
-    //     ) {
-    //         return null;
-    //     }
-
-    //     return currentBeneficiary;
-    // }, [
-    //     currentBeneficiary,
-    //     currentBeneficiaryId,
-    // ]);
-
     const [
         selectedBeneficiary,
         setSelectedBeneficiary,
     ] = useState<IBeneficiary | null>(null);
+
+    const { data: beneficiaries } =
+        useGetBeneficiaries();
+
+    const allBeneficiaries = useMemo(() => {
+        return (
+            beneficiaries?.pages?.flatMap(
+                (page) => page.data,
+            ) || []
+        );
+    }, [beneficiaries]);
 
     useEffect(() => {
         if (
@@ -153,12 +152,22 @@ const Beneficiary = () => {
             setSelectedBeneficiary(
                 currentBeneficiary,
             );
-        } else {
-            setSelectedBeneficiary(null);
+        } else if (!!currentBeneficiaryId) {
+            const selected =
+                allBeneficiaries.find(
+                    (b) =>
+                        b.beneficiary_id.toString() ===
+                        currentBeneficiaryId,
+                );
+            setSelectedBeneficiary(
+                selected || null,
+            );
         }
     }, [
         currentBeneficiary,
         currentBeneficiaryId,
+        record?.beneficiary,
+        allBeneficiaries,
     ]);
 
     // get age from beneficiary.birthdate
@@ -168,7 +177,6 @@ const Beneficiary = () => {
               selectedBeneficiary.birthday,
           ).getFullYear()
         : "";
-
     const Input = () =>
         record?.beneficiary ? (
             <H4>
@@ -188,17 +196,37 @@ const Beneficiary = () => {
                         </Label>
                         <SelectBeneficiary
                             defaultValue={
-                                selectedBeneficiary
+                                selectedBeneficiary ||
+                                undefined
                             }
                             onValueChange={(
                                 beneficiary,
                             ) => {
+                                const selected =
+                                    allBeneficiaries.find(
+                                        (b) =>
+                                            b.beneficiary_id.toString() ===
+                                            beneficiary?.beneficiary_id.toString(),
+                                    );
+
                                 setSelectedBeneficiary(
-                                    beneficiary,
+                                    selected ||
+                                        null,
+                                );
+
+                                field.onBlur();
+                                console.log(
+                                    "Selected beneficiary:",
+                                    selected,
+                                    allBeneficiaries.map(
+                                        (b) =>
+                                            b.beneficiary_id,
+                                    ),
+                                    beneficiary?.beneficiary_id,
                                 );
                                 field.onChange(
-                                    beneficiary?.beneficiary_id.toString() ||
-                                        "",
+                                    selected?.beneficiary_id.toString() ||
+                                        null,
                                 );
                             }}
                         />

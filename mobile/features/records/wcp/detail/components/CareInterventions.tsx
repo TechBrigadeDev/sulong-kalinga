@@ -1,5 +1,5 @@
 import Badge from "components/Bagde";
-import { useGetInterventions } from "features/care-plan/hook";
+import { IWCPIntervention } from "features/records/type";
 import {
     Bath,
     CheckCircle,
@@ -17,61 +17,44 @@ import {
     XStack,
     YStack,
 } from "tamagui";
-
-interface Intervention {
-    wcp_intervention_id: number;
-    intervention_id: number | null;
-    care_category_id: number;
-    intervention_description: string | null;
-    duration_minutes: string;
-    implemented: boolean;
-}
-
 interface CareInterventionsProps {
-    interventions: Intervention[];
+    interventions: IWCPIntervention[];
 }
 
 export function CareInterventions({
     interventions,
 }: CareInterventionsProps) {
-    const {} = useGetInterventions();
-
     const categoryMap: Record<
         number,
         { name: string; IconComponent: any }
     > = {
         1: {
-            name: "PERSONAL CARE",
-            IconComponent: Bath,
-        },
-        2: {
-            name: "HEALTH MONITORING",
-            IconComponent: Stethoscope,
-        },
-        3: {
-            name: "MEDICATION MANAGEMENT",
-            IconComponent: Pill,
-        },
-        4: {
-            name: "MOBILITY SUPPORT",
+            name: "MOBILITY",
             IconComponent: Heart,
         },
-        5: {
-            name: "SOCIAL ENGAGEMENT",
-            IconComponent: Users,
-        },
-        6: {
-            name: "SAFETY MEASURES",
-            IconComponent: Shield,
-        },
-        // Add mappings for the categories shown in web UI
-        7: {
+        2: {
             name: "COGNITIVE/COMMUNICATION",
             IconComponent: Users,
         },
-        8: {
+        3: {
+            name: "SELF-SUSTAINABILITY",
+            IconComponent: Bath,
+        },
+        4: {
             name: "DISEASE/THERAPY HANDLING",
             IconComponent: Pill,
+        },
+        5: {
+            name: "DAILY LIFE/SOCIAL CONTACT",
+            IconComponent: Users,
+        },
+        6: {
+            name: "OUTDOOR ACTIVITIES",
+            IconComponent: Stethoscope,
+        },
+        7: {
+            name: "HOUSEHOLD KEEPING",
+            IconComponent: Shield,
         },
     };
 
@@ -81,6 +64,9 @@ export function CareInterventions({
             (acc, intervention) => {
                 const categoryId =
                     intervention.care_category_id;
+
+                if (!categoryId) return acc;
+
                 const categoryName =
                     categoryMap[categoryId]
                         ?.name || "OTHER";
@@ -93,7 +79,10 @@ export function CareInterventions({
                 );
                 return acc;
             },
-            {} as Record<string, Intervention[]>,
+            {} as Record<
+                string,
+                IWCPIntervention[]
+            >,
         );
 
     // Calculate total care time
@@ -198,7 +187,7 @@ export function CareInterventions({
                                                 fontSize="$4"
                                                 color="#495057"
                                             >
-                                                {intervention.intervention_description ||
+                                                {intervention.description ||
                                                     `${categoryName.toLowerCase()} intervention`}
                                             </Text>
 
