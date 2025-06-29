@@ -1,4 +1,3 @@
-import TabScroll from "components/tabs/TabScroll";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useCarePlanForm } from "features/care-plan/form/form";
@@ -9,6 +8,7 @@ import {
     Button,
     Card,
     Input,
+    ScrollView,
     Text,
     YStack,
 } from "tamagui";
@@ -30,8 +30,10 @@ export const Evaluation = ({
     onChange: _onChange,
 }: EvaluationProps) => {
     return (
-        <TabScroll>
-            <YStack p="$4" gap="$4">
+        <ScrollView flex={1}>
+            <YStack
+                style={{ padding: 16, gap: 16 }}
+            >
                 <Card elevate>
                     <Card.Header padded>
                         <Text
@@ -47,7 +49,7 @@ export const Evaluation = ({
                     </YStack>
                 </Card>
             </YStack>
-        </TabScroll>
+        </ScrollView>
     );
 };
 
@@ -77,6 +79,14 @@ const PictureUpload = () => {
             onChange(result.assets[0].uri);
         }
     };
+
+    const uri = getValues(
+        "evaluation.pictureUri",
+    );
+
+    useEffect(() => {
+        console.log("Current picture URI:", uri);
+    }, [uri, getValues]);
 
     return (
         <Controller

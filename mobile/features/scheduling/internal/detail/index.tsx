@@ -162,11 +162,12 @@ const InternalAppointmentDetail = ({
                                             •
                                         </Text>
                                         <Text>
-                                            {participant.user
-                                                ? `${participant.user.first_name} ${participant.user.last_name}`
-                                                : participant.participant_type}
-                                            {participant.is_organizer &&
-                                                " (Organizer)"}
+                                            {
+                                                participant.full_name
+                                            }{" "}
+                                            {participant.is_organizer
+                                                ? "(Organizer)"
+                                                : ""}
                                         </Text>
                                     </XStack>
                                 ),
