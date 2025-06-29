@@ -28,6 +28,7 @@ use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Services\LogService;
 use App\Enums\LogType;
+use App\Services\NotificationService;
 
 use App\Services\UserManagementService;
 use App\Services\UploadService;
@@ -37,12 +38,18 @@ class BeneficiaryController extends Controller
     protected $userManagementService;
     protected $logService;
     protected $uploadService;
+    protected $notificationService;
 
-    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
-    {
+    public function __construct(
+        UserManagementService $userManagementService,
+        LogService $logService,
+        UploadService $uploadService,
+        NotificationService $notificationService
+    ) {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
     }
 
     private function resetGeneralCarePlanSequence()
@@ -155,45 +162,22 @@ class BeneficiaryController extends Controller
                     $reason = $request->input('reason');
                     
                     // 1. Notify the beneficiary about the status change
-                    $beneficiaryTitle = 'Your Account Status Changed';
-                    $beneficiaryMessage = 'Your beneficiary account status has been changed from ' . $oldStatus . ' to ' . $newStatus . 
-                                        ' by ' . $actor . ' (' . $actorRole . ')';
-                    if ($reason) {
-                        $beneficiaryMessage .= '. Reason: ' . $reason;
-                    }
-                    $this->sendNotificationToBeneficiary($id, $beneficiaryTitle, $beneficiaryMessage);
-                    
+                    $this->notificationService->notifyBeneficiary($id, $beneficiaryTitle, $beneficiaryMessage);
+
                     // 2. Notify family members about the status change
-                    $familyTitle = 'Beneficiary Status Changed';
-                    $familyMessage = 'The status of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                   ' has been changed from ' . $oldStatus . ' to ' . $newStatus . ' by ' . $actor . ' (' . $actorRole . ')';
-                    if ($reason) {
-                        $familyMessage .= '. Reason: ' . $reason;
+                    $familyMembers = FamilyMember::where('related_beneficiary_id', $id)->get();
+                    foreach ($familyMembers as $member) {
+                        $this->notificationService->notifyFamilyMember($member->family_member_id, $familyTitle, $familyMessage);
                     }
-                    $this->sendNotificationToFamilyMembers($id, $familyTitle, $familyMessage);
-                    
+
                     // 3. Notify the assigned care worker (if not the one making the change)
                     if ($careWorkerId && $careWorkerId != Auth::id()) {
-                        $careWorkerTitle = 'Beneficiary Status Changed';
-                        $careWorkerMessage = 'The status of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                           ', who is assigned to you, has been changed from ' . $oldStatus . ' to ' . $newStatus . 
-                                           ' by ' . $actor . ' (' . $actorRole . ')';
-                        if ($reason) {
-                            $careWorkerMessage .= '. Reason: ' . $reason;
-                        }
-                        $this->sendNotificationToCareWorker($careWorkerId, $careWorkerTitle, $careWorkerMessage);
-                        
+                        $this->notificationService->notifyStaff($careWorkerId, $careWorkerTitle, $careWorkerMessage);
+
                         // 4. Notify the care manager (if not the one making the change)
                         $careWorker = User::find($careWorkerId);
                         if ($careWorker && $careWorker->assigned_care_manager_id && $careWorker->assigned_care_manager_id != Auth::id()) {
-                            $careManagerTitle = 'Beneficiary Status Changed';
-                            $careManagerMessage = 'The status of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                                ', who is assigned to your care worker ' . $careWorker->first_name . ' ' . $careWorker->last_name . 
-                                                ', has been changed from ' . $oldStatus . ' to ' . $newStatus . ' by ' . $actor . ' (' . $actorRole . ')';
-                            if ($reason) {
-                                $careManagerMessage .= '. Reason: ' . $reason;
-                            }
-                            $this->sendNotificationToCareManager($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
+                            $this->notificationService->notifyStaff($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
                         }
                     }
                 } catch (\Exception $notifyEx) {
@@ -1089,33 +1073,30 @@ class BeneficiaryController extends Controller
             DB::commit();
 
             try {
-                // 1. Welcome notification for the beneficiary
                 if ($beneficiary) {
                     $welcomeTitle = 'Welcome to SULONG KALINGA';
-                    $welcomeMessage = 'Welcome ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                    '! Your beneficiary account has been created in SULONG KALINGA. You can now access the portal with your credentials.';
-                    $this->sendNotificationToBeneficiary($beneficiary->beneficiary_id, $welcomeTitle, $welcomeMessage);
+                    $welcomeMessage = 'Welcome ' . $beneficiary->first_name . ' ' . $beneficiary->last_name .
+                        '! Your beneficiary account has been created in SULONG KALINGA. You can now access the portal with your credentials.';
+                    $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $welcomeTitle, $welcomeMessage);
                 }
-                
-                // 2. Notify assigned care worker
+
                 $careWorkerId = $request->input('care_worker.careworker_id');
                 if ($careWorkerId && $careWorkerId != Auth::id()) {
-                    $careWorker = User::find($careWorkerId);
                     $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
                     $actorRole = Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Care Manager' : 'Care Worker');
-                    
                     $title = 'New Beneficiary Assigned';
-                    $message = $actor . ' (' . $actorRole . ') has assigned a new beneficiary, ' . 
-                              $beneficiary->first_name . ' ' . $beneficiary->last_name . ', to you.';
-                    $this->sendNotificationToCareWorker($careWorkerId, $title, $message);
-                    
-                    // 3. Notify the care manager associated with the care worker
+                    $message = $actor . ' (' . $actorRole . ') has assigned a new beneficiary, ' .
+                        $beneficiary->first_name . ' ' . $beneficiary->last_name . ', to you.';
+
+                    $this->notificationService->notifyStaff($careWorkerId, $title, $message);
+
+                    $careWorker = User::find($careWorkerId);
                     if ($careWorker && $careWorker->assigned_care_manager_id && $careWorker->assigned_care_manager_id != Auth::id()) {
                         $careManagerTitle = 'New Beneficiary for Your Care Worker';
-                        $careManagerMessage = 'A new beneficiary, ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                            ', has been assigned to your care worker ' . $careWorker->first_name . ' ' . $careWorker->last_name . 
-                                            ' by ' . $actor . ' (' . $actorRole . ').';
-                        $this->sendNotificationToCareManager($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
+                        $careManagerMessage = 'A new beneficiary, ' . $beneficiary->first_name . ' ' . $beneficiary->last_name .
+                            ', has been assigned to your care worker ' . $careWorker->first_name . ' ' . $careWorker->last_name .
+                            ' by ' . $actor . ' (' . $actorRole . ').';
+                        $this->notificationService->notifyStaff($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
                     }
                 }
             } catch (\Exception $notifyEx) {
@@ -1945,67 +1926,39 @@ class BeneficiaryController extends Controller
                 // 1. Notify the beneficiary about the update
                 $beneficiaryTitle = 'Your Profile Was Updated';
                 $beneficiaryMessage = 'Your beneficiary profile was updated by ' . $actor . ' (' . $actorRole . ').';
-                $this->sendNotificationToBeneficiary($beneficiary->beneficiary_id, $beneficiaryTitle, $beneficiaryMessage);
-                
+                $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $beneficiaryTitle, $beneficiaryMessage);
+
                 // 2. Notify family members about the update
                 $familyTitle = 'Beneficiary Profile Updated';
-                $familyMessage = 'The profile of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                               ' has been updated by ' . $actor . ' (' . $actorRole . ').';
-                $this->sendNotificationToFamilyMembers($beneficiary->beneficiary_id, $familyTitle, $familyMessage);
-                
+                $familyMessage = 'The profile of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name .
+                    ' was updated by ' . $actor . ' (' . $actorRole . ').';
+                $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
+                foreach ($familyMembers as $member) {
+                    $this->notificationService->notifyFamilyMember($member->family_member_id, $familyTitle, $familyMessage);
+                }
+
                 // 3. Check if care worker assignment changed
                 if ($originalCareWorkerId != $newCareWorkerId) {
-                    // Notify old care worker if they exist and are not the one making the change
                     if ($originalCareWorkerId && $originalCareWorkerId != Auth::id()) {
-                        $oldCareWorkerTitle = 'Beneficiary Reassigned';
-                        $oldCareWorkerMessage = 'Beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                              ' has been reassigned from you by ' . $actor . ' (' . $actorRole . ').';
-                        $this->sendNotificationToCareWorker($originalCareWorkerId, $oldCareWorkerTitle, $oldCareWorkerMessage);
-                        
-                        // Get the old care worker's manager
+                        $this->notificationService->notifyStaff($originalCareWorkerId, $oldCareWorkerTitle, $oldCareWorkerMessage);
                         $oldCareWorker = User::find($originalCareWorkerId);
                         if ($oldCareWorker && $oldCareWorker->assigned_care_manager_id && $oldCareWorker->assigned_care_manager_id != Auth::id()) {
-                            $oldManagerTitle = 'Beneficiary Reassigned from Your Care Worker';
-                            $oldManagerMessage = 'Beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                               ' has been reassigned from your care worker ' . $oldCareWorker->first_name . ' ' . $oldCareWorker->last_name . 
-                                               ' by ' . $actor . ' (' . $actorRole . ').';
-                            $this->sendNotificationToCareManager($oldCareWorker->assigned_care_manager_id, $oldManagerTitle, $oldManagerMessage);
+                            $this->notificationService->notifyStaff($oldCareWorker->assigned_care_manager_id, $oldManagerTitle, $oldManagerMessage);
                         }
                     }
-                    
-                    // Notify new care worker if they exist and are not the one making the change
                     if ($newCareWorkerId && $newCareWorkerId != Auth::id()) {
-                        $newCareWorkerTitle = 'New Beneficiary Assigned';
-                        $newCareWorkerMessage = 'Beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                              ' has been assigned to you by ' . $actor . ' (' . $actorRole . ').';
-                        $this->sendNotificationToCareWorker($newCareWorkerId, $newCareWorkerTitle, $newCareWorkerMessage);
-                        
-                        // Get the new care worker's manager
+                        $this->notificationService->notifyStaff($newCareWorkerId, $newCareWorkerTitle, $newCareWorkerMessage);
                         $newCareWorker = User::find($newCareWorkerId);
                         if ($newCareWorker && $newCareWorker->assigned_care_manager_id && $newCareWorker->assigned_care_manager_id != Auth::id()) {
-                            $newManagerTitle = 'New Beneficiary for Your Care Worker';
-                            $newManagerMessage = 'Beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                               ' has been assigned to your care worker ' . $newCareWorker->first_name . ' ' . $newCareWorker->last_name . 
-                                               ' by ' . $actor . ' (' . $actorRole . ').';
-                            $this->sendNotificationToCareManager($newCareWorker->assigned_care_manager_id, $newManagerTitle, $newManagerMessage);
+                            $this->notificationService->notifyStaff($newCareWorker->assigned_care_manager_id, $newManagerTitle, $newManagerMessage);
                         }
                     }
                 } else {
-                    // If care worker didn't change, but we still need to notify them about the update
                     if ($newCareWorkerId && $newCareWorkerId != Auth::id()) {
-                        $careWorkerTitle = 'Beneficiary Profile Updated';
-                        $careWorkerMessage = 'The profile of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                           ', who is assigned to you, has been updated by ' . $actor . ' (' . $actorRole . ').';
-                        $this->sendNotificationToCareWorker($newCareWorkerId, $careWorkerTitle, $careWorkerMessage);
-                        
-                        // Also notify the care manager
+                        $this->notificationService->notifyStaff($newCareWorkerId, $careWorkerTitle, $careWorkerMessage);
                         $careWorker = User::find($newCareWorkerId);
                         if ($careWorker && $careWorker->assigned_care_manager_id && $careWorker->assigned_care_manager_id != Auth::id()) {
-                            $careManagerTitle = 'Beneficiary Profile Updated';
-                            $careManagerMessage = 'The profile of beneficiary ' . $beneficiary->first_name . ' ' . $beneficiary->last_name . 
-                                                ', who is assigned to your care worker ' . $careWorker->first_name . ' ' . $careWorker->last_name . 
-                                                ', has been updated by ' . $actor . ' (' . $actorRole . ').';
-                            $this->sendNotificationToCareManager($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
+                            $this->notificationService->notifyStaff($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
                         }
                     }
                 }
@@ -2059,18 +2012,17 @@ class BeneficiaryController extends Controller
                 // 1. Notify the assigned care worker (if not the one deleting)
                 if ($careWorkerId && $careWorkerId != Auth::id()) {
                     $careWorkerTitle = 'Beneficiary Deleted';
-                    $careWorkerMessage = 'Beneficiary ' . $beneficiaryName . ', who was assigned to you, has been deleted by ' . 
-                                    $actor . ' (' . $actorRole . ').';
-                    $this->sendNotificationToCareWorker($careWorkerId, $careWorkerTitle, $careWorkerMessage);
-                    
-                    // 2. Notify the care manager (if not the one deleting)
+                    $careWorkerMessage = 'Beneficiary ' . $beneficiaryName . ', who was assigned to you, has been deleted by ' .
+                        $actor . ' (' . $actorRole . ').';
+                    $this->notificationService->notifyStaff($careWorkerId, $careWorkerTitle, $careWorkerMessage);
+
                     $careWorker = User::find($careWorkerId);
                     if ($careWorker && $careWorker->assigned_care_manager_id && $careWorker->assigned_care_manager_id != Auth::id()) {
                         $careManagerTitle = 'Beneficiary Deleted';
-                        $careManagerMessage = 'Beneficiary ' . $beneficiaryName . ', who was assigned to your care worker ' . 
-                                            $careWorker->first_name . ' ' . $careWorker->last_name . ', has been deleted by ' . 
-                                            $actor . ' (' . $actorRole . ').';
-                        $this->sendNotificationToCareManager($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
+                        $careManagerMessage = 'Beneficiary ' . $beneficiaryName . ', who was assigned to your care worker ' .
+                            $careWorker->first_name . ' ' . $careWorker->last_name . ', has been deleted by ' .
+                            $actor . ' (' . $actorRole . ').';
+                        $this->notificationService->notifyStaff($careWorker->assigned_care_manager_id, $careManagerTitle, $careManagerMessage);
                     }
                 }
             } catch (\Exception $notifyEx) {
@@ -2119,152 +2071,153 @@ class BeneficiaryController extends Controller
         return response()->json(['hasPermission' => $hasPermission]);
     }
 
-    /**
-     * Send notification to a beneficiary
-     *
-     * @param int $beneficiaryId ID of the beneficiary to notify
-     * @param string $title Notification title  
-     * @param string $message Notification message
-     * @return void
-     */
-    private function sendNotificationToBeneficiary($beneficiaryId, $title, $message)
-    {
-        try {
-            // Check if beneficiary has an associated portal account
-            $beneficiary = Beneficiary::find($beneficiaryId);
-            if (!$beneficiary) {
-                \Log::warning('Cannot send notification to beneficiary: No portal account found for beneficiary ID ' . $beneficiaryId);
-                return;
-            }
+    // DO NOT USE, USE NOTIFICATION SERVICE INSTEAD
+    // /**
+    //  * Send notification to a beneficiary
+    //  *
+    //  * @param int $beneficiaryId ID of the beneficiary to notify
+    //  * @param string $title Notification title  
+    //  * @param string $message Notification message
+    //  * @return void
+    //  */
+    // private function sendNotificationToBeneficiary($beneficiaryId, $title, $message)
+    // {
+    //     try {
+    //         // Check if beneficiary has an associated portal account
+    //         $beneficiary = Beneficiary::find($beneficiaryId);
+    //         if (!$beneficiary) {
+    //             \Log::warning('Cannot send notification to beneficiary: No portal account found for beneficiary ID ' . $beneficiaryId);
+    //             return;
+    //         }
             
-            // Create notification
-            $notification = new Notification();
-            $notification->user_id = $beneficiaryId;
-            $notification->user_type = 'beneficiary';
-            $notification->message_title = $title;
-            $notification->message = $message;
-            $notification->date_created = now();
-            $notification->is_read = false;
-            $notification->save();
+    //         // Create notification
+    //         $notification = new Notification();
+    //         $notification->user_id = $beneficiaryId;
+    //         $notification->user_type = 'beneficiary';
+    //         $notification->message_title = $title;
+    //         $notification->message = $message;
+    //         $notification->date_created = now();
+    //         $notification->is_read = false;
+    //         $notification->save();
             
-            \Log::info('Created notification for beneficiary ' . $beneficiaryId);
-        } catch (\Exception $e) {
-            \Log::error('Failed to send notification to beneficiary ' . $beneficiaryId . ': ' . $e->getMessage());
-        }
-    }
+    //         \Log::info('Created notification for beneficiary ' . $beneficiaryId);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send notification to beneficiary ' . $beneficiaryId . ': ' . $e->getMessage());
+    //     }
+    // }
 
-    /**
-     * Send notification to a care worker
-     *
-     * @param int $careWorkerId ID of the care worker to notify
-     * @param string $title Notification title  
-     * @param string $message Notification message
-     * @return void
-     */
-    private function sendNotificationToCareWorker($careWorkerId, $title, $message)
-    {
-        try {
-            // Ensure care worker exists and is active
-            $careWorker = User::where('id', $careWorkerId)
-                ->where('role_id', 3)
-                ->where('status', 'Active')
-                ->first();
+    // /**
+    //  * Send notification to a care worker
+    //  *
+    //  * @param int $careWorkerId ID of the care worker to notify
+    //  * @param string $title Notification title  
+    //  * @param string $message Notification message
+    //  * @return void
+    //  */
+    // private function sendNotificationToCareWorker($careWorkerId, $title, $message)
+    // {
+    //     try {
+    //         // Ensure care worker exists and is active
+    //         $careWorker = User::where('id', $careWorkerId)
+    //             ->where('role_id', 3)
+    //             ->where('status', 'Active')
+    //             ->first();
                 
-            if (!$careWorker) {
-                \Log::warning('Cannot send notification: No active care worker found with ID ' . $careWorkerId);
-                return;
-            }
+    //         if (!$careWorker) {
+    //             \Log::warning('Cannot send notification: No active care worker found with ID ' . $careWorkerId);
+    //             return;
+    //         }
             
-            // Create notification
-            $notification = new Notification();
-            $notification->user_id = $careWorkerId;
-            $notification->user_type = 'cose_staff';
-            $notification->message_title = $title;
-            $notification->message = $message;
-            $notification->date_created = now();
-            $notification->is_read = false;
-            $notification->save();
+    //         // Create notification
+    //         $notification = new Notification();
+    //         $notification->user_id = $careWorkerId;
+    //         $notification->user_type = 'cose_staff';
+    //         $notification->message_title = $title;
+    //         $notification->message = $message;
+    //         $notification->date_created = now();
+    //         $notification->is_read = false;
+    //         $notification->save();
             
-            \Log::info('Created notification for care worker ' . $careWorkerId);
-        } catch (\Exception $e) {
-            \Log::error('Failed to send notification to care worker ' . $careWorkerId . ': ' . $e->getMessage());
-        }
-    }
+    //         \Log::info('Created notification for care worker ' . $careWorkerId);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send notification to care worker ' . $careWorkerId . ': ' . $e->getMessage());
+    //     }
+    // }
 
-    /**
-     * Send notification to a care manager
-     *
-     * @param int $careManagerId ID of the care manager to notify
-     * @param string $title Notification title  
-     * @param string $message Notification message
-     * @return void
-     */
-    private function sendNotificationToCareManager($careManagerId, $title, $message)
-    {
-        try {
-            // Ensure care manager exists and is active
-            $careManager = User::where('id', $careManagerId)
-                ->where('role_id', 2)
-                ->where('status', 'Active')
-                ->first();
+    // /**
+    //  * Send notification to a care manager
+    //  *
+    //  * @param int $careManagerId ID of the care manager to notify
+    //  * @param string $title Notification title  
+    //  * @param string $message Notification message
+    //  * @return void
+    //  */
+    // private function sendNotificationToCareManager($careManagerId, $title, $message)
+    // {
+    //     try {
+    //         // Ensure care manager exists and is active
+    //         $careManager = User::where('id', $careManagerId)
+    //             ->where('role_id', 2)
+    //             ->where('status', 'Active')
+    //             ->first();
                 
-            if (!$careManager) {
-                \Log::warning('Cannot send notification: No active care manager found with ID ' . $careManagerId);
-                return;
-            }
+    //         if (!$careManager) {
+    //             \Log::warning('Cannot send notification: No active care manager found with ID ' . $careManagerId);
+    //             return;
+    //         }
             
-            // Create notification
-            $notification = new Notification();
-            $notification->user_id = $careManagerId;
-            $notification->user_type = 'cose_staff';
-            $notification->message_title = $title;
-            $notification->message = $message;
-            $notification->date_created = now();
-            $notification->is_read = false;
-            $notification->save();
+    //         // Create notification
+    //         $notification = new Notification();
+    //         $notification->user_id = $careManagerId;
+    //         $notification->user_type = 'cose_staff';
+    //         $notification->message_title = $title;
+    //         $notification->message = $message;
+    //         $notification->date_created = now();
+    //         $notification->is_read = false;
+    //         $notification->save();
             
-            \Log::info('Created notification for care manager ' . $careManagerId);
-        } catch (\Exception $e) {
-            \Log::error('Failed to send notification to care manager ' . $careManagerId . ': ' . $e->getMessage());
-        }
-    }
+    //         \Log::info('Created notification for care manager ' . $careManagerId);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send notification to care manager ' . $careManagerId . ': ' . $e->getMessage());
+    //     }
+    // }
 
-    /**
-     * Send notification to all family members of a beneficiary
-     *
-     * @param int $beneficiaryId ID of the beneficiary
-     * @param string $title Notification title  
-     * @param string $message Notification message
-     * @return void
-     */
-    private function sendNotificationToFamilyMembers($beneficiaryId, $title, $message)
-    {
-        try {
-            // Get all family members related to this beneficiary
-            $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
+    // /**
+    //  * Send notification to all family members of a beneficiary
+    //  *
+    //  * @param int $beneficiaryId ID of the beneficiary
+    //  * @param string $title Notification title  
+    //  * @param string $message Notification message
+    //  * @return void
+    //  */
+    // private function sendNotificationToFamilyMembers($beneficiaryId, $title, $message)
+    // {
+    //     try {
+    //         // Get all family members related to this beneficiary
+    //         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
             
-            if ($familyMembers->isEmpty()) {
-                \Log::info('No family members found for beneficiary ' . $beneficiaryId);
-                return;
-            }
+    //         if ($familyMembers->isEmpty()) {
+    //             \Log::info('No family members found for beneficiary ' . $beneficiaryId);
+    //             return;
+    //         }
             
-            foreach ($familyMembers as $member) {
-                // Create notification for each family member - use family_member_id directly
-                $notification = new Notification();
-                $notification->user_id = $member->family_member_id;
-                $notification->user_type = 'family_member';
-                $notification->message_title = $title;
-                $notification->message = $message;
-                $notification->date_created = now();
-                $notification->is_read = false;
-                $notification->save();
+    //         foreach ($familyMembers as $member) {
+    //             // Create notification for each family member - use family_member_id directly
+    //             $notification = new Notification();
+    //             $notification->user_id = $member->family_member_id;
+    //             $notification->user_type = 'family_member';
+    //             $notification->message_title = $title;
+    //             $notification->message = $message;
+    //             $notification->date_created = now();
+    //             $notification->is_read = false;
+    //             $notification->save();
                 
-                \Log::info('Created notification for family member ' . $member->family_member_id);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Failed to send notifications to family members of beneficiary ' . $beneficiaryId . ': ' . $e->getMessage());
-        }
-    }
+    //             \Log::info('Created notification for family member ' . $member->family_member_id);
+    //         }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send notifications to family members of beneficiary ' . $beneficiaryId . ': ' . $e->getMessage());
+    //     }
+    // }
 
     /**
      * Generate a unique username based on beneficiary's name

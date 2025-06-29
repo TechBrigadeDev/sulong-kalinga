@@ -20,14 +20,17 @@ use Carbon\Carbon;
 use App\Services\LogService;
 use App\Enums\LogType;
 use Exception;
+use App\Services\NotificationService;
 
 class EmergencyAndRequestController extends Controller
 {
     protected $logService;
+    protected $notificationService;
 
-    public function __construct(LogService $logService)
+    public function __construct(LogService $logService, NotificationService $notificationService)
     {
         $this->logService = $logService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -747,14 +750,15 @@ class EmergencyAndRequestController extends Controller
             $message = $request->message ?? "This {$typeName} requires your attention.";
             $title = "Reminder: Pending {$typeName} for " . $record->beneficiary->first_name . ' ' . $record->beneficiary->last_name;
             
-            Notification::create([
-                'user_id' => $careManager->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message . " (Reminder from " . $user->first_name . " " . $user->last_name . ")",
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            foreach ($careManagers as $careManager) {
+                if ($careManager->id != $actor->id) {
+                    $this->notificationService->notifyStaff(
+                        $careManager->id,
+                        $title,
+                        $message
+                    );
+                }
+            }
             
             // Log the reminder
             $this->logService->createLog(
@@ -826,54 +830,42 @@ class EmergencyAndRequestController extends Controller
         
         // Notify beneficiary if they have portal access
         if (!$isNoteUpdate && $beneficiary) {
-            Notification::create([
-                'user_id' => $beneficiary->beneficiary_id,
-                'user_type' => 'beneficiary',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                $title,
+                $message
+            );
         }
         
         // Notify family members
         if (!$isNoteUpdate) {
             $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
             foreach ($familyMembers as $familyMember) {
-                Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyFamilyMember(
+                    $familyMember->family_member_id,
+                    $title,
+                    $message
+                );
             }
         }
         
         // Notify assigned staff
         if ($assignedStaff && $assignedStaff->id != $actor->id) {
-            Notification::create([
-                'user_id' => $assignedStaff->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff(
+                $assignedStaff->id,
+                $title,
+                $message
+            );
         }
         
         // Notify care managers (except the one who made the update)
         foreach ($careManagers as $careManager) {
             if ($careManager->id != $actor->id) {
-                Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyStaff(
+                    $careManager->id,
+                    $title,
+                    $message
+                );
             }
         }
     }
@@ -919,54 +911,42 @@ class EmergencyAndRequestController extends Controller
         
         // Notify beneficiary if they have portal access
         if (!$isNoteUpdate && $beneficiary) {
-            Notification::create([
-                'user_id' => $beneficiary->beneficiary_id,
-                'user_type' => 'beneficiary',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                $title,
+                $message
+            );
         }
         
         // Notify family members
         if (!$isNoteUpdate) {
             $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
             foreach ($familyMembers as $familyMember) {
-                Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyFamilyMember(
+                    $familyMember->family_member_id,
+                    $title,
+                    $message
+                );
             }
         }
         
         // Notify care worker
         if ($careWorker && $careWorker->id != $actor->id) {
-            Notification::create([
-                'user_id' => $careWorker->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff(
+                $careWorker->id,
+                $title,
+                $message
+            );
         }
         
         // Notify care managers (except the one who made the update)
         foreach ($careManagers as $careManager) {
             if ($careManager->id != $actor->id) {
-                Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyStaff(
+                    $careManager->id,
+                    $title,
+                    $message
+                );
             }
         }
     }

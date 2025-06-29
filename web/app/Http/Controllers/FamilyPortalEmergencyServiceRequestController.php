@@ -18,9 +18,17 @@ use App\Models\GeneralCarePlan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class FamilyPortalEmergencyServiceRequestController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index()
     {
         try {
@@ -636,47 +644,20 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             // 1. Notify the beneficiary if they're not the sender
             if ($senderType !== 'beneficiary') {
-                \App\Models\Notification::create([
-                    'user_id' => $beneficiaryId,
-                    'user_type' => 'beneficiary',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created notification for beneficiary #{$beneficiaryId}");
+                $this->notificationService->notifyBeneficiary($beneficiaryId, $title, $message);
             }
             
             // 2. Notify all family members (except the sender if they're a family member)
             $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
             foreach ($familyMembers as $familyMember) {
-                // Skip if this family member is the sender
-                if ($senderType === 'family' && $senderId == $familyMember->family_member_id) {
-                    continue;
-                }
-                
-                \App\Models\Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created notification for family member #{$familyMember->family_member_id}");
+                if ($senderType === 'family' && $senderId == $familyMember->family_member_id) continue;
+                $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
             }
             
             // 3. Notify all care managers (existing code)
             $careManagers = \App\Models\User::where('role_id', 2)->get();
             foreach ($careManagers as $careManager) {
-                \App\Models\Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyStaff($careManager->id, $title, $message);
             }
             
             // 4. Try to find and notify the assigned care worker (existing code)
@@ -685,17 +666,11 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
                 
                 if ($generalCarePlan && $generalCarePlan->care_worker_id) {
-                    // We found the assigned care worker, create notification
-                    \App\Models\Notification::create([
-                        'user_id' => $generalCarePlan->care_worker_id,
-                        'user_type' => 'cose_staff',
-                        'message_title' => $title . " (For Your Beneficiary)",
-                        'message' => $message,
-                        'date_created' => now(),
-                        'is_read' => false
-                    ]);
-                    
-                    Log::info("Created notification for assigned care worker #{$generalCarePlan->care_worker_id} for beneficiary #{$beneficiaryId}");
+                    $this->notificationService->notifyStaff(
+                        $generalCarePlan->care_worker_id,
+                        $title . " (For Your Beneficiary)",
+                        $message
+                    );
                 } else {
                     Log::info("No assigned care worker found for beneficiary #{$beneficiaryId}");
                 }
@@ -843,48 +818,20 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             // 1. Notify the beneficiary if they're not the canceller
             if ($cancellerType !== 'beneficiary' || $cancellerId != $beneficiaryId) {
-                \App\Models\Notification::create([
-                    'user_id' => $beneficiaryId,
-                    'user_type' => 'beneficiary',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created cancellation notification for beneficiary #{$beneficiaryId}");
+                $this->notificationService->notifyBeneficiary($beneficiaryId, $title, $message);
             }
             
             // 2. Notify all family members (except the canceller if they're a family member)
             $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
             foreach ($familyMembers as $familyMember) {
-                // Skip if this family member is the canceller
-                if ($cancellerType === 'family' && $cancellerId == $familyMember->family_member_id) {
-                    continue;
-                }
-                
-                \App\Models\Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created cancellation notification for family member #{$familyMember->family_member_id}");
+                if ($cancellerType === 'family' && $cancellerId == $familyMember->family_member_id) continue;
+                $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
             }
             
             // 3. Notify all care managers
             $careManagers = \App\Models\User::where('role_id', 2)->get();
             foreach ($careManagers as $careManager) {
-                \App\Models\Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created cancellation notification for care manager #{$careManager->id}");
+                $this->notificationService->notifyStaff($careManager->id, $title, $message);
             }
             
             // 4. Notify the assigned care worker if any
@@ -892,16 +839,11 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
                 
                 if ($generalCarePlan && $generalCarePlan->care_worker_id) {
-                    \App\Models\Notification::create([
-                        'user_id' => $generalCarePlan->care_worker_id,
-                        'user_type' => 'cose_staff',
-                        'message_title' => $title . " (For Your Beneficiary)",
-                        'message' => $message,
-                        'date_created' => now(),
-                        'is_read' => false
-                    ]);
-                    
-                    Log::info("Created cancellation notification for care worker #{$generalCarePlan->care_worker_id}");
+                    $this->notificationService->notifyStaff(
+                        $generalCarePlan->care_worker_id,
+                        $title . " (For Your Beneficiary)",
+                        $message
+                    );
                 }
             }
             
@@ -1179,48 +1121,20 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
             
             // 1. Notify the beneficiary if they're not the editor
             if ($editorType !== 'beneficiary' || $editorId != $beneficiaryId) {
-                \App\Models\Notification::create([
-                    'user_id' => $beneficiaryId,
-                    'user_type' => 'beneficiary',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created update notification for beneficiary #{$beneficiaryId}");
+                $this->notificationService->notifyBeneficiary($beneficiaryId, $title, $message);
             }
             
             // 2. Notify all family members (except the editor if they're a family member)
             $familyMembers = \App\Models\FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
             foreach ($familyMembers as $familyMember) {
-                // Skip if this family member is the editor
-                if ($editorType === 'family' && $editorId == $familyMember->family_member_id) {
-                    continue;
-                }
-                
-                \App\Models\Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created update notification for family member #{$familyMember->family_member_id}");
+                if ($editorType === 'family' && $editorId == $familyMember->family_member_id) continue;
+                $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
             }
             
             // 3. Notify all care managers
             $careManagers = \App\Models\User::where('role_id', 2)->get();
             foreach ($careManagers as $careManager) {
-                \App\Models\Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                Log::info("Created update notification for care manager #{$careManager->id}");
+                $this->notificationService->notifyStaff($careManager->id, $title, $message);
             }
             
             // 4. Notify the assigned care worker if any
@@ -1228,16 +1142,11 @@ class FamilyPortalEmergencyServiceRequestController extends Controller
                 $generalCarePlan = \App\Models\GeneralCarePlan::find($beneficiary->general_care_plan_id);
                 
                 if ($generalCarePlan && $generalCarePlan->care_worker_id) {
-                    \App\Models\Notification::create([
-                        'user_id' => $generalCarePlan->care_worker_id,
-                        'user_type' => 'cose_staff',
-                        'message_title' => $title . " (For Your Beneficiary)",
-                        'message' => $message,
-                        'date_created' => now(),
-                        'is_read' => false
-                    ]);
-                    
-                    Log::info("Created update notification for care worker #{$generalCarePlan->care_worker_id}");
+                    $this->notificationService->notifyStaff(
+                        $generalCarePlan->care_worker_id,
+                        $title . " (For Your Beneficiary)",
+                        $message
+                    );
                 }
             }
             

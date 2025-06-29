@@ -22,6 +22,7 @@ use App\Models\Notification;
 use Carbon\Carbon;
 use App\Services\LogService;
 use App\Enums\LogType;
+use App\Services\NotificationService; // Add this import
 
 use App\Services\UserManagementService;
 use App\Services\UploadService; // Add this at the top with other imports
@@ -31,12 +32,18 @@ class AdminController extends Controller
     protected $userManagementService;
     protected $logService;
     protected $uploadService;
+    protected $notificationService; // Add this property
 
-    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
-    {
+    public function __construct(
+        UserManagementService $userManagementService,
+        LogService $logService,
+        UploadService $uploadService,
+        NotificationService $notificationService // Add this parameter
+    ) {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService; // Set the property
     }
 
     public function storeAdministrator(Request $request)
@@ -244,7 +251,7 @@ class AdminController extends Controller
         $welcomeTitle = 'Welcome to SULONG KALINGA';
         $welcomeMessage = 'Welcome ' . $administrator->first_name . ' ' . $administrator->last_name . 
                          '! Your administrator account has been created. You can now access the system with your credentials.';
-        $this->sendNotificationToAdmin($administrator->id, $welcomeTitle, $welcomeMessage);
+        $this->notificationService->notifyStaff($administrator->id, $welcomeTitle, $welcomeMessage);
         
         // Send notification to other admins about the new admin (excluding the creator and the new admin)
         $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
@@ -252,7 +259,14 @@ class AdminController extends Controller
         $message = $actor . ' added a new administrator ' . $administrator->first_name . ' ' . 
                   $administrator->last_name . ' as ' . 
                   ($administrator->organization_role_id == 2 ? 'Project Coordinator' : 'MEAL Coordinator');
-        $this->sendAdminNotification($title, $message, $administrator->id);
+        $admins = User::where('role_id', 1)
+            ->where('status', 'Active')
+            ->where('id', '!=', Auth::id())
+            ->where('id', '!=', $administrator->id)
+            ->get();
+        foreach ($admins as $admin) {
+            $this->notificationService->notifyStaff($admin->id, $title, $message);
+        }
 
         // Redirect with success message
         return redirect()->route('admin.administrators.create')->with('success', 'Administrator has been successfully added!');
@@ -510,7 +524,7 @@ class AdminController extends Controller
             $title = 'Your Profile Was Updated';
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             $message = 'Your administrator profile was updated by ' . $actor . '.';
-            $this->sendNotificationToAdmin($administrator->id, $title, $message);
+            $this->notificationService->notifyStaff($administrator->id, $title, $message);
         }
 
         // Redirect with success message
@@ -634,40 +648,25 @@ class AdminController extends Controller
             
             // Only send notifications if admin is active (to avoid sending to inactive users)
             if ($status === 'Active') {
-                // Try-catch inside to prevent notification errors from breaking status update
                 try {
-                    // Send notification to the administrator whose status was changed
                     $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
-                    
-                    // Customize message based on whether it's a reactivation
                     if ($oldStatus === 'Inactive') {
-                        // Welcome back message for reactivated admins
                         $title = 'Welcome Back to SULONG KALINGA';
                         $message = 'Welcome back, ' . $admin->first_name . '! Your administrator account has been reactivated by ' . $actor . '. You now have full access to the system again.';
                     } else {
-                        // Regular status change message
                         $title = 'Your Account Status Changed';
                         $message = 'Your administrator account status was changed from ' . $oldStatus . ' to ' . $status . ' by ' . $actor . '.';
                     }
-                    
-                    $notification = new Notification();
-                    $notification->user_id = $admin->id;
-                    $notification->user_type = 'cose_staff';
-                    $notification->message_title = $title;
-                    $notification->message = $message;
-                    $notification->date_created = now();
-                    $notification->is_read = false;
-                    $notification->save();
+                    // Use NotificationService
+                    $this->notificationService->notifyStaff($admin->id, $title, $message);
                 } catch (\Exception $notifyEx) {
                     \Log::warning('Failed to send admin status notification: ' . $notifyEx->getMessage());
-                    // Continue execution - don't let notification failure prevent status update
                 }
             }
             
             // If status changed to "Inactive", also notify other admins (it's important)
             if ($status == 'Inactive') {
                 try {
-                    // Get all active admins except the current user and the target admin
                     $admins = User::where('role_id', 1)
                         ->where('status', 'Active')
                         ->where('id', '!=', Auth::id())
@@ -679,18 +678,11 @@ class AdminController extends Controller
                     $adminMessage = $actor . ' changed the status of administrator ' . $admin->first_name . ' ' . $admin->last_name . ' to Inactive.';
                     
                     foreach ($admins as $otherAdmin) {
-                        $notification = new Notification();
-                        $notification->user_id = $otherAdmin->id;
-                        $notification->user_type = 'cose_staff';
-                        $notification->message_title = $adminTitle;
-                        $notification->message = $adminMessage;
-                        $notification->date_created = now();
-                        $notification->is_read = false;
-                        $notification->save();
+                        // Use NotificationService
+                        $this->notificationService->notifyStaff($otherAdmin->id, $adminTitle, $adminMessage);
                     }
                 } catch (\Exception $notifyEx) {
                     \Log::warning('Failed to send admin deactivation notifications: ' . $notifyEx->getMessage());
-                    // Continue execution - don't let notification failure prevent status update
                 }
             }
             
@@ -1168,7 +1160,13 @@ class AdminController extends Controller
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             $title = 'Barangay Deleted';
             $message = $actor . ' deleted barangay ' . $barangayName . ' from ' . $municipalityName . ' municipality';
-            $this->sendLocationNotification($title, $message);
+            $staffUsers = User::whereIn('role_id', [1, 2])
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($staffUsers as $user) {
+                $this->notificationService->notifyStaff($user->id, $title, $message);
+            }
                 
             return response()->json([
                 'success' => true,
@@ -1256,7 +1254,13 @@ class AdminController extends Controller
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             $title = 'Municipality Deleted';
             $message = $actor . ' deleted municipality ' . $municipalityName;
-            $this->sendLocationNotification($title, $message);
+            $staffUsers = User::whereIn('role_id', [1, 2])
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($staffUsers as $user) {
+                $this->notificationService->notifyStaff($user->id, $title, $message);
+            }
             
             return response()->json([
                 'success' => true,
@@ -1315,7 +1319,13 @@ class AdminController extends Controller
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             $title = 'New Municipality Added';
             $message = $actor . ' added a new municipality ' . $request->municipality_name;
-            $this->sendLocationNotification($title, $message);
+            $staffUsers = User::whereIn('role_id', [1, 2])
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($staffUsers as $user) {
+                $this->notificationService->notifyStaff($user->id, $title, $message);
+            }
                 
             $message = 'Municipality "' . $request->municipality_name . '" has been added successfully.';
             
@@ -1408,7 +1418,13 @@ class AdminController extends Controller
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             $title = 'New Barangay Added';
             $message = $actor . ' added a new barangay ' . $request->barangay_name . ' in ' . $municipalityName . ' municipality';
-            $this->sendLocationNotification($title, $message);
+            $staffUsers = User::whereIn('role_id', [1, 2])
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($staffUsers as $user) {
+                $this->notificationService->notifyStaff($user->id, $title, $message);
+            }
            
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -1473,7 +1489,13 @@ class AdminController extends Controller
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
             $title = 'Municipality Updated';
             $message = $actor . ' updated municipality from "' . $oldName . '" to "' . $request->municipality_name . '"';
-            $this->sendLocationNotification($title, $message);
+            $staffUsers = User::whereIn('role_id', [1, 2])
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($staffUsers as $user) {
+                $this->notificationService->notifyStaff($user->id, $title, $message);
+            }
             
             $message = 'Municipality has been updated successfully to "' . $request->municipality_name . '".';
             
@@ -1580,7 +1602,13 @@ class AdminController extends Controller
                 $message .= ' and moved it from ' . $originalMunicipality . ' to ' . $newMunicipality->municipality_name;
             }
             
-            $this->sendLocationNotification($title, $message);
+            $staffUsers = User::whereIn('role_id', [1, 2])
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($staffUsers as $user) {
+                $this->notificationService->notifyStaff($user->id, $title, $message);
+            }
         
             
             // Prepare success message
@@ -1698,194 +1726,195 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Send a notification specifically to a target admin
-     *
-     * @param int $adminId ID of the admin to notify
-     * @param string $title Notification title  
-     * @param string $message Notification message
-     * @return void
-     */
-    private function sendNotificationToAdmin($adminId, $title, $message)
-    {
-        try {
-            // Ensure admin exists and is active
-            $admin = User::where('id', $adminId)
-                ->where('role_id', 1)
-                ->where('status', 'Active')
-                ->first();
+    // DO NOT USE, USE NOTIFICATION SERVICE INSTEAD
+    // /**
+    //  * Send a notification specifically to a target admin
+    //  *
+    //  * @param int $adminId ID of the admin to notify
+    //  * @param string $title Notification title  
+    //  * @param string $message Notification message
+    //  * @return void
+    //  */
+    // private function sendNotificationToAdmin($adminId, $title, $message)
+    // {
+    //     try {
+    //         // Ensure admin exists and is active
+    //         $admin = User::where('id', $adminId)
+    //             ->where('role_id', 1)
+    //             ->where('status', 'Active')
+    //             ->first();
                 
-            if (!$admin) {
-                \Log::warning('Attempted to send notification to non-existent or inactive admin: ' . $adminId);
-                return;
-            }
+    //         if (!$admin) {
+    //             \Log::warning('Attempted to send notification to non-existent or inactive admin: ' . $adminId);
+    //             return;
+    //         }
             
-            // Create notification
-            $notification = new \App\Models\Notification();
-            $notification->user_id = $adminId;
-            $notification->user_type = 'cose_staff';
-            $notification->message_title = $title;
-            $notification->message = $message;
-            $notification->date_created = now();
-            $notification->is_read = false;
-            $notification->save();
+    //         // Create notification
+    //         $notification = new \App\Models\Notification();
+    //         $notification->user_id = $adminId;
+    //         $notification->user_type = 'cose_staff';
+    //         $notification->message_title = $title;
+    //         $notification->message = $message;
+    //         $notification->date_created = now();
+    //         $notification->is_read = false;
+    //         $notification->save();
             
-            \Log::info('Created personal notification for admin ' . $adminId);
-        } catch (\Exception $e) {
-            \Log::error('Failed to send notification to admin ' . $adminId . ': ' . $e->getMessage());
-        }
-    }
+    //         \Log::info('Created personal notification for admin ' . $adminId);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send notification to admin ' . $adminId . ': ' . $e->getMessage());
+    //     }
+    // }
 
-    /**
-     * Update the administrator's email
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function updateAdminEmail(Request $request)
-    {
-        // Validate the request
-        $validator = Validator::make($request->all(), [
-            'account_email' => [
-                'required',
-                'string',
-                'email',
-                'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
-                Rule::unique('cose_users', 'email')->ignore(Auth::id()),
-            ],
-            'current_password' => 'required|string',
-        ]);
+    // /**
+    //  * Update the administrator's email
+    //  *
+    //  * @param  \Illuminate\Http\Request  $request
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function updateAdminEmail(Request $request)
+    // {
+    //     // Validate the request
+    //     $validator = Validator::make($request->all(), [
+    //         'account_email' => [
+    //             'required',
+    //             'string',
+    //             'email',
+    //             'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
+    //             Rule::unique('cose_users', 'email')->ignore(Auth::id()),
+    //         ],
+    //         'current_password' => 'required|string',
+    //     ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->with('activeTab', 'settings')
-                ->withInput();
-        }
+    //     if ($validator->fails()) {
+    //         return redirect()->back()
+    //             ->withErrors($validator)
+    //             ->with('activeTab', 'settings')
+    //             ->withInput();
+    //     }
 
-        // Get the current user
-        $user = Auth::user();
+    //     // Get the current user
+    //     $user = Auth::user();
         
-        // Check if the new email is the same as the current email
-        if ($user->email === $request->input('account_email')) {
-            return redirect()->back()
-                ->withErrors(['account_email' => 'The new email is the same as your current email.'])
-                ->with('activeTab', 'settings');
-        }
+    //     // Check if the new email is the same as the current email
+    //     if ($user->email === $request->input('account_email')) {
+    //         return redirect()->back()
+    //             ->withErrors(['account_email' => 'The new email is the same as your current email.'])
+    //             ->with('activeTab', 'settings');
+    //     }
 
-        // Verify current password
-        if (!Hash::check($request->input('current_password'), $user->password)) {
-            return redirect()->back()
-                ->withErrors(['current_password' => 'The provided password does not match your current password.'])
-                ->with('activeTab', 'settings');
-        }
+    //     // Verify current password
+    //     if (!Hash::check($request->input('current_password'), $user->password)) {
+    //         return redirect()->back()
+    //             ->withErrors(['current_password' => 'The provided password does not match your current password.'])
+    //             ->with('activeTab', 'settings');
+    //     }
 
-        try {
-            // Get the current user
-            $user = Auth::user();
+    //     try {
+    //         // Get the current user
+    //         $user = Auth::user();
             
-            // Update email
-            $user->email = $request->input('account_email');
-            $user->updated_at = now();
-            $user->save();
+    //         // Update email
+    //         $user->email = $request->input('account_email');
+    //         $user->updated_at = now();
+    //         $user->save();
 
-            // Log the email change
-            \Log::info('Administrator email updated', [
-                'admin_id' => $user->id,
-                'old_email' => $user->getOriginal('email'),
-                'new_email' => $user->email
-            ]);
+    //         // Log the email change
+    //         \Log::info('Administrator email updated', [
+    //             'admin_id' => $user->id,
+    //             'old_email' => $user->getOriginal('email'),
+    //             'new_email' => $user->email
+    //         ]);
 
-            // Fix: Use $user instead of $administrator
-            $this->logService->createLog(
-                'administrator',
-                $user->id,
-                LogType::UPDATE,  // Changed from VIEW to UPDATE
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their email address'
-            );
+    //         // Fix: Use $user instead of $administrator
+    //         $this->logService->createLog(
+    //             'administrator',
+    //             $user->id,
+    //             LogType::UPDATE,  // Changed from VIEW to UPDATE
+    //             Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their email address'
+    //         );
 
-            return redirect()->route('admin.account.profile.index')
-                ->with('success', 'Your email has been updated successfully.')
-                ->with('activeTab', 'settings');
-        } catch (\Exception $e) {
-            \Log::error('Failed to update administrator email: ' . $e->getMessage());
+    //         return redirect()->route('admin.account.profile.index')
+    //             ->with('success', 'Your email has been updated successfully.')
+    //             ->with('activeTab', 'settings');
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to update administrator email: ' . $e->getMessage());
             
-            return redirect()->back()
-                ->withErrors(['error' => 'An error occurred while updating your email. Please try again.'])
-                ->with('activeTab', 'settings');
-        }
-    }
+    //         return redirect()->back()
+    //             ->withErrors(['error' => 'An error occurred while updating your email. Please try again.'])
+    //             ->with('activeTab', 'settings');
+    //     }
+    // }
 
-    /**
-     * Update the administrator's password
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function updateAdminPassword(Request $request)
-    {
-        // Validate the request
+    // /**
+    //  * Update the administrator's password
+    //  *
+    //  * @param  \Illuminate\Http\Request  $request
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function updateAdminPassword(Request $request)
+    // {
+    //     // Validate the request
 
-        $validator = Validator::make($request->all(), [
-            'current_password' => 'required|string',
-            'account_password' => 'required|string|min:8',
-            'account_password_confirmation' => 'required|same:account_password',
-        ], [
-            'account_password.required' => 'The new password field is required.',
-            'account_password.min' => 'The new password must be at least 8 characters.',
-            'account_password_confirmation.required' => 'Please confirm your new password.',
-            'account_password_confirmation.same' => 'The password confirmation does not match.',
-        ]);
+    //     $validator = Validator::make($request->all(), [
+    //         'current_password' => 'required|string',
+    //         'account_password' => 'required|string|min:8',
+    //         'account_password_confirmation' => 'required|same:account_password',
+    //     ], [
+    //         'account_password.required' => 'The new password field is required.',
+    //         'account_password.min' => 'The new password must be at least 8 characters.',
+    //         'account_password_confirmation.required' => 'Please confirm your new password.',
+    //         'account_password_confirmation.same' => 'The password confirmation does not match.',
+    //     ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->with('activeTab', 'settings')
-                ->withInput();
-        }
+    //     if ($validator->fails()) {
+    //         return redirect()->back()
+    //             ->withErrors($validator)
+    //             ->with('activeTab', 'settings')
+    //             ->withInput();
+    //     }
 
-        // Get the current user
-        $user = Auth::user();
+    //     // Get the current user
+    //     $user = Auth::user();
 
-        // Verify current password
-        if (!Hash::check($request->input('current_password'), $user->password)) {
-            return redirect()->back()
-                ->withErrors(['current_password' => 'The provided password does not match your current password.'])
-                ->with('activeTab', 'settings');
-        }
+    //     // Verify current password
+    //     if (!Hash::check($request->input('current_password'), $user->password)) {
+    //         return redirect()->back()
+    //             ->withErrors(['current_password' => 'The provided password does not match your current password.'])
+    //             ->with('activeTab', 'settings');
+    //     }
 
-         try {
-            // Get the current user
-            $user = Auth::user();
+    //      try {
+    //         // Get the current user
+    //         $user = Auth::user();
 
-            // Update password
-            $user->password = bcrypt($request->input('account_password'));
-            $user->updated_at = now();
-            $user->save();
+    //         // Update password
+    //         $user->password = bcrypt($request->input('account_password'));
+    //         $user->updated_at = now();
+    //         $user->save();
 
-            // Log the password change
-            \Log::info('Administrator password updated', [
-                'admin_id' => $user->id,
-                'timestamp' => now()
-            ]);
+    //         // Log the password change
+    //         \Log::info('Administrator password updated', [
+    //             'admin_id' => $user->id,
+    //             'timestamp' => now()
+    //         ]);
 
-            // Fix: Use $user instead of $administrator
-            $this->logService->createLog(
-                'administrator',
-                $user->id,
-                LogType::UPDATE,  // Changed from VIEW to UPDATE
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their password'
-            );
+    //         // Fix: Use $user instead of $administrator
+    //         $this->logService->createLog(
+    //             'administrator',
+    //             $user->id,
+    //             LogType::UPDATE,  // Changed from VIEW to UPDATE
+    //             Auth::user()->first_name . ' ' . Auth::user()->last_name . ' updated their password'
+    //         );
 
-            return redirect()->route('admin.account.profile.index')
-                ->with('success', 'Your password has been updated successfully.')
-                ->with('activeTab', 'settings');
-        } catch (\Exception $e) {
-            \Log::error('Failed to update administrator password: ' . $e->getMessage());
+    //         return redirect()->route('admin.account.profile.index')
+    //             ->with('success', 'Your password has been updated successfully.')
+    //             ->with('activeTab', 'settings');
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to update administrator password: ' . $e->getMessage());
             
-            return redirect()->back()
-                ->withErrors(['error' => 'An error occurred while updating your password. Please try again.'])
-                ->with('activeTab', 'settings');
-        }
-    }
+    //         return redirect()->back()
+    //             ->withErrors(['error' => 'An error occurred while updating your password. Please try again.'])
+    //             ->with('activeTab', 'settings');
+    //     }
+    // }
 }

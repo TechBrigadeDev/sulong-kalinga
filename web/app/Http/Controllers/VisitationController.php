@@ -19,9 +19,17 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\NotificationService;
 
 class VisitationController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Display the care worker appointments page with appropriate view based on user role
      */
@@ -1786,59 +1794,30 @@ class VisitationController extends Controller
             default:
                 return;
         }
-        
-        // Send notification to care worker (if not the author)
+
+        // BLOCK 1: Notify Care Worker (if not the author)
         if ($careWorker && $careWorker->id != $authorId) {
-            Notification::create([
-                'user_id' => $careWorker->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff($careWorker->id, $title, $message);
         }
-        
-        // Send notification to care manager (if not the author)
+
+        // BLOCK 2: Notify Care Manager (if not the author)
         if ($careManager && $careManager->id != $authorId) {
-            Notification::create([
-                'user_id' => $careManager->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff($careManager->id, $title, $message);
         }
-        
-        // Notify beneficiary if they have portal access
-        if ($beneficiary->portal_account_id) {
-            Notification::create([
-                'user_id' => $beneficiary->beneficiary_id,
-                'user_type' => 'beneficiary',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+
+        // BLOCK 3: Notify Beneficiary (if they have portal access)
+        if ($beneficiary && $beneficiary->portal_account_id) {
+            $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $title, $message);
         }
-        
-        // Notify all family members
+
+        // BLOCK 4: Notify all Family Members (if they have portal access)
         foreach ($familyMembers as $familyMember) {
             if ($familyMember->portal_account_id) {
-                Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
             }
         }
 
-        // Administrator notification code removed
-        
+        // BLOCK 5: Logging
         \Log::info("Appointment notifications sent", [
             'action' => $action,
             'visitation_id' => $visitation->visitation_id,
@@ -1857,110 +1836,86 @@ class VisitationController extends Controller
      */
     private function notifyCareWorkerChange(Visitation $originalVisitation, Visitation $newVisitation, $originalCareWorkerId, $newCareWorkerId)
     {
-        // Get care worker details
         $originalCareWorker = User::find($originalCareWorkerId);
         $newCareWorker = User::find($newCareWorkerId);
-        
         if (!$originalCareWorker || !$newCareWorker) {
             return;
         }
-        
         $beneficiary = Beneficiary::find($newVisitation->beneficiary_id);
         if (!$beneficiary) {
             return;
         }
-        
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
-        
+
         // Get care managers for both care workers
         $careManagers = [];
         if ($originalCareWorker->assigned_care_manager_id) {
             $careManagers[$originalCareWorker->assigned_care_manager_id] = User::find($originalCareWorker->assigned_care_manager_id);
         }
-        
         if ($newCareWorker->assigned_care_manager_id) {
             $careManagers[$newCareWorker->assigned_care_manager_id] = User::find($newCareWorker->assigned_care_manager_id);
         }
-        
-        // Format date information
+
         $dateFormatted = Carbon::parse($newVisitation->visitation_date)->format('l, F j, Y');
         $scheduleChanged = $originalVisitation->visitation_date->format('Y-m-d') !== $newVisitation->visitation_date->format('Y-m-d');
-        
-        // Prepare notification message
         $title = "Care Worker Changed for Appointment";
         $scheduleInfo = $scheduleChanged ? 
             " The appointment was also rescheduled to {$dateFormatted}." : 
             " on {$dateFormatted}";
-        
         $message = "The care worker for {$beneficiary->first_name} {$beneficiary->last_name}'s appointment" .
                 "{$scheduleInfo} " .
                 "has been changed from {$originalCareWorker->first_name} {$originalCareWorker->last_name} " .
                 "to {$newCareWorker->first_name} {$newCareWorker->last_name}.";
-        
-        // Notify original care worker
+
+        // BLOCK 1: Notify original care worker
         if ($originalCareWorker->id != Auth::id()) {
-            Notification::create([
-                'user_id' => $originalCareWorker->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message . " You have been unassigned from this appointment.",
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff(
+                $originalCareWorker->id,
+                $title,
+                $message . " You have been unassigned from this appointment."
+            );
         }
-        
-        // Notify new care worker
+
+        // BLOCK 2: Notify new care worker
         if ($newCareWorker->id != Auth::id()) {
-            Notification::create([
-                'user_id' => $newCareWorker->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message . " You have been assigned to this appointment.",
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff(
+                $newCareWorker->id,
+                $title,
+                $message . " You have been assigned to this appointment."
+            );
         }
-        
-        // Notify care managers
+
+        // BLOCK 3: Notify care managers
         foreach ($careManagers as $careManager) {
             if ($careManager && $careManager->id != Auth::id()) {
-                Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyStaff(
+                    $careManager->id,
+                    $title,
+                    $message
+                );
             }
         }
-        
-        // Notify beneficiary if they have portal access
+
+        // BLOCK 4: Notify beneficiary if they have portal access
         if ($beneficiary->portal_account_id) {
-            Notification::create([
-                'user_id' => $beneficiary->beneficiary_id,
-                'user_type' => 'beneficiary',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyBeneficiary(
+                $beneficiary->beneficiary_id,
+                $title,
+                $message
+            );
         }
-        
-        // Notify family members
+
+        // BLOCK 5: Notify family members
         foreach ($familyMembers as $familyMember) {
             if ($familyMember->portal_account_id) {
-                Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyFamilyMember(
+                    $familyMember->family_member_id,
+                    $title,
+                    $message
+                );
             }
         }
-        
+
         \Log::info("Care worker change notifications sent", [
             'old_worker' => $originalCareWorkerId,
             'new_worker' => $newCareWorkerId,

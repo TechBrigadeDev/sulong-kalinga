@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use App\Services\LogService;
 use App\Enums\LogType;
+use App\Services\NotificationService;
 
 use App\Services\UserManagementService;
 use App\Services\UploadService;
@@ -25,12 +26,18 @@ class CareManagerController extends Controller
     protected $userManagementService;
     protected $logService;
     protected $uploadService;
+    protected $notificationService;
 
-    public function __construct(UserManagementService $userManagementService, LogService $logService, UploadService $uploadService)
-    {
+    public function __construct(
+        UserManagementService $userManagementService,
+        LogService $logService,
+        UploadService $uploadService,
+        NotificationService $notificationService
+    ) {
         $this->userManagementService = $userManagementService;
         $this->logService = $logService;
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService;
     }
 
     public function index(Request $request)
@@ -303,7 +310,7 @@ class CareManagerController extends Controller
             $welcomeTitle = 'Welcome to SULONG KALINGA';
             $welcomeMessage = 'Welcome ' . $caremanager->first_name . ' ' . $caremanager->last_name . 
                              '! Your care manager account has been created. You can now access the system with your credentials.';
-            $this->sendNotificationToCareManager($caremanager->id, $welcomeTitle, $welcomeMessage);
+            $this->notificationService->notifyStaff($caremanager->id, $welcomeTitle, $welcomeMessage);
             
             // Send notification to admins about the new care manager (excluding the creator)
             $actor = Auth::user()->first_name . ' ' . Auth::user()->last_name;
@@ -311,7 +318,13 @@ class CareManagerController extends Controller
             $message = $actor . ' added a new care manager: ' . $caremanager->first_name . ' ' . 
                       $caremanager->last_name . ' assigned to ' . 
                       Municipality::find($caremanager->assigned_municipality_id)->municipality_name . ' municipality';
-            $this->sendCareManagerNotification($title, $message);
+            $admins = User::where('role_id', 1)
+                ->where('status', 'Active')
+                ->where('id', '!=', Auth::id())
+                ->get();
+            foreach ($admins as $admin) {
+                $this->notificationService->notifyStaff($admin->id, $title, $message);
+            }
         } catch (\Exception $notifyEx) {
             // Log but continue - don't let notification failure prevent account creation
             \Log::warning('Failed to send welcome notification to new care manager: ' . $notifyEx->getMessage());
@@ -538,7 +551,7 @@ class CareManagerController extends Controller
                     $message .= ' Your assigned municipality has been changed to ' . $newMunicipality->municipality_name . '.';
                 }
                 
-                $this->sendNotificationToCareManager($caremanager->id, $title, $message);
+                $this->notificationService->notifyStaff($caremanager->id, $title, $message);
             } catch (\Exception $notifyEx) {
                 // Log but continue - don't let notification failure prevent update
                 \Log::warning('Failed to send profile update notification to care manager: ' . $notifyEx->getMessage());
@@ -628,14 +641,7 @@ class CareManagerController extends Controller
                         $message = 'Your care manager account status was changed from ' . $oldStatus . ' to ' . $status . ' by ' . $actor . '.';
                     }
                     
-                    $notification = new Notification();
-                    $notification->user_id = $caremanager->id;
-                    $notification->user_type = 'cose_staff';
-                    $notification->message_title = $title;
-                    $notification->message = $message;
-                    $notification->date_created = now();
-                    $notification->is_read = false;
-                    $notification->save();
+                    $this->notificationService->notifyStaff($caremanager->id, $title, $message);
                 } catch (\Exception $notifyEx) {
                     \Log::warning('Failed to send care manager status notification: ' . $notifyEx->getMessage());
                     // Continue execution - don't let notification failure prevent status update
@@ -656,14 +662,7 @@ class CareManagerController extends Controller
                     $adminMessage = $actor . ' changed the status of care manager ' . $caremanager->first_name . ' ' . $caremanager->last_name . ' to Inactive.';
                     
                     foreach ($admins as $admin) {
-                        $notification = new Notification();
-                        $notification->user_id = $admin->id;
-                        $notification->user_type = 'cose_staff';
-                        $notification->message_title = $adminTitle;
-                        $notification->message = $adminMessage;
-                        $notification->date_created = now();
-                        $notification->is_read = false;
-                        $notification->save();
+                        $this->notificationService->notifyStaff($admin->id, $adminTitle, $adminMessage);
                     }
                 } catch (\Exception $notifyEx) {
                     \Log::warning('Failed to send care manager deactivation notifications: ' . $notifyEx->getMessage());
@@ -737,81 +736,82 @@ class CareManagerController extends Controller
         }
     }
 
-    /**
-     * Send notification to admins about care manager-related actions (except the current user)
-     *
-     * @param string $title Notification title
-     * @param string $message Notification message
-     * @param int|null $targetCareManagerId ID of the care manager to exclude from recipients (if any)
-     * @return void
-     */
-    private function sendCareManagerNotification($title, $message, $targetCareManagerId = null)
-    {
-        try {
-            // Get the current user's ID
-            $currentUserId = Auth::id();
+    // DO NOT USE, USE NOTIFICATION SERVICE INSTEAD
+    // /**
+    //  * Send notification to admins about care manager-related actions (except the current user)
+    //  *
+    //  * @param string $title Notification title
+    //  * @param string $message Notification message
+    //  * @param int|null $targetCareManagerId ID of the care manager to exclude from recipients (if any)
+    //  * @return void
+    //  */
+    // private function sendCareManagerNotification($title, $message, $targetCareManagerId = null)
+    // {
+    //     try {
+    //         // Get the current user's ID
+    //         $currentUserId = Auth::id();
             
-            // Get all active admins EXCEPT the current user
-            $admins = User::where('role_id', 1)
-                ->where('status', 'Active')
-                ->where('id', '!=', $currentUserId)
-                ->get();
+    //         // Get all active admins EXCEPT the current user
+    //         $admins = User::where('role_id', 1)
+    //             ->where('status', 'Active')
+    //             ->where('id', '!=', $currentUserId)
+    //             ->get();
                 
-            \Log::info('Sending care manager notification to ' . $admins->count() . ' admins');
+    //         \Log::info('Sending care manager notification to ' . $admins->count() . ' admins');
                 
-            foreach ($admins as $admin) {
-                // Create notification for each admin
-                $notification = new Notification();
-                $notification->user_id = $admin->id;
-                $notification->user_type = 'cose_staff';
-                $notification->message_title = $title;
-                $notification->message = $message;
-                $notification->date_created = now();
-                $notification->is_read = false;
-                $notification->save();
-            }
-        } catch (\Exception $e) {
-            \Log::error('Failed to send care manager notification to admins: ' . $e->getMessage());
-        }
-    }
+    //         foreach ($admins as $admin) {
+    //             // Create notification for each admin
+    //             $notification = new Notification();
+    //             $notification->user_id = $admin->id;
+    //             $notification->user_type = 'cose_staff';
+    //             $notification->message_title = $title;
+    //             $notification->message = $message;
+    //             $notification->date_created = now();
+    //             $notification->is_read = false;
+    //             $notification->save();
+    //         }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send care manager notification to admins: ' . $e->getMessage());
+    //     }
+    // }
 
-    /**
-     * Send a notification specifically to a target care manager
-     *
-     * @param int $careManagerId ID of the care manager to notify
-     * @param string $title Notification title  
-     * @param string $message Notification message
-     * @return void
-     */
-    private function sendNotificationToCareManager($careManagerId, $title, $message)
-    {
-        try {
-            // Ensure care manager exists and is active
-            $careManager = User::where('id', $careManagerId)
-                ->where('role_id', 2)
-                ->where('status', 'Active')
-                ->first();
+    // /**
+    //  * Send a notification specifically to a target care manager
+    //  *
+    //  * @param int $careManagerId ID of the care manager to notify
+    //  * @param string $title Notification title  
+    //  * @param string $message Notification message
+    //  * @return void
+    //  */
+    // private function sendNotificationToCareManager($careManagerId, $title, $message)
+    // {
+    //     try {
+    //         // Ensure care manager exists and is active
+    //         $careManager = User::where('id', $careManagerId)
+    //             ->where('role_id', 2)
+    //             ->where('status', 'Active')
+    //             ->first();
                 
-            if (!$careManager) {
-                \Log::warning('Attempted to send notification to non-existent or inactive care manager: ' . $careManagerId);
-                return;
-            }
+    //         if (!$careManager) {
+    //             \Log::warning('Attempted to send notification to non-existent or inactive care manager: ' . $careManagerId);
+    //             return;
+    //         }
             
-            // Create notification
-            $notification = new Notification();
-            $notification->user_id = $careManagerId;
-            $notification->user_type = 'cose_staff';
-            $notification->message_title = $title;
-            $notification->message = $message;
-            $notification->date_created = now();
-            $notification->is_read = false;
-            $notification->save();
+    //         // Create notification
+    //         $notification = new Notification();
+    //         $notification->user_id = $careManagerId;
+    //         $notification->user_type = 'cose_staff';
+    //         $notification->message_title = $title;
+    //         $notification->message = $message;
+    //         $notification->date_created = now();
+    //         $notification->is_read = false;
+    //         $notification->save();
             
-            \Log::info('Created personal notification for care manager ' . $careManagerId);
-        } catch (\Exception $e) {
-            \Log::error('Failed to send notification to care manager ' . $careManagerId . ': ' . $e->getMessage());
-        }
-    }
+    //         \Log::info('Created personal notification for care manager ' . $careManagerId);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to send notification to care manager ' . $careManagerId . ': ' . $e->getMessage());
+    //     }
+    // }
 
     /**
      * Update the care manager's email
