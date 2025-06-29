@@ -159,7 +159,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // Weekly Care Plans
     Route::get('/records/weekly-care-plans', [RecordsManagementApiController::class, 'listWeekly']);
     Route::get('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'showWeekly']);
-    Route::patch('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'updateWeekly']);
+    Route::post('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'updateWeekly']);
 
     // General Care Plans REMOVED
     // Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
