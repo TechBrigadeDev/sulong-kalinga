@@ -22,21 +22,17 @@ class AuthController {
 
     async login(login: string, password: string) {
         const formData = new FormData();
-        console.log('zzzzzzzzzzzzzxxx')
         if (isEmail(login)) {
             formData.append("email", login);
         } else {
             formData.append("username", login);
         }
         formData.append("password", password);
-        console.log('zzzzzzz1zzzzzzxxx')
-        console.log('zzzzzzz1zzzzzzxxx',this.api)
 
         const response = await this.api.post(
             "/login",
             formData,
         );
-        console.log(response)
         const validate =
             await loginSchema.response.safeParseAsync(
                 response.data,

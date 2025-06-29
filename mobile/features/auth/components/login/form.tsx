@@ -18,11 +18,7 @@ const LoginForm = () => {
             },
         });
 
-    const [login, setLogin] = useState(
-        process.env.NODE_ENV !== "production"
-            ? "felisa.villanueva@cose.org.ph"
-            : "",
-    );
+    const [login, setLogin] = useState("");
     const [password, setPassword] = useState(
         process.env.NODE_ENV !== "production"
             ? "12312312"
