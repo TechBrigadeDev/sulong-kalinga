@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\User; // This is for cose_users
 use App\Observers\CoseUserObserver;
-use App\Models\Beneficiary;
+use App\Models\Beneficiary; 
 use App\Observers\BeneficiaryObserver;
 use App\Models\FamilyMember;
 use App\Observers\FamilyMemberObserver;

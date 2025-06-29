@@ -15,9 +15,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use App\Services\NotificationService;
 
 class MedicationScheduleController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Display the medication schedule management page based on user role
      */
@@ -280,51 +288,51 @@ class MedicationScheduleController extends Controller
         if (!$beneficiary) {
             return;
         }
-        
+
         $beneficiaryName = $beneficiary->first_name . ' ' . $beneficiary->last_name;
         $medicationName = $medicationSchedule->medication_name;
         $dosage = $medicationSchedule->dosage;
-        
+
         // Generate schedule information for the notification
         $scheduleInfo = $this->getScheduleInfoForNotification($medicationSchedule);
-        
+
         // Create notification message
         $messageTitle = 'New Medication Schedule';
         $message = "A new medication schedule has been created for {$beneficiaryName}: {$medicationName} ({$dosage}). {$scheduleInfo}";
-        
+
         // 1. Notify the beneficiary
-        $this->createNotification($beneficiary->beneficiary_id, 'beneficiary', $messageTitle, $message);
-        
+        $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $messageTitle, $message);
+
         // 2. Notify all family members related to the beneficiary
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            $this->createNotification($familyMember->family_member_id, 'family_member', $messageTitle, $message);
+            $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $messageTitle, $message);
         }
-        
+
         // 3. Notify the care worker assigned to the beneficiary (if they exist and are not the creator)
         if ($beneficiary->generalCarePlan) {
             $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
-            // Only notify if the care worker exists and is not the one creating the medication schedule
             if ($careWorkerId && $careWorkerId != $medicationSchedule->created_by) {
-                $this->createNotification($careWorkerId, 'cose_staff', $messageTitle, $message);
+                $this->notificationService->notifyStaff($careWorkerId, $messageTitle, $message);
             }
         }
     }
     
-    /**
-     * Create a notification record.
-     */
-    private function createNotification($userId, $userType, $title, $message)
-    {
-        Notification::create([
-            'user_id' => $userId,
-            'user_type' => $userType,
-            'message_title' => $title,
-            'message' => $message,
-            'date_created' => now(),
-            'is_read' => false
-        ]);
-    }
+    // DO NOT USE, USE NOTIFICATION SERVICE INSTEAD
+    // /**
+    //  * Create a notification record.
+    //  */
+    // private function createNotification($userId, $userType, $title, $message)
+    // {
+    //     Notification::create([
+    //         'user_id' => $userId,
+    //         'user_type' => $userType,
+    //         'message_title' => $title,
+    //         'message' => $message,
+    //         'date_created' => now(),
+    //         'is_read' => false
+    //     ]);
+    // }
     
     /**
      * Generate a human-readable schedule description for notifications.
@@ -699,19 +707,19 @@ class MedicationScheduleController extends Controller
         $message .= "View full details in the Sulong Kalinga system.";
         
         // Send the notifications
-        $this->createNotification($beneficiary->beneficiary_id, 'beneficiary', $messageTitle, $message);
+        $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $messageTitle, $message);
         
         // Notify family members
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            $this->createNotification($familyMember->family_member_id, 'family_member', $messageTitle, $message);
+            $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $messageTitle, $message);
         }
         
         // Notify care worker if applicable
         if ($beneficiary->generalCarePlan) {
             $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
             if ($careWorkerId && $careWorkerId != $medicationSchedule->updated_by) {
-                $this->createNotification($careWorkerId, 'cose_staff', $messageTitle, $message);
+                $this->notificationService->notifyStaff($careWorkerId, $messageTitle, $message);
             }
         }
     }
@@ -817,19 +825,19 @@ class MedicationScheduleController extends Controller
         $message .= "This medication is no longer part of the treatment plan.";
         
         // 1. Notify the beneficiary
-        $this->createNotification($beneficiaryId, 'beneficiary', $messageTitle, $message);
+        $this->notificationService->notifyBeneficiary($beneficiaryId, $messageTitle, $message);
         
         // 2. Notify all family members related to the beneficiary
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiaryId)->get();
         foreach ($familyMembers as $familyMember) {
-            $this->createNotification($familyMember->family_member_id, 'family_member', $messageTitle, $message);
+            $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $messageTitle, $message);
         }
         
         // 3. Notify the care worker assigned to the beneficiary
         if ($beneficiary->generalCarePlan) {
             $careWorkerId = $beneficiary->generalCarePlan->care_worker_id;
             if ($careWorkerId && $careWorkerId != $user->id) {
-                $this->createNotification($careWorkerId, 'cose_staff', $messageTitle, $message);
+                $this->notificationService->notifyStaff($careWorkerId, $messageTitle, $message);
             }
         }
         
@@ -839,7 +847,7 @@ class MedicationScheduleController extends Controller
             if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
                 $careWorker = User::find($beneficiary->generalCarePlan->care_worker_id);
                 if ($careWorker && $careWorker->care_manager_id) {
-                    $this->createNotification($careWorker->care_manager_id, 'cose_staff', $messageTitle, $message);
+                    $this->notificationService->notifyStaff($careWorker->care_manager_id, $messageTitle, $message);
                 }
             }
         }

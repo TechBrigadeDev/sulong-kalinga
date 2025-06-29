@@ -7,7 +7,7 @@ use App\Models\VisitationOccurrence;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class CleanupOldVisitationOccurrences extends Command
+class UpdateVisitationStatuses extends Command
 {
     protected $signature = 'visitations:cleanup-old-occurrences {--months=12}';
     protected $description = 'Remove old visitation occurrences that exceed the retention period';
