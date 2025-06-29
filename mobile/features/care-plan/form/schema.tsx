@@ -182,7 +182,7 @@ export const carePlanFormSchema = z
                 code: z.ZodIssueCode.custom,
                 message:
                     "Please select at least one intervention from any care category",
-                path: ["mobility"],
+                path: ["interventions"],
             });
         }
     });

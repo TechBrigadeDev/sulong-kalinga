@@ -116,11 +116,6 @@ export const PersonalDetails = ({
 
 const Beneficiary = () => {
     const { record } = useCarePlanFormStore();
-
-    console.log(
-        "beneficiary record:",
-        record?.beneficiary,
-    );
     const { data: currentBeneficiary } =
         useGetBeneficiary(
             record?.beneficiary?.beneficiary_id.toString(),
@@ -138,28 +133,6 @@ const Beneficiary = () => {
         setSelectedBeneficiary,
     ] = useState<IBeneficiary | null>(null);
 
-    useEffect(() => {
-        if (
-            currentBeneficiary?.beneficiary_id.toString() ===
-            currentBeneficiaryId
-        ) {
-            setSelectedBeneficiary(
-                currentBeneficiary,
-            );
-        }
-    }, [
-        currentBeneficiary,
-        currentBeneficiaryId,
-    ]);
-
-    // get age from beneficiary.birthdate
-    const age = selectedBeneficiary
-        ? new Date().getFullYear() -
-          new Date(
-              selectedBeneficiary.birthday,
-          ).getFullYear()
-        : "";
-
     const { data: beneficiaries } =
         useGetBeneficiaries();
 
@@ -171,6 +144,39 @@ const Beneficiary = () => {
         );
     }, [beneficiaries]);
 
+    useEffect(() => {
+        if (
+            currentBeneficiary?.beneficiary_id.toString() ===
+            currentBeneficiaryId
+        ) {
+            setSelectedBeneficiary(
+                currentBeneficiary,
+            );
+        } else if (!!currentBeneficiaryId) {
+            const selected =
+                allBeneficiaries.find(
+                    (b) =>
+                        b.beneficiary_id.toString() ===
+                        currentBeneficiaryId,
+                );
+            setSelectedBeneficiary(
+                selected || null,
+            );
+        }
+    }, [
+        currentBeneficiary,
+        currentBeneficiaryId,
+        record?.beneficiary,
+        allBeneficiaries,
+    ]);
+
+    // get age from beneficiary.birthdate
+    const age = selectedBeneficiary
+        ? new Date().getFullYear() -
+          new Date(
+              selectedBeneficiary.birthday,
+          ).getFullYear()
+        : "";
     const Input = () =>
         record?.beneficiary ? (
             <H4>
