@@ -17,7 +17,17 @@ export default function Layout() {
     const router = useRouter();
 
     return (
-        <Tabs>
+        <Tabs
+            options={{
+                screenOptions: {
+                    lazy: true,
+                    action: {
+                        type: "none",
+                    },
+                    title: "",
+                },
+            }}
+        >
             <View style={styles.tabContainer}>
                 <TabSlot />
             </View>
