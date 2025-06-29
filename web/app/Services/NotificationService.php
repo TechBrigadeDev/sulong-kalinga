@@ -9,7 +9,7 @@ use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\FcmToken;
 use Carbon\Carbon;
-use NotificationChannels\Expo\ExpoMessage;
+use App\Notifications\ExpoPushNotification;
 
 class NotificationService
 {
@@ -211,7 +211,7 @@ class NotificationService
     }
 
     /**
-     * Send Expo push notification
+     * Send Expo push notification using the dedicated notification class
      *
      * @param mixed $notifiable
      * @param string $title
@@ -221,9 +221,15 @@ class NotificationService
      */
     private function sendExpoPush($notifiable, string $title, string $message, string $role): void
     {
-        // Get FCM token based on the notifiable model and role
         $fcmToken = null;
         $userId = null;
+
+        \Log::info('=== PUSH NOTIFICATION DEBUG START ===');
+        \Log::info('Notifiable details', [
+            'class' => get_class($notifiable),
+            'id' => $notifiable->id ?? 'no id',
+            'role' => $role
+        ]);
         
         if ($notifiable instanceof User && $role === 'cose_staff') {
             $userId = $notifiable->id;
@@ -233,54 +239,34 @@ class NotificationService
             $userId = $notifiable->family_member_id;
         }
         
+        \Log::info('User ID resolved', ['user_id' => $userId]);
+        
         if ($userId) {
             $fcmToken = FcmToken::getTokenByUser($userId, $role);
+            \Log::info('Token lookup result', [
+                'token_found' => $fcmToken ? 'YES' : 'NO',
+                'token_value' => $fcmToken ? $fcmToken->token : 'NONE'
+            ]);
         }
         
         // Only send if FCM token exists
         if ($fcmToken) {
             try {
+                \Log::info('Attempting to send push notification');
                 \Illuminate\Support\Facades\Notification::send(
                     $notifiable,
-                    new class($title, $message, $fcmToken->token) extends \Illuminate\Notifications\Notification {
-                        private $title;
-                        private $message;
-                        private $token;
-
-                        public function __construct($title, $message, $token)
-                        {
-                            $this->title = $title;
-                            $this->message = $message;
-                            $this->token = $token;
-                        }
-
-                        public function via($notifiable): array
-                        {
-                            return ['expo'];
-                        }
-
-                        public function toExpo($notifiable): ExpoMessage
-                        {
-                            return ExpoMessage::create($this->title)
-                                ->body($this->message)
-                                ->priority('high')
-                                ->expiresAt(now()->addHour());
-                        }
-
-                        /**
-                         * Get the Expo push token for the notifiable
-                         */
-                        public function routeNotificationForExpo($notifiable)
-                        {
-                            return $this->token;
-                        }
-                    }
+                    new ExpoPushNotification($title, $message, $fcmToken->token)
                 );
+                \Log::info('✅ Push notification sent successfully');
             } catch (\Exception $e) {
-                // Log the error but don't fail the notification creation
-                \Illuminate\Support\Facades\Log::error('Failed to send push notification: ' . $e->getMessage());
+                \Log::error('❌ Failed to send push notification: ' . $e->getMessage());
+                \Log::error('Exception trace: ' . $e->getTraceAsString());
             }
+        } else {
+            \Log::warning('❌ No FCM token found - push notification skipped');
         }
+        
+        \Log::info('=== PUSH NOTIFICATION DEBUG END ===');
     }
 
     /**
