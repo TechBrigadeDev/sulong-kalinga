@@ -111,6 +111,57 @@ class NotificationController extends Controller {
             await this.api.post(path);
         return response.data;
     }
+
+    async getNotificationToken(role: IRole) {
+        const path = portalPath(
+            role,
+            "/fcm/token",
+        );
+
+        try {
+            const response =
+                await this.api.get(path);
+
+            console.log(
+                "Notification token response",
+                response.data,
+            );
+
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.status) {
+                    case 500:
+                        log(
+                            "Server error:",
+                            error.message,
+                        );
+                        break;
+                    default:
+                        break;
+                }
+            } else if (
+                error instanceof ZodError
+            ) {
+                log("Zod error:", error.errors);
+            }
+
+            throw new Error(
+                "Failed to fetch notification token",
+            );
+        }
+    }
+    async registerNotification(role: IRole) {
+        const path = portalPath(
+            role,
+            "/fcm/register",
+        );
+
+        console.log(
+            "Registering notification",
+            path,
+        );
+    }
 }
 
 const notificationController =

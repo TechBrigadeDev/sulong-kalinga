@@ -2,6 +2,7 @@ import {
     InvalidateOptions,
     QueryClient,
 } from "@tanstack/react-query";
+import { IRole } from "features/auth/auth.interface";
 import { authStore } from "features/auth/auth.store";
 
 export const queryClient = new QueryClient({
@@ -174,6 +175,14 @@ export const QK = {
     notification: {
         getNotifications:
             "notification/getNotifications",
+        getToken: (role: IRole) => [
+            "notification/getNotificationToken",
+            role,
+        ],
+        registerToken: (role: IRole) => [
+            "notification/registerNotification",
+            role || "token",
+        ],
     },
 };
 
