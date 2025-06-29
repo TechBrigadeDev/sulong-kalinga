@@ -195,7 +195,22 @@ class CarePlanApiController extends Controller
                 'evaluation_recommendations' => $carePlan->evaluation_recommendations,
                 'illnesses' => $carePlan->illnesses ? json_decode($carePlan->illnesses) : [],
                 'vital_signs' => $carePlan->vitalSigns,
-                'interventions' => $carePlan->interventions,
+                'interventions' => $carePlan->interventions->map(function ($intervention) {
+                    // If intervention_description is null and intervention_id is set, get from related intervention
+                    $description = $intervention->intervention_description;
+                    if (!$description && $intervention->intervention_id && $intervention->intervention) {
+                        $description = $intervention->intervention->intervention_description;
+                    }
+                    return [
+                        'wcp_intervention_id' => $intervention->wcp_intervention_id,
+                        'weekly_care_plan_id' => $intervention->weekly_care_plan_id,
+                        'intervention_id' => $intervention->intervention_id,
+                        'care_category_id' => $intervention->care_category_id,
+                        'intervention_description' => $description,
+                        'duration_minutes' => $intervention->duration_minutes,
+                        'implemented' => $intervention->implemented,
+                    ];
+                }),
                 'photo_url' => $photoUrl,
                 'created_at' => $carePlan->created_at,
                 'updated_at' => $carePlan->updated_at,

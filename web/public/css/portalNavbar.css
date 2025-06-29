@@ -1,5 +1,16 @@
+.notification-modal .modal-dialog {
+    max-width: 900px; /* or your desired width */
+    width: 90vw;      /* responsive width */
+}
+
+.navbar-nav .dropdown-menu {
+    width: 500px; /* Adjust width as needed */
+    max-height: 400px; /* Limit height for better UX */
+    overflow-y: auto; /* Enable scrolling if content exceeds height */
+}
+
 .message-dropdown {
-        width: 350px;
+        width: 550px;
         max-height: 400px;
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         border: none;
@@ -149,7 +160,8 @@
     }
 
     .notification-list {
-        max-height: 300px;
+        max-height: 500px;
+        min-width: 350px;
         overflow-y: auto;
     }
 
@@ -272,25 +284,13 @@
         text-decoration: underline;
     }
 
-    /* Notification badge on the bell icon */
-    .nav-notification-link {
-        position: relative;
-    }
-
-    .notification-count {
-        position: absolute;
-        top: 0;
-        right: -5px;
-        font-size: 0.65rem;
-    }
-
     /* Notification modal styles */
     .notification-modal .modal-body {
         padding: 1rem;
     }
 
     .notification-modal .notification-list {
-        max-height: 400px;
+        max-height: 500px;
     }
 
     .notification-modal .notification-item {

@@ -470,15 +470,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function createNotificationHTML(notification, iconClass, iconType, timeAgo, truncate) {
         return `
             <div class="notification-item ${notification.is_read ? '' : 'unread'}" 
-                 data-id="${notification.notification_id}" 
-                 id="notification-${notification.notification_id}">
+                data-id="${notification.notification_id}" 
+                id="notification-${notification.notification_id}">
                 <div class="d-flex align-items-start">
                     <div class="notification-icon ${iconType}">
                         <i class="bi ${iconClass}"></i>
                     </div>
                     <div class="notification-content">
                         <strong>${notification.message_title || 'Notification'}</strong>
-                        <p class="mb-1 ${truncate ? 'text-truncate' : ''}">${notification.message}</p>
+                        <p class="mb-1 ${truncate ? 'text-truncate' : ''}">${notification.message ? notification.message.replace(/\n/g, '<br>') : ''}</p>
                         <span class="notification-time">${timeAgo}</span>
                     </div>
                 </div>

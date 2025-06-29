@@ -104,7 +104,7 @@ use App\Helpers\TranslationHelper as T;
         <li><a class="link_name">{{ T::translate('Location Tracking', 'Pagsubaybay sa Lokasyon')}}</a></li>
         @if(Route::has('care-manager.beneficiary.map.index'))
           <li>
-            <a href="{{ route('care-manager.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiary-map') }}'; return false;" @endif>
+            <a href="{{ route('care-manager.beneficiary.map.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.beneficiary.map.index') }}'; return false;" @endif>
               {{ T::translate('Beneficiary Map', 'Mapa ng Benepisyaryo')}}
             </a>
           </li>
@@ -134,6 +134,16 @@ use App\Helpers\TranslationHelper as T;
       </a>
       <ul class="sub-menu blank">
         <li><a class="link_name" href="{{ route('care-manager.municipalities.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.municipalities.index') }}'; return false;" @endif>{{ T::translate('Municipality Management', 'Pamamahala sa Munisipalidad')}}</a></li>
+      </ul>
+    </li>
+
+    <li class="{{ Request::routeIs('care-manager.ai-summary.*') ? 'active' : '' }}">
+      <a href="{{ route('care-manager.ai-summary.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.ai-summary.index') }}'; return false;" @endif>
+        <i class="bi bi-stars"></i>
+        <span class="link_name">AI Summary</span>
+      </a>
+      <ul class="sub-menu blank">
+        <li><a class="link_name" href="{{ route('care-manager.ai-summary.index') }}" @if($isMessagingView) target="_top" onclick="window.top.location.href='{{ route('care-manager.ai-summary.index') }}'; return false;" @endif>AI Summary</a></li>
       </ul>
     </li>
   </ul>

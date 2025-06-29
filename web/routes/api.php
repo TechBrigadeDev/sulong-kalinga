@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\InternalAppointmentsApiController;
 use App\Http\Controllers\Api\VisitationApiController;
 use App\Http\Controllers\Api\MessagingApiController;
 use App\Http\Controllers\Api\NotificationsApiController;
+use App\Http\Controllers\Api\FcmApiController;
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\ShiftTrackApiController;
 use App\Http\Controllers\Api\RecordsManagementApiController;
@@ -96,6 +97,10 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     Route::get('/notifications', [NotificationsApiController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationsApiController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationsApiController::class, 'markAllAsRead']);
+
+    // FCM Push Notifications
+    Route::post('/fcm/register', [FcmApiController::class, 'register']);
+    Route::get('/fcm/token', [FcmApiController::class, 'getToken']);
 
     // Reports Management API
     Route::get('/reports', [ReportsApiController::class, 'index']);

@@ -27,6 +27,8 @@ class WeeklyCarePlan extends Model
         'evaluation_summary_draft',
         'evaluation_translation_draft',
         'assessment_summary_sections',
+        'assessment_translation_sections',
+        'evaluation_translation_sections',
         'evaluation_summary_sections',
         'assessment_summary_final',
         'evaluation_summary_final',

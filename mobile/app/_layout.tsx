@@ -11,6 +11,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import Providers from "~/components/Providers";
 import { authStore } from "~/features/auth/auth.store";
+import {
+    notificationHandler,
+    registerForPushNotificationsAsync,
+} from "~/lib/notification/service";
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -24,6 +28,8 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+notificationHandler();
 
 export default function RootLayout() {
     const [loaded, error] = useFonts({
@@ -54,12 +60,25 @@ function RootLayoutNav() {
         authStore((state) => state.token) !==
         null;
 
+    const register = async () => {
+        await Promise.all([
+            registerForPushNotificationsAsync(),
+        ]);
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            register();
+        }
+    }, [isAuthenticated]);
+
     return (
         <Providers>
             <GestureHandlerRootView
                 style={{ flex: 1 }}
             >
                 <Stack>
+                    <Stack.Screen name="login" />
                     <Stack.Protected
                         guard={isAuthenticated}
                     >
@@ -87,14 +106,6 @@ function RootLayoutNav() {
                             }}
                         />
                         <Stack.Screen
-                            name="notifications/index"
-                            options={{
-                                title: "Notifications",
-                                headerTitle:
-                                    "Notifications",
-                            }}
-                        />
-                        <Stack.Screen
                             name="scheduling"
                             options={{
                                 headerShown:
@@ -102,7 +113,6 @@ function RootLayoutNav() {
                             }}
                         />
                     </Stack.Protected>
-                    <Stack.Screen name="login" />
                 </Stack>
             </GestureHandlerRootView>
             <Dialogs />

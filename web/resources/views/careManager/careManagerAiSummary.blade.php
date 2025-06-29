@@ -208,8 +208,8 @@
     use App\Helpers\TranslationHelper as T;
     @endphp
 
-    @include('components.adminNavbar')
-    @include('components.adminSidebar')
+    @include('components.careManagerNavbar')
+    @include('components.careManagerSidebar')
 
     <div class="home-section">
         <div class="page-header">
@@ -589,7 +589,7 @@
 
                 // Make request to translate both summary and sections
                 $.ajax({
-                    url: '/admin/ai-summary/translate-sections',
+                    url: '/care-manager/ai-summary/translate-sections',
                     type: 'POST',
                     data: {
                         sections: sections,
@@ -721,7 +721,7 @@
                 let dateTo = $('#date_to').val();
                 
                 $.ajax({
-                    url: '/admin/ai-summary/search',
+                    url: '/care-manager/ai-summary/search',
                     type: 'GET',
                     data: {
                         search: search,
@@ -853,7 +853,7 @@
             // Load care plan details
             function loadCarePlanDetails(id) {
                 $.ajax({
-                    url: `/admin/ai-summary/care-plan/${id}`,
+                    url: `/care-manager/ai-summary/care-plan/${id}`,
                     type: 'GET',
                     success: function(carePlan) {
                         currentCarePlanId = carePlan.weekly_care_plan_id;
@@ -1091,7 +1091,7 @@
                 }, 150);
                 
                 $.ajax({
-                    url: '/admin/ai-summary/summarize',
+                    url: '/care-manager/ai-summary/summarize',
                     type: 'POST',
                     data: {
                         text: text,
@@ -1173,7 +1173,7 @@
                 }, 150);
                 
                 $.ajax({
-                    url: '/admin/ai-summary/summarize',
+                    url: '/care-manager/ai-summary/summarize',
                     type: 'POST',
                     data: {
                         text: text,
@@ -1454,7 +1454,7 @@
                 data[`${type}_summary_sections`] = sections;
                 
                 $.ajax({
-                    url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                    url: `/care-manager/ai-summary/update/${currentCarePlanId}`,
                     type: 'PUT',
                     data: data,
                     success: function(response) {
@@ -1508,7 +1508,7 @@
                 data[`${type}_summary_sections`] = sections;
                 
                 $.ajax({
-                    url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                    url: `/care-manager/ai-summary/update/${currentCarePlanId}`,
                     type: 'PUT',
                     data: data,
                     success: function(response) {
@@ -1641,7 +1641,7 @@
                 }
 
                 $.ajax({
-                    url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
+                    url: `/care-manager/ai-summary/finalize/${currentCarePlanId}`,
                     type: 'PUT',
                     data: data,
                     success: function(response) {
@@ -1726,7 +1726,7 @@
 
                 // Make request to translate both summary and sections
                 $.ajax({
-                    url: '/admin/ai-summary/translate-sections',
+                    url: '/care-manager/ai-summary/translate-sections',
                     type: 'POST',
                     data: {
                         sections: sections,
@@ -1836,7 +1836,7 @@
                     data[`${type}_translation_sections`] = sections;
                 }
                 $.ajax({
-                    url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                    url: `/care-manager/ai-summary/update/${currentCarePlanId}`,
                     type: 'PUT',
                     data: data,
                     success: function(response) {

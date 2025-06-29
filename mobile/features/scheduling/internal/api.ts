@@ -1,4 +1,5 @@
 import { Controller } from "common/api";
+import { log } from "common/debug";
 
 import {
     internalAppointmentResponseSchema,
@@ -47,9 +48,14 @@ class InternalSchedulingController extends Controller {
             );
 
         if (!valid.success) {
-            console.error(
-                "Internal appointments validation error",
+            log(
+                "\n\n\nInternal appointments validation error",
                 valid.error,
+                JSON.stringify(
+                    response.data,
+                    null,
+                    2,
+                ),
             );
             throw new Error(
                 "Internal appointments validation error",

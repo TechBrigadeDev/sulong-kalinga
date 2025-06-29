@@ -12,7 +12,7 @@ export const internalAppointmentSchema = z.object(
         appointment_id: z.number(),
         appointment_type_id: z.number(),
         title: z.string(),
-        description: z.string(),
+        description: z.string().nullable(),
         other_type_details: z.string().nullable(),
         date: z.string().datetime(),
         start_time: z

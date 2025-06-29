@@ -24,7 +24,16 @@ class FamilyMemberApiController extends Controller
     // List all family members
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = FamilyMember::with('beneficiary');
+
+        // Restrict to only family members of beneficiaries assigned to this care worker
+        if ($user && $user->role_id == 3) {
+            $assignedBeneficiaryIds = \App\Models\Beneficiary::whereHas('generalCarePlan', function($q) use ($user) {
+                $q->where('care_worker_id', $user->id);
+            })->pluck('beneficiary_id');
+            $query->whereIn('related_beneficiary_id', $assignedBeneficiaryIds);
+        }
 
         // Optional: search/filter
         if ($request->has('search')) {

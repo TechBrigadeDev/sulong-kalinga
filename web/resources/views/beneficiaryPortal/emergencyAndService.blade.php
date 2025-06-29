@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/portalemergencyAndService.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/familyPortalHomePage.css') }}">
 
     <style>
         /* Timeline styling */

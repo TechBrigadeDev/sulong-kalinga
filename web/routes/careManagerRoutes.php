@@ -182,11 +182,23 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/delete', [MedicationScheduleController::class, 'destroy'])->name('delete');
     });
 
+    Route::prefix('ai-summary')->name('ai-summary.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AiSummaryController::class, 'index'])->name('index');
+        Route::get('/search', [\App\Http\Controllers\AiSummaryController::class, 'search'])->name('search');
+        Route::get('/care-plan/{id}', [\App\Http\Controllers\AiSummaryController::class, 'getCarePlan'])->name('getCarePlan');
+        Route::post('/summarize', [\App\Http\Controllers\AiSummaryController::class, 'summarize'])->name('summarize');
+        Route::put('/update/{id}', [\App\Http\Controllers\AiSummaryController::class, 'updateSummary'])->name('update');
+        Route::put('/finalize/{id}', [\App\Http\Controllers\AiSummaryController::class, 'finalizeSummary'])->name('finalize');
+        Route::post('/translate', [\App\Http\Controllers\AiSummaryController::class, 'translate'])->name('translate');
+        Route::post('/translate-sections', [\App\Http\Controllers\AiSummaryController::class, 'translateSections'])->name('translate-sections');
+    });
+
     // Emergency and Service Request
         Route::prefix('emergency-request')->name('emergency.request.')->group(function () {
         Route::get('/', [EmergencyAndRequestController::class, 'index'])->name('index');
         Route::get('/view-history', [EmergencyAndRequestController::class, 'viewHistory'])->name('viewHistory');
         Route::post('/filter-history', [EmergencyAndRequestController::class, 'filterHistory'])->name('filter.history');
+        Route::get('/partial-content', [EmergencyAndRequestController::class, 'partialContent'])->name('partial-content');
         
         // Data retrieval routes for modals
         Route::get('/emergency/{id}', [EmergencyAndRequestController::class, 'getEmergencyNotice'])->name('get.emergency');
@@ -197,8 +209,6 @@ Route::middleware(['auth', '\App\Http\Middleware\CheckRole:care_manager'])->pref
         Route::post('/respond-emergency', [EmergencyAndRequestController::class, 'respondToEmergency'])->name('respond.emergency');
         Route::post('/handle-service', [EmergencyAndRequestController::class, 'handleServiceRequest'])->name('handle.service');
         Route::post('/archive', [EmergencyAndRequestController::class, 'archiveRecord'])->name('archive');
-
-        
         });
 
         // Shift Histories
