@@ -11,29 +11,47 @@ class BudgetAllocationFactory extends Factory
 {
     protected $model = BudgetAllocation::class;
 
+    // Cache static arrays to avoid repeated DB queries
+    protected static $adminIds = null;
+    protected static $typeIds = null;
+    protected static $budgetTypeDescriptions = [
+        'Regular Allocation' => 'Standard monthly budget for ongoing operations and essential services.',
+        'Supplemental Budget' => 'Additional funds allocated for special projects or urgent needs.',
+        'Grant Funding' => 'Funds received from external grants or donor organizations for specific initiatives.',
+        'Program-specific' => 'Budget dedicated to targeted programs or projects for beneficiaries.',
+        'Emergency Fund' => 'Reserved budget for immediate response to emergencies and disasters.',
+        'Adjustment' => 'Budget adjustment to reflect changes in funding or operational requirements.',
+    ];
+
     public function definition()
     {
-        // Get all admin users for random assignment
-        $adminIds = User::where('role_id', 1)->pluck('id')->toArray();
-        $adminId = !empty($adminIds) ? $this->faker->randomElement($adminIds) : null;
-        
-        // Get all budget type IDs for random assignment
-        $typeIds = BudgetType::pluck('budget_type_id')->toArray();
-        
+        // Cache admin IDs
+        if (is_null(self::$adminIds)) {
+            self::$adminIds = User::where('role_id', 1)->pluck('id')->toArray();
+        }
+        $adminId = !empty(self::$adminIds) ? $this->faker->randomElement(self::$adminIds) : User::factory();
+
+        // Cache budget type IDs and names
+        if (is_null(self::$typeIds)) {
+            self::$typeIds = BudgetType::pluck('budget_type_id', 'name')->toArray();
+        }
+        $typeNames = array_keys(self::$typeIds);
+        $typeName = $this->faker->randomElement($typeNames);
+        $typeId = self::$typeIds[$typeName];
+
         // Create date range (1-3 months)
         $startDate = $this->faker->dateTimeBetween('-12 months', '2025-07-31');
-        $endDate = clone $startDate;
-        $endDate->modify('+' . rand(1, 3) . ' months');
-        
+        $endDate = (clone $startDate)->modify('+' . rand(1, 3) . ' months');
+
         return [
-            'amount' => $this->faker->randomElement([10000, 15000, 20000, 25000, 30000, 50000]),
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'budget_type_id' => $this->faker->randomElement($typeIds),
-            'description' => $this->faker->optional(0.7)->sentence(),
+            'budget_type_id' => $typeId,
+            'description' => self::$budgetTypeDescriptions[$typeName] ?? 'General budget allocation for organizational needs.',
+            'amount' => $this->faker->numberBetween(10000, 50000),
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
             'created_by' => $adminId,
             'updated_by' => $adminId,
-            'created_at' => now(),
+            'created_at' => $startDate,
             'updated_at' => now(),
         ];
     }
