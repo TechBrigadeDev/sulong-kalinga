@@ -15,7 +15,9 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sulongkalinga.app",
+      "bundleIdentifier": "ph.org.cosemhcs.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCalendarsUsageDescription": "Allows this app to access your calendar to schedule and display events.",
         "NSAppTransportSecurity": {
@@ -36,8 +38,15 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.sulongkalinga.app",
-      "softwareKeyboardLayoutMode": "pan"
+      "package": "ph.org.cosemhcs.app",
+      "softwareKeyboardLayoutMode": "pan",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -62,7 +71,14 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -72,6 +88,7 @@
       "eas": {
         "projectId": "8829fdd6-e171-4ce0-b9c6-bb49631f79ad"
       }
-    }
+    },
+    "owner": "techbrigadedev"
   }
 }

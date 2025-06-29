@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Portal\EmergencyServiceRequestApiController;
 use App\Http\Controllers\Api\Portal\CarePlanApiController;
 use App\Http\Controllers\Api\Portal\PortalBeneficiariesApiController;
 use App\Http\Controllers\Api\NotificationsApiController;
+use App\Http\Controllers\Api\FcmApiController;
 use App\Http\Controllers\Api\Portal\MessagingApiController;
 use App\Http\Controllers\Api\Portal\FaqApiController;
 use App\Http\Controllers\Api\Portal\RelativesApiController;
@@ -61,6 +62,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     Route::get('/notifications', [NotificationsApiController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationsApiController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationsApiController::class, 'markAllAsRead']);
+
+    // FCM Push Notifications
+    Route::post('/fcm/register', [FcmApiController::class, 'register']);
+    Route::get('/fcm/token', [FcmApiController::class, 'getToken']);
 
     // Messaging
     Route::get('/messaging/unread-count', [MessagingApiController::class, 'unreadCount']);
