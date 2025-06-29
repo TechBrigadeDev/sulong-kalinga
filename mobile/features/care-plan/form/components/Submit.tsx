@@ -94,6 +94,9 @@ const SubmitCarePlanForm = () => {
                 "Error submitting form:",
                 error,
             );
+            throw new Error(
+                "Failed to submit care plan form",
+            );
         }
     };
 
@@ -281,7 +284,9 @@ const SubmitCarePlanForm = () => {
                 </View>
             )}
             <Text>
-                {record?.id ? "Edit" : "Create"}{" "}
+                {record?.id
+                    ? "Edit"
+                    : "Create"}{" "}
                 Weekly Care Plan
             </Text>
         </Button>

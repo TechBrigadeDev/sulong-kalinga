@@ -135,7 +135,7 @@ class CarePlanController extends Controller {
                 );
 
             const response = await this.api.patch(
-                `/weekly-care-plans/${id}`,
+                `/records/weekly-care-plans/${id}`,
                 apiData,
                 {
                     headers: {
@@ -171,7 +171,7 @@ class CarePlanController extends Controller {
                             status: "danger",
                             duration: 4000,
                         });
-                        return;
+                        break;
                     default:
                         toastServerError({
                             data: JSON.stringify(
@@ -185,8 +185,8 @@ class CarePlanController extends Controller {
                                 ?.status,
                         });
                 }
-                return;
             }
+            throw error;
         }
     }
 }
