@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\FamilyMember;
+use NotificationChannels\Expo\ExpoPushToken;
 
 class Beneficiary extends Authenticatable
 {
@@ -80,12 +81,27 @@ class Beneficiary extends Authenticatable
     }
 
     public function routeNotificationForExpo($notification = null)
+{
+    $token = \App\Models\FcmToken::where('user_id', $this->beneficiary_id)
+        ->where('role', 'beneficiary')
+        ->value('token');
+    \Log::info('routeNotificationForExpo called', [
+        'beneficiary_id' => $this->beneficiary_id,
+        'token' => $token,
+    ]);
+    // Use the static make() method
+    return $token ? [\NotificationChannels\Expo\ExpoPushToken::make($token)] : [];
+}
+
+    public function routeNotificationForFcm($notification = null)
     {
-        // Return the Expo push token for this beneficiary
-        // If you store the token in a related table, fetch it here
         $token = \App\Models\FcmToken::where('user_id', $this->beneficiary_id)
             ->where('role', 'beneficiary')
             ->value('token');
+        \Log::info('routeNotificationForFcm called', [
+            'beneficiary_id' => $this->beneficiary_id,
+            'token' => $token,
+        ]);
         return $token ? [$token] : [];
     }
 }
