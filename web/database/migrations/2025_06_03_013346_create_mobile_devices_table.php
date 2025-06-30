@@ -13,12 +13,17 @@ return new class extends Migration
     {
         Schema::create('mobile_devices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('device_uuid')->unique();
-            $table->string('device_type');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('user_type')->nullable(); // e.g. 'beneficiary', 'family_member', 'cose_staff'
+            $table->string('device_uuid')->unique(); // Unique identifier from the device
+            $table->string('device_type');           // e.g. 'android', 'ios'
             $table->string('device_model')->nullable();
             $table->string('os_version')->nullable();
             $table->timestamps();
+
+            // Indexes for fast lookup
+            $table->index(['user_id', 'user_type']);
+            $table->index('device_uuid');
         });
     }
 

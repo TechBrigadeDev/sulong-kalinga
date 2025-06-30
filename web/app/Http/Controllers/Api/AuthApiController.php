@@ -7,9 +7,12 @@ use App\Models\User; // cose_users table
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\UnifiedUser; // users table
+use App\Models\FcmToken;
+use App\Models\MobileDevice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\UploadService;
+use Illuminate\Support\Facades\Validator;
 
 class AuthApiController extends Controller
 {
@@ -154,11 +157,38 @@ class AuthApiController extends Controller
     }
 
     /**
-     * Logout user (revoke token)
+     * Logout user (revoke token and device-specific push token)
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Validate device_uuid for device-specific logout
+        $validator = Validator::make($request->all(), [
+            'device_uuid' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+        $deviceUuid = $request->input('device_uuid');
+
+        // Remove the push token for this user+device (all roles)
+        FcmToken::where('user_id', $user->id)
+            ->where('device_uuid', $deviceUuid)
+            ->delete();
+
+        // Optionally, also remove the device record
+        MobileDevice::where('device_uuid', $deviceUuid)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        // Revoke the Laravel access token
+        $user->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FcmToken;
+use App\Models\MobileDevice;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ class FcmApiController extends Controller
     }
 
     /**
-     * Register or update FCM token for authenticated user
+     * Register or update FCM token for authenticated user and device
      *
      * @param Request $request
      * @return JsonResponse
@@ -37,6 +38,10 @@ class FcmApiController extends Controller
                     }
                 },
             ],
+            'device_uuid' => 'required|string',
+            'device_type' => 'required|string',
+            'device_model' => 'nullable|string',
+            'os_version' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -50,12 +55,37 @@ class FcmApiController extends Controller
         try {
             $user = $request->user();
             $token = $request->input('token');
+            $deviceUuid = $request->input('device_uuid');
+            $deviceType = $request->input('device_type');
+            $deviceModel = $request->input('device_model');
+            $osVersion = $request->input('os_version');
 
             // Determine user role and ID based on role_id
             [$userId, $role] = $this->getUserIdAndRole($user);
 
-            // Register the token (this will replace any existing tokens for the user)
-            $fcmToken = $this->notificationService->register($userId, $role, $token);
+            // Register or update the device in mobile_devices
+            $mobileDevice = MobileDevice::updateOrCreate(
+                ['device_uuid' => $deviceUuid],
+                [
+                    'user_id' => $userId,
+                    'user_type' => $role,
+                    'device_type' => $deviceType,
+                    'device_model' => $deviceModel,
+                    'os_version' => $osVersion,
+                ]
+            );
+
+            // Register or update the token in fcm_tokens for this user+role+device
+            $fcmToken = FcmToken::updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'role' => $role,
+                    'device_uuid' => $deviceUuid,
+                ],
+                [
+                    'token' => $token,
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -64,6 +94,7 @@ class FcmApiController extends Controller
                     'id' => $fcmToken->id,
                     'token' => $fcmToken->token,
                     'role' => $fcmToken->role,
+                    'device_uuid' => $fcmToken->device_uuid,
                     'registered_at' => $fcmToken->created_at
                 ]
             ], 201);
@@ -78,12 +109,63 @@ class FcmApiController extends Controller
     }
 
     /**
-     * Get FCM token for authenticated user
+     * Remove FCM token for authenticated user and device (logout)
      *
      * @param Request $request
      * @return JsonResponse
      */
-    public function getToken(Request $request): JsonResponse
+    public function logout(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'device_uuid' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $deviceUuid = $request->input('device_uuid');
+            [$userId, $role] = $this->getUserIdAndRole($user);
+
+            // Remove the token for this user+role+device
+            FcmToken::where('user_id', $userId)
+                ->where('role', $role)
+                ->where('device_uuid', $deviceUuid)
+                ->delete();
+
+            // Optionally, also remove the device record
+            MobileDevice::where('device_uuid', $deviceUuid)
+                ->where('user_id', $userId)
+                ->where('user_type', $role)
+                ->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'FCM token and device unregistered successfully'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to unregister FCM token',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get FCM tokens for authenticated user (all devices)
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getTokens(Request $request): JsonResponse
     {
         try {
             $user = $request->user();
@@ -91,29 +173,34 @@ class FcmApiController extends Controller
             // Determine user role and ID based on role_id
             [$userId, $role] = $this->getUserIdAndRole($user);
 
-            $fcmToken = $this->notificationService->getTokenByUser($userId, $role);
+            $fcmTokens = FcmToken::where('user_id', $userId)
+                ->where('role', $role)
+                ->get();
 
-            if (!$fcmToken) {
+            if ($fcmTokens->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No FCM token found for user'
+                    'message' => 'No FCM tokens found for user'
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'id' => $fcmToken->id,
-                    'token' => $fcmToken->token,
-                    'role' => $fcmToken->role,
-                    'registered_at' => $fcmToken->created_at
-                ]
+                'data' => $fcmTokens->map(function ($token) {
+                    return [
+                        'id' => $token->id,
+                        'token' => $token->token,
+                        'role' => $token->role,
+                        'device_uuid' => $token->device_uuid,
+                        'registered_at' => $token->created_at
+                    ];
+                })
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve FCM token',
+                'message' => 'Failed to retrieve FCM tokens',
                 'error' => $e->getMessage()
             ], 500);
         }
