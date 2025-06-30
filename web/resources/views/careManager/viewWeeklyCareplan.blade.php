@@ -166,17 +166,31 @@
                 
                 <!-- Assessment Section -->
                 <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clipboard2-check-fill icon-secondary me-2"></i>{{ T::translate('Assessment', 'Pagtatasa')}}</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard2-check-fill icon-secondary me-2"></i>
+                            {{ T::translate('Assessment', 'Pagtatasa') }}
+                        </h5>
+                        <div>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Assessment Toggle">
+                                <button type="button" class="btn btn-outline-primary active" id="btn-assessment-original">Original</button>
+                                <button type="button" class="btn btn-outline-primary" id="btn-assessment-summary">Summary</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="detail-group">
                             <div class="detail-label">
                                 <i class="bi bi-journal-text icon-primary"></i>
-                                {{ T::translate('Assessment Notes', 'Mga Tala ng Pagtatasa')}}
+                                {{ T::translate('Assessment Notes', 'Mga Tala ng Pagtatasa') }}
                             </div>
                             <div class="detail-value" style="min-height: 80px;">
-                                {{ $weeklyCareplan->assessment ?? T::translate('No assessment recorded', 'Walang assessment na naitala') }}
+                                <span id="assessment-original">
+                                    {{ $weeklyCareplan->assessment ?? T::translate('No assessment recorded', 'Walang assessment na naitala') }}
+                                </span>
+                                <span id="assessment-summary" style="display:none;">
+                                    {{ $weeklyCareplan->assessment_summary_final ?? T::translate('No summary available', 'Walang buod na available') }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -250,18 +264,32 @@
                 
                 <!-- Evaluation Section -->
                 <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clipboard2-data-fill icon-secondary me-2"></i>{{ T::translate('Evaluation and Recommendations', 'Ebalwasyon at Rekomendasyon')}}</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard2-data-fill icon-secondary me-2"></i>
+                            {{ T::translate('Evaluation and Recommendations', 'Ebalwasyon at Rekomendasyon') }}
+                        </h5>
+                        <div>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Evaluation Toggle">
+                                <button type="button" class="btn btn-outline-primary active" id="btn-evaluation-original">Original</button>
+                                <button type="button" class="btn btn-outline-primary" id="btn-evaluation-summary">Summary</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="detail-group">
                             <div class="detail-value">
-                                @if($weeklyCareplan->evaluation_recommendations)
-                                    <i class="bi bi-chat-square-text-fill icon-secondary me-2"></i>
-                                    {{ $weeklyCareplan->evaluation_recommendations }}
-                                @else
-                                    {{ T::translate('No evaluation recorded', 'Walang ebalwasyon na naitala')}}
-                                @endif
+                                <span id="evaluation-original">
+                                    @if($weeklyCareplan->evaluation_recommendations)
+                                        <i class="bi bi-chat-square-text-fill icon-secondary me-2"></i>
+                                        {{ $weeklyCareplan->evaluation_recommendations }}
+                                    @else
+                                        {{ T::translate('No evaluation recorded', 'Walang ebalwasyon na naitala') }}
+                                    @endif
+                                </span>
+                                <span id="evaluation-summary" style="display:none;">
+                                    {{ $weeklyCareplan->evaluation_summary_final ?? T::translate('No summary available', 'Walang buod na available') }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -462,6 +490,33 @@
             const initialModal = new bootstrap.Modal(document.getElementById('confirmDeleteWeeklyCarePlanModal'));
             initialModal.show();
         }
+    </script>
+        <script>
+        document.getElementById('btn-assessment-original').onclick = function() {
+            document.getElementById('assessment-original').style.display = '';
+            document.getElementById('assessment-summary').style.display = 'none';
+            this.classList.add('active');
+            document.getElementById('btn-assessment-summary').classList.remove('active');
+        };
+        document.getElementById('btn-assessment-summary').onclick = function() {
+            document.getElementById('assessment-original').style.display = 'none';
+            document.getElementById('assessment-summary').style.display = '';
+            this.classList.add('active');
+            document.getElementById('btn-assessment-original').classList.remove('active');
+        };
+
+        document.getElementById('btn-evaluation-original').onclick = function() {
+            document.getElementById('evaluation-original').style.display = '';
+            document.getElementById('evaluation-summary').style.display = 'none';
+            this.classList.add('active');
+            document.getElementById('btn-evaluation-summary').classList.remove('active');
+        };
+        document.getElementById('btn-evaluation-summary').onclick = function() {
+            document.getElementById('evaluation-original').style.display = 'none';
+            document.getElementById('evaluation-summary').style.display = '';
+            this.classList.add('active');
+            document.getElementById('btn-evaluation-original').classList.remove('active');
+        };
     </script>
    
 </body>
