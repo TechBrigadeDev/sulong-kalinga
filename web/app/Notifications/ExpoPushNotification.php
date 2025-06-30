@@ -21,16 +21,15 @@ class ExpoPushNotification extends Notification
      * @param string $message
      * @param string $token
      */
-    public function __construct($title, $message, $token)
+    public function __construct($title, $message)
     {
         \Log::info('ExpoPushNotification constructed', [
             'title' => $title,
             'message' => $message,
-            'token' => $token,
         ]);
         $this->title = $title;
         $this->message = $message;
-        $this->token = $token;
+        //$this->token = $token;
     }
 
     /**
@@ -63,7 +62,7 @@ class ExpoPushNotification extends Notification
                 ->expiresAt(now()->addHour());
 
             \Log::info('ExpoPushNotification payload', [ // EXISTING
-                'to' => $this->token,
+                //'to' => $this->token,
                 'title' => $this->title,
                 'body' => $this->message,
             ]);
@@ -75,14 +74,14 @@ class ExpoPushNotification extends Notification
         }
     }
 
-    /**
-     * Route notification for Expo.
-     *
-     * @param mixed $notifiable
-     * @return string
-     */
-    public function routeNotificationForExpo($notifiable)
-    {
-        return $this->token;
-    }
+    // /**
+    //  * Route notification for Expo.
+    //  *
+    //  * @param mixed $notifiable
+    //  * @return string
+    //  */
+    // public function routeNotificationForExpo($notifiable)
+    // {
+    //     return $this->token;
+    // }
 }

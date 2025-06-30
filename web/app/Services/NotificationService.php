@@ -255,7 +255,8 @@ class NotificationService
                 \Log::info('Attempting to send push notification');
                 \Illuminate\Support\Facades\Notification::send(
                     $notifiable,
-                    new ExpoPushNotification($title, $message, $fcmToken->token)
+                    new ExpoPushNotification($title, $message)
+                    // new ExpoPushNotification($title, $message, $fcmToken->token)
                 );
                 \Log::info('✅ Push notification sent successfully');
             } catch (\Exception $e) {
