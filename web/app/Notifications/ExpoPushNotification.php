@@ -23,6 +23,11 @@ class ExpoPushNotification extends Notification
      */
     public function __construct($title, $message, $token)
     {
+        \Log::info('ExpoPushNotification constructed', [
+            'title' => $title,
+            'message' => $message,
+            'token' => $token,
+        ]);
         $this->title = $title;
         $this->message = $message;
         $this->token = $token;
@@ -36,6 +41,7 @@ class ExpoPushNotification extends Notification
      */
     public function via($notifiable)
     {
+        \Log::info('ExpoPushNotification via called');
         return ['expo'];
     }
 
