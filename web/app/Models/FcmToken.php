@@ -13,6 +13,7 @@ class FcmToken extends Model
         'user_id',
         'role',
         'token',
+        'device_uuid',
     ];
 
     protected $casts = [
@@ -38,6 +39,14 @@ class FcmToken extends Model
     }
 
     /**
+     * Device associated with this token
+     */
+    public function device()
+    {
+        return $this->belongsTo(MobileDevice::class, 'device_uuid', 'device_uuid');
+    }
+
+    /**
      * Scope to get tokens by user and role
      */
     public function scopeByUser($query, $userId, $role)
@@ -46,25 +55,30 @@ class FcmToken extends Model
     }
 
     /**
-     * Register or update FCM token for a user (replaces existing tokens)
+     * Register or update FCM token for a user and device (device-specific)
      */
-    public static function registerToken($userId, $role, $token)
+    public static function registerToken($userId, $role, $token, $deviceUuid)
     {
-        // Delete existing tokens for this user and role to ensure only one active token
-        static::where('user_id', $userId)->where('role', $role)->delete();
-        
-        return static::create([
-            'user_id' => $userId,
-            'role' => $role,
-            'token' => $token,
-        ]);
+        return static::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'role' => $role,
+                'device_uuid' => $deviceUuid,
+            ],
+            [
+                'token' => $token,
+            ]
+        );
     }
 
     /**
-     * Get FCM token by user ID and role
+     * Get FCM token by user ID, role, and device
      */
-    public static function getTokenByUser($userId, $role)
+    public static function getTokenByUserAndDevice($userId, $role, $deviceUuid)
     {
-        return static::where('user_id', $userId)->where('role', $role)->first();
+        return static::where('user_id', $userId)
+            ->where('role', $role)
+            ->where('device_uuid', $deviceUuid)
+            ->first();
     }
 }
