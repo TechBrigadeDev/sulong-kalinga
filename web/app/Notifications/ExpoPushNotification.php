@@ -47,10 +47,18 @@ class ExpoPushNotification extends Notification
      */
     public function toExpo($notifiable)
     {
-        return ExpoMessage::create($this->title)
+        $message = ExpoMessage::create($this->title)
             ->body($this->message)
             ->priority('high')
             ->expiresAt(now()->addHour());
+
+        \Log::info('ExpoPushNotification payload', [
+            'to' => $this->token,
+            'title' => $this->title,
+            'body' => $this->message,
+        ]);
+
+        return $message;
     }
 
     /**
