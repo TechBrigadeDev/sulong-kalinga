@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\Expo\ExpoPushToken;
 
 class User extends Authenticatable
 {
@@ -153,4 +154,15 @@ class User extends Authenticatable
         return $this->morphMany(Message::class, 'sender');
     }
     
+    public function routeNotificationForFcm($notification = null)
+    {
+        $token = \App\Models\FcmToken::where('user_id', $this->id)
+            ->where('role', 'cose_staff')
+            ->value('token');
+        \Log::info('routeNotificationForFcm called', [
+            'id' => $this->id,
+            'token' => $token,
+        ]);
+        return $token ? [$token] : [];
+    }
 }

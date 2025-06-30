@@ -41,7 +41,7 @@ class ExpoPushNotification extends Notification
     public function via($notifiable)
     {
         \Log::info('ExpoPushNotification via called');
-        return ['expo'];
+        return ['custom_expo'];
     }
 
     /**
@@ -51,22 +51,37 @@ class ExpoPushNotification extends Notification
      * @return \NotificationChannels\Expo\ExpoMessage
      */
     public function toExpo($notifiable)
-    {
-        \Log::info('📩 Entered toExpo method'); // NEW LINE
+    // {
+    //     \Log::info('📩 Entered toExpo method'); // NEW LINE
 
+    //     try {
+    //         $message = ExpoMessage::create($this->title)
+    //             ->body($this->message)
+    //             ->sound('default')
+    //             ->priority('high')
+    //             ->expiresAt(now()->addHour());
+
+    //         \Log::info('ExpoPushNotification payload', [ // EXISTING
+    //             //'to' => $this->token,
+    //             'title' => $this->title,
+    //             'body' => $this->message,
+    //         ]);
+
+    //         return $message;
+    //     } catch (\Throwable $e) {
+    //         \Log::error('❌ Error inside toExpo: ' . $e->getMessage());
+    //         return null;
+    //     }
+    // }
+    {
+        \Log::info('📩 Entered toExpo method');
         try {
             $message = ExpoMessage::create($this->title)
-                ->body($this->message)
-                ->sound('default')
-                ->priority('high')
-                ->expiresAt(now()->addHour());
-
-            \Log::info('ExpoPushNotification payload', [ // EXISTING
-                //'to' => $this->token,
+                ->body($this->message);
+            \Log::info('ExpoPushNotification payload', [
                 'title' => $this->title,
                 'body' => $this->message,
             ]);
-
             return $message;
         } catch (\Throwable $e) {
             \Log::error('❌ Error inside toExpo: ' . $e->getMessage());

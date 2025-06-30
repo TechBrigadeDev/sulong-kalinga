@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use NotificationChannels\Expo\ExpoPushToken;
 
 class FamilyMember extends Authenticatable
 {
@@ -35,5 +36,16 @@ class FamilyMember extends Authenticatable
     public function sentMessages()
     {
         return $this->morphMany(Message::class, 'sender');
+    }
+    public function routeNotificationForFcm($notification = null)
+    {
+        $token = \App\Models\FcmToken::where('user_id', $this->family_member_id)
+            ->where('role', 'family_member')
+            ->value('token');
+        \Log::info('routeNotificationForFcm called', [
+            'family_member_id' => $this->family_member_id,
+            'token' => $token,
+        ]);
+        return $token ? [$token] : [];
     }
 }
