@@ -78,4 +78,14 @@ class Beneficiary extends Authenticatable
     {
         return $this->belongsTo(\App\Models\User::class, 'assigned_care_worker_id', 'id');
     }
+
+    public function routeNotificationForExpo($notification = null)
+    {
+        // Return the Expo push token for this beneficiary
+        // If you store the token in a related table, fetch it here
+        $token = \App\Models\FcmToken::where('user_id', $this->beneficiary_id)
+            ->where('role', 'beneficiary')
+            ->value('token');
+        return $token ? [$token] : [];
+    }
 }
