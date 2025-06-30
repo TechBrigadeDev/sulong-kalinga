@@ -37,6 +37,19 @@ class FamilyMember extends Authenticatable
     {
         return $this->morphMany(Message::class, 'sender');
     }
+
+    public function routeNotificationForExpo($notification = null)
+{
+    $token = \App\Models\FcmToken::where('user_id', $this->family_member_id)
+        ->where('role', 'family_member')
+        ->value('token');
+    \Log::info('routeNotificationForExpo called', [
+        'family_member_id' => $this->family_member_id,
+        'token' => $token,
+    ]);
+    return $token ? [\NotificationChannels\Expo\ExpoPushToken::make($token)] : [];
+}
+
     public function routeNotificationForFcm($notification = null)
     {
         $token = \App\Models\FcmToken::where('user_id', $this->family_member_id)
