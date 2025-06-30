@@ -19,6 +19,8 @@ class ReportsController extends Controller
      */
     public function index(Request $request)
     {
+        set_time_limit(120); // 2 minutes
+
         // Get request parameters
         $search = $request->input('search', '');
         $filterType = $request->input('filter', '');
@@ -98,9 +100,19 @@ class ReportsController extends Controller
                 $combinedReports = $combinedReports->filter(function($report) use ($search) {
                     $authorName = ($report->author_first_name . ' ' . $report->author_last_name);
                     $beneficiaryName = ($report->beneficiary_first_name . ' ' . $report->beneficiary_last_name);
-                    
-                    return (stripos($authorName, $search) !== false || 
-                            stripos($beneficiaryName, $search) !== false);
+
+                    // Allow searching by weekly_care_plan_id and general_care_plan_id
+                    $searchLower = strtolower($search);
+                    $idMatch = (
+                        (isset($report->report_type) && $report->report_type === 'Weekly Care Plan' && (string)$report->report_id === $search) ||
+                        (isset($report->report_type) && $report->report_type === 'General Care Plan' && (string)$report->report_id === $search)
+                    );
+
+                    return (
+                        stripos($authorName, $search) !== false ||
+                        stripos($beneficiaryName, $search) !== false ||
+                        $idMatch
+                    );
                 });
             }
             
