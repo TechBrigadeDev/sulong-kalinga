@@ -53,18 +53,26 @@ class ExpoPushNotification extends Notification
      */
     public function toExpo($notifiable)
     {
-        $message = ExpoMessage::create($this->title)
-            ->body($this->message)
-            ->priority('high')
-            ->expiresAt(now()->addHour());
+        \Log::info('📩 Entered toExpo method'); // NEW LINE
 
-        \Log::info('ExpoPushNotification payload', [
-            'to' => $this->token,
-            'title' => $this->title,
-            'body' => $this->message,
-        ]);
+        try {
+            $message = ExpoMessage::create($this->title)
+                ->body($this->message)
+                ->sound('default')
+                ->priority('high')
+                ->expiresAt(now()->addHour());
 
-        return $message;
+            \Log::info('ExpoPushNotification payload', [ // EXISTING
+                'to' => $this->token,
+                'title' => $this->title,
+                'body' => $this->message,
+            ]);
+
+            return $message;
+        } catch (\Throwable $e) {
+            \Log::error('❌ Error inside toExpo: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
