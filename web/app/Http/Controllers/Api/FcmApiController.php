@@ -80,7 +80,7 @@ class FcmApiController extends Controller
                 [
                     'user_id' => $userId,
                     'role' => $role,
-                    'device_uuid' => $deviceUuid,
+                    'mobile_device_id' => $mobileDevice->id,
                 ],
                 [
                     'token' => $token,
@@ -94,7 +94,8 @@ class FcmApiController extends Controller
                     'id' => $fcmToken->id,
                     'token' => $fcmToken->token,
                     'role' => $fcmToken->role,
-                    'device_uuid' => $fcmToken->device_uuid,
+                    'mobile_device_id' => $fcmToken->mobile_device_id,
+                    'device_uuid' => $mobileDevice->device_uuid,
                     'registered_at' => $fcmToken->created_at
                 ]
             ], 201);
@@ -109,46 +110,80 @@ class FcmApiController extends Controller
     }
 
     /**
-     * Remove FCM token for authenticated user and device (logout)
+     * Remove FCM token for authenticated user and device (revoke)
      *
      * @param Request $request
      * @return JsonResponse
      */
-    public function logout(Request $request): JsonResponse
+    public function revoke(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'device_uuid' => 'required|string',
+            'device_uuid' => 'nullable|string',
+            'fcm_token' => 'nullable|string',
         ]);
 
-        if ($validator->fails()) {
+        if ($validator->fails() || (!$request->filled('device_uuid') && !$request->filled('fcm_token'))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
+                'message' => 'Validation failed. Provide either device_uuid or fcm_token.',
                 'errors' => $validator->errors()
             ], 422);
         }
 
         try {
             $user = $request->user();
-            $deviceUuid = $request->input('device_uuid');
             [$userId, $role] = $this->getUserIdAndRole($user);
 
-            // Remove the token for this user+role+device
-            FcmToken::where('user_id', $userId)
-                ->where('role', $role)
-                ->where('device_uuid', $deviceUuid)
-                ->delete();
+            $deleted = false;
 
-            // Optionally, also remove the device record
-            MobileDevice::where('device_uuid', $deviceUuid)
-                ->where('user_id', $userId)
-                ->where('user_type', $role)
-                ->delete();
+            // Revoke by fcm_token
+            if ($request->filled('fcm_token')) {
+                $fcmToken = FcmToken::where('user_id', $userId)
+                    ->where('role', $role)
+                    ->where('token', $request->input('fcm_token'))
+                    ->first();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'FCM token and device unregistered successfully'
-            ], 200);
+                if ($fcmToken) {
+                    $mobileDeviceId = $fcmToken->mobile_device_id;
+                    $fcmToken->delete();
+                    // Always delete the device entry
+                    MobileDevice::where('id', $mobileDeviceId)
+                        ->where('user_id', $userId)
+                        ->where('user_type', $role)
+                        ->delete();
+                    $deleted = true;
+                }
+            }
+
+            // Revoke by device_uuid
+            if (!$deleted && $request->filled('device_uuid')) {
+                $mobileDevice = MobileDevice::where('device_uuid', $request->input('device_uuid'))
+                    ->where('user_id', $userId)
+                    ->where('user_type', $role)
+                    ->first();
+
+                if ($mobileDevice) {
+                    FcmToken::where('user_id', $userId)
+                        ->where('role', $role)
+                        ->where('mobile_device_id', $mobileDevice->id)
+                        ->delete();
+
+                    $mobileDevice->delete();
+                    $deleted = true;
+                }
+            }
+
+            if ($deleted) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'FCM token and device unregistered successfully'
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No matching FCM token or device found'
+                ], 404);
+            }
 
         } catch (\Exception $e) {
             return response()->json([
@@ -165,7 +200,7 @@ class FcmApiController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function getTokens(Request $request): JsonResponse
+    public function getToken(Request $request): JsonResponse
     {
         try {
             $user = $request->user();
@@ -175,6 +210,7 @@ class FcmApiController extends Controller
 
             $fcmTokens = FcmToken::where('user_id', $userId)
                 ->where('role', $role)
+                ->with('device')
                 ->get();
 
             if ($fcmTokens->isEmpty()) {
@@ -191,7 +227,11 @@ class FcmApiController extends Controller
                         'id' => $token->id,
                         'token' => $token->token,
                         'role' => $token->role,
-                        'device_uuid' => $token->device_uuid,
+                        'mobile_device_id' => $token->mobile_device_id,
+                        'device_uuid' => $token->device ? $token->device->device_uuid : null,
+                        'device_type' => $token->device ? $token->device->device_type : null,
+                        'device_model' => $token->device ? $token->device->device_model : null,
+                        'os_version' => $token->device ? $token->device->os_version : null,
                         'registered_at' => $token->created_at
                     ];
                 })

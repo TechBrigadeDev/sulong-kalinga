@@ -161,35 +161,8 @@ class AuthApiController extends Controller
      */
     public function logout(Request $request)
     {
-        // Validate device_uuid for device-specific logout
-        $validator = Validator::make($request->all(), [
-            'device_uuid' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $user = $request->user();
-        $deviceUuid = $request->input('device_uuid');
-
-        // Remove the push token for this user+device (all roles)
-        FcmToken::where('user_id', $user->id)
-            ->where('device_uuid', $deviceUuid)
-            ->delete();
-
-        // Optionally, also remove the device record
-        MobileDevice::where('device_uuid', $deviceUuid)
-            ->where('user_id', $user->id)
-            ->delete();
-
-        // Revoke the Laravel access token
         $user->currentAccessToken()->delete();
-
         return response()->json([
             'success' => true,
             'message' => 'Successfully logged out'

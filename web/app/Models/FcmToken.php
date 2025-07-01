@@ -13,7 +13,7 @@ class FcmToken extends Model
         'user_id',
         'role',
         'token',
-        'device_uuid',
+        'mobile_device_id',
     ];
 
     protected $casts = [
@@ -43,7 +43,7 @@ class FcmToken extends Model
      */
     public function device()
     {
-        return $this->belongsTo(MobileDevice::class, 'device_uuid', 'device_uuid');
+        return $this->belongsTo(MobileDevice::class, 'mobile_device_id');
     }
 
     /**
@@ -56,14 +56,19 @@ class FcmToken extends Model
 
     /**
      * Register or update FCM token for a user and device (device-specific)
+     * @param int $userId
+     * @param string $role
+     * @param string $token
+     * @param int $mobileDeviceId
+     * @return static
      */
-    public static function registerToken($userId, $role, $token, $deviceUuid)
+    public static function registerToken($userId, $role, $token, $mobileDeviceId)
     {
         return static::updateOrCreate(
             [
                 'user_id' => $userId,
                 'role' => $role,
-                'device_uuid' => $deviceUuid,
+                'mobile_device_id' => $mobileDeviceId,
             ],
             [
                 'token' => $token,
@@ -73,12 +78,16 @@ class FcmToken extends Model
 
     /**
      * Get FCM token by user ID, role, and device
+     * @param int $userId
+     * @param string $role
+     * @param int $mobileDeviceId
+     * @return static|null
      */
-    public static function getTokenByUserAndDevice($userId, $role, $deviceUuid)
+    public static function getTokenByUserAndDevice($userId, $role, $mobileDeviceId)
     {
         return static::where('user_id', $userId)
             ->where('role', $role)
-            ->where('device_uuid', $deviceUuid)
+            ->where('mobile_device_id', $mobileDeviceId)
             ->first();
     }
 }

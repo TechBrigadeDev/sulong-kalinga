@@ -102,6 +102,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // FCM Push Notifications
     Route::post('/fcm/register', [FcmApiController::class, 'register']);
     Route::get('/fcm/token', [FcmApiController::class, 'getToken']);
+    Route::post('/fcm/revoke', [FcmApiController::class, 'revoke']);
 
     // Reports Management API
     Route::get('/reports', [ReportsApiController::class, 'index']);
@@ -216,42 +217,42 @@ require __DIR__.'/apiFamilyRoutes.php';
 //     }
 // });
 
-// // Test route to send push notification
-// Route::post('/test/send-push', function (Request $request) {
-//     $request->validate([
-//         'user_id' => 'required|integer',
-//         'role' => 'required|string|in:cose_staff,beneficiary,family_member',
-//         'title' => 'required|string',
-//         'message' => 'required|string'
-//     ]);
+// Test route to send push notification
+Route::post('/test/send-push', function (Request $request) {
+    $request->validate([
+        'user_id' => 'required|integer',
+        'role' => 'required|string|in:cose_staff,beneficiary,family_member',
+        'title' => 'required|string',
+        'message' => 'required|string'
+    ]);
     
-//     try {
-//         $service = new NotificationService();
+    try {
+        $service = new NotificationService();
         
-//         switch ($request->role) {
-//             case 'cose_staff':
-//                 $result = $service->notifyStaff($request->user_id, $request->title, $request->message);
-//                 break;
-//             case 'beneficiary':
-//                 $result = $service->notifyBeneficiary($request->user_id, $request->title, $request->message);
-//                 break;
-//             case 'family_member':
-//                 $result = $service->notifyFamilyMember($request->user_id, $request->title, $request->message);
-//                 break;
-//         }
+        switch ($request->role) {
+            case 'cose_staff':
+                $result = $service->notifyStaff($request->user_id, $request->title, $request->message);
+                break;
+            case 'beneficiary':
+                $result = $service->notifyBeneficiary($request->user_id, $request->title, $request->message);
+                break;
+            case 'family_member':
+                $result = $service->notifyFamilyMember($request->user_id, $request->title, $request->message);
+                break;
+        }
         
-//         return response()->json([
-//             'success' => true,
-//             'message' => 'Notification sent successfully',
-//             'data' => $result
-//         ]);
-//     } catch (\Exception $e) {
-//         return response()->json([
-//             'success' => false,
-//             'message' => $e->getMessage()
-//         ], 400);
-//     }
-// });
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification sent successfully',
+            'data' => $result
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 400);
+    }
+});
 
 // // Test route to check if token exists
 // Route::get('/test/check-token/{user_id}/{role}', function ($userId, $role) {
