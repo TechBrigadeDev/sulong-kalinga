@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('fcm_tokens', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->string('role')->comment('beneficiary, family_member, or cose_staff');
             $table->foreignId('mobile_device_id')->constrained('mobile_devices')->onDelete('cascade');
             $table->string('token')->unique();
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
+
+            // Enforce one token per user/role/device
+            $table->unique(['user_id', 'role', 'mobile_device_id'], 'fcm_tokens_user_id_role_mobile_device_id_unique');
         });
     }
 

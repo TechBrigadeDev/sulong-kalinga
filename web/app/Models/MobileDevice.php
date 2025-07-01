@@ -34,6 +34,6 @@ class MobileDevice extends Model
      */
     public function fcmTokens()
     {
-        return $this->hasMany(FcmToken::class, 'device_uuid', 'device_uuid');
+        return $this->hasMany(FcmToken::class, 'mobile_device_id');
     }
 }
