@@ -187,9 +187,20 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-12">
-                            <label class="form-label">{{ T::translate('Assessment', 'Pagtatasa')}}</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">{{ T::translate('Assessment', 'Pagtatasa') }}</span>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Assessment Toggle">
+                                    <button type="button" class="btn btn-outline-primary active" id="btn-assessment-original">Original</button>
+                                    <button type="button" class="btn btn-outline-primary" id="btn-assessment-summary">Summary</button>
+                                </div>
+                            </div>
                             <div class="border p-3 rounded mb-3 bg-light">
-                                {!! nl2br(e($weeklyCareplan->assessment)) !!}
+                                <span id="assessment-original">
+                                    {!! nl2br(e($weeklyCareplan->assessment ?? T::translate('No assessment recorded', 'Walang assessment na naitala'))) !!}
+                                </span>
+                                <span id="assessment-summary" style="display:none;">
+                                    {!! nl2br(e($weeklyCareplan->assessment_summary_final ?? T::translate('No summary available', 'Walang buod na available'))) !!}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -198,7 +209,7 @@
 
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">{{ T::translate('Assessment', 'Pagtatasa')}}</h5>
+                    <h5 class="mb-0">{{ T::translate('Vital Signs & Photo Documentation', 'Vital Signs at Larawan sa Dokumentasyon')}}</h5>
                     <div class="text-white">
                         <small>{{ T::translate('Date', 'Petsa')}}: {{ \Carbon\Carbon::parse($weeklyCareplan->date)->format('M d, Y') }}</small>
                     </div>
@@ -255,8 +266,20 @@
                     <div class="row">
                         <div class="col-md-12">                            
                             @if($weeklyCareplan->evaluation_recommendations)
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold">{{ T::translate('Evaluation & Recommendations', 'Ebalwasyon at Rekomendasyon') }}</span>
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Evaluation Toggle">
+                                        <button type="button" class="btn btn-outline-primary active" id="btn-evaluation-original">Original</button>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-evaluation-summary">Summary</button>
+                                    </div>
+                                </div>
                                 <div class="border p-3 rounded bg-light">
-                                    {!! nl2br(e($weeklyCareplan->evaluation_recommendations)) !!}
+                                    <span id="evaluation-original">
+                                        {!! nl2br(e($weeklyCareplan->evaluation_recommendations ?? T::translate('No evaluation recorded', 'Walang ebalwasyon na naitala'))) !!}
+                                    </span>
+                                    <span id="evaluation-summary" style="display:none;">
+                                        {!! nl2br(e($weeklyCareplan->evaluation_summary_final ?? T::translate('No summary available', 'Walang buod na available'))) !!}
+                                    </span>
                                 </div>
                             @endif
                         </div>
@@ -415,6 +438,37 @@
                     document.getElementById('acknowledgmentForm').submit();
                 });
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Assessment toggle
+            document.getElementById('btn-assessment-original').onclick = function() {
+                document.getElementById('assessment-original').style.display = '';
+                document.getElementById('assessment-summary').style.display = 'none';
+                this.classList.add('active');
+                document.getElementById('btn-assessment-summary').classList.remove('active');
+            };
+            document.getElementById('btn-assessment-summary').onclick = function() {
+                document.getElementById('assessment-original').style.display = 'none';
+                document.getElementById('assessment-summary').style.display = '';
+                this.classList.add('active');
+                document.getElementById('btn-assessment-original').classList.remove('active');
+            };
+
+            // Evaluation toggle
+            document.getElementById('btn-evaluation-original').onclick = function() {
+                document.getElementById('evaluation-original').style.display = '';
+                document.getElementById('evaluation-summary').style.display = 'none';
+                this.classList.add('active');
+                document.getElementById('btn-evaluation-summary').classList.remove('active');
+            };
+            document.getElementById('btn-evaluation-summary').onclick = function() {
+                document.getElementById('evaluation-original').style.display = 'none';
+                document.getElementById('evaluation-summary').style.display = '';
+                this.classList.add('active');
+                document.getElementById('btn-evaluation-original').classList.remove('active');
+            };
         });
     </script>
 </body>
