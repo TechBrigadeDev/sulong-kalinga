@@ -56,3 +56,6 @@ Schedule::command('medications:send-reminders noon')->dailyAt('11:30');
 Schedule::command('medications:send-reminders evening')->dailyAt('17:00');
 Schedule::command('medications:send-reminders night')->dailyAt('20:00');
 Schedule::command('medications:send-exact-reminders')->everyMinute();
+
+Schedule::command('appointments:send-exact-reminders')->everyMinute();
+Schedule::command('visitations:send-exact-reminders')->everyMinute();
