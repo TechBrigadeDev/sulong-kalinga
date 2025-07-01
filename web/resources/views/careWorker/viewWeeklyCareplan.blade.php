@@ -191,7 +191,7 @@
                                     {{ $weeklyCareplan->assessment ?? T::translate('No assessment recorded', 'Walang assessment na naitala') }}
                                 </span>
                                 <span id="assessment-summary" style="display:none;">
-                                    {{ $weeklyCareplan->assessment_summary_final ?? T::translate('No summary available', 'Walang buod na available') }}
+                                    {!! nl2br(e($weeklyCareplan->assessment_summary_final ?? T::translate('No summary available', 'Walang buod na available'))) !!}
                                 </span>
                             </div>
                         </div>
@@ -290,7 +290,7 @@
                                     @endif
                                 </span>
                                 <span id="evaluation-summary" style="display:none;">
-                                    {{ $weeklyCareplan->evaluation_summary_final ?? T::translate('No summary available', 'Walang buod na available') }}
+                                    {!! nl2br(e($weeklyCareplan->evaluation_summary_final ?? T::translate('No summary available', 'Walang buod na available'))) !!}
                                 </span>
                             </div>
                         </div>
