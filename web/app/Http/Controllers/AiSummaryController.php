@@ -11,6 +11,9 @@ class AiSummaryController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->isCareManager()) {
+            return view('careManager.careManagerAiSummary');
+        }
         return view('admin.adminAiSummary');
     }
 
@@ -56,7 +59,7 @@ class AiSummaryController extends Controller
 
     public function summarize(Request $request)
     {
-        set_time_limit(90);
+        set_time_limit(600);
 
         $request->validate([
             'text' => 'required|string',
@@ -67,6 +70,7 @@ class AiSummaryController extends Controller
 
         try {
             // Fix the URL by ensuring we're targeting the /summarize endpoint
+            // Latest fix in calamancy api url is using nlp_host variable link after latest successful deploy @ June 27 2025 7:13AM
             $baseUrl = env('CALAMANCY_API_URL', 'http://calamancy-api:5000');
             $apiUrl = rtrim($baseUrl, '/') . '/summarize'; 
             \Log::info("Calling CalamanCy API at: " . $apiUrl);
@@ -134,6 +138,10 @@ class AiSummaryController extends Controller
             'evaluation_summary_draft' => 'sometimes|nullable|string',
             'assessment_summary_sections' => 'sometimes|nullable|array',
             'evaluation_summary_sections' => 'sometimes|nullable|array',
+            'assessment_translation_draft' => 'sometimes|nullable|string',
+            'evaluation_translation_draft' => 'sometimes|nullable|string',
+            'assessment_translation_sections' => 'sometimes|nullable|array',
+            'evaluation_translation_sections' => 'sometimes|nullable|array',
         ]);
 
         \Log::info("Updating summary for care plan ID: {$id}");
@@ -160,6 +168,19 @@ class AiSummaryController extends Controller
         
         if ($request->has('evaluation_summary_sections')) {
             $carePlan->evaluation_summary_sections = $request->evaluation_summary_sections;
+        }
+
+        if ($request->filled('assessment_translation_draft')) {
+            $carePlan->assessment_translation_draft = $request->assessment_translation_draft;
+        }
+        if ($request->filled('evaluation_translation_draft')) {
+            $carePlan->evaluation_translation_draft = $request->evaluation_translation_draft;
+        }
+        if ($request->has('assessment_translation_sections')) {
+            $carePlan->assessment_translation_sections = $request->assessment_translation_sections;
+        }
+        if ($request->has('evaluation_translation_sections')) {
+            $carePlan->evaluation_translation_sections = $request->evaluation_translation_sections;
         }
         
         $carePlan->has_ai_summary = true;
@@ -208,6 +229,8 @@ class AiSummaryController extends Controller
 
     public function translate(Request $request)
     {
+        set_time_limit(600);
+
         $request->validate([
             'text' => 'required|string',
             'weekly_care_plan_id' => 'required|integer',
@@ -269,6 +292,8 @@ class AiSummaryController extends Controller
 
     public function translateSections(Request $request)
     {
+        set_time_limit(600);
+
         $request->validate([
             'sections' => 'required|array',
             'weekly_care_plan_id' => 'required|integer',
@@ -316,16 +341,27 @@ class AiSummaryController extends Controller
                 }
             }
 
-            // Detect gender from original Tagalog sections
-            $gender = $this->detectMainSubjectGender($request->sections);
+            // Save to database
+            $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
+            
+            // Get gender from beneficiary if available, else fallback to detection
+            $beneficiaryGender = strtolower($carePlan->beneficiary->gender ?? '');
+            if ($beneficiaryGender === 'female') {
+                $gender = 'female';
+            } elseif ($beneficiaryGender === 'male') {
+                $gender = 'male';
+            } else {
+                $gender = $this->detectMainSubjectGender($request->sections);
+            }
 
             // Harmonize pronouns in each translated section
             foreach ($translatedSections as $key => $translatedText) {
                 $translatedSections[$key] = $this->harmonizePronouns($translatedText, $gender);
             }
-
-            // Save to database
-            $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
+            // Harmonize executive summary if present
+            if (isset($translatedSections['full_summary'])) {
+                $translatedSections['full_summary'] = $this->harmonizePronouns($translatedSections['full_summary'], $gender);
+            }
             
             if ($request->type === 'assessment') {
                 $carePlan->assessment_translation_sections = $translatedSections;
@@ -433,9 +469,13 @@ class AiSummaryController extends Controller
         $text = implode(' ', $sections);
         $text = strtolower($text);
 
-        // Add more as needed
-        $female_terms = ['lola', 'nanay', 'ginang', 'ate', 'mrs.', 'ms.'];
-        $male_terms = ['lolo', 'tatay', 'ginoong', 'kuya', 'mr.'];
+        // Expanded lists
+        $female_terms = [
+            'lola', 'nanay', 'ginang', 'ate', 'mrs.', 'ms.', 'ina', 'babae', 'mama', 'mom', 'mother', 'daughter', 'sister', 'tita', 'aunt', 'apo', 'miss', 'madam', 'ma\'am', 'wife', 'asawa', 'girlfriend', 'fiancée', 'lola', 'lola', 'lola'
+        ];
+        $male_terms = [
+            'lolo', 'tatay', 'ginoong', 'kuya', 'mr.', 'ama', 'lalaki', 'papa', 'dad', 'father', 'son', 'brother', 'tito', 'uncle', 'apo', 'sir', 'husband', 'asawa', 'boyfriend', 'fiancé'
+        ];
 
         foreach ($female_terms as $term) {
             if (strpos($text, $term) !== false) {
@@ -447,6 +487,15 @@ class AiSummaryController extends Controller
                 return 'male';
             }
         }
+
+        // Fallback: check for pronouns in the text
+        if (preg_match('/\b(she|her|hers)\b/', $text)) {
+            return 'female';
+        }
+        if (preg_match('/\b(he|him|his)\b/', $text)) {
+            return 'male';
+        }
+
         // Default to neutral if not found
         return 'neutral';
     }
@@ -454,30 +503,84 @@ class AiSummaryController extends Controller
     private function harmonizePronouns($text, $gender)
     {
         if ($gender === 'female') {
-            // Replace with more consistent patterns
             $patterns = [
-                '/\bHe\b/i' => 'She',
-                '/\bhe\b/i' => 'she',
-                '/\bHis\b/i' => 'Her',
-                '/\bhis\b/i' => 'her',
-                '/\bHim\b/i' => 'Her',
-                '/\bhim\b/i' => 'her',
-                '/\bFather\b/i' => 'Mother', // Add name replacements
-                '/\bDad\b/i' => 'Mom',
-                '/\bgrandfather\b/i' => 'grandmother',
+                // Subject/Object/Reflexive
+                '/\bHe\b/' => 'She',
+                '/\bhe\b/' => 'she',
+                '/\bHis\b/' => 'Her',
+                '/\bhis\b/' => 'her',
+                '/\bHim\b/' => 'Her',
+                '/\bhim\b/' => 'her',
+                '/\bHimself\b/' => 'Herself',
+                '/\bhimself\b/' => 'herself',
+                '/\bFather\b/' => 'Mother',
+                '/\bDad\b/' => 'Mom',
+                '/\bgrandfather\b/' => 'grandmother',
+                '/\bson\b/' => 'daughter',
+                '/\buncle\b/' => 'aunt',
+                '/\bMr\./' => 'Ms.',
+                '/\bSir\b/' => 'Ma\'am',
+                // Possessive
+                '/\bhis\'s\b/' => 'her',
+                '/\bhis\b/' => 'her',
+                '/\bhers\b/' => 'hers',
             ];
         } elseif ($gender === 'male') {
             $patterns = [
-                '/\bShe\b/i' => 'He',
-                '/\bshe\b/i' => 'he',
-                '/\bHer\b/i' => 'His',
-                '/\bher\b/i' => 'his',
-                '/\bMother\b/i' => 'Father', // Add name replacements
-                '/\bMom\b/i' => 'Dad',
-                '/\bgrandmother\b/i' => 'grandfather',
+                '/\bShe\b/' => 'He',
+                '/\bshe\b/' => 'he',
+                '/\bHer\b/' => 'His',
+                '/\bher\b/' => 'his',
+                '/\bHerself\b/' => 'Himself',
+                '/\bherself\b/' => 'himself',
+                '/\bMother\b/' => 'Father',
+                '/\bMom\b/' => 'Dad',
+                '/\bgrandmother\b/' => 'grandfather',
+                '/\bdaughter\b/' => 'son',
+                '/\baunt\b/' => 'uncle',
+                '/\bMs\./' => 'Mr.',
+                '/\bMa\'am\b/' => 'Sir',
+                // Possessive
+                '/\bher\'s\b/' => 'his',
+                '/\bhers\b/' => 'his',
             ];
-        } else {
-            $patterns = [];
+        } else { // Neutral/Other: use they/them/their
+            $patterns = [
+                // Subject/Object/Reflexive
+                '/\bHe\b/' => 'They',
+                '/\bhe\b/' => 'they',
+                '/\bShe\b/' => 'They',
+                '/\bshe\b/' => 'they',
+                '/\bHis\b/' => 'Their',
+                '/\bhis\b/' => 'their',
+                '/\bHer\b/' => 'Their',
+                '/\bher\b/' => 'their',
+                '/\bHim\b/' => 'Them',
+                '/\bhim\b/' => 'them',
+                '/\bHerself\b/' => 'Themself',
+                '/\bherself\b/' => 'themself',
+                '/\bHimself\b/' => 'Themself',
+                '/\bhimself\b/' => 'themself',
+                // '/\bFather\b/' => 'Parent',
+                // '/\bMother\b/' => 'Parent',
+                // '/\bDad\b/' => 'Parent',
+                // '/\bMom\b/' => 'Parent',
+                // '/\bgrandfather\b/' => 'grandparent',
+                // '/\bgrandmother\b/' => 'grandparent',
+                // '/\bson\b/' => 'child',
+                // '/\bdaughter\b/' => 'child',
+                // '/\buncle\b/' => 'relative',
+                // '/\baunt\b/' => 'relative',
+                // '/\bMr\./' => 'Mx.',
+                // '/\bMs\./' => 'Mx.',
+                // '/\bSir\b/' => 'Mx.',
+                // '/\bMa\'am\b/' => 'Mx.',
+                // Possessive
+                '/\bher\'s\b/' => 'theirs',
+                '/\bhers\b/' => 'theirs',
+                '/\bhis\'s\b/' => 'theirs',
+                '/\bhis\b/' => 'their',
+            ];
         }
 
         // Apply all replacements

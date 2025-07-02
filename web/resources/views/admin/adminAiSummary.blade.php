@@ -6,11 +6,21 @@
     <title>Care Records Summarization</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/nlpUI.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        textarea.form-control.section-editor {
+            min-height: unset !important;
+            height: auto !important;
+            /* Optionally, set a max-height or resize if you want */
+        }
+
+        textarea.form-control {
+            min-height: unset !important;
+            height: auto !important;
+        }
+
         #assessmentSummaryDisplay, #evaluationSummaryDisplay {
             white-space: pre-line;
         }
@@ -53,9 +63,6 @@
         }
         .date-filter {
             width: 150px;
-        }
-        .form-control, .btn {
-            height: 38px;
         }
         
         /* Table header styling */
@@ -194,6 +201,7 @@
             gap: 10px;
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 </head>
 <body>
     @php
@@ -320,22 +328,14 @@
                                         <div class="card-body">
                                             <h6 class="fw-bold"><i class="bi bi-file-text me-2"></i>Executive Summary</h6>
                                             <div id="assessmentSummaryDisplay" class="p-2 bg-light rounded"></div>
+                                            <div id="assessmentSummaryDraft" style="display:none;"></div>
                                         </div>
                                     </div>
                                     
-                                    <div id="assessmentSummaryDraft" style="display:none;"></div>
                                     <div id="assessmentSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
                                     </div>
 
-                                    <!-- New translation section -->
-                                    <div id="assessmentTranslationSection" class="summary-section-blue mb-4" style="display: none;">
-                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
-                                        <div id="assessmentTranslationDraft" class="fst-italic"></div>
-                                        <div class="mt-2">
-                                        </div>
-                                    </div>
-                                    
                                     <div class="text-end">
                                         <button class="btn btn-outline-secondary action-btn" id="editAssessmentSummary">
                                             <i class="bi bi-pencil me-1"></i> Edit
@@ -347,9 +347,32 @@
                                             <i class="bi bi-check-lg me-1"></i> Save
                                         </button>
                                     </div>
-                                    
-                                    <div id="assessmentSummarySections" class="mb-3">
-                                        <!-- Section cards will be added here -->
+
+                                    <!-- New translation section -->
+                                    <div id="assessmentTranslationSection" class="summary-section-blue mb-4" style="display: none;">
+                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
+                                        <div id="assessmentTranslationDraft" class="fst-italic"></div>
+                                        <div class="mt-2">
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end mt-2">
+                                        <button class="btn btn-outline-secondary action-btn" id="editAssessmentTranslation">
+                                        <i class="bi bi-pencil me-1"></i> Edit English Translation
+                                        </button>
+                                        <button class="btn btn-success action-btn" id="saveAssessmentTranslation" style="display: none;">
+                                        <i class="bi bi-check-lg me-1"></i> Save English Translation
+                                        </button>
+                                    </div>
+                                
+
+                                    <div class="text-end mt-2">
+                                        <button class="btn btn-success me-2" id="finalizeAssessmentTagalog">
+                                            <i class="bi bi-check-circle"></i> Finalize Using Tagalog Summary
+                                        </button>
+                                        <button class="btn btn-primary" id="finalizeAssessmentEnglish">
+                                            <i class="bi bi-translate"></i> Finalize Using English Translation
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -386,27 +409,16 @@
                                         <div class="card-body">
                                             <h6 class="fw-bold"><i class="bi bi-file-text me-2"></i>Executive Summary</h6>
                                             <div id="evaluationSummaryDisplay" class="p-2 bg-light rounded"></div>
+                                            <div id="evaluationSummaryDraft" style="display:none;"></div>
                                         </div>
                                     </div>
                                     
                                     <div id="evaluationSummarySections" class="mb-3">
                                         <!-- Section cards will be added here -->
-                                         <div id="evaluationSummaryDraft" style="display:none;"></div>
                                          <div class="mt-2">
-                                            <button class="btn btn-success" id="finalizeEvaluationSummary" onclick="finalizeSummary('evaluation')">
-                                                <i class="bi bi-check-circle"></i> Use Summary as Final
-                                            </button>
                                         </div>
                                     </div>
 
-                                    <!-- New translation section -->
-                                    <div id="evaluationTranslationSection" class="summary-section-blue mb-4" style="display: none;">
-                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
-                                        <div id="evaluationTranslationDraft" class="fst-italic"></div>
-                                        <div class="mt-2">
-                                        </div>
-                                    </div>
-                                    
                                     <div class="text-end">
                                         <button class="btn btn-outline-secondary action-btn" id="editEvaluationSummary">
                                             <i class="bi bi-pencil me-1"></i> Edit
@@ -418,15 +430,34 @@
                                             <i class="bi bi-check-lg me-1"></i> Save
                                         </button>
                                     </div>
+
+                                    <!-- New translation section -->
+                                    <div id="evaluationTranslationSection" class="summary-section-blue mb-4" style="display: none;">
+                                        <h6 class="fw-bold"><i class="bi bi-translate me-2"></i>English Translation</h6>
+                                        <div id="evaluationTranslationDraft" class="fst-italic"></div>
+                                        <div class="mt-2">
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end mt-2">
+                                        <button class="btn btn-outline-secondary action-btn" id="editEvaluationTranslation">
+                                        <i class="bi bi-pencil me-1"></i> Edit English Translation
+                                        </button>
+                                        <button class="btn btn-success action-btn" id="saveEvaluationTranslation" style="display: none;">
+                                        <i class="bi bi-check-lg me-1"></i> Save English Translation
+                                        </button>
+                                    </div>
+
+                                    <div class="text-end mt-2">
+                                        <button class="btn btn-success me-2" id="finalizeEvaluationTagalog">
+                                            <i class="bi bi-check-circle"></i> Finalize Using Tagalog Summary
+                                        </button>
+                                        <button class="btn btn-primary" id="finalizeEvaluationEnglish">
+                                            <i class="bi bi-translate"></i> Finalize Using English Translation
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Finalize Button -->
-                        <div class="text-center mb-4">
-                            <button class="btn btn-success btn-lg action-btn" id="finalizeSummaries">
-                                <i class="bi bi-check-circle me-1"></i> Finalize Summaries
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -469,6 +500,25 @@
         </div>
     </div>
 
+    <!-- Preview Final Summary Modal -->
+    <div class="modal fade" id="previewSummaryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Preview Final Summary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="previewSummaryContent" style="white-space: pre-line; font-family: inherit;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="confirmFinalizeBtn">
+                        <i class="bi bi-check-circle"></i> Confirm Finalize
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ asset('js/toggleSideBar.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -479,8 +529,23 @@
         let currentPage = 1;
 
         $(document).ready(function() {
+            
             let currentCarePlanId = null;
             let currentPage = 1;
+
+            $('#editAssessmentTranslation, #saveAssessmentTranslation').hide();
+            $('#editEvaluationTranslation, #saveEvaluationTranslation').hide();
+
+            if ($('#assessmentTranslationDraft').text().trim()) {
+                $('#finalizeAssessmentEnglish').show();
+            } else {
+                $('#finalizeAssessmentEnglish').hide();
+            }
+            if ($('#evaluationTranslationDraft').text().trim()) {
+                $('#finalizeEvaluationEnglish').show();
+            } else {
+                $('#finalizeEvaluationEnglish').hide();
+            }
 
             // For Assessment translation
             $('#translateAssessmentSummary').off('click').click(function() {
@@ -537,10 +602,23 @@
                         $('#loadingProgressBar').css('width', '100%');
                         setTimeout(() => {
                             $('#loadingModal').modal('hide');
-                            // Update translation draft and section translations
-                            $('#assessmentTranslationDraft').text(response.translatedText); // or #evaluationTranslationDraft
-                            displayTranslatedSections('assessment', response.translatedSections); // or 'evaluation'
-                            $('#assessmentTranslationSection').show(); // or #evaluationTranslationSection
+                            $('#assessmentTranslationDraft').text(response.translatedText);
+                            displayTranslatedSections('assessment', response.translatedSections);
+                            $('#assessmentTranslationSection').show();
+
+                            // Update finalize button visibility
+                            if ($('#assessmentTranslationDraft').text().trim()) {
+                                $('#finalizeAssessmentEnglish').show();
+                            } else {
+                                $('#finalizeAssessmentEnglish').hide();
+                            }
+
+                            if ($('#assessmentTranslationDraft').text().trim()) {
+                                $('#editAssessmentTranslation').show();
+                            } else {
+                                $('#editAssessmentTranslation').hide();
+                                $('#saveAssessmentTranslation').hide();
+                            }
                         }, 500);
                     },
                     error: function(xhr) {
@@ -551,6 +629,69 @@
                     }
                 });
             });
+
+            // Edit English translation (Assessment)
+            $('#editAssessmentTranslation').click(function() {
+                toggleTranslationEditMode('assessment', true);
+            });
+            $('#saveAssessmentTranslation').click(function() {
+                saveTranslationEdit('assessment');
+            });
+
+            // Edit English translation (Evaluation)
+            $('#editEvaluationTranslation').click(function() {
+                toggleTranslationEditMode('evaluation', true);
+            });
+            $('#saveEvaluationTranslation').click(function() {
+                saveTranslationEdit('evaluation');
+            });
+
+            function toggleTranslationEditMode(type, isEdit) {
+                if (isEdit) {
+                    // Executive summary
+                    let currentText = $(`#${type}TranslationDraft`).text();
+                    $(`#${type}TranslationDraft`).hide();
+                    $(`#${type}TranslationDraft`).after(`<textarea class="form-control" id="${type}TranslationDraftEditor" rows="7">${currentText}</textarea>`);
+                    // Sections
+                    $(`#${type}TranslationSections .translation-section-content`).hide();
+                    $(`#${type}TranslationSections .translation-editor`).show();
+                    // Buttons
+                    $(`#edit${capitalize(type)}Translation`).hide();
+                    $(`#save${capitalize(type)}Translation`).show();
+                } else {
+                    // Executive summary
+                    let newText = $(`#${type}TranslationDraftEditor`).val();
+                    $(`#${type}TranslationDraft`).text(newText).show();
+                    $(`#${type}TranslationDraftEditor`).remove();
+                    // Sections
+                    $(`#${type}TranslationSections .translation-section-content`).show();
+                    $(`#${type}TranslationSections .translation-editor`).hide();
+                    // Buttons
+                    $(`#edit${capitalize(type)}Translation`).show();
+                    $(`#save${capitalize(type)}Translation`).hide();
+                }
+            }
+
+            function saveTranslationEdit(type) {
+                // Collect translation summary and sections
+                let translation = $(`#${type}TranslationDraftEditor`).val();
+                let sections = {};
+                $(`#${type}TranslationSections .translation-editor`).each(function() {
+                    let section = $(this).data('section');
+                    let content = $(this).val();
+                    sections[section] = content;
+                    // Update the displayed content
+                    $(this).siblings('.translation-section-content').text(content);
+                });
+                // Save to backend if needed
+                saveTranslation(type, translation, sections);
+                // Switch back to view mode
+                toggleTranslationEditMode(type, false);
+            }
+
+            function capitalize(str) {
+                return str.charAt(0).toUpperCase() + str.slice(1);
+            }
             
             // Load initial data
             loadCarePlans(1);
@@ -896,6 +1037,31 @@
                                 
                 // Scroll to details with a small offset and behavior smooth
                 document.getElementById('carePlanDetails').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                if ($('#assessmentTranslationDraft').text().trim()) {
+                    $('#finalizeAssessmentEnglish').show();
+                } else {
+                    $('#finalizeAssessmentEnglish').hide();
+                }
+                if ($('#evaluationTranslationDraft').text().trim()) {
+                    $('#finalizeEvaluationEnglish').show();
+                } else {
+                    $('#finalizeEvaluationEnglish').hide();
+                }
+
+                if ($('#assessmentTranslationDraft').text().trim()) {
+                    $('#editAssessmentTranslation').show();
+                } else {
+                    $('#editAssessmentTranslation').hide();
+                    $('#saveAssessmentTranslation').hide();
+                }
+
+                if ($('#evaluationTranslationDraft').text().trim()) {
+                    $('#editEvaluationTranslation').show();
+                } else {
+                    $('#editEvaluationTranslation').hide();
+                    $('#saveEvaluationTranslation').hide();
+                }
             }
             
             // Generate assessment summary
@@ -1148,7 +1314,7 @@
                             </div>
                             <div class="card-body py-2">
                                 <p class="section-content mb-0" data-section="${key}">${valueStr}</p>
-                                <textarea class="form-control section-editor" data-section="${key}" style="display: none;">${valueStr}</textarea>
+                                <textarea class="form-control section-editor" data-section="${key}" rows="7" style="display: none;">${valueStr}</textarea>
                             </div>
                         </div>`;
                         sectionContainer.append(sectionHtml);
@@ -1184,27 +1350,40 @@
             });
             
             // Toggle edit mode
-            function toggleEditMode(type, isEdit) {
+            function toggleEditMode(type, isEdit, language = 'tagalog') {
                 if (isEdit) {
-                    // Switch to edit mode
-                    $(`#${type}SummarySections .section-content`).hide();
-                    $(`#${type}SummarySections .section-editor`).show();
-                    $(`#edit${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).hide();
-                    $(`#save${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).show();
-                    
-                    // Make the main summary draft editable
-                    let currentText = $(`#${type}SummaryDraft`).text();
-                    $(`#${type}SummaryDraft`).html(`<textarea class="form-control" id="${type}SummaryDraftEditor">${currentText}</textarea>`);
+                    if (language === 'english') {
+                        // Hide display, show textarea for translation
+                        $(`#${type}TranslationDraft`).hide();
+                        let currentText = $(`#${type}TranslationDraft`).text();
+                        $(`#${type}TranslationDraft`).after(`<textarea class="form-control" id="${type}TranslationDraftEditor" rows="7">${currentText}</textarea>`);
+                    } else {
+                        // Tagalog (existing logic)
+                        $(`#${type}SummaryDisplay`).hide();
+                        $(`#${type}SummaryDraft`).show();
+                        let currentText = $(`#${type}SummaryDisplay`).text();
+                        $(`#${type}SummaryDraft`).html(`<textarea class="form-control" id="${type}SummaryDraftEditor" rows="7">${currentText}</textarea>`);
+                        $(`#${type}SummarySections .section-content`).hide();
+                        $(`#${type}SummarySections .section-editor`).show();
+                        $(`#edit${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).hide();
+                        $(`#save${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).show();
+                    }
                 } else {
-                    // Switch back to view mode
-                    $(`#${type}SummarySections .section-content`).show();
-                    $(`#${type}SummarySections .section-editor`).hide();
-                    $(`#edit${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).show();
-                    $(`#save${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).hide();
-                    
-                    // Make the main summary draft non-editable
-                    let currentText = $(`#${type}SummaryDraftEditor`).val();
-                    $(`#${type}SummaryDraft`).text(currentText);
+                    if (language === 'english') {
+                        // Save translation textarea value back to div
+                        let newText = $(`#${type}TranslationDraftEditor`).val();
+                        $(`#${type}TranslationDraft`).text(newText).show();
+                        $(`#${type}TranslationDraftEditor`).remove();
+                    } else {
+                        // Tagalog (existing logic)
+                        let newText = $(`#${type}SummaryDraftEditor`).val();
+                        $(`#${type}SummaryDisplay`).text(newText).show();
+                        $(`#${type}SummaryDraft`).hide();
+                        $(`#${type}SummarySections .section-content`).show();
+                        $(`#${type}SummarySections .section-editor`).hide();
+                        $(`#edit${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).show();
+                        $(`#save${type.charAt(0).toUpperCase() + type.slice(1)}Summary`).hide();
+                    }
                 }
             }
             
@@ -1343,93 +1522,163 @@
             }
             
             // Finalize summaries
-            $('#finalizeSummaries').click(function() {
-                if (!currentCarePlanId) return;
-                
-                let assessmentSummary = $('#assessmentSummaryDraft').text();
-                let evaluationSummary = $('#evaluationSummaryDraft').text();
-                
-                if (!assessmentSummary && !evaluationSummary) {
-                    alert('Please generate at least one summary before finalizing.');
-                    return;
-                }
+            // Store the summary to finalize and the type/language globally for confirmation
+            let pendingFinalize = {};
+
+            $('#confirmFinalizeBtn').click(function() {
+                $('#previewSummaryModal').modal('hide');
+                finalizeSummaryChoice(pendingFinalize.type, pendingFinalize.language, pendingFinalize.summaryContent);
             });
 
-        });
+            // Finalize Assessment Tagalog
+            $('#finalizeAssessmentTagalog').click(function() {
+                previewSummary('assessment', 'tagalog');
+            });
 
-        function finalizeSummary(type) {
-            if (!currentCarePlanId) return;
-            
-            // Get the appropriate content based on type
-            const summaryContent = type === 'assessment' 
-                ? $('#assessmentSummaryDraft').text() 
-                : $('#evaluationSummaryDraft').text();
-            
-            if (!summaryContent.trim()) {
-                alert(`No ${type} summary available to finalize.`);
-                return;
+            // Finalize Assessment English
+            $('#finalizeAssessmentEnglish').click(function() {
+                previewSummary('assessment', 'english');
+            });
+
+            // Finalize Evaluation Tagalog
+            $('#finalizeEvaluationTagalog').click(function() {
+                previewSummary('evaluation', 'tagalog');
+            });
+
+            // Finalize Evaluation English
+            $('#finalizeEvaluationEnglish').click(function() {
+                previewSummary('evaluation', 'english');
+            });
+
+            function previewSummary(type, language) {
+                if (!currentCarePlanId) return;
+
+                let execSummary = '';
+                let sections = [];
+
+                // Get executive summary
+                if (language === 'tagalog') {
+                    execSummary = $(`#${type}SummaryDraft`).text().trim();
+                } else if (language === 'english') {
+                    execSummary = $(`#${type}TranslationDraft`).text().trim();
+                }
+
+                // Get all sections
+                if (language === 'tagalog') {
+                    $(`#${type}SummarySections .section-content`).each(function() {
+                        const sectionTitle = $(this).closest('.card').find('.card-header h6').text().trim();
+                        const sectionText = $(this).text().trim();
+                        if (sectionText) {
+                            sections.push({ title: sectionTitle, text: sectionText });
+                        }
+                    });
+                } else if (language === 'english') {
+                    $(`#${type}TranslationSections .translation-editor`).each(function() {
+                        const sectionTitle = $(this).closest('.card').find('.card-header h6').text().trim();
+                        const sectionText = $(this).val().trim();
+                        if (sectionText) {
+                            sections.push({ title: sectionTitle, text: sectionText });
+                        }
+                    });
+                }
+
+                // Build the summaryContent string
+                let summaryContent = `Executive Summary:\n${execSummary}\n\nSections:\n\n`;
+                sections.forEach(section => {
+                    summaryContent += `${section.title}\n${section.text}\n\n`;
+                });
+                summaryContent = summaryContent.trim();
+
+                if (!summaryContent) {
+                    alert(`No ${language === 'english' ? 'English translation' : 'Tagalog summary'} available to finalize.`);
+                    return;
+                }
+
+                // Store for confirmation
+                pendingFinalize = { type, language, summaryContent };
+
+                let btnText = language === 'english'
+                    ? 'Finalize Using English Translation'
+                    : 'Finalize Using Tagalog Summary';
+                $('#confirmFinalizeBtn').html(`<i class="bi bi-check-circle"></i> ${btnText}`);
+
+                // Show in modal
+                $('#previewSummaryContent').text(summaryContent);
+                $('#previewSummaryModal').modal('show');
             }
-            
-            if (confirm(`Are you sure you want to finalize this ${type} summary? This will mark it as the official summary.`)) {
+
+            function finalizeSummaryChoice(type, language, summaryContent) {
+                if (!currentCarePlanId) return;
+
+                if (!summaryContent) {
+                    alert(`No ${language === 'english' ? 'English translation' : 'Tagalog summary'} available to finalize.`);
+                    return;
+                }
+
                 // Show loading
                 $('#loadingText').text(`Finalizing ${type} summary...`);
                 $('#loadingProgressBar').css('width', '0%');
                 $('#loadingModal').modal('show');
-                
-                // Show loading modal
-                $('#loadingText').text('Finalizing summaries...');
-                $('#loadingProgressBar').css('width', '0%');
-                $('#loadingModal').modal('show');
-                
-                // Simulate progress (for better UX)
+
+                // Simulate progress
                 let progress = 0;
                 const progressInterval = setInterval(() => {
                     progress += 10;
                     $('#loadingProgressBar').css('width', `${progress}%`);
-                    
                     if (progress >= 90) {
                         clearInterval(progressInterval);
                     }
                 }, 100);
-                
+
+                // Prepare data
+                let data = {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                };
+                if (type === 'assessment') {
+                    data['assessment_summary_final'] = summaryContent;
+                } else {
+                    data['evaluation_summary_final'] = summaryContent;
+                }
+
                 $.ajax({
                     url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
                     type: 'PUT',
-                    data: {
-                        assessment_summary_final: assessmentSummary,
-                        evaluation_summary_final: evaluationSummary,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
+                    data: data,
                     success: function(response) {
                         clearInterval(progressInterval);
                         $('#loadingProgressBar').css('width', '100%');
                         setTimeout(() => {
                             $('#loadingModal').modal('hide');
-                            
-                            // Show success alert
-                            const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="bi bi-check-circle-fill me-2"></i> Summaries have been finalized successfully!
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            // Show success toast
+                            const toast = `<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+                                <div class="toast show bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+                                    <div class="toast-header bg-success text-white">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <strong class="me-auto">Success</strong>
+                                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                                    </div>
+                                    <div class="toast-body">
+                                        Summary has been finalized successfully!
+                                    </div>
+                                </div>
                             </div>`;
-                            
-                            // Insert at the top of the care plan details section
-                            $(successAlert).prependTo('#carePlanDetails');
-                            
+                            $(toast).appendTo('body');
+                            setTimeout(() => {
+                                $('.toast').toast('hide');
+                                setTimeout(() => {
+                                    $('.toast').remove();
+                                }, 500);
+                            }, 3000);
+
                             // Refresh the care plan list to update status
                             loadCarePlans(currentPage);
-                            
-                            // Auto dismiss after 5 seconds
-                            setTimeout(() => {
-                                $('.alert').alert('close');
-                            }, 5000);
-                            
                         }, 500);
                     },
                     error: function(xhr) {
                         clearInterval(progressInterval);
                         $('#loadingModal').modal('hide');
-                        console.error('Error finalizing summaries:', xhr);
-                        alert('Failed to finalize summaries. Please try again.');
+                        console.error('Error finalizing summary:', xhr);
+                        alert('Failed to finalize summary. Please try again.');
                     }
                 });
             }
@@ -1437,13 +1686,6 @@
             // For Evaluation translation
             $('#translateEvaluationSummary').off('click').click(function() {
                 if (!currentCarePlanId) return;
-
-                // Get executive summary
-                // Always include the executive summary as 'full_summary'
-                const summaryText = $('#assessmentSummaryDraft').text().trim();
-                if (summaryText) {
-                    sections['full_summary'] = summaryText;
-                }
 
                 // Collect all section texts
                 const sections = {};
@@ -1455,6 +1697,13 @@
                     }
                 });
 
+                // Get executive summary
+                // Always include the executive summary as 'full_summary'
+                const summaryText = $('#evaluationSummaryDraft').text().trim();
+                if (summaryText) {
+                    sections['full_summary'] = summaryText;
+                }
+            
                 if (!summaryText && Object.keys(sections).length === 0) {
                     alert('No evaluation summary or sections available to translate.');
                     return;
@@ -1490,11 +1739,24 @@
                         $('#loadingProgressBar').css('width', '100%');
                         setTimeout(() => {
                             $('#loadingModal').modal('hide');
-                            // Update translation draft and section translations
-                            $('#evaluationTranslationDraft').text(response.translatedText); // or #evaluationTranslationDraft
-                            displayTranslatedSections('evaluation', response.translatedSections); // or 'evaluation'
-                            $('#evaluationTranslationSection').show(); // or #evaluationTranslationSection
-                        }, 100000);
+                            $('#evaluationTranslationDraft').text(response.translatedText);
+                            displayTranslatedSections('evaluation', response.translatedSections);
+                            $('#evaluationTranslationSection').show();
+
+                            // Update finalize button visibility
+                            if ($('#evaluationTranslationDraft').text().trim()) {
+                                $('#finalizeEvaluationEnglish').show();
+                            } else {
+                                $('#finalizeEvaluationEnglish').hide();
+                            }
+
+                            if ($('#evaluationTranslationDraft').text().trim()) {
+                                $('#editEvaluationTranslation').show();
+                            } else {
+                                $('#editEvaluationTranslation').hide();
+                                $('#saveEvaluationTranslation').hide();
+                            }
+                        }, 500);
                     },
                     error: function(xhr) {
                         clearInterval(progressInterval);
@@ -1504,7 +1766,6 @@
                     }
                 });
             });
-        }
 
             function displayTranslatedSections(type, sections) {
                 if (!sections) return;
@@ -1555,7 +1816,8 @@
                             <h6 class="mb-0">${sectionTitle}</h6>
                         </div>
                         <div class="card-body py-2">
-                            <textarea class="form-control section-editor translation-editor mb-2" data-section="${key}">${value}</textarea>
+                            <p class="translation-section-content mb-0" data-section="${key}">${value}</p>
+                            <textarea class="form-control section-editor translation-editor mb-2" data-section="${key}" rows="7" style="display:none;">${value}</textarea>
                         </div>
                     </div>`;
                     
@@ -1563,162 +1825,29 @@
                 });
             }
 
-            // Use translation as final version
-            $('#useAssessmentTranslation').click(function() {
+            // Save translation draft to database
+            function saveTranslation(type, translation, sections = null) {
                 if (!currentCarePlanId) return;
-                
-                const translation = $('#assessmentTranslationDraft').text();
-                if (!translation) return;
-                
-                // Show confirmation dialog
-                if (confirm('Are you sure you want to use this translation as the final assessment summary?')) {
-                    // Show loading
-                    $('#loadingText').text('Setting translation as final...');
-                    $('#loadingProgressBar').css('width', '0%');
-                    $('#loadingModal').modal('show');
-                    
-                    let progress = 0;
-                    const progressInterval = setInterval(() => {
-                        progress += 10;
-                        $('#loadingProgressBar').css('width', `${progress}%`);
-                        
-                        if (progress >= 90) {
-                            clearInterval(progressInterval);
-                        }
-                    }, 100);
-                    
-                    // Save as final
-                    $.ajax({
-                        url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
-                        type: 'PUT',
-                        data: {
-                            assessment_summary_final: translation,
-                            _token: $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            clearInterval(progressInterval);
-                            $('#loadingProgressBar').css('width', '100%');
-                            
-                            setTimeout(() => {
-                                $('#loadingModal').modal('hide');
-                                
-                                // Show success
-                                const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <i class="bi bi-check-circle-fill me-2"></i> English translation has been set as the final summary!
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>`;
-                                
-                                // Insert at the top of the care plan details section
-                                $(successAlert).prependTo('#carePlanDetails');
-                                
-                                // Refresh the care plan list
-                                loadCarePlans(currentPage);
-                                
-                                // Auto dismiss after 5 seconds
-                                setTimeout(() => {
-                                    $('.alert').alert('close');
-                                }, 5000);
-                            }, 500);
-                        },
-                        error: function(xhr) {
-                            clearInterval(progressInterval);
-                            $('#loadingModal').modal('hide');
-                            console.error('Error finalizing translation:', xhr);
-                            alert('Failed to set translation as final. Please try again.');
-                        }
-                    });
+                let data = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                };
+                data[`${type}_translation_draft`] = translation;
+                if (sections) {
+                    data[`${type}_translation_sections`] = sections;
                 }
-            });
-
-            // Same for evaluation
-            $('#useEvaluationTranslation').click(function() {
-                if (!currentCarePlanId) return;
-                
-                const translation = $('#evaluationTranslationDraft').text();
-                if (!translation) return;
-                
-                // Show confirmation dialog
-                if (confirm('Are you sure you want to use this translation as the final evaluation summary?')) {
-                    // Show loading
-                    $('#loadingText').text('Setting translation as final...');
-                    $('#loadingProgressBar').css('width', '0%');
-                    $('#loadingModal').modal('show');
-                    
-                    let progress = 0;
-                    const progressInterval = setInterval(() => {
-                        progress += 10;
-                        $('#loadingProgressBar').css('width', `${progress}%`);
-                        
-                        if (progress >= 90) {
-                            clearInterval(progressInterval);
-                        }
-                    }, 100);
-                    
-                    // Save as final
-                    $.ajax({
-                        url: `/admin/ai-summary/finalize/${currentCarePlanId}`,
-                        type: 'PUT',
-                        data: {
-                            evaluation_summary_final: translation,
-                            _token: $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            clearInterval(progressInterval);
-                            $('#loadingProgressBar').css('width', '100%');
-                            
-                            setTimeout(() => {
-                                $('#loadingModal').modal('hide');
-                                
-                                // Show success
-                                const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <i class="bi bi-check-circle-fill me-2"></i> English translation has been set as the final summary!
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>`;
-                                
-                                // Insert at the top of the care plan details section
-                                $(successAlert).prependTo('#carePlanDetails');
-                                
-                                // Refresh the care plan list
-                                loadCarePlans(currentPage);
-                                
-                                // Auto dismiss after 5 seconds
-                                setTimeout(() => {
-                                    $('.alert').alert('close');
-                                }, 5000);
-                            }, 500);
-                        },
-                        error: function(xhr) {
-                            clearInterval(progressInterval);
-                            $('#loadingModal').modal('hide');
-                            console.error('Error finalizing translation:', xhr);
-                            alert('Failed to set translation as final. Please try again.');
-                        }
-                    });
-                }
-            });
-
-        // Save translation draft to database
-        function saveTranslation(type, translation) {
-            if (!currentCarePlanId) return;
-            
-            let data = {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-            };
-            
-            data[`${type}_translation_draft`] = translation;
-            
-            $.ajax({
-                url: `/admin/ai-summary/update/${currentCarePlanId}`,
-                type: 'PUT',
-                data: data,
-                success: function(response) {
-                    console.log('Translation saved successfully');
-                },
-                error: function(xhr) {
-                    console.error('Error saving translation:', xhr);
-                }
-            });
-        }
+                $.ajax({
+                    url: `/admin/ai-summary/update/${currentCarePlanId}`,
+                    type: 'PUT',
+                    data: data,
+                    success: function(response) {
+                        console.log('Translation saved successfully');
+                    },
+                    error: function(xhr) {
+                        console.error('Error saving translation:', xhr);
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
