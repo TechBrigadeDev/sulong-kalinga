@@ -487,7 +487,7 @@ def extract_sections_improved(sentences, doc_type="assessment"):
             "dehydration", "kulang sa tubig", "poor skin turgor", "dry mucous membranes",
             "difficulty breathing", "respiratory distress", "naghahabol ng hininga",
             "pallor", "maputla", "cyanosis", "maasul na balat", "bluish discoloration",
-            "BMI", "body mass index", "height-
+            "BMI", "body mass index",
         ],
         
         "kalagayan_mental": [
@@ -2142,6 +2142,167 @@ def post_process_summary(summary):
         'pangmatagalangsakit': 'pangmatagalang sakit',
         'ngayon ay': 'ngayon ay',
         'isa\'t i': 'isa\'t isa',
+        # Merged words
+        'arawmas': 'araw mas',
+        'pagtulognagigising': 'pagtulog nagigising',
+        'expressionslalo': 'expressions lalo',
+        'pagsimangotay': 'pagsimangot ay',
+        'anakparehong': 'anak—parehong',
+        'patternsa': 'pattern sa',
+        'lugarisang': 'lugar. Isang',
+        'naobserbahankong': 'naobserbahan kong',
+        'hindimakontrol': 'hindi makontrol',
+        'nagiisang': 'nag-iisang',
+        'hindigumagana': 'hindi gumagana',
+        'hindisiya': 'hindi siya',
+        'hindinaliligo': 'hindi naliligo',
+        'hindikakain': 'hindi kakain',
+        'hindimabilis': 'hindi mabilis',
+        'hindimakausap': 'hindi makausap',
+        'nakaririndi': 'nakaririnig',
+        'pagkakasakit': 'pagkakasakit',
+        'hindimagandang': 'hindi magandang',
+        'akoayparating': 'ako ay parating',
+        'mayroongpabalikbalik': 'mayroong pabalik-balik',
+        'laginakakalimutan': 'lagi nakakalimutan',
+        
+        # Incorrect spacing/hyphenation
+        'secret-monitor': 'monitor',
+        'self-care': 'self care',
+        'ma-document': 'i-document',
+        'ma-monitor': 'i-monitor',
+        'Paano monitor': 'paano i-monitor',
+        'i monitor': 'i-monitor',
+        'I monitor': 'I-monitor',
+        'self assess': 'self-assess',
+        'pang araw araw': 'pang-araw-araw',
+        'araw araw': 'araw-araw',
+        'tuloy tuloy': 'tuloy-tuloy',
+        'regular check up': 'regular check-up',
+        'follow up': 'follow-up',
+        'check up': 'check-up',
+        'post operative': 'post-operative',
+        'pre operative': 'pre-operative',
+        
+        # Missing prepositions
+        'dahil sakit': 'dahil sa sakit',
+        'dahil lumalalang': 'dahil sa lumalalang',
+        'dahil problema': 'dahil sa problema',
+        'timing symptoms': 'timing ng symptoms',
+        'dahil pagod': 'dahil sa pagod',
+        'dahil stress': 'dahil sa stress',
+        'para treatment': 'para sa treatment',
+        'para assessment': 'para sa assessment',
+        'para referral': 'para sa referral',
+        'para therapy': 'para sa therapy',
+        'para pag inom': 'para sa pag-inom',
+        'para pagkain': 'para sa pagkain',
+        
+        # Person references
+        'Tataydati': 'Tatay dati',
+        'Nanayko': 'Nanay ko',
+        'Tatayko': 'Tatay ko',
+        'Ating patient': 'Ating beneficiary',
+        'Ang patient': 'Ang beneficiary',
+        'Sa patient': 'Sa beneficiary',
+        'Si patient': 'Si beneficiary',
+        'Para sa patient': 'Para sa beneficiary',
+        
+        # Articles and determiners
+        'ng symptoms': 'ng mga symptoms',
+        'ng gamot': 'ng mga gamot',
+        'ng beses': 'ng mga beses',
+        'ng araw': 'ng mga araw',
+        'ng hakbang': 'ng mga hakbang',
+        'sa symptoms': 'sa mga symptoms',
+        'sa gamot': 'sa mga gamot',
+        'may symptoms': 'may mga symptoms',
+        'may gamot': 'may mga gamot',
+        'may nutrition': 'may mga nutrition-based',
+        
+        # Grammar/spelling fixes
+        'ng ayon': 'ngayon',
+        'la,': 'sala,',
+        'Samakatuwid': 'Dahil dito,',
+        'rili': 'sarili',
+        'para noia': 'paranoia',
+        'unit ng ayon': 'ngunit ngayon',
+        'sa an': 'saan',
+        'sa kit': 'sakit',
+        'sa fety': 'safety',
+        'sa rili': 'sarili',
+        'isa-i': 'isa-isa',
+        'para sa rili': 'para sa sarili',
+        'kanyanger': 'kanyang anger',
+        'nagsusul': 'nagsusulat',
+        'sa bay-sa bay': 'sabay-sabay',
+        'lapig': 'sa lapig',
+        'tulungan problema': 'tulungan sa problema',
+        'higit napaka': 'higit na napaka',
+        'pag ka': 'pagka',
+        'pang araw': 'pang-araw',
+        'di makatulog': 'hindi makatulog',
+        'di kumakain': 'hindi kumakain',
+        'di regular': 'hindi regular',
+        'di nagbabago': 'hindi nagbabago',
+        'walangpagbabago': 'walang pagbabago',
+        'healthcommunity': 'health community',
+        'healthprovider': 'health provider',
+        'dietaryneeds': 'dietary needs',
+        'medicationschedule': 'medication schedule',
+        'mentalstate': 'mental state',
+        'discomfortlevel': 'discomfort level',
+        'socialneeds': 'social needs',
+        
+        # Medical terms
+        'bloodpressure': 'blood pressure',
+        'heartrate': 'heart rate',
+        'bodytemp': 'body temperature',
+        'glucoselevel': 'glucose level',
+        'hyper tension': 'hypertension',
+        'insom nia': 'insomnia',
+        'demen tia': 'dementia',
+        'alz heimer': 'alzheimer',
+        'depre ssion': 'depression',
+        
+        # Common contractions and abbreviations
+        'accdg': 'ayon',
+        'asap': 'kaagad',
+        'atbp': 'at iba pa',
+        'wla': 'wala',
+        'mron': 'mayroon',
+        'pra': 'para',
+        'dhl': 'dahil',
+        'dpat': 'dapat',
+        'sknya': 'sa kanya',
+        'lng': 'lang',
+        'mgdamag': 'magdamag',
+        'sitti': 'sitting',
+        
+        # Mixed language issues
+        'nag-eexercise': 'nag-eexercise',
+        'nag-aalaga': 'nag-aalaga',
+        'nagtake': 'nag-take',
+        'nagcheckup': 'nag-checkup',
+        'nagfollow': 'nag-follow',
+        'icheck': 'i-check',
+        'imonitor': 'i-monitor',
+        'idocument': 'i-document',
+        'irefer': 'i-refer',
+        'iensure': 'i-ensure',
+        'ifollow': 'i-follow',
+        
+        # Function words
+        'mgat': 'mga at',
+        'atatbp': 'at at iba pa',
+        'npra': 'na para',
+        'dats': 'at sa',
+        'atyung': 'at yung',
+        'peroang': 'pero ang',
+        'atng': 'at ng',
+        'sapag': 'sa pag',
+        'sa pat': 'sapat',
+        'nasi': 'na si'
     }
     
     # Apply all specific word fixes
@@ -2151,6 +2312,10 @@ def post_process_summary(summary):
     # Fix spacing issues
     summary = re.sub(r'\s+', ' ', summary)
     summary = re.sub(r'\s([,.;:])', r'\1', summary)
+
+    # Add more comprehensive patterns
+    text = re.sub(r'\bsa\s*kit\b', 'sakit', summary)
+    text = re.sub(r'\bsa\-kit\b', 'sakit', summary)
     
     # Fix missing spaces (more comprehensive)
     summary = re.sub(r'([a-z])([A-Z])', r'\1 \2', summary)  # Space between lowercase and uppercase

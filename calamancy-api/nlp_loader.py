@@ -105,7 +105,76 @@ def clean_and_normalize_text(text):
     # IMPROVED: Only add spaces around standalone dashes, not within hyphenated words
     text = re.sub(r'(\w)\s+-\s+(\w)', r'\1-\2', text)  # Fix over-spaced hyphens first
     text = re.sub(r'(\s)-(\s)', r'\1 - \2', text)  # Ensure spaces around standalone dashes
-    
+
+    # Add specific fixes for problematic Tagalog word splits and common errors
+    fixes = [
+        (r'\bsa\s+kit\b', 'sakit'),
+        (r'\bpag\s+ka\b', 'pagka'),
+        (r'\bhin\s+di\b', 'hindi'),
+        (r'\bdi\s+makatulog\b', 'hindi makatulog'),
+        (r'\bdi\s+kumakain\b', 'hindi kumakain'),
+        (r'\bdi\s+regular\b', 'hindi regular'),
+        (r'\bdi\s+nagbabago\b', 'hindi nagbabago'),
+        (r'\baraw\s+araw\b', 'araw-araw'),
+        (r'\bpang\s+araw\s+araw\b', 'pang-araw-araw'),
+        (r'\btuloy\s+tuloy\b', 'tuloy-tuloy'),
+        (r'\bcheck\s+up\b', 'check-up'),
+        (r'\bfollow\s+up\b', 'follow-up'),
+        (r'\bpost\s+operative\b', 'post-operative'),
+        (r'\bpre\s+operative\b', 'pre-operative'),
+        (r'\bng\s+ayon\b', 'ngayon'),
+        (r'\bisa-i\b', 'isa-isa'),
+        (r'\bmag-isa\s+siya\b', 'mag-isa siya'),
+        (r'\bmag-isa\s+bumangon\b', 'mag-isa bumangon'),
+        (r'\bmag-isa\s+kumain\b', 'mag-isa kumain'),
+        (r'\bmag-isa\s+maglakad\b', 'mag-isa maglakad'),
+        (r'\bmag-isa\s+maligo\b', 'mag-isa maligo'),
+        (r'\bnag-iisa\s+siya\b', 'nag-iisa siya'),
+        (r'\bnag-iisang\b', 'nag-iisang'),
+        (r'\bhindi\s+gumagana\b', 'hindi gumagana'),
+        (r'\bhindi\s+siya\b', 'hindi siya'),
+        (r'\bhindi\s+naliligo\b', 'hindi naliligo'),
+        (r'\bhindi\s+kakain\b', 'hindi kakain'),
+        (r'\bhindi\s+mabilis\b', 'hindi mabilis'),
+        (r'\bhindi\s+makausap\b', 'hindi makausap'),
+        (r'\bself\s+care\b', 'self-care'),
+        (r'\bi\s+monitor\b', 'i-monitor'),
+        (r'\bi\s+document\b', 'i-document'),
+        (r'\bi\s+refer\b', 'i-refer'),
+        (r'\bi\s+ensure\b', 'i-ensure'),
+        (r'\bi\s+follow\b', 'i-follow'),
+        (r'\bself\s+assess\b', 'self-assess'),
+        (r'\bmay\s+symptoms\b', 'may mga symptoms'),
+        (r'\bmay\s+gamot\b', 'may mga gamot'),
+        (r'\bmay\s+nutrition\b', 'may mga nutrition-based'),
+        (r'\bng\s+symptoms\b', 'ng mga symptoms'),
+        (r'\bng\s+gamot\b', 'ng mga gamot'),
+        (r'\bng\s+beses\b', 'ng mga beses'),
+        (r'\bng\s+araw\b', 'ng mga araw'),
+        (r'\bng\s+hakbang\b', 'ng mga hakbang'),
+        (r'\bsa\s+symptoms\b', 'sa mga symptoms'),
+        (r'\bsa\s+gamot\b', 'sa mga gamot'),
+        # Additional grammar/spelling fixes
+        (r'\bng\s+ayon\b', 'ngayon'),
+        (r'\bla,', 'sala,'),
+        (r'\bSamakatuwid\b', 'Dahil dito,'),
+        (r'\brili\b', 'sarili'),
+        (r'\bpara\s+noia\b', 'paranoia'),
+        (r'\bunit\s+ng\s+ayon\b', 'ngunit ngayon'),
+        (r'\bsa\s+an\b', 'saan'),
+        (r'\bsa\s+kit\b', 'sakit'),
+        (r'\bsa\s+fety\b', 'safety'),
+        (r'\bsa\s+rili\b', 'sarili'),
+        (r'\bisa-i\b', 'isa-isa'),
+        (r'\bpara\s+sa\s+rili\b', 'para sa sarili'),
+        (r'\bkanyanger\b', 'kanyang anger'),
+        (r'\bnagsusul\b', 'nagsusulat'),
+        (r'\bsa\s+bay-sa\s+bay\b', 'sabay-sabay'),
+        (r'\bsa\s+pat\b', 'sapat'),
+    ]
+    for pattern, replacement in fixes:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+
     # Fix spaces around parentheses
     text = re.sub(r'\s*\(\s*', ' (', text)
     text = re.sub(r'\s*\)\s*', ') ', text)
