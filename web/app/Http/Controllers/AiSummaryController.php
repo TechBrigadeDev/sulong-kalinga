@@ -94,6 +94,13 @@ class AiSummaryController extends Controller
                 
                 // Save data to database immediately
                 $carePlan = WeeklyCarePlan::findOrFail($request->care_plan_id);
+
+                $data['summary'] = $this->postProcessTagalogSummary($data['summary'] ?? '');
+                if (!empty($data['sections']) && is_array($data['sections'])) {
+                    foreach ($data['sections'] as $k => $v) {
+                        $data['sections'][$k] = $this->postProcessTagalogSummary($v);
+                    }
+                }
                 
                 if ($request->type === 'assessment') {
                     $carePlan->assessment_summary_draft = $data['summary'] ?? 'No summary generated';
@@ -587,6 +594,41 @@ class AiSummaryController extends Controller
         foreach ($patterns as $pattern => $replacement) {
             $text = preg_replace($pattern, $replacement, $text);
         }
+        return $text;
+    }
+
+    /**
+     * Post-process Tagalog summary to fix problematic word splits and spelling.
+     */
+    private function postProcessTagalogSummary($text)
+    {
+        if (!$text) {
+            return $text;
+        }
+
+        $fixes = [
+            'ng ayon' => 'ngayon',
+            'la,' => 'sala,',
+            'rili' => 'sarili',
+            'para noia' => 'paranoia',
+            'unit ng ayon' => 'ngunit ngayon',
+            'ng ayon' => 'ngayon',
+            'sa an' => 'saan',
+            'sa kit' => 'sakit',
+            'sa fety' => 'safety',
+            'sa rili' => 'sarili',
+            'isa-i' => 'isa-isa',
+            'para sa rili' => 'para sa sarili',
+            'kanyanger' => 'kanyang anger',
+            'nagsusul' => 'nagsusulat',
+            'sa bay-sa bay' => 'sabay-sabay',
+            'sa pat' => 'sapat',
+        ];
+
+        foreach ($fixes as $wrong => $correct) {
+            $text = preg_replace('/\b' . preg_quote($wrong, '/') . '\b/u', $correct, $text);
+        }
+
         return $text;
     }
 
