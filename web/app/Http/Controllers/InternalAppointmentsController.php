@@ -19,9 +19,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\Notification;
+use App\Services\NotificationService;
 
 class InternalAppointmentsController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct()
+    {
+        $this->notificationService = app(NotificationService::class);
+    }
+
     /**
      * Display the internal appointments page based on user role
      */
@@ -1597,7 +1605,7 @@ class InternalAppointmentsController extends Controller
         // Get all participants
         $participants = $appointment->participants;
         $notifiedUsers = [];
-        
+
         foreach ($participants as $participant) {
             $userId = $participant->participant_id;
             $userType = $participant->participant_type;
@@ -1606,7 +1614,7 @@ class InternalAppointmentsController extends Controller
             if (!$userId) {
                 continue;
             }
-            
+
             // Convert participant type for notification system 
             $notificationType = $userType;
             if ($userType === 'cose_user') {
@@ -1620,8 +1628,7 @@ class InternalAppointmentsController extends Controller
                 \Log::warning("Unknown participant type: {$userType}");
                 continue;
             }
-            
-            // Skip duplicates
+
             $key = $notificationType . '-' . $userId;
             if (in_array($key, $notifiedUsers)) {
                 continue;
@@ -1629,10 +1636,7 @@ class InternalAppointmentsController extends Controller
             
             // Customize message for each user type
             $customMessage = $message;
-            
-            // For beneficiaries, you might want to simplify or customize the message
             if ($userType === 'beneficiary') {
-                // Optional: Add beneficiary-specific information or formatting
                 $customMessage = "Dear Beneficiary, " . $message;
             } 
             // For family members, add context about which beneficiary this relates to
@@ -1644,25 +1648,28 @@ class InternalAppointmentsController extends Controller
                     $customMessage = "Regarding {$beneficiaryName}: " . $message;
                 }
             }
-            
+
             try {
-                // Create notification with ALL required fields
-                Notification::create([
-                    'user_id' => $userId,
-                    'user_type' => $notificationType,
-                    'message_title' => $title ?? 'Appointment Notification',
-                    'message' => $customMessage,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
-                
+                // Use NotificationService for push + DB notification
+                switch ($notificationType) {
+                    case 'cose_staff':
+                        $this->notificationService->notifyStaff($userId, $title ?? 'Appointment Notification', $customMessage);
+                        break;
+                    case 'beneficiary':
+                        $this->notificationService->notifyBeneficiary($userId, $title ?? 'Appointment Notification', $customMessage);
+                        break;
+                    case 'family_member':
+                        $this->notificationService->notifyFamilyMember($userId, $title ?? 'Appointment Notification', $customMessage);
+                        break;
+                }
+
                 $notifiedUsers[] = $key;
                 \Log::info("Sent {$type} notification to {$notificationType} #{$userId}");
             } catch (\Exception $e) {
                 \Log::error("Failed to send notification to {$notificationType} #{$userId}: " . $e->getMessage());
             }
         }
-        
+
         \Log::info("Sent notifications about appointment {$appointment->appointment_id}", [
             'type' => $type,
             'recipient_count' => count($notifiedUsers)

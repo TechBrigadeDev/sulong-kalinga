@@ -5,16 +5,24 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\VisitationOccurrence;
 use App\Models\Visitation;
-use App\Models\Notification;
 use App\Models\User;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use Carbon\Carbon;
+use App\Services\NotificationService;
 
 class SendExactVisitationReminders extends Command
 {
     protected $signature = 'visitations:send-exact-reminders';
     protected $description = 'Send reminders for visitations at their exact scheduled reminder time';
+
+    protected $notificationService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notificationService = app(NotificationService::class);
+    }
 
     public function handle()
     {
@@ -57,39 +65,18 @@ class SendExactVisitationReminders extends Command
 
         // Notify care worker
         if ($careWorker) {
-            Notification::create([
-                'user_id' => $careWorker->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyStaff($careWorker->id, $title, $message);
         }
 
         // Notify beneficiary
         if ($beneficiary) {
-            Notification::create([
-                'user_id' => $beneficiary->beneficiary_id,
-                'user_type' => 'beneficiary',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $title, $message);
         }
 
         // Notify family members
         $familyMembers = FamilyMember::where('related_beneficiary_id', $visitation->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            Notification::create([
-                'user_id' => $familyMember->family_member_id,
-                'user_type' => 'family_member',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
         }
     }
 }
