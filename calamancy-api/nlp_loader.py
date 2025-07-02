@@ -56,53 +56,41 @@ except Exception as e:
     traceback.print_exc()
     sys.exit(1)
 
-# Add sentence splitting function here to avoid circular imports
 def split_into_sentences(text):
     """Split text into sentences with improved handling for Tagalog text"""
     if not text:
         return []
-        
+
     # Clean and normalize the text first
+    # Only add space after punctuation if not already present
     text = re.sub(r'([.!?,:;])([A-Za-z])', r'\1 \2', text)
-    text = re.sub(r'(\w)\s+-\s+(\w)', r'\1-\2', text)  # Fix over-spaced hyphens first
-    text = re.sub(r'(\s)-(\s)', r'\1 - \2', text)  # Ensure spaces around standalone dashes
+    # Do NOT split on 'sa ', hyphens, or inside words!
+    # Only fix over-spaced hyphens (e.g., "sabay - sabay" -> "sabay-sabay")
+    text = re.sub(r'(\w)\s*-\s*(\w)', r'\1-\2', text)
     text = re.sub(r'\s+', ' ', text).strip()
-    
+
     # List of common abbreviations to avoid incorrect sentence splitting
     abbreviations = [r'Dr\.', r'St\.', r'Mr\.', r'Mrs\.', r'Ms\.', r'Prof\.', r'etc\.', 
                      r'e\.g\.', r'i\.e\.', r'vs\.', r'Fig\.', r'No\.', r'Atty\.', r'Gov\.']
-    
+
     # Temporarily replace periods in abbreviations to prevent incorrect splitting
     for abbr in abbreviations:
         text = re.sub(abbr, abbr.replace('.', '@@'), text)
-    
-    # Try spaCy's sentence splitter first
+
+    # Use spaCy/calamancy's sentence splitter
     doc = nlp(text)
     sentences = [sent.text.strip() for sent in doc.sents]
-    
-    # If that returns just one sentence for a long text, use regex-based splitting
+
+    # If that returns just one sentence for a long text, use regex-based splitting on punctuation only
     if len(sentences) <= 1 and len(text) > 100:
-        # More sophisticated end-of-sentence pattern
+        # Only split at end of sentence punctuation followed by a space and a capital letter or number
         sentence_endings = r'(?<=[.!?])\s+(?=[A-Z0-9])'
         sentences = [s.strip() for s in re.split(sentence_endings, text) if s.strip()]
-        
-        # Don't split on common Filipino/English conjunctions in mid-sentence 
-        # but retain complete sentences
-        refined_sentences = []
-        for sent in sentences:
-            if len(sent) > 150:  # Only split very long sentences
-                # Use lookaround assertions to identify sentence-like boundaries
-                conjunction_pattern = r'(?<=[.!?])\s+(?:ngunit|subalit|datapwat|gayunman|kapag|kung)\s+'
-                conjunction_splits = re.split(conjunction_pattern, sent)
-                refined_sentences.extend([s.strip() for s in conjunction_splits if s.strip()])
-            else:
-                refined_sentences.append(sent)
-        sentences = refined_sentences
-    
+
     # Restore the original abbreviation periods
     sentences = [re.sub(r'@@', '.', sent) for sent in sentences]
-    
-    # Filter out very short or empty sentences, but be more lenient (min 5 chars instead of 10)
+
+    # Filter out very short or empty sentences, but be more lenient (min 5 chars)
     return [sent for sent in sentences if len(sent) > 5]
 
 # Text cleaning function - also moved here for convenience
