@@ -6,13 +6,21 @@ use Illuminate\Console\Command;
 use App\Models\MedicationSchedule;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
-use App\Models\Notification;
 use Carbon\Carbon;
+use App\Services\NotificationService;
 
 class SendExactTimeMedicationReminders extends Command
 {
     protected $signature = 'medications:send-exact-reminders';
     protected $description = 'Send medication reminders at the exact scheduled time';
+
+    protected $notificationService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notificationService = app(NotificationService::class);
+    }
 
     public function handle()
     {
@@ -75,32 +83,21 @@ class SendExactTimeMedicationReminders extends Command
         }
 
         // Notify beneficiary
-        $this->createNotification($beneficiary->beneficiary_id, 'beneficiary', $title, $message);
+        $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $title, $message);
+
         // Notify family members
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            $this->createNotification($familyMember->family_member_id, 'family_member', $title, $message);
+            $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
         }
+
         // Notify assigned care worker
         if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
-            $this->createNotification(
+            $this->notificationService->notifyStaff(
                 $beneficiary->generalCarePlan->care_worker_id,
-                'cose_staff',
                 $title,
                 $message
             );
         }
-    }
-
-    private function createNotification($userId, $userType, $title, $message)
-    {
-        Notification::create([
-            'user_id' => $userId,
-            'user_type' => $userType,
-            'message_title' => $title,
-            'message' => $message,
-            'date_created' => now(),
-            'is_read' => false
-        ]);
     }
 }

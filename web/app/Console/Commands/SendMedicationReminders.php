@@ -7,20 +7,28 @@ use App\Models\MedicationSchedule;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\User;
-use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class SendMedicationReminders extends Command
 {
     protected $signature = 'medications:send-reminders {time_of_day? : morning, noon, evening, or night}';
     protected $description = 'Send medication reminders based on schedule times';
 
+    protected $notificationService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notificationService = app(NotificationService::class);
+    }
+
     public function handle()
     {
         $timeOfDay = $this->argument('time_of_day');
         $now = Carbon::now();
-        
+
         // If no specific time is provided, determine based on current time
         if (!$timeOfDay) {
             $hour = (int)$now->format('H');
@@ -35,9 +43,9 @@ class SendMedicationReminders extends Command
                 $timeOfDay = 'night';
             }
         }
-        
+
         $this->info("Sending {$timeOfDay} medication reminders at " . $now->format('Y-m-d H:i:s'));
-        
+
         // Find active medications for the current time of day
         $query = MedicationSchedule::with(['beneficiary'])
             ->where('status', 'active')
@@ -96,8 +104,9 @@ class SendMedicationReminders extends Command
             return false;
         }
 
-        // Format the time based on time of day
+        // Format the time and with_food flag
         $timeStr = '';
+        $withFood = '';
         switch ($timeOfDay) {
             case 'morning':
                 $timeStr = Carbon::parse($medication->morning_time)->format('g:i A');
@@ -129,36 +138,23 @@ class SendMedicationReminders extends Command
         }
         
         // 1. Notify beneficiary
-        $this->createNotification($beneficiary->beneficiary_id, 'beneficiary', $title, $message);
+        $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $title, $message);
 
         // 2. Notify family members
         $familyMembers = FamilyMember::where('related_beneficiary_id', $beneficiary->beneficiary_id)->get();
         foreach ($familyMembers as $familyMember) {
-            $this->createNotification($familyMember->family_member_id, 'family_member', $title, $message);
+            $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
         }
-        
+
         // 3. Notify assigned care worker
         if ($beneficiary->generalCarePlan && $beneficiary->generalCarePlan->care_worker_id) {
-            $this->createNotification(
-                $beneficiary->generalCarePlan->care_worker_id, 
-                'cose_staff', 
-                $title, 
+            $this->notificationService->notifyStaff(
+                $beneficiary->generalCarePlan->care_worker_id,
+                $title,
                 $message
             );
         }
 
         return true;
-    }
-
-    private function createNotification($userId, $userType, $title, $message)
-    {
-        Notification::create([
-            'user_id' => $userId,
-            'user_type' => $userType,
-            'message_title' => $title,
-            'message' => $message,
-            'date_created' => now(),
-            'is_read' => false
-        ]);
     }
 }
