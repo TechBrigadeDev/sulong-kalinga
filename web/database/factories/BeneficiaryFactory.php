@@ -14,16 +14,16 @@ class BeneficiaryFactory extends Factory
     protected $model = Beneficiary::class;
     
     // Filipino first names (mixed gender)
-    protected $firstNames = [
-        // Male names
+    protected $maleFirstNames = [
         'Antonio', 'Jose', 'Manuel', 'Francisco', 'Juan', 'Roberto', 'Ricardo', 'Eduardo', 
         'Carlos', 'Miguel', 'Rafael', 'Felix', 'Alejandro', 'Victor', 'Rodrigo', 'Ernesto', 
         'Fernando', 'Danilo', 'Mariano', 'Pedro', 'Rene', 'Domingo', 'Cesar', 'Jaime', 'Efren',
         'Nestor', 'Romeo', 'Alfredo', 'Luis', 'Ramon', 'Felipe', 'Salvador', 'Enrique', 'Benjamin',
         'Raul', 'Alfonso', 'Arsenio', 'Virgilio', 'Mario', 'Alberto', 'Ismael', 'Guillermo', 'Emilio',
-        'Leonardo', 'Vicente', 'Rolando', 'Arturo', 'Crisanto', 'Diosdado',
-        
-        // Female names
+        'Leonardo', 'Vicente', 'Rolando', 'Arturo', 'Crisanto', 'Diosdado'
+    ];
+
+    protected $femaleFirstNames = [
         'Maria', 'Rosario', 'Carmen', 'Gloria', 'Teresita', 'Josefina', 'Luzviminda', 'Corazon', 
         'Fe', 'Lourdes', 'Erlinda', 'Imelda', 'Nida', 'Clarita', 'Leticia', 'Flordeliza', 
         'Carmelita', 'Remedios', 'Anita', 'Lilia', 'Esperanza', 'Milagros', 'Felicidad', 'Virginia', 
@@ -104,103 +104,124 @@ class BeneficiaryFactory extends Factory
      */
     public function definition(): array
     {
-        // Determine gender and select appropriate name
-        $gender = $this->faker->randomElement(['Male', 'Female']);
-        
-        // Select first name based on gender
-        if ($gender === 'Male') {
-            $firstName = $this->faker->randomElement(array_slice($this->firstNames, 0, 49)); // First 49 are male names
-        } else {
-            $firstName = $this->faker->randomElement(array_slice($this->firstNames, 49)); // Rest are female names
-        }
-        
-        $middleName = $this->faker->randomElement($this->middleNames);
-        $lastName = $this->faker->randomElement($this->lastNames);
-        
-        // Get care manager for created_by and updated_by
-        $userIdWithRole2 = User::where('role_id', 2)->inRandomOrder()->first()->id;
-        
-        // 50% for each municipality
-        $municipalityId = $this->faker->randomElement([1, 2]); 
-        
-        // Pick a barangay from the appropriate municipality
-        $barangayId = $this->faker->randomElement($this->barangayMap[$municipalityId]);
-        $barangay = Barangay::find($barangayId);
-        $barangayName = $barangay->barangay_name;
-        
-        // Generate an address that includes the barangay name
-        $streetAddress = $this->generateAddress($barangayName);
-        
-        // Generate a birthday for someone 60-100 years old
-        $birthday = $this->faker->dateTimeBetween('-100 years', '-60 years')->format('Y-m-d');
-        
-        // Generate username (first initial + middle initial + last name)
-        $baseUsername = strtolower(substr($firstName, 0, 1) . substr($middleName, 0, 1) . $lastName);
-        $baseUsername = preg_replace('/[^a-z0-9]/', '', $baseUsername); // Remove special characters
-
-         // Check for username duplicates and add a number if needed
-        $username = $this->generateUniqueUsername($baseUsername);
-        
-        // Generate emergency contact (slightly more likely to be of opposite gender)
-        $emergencyContactGender = $this->faker->boolean(65) ? ($gender === 'Male' ? 'Female' : 'Male') : $gender;
-        
-        if ($emergencyContactGender === 'Male') {
-            $emergencyContactName = $this->faker->randomElement(array_slice($this->firstNames, 0, 49)) . ' ' . 
-                                  $this->faker->randomElement($this->lastNames);
-        } else {
-            $emergencyContactName = $this->faker->randomElement(array_slice($this->firstNames, 49)) . ' ' . 
-                                  $this->faker->randomElement($this->lastNames);
-        }
-        
-        // Select a relation type
-        $relationKey = array_rand($this->relationTypes);
-        $relationOptions = $this->relationTypes[$relationKey];
-        $relation = $relationOptions[array_rand($relationOptions)];
-        
-        // Generate emergency procedure
-        $emergencyProcedures = [
-            "Contact family immediately and provide medical care.",
-            "Call emergency services and administer prescribed medication.",
-            "Check vital signs, provide medication, and notify care manager.",
-            "Contact the designated emergency contact and care worker simultaneously.",
-            "Assist with breathing exercises, administer medication if needed, and call family.",
-            "Keep calm, check for immediate dangers, and call emergency services.",
-            "Follow the emergency response protocol outlined in the care plan.",
-            "Ensure patient is comfortable, monitor vital signs, and contact medical professional.",
-            "Administer first aid if qualified, then contact emergency services.",
-            "Contact the nearest health center while monitoring the patient's condition."
-        ];
-        
         return [
-            'first_name' => $firstName,
-            'middle_name' => $middleName,
-            'last_name' => $lastName,
+            // Gender: default to Male, but will be overridden by seeder
+            'gender' => 'Male',
+
+            // Use a closure so $attributes['gender'] is available
+            'first_name' => function (array $attributes) {
+                $gender = $attributes['gender'] ?? 'Male';
+                return $this->faker->randomElement(
+                    $gender === 'Male' ? $this->maleFirstNames : $this->femaleFirstNames
+                );
+            },
+            'middle_name' => $this->faker->randomElement($this->middleNames),
+            'last_name' => $this->faker->randomElement($this->lastNames),
             'civil_status' => $this->faker->randomElement(['Single', 'Married', 'Widowed', 'Separated']),
-            'gender' => $gender,
-            'birthday' => $birthday,
-            'primary_caregiver' => $this->faker->boolean(70) ? $this->generateFilipinoName($gender === 'Male' ? 'Female' : 'Male') : null,
+            'birthday' => $this->faker->dateTimeBetween('-100 years', '-60 years')->format('Y-m-d'),
+
+            // Municipality and barangay
+            'municipality_id' => function () {
+                return $this->faker->randomElement([1, 2]);
+            },
+            'barangay_id' => function (array $attributes) {
+                $municipalityId = $attributes['municipality_id'] ?? 1;
+                return $this->faker->randomElement($this->barangayMap[$municipalityId]);
+            },
+            'street_address' => function (array $attributes) {
+                $barangayId = $attributes['barangay_id'] ?? 1;
+                $barangay = \App\Models\Barangay::find($barangayId);
+                $barangayName = $barangay ? $barangay->barangay_name : 'Barangay';
+                return $this->generateAddress($barangayName);
+            },
+
+            // Username (first initial + middle initial + last name, unique)
+            'username' => function (array $attributes) {
+                $firstName = $attributes['first_name'] ?? 'A';
+                $middleName = $attributes['middle_name'] ?? 'Santos';
+                $lastName = $attributes['last_name'] ?? 'Santos';
+                $baseUsername = strtolower(substr($firstName, 0, 1) . substr($middleName, 0, 1) . $lastName);
+                $baseUsername = preg_replace('/[^a-z0-9]/', '', $baseUsername);
+                return $this->generateUniqueUsername($baseUsername);
+            },
+
+            // Password
+            'password' => \Illuminate\Support\Facades\Hash::make('12312312'),
+
+            // Primary caregiver (70% chance, opposite gender)
+            'primary_caregiver' => function (array $attributes) {
+                if ($this->faker->boolean(70)) {
+                    $gender = $attributes['gender'] ?? 'Male';
+                    $oppositeGender = $gender === 'Male' ? 'Female' : 'Male';
+                    return $this->generateFilipinoName($oppositeGender);
+                }
+                return null;
+            },
+
+            // Contact info
             'mobile' => '+63' . $this->faker->numberBetween(9000000000, 9999999999),
             'landline' => $this->faker->boolean(70) ? $this->faker->numberBetween(2000000, 9999999) : null,
-            'street_address' => $streetAddress,
-            'barangay_id' => $barangayId,
-            'municipality_id' => $municipalityId,
+
+            // Category
             'category_id' => $this->faker->randomElement([1, 2, 3, 4, 5, 6, 7, 8]),
-            'emergency_contact_name' => $emergencyContactName,
-            'emergency_contact_relation' => $relation,
+
+            // Emergency contact
+            'emergency_contact_name' => function (array $attributes) {
+                $gender = $attributes['gender'] ?? 'Male';
+                $emergencyContactGender = $this->faker->boolean(65) ? ($gender === 'Male' ? 'Female' : 'Male') : $gender;
+                $firstName = $this->faker->randomElement(
+                    $emergencyContactGender === 'Male' ? $this->maleFirstNames : $this->femaleFirstNames
+                );
+                $lastName = $this->faker->randomElement($this->lastNames);
+                return $firstName . ' ' . $lastName;
+            },
+            'emergency_contact_relation' => function () {
+                $relationKey = array_rand($this->relationTypes);
+                $relationOptions = $this->relationTypes[$relationKey];
+                return $relationOptions[array_rand($relationOptions)];
+            },
             'emergency_contact_mobile' => '+63' . $this->faker->numberBetween(9000000000, 9999999999),
-            'emergency_contact_email' => $this->faker->boolean(60) ? 
-                                      strtolower(str_replace(' ', '.', $emergencyContactName)) . '@' . 
-                                      $this->faker->randomElement(['gmail.com', 'yahoo.com', 'outlook.com']) : null,
-            'emergency_procedure' => $this->faker->randomElement($emergencyProcedures),
-            'beneficiary_status_id' => 1, // Default to Active
+            'emergency_contact_email' => function (array $attributes) {
+                if ($this->faker->boolean(60)) {
+                    $name = $attributes['emergency_contact_name'] ?? 'contact';
+                    return strtolower(str_replace(' ', '.', $name)) . '@' .
+                        $this->faker->randomElement(['gmail.com', 'yahoo.com', 'outlook.com']);
+                }
+                return null;
+            },
+
+            // Emergency procedure
+            'emergency_procedure' => $this->faker->randomElement([
+                "Contact family immediately and provide medical care.",
+                "Call emergency services and administer prescribed medication.",
+                "Check vital signs, provide medication, and notify care manager.",
+                "Contact the designated emergency contact and care worker simultaneously.",
+                "Assist with breathing exercises, administer medication if needed, and call family.",
+                "Keep calm, check for immediate dangers, and call emergency services.",
+                "Follow the emergency response protocol outlined in the care plan.",
+                "Ensure patient is comfortable, monitor vital signs, and contact medical professional.",
+                "Administer first aid if qualified, then contact emergency services.",
+                "Contact the nearest health center while monitoring the patient's condition."
+            ]),
+
+            // Status and care plan
+            'beneficiary_status_id' => 1,
             'status_reason' => null,
-            'general_care_plan_id' => null, // Will be set after creation
-            'username' => $username,
-            'password' => Hash::make('12312312'), // Default password
+            'general_care_plan_id' => null,
+
+            // Signatures
             'beneficiary_signature' => null,
             'care_worker_signature' => null,
-            'created_by' => $userIdWithRole2,
-            'updated_by' => $userIdWithRole2,
+
+            // Created/updated by
+            'created_by' => function () {
+                return \App\Models\User::where('role_id', 2)->inRandomOrder()->first()->id;
+            },
+            'updated_by' => function (array $attributes) {
+                return $attributes['created_by'] ?? \App\Models\User::where('role_id', 2)->inRandomOrder()->first()->id;
+            },
+
+            // Timestamps
             'created_at' => now(),
             'updated_at' => now(),
         ];
@@ -235,10 +256,10 @@ class BeneficiaryFactory extends Factory
             $gender = $this->faker->randomElement(['Male', 'Female']);
         }
         
-        if ($gender === 'Male') {
-            $firstName = $this->faker->randomElement(array_slice($this->firstNames, 0, 49));
+       if ($gender === 'Male') {
+            $firstName = $this->faker->randomElement($this->maleFirstNames);
         } else {
-            $firstName = $this->faker->randomElement(array_slice($this->firstNames, 49));
+            $firstName = $this->faker->randomElement($this->femaleFirstNames);
         }
         
         $lastName = $this->faker->randomElement($this->lastNames);
