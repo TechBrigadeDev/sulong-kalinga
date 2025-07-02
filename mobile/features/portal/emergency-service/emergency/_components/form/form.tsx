@@ -29,7 +29,13 @@ export const { useAppForm: useEmergencyForm } =
             DescriptionField:
                 EmergencyDescription,
         },
-        formComponents: {
-            Submit: SubmitEmergency,
-        },
     });
+    return (
+        <FormProvider {...form}>
+            {children}
+        </FormProvider>
+    );
+};
+
+export const useEmergencyForm = () =>
+    useFormContext<IEmergencyForm>();

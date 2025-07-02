@@ -50,15 +50,6 @@ class CarePlanController extends Controller {
 
         const response = await this.api.get(path);
 
-        log(
-            "CarePlanController.getCarePlanById\n",
-            JSON.stringify(
-                response.data,
-                null,
-                2,
-            ),
-        );
-
         const validate = await itemResponseSchema(
             portalCarePlanDetailSchema,
         ).safeParseAsync(response.data);

@@ -5,8 +5,8 @@ import {
 import { invalidateQK, QK } from "common/query";
 import { authStore } from "features/auth/auth.store";
 
-import { IServiceForm } from "./_components/form/interface";
 import serviceController from "./api";
+import { IServiceRequestForm } from "./form/schema";
 
 const api = serviceController;
 
@@ -29,7 +29,7 @@ export const useServiceRequest = () => {
     const { role, token } = authStore();
     return useMutation({
         mutationFn: async (
-            data: IServiceForm,
+            data: IServiceRequestForm,
         ) => {
             if (!role || !token) {
                 throw new Error(
@@ -47,46 +47,6 @@ export const useServiceRequest = () => {
         onSuccess: async (data) => {
             console.log(
                 "Service request submitted successfully:",
-                data,
-            );
-
-            await invalidateQK(
-                QK.emergencyService.getActiveRequests(),
-            );
-            await invalidateQK(
-                QK.emergencyService.getRequestsHistory(),
-            );
-        },
-    });
-};
-
-export const useEditnServiceRequest = () => {
-    const { role, token } = authStore();
-    return useMutation({
-        mutationFn: async ({
-            id,
-            data,
-        }: {
-            data: IServiceForm;
-            id: string;
-        }) => {
-            if (!role || !token) {
-                throw new Error(
-                    "User role or token is not defined",
-                );
-            }
-
-            const response =
-                await api.putServiceRequest(
-                    role,
-                    id,
-                    data,
-                );
-            return response;
-        },
-        onSuccess: async (data) => {
-            console.log(
-                "Service request edited successfully:",
                 data,
             );
 

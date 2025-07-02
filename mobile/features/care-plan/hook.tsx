@@ -1,19 +1,10 @@
-import {
-    useMutation,
-    useQuery,
-} from "@tanstack/react-query";
-import { QK } from "common/query";
+import { useMutation } from "@tanstack/react-query";
 import { authStore } from "features/auth/auth.store";
-import { showToastable } from "react-native-toastable";
 
 import { carePlanController } from ".";
 import { CarePlanFormData } from "./form/type";
-import {
-    IIntervention,
-    IInterventionCategory,
-} from "./interface";
 
-export const usePostCarePlan = (props: {
+export const useSubmitCarePlanForm = (props: {
     onError?: (error: Error) => Promise<void>;
 }) => {
     const { token } = authStore();

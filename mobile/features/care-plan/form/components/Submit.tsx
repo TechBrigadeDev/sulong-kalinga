@@ -1,11 +1,6 @@
-import { useRouter } from "expo-router";
 import { useCarePlanForm } from "features/care-plan/form/form";
-import { useCarePlanFormStore } from "features/care-plan/form/store";
 import { CarePlanFormData } from "features/care-plan/form/type";
-import {
-    usePatchCarePlan,
-    usePostCarePlan,
-} from "features/care-plan/hook";
+import { useSubmitCarePlanForm } from "features/care-plan/hook";
 import {
     SubmitErrorHandler,
     SubmitHandler,
@@ -19,48 +14,10 @@ import {
 } from "tamagui";
 
 const SubmitCarePlanForm = () => {
-    const router = useRouter();
-
-    const {
-        mutateAsync: postCarePlan,
-        isPending,
-    } = usePostCarePlan({
-        onError: async (error) => {
-            console.error(
-                "Error submitting care plan form:",
-                error,
-            );
-            showToastable({
-                message:
-                    "An error occurred while submitting the care plan. Please try again.",
-                status: "danger",
-                duration: 4000,
-            });
-        },
-    });
-
-    const {
-        mutateAsync: patchCarePlan,
-        isPending: isUpdating,
-    } = usePatchCarePlan({
-        onError: async (error) => {
-            console.error(
-                "Error updating care plan form:",
-                error,
-            );
-            showToastable({
-                message:
-                    "An error occurred while updating the care plan. Please try again.",
-                status: "danger",
-                duration: 4000,
-            });
-        },
-    });
-
-    const { handleSubmit, formState, reset } =
+    const { mutateAsync, isPending } =
+        useSubmitCarePlanForm();
+    const { handleSubmit, formState } =
         useCarePlanForm();
-
-    const { record } = useCarePlanFormStore();
 
     const onSubmit: SubmitHandler<
         CarePlanFormData
@@ -71,24 +28,7 @@ const SubmitCarePlanForm = () => {
         );
 
         try {
-            if (record?.id) {
-                await patchCarePlan({
-                    id: record.id.toString(),
-                    data,
-                });
-            } else {
-                await postCarePlan(data);
-            }
-
-            reset();
-            router.back();
-
-            showToastable({
-                message:
-                    "Weekly Care Plan saved successfully!",
-                status: "success",
-                duration: 4000,
-            });
+            await mutateAsync(data);
         } catch (error) {
             console.error(
                 "Error submitting form:",
@@ -235,21 +175,10 @@ const SubmitCarePlanForm = () => {
             showToastable({
                 message: `${errorText}`,
                 status: "danger",
-                duration: 3000,
-                swipeDirection: "right",
+                duration: 6000,
             });
         }
     };
-
-    const isDisabled =
-        formState.isSubmitting ||
-        isPending ||
-        isUpdating;
-
-    const isLoading =
-        formState.isSubmitting ||
-        isPending ||
-        isUpdating;
 
     const onPress = async () => {
         if (formState.isSubmitting) {
@@ -276,9 +205,12 @@ const SubmitCarePlanForm = () => {
             }}
             onPress={onPress}
             themeInverse
-            disabled={isDisabled}
+            disabled={
+                formState.isSubmitting ||
+                isPending
+            }
         >
-            {isLoading && (
+            {formState.isSubmitting && (
                 <View>
                     <Spinner size="small" />
                 </View>
