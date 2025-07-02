@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    cron \
     && rm -rf /var/lib/apt/lists/* \
     && install-php-extensions \
     pcntl \
@@ -23,12 +24,16 @@ RUN apt-get update && apt-get install -y \
     pgsql \
     gd
 
-# Copy application code and built vendor
+# Set up the cron job for Laravel Scheduler
+RUN (crontab -l ; echo "* * * * * cd /app && php artisan schedule:run >> /dev/null 2>&1") | crontab -
+
 WORKDIR /app
 COPY --from=builder /app/vendor ./vendor
 COPY . /app
 
-# Run the application using PHP Octane with FrankenPHP
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8000"]
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 EXPOSE 8000
+
+CMD ["/start.sh"]
