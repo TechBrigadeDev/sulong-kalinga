@@ -90,7 +90,7 @@ class AuthApiController extends Controller
             }
         }
 
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         // Build uniform response
