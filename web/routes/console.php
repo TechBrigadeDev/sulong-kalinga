@@ -45,11 +45,11 @@ Schedule::command('visitations:update-statuses')
     ->dailyAt('00:05')
     ->description('Update visitation statuses based on dates');
 
-Schedule::command('db:optimize')
-    ->weekly()
-    ->sundays()
-    ->at('02:00')
-    ->description('Optimize database tables');
+// Schedule::command('db:optimize')
+//     ->weekly()
+//     ->sundays()
+//     ->at('02:00')
+//     ->description('Optimize database tables');
 
 Schedule::command('medications:send-reminders morning')->dailyAt('07:00');
 Schedule::command('medications:send-reminders noon')->dailyAt('11:30');
