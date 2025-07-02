@@ -31,7 +31,7 @@ WORKDIR /app
 COPY --from=builder /app/vendor ./vendor
 COPY . /app
 
-COPY start.sh /start.sh
+COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
 EXPOSE 8000
