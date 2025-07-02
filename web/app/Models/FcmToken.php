@@ -13,6 +13,7 @@ class FcmToken extends Model
         'user_id',
         'role',
         'token',
+        'mobile_device_id',
     ];
 
     protected $casts = [
@@ -38,6 +39,14 @@ class FcmToken extends Model
     }
 
     /**
+     * Device associated with this token
+     */
+    public function device()
+    {
+        return $this->belongsTo(MobileDevice::class, 'mobile_device_id');
+    }
+
+    /**
      * Scope to get tokens by user and role
      */
     public function scopeByUser($query, $userId, $role)
@@ -46,25 +55,39 @@ class FcmToken extends Model
     }
 
     /**
-     * Register or update FCM token for a user (replaces existing tokens)
+     * Register or update FCM token for a user and device (device-specific)
+     * @param int $userId
+     * @param string $role
+     * @param string $token
+     * @param int $mobileDeviceId
+     * @return static
      */
-    public static function registerToken($userId, $role, $token)
+    public static function registerToken($userId, $role, $token, $mobileDeviceId)
     {
-        // Delete existing tokens for this user and role to ensure only one active token
-        static::where('user_id', $userId)->where('role', $role)->delete();
-        
-        return static::create([
-            'user_id' => $userId,
-            'role' => $role,
-            'token' => $token,
-        ]);
+        return static::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'role' => $role,
+                'mobile_device_id' => $mobileDeviceId,
+            ],
+            [
+                'token' => $token,
+            ]
+        );
     }
 
     /**
-     * Get FCM token by user ID and role
+     * Get FCM token by user ID, role, and device
+     * @param int $userId
+     * @param string $role
+     * @param int $mobileDeviceId
+     * @return static|null
      */
-    public static function getTokenByUser($userId, $role)
+    public static function getTokenByUserAndDevice($userId, $role, $mobileDeviceId)
     {
-        return static::where('user_id', $userId)->where('role', $role)->first();
+        return static::where('user_id', $userId)
+            ->where('role', $role)
+            ->where('mobile_device_id', $mobileDeviceId)
+            ->first();
     }
 }

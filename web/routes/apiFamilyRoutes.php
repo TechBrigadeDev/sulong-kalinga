@@ -65,6 +65,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . 
     // FCM Push Notifications
     Route::post('/fcm/register', [FcmApiController::class, 'register']);
     Route::get('/fcm/token', [FcmApiController::class, 'getToken']);
+    Route::post('/fcm/revoke', [FcmApiController::class, 'revoke']);
 
     // Messaging
     Route::get('/messaging/unread-count', [MessagingApiController::class, 'unreadCount']);
