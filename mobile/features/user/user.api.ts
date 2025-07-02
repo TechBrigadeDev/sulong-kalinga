@@ -62,8 +62,7 @@ class UserController extends Controller {
         const formData = {
             email: data.new_email,
             new_email: data.new_email,
-            current_password:
-                data.current_password,
+            password: data.current_password,
         };
 
         try {
@@ -100,6 +99,7 @@ class UserController extends Controller {
             console.error(
                 "Error updating email:",
                 error,
+                JSON.stringify(error, null, 2),
             );
             throw error;
         }

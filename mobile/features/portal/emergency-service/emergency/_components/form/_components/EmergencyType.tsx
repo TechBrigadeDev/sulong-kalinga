@@ -28,6 +28,7 @@ const EmergencyType = () => {
                 onValueChange={(value) => {
                     field.handleChange(value);
                 }}
+                disablePreventBodyScroll
             >
                 <Select.Trigger
                     disabled={isLoading}

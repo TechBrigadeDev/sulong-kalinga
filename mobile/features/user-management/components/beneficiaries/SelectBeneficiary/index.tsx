@@ -232,6 +232,7 @@ const SelectBeneficiary = ({
                     selectedBeneficiary || null,
                 );
             }}
+            disablePreventBodyScroll
         >
             <Select.Trigger
                 style={{

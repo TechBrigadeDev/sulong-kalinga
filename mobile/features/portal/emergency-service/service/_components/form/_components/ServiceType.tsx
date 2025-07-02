@@ -32,6 +32,7 @@ const ServiceType = () => {
                     );
                     field.handleChange(value);
                 }}
+                disablePreventBodyScroll
             >
                 <Select.Trigger
                     disabled={isLoading}
