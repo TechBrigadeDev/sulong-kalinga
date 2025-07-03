@@ -1,6 +1,8 @@
-import { useFocusEffect } from "@react-navigation/native";
 import TabScroll from "components/tabs/TabScroll";
-import { Stack } from "expo-router";
+import {
+    Stack,
+    useFocusEffect,
+} from "expo-router";
 import { IRecordDetail } from "features/records/interface";
 import {
     ArrowLeft,
@@ -163,8 +165,6 @@ const Form = ({ record }: Props) => {
                 },
             });
         } else {
-
-
         }
 
         return () => {
@@ -181,13 +181,15 @@ const Form = ({ record }: Props) => {
     ]);
 
     // Reset step when component unmounts or user navigates away
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         resetStep();
-    //         formReset();
-    //     }, [resetStep, formReset]),
-    // );
-
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                setRecord(null);
+                resetStep();
+                formReset();
+            };
+        }, [resetStep, formReset, setRecord]),
+    );
 
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {
