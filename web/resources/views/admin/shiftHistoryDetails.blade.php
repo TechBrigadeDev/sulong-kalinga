@@ -74,12 +74,25 @@
                                             <div class="detail-label">Shift Time:</div>
                                             <div class="detail-value" id="detail-shift-time">
                                                 {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
-                                                {{ $shift->time_out ? \Carbon\Carbon::parse($shift->time_out)->format('h:i A') : '--:--' }}
+                                                {{ $shift->updated_at ? \Carbon\Carbon::parse($shift->updated_at)->format('h:i A') : '--:--' }}
                                             </div>
                                         </div>
                                         <div class="detail-row">
                                             <div class="detail-label">{{ T::translate('Total Hours:', 'Kabuuang Oras:')}}</div>
-                                            <div class="detail-value" id="detail-total-hours">8 hours</div>
+                                            <div class="detail-value" id="detail-total-hours">
+                                                @if($shift->updated_at)
+                                                    @php
+                                                        $start = \Carbon\Carbon::parse($shift->time_in);
+                                                        $end = \Carbon\Carbon::parse($shift->updated_at);
+                                                        $totalMinutes = $start->diffInMinutes($end);
+                                                        $hours = floor($totalMinutes / 60);
+                                                        $minutes = $totalMinutes % 60;
+                                                    @endphp
+                                                    {{ $hours }} hours{{ $minutes > 0 ? ' ' . $minutes . ' minutes' : '' }}
+                                                @else
+                                                    In Progress
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -114,7 +127,8 @@
                                         @forelse($tracks as $track)
                                             <tr>
                                                 <td>
-                                                    {{ \Carbon\Carbon::parse($track->recorded_at)->format('h:i A') }}
+                                                    {{-- Use created_at instead of recorded_at for correct time --}}
+                                                    {{ \Carbon\Carbon::parse($track->created_at)->format('h:i A') }}
                                                 </td>
                                                 <td>
                                                     <i class="bi bi-geo-alt-fill text-primary me-2"></i>
