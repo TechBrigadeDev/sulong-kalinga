@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\ShiftTrackApiController;
 use App\Http\Controllers\Api\RecordsManagementApiController;
 use App\Http\Middleware\RoleMiddleware;
 use App\Services\NotificationService;
+// use App\Http\Controllers\NotifyCareManagerController;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -36,6 +37,10 @@ Route::get('/public-test', function () {
 Route::post('/login', [AuthApiController::class, 'login']);
 
 // Route::get('/test-google-map', [\App\Http\Controllers\BeneficiaryController::class, 'testGoogleMap']);
+
+
+// // Example for web.php (for quick testing, no auth)
+// Route::post('/test-notify-care-managers', [NotifyCareManagerController::class, 'notifyAll']);
 
 
 // Protected Routes

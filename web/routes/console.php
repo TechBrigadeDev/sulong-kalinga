@@ -41,9 +41,9 @@ Schedule::command('visitations:cleanup-old-occurrences --months=12')
     ->at('01:00')
     ->description('Clean up old visitation occurrences');
 
-Schedule::command('visitations:update-statuses')
-    ->dailyAt('00:05')
-    ->description('Update visitation statuses based on dates');
+// Schedule::command('visitations:update-statuses')
+//     ->dailyAt('00:05')
+//     ->description('Update visitation statuses based on dates');
 
 // Schedule::command('db:optimize')
 //     ->weekly()
@@ -55,7 +55,9 @@ Schedule::command('medications:send-reminders morning')->dailyAt('07:00');
 Schedule::command('medications:send-reminders noon')->dailyAt('11:30');
 Schedule::command('medications:send-reminders evening')->dailyAt('17:00');
 Schedule::command('medications:send-reminders night')->dailyAt('20:00');
-Schedule::command('medications:send-exact-reminders')->everyMinute();
+Schedule::command('medications:send-exact-reminders')
+    ->everyMinute()
+    ->appendOutputTo(storage_path('logs/cron-medications.log')); // Add this line
 
 Schedule::command('appointments:send-exact-reminders')->everyMinute();
 Schedule::command('visitations:send-exact-reminders')->everyMinute();

@@ -238,7 +238,13 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            'New Service Request Submitted',
+            "{$beneficiaryName} has submitted a new service request."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             'New Service Request Submitted',
             "{$beneficiaryName} has submitted a new service request."
         );
@@ -354,7 +360,13 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            'Service Request Updated',
+            "{$beneficiaryName} has updated a service request."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             'Service Request Updated',
             "{$beneficiaryName} has updated a service request."
         );
@@ -464,8 +476,13 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
-        // Notify all care managers
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            'New Emergency Notice Submitted',
+            "{$beneficiaryName} has submitted a new emergency notice."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             'New Emergency Notice Submitted',
             "{$beneficiaryName} has submitted a new emergency notice."
         );
@@ -515,7 +532,13 @@ class EmergencyServiceRequestApiController extends Controller
 
         $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
 
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            'Emergency Notice Updated',
+            "{$beneficiaryName} has updated an emergency notice."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             'Emergency Notice Updated',
             "{$beneficiaryName} has updated an emergency notice."
         );
@@ -618,7 +641,13 @@ class EmergencyServiceRequestApiController extends Controller
 
         $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
 
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            'Emergency Notice Deleted',
+            "{$beneficiaryName} has deleted an emergency notice."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             'Emergency Notice Deleted',
             "{$beneficiaryName} has deleted an emergency notice."
         );
@@ -719,7 +748,13 @@ class EmergencyServiceRequestApiController extends Controller
 
         $beneficiaryName = trim($beneficiary->first_name . ' ' . $beneficiary->last_name);
 
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            'Service Request Deleted',
+            "{$beneficiaryName} has deleted a service request."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             'Service Request Deleted',
             "{$beneficiaryName} has deleted a service request."
         );
@@ -862,8 +897,13 @@ class EmergencyServiceRequestApiController extends Controller
             }
         }
 
-        // Notify all care managers
+        // Notify all care managers (push/in-app)
         $this->notificationService->notifyAllCareManagers(
+            $notificationTitle,
+            "{$notificationMessage} for {$beneficiaryName} was cancelled."
+        );
+        // Notify all care managers (email)
+        $this->notificationService->notifyAllCareManagersByEmail(
             $notificationTitle,
             "{$notificationMessage} for {$beneficiaryName} was cancelled."
         );
