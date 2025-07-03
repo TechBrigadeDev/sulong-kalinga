@@ -3,10 +3,10 @@
     width: 90vw;      /* responsive width */
 }
 
-.navbar-nav .dropdown-menu {
+.navbar-nav .dropdown-menu .dropdown-notifications {
     width: 500px; /* Adjust width as needed */
     max-height: 400px; /* Limit height for better UX */
-    overflow-y: auto; /* Enable scrolling if content exceeds height */
+   
 }
 
 .message-dropdown {
@@ -162,7 +162,7 @@
     .notification-list {
         max-height: 500px;
         min-width: 350px;
-        overflow-y: auto;
+        overflow-y: hidden;
     }
 
     .notification-item {
