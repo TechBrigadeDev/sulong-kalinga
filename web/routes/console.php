@@ -41,9 +41,9 @@ Schedule::command('visitations:cleanup-old-occurrences --months=12')
     ->at('01:00')
     ->description('Clean up old visitation occurrences');
 
-Schedule::command('visitations:update-statuses')
-    ->dailyAt('00:05')
-    ->description('Update visitation statuses based on dates');
+// Schedule::command('visitations:update-statuses')
+//     ->dailyAt('00:05')
+//     ->description('Update visitation statuses based on dates');
 
 // Schedule::command('db:optimize')
 //     ->weekly()

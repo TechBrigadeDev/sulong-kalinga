@@ -27,14 +27,12 @@ class SendExactVisitationReminders extends Command
     public function handle()
     {
         $now = Carbon::now();
-        // Calculate target time range (5 minutes from now)
         $targetTime = $now->copy()->addMinutes(5);
         $targetHour = $targetTime->format('H');
         $targetMinute = $targetTime->format('i');
         
         $this->info("Checking for visitations scheduled at approximately " . $targetTime->format('Y-m-d H:i'));
 
-        // Fetch visitation occurrences that start in 5 minutes
         $occurrences = VisitationOccurrence::with('visitation')
             ->whereHas('visitation', function($q) use ($targetHour, $targetMinute) {
                 $q->whereRaw("EXTRACT(HOUR FROM start_time) = ?", [$targetHour])
@@ -46,8 +44,13 @@ class SendExactVisitationReminders extends Command
 
         $count = 0;
         foreach ($occurrences as $occurrence) {
-            $this->sendReminder($occurrence);
-            $count++;
+            // Unique cache key per occurrence, date, and time
+            $cacheKey = 'visit_reminder_sent_' . $occurrence->id . '_' . $now->toDateString() . '_' . $targetHour . $targetMinute;
+            if (!cache()->has($cacheKey)) {
+                $this->sendReminder($occurrence);
+                cache()->put($cacheKey, true, now()->addMinutes(15));
+                $count++;
+            }
         }
 
         $this->info("Sent {$count} visitation reminders at {$now->format('Y-m-d H:i')}");

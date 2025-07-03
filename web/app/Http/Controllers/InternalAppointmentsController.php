@@ -1779,6 +1779,13 @@ class InternalAppointmentsController extends Controller
             if (!$appointment) {
                 continue;
             }
+
+            // Unique cache key per occurrence
+            $cacheKey = 'internal_appt_reminder_sent_' . $occurrence->occurrence_id;
+            if (cache()->has($cacheKey)) {
+                continue;
+            }
+            cache()->put($cacheKey, true, now()->addDay()); // Cache for 24 hours
             
             // Format date and time for notification
             $formattedDate = Carbon::parse($occurrence->occurrence_date)->format('F j, Y');
