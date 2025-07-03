@@ -9,6 +9,10 @@ import {
  * Maps the care plan form data to the expected backend API format
  * based on PHP validation rules
  * Returns FormData object for file upload support
+ *
+ * Note: The illness field is treated as a comma-separated string in the form
+ * but mapped to separate illness[x] array entries for the backend API.
+ * This allows multiple illnesses to be sent as individual form data entries.
  */
 export async function mapCarePlanFormToApiData(
     formData: CarePlanFormData,
@@ -65,11 +69,25 @@ export async function mapCarePlanFormToApiData(
         formData.personalDetails.respiratoryRate.toString(),
     );
 
+    // Handle illness as array for comma-separated illnesses
     if (formData.personalDetails.illness) {
-        formDataObj.append(
-            "illness",
-            formData.personalDetails.illness,
-        );
+        // Split by comma, trim whitespace, and filter out empty strings
+        const illnessArray =
+            formData.personalDetails.illness
+                .split(",")
+                .map((illness) => illness.trim())
+                .filter(
+                    (illness) =>
+                        illness.length > 0,
+                );
+
+        // Append each illness as illness[index] to match backend expectations
+        illnessArray.forEach((illness, index) => {
+            formDataObj.append(
+                `illness[${index}]`,
+                illness,
+            );
+        });
     }
 
     // Evaluation mapping
@@ -163,7 +181,7 @@ export interface CarePlanApiData {
     body_temperature: number;
     pulse_rate: number;
     respiratory_rate: number;
-    illness: string | null;
+    illness: string[] | null; // Changed to string array to reflect the array mapping
     evaluation_recommendations: string;
     photo: File;
     selected_interventions: string[];

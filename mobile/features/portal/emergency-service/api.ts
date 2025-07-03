@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { Controller } from "common/api";
 import { listResponseSchema } from "common/schema";
 import { IRole } from "features/auth/auth.interface";
@@ -7,7 +8,6 @@ import {
     emergencyServiceHistorySchema,
     emergencyServiceRequestSchema,
 } from "./schema";
-import { AxiosError } from "axios";
 
 class EmergencyServicenController extends Controller {
     async getActiveRequests(role: IRole) {

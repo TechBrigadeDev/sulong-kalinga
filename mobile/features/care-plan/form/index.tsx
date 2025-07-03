@@ -104,7 +104,6 @@ const Form = ({ record }: Props) => {
     };
 
     useEffect(() => {
-        console.log("has record", record);
         if (record) {
             setRecord(record);
             formReset({
@@ -164,7 +163,6 @@ const Form = ({ record }: Props) => {
                         "",
                 },
             });
-        } else {
         }
 
         return () => {
@@ -180,7 +178,6 @@ const Form = ({ record }: Props) => {
         formHasValues,
     ]);
 
-    // Reset step when component unmounts or user navigates away
     useFocusEffect(
         useCallback(() => {
             return () => {

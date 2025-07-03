@@ -12,7 +12,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Providers from "~/components/Providers";
 import { authStore } from "~/features/auth/auth.store";
 import { notificationHandler } from "~/features/notification/service";
-import { useRegisterNotification } from "../features/notification/hook";
 
 export {
     // Catch any errors thrown by the Layout component.

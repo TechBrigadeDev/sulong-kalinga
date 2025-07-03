@@ -199,3 +199,36 @@ export const useRegisterNotification = () => {
             : 1000 * 60 * 60 * 24,
     });
 };
+
+export const useRevokeNotificationToken = () => {
+    const {
+        role,
+        token,
+        notificationToken,
+        setNotificationToken,
+    } = authStore();
+
+    return useMutation({
+        mutationFn: async () => {
+            if (
+                !role ||
+                !token ||
+                !notificationToken
+            ) {
+                throw new Error(
+                    "Role or token is not defined",
+                );
+            }
+
+            const response =
+                await api.revokeNotificationToken(
+                    role,
+                    notificationToken,
+                );
+            if (response.success) {
+                setNotificationToken(null);
+            }
+            return response;
+        },
+    });
+};
