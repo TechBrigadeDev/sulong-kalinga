@@ -421,10 +421,18 @@ class EmergencyAndRequestController extends Controller
             // Save changes
             $update->save();
             $notice->save();
-            
-            // Send notifications to relevant parties
+
+            // Send notifications to relevant parties (push/in-app)
             $this->sendEmergencyNotifications($notice, $update, $user);
-            
+
+            // Notify all care managers (push/in-app)
+            $subject = 'Emergency Notice Update';
+            $emailMessage = "Emergency notice for {$notice->beneficiary->first_name} {$notice->beneficiary->last_name} has been updated by {$user->first_name} {$user->last_name}.\n\n{$update->message}";
+            $this->notificationService->notifyAllCareManagers($subject, $emailMessage);
+
+            // Notify all care managers (email)
+            $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage);
+
             // Log this action
             $this->logService->createLog(
                 'emergency_notice',
@@ -568,10 +576,18 @@ class EmergencyAndRequestController extends Controller
             // Save changes
             $serviceRequest->save();
             $update->save();
-            
-            // Send notifications
+
+            // Send notifications to relevant parties (push/in-app)
             $this->sendServiceRequestNotifications($serviceRequest, $update, $user);
-            
+
+            // Notify all care managers (push/in-app)
+            $subject = 'Service Request Update';
+            $emailMessage = "Service request for {$serviceRequest->beneficiary->first_name} {$serviceRequest->beneficiary->last_name} has been updated by {$user->first_name} {$user->last_name}.\n\n{$update->message}";
+            $this->notificationService->notifyAllCareManagers($subject, $emailMessage);
+
+            // Notify all care managers (email)
+            $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage);
+
             // Log this action
             $this->logService->createLog(
                 'service_request',
@@ -682,6 +698,14 @@ class EmergencyAndRequestController extends Controller
             }
             
             \DB::commit();
+
+            // Notify all care managers (push/in-app)
+            $subject = 'Record Archived';
+            $emailMessage = "A record (type: {$request->record_type}, ID: {$request->record_id}) has been archived by {$user->first_name} {$user->last_name}.";
+            $this->notificationService->notifyAllCareManagers($subject, $emailMessage);
+
+            // Notify all care managers (email)
+            $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage);
             
             return response()->json([
                 'success' => true,
@@ -750,16 +774,19 @@ class EmergencyAndRequestController extends Controller
             $message = $request->message ?? "This {$typeName} requires your attention.";
             $title = "Reminder: Pending {$typeName} for " . $record->beneficiary->first_name . ' ' . $record->beneficiary->last_name;
             
-            foreach ($careManagers as $careManager) {
-                if ($careManager->id != $actor->id) {
-                    $this->notificationService->notifyStaff(
-                        $careManager->id,
-                        $title,
-                        $message
-                    );
-                }
-            }
-            
+            // foreach ($careManagers as $careManager) {
+            //     if ($careManager->id != $actor->id) {
+            //         $this->notificationService->notifyStaff(
+            //             $careManager->id,
+            //             $title,
+            //             $message
+            //         );
+            //     }
+            // }
+
+            $this->notificationService->notifyAllCareManagers($title, $message);
+            $this->notificationService->notifyAllCareManagersByEmail($title, $message);
+                        
             // Log the reminder
             $this->logService->createLog(
                 $request->record_type === 'emergency' ? 'emergency_notice' : 'service_request',
