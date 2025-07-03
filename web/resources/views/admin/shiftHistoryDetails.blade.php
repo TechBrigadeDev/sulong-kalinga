@@ -34,9 +34,13 @@
                     <a href="{{ route('admin.shift.histories.index') }}" class="btn btn-secondary btn-sm d-inline-flex d-md-none">
                         <i class="bi bi-arrow-left me-2"></i>{{ T::translate('Back', 'BUmalik')}}
                     </a>
-                    <button class="btn btn-primary btn-sm">
-                        <i class="bi bi-download me-2"></i>Export Report
-                    </button>
+                    <a 
+                        href="{{ route(request()->is('care-manager/*') ? 'care-manager.shift.histories.exportPdf' : 'admin.shift.histories.exportPdf', ['shiftId' => $shift->id]) }}" 
+                        class="btn btn-primary btn-sm"
+                        target="_blank"
+                    >
+                        <i class="bi bi-download me-2"></i>{{ T::translate('Export Report', 'I-Export ang Report')}}
+                    </a>
                 </div>
             </div>
             <div class="row" id="home-content">
