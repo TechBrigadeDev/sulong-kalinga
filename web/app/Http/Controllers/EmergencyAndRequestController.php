@@ -431,7 +431,7 @@ class EmergencyAndRequestController extends Controller
             $this->notificationService->notifyAllCareManagers($subject, $emailMessage);
 
             // Notify all care managers (email)
-            $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage);
+            // $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage); // NOT NEEDED FOR NOW
 
             // Log this action
             $this->logService->createLog(
@@ -586,7 +586,7 @@ class EmergencyAndRequestController extends Controller
             $this->notificationService->notifyAllCareManagers($subject, $emailMessage);
 
             // Notify all care managers (email)
-            $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage);
+            // $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage); // NOT NEEDED FOR NOW
 
             // Log this action
             $this->logService->createLog(
@@ -705,7 +705,7 @@ class EmergencyAndRequestController extends Controller
             $this->notificationService->notifyAllCareManagers($subject, $emailMessage);
 
             // Notify all care managers (email)
-            $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage);
+            // $this->notificationService->notifyAllCareManagersByEmail($subject, $emailMessage); // NOT NEEDED FOR NOW
             
             return response()->json([
                 'success' => true,
@@ -771,7 +771,7 @@ class EmergencyAndRequestController extends Controller
             }
             
             // Create the notification
-            $message = $request->message ?? "This {$typeName} requires your attention.";
+            $message = "Care Worker: {$user->first_name} {$user->last_name} sent the following reminder:\n\n" . ($request->message ?? "This {$typeName} requires your attention.");
             $title = "Reminder: Pending {$typeName} for " . $record->beneficiary->first_name . ' ' . $record->beneficiary->last_name;
             
             // foreach ($careManagers as $careManager) {
