@@ -54,6 +54,7 @@ const UpdateEmail = () => {
                 );
                 return;
             }
+
             await updateEmail(validate.data);
         },
     });
