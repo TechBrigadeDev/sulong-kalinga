@@ -26,18 +26,34 @@ class SendExactVisitationReminders extends Command
 
     public function handle()
     {
-        $now = Carbon::now()->format('Y-m-d H:i:00'); // Current minute
+        $now = Carbon::now();
+        $targetTime = $now->copy()->addMinutes(5);
+        $targetHour = $targetTime->format('H');
+        $targetMinute = $targetTime->format('i');
+        
+        $this->info("Checking for visitations scheduled at approximately " . $targetTime->format('Y-m-d H:i'));
 
-        // Fetch visitation occurrences that need a reminder at this exact minute
-        $occurrences = VisitationOccurrence::where('reminder_time', $now)->get();
+        $occurrences = VisitationOccurrence::with('visitation')
+            ->whereHas('visitation', function($q) use ($targetHour, $targetMinute) {
+                $q->whereRaw("EXTRACT(HOUR FROM start_time) = ?", [$targetHour])
+                ->whereRaw("EXTRACT(MINUTE FROM start_time) = ?", [$targetMinute]);
+            })
+            ->where('occurrence_date', $now->toDateString())
+            ->where('status', 'scheduled')
+            ->get();
 
         $count = 0;
         foreach ($occurrences as $occurrence) {
-            $this->sendReminder($occurrence);
-            $count++;
+            // Unique cache key per occurrence, date, and time
+            $cacheKey = 'visit_reminder_sent_' . $occurrence->id . '_' . $now->toDateString() . '_' . $targetHour . $targetMinute;
+            if (!cache()->has($cacheKey)) {
+                $this->sendReminder($occurrence);
+                cache()->put($cacheKey, true, now()->addMinutes(15));
+                $count++;
+            }
         }
 
-        $this->info("Sent {$count} exact visitation reminders at {$now}");
+        $this->info("Sent {$count} visitation reminders at {$now->format('Y-m-d H:i')}");
         return 0;
     }
 
