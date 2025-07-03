@@ -92,7 +92,7 @@
                                                         <a href="{{ route('care-manager.shift.histories.shiftDetails', ['shiftId' => $shift->id]) }}">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        <a href="{{ route('admin.shift.histories.exportPdf', ['shiftId' => $shift->id]) }}" title="Download Report" target="_blank">
+                                                        <a href="{{ route('care-manager.shift.histories.exportPdf', ['shiftId' => $shift->id]) }}" title="Download Report" target="_blank">
                                                             <i class="bi bi-download"></i>
                                                         </a>
                                                     </div>

@@ -31,9 +31,6 @@
                     <a href="{{ route('care-worker.beneficiaries.index') }}" class="btn btn-secondary mobile-back-btn" style="height: 33px;">
                         <i class="bi bi-arrow-left"></i> {{ T::translate('Back', 'Bumalik')}}
                     </a>
-                    <a href="{{ route('care-worker.beneficiaries.edit', $beneficiary->beneficiary_id) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit', 'I-Edit')}}
-                    </a>
                 </div>
             </div>
             <div class="row" id="home-content">
