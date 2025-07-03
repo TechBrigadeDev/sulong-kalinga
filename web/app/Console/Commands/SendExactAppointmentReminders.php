@@ -25,10 +25,20 @@ class SendExactAppointmentReminders extends Command
 
     public function handle()
     {
-        $now = Carbon::now()->format('Y-m-d H:i:00'); // Current minute
+        $now = Carbon::now();
+        // Calculate target time range (5 minutes from now)
+        $targetTime = $now->copy()->addMinutes(5);
+        $targetHour = $targetTime->format('H');
+        $targetMinute = $targetTime->format('i');
+        
+        $this->info("Checking for appointments scheduled at approximately " . $targetTime->format('Y-m-d H:i'));
 
-        // Fetch appointments that need a reminder at this exact minute
-        $appointments = Appointment::where('reminder_time', $now)->get();
+        // Fetch appointments that start in 5 minutes
+        $appointments = Appointment::where('status', 'scheduled')
+            ->whereDate('date', $now->toDateString())
+            ->whereRaw("EXTRACT(HOUR FROM start_time) = ?", [$targetHour])
+            ->whereRaw("EXTRACT(MINUTE FROM start_time) = ?", [$targetMinute])
+            ->get();
 
         $count = 0;
         foreach ($appointments as $appointment) {
@@ -36,7 +46,7 @@ class SendExactAppointmentReminders extends Command
             $count++;
         }
 
-        $this->info("Sent {$count} exact appointment reminders at {$now}");
+        $this->info("Sent {$count} appointment reminders at {$now->format('Y-m-d H:i')}");
         return 0;
     }
 

@@ -55,7 +55,9 @@ Schedule::command('medications:send-reminders morning')->dailyAt('07:00');
 Schedule::command('medications:send-reminders noon')->dailyAt('11:30');
 Schedule::command('medications:send-reminders evening')->dailyAt('17:00');
 Schedule::command('medications:send-reminders night')->dailyAt('20:00');
-Schedule::command('medications:send-exact-reminders')->everyMinute();
+Schedule::command('medications:send-exact-reminders')
+    ->everyMinute()
+    ->appendOutputTo(storage_path('logs/cron-medications.log')); // Add this line
 
 Schedule::command('appointments:send-exact-reminders')->everyMinute();
 Schedule::command('visitations:send-exact-reminders')->everyMinute();
