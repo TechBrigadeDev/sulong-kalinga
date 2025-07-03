@@ -5,10 +5,12 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Visitation;
 use App\Models\VisitationOccurrence;
+use App\Models\Notification;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\NotificationService;
 
