@@ -1,5 +1,7 @@
+import ScrollView from "components/ScrollView";
+import { Stack } from "expo-router";
 import { IVisitation } from "features/scheduling/visitation/type";
-import { YStackProps } from "tamagui";
+import { YStack, YStackProps } from "tamagui";
 
 import BeneficiaryCard from "./components/BeneficiaryCard";
 import CareWorkerCard from "./components/CareWorkerCard";
@@ -20,48 +22,56 @@ const VisitationDetail = ({
 
     return (
         <>
-            <BeneficiaryCard
-                name={beneficiaryFullName}
+            <Stack.Screen
+                options={{
+                    headerTitle:
+                        beneficiaryFullName,
+                }}
             />
-            <CareWorkerCard
-                name={careWorkerFullName}
-            />
-            {/* <VisitDetailsCard
-                date={new Date(
-                    visitation.visitation_date,
-                ).toLocaleDateString()}
-                time={
-                    visitation.is_flexible_time
-                        ? "Flexible Time"
-                        : `${new Date(visitation.start_time ?? "").toLocaleTimeString()} - ${new Date(visitation.end_time ?? "").toLocaleTimeString()}`
-                }
-                type={visitation.visit_type}
-                status={visitation.status}
-            /> */}
-            <LocationCard
-                location={
-                    visitation.beneficiary
-                        .street_address
-                }
-            />
-            <StatusCard
-                beneficiaryConfirmed={
-                    !!visitation.confirmed_by_beneficiary
-                }
-                familyConfirmed={
-                    !!visitation.confirmed_by_family
-                }
-                confirmedOn={
-                    visitation.confirmed_on
-                        ? new Date(
-                              visitation.confirmed_on,
-                          ).toLocaleDateString()
-                        : undefined
-                }
-            />
-            <NotesCard
-                notes={visitation.notes || ""}
-            />
+            <ScrollView
+                flex={1}
+                style={{
+                    backgroundColor: "#f9fafb",
+                }}
+                contentContainerStyle={{
+                    paddingBlockEnd: 110,
+                }}
+            >
+                <YStack gap="$4" p="$4">
+                    <BeneficiaryCard
+                        name={beneficiaryFullName}
+                    />
+                    <CareWorkerCard
+                        name={careWorkerFullName}
+                    />
+                    <LocationCard
+                        location={
+                            visitation.beneficiary
+                                .street_address
+                        }
+                    />
+                    <StatusCard
+                        beneficiaryConfirmed={
+                            !!visitation.confirmed_by_beneficiary
+                        }
+                        familyConfirmed={
+                            !!visitation.confirmed_by_family
+                        }
+                        confirmedOn={
+                            visitation.confirmed_on
+                                ? new Date(
+                                      visitation.confirmed_on,
+                                  ).toLocaleDateString()
+                                : undefined
+                        }
+                    />
+                    <NotesCard
+                        notes={
+                            visitation.notes || ""
+                        }
+                    />
+                </YStack>
+            </ScrollView>
         </>
     );
 };

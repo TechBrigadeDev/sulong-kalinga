@@ -1,6 +1,8 @@
-import { useFocusEffect } from "@react-navigation/native";
 import TabScroll from "components/tabs/TabScroll";
-import { Stack } from "expo-router";
+import {
+    Stack,
+    useFocusEffect,
+} from "expo-router";
 import { IRecordDetail } from "features/records/interface";
 import {
     ArrowLeft,
@@ -31,6 +33,7 @@ import {
     useCarePlanForm,
 } from "./form";
 import { useCarePlanFormStore } from "./store";
+import { CarePlanFormData } from "./type";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
@@ -43,6 +46,31 @@ const FORM_STEPS = [
     { label: "Household Keeping" },
     { label: "Evaluation" },
 ];
+
+// Helper function to get default form values for create mode
+const getDefaultFormValues =
+    (): Partial<CarePlanFormData> => ({
+        personalDetails: {
+            beneficiaryId: "",
+            illness: "",
+            assessment: "",
+            bloodPressure: "",
+            pulseRate: 72,
+            temperature: 36.5,
+            respiratoryRate: 16,
+        },
+        mobility: [],
+        cognitive: [],
+        selfSustainability: [],
+        diseaseTherapy: [],
+        socialContact: [],
+        outdoorActivity: [],
+        householdKeeping: [],
+        evaluation: {
+            pictureUri: "",
+            recommendations: "",
+        },
+    });
 
 interface Props {
     record?: IRecordDetail;
@@ -57,11 +85,8 @@ const Form = ({ record }: Props) => {
         resetStep,
     } = useCarePlanFormStore();
 
-    const { reset: formReset, getValues } =
+    const { reset: formReset } =
         useCarePlanForm();
-
-    const formHasValues =
-        Object.keys(getValues()).length > 0;
 
     // Helper function to map interventions for each category
     const mapInterventions = (
@@ -102,7 +127,6 @@ const Form = ({ record }: Props) => {
     };
 
     useEffect(() => {
-        console.log("has record", record);
         if (record) {
             setRecord(record);
             formReset({
@@ -162,32 +186,43 @@ const Form = ({ record }: Props) => {
                         "",
                 },
             });
-        } else {
-
-
         }
 
         return () => {
             console.log(
                 "Form reset on record change or unmount",
             );
-            formReset({});
+            formReset(getDefaultFormValues());
         };
-    }, [
-        record,
-        setRecord,
-        formReset,
-        formHasValues,
-    ]);
+    }, [record, setRecord, formReset]);
 
-    // Reset step when component unmounts or user navigates away
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         resetStep();
-    //         formReset();
-    //     }, [resetStep, formReset]),
-    // );
+    useFocusEffect(
+        useCallback(() => {
+            // Screen focused - ensure proper mode setup
+            if (!record) {
+                // Create mode - reset to clean defaults
+                setRecord(null);
+                resetStep();
+                formReset(getDefaultFormValues());
+            }
 
+            return () => {
+                // Screen blurred - cleanup only if in create mode
+                if (!record) {
+                    setRecord(null);
+                    resetStep();
+                    formReset(
+                        getDefaultFormValues(),
+                    );
+                }
+            };
+        }, [
+            record,
+            resetStep,
+            formReset,
+            setRecord,
+        ]),
+    );
 
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {

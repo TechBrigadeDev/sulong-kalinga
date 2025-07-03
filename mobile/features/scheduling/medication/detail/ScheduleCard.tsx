@@ -38,126 +38,160 @@ const ScheduleCard = (
         as_needed,
     } = props || {};
 
+    const schedules = [
+        {
+            time: "Morning",
+            value: morning_time,
+            withFood: with_food_morning,
+        },
+        {
+            time: "Noon",
+            value: noon_time,
+            withFood: with_food_noon,
+        },
+        {
+            time: "Evening",
+            value: evening_time,
+            withFood: with_food_evening,
+        },
+        {
+            time: "Night",
+            value: night_time,
+            withFood: with_food_night,
+        },
+    ];
+
+    const activeSchedules = schedules.filter(
+        (schedule) => schedule.value,
+    );
+
     return (
-        <Card mb="$2">
-            <Card.Header padded>
-                <XStack gap="$2" items="center">
-                    <Clock size={16} />
-                    <H4>Schedule</H4>
+        <Card
+            elevate
+            mb="$4"
+            p="$4"
+            style={{ borderRadius: 16 }}
+        >
+            <YStack gap="$3">
+                <XStack
+                    style={{
+                        alignItems: "center",
+                    }}
+                    gap="$2"
+                >
+                    <Clock
+                        size={24}
+                        color="#3b82f6"
+                    />
+                    <H4 color="#111827">
+                        Schedule
+                    </H4>
                 </XStack>
-            </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$3">
-                    {as_needed ? (
-                        <XStack
-                            gap="$2"
-                            items="center"
+
+                {activeSchedules.length > 0 ? (
+                    <YStack gap="$3">
+                        {activeSchedules.map(
+                            (schedule, index) => (
+                                <XStack
+                                    key={index}
+                                    style={{
+                                        backgroundColor:
+                                            "#f3f4f6",
+                                        padding: 12,
+                                        borderRadius: 8,
+                                        justifyContent:
+                                            "space-between",
+                                        alignItems:
+                                            "center",
+                                    }}
+                                >
+                                    <YStack gap="$1">
+                                        <Text
+                                            fontSize="$4"
+                                            fontWeight="600"
+                                        >
+                                            {
+                                                schedule.time
+                                            }
+                                        </Text>
+                                        <Text
+                                            fontSize="$5"
+                                            style={{
+                                                color: "#3b82f6",
+                                            }}
+                                            fontWeight="500"
+                                        >
+                                            {formatTime(
+                                                schedule.value!,
+                                            )}
+                                        </Text>
+                                    </YStack>
+                                    {schedule.withFood && (
+                                        <XStack
+                                            style={{
+                                                backgroundColor:
+                                                    "#fed7aa",
+                                                paddingHorizontal: 8,
+                                                paddingVertical: 4,
+                                                borderRadius: 6,
+                                                alignItems:
+                                                    "center",
+                                            }}
+                                            gap="$1"
+                                        >
+                                            <Text
+                                                fontSize="$2"
+                                                style={{
+                                                    color: "#ea580c",
+                                                }}
+                                            >
+                                                With
+                                                food
+                                            </Text>
+                                        </XStack>
+                                    )}
+                                </XStack>
+                            ),
+                        )}
+                    </YStack>
+                ) : as_needed ? (
+                    <YStack
+                        style={{
+                            backgroundColor:
+                                "#fef3c7",
+                            padding: 12,
+                            borderRadius: 8,
+                            alignItems: "center",
+                        }}
+                        gap="$2"
+                    >
+                        <AlertTriangle
+                            size={16}
+                            color="#f59e0b"
+                        />
+                        <Text
+                            fontSize="$4"
+                            style={{
+                                color: "#d97706",
+                            }}
+                            fontWeight="500"
                         >
-                            <AlertTriangle
-                                size={16}
-                                color="#facc15"
-                            />
-                            <Text>
-                                Take as needed
-                            </Text>
-                        </XStack>
-                    ) : (
-                        <>
-                            {morning_time && (
-                                <XStack
-                                    display="flex"
-                                    gap="$2"
-                                >
-                                    <Text>
-                                        Morning
-                                    </Text>
-                                    <XStack gap="$2">
-                                        <Text>
-                                            {formatTime(
-                                                morning_time,
-                                            )}
-                                        </Text>
-                                        {with_food_morning && (
-                                            <Text color="gray">
-                                                (with
-                                                food)
-                                            </Text>
-                                        )}
-                                    </XStack>
-                                </XStack>
-                            )}
-                            {noon_time && (
-                                <XStack
-                                    display="flex"
-                                    gap="$2"
-                                >
-                                    <Text>
-                                        Noon
-                                    </Text>
-                                    <XStack gap="$2">
-                                        <Text>
-                                            {formatTime(
-                                                noon_time,
-                                            )}
-                                        </Text>
-                                        {with_food_noon && (
-                                            <Text color="gray">
-                                                (with
-                                                food)
-                                            </Text>
-                                        )}
-                                    </XStack>
-                                </XStack>
-                            )}
-                            {evening_time && (
-                                <XStack
-                                    display="flex"
-                                    gap="$2"
-                                >
-                                    <Text>
-                                        Evening
-                                    </Text>
-                                    <XStack gap="$2">
-                                        <Text>
-                                            {formatTime(
-                                                evening_time,
-                                            )}
-                                        </Text>
-                                        {with_food_evening && (
-                                            <Text color="gray">
-                                                (with
-                                                food)
-                                            </Text>
-                                        )}
-                                    </XStack>
-                                </XStack>
-                            )}
-                            {night_time && (
-                                <XStack
-                                    display="flex"
-                                    gap="$2"
-                                >
-                                    <Text>
-                                        Night
-                                    </Text>
-                                    <XStack gap="$2">
-                                        <Text>
-                                            {formatTime(
-                                                night_time,
-                                            )}
-                                        </Text>
-                                        {with_food_night && (
-                                            <Text color="gray">
-                                                (with
-                                                food)
-                                            </Text>
-                                        )}
-                                    </XStack>
-                                </XStack>
-                            )}
-                        </>
-                    )}
-                </YStack>
+                            As needed basis
+                        </Text>
+                    </YStack>
+                ) : (
+                    <Text
+                        fontSize="$4"
+                        style={{
+                            color: "#6b7280",
+                            textAlign: "center",
+                        }}
+                        py="$4"
+                    >
+                        No specific schedule times
+                        set
+                    </Text>
+                )}
             </YStack>
         </Card>
     );

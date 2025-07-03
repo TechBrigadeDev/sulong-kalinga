@@ -16,6 +16,10 @@ interface State {
     user: IUser | null;
     setUser: (user: IUser | null) => void;
     clear: () => void;
+    notificationToken: string | null;
+    setNotificationToken: (
+        token: string | null,
+    ) => void;
 }
 
 const store: StateCreator<State> = (set) => ({
@@ -32,6 +36,10 @@ const store: StateCreator<State> = (set) => ({
         set({
             user,
         }),
+    notificationToken: null,
+    setNotificationToken: (token) => {
+        set({ notificationToken: token });
+    },
     clear: () => {
         set({
             token: null,

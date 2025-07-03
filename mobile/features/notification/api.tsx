@@ -161,6 +161,7 @@ class NotificationController extends Controller {
             );
         }
     }
+
     async registerNotification({
         role,
         token,
@@ -210,6 +211,56 @@ class NotificationController extends Controller {
 
             throw new Error(
                 "Failed to register notification token",
+            );
+        }
+    }
+
+    async revokeNotificationToken(
+        role: IRole,
+        token: string,
+    ) {
+        const path = portalPath(
+            role,
+            "/fcm/revoke",
+        );
+
+        try {
+            const response = await this.api.post(
+                path,
+                {
+                    token,
+                },
+            );
+            console.log(
+                "Notification token revoked",
+                response.data,
+            );
+            return response.data;
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                switch (error.status) {
+                    case 500:
+                        log(
+                            "Server error:",
+                            error.message,
+                        );
+                        break;
+                    default:
+                        log(
+                            "Error revoking notification token:",
+                            error.response?.data,
+                            error.message,
+                        );
+                        break;
+                }
+            } else if (
+                error instanceof ZodError
+            ) {
+                log("Zod error:", error.errors);
+            }
+
+            throw new Error(
+                "Failed to revoke notification token",
             );
         }
     }

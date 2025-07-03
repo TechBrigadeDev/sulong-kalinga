@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useToast } from "common/toast";
 import { useRouter } from "expo-router";
+import { useRevokeNotificationToken } from "features/notification/hook";
 
 import { QK } from "~/common/query";
 
@@ -71,8 +72,11 @@ export const useLogin = (params?: {
 };
 
 export const useLogout = () => {
-    const { token, clear } = authStore();
     const router = useRouter();
+
+    const { token, clear } = authStore();
+    const { mutate: revokeToken } =
+        useRevokeNotificationToken();
 
     const { mutateAsync: logout, isPending } =
         useMutation({
@@ -83,9 +87,11 @@ export const useLogout = () => {
                         "No token found",
                     );
                 }
-                await authController.logout(
-                    token,
-                );
+
+                await Promise.all([
+                    authController.logout(token),
+                    revokeToken(),
+                ]);
             },
             onSettled: () => {
                 clear();

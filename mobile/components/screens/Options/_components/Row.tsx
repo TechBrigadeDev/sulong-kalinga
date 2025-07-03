@@ -23,26 +23,48 @@ const OptionRow = ({
     if (!href) {
         return (
             <XStack
-                display="flex"
-                flexDirection="row"
-                items="center"
-                justify="space-between"
-                paddingBlock={15}
-                paddingInline={15}
-                gap={10}
+                p="$3"
+                gap="$3"
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent:
+                        "space-between",
+                    minHeight: 60,
+                }}
             >
                 <XStack
-                    flexDirection="row"
-                    items="center"
-                    gap={10}
+                    gap="$3"
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        flex: 1,
+                    }}
                 >
                     <Icon />
-                    <Text style={style.rowLabel}>
+                    <Text
+                        style={style.rowLabel}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
                         {label}
                     </Text>
                 </XStack>
-                <XStack>
-                    <Text textWrap="stable">
+                <XStack
+                    style={{
+                        maxWidth: "60%",
+                        alignItems: "flex-end",
+                    }}
+                >
+                    <Text
+                        textWrap="wrap"
+                        numberOfLines={0}
+                        fontSize="$4"
+                        style={{
+                            flexShrink: 1,
+                            textAlign: "right",
+                        }}
+                    >
                         {value}
                     </Text>
                 </XStack>
@@ -77,24 +99,45 @@ const Link = ({
         <ExpoLink href={href} asChild>
             <TouchableOpacity style={style.row}>
                 <XStack
-                    gap={10}
-                    style={style.rowLabel}
+                    gap="$3"
+                    style={{
+                        ...style.rowLabel,
+                        flex: 1,
+                    }}
                 >
                     <Icon icon={icon} />
-                    <Text style={style.rowLabel}>
+                    <Text
+                        style={style.rowLabel}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
                         {label}
                     </Text>
                 </XStack>
-                <XStack style={style.rowValue}>
+                <XStack
+                    gap="$2"
+                    style={{
+                        ...style.rowValue,
+                        maxWidth: "60%",
+                        alignItems: "center",
+                    }}
+                >
                     {value && (
-                        <Text>{value}</Text>
+                        <Text
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            style={{
+                                flexShrink: 1,
+                                textAlign:
+                                    "right",
+                            }}
+                        >
+                            {value}
+                        </Text>
                     )}
                     <Chevron
                         size={24}
                         color="#000"
-                        style={{
-                            marginLeft: "auto",
-                        }}
                     />
                 </XStack>
             </TouchableOpacity>

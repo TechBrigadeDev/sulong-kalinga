@@ -18,10 +18,14 @@ export const useEmergencyTypes = () => {
                 .getTypes,
         ],
         queryFn: async () => {
-            const response =
-                await api.getEmergencyTypes(
-                    "beneficiary",
+            if (!role || !token) {
+                throw new Error(
+                    "User role or token is not available",
                 );
+            }
+
+            const response =
+                await api.getEmergencyTypes(role);
 
             return response;
         },

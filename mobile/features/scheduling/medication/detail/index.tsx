@@ -1,6 +1,7 @@
 import ScrollView from "components/ScrollView";
 import { Stack } from "expo-router";
 import { IMedicationSchedule } from "features/scheduling/medication/medication.type";
+import { YStack } from "tamagui";
 
 import DurationCard from "./DurationCard";
 import HeaderCard from "./HeaderCard";
@@ -53,59 +54,81 @@ const MedicationDetail = ({
     const fullName = `${scheduleData.beneficiary?.first_name} ${scheduleData.beneficiary?.last_name}`;
 
     return (
-        <ScrollView>
+        <>
             <Stack.Screen
                 options={{
                     headerTitle: fullName,
                 }}
             />
-            <HeaderCard
-                medication_name={
-                    scheduleData.medication_name
-                }
-                dosage={scheduleData.dosage}
-                medication_type={
-                    scheduleData.medication_type
-                }
-                status={scheduleData.status}
-            />
-            <ScheduleCard
-                morning_time={
-                    scheduleData.morning_time
-                }
-                noon_time={scheduleData.noon_time}
-                evening_time={
-                    scheduleData.evening_time
-                }
-                night_time={
-                    scheduleData.night_time
-                }
-                with_food_morning={
-                    scheduleData.with_food_morning
-                }
-                with_food_noon={
-                    scheduleData.with_food_noon
-                }
-                with_food_evening={
-                    scheduleData.with_food_evening
-                }
-                with_food_night={
-                    scheduleData.with_food_night
-                }
-                as_needed={scheduleData.as_needed}
-            />
-            <DurationCard
-                start_date={
-                    scheduleData.start_date
-                }
-                end_date={scheduleData.end_date}
-            />
-            <SpecialInstructionsCard
-                special_instructions={
-                    scheduleData.special_instructions
-                }
-            />
-        </ScrollView>
+            <ScrollView
+                flex={1}
+                style={{
+                    backgroundColor: "#f9fafb",
+                }}
+                contentContainerStyle={{
+                    paddingBlockEnd: 110,
+                }}
+            >
+                <YStack gap="$4" p="$4">
+                    <HeaderCard
+                        medication_name={
+                            scheduleData.medication_name
+                        }
+                        dosage={
+                            scheduleData.dosage
+                        }
+                        medication_type={
+                            scheduleData.medication_type
+                        }
+                        status={
+                            scheduleData.status
+                        }
+                    />
+                    <ScheduleCard
+                        morning_time={
+                            scheduleData.morning_time
+                        }
+                        noon_time={
+                            scheduleData.noon_time
+                        }
+                        evening_time={
+                            scheduleData.evening_time
+                        }
+                        night_time={
+                            scheduleData.night_time
+                        }
+                        with_food_morning={
+                            scheduleData.with_food_morning
+                        }
+                        with_food_noon={
+                            scheduleData.with_food_noon
+                        }
+                        with_food_evening={
+                            scheduleData.with_food_evening
+                        }
+                        with_food_night={
+                            scheduleData.with_food_night
+                        }
+                        as_needed={
+                            scheduleData.as_needed
+                        }
+                    />
+                    <DurationCard
+                        start_date={
+                            scheduleData.start_date
+                        }
+                        end_date={
+                            scheduleData.end_date
+                        }
+                    />
+                    <SpecialInstructionsCard
+                        special_instructions={
+                            scheduleData.special_instructions
+                        }
+                    />
+                </YStack>
+            </ScrollView>
+        </>
     );
 };
 

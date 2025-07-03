@@ -284,9 +284,7 @@ const SubmitCarePlanForm = () => {
                 </View>
             )}
             <Text>
-                {record?.id
-                    ? "Edit"
-                    : "Create"}{" "}
+                {record?.id ? "Edit" : "Create"}{" "}
                 Weekly Care Plan
             </Text>
         </Button>

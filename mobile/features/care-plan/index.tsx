@@ -56,8 +56,14 @@ class CarePlanController extends Controller {
                                 null,
                                 2,
                             ),
-                            error: error.response
-                                ?.data,
+                            error: JSON.stringify(
+                                error.response
+                                    ?.data,
+                                null,
+                                2,
+                            ),
+                            message:
+                                "An error occurred while submitting the care plan form.",
                             status: error.response
                                 ?.status,
                         });
@@ -141,7 +147,7 @@ class CarePlanController extends Controller {
                     data,
                 );
 
-            const response = await this.api.patch(
+            const response = await this.api.post(
                 `/records/weekly-care-plans/${id}`,
                 apiData,
                 {
@@ -190,17 +196,23 @@ class CarePlanController extends Controller {
                         });
                         break;
                     default:
-                        toastServerError({
-                            data: JSON.stringify(
-                                data,
+                        log(
+                            "Unhandled error while patching care plan:",
+                            JSON.stringify(
+                                {
+                                    reponse:
+                                        error
+                                            .response
+                                            ?.data,
+                                    status: error
+                                        .response
+                                        ?.status,
+                                    data,
+                                },
                                 null,
                                 2,
                             ),
-                            error: error.response
-                                ?.data,
-                            status: error.response
-                                ?.status,
-                        });
+                        );
                 }
             }
             throw error;

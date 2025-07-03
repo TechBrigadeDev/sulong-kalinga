@@ -16,18 +16,40 @@ const PersonalInformation = ({
     beneficiary,
 }: Props) => {
     return (
-        <Card elevate>
-            <Card.Header padded>
-                <H3>Personal Information</H3>
-            </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$3">
+        <Card
+            elevate
+            mb="$4"
+            style={{ borderRadius: 16 }}
+            backgroundColor="$background"
+            borderColor="$borderColor"
+        >
+            <YStack gap="$4" p="$4">
+                <H3
+                    color="#111827"
+                    fontWeight="600"
+                >
+                    Personal Information
+                </H3>
+                <YStack gap="$4">
                     <XStack gap="$4">
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Full Name
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {
                                     beneficiary.first_name
                                 }{" "}
@@ -37,10 +59,23 @@ const PersonalInformation = ({
                             </Text>
                         </YStack>
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Civil Status
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {
                                     beneficiary.civil_status
                                 }
@@ -49,20 +84,46 @@ const PersonalInformation = ({
                     </XStack>
                     <XStack gap="$4">
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Gender
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {
                                     beneficiary.gender
                                 }
                             </Text>
                         </YStack>
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Birthday
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {new Date(
                                     beneficiary.birthday,
                                 ).toLocaleDateString()}
@@ -70,10 +131,23 @@ const PersonalInformation = ({
                         </YStack>
                     </XStack>
                     <YStack>
-                        <Text opacity={0.6}>
+                        <Text
+                            fontSize="$3"
+                            style={{
+                                color: "#6b7280",
+                            }}
+                            fontWeight="500"
+                            mb="$2"
+                        >
                             Address
                         </Text>
-                        <Text>
+                        <Text
+                            fontSize="$4"
+                            style={{
+                                color: "#111827",
+                            }}
+                            fontWeight="400"
+                        >
                             {
                                 beneficiary.street_address
                             }
@@ -81,10 +155,23 @@ const PersonalInformation = ({
                     </YStack>
                     <XStack gap="$4">
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Mobile
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {
                                     beneficiary.mobile
                                 }

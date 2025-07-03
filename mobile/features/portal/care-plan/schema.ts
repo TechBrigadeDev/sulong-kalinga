@@ -56,7 +56,7 @@ export const portalCarePlanDetailSchema =
         created_at: z.string(),
         updated_at: z.string(),
         acknowledge_status: z.string(),
-        who_acknowledged: z.string(),
+        who_acknowledged: z.string().nullable(),
     });
 
 export type Intervention = z.infer<

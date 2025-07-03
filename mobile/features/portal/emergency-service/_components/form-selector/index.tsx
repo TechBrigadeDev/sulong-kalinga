@@ -3,11 +3,7 @@ import { EmergencyServiceFormProp } from "features/portal/emergency-service/emer
 import ServiceAssistanceForm from "features/portal/emergency-service/service/_components/form";
 import { useEmergencyServiceStore } from "features/portal/emergency-service/store";
 import { ICurrentEmergencyServiceForm } from "features/portal/emergency-service/type";
-import {
-    ReactNode,
-    useEffect,
-    useState,
-} from "react";
+import { ReactNode } from "react";
 import {
     Separator,
     SizableText,
@@ -15,6 +11,7 @@ import {
     TabsContentProps,
     View,
 } from "tamagui";
+import { useStore } from "zustand";
 
 const tabs: {
     value: string;
@@ -44,26 +41,16 @@ const EmergencyServiceFormSelector = (
 ) => {
     const store = useEmergencyServiceStore();
 
-    const [form, setForm] =
-        useState<ICurrentEmergencyServiceForm>(
-            "emergency",
-        );
-
-    useEffect(() => {
-        store.subscribe((state) => {
-            const form =
-                state.currentEmergencyServiceForm;
-            if (form) {
-                setForm(
-                    state.currentEmergencyServiceForm,
-                );
-            }
-        });
-    }, [store]);
+    // Use reactive subscription with useStore from zustand for context-based stores
+    const currentForm = useStore(
+        store,
+        (state) =>
+            state.currentEmergencyServiceForm,
+    );
 
     return (
         <Tabs
-            value={form}
+            value={currentForm}
             orientation="horizontal"
             flexDirection="column"
             activationMode="manual"
