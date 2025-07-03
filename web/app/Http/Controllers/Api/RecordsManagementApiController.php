@@ -208,6 +208,7 @@ class RecordsManagementApiController extends Controller
     // Edit/Update weekly care plan (PATCH)
     public function updateWeekly($id, Request $request)
     {
+        set_time_limit(120);
         $user = $request->user();
         $plan = WeeklyCarePlan::with(['vitalSigns', 'interventions'])->findOrFail($id);
 

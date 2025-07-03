@@ -28,6 +28,7 @@ class WeeklyCarePlanApiController extends Controller
 
     public function store(Request $request)
     {
+        set_time_limit(120);
         // Authorization: Only allow Care Workers (role_id == 3)
         if (!$request->user() || $request->user()->role_id != 3) {
             return response()->json([
