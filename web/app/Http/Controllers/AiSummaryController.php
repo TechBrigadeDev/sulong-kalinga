@@ -94,6 +94,13 @@ class AiSummaryController extends Controller
                 
                 // Save data to database immediately
                 $carePlan = WeeklyCarePlan::findOrFail($request->care_plan_id);
+
+                $data['summary'] = $this->postProcessTagalogSummary($data['summary'] ?? '');
+                if (!empty($data['sections']) && is_array($data['sections'])) {
+                    foreach ($data['sections'] as $k => $v) {
+                        $data['sections'][$k] = $this->postProcessTagalogSummary($v);
+                    }
+                }
                 
                 if ($request->type === 'assessment') {
                     $carePlan->assessment_summary_draft = $data['summary'] ?? 'No summary generated';
@@ -341,16 +348,27 @@ class AiSummaryController extends Controller
                 }
             }
 
-            // Detect gender from original Tagalog sections
-            $gender = $this->detectMainSubjectGender($request->sections);
+            // Save to database
+            $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
+            
+            // Get gender from beneficiary if available, else fallback to detection
+            $beneficiaryGender = strtolower($carePlan->beneficiary->gender ?? '');
+            if ($beneficiaryGender === 'female') {
+                $gender = 'female';
+            } elseif ($beneficiaryGender === 'male') {
+                $gender = 'male';
+            } else {
+                $gender = $this->detectMainSubjectGender($request->sections);
+            }
 
             // Harmonize pronouns in each translated section
             foreach ($translatedSections as $key => $translatedText) {
                 $translatedSections[$key] = $this->harmonizePronouns($translatedText, $gender);
             }
-
-            // Save to database
-            $carePlan = WeeklyCarePlan::findOrFail($request->weekly_care_plan_id);
+            // Harmonize executive summary if present
+            if (isset($translatedSections['full_summary'])) {
+                $translatedSections['full_summary'] = $this->harmonizePronouns($translatedSections['full_summary'], $gender);
+            }
             
             if ($request->type === 'assessment') {
                 $carePlan->assessment_translation_sections = $translatedSections;
@@ -458,9 +476,13 @@ class AiSummaryController extends Controller
         $text = implode(' ', $sections);
         $text = strtolower($text);
 
-        // Add more as needed
-        $female_terms = ['lola', 'nanay', 'ginang', 'ate', 'mrs.', 'ms.'];
-        $male_terms = ['lolo', 'tatay', 'ginoong', 'kuya', 'mr.'];
+        // Expanded lists
+        $female_terms = [
+            'lola', 'nanay', 'ginang', 'ate', 'mrs.', 'ms.', 'ina', 'babae', 'mama', 'mom', 'mother', 'daughter', 'sister', 'tita', 'aunt', 'apo', 'miss', 'madam', 'ma\'am', 'wife', 'asawa', 'girlfriend', 'fiancée', 'lola', 'lola', 'lola'
+        ];
+        $male_terms = [
+            'lolo', 'tatay', 'ginoong', 'kuya', 'mr.', 'ama', 'lalaki', 'papa', 'dad', 'father', 'son', 'brother', 'tito', 'uncle', 'apo', 'sir', 'husband', 'asawa', 'boyfriend', 'fiancé'
+        ];
 
         foreach ($female_terms as $term) {
             if (strpos($text, $term) !== false) {
@@ -472,6 +494,15 @@ class AiSummaryController extends Controller
                 return 'male';
             }
         }
+
+        // Fallback: check for pronouns in the text
+        if (preg_match('/\b(she|her|hers)\b/', $text)) {
+            return 'female';
+        }
+        if (preg_match('/\b(he|him|his)\b/', $text)) {
+            return 'male';
+        }
+
         // Default to neutral if not found
         return 'neutral';
     }
@@ -479,36 +510,125 @@ class AiSummaryController extends Controller
     private function harmonizePronouns($text, $gender)
     {
         if ($gender === 'female') {
-            // Replace with more consistent patterns
             $patterns = [
-                '/\bHe\b/i' => 'She',
-                '/\bhe\b/i' => 'she',
-                '/\bHis\b/i' => 'Her',
-                '/\bhis\b/i' => 'her',
-                '/\bHim\b/i' => 'Her',
-                '/\bhim\b/i' => 'her',
-                '/\bFather\b/i' => 'Mother', // Add name replacements
-                '/\bDad\b/i' => 'Mom',
-                '/\bgrandfather\b/i' => 'grandmother',
+                // Subject/Object/Reflexive
+                '/\bHe\b/' => 'She',
+                '/\bhe\b/' => 'she',
+                '/\bHis\b/' => 'Her',
+                '/\bhis\b/' => 'her',
+                '/\bHim\b/' => 'Her',
+                '/\bhim\b/' => 'her',
+                '/\bHimself\b/' => 'Herself',
+                '/\bhimself\b/' => 'herself',
+                '/\bFather\b/' => 'Mother',
+                '/\bDad\b/' => 'Mom',
+                '/\bgrandfather\b/' => 'grandmother',
+                '/\bson\b/' => 'daughter',
+                '/\buncle\b/' => 'aunt',
+                '/\bMr\./' => 'Ms.',
+                '/\bSir\b/' => 'Ma\'am',
+                // Possessive
+                '/\bhis\'s\b/' => 'her',
+                '/\bhis\b/' => 'her',
+                '/\bhers\b/' => 'hers',
             ];
         } elseif ($gender === 'male') {
             $patterns = [
-                '/\bShe\b/i' => 'He',
-                '/\bshe\b/i' => 'he',
-                '/\bHer\b/i' => 'His',
-                '/\bher\b/i' => 'his',
-                '/\bMother\b/i' => 'Father', // Add name replacements
-                '/\bMom\b/i' => 'Dad',
-                '/\bgrandmother\b/i' => 'grandfather',
+                '/\bShe\b/' => 'He',
+                '/\bshe\b/' => 'he',
+                '/\bHer\b/' => 'His',
+                '/\bher\b/' => 'his',
+                '/\bHerself\b/' => 'Himself',
+                '/\bherself\b/' => 'himself',
+                '/\bMother\b/' => 'Father',
+                '/\bMom\b/' => 'Dad',
+                '/\bgrandmother\b/' => 'grandfather',
+                '/\bdaughter\b/' => 'son',
+                '/\baunt\b/' => 'uncle',
+                '/\bMs\./' => 'Mr.',
+                '/\bMa\'am\b/' => 'Sir',
+                // Possessive
+                '/\bher\'s\b/' => 'his',
+                '/\bhers\b/' => 'his',
             ];
-        } else {
-            $patterns = [];
+        } else { // Neutral/Other: use they/them/their
+            $patterns = [
+                // Subject/Object/Reflexive
+                '/\bHe\b/' => 'They',
+                '/\bhe\b/' => 'they',
+                '/\bShe\b/' => 'They',
+                '/\bshe\b/' => 'they',
+                '/\bHis\b/' => 'Their',
+                '/\bhis\b/' => 'their',
+                '/\bHer\b/' => 'Their',
+                '/\bher\b/' => 'their',
+                '/\bHim\b/' => 'Them',
+                '/\bhim\b/' => 'them',
+                '/\bHerself\b/' => 'Themself',
+                '/\bherself\b/' => 'themself',
+                '/\bHimself\b/' => 'Themself',
+                '/\bhimself\b/' => 'themself',
+                // '/\bFather\b/' => 'Parent',
+                // '/\bMother\b/' => 'Parent',
+                // '/\bDad\b/' => 'Parent',
+                // '/\bMom\b/' => 'Parent',
+                // '/\bgrandfather\b/' => 'grandparent',
+                // '/\bgrandmother\b/' => 'grandparent',
+                // '/\bson\b/' => 'child',
+                // '/\bdaughter\b/' => 'child',
+                // '/\buncle\b/' => 'relative',
+                // '/\baunt\b/' => 'relative',
+                // '/\bMr\./' => 'Mx.',
+                // '/\bMs\./' => 'Mx.',
+                // '/\bSir\b/' => 'Mx.',
+                // '/\bMa\'am\b/' => 'Mx.',
+                // Possessive
+                '/\bher\'s\b/' => 'theirs',
+                '/\bhers\b/' => 'theirs',
+                '/\bhis\'s\b/' => 'theirs',
+                '/\bhis\b/' => 'their',
+            ];
         }
 
         // Apply all replacements
         foreach ($patterns as $pattern => $replacement) {
             $text = preg_replace($pattern, $replacement, $text);
         }
+        return $text;
+    }
+
+    /**
+     * Post-process Tagalog summary to fix problematic word splits and spelling.
+     */
+    private function postProcessTagalogSummary($text)
+    {
+        if (!$text) {
+            return $text;
+        }
+
+        $fixes = [
+            'ng ayon' => 'ngayon',
+            'la,' => 'sala,',
+            'rili' => 'sarili',
+            'para noia' => 'paranoia',
+            'unit ng ayon' => 'ngunit ngayon',
+            'ng ayon' => 'ngayon',
+            'sa an' => 'saan',
+            'sa kit' => 'sakit',
+            'sa fety' => 'safety',
+            'sa rili' => 'sarili',
+            'isa-i' => 'isa-isa',
+            'para sa rili' => 'para sa sarili',
+            'kanyanger' => 'kanyang anger',
+            'nagsusul' => 'nagsusulat',
+            'sa bay-sa bay' => 'sabay-sabay',
+            'sa pat' => 'sapat',
+        ];
+
+        foreach ($fixes as $wrong => $correct) {
+            $text = preg_replace('/\b' . preg_quote($wrong, '/') . '\b/u', $correct, $text);
+        }
+
         return $text;
     }
 

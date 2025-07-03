@@ -1,23 +1,8 @@
 import ProfileSettings from "components/screens/Options/profile/Settings";
-import {
-    Link as ExpoLink,
-    LinkProps,
-} from "expo-router";
-import { authStore } from "features/auth/auth.store";
-import { isStaff } from "features/auth/auth.util";
+import Reports from "components/screens/Options/Reports";
+import UserManagement from "components/screens/Options/UserManagement";
 import NotificationButton from "features/notification/_components/NotificationButton";
-import { icons } from "lucide-react-native";
-import {
-    StyleSheet,
-    TouchableOpacity,
-} from "react-native";
-import {
-    Card as TCard,
-    Text,
-    View,
-    XStack,
-    YStack,
-} from "tamagui";
+import { StyleSheet } from "react-native";
 
 import Header from "~/components/Header";
 import TabScroll from "~/components/tabs/TabScroll";
@@ -25,7 +10,7 @@ import LogoutButton from "~/features/auth/components/logout/button";
 
 const Screen = () => {
     return (
-        <View>
+        <>
             <Header
                 name="Options"
                 headerRight={() => (
@@ -47,137 +32,7 @@ const Screen = () => {
                 <Reports />
                 <LogoutButton />
             </TabScroll>
-        </View>
-    );
-};
-
-const UserManagement = () => {
-    const { role } = authStore();
-    if (!isStaff() || !role) return null;
-
-    return (
-        <Section>
-            <Title name="User Management" />
-            <Card>
-                <Link
-                    label="Beneficiaries"
-                    href="/options/user-management/beneficiaries"
-                    icon="HandHelping"
-                />
-                <Link
-                    label="Families"
-                    href="/options/user-management/family"
-                    icon="UsersRound"
-                />
-                {role !== "care_worker" && (
-                    <Link
-                        label="Care Workers"
-                        href="/options/user-management/care-workers"
-                        icon="HeartHandshake"
-                    />
-                )}
-                {role === "admin" && (
-                    <>
-                        <Link
-                            label="Care Managers"
-                            href="/options/user-management/care-managers"
-                            icon="Smile"
-                        />
-                        <Link
-                            label="Administrators"
-                            href="/options/user-management/admins"
-                            icon="ShieldUser"
-                        />
-                    </>
-                )}
-            </Card>
-        </Section>
-    );
-};
-
-const Reports = () => {
-    if (!isStaff()) return null;
-    return (
-        <Section>
-            <Title name="Reports" />
-            <Card>
-                <Link
-                    label="Care Records"
-                    href="/options/reports/care-records"
-                    icon="FileText"
-                />
-            </Card>
-        </Section>
-    );
-};
-
-const Card = ({
-    children,
-}: {
-    children?: React.ReactNode;
-}) => {
-    return (
-        <TCard style={style.sectionCard}>
-            {children}
-        </TCard>
-    );
-};
-
-const Section = ({
-    children,
-}: {
-    children: React.ReactNode;
-}) => {
-    return (
-        <YStack style={style.section}>
-            {children}
-        </YStack>
-    );
-};
-
-export const Title = ({
-    name: title,
-}: {
-    name: string;
-}) => (
-    <Text style={style.sectionTitle}>
-        {title}
-    </Text>
-);
-
-const Link = ({
-    href,
-    label,
-    icon,
-}: {
-    href: LinkProps["href"];
-    label: string;
-    icon: keyof typeof icons;
-}) => {
-    const Icon = icons[icon];
-    const Chevron = icons.ChevronRight;
-
-    return (
-        <ExpoLink href={href} asChild>
-            <TouchableOpacity style={style.link}>
-                <XStack
-                    gap={10}
-                    style={style.linkLabel}
-                >
-                    <Icon
-                        size={24}
-                        color="#000"
-                    />
-                    <Text>{label}</Text>
-                </XStack>
-
-                <Chevron
-                    size={24}
-                    color="#000"
-                    style={{ marginLeft: "auto" }}
-                />
-            </TouchableOpacity>
-        </ExpoLink>
+        </>
     );
 };
 
@@ -185,27 +40,6 @@ const style = StyleSheet.create({
     scroll: {
         display: "flex",
         paddingHorizontal: 40,
-    },
-    section: {
-        paddingBottom: 30,
-    },
-    sectionTitle: {
-        fontSize: 15,
-        fontWeight: "bold",
-        marginBottom: 10,
-    },
-    sectionCard: {
-        backgroundColor: "#fff",
-        paddingHorizontal: 20,
-    },
-    link: {
-        display: "flex",
-        flexDirection: "row",
-        gap: 10,
-        paddingVertical: 15,
-    },
-    linkLabel: {
-        alignItems: "center",
     },
 });
 

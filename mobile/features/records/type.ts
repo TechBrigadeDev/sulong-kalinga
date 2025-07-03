@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
     reportSchema,
+    wcpInterventionSchema,
     wcpRecordSchema,
     wcpRecordsSchema,
 } from "./schema";
@@ -16,6 +17,10 @@ export type IWCPRecords = z.infer<
 
 export type IWCPRecord = z.infer<
     typeof wcpRecordSchema
+>;
+
+export type IWCPIntervention = z.infer<
+    typeof wcpInterventionSchema
 >;
 
 export type IBeneficiary = z.infer<

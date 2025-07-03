@@ -12,11 +12,20 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class SendAppointmentReminders extends Command
 {
     protected $signature = 'appointments:send-reminders';
     protected $description = 'Send reminder notifications for upcoming appointments';
+
+    protected $notificationService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notificationService = app(NotificationService::class);
+    }
 
     public function handle()
     {
@@ -173,48 +182,20 @@ class SendAppointmentReminders extends Command
         $familyMembers = FamilyMember::where('related_beneficiary_id', $visitation->beneficiary_id)->get();
         
         try {
-            // Send notification to care worker
-            Notification::create([
-                'user_id' => $careWorker->id,
-                'user_type' => 'cose_staff',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
-            
-            // Send notification to care manager (if exists)
+            // Send notification and push to care worker
+            $this->notificationService->notifyStaff($careWorker->id, $title, $message);
+
+            // Send notification and push to care manager (if exists)
             if ($careManager) {
-                Notification::create([
-                    'user_id' => $careManager->id,
-                    'user_type' => 'cose_staff',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyStaff($careManager->id, $title, $message);
             }
-            
+
             // Notify beneficiary
-            Notification::create([
-                'user_id' => $beneficiary->beneficiary_id,
-                'user_type' => 'beneficiary',
-                'message_title' => $title,
-                'message' => $message,
-                'date_created' => now(),
-                'is_read' => false
-            ]);
+            $this->notificationService->notifyBeneficiary($beneficiary->beneficiary_id, $title, $message);
 
             // Notify family members
             foreach ($familyMembers as $familyMember) {
-                Notification::create([
-                    'user_id' => $familyMember->family_member_id,
-                    'user_type' => 'family_member',
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => now(),
-                    'is_read' => false
-                ]);
+                $this->notificationService->notifyFamilyMember($familyMember->family_member_id, $title, $message);
             }
             
             $this->info("Sent reminder notifications for appointment between care worker {$careWorker->first_name} and beneficiary {$beneficiary->first_name} on {$dateFormatted}");

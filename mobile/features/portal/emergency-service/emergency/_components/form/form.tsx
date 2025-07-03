@@ -1,26 +1,24 @@
-import {
-    createFormHook,
-    createFormHookContexts,
-    formOptions,
-} from "@tanstack/react-form";
+import { createFormHook } from "@tanstack/react-form";
 
 import EmergencyDescription from "./_components/Description";
 import EmergencyType from "./_components/EmergencyType";
 import SubmitEmergency from "./_components/Submit";
-import { emergencyAssistanceFormSchema } from "./schema";
+import {
+    emergencyFieldContext,
+    emergencyFormContext,
+    emergencyFormOpts,
+    useEmergencyFieldContext,
+    useEmergencyFormContext,
+} from "./context";
 
-export const emergencyFormOpts = formOptions({
-    validators: {
-        onChange: emergencyAssistanceFormSchema,
-    },
-});
-
-export const {
-    fieldContext: emergencyFieldContext,
-    formContext: emergencyFormContext,
-    useFieldContext: useEmergencyFieldContext,
-    useFormContext: useEmergencyFormContext,
-} = createFormHookContexts();
+// Re-export the context hooks and options for convenience
+export {
+    emergencyFieldContext,
+    emergencyFormContext,
+    emergencyFormOpts,
+    useEmergencyFieldContext,
+    useEmergencyFormContext,
+};
 
 export const { useAppForm: useEmergencyForm } =
     createFormHook({

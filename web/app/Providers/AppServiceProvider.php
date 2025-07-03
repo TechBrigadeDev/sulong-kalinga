@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\User; // This is for cose_users
 use App\Observers\CoseUserObserver;
-use App\Models\Beneficiary;
+use App\Models\Beneficiary; 
 use App\Observers\BeneficiaryObserver;
 use App\Models\FamilyMember;
 use App\Observers\FamilyMemberObserver;
@@ -13,6 +13,8 @@ use App\Models\LanguagePreference;
 use Illuminate\Support\Facades\URL; 
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Notifications\ChannelManager;
+use App\Notifications\Channels\CustomExpoChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -66,6 +68,13 @@ class AppServiceProvider extends ServiceProvider
                 \Log::error('Error in language preference view composer: ' . $e->getMessage());
                 $view->with('useTagalog', false);
             }
+        });
+
+        $this->app->make(ChannelManager::class)->extend('custom_expo', function ($app) {
+            return new CustomExpoChannel(
+                $app->make(\NotificationChannels\Expo\Gateway\ExpoGateway::class),
+                $app->make(\Illuminate\Contracts\Events\Dispatcher::class)
+            );
         });
     }
 }

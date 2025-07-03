@@ -45,3 +45,7 @@ ios/
 .github/
 
 credentials.json
+
+*.apk
+
+.DS_Store

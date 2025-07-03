@@ -170,7 +170,6 @@ export const NotificationCard = ({
                                 : "#374151"
                         }
                         lineHeight="$1"
-                        numberOfLines={3}
                     >
                         {item.message}
                     </Text>

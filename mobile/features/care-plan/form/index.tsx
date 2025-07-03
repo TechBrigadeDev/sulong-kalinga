@@ -30,6 +30,7 @@ import {
     useCarePlanForm,
 } from "./form";
 import { useCarePlanFormStore } from "./store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
@@ -48,6 +49,7 @@ interface Props {
 }
 
 const Form = ({ record }: Props) => {
+    const { bottom } = useSafeAreaInsets();
     const {
         setRecord,
         currentStep,
@@ -180,6 +182,15 @@ const Form = ({ record }: Props) => {
         }, [resetStep]),
     );
 
+    useEffect(() => {
+        return () => {
+            console.log(
+                "Form unmounted, resetting form state",
+            );
+            formReset({});
+        };
+    }, [formReset]);
+
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
@@ -229,8 +240,11 @@ const Form = ({ record }: Props) => {
                     setStep={setCurrentStep}
                 />
 
-                <TabScroll flex={1}>
-                    <YStack gap="$4">
+                <TabScroll
+                    flex={1}
+                    showScrollUp={false}
+                >
+                    <YStack gap="$4" flex={1}>
                         {renderStep()}
                     </YStack>
                 </TabScroll>
@@ -239,6 +253,7 @@ const Form = ({ record }: Props) => {
                     borderTopWidth={1}
                     p="$4"
                     bg="$background"
+                    marginBlockEnd={bottom}
                 >
                     <XStack
                         gap="$4"

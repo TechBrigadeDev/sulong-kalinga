@@ -6,10 +6,8 @@ import {
 import WCPForm from "features/care-plan/form";
 import { useGetInterventions } from "features/care-plan/hook";
 import { useWCPRecord } from "features/records/hook";
-import {
-    SafeAreaProvider,
-    useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { YStack } from "tamagui";
 
 const Screen = () => {
     const { id } = useLocalSearchParams<{
@@ -33,15 +31,9 @@ const Screen = () => {
         );
 
     return (
-        <SafeAreaProvider
-            style={{
-                flex: 1,
-                marginBottom: insets.bottom,
-                alignItems: "center",
-            }}
-        >
+        <YStack flex={1}>
             <Form />
-        </SafeAreaProvider>
+        </YStack>
     );
 };
 

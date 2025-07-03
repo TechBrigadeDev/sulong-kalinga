@@ -1,13 +1,14 @@
-import TabScroll from "components/tabs/TabScroll";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useCarePlanForm } from "features/care-plan/form/form";
 import { Image as LucideImage } from "lucide-react-native";
+import { useEffect } from "react";
 import { Controller } from "react-hook-form";
 import {
     Button,
     Card,
     Input,
+    ScrollView,
     Text,
     YStack,
 } from "tamagui";
@@ -29,8 +30,10 @@ export const Evaluation = ({
     onChange: _onChange,
 }: EvaluationProps) => {
     return (
-        <TabScroll>
-            <YStack p="$4" gap="$4">
+        <ScrollView flex={1}>
+            <YStack
+                style={{ padding: 16, gap: 16 }}
+            >
                 <Card elevate>
                     <Card.Header padded>
                         <Text
@@ -46,12 +49,13 @@ export const Evaluation = ({
                     </YStack>
                 </Card>
             </YStack>
-        </TabScroll>
+        </ScrollView>
     );
 };
 
 const PictureUpload = () => {
-    const { control } = useCarePlanForm();
+    const { control, getValues } =
+        useCarePlanForm();
 
     const pickImage = async (
         onChange: (uri: string | null) => void,
@@ -75,6 +79,14 @@ const PictureUpload = () => {
             onChange(result.assets[0].uri);
         }
     };
+
+    const uri = getValues(
+        "evaluation.pictureUri",
+    );
+
+    useEffect(() => {
+        console.log("Current picture URI:", uri);
+    }, [uri, getValues]);
 
     return (
         <Controller
@@ -156,7 +168,31 @@ const PictureUpload = () => {
 };
 
 const RecommendationsInput = () => {
-    const { control } = useCarePlanForm();
+    const { control, getValues, setValue } =
+        useCarePlanForm();
+
+    const currentRecommendations =
+        getValues("evaluation.recommendations") ||
+        "";
+
+    useEffect(() => {
+        // if the value exceeds 5000 characters,
+        // truncate it to the first 5000 characters
+        if (
+            currentRecommendations.length > 5000
+        ) {
+            const truncatedValue =
+                currentRecommendations.slice(
+                    0,
+                    5000,
+                );
+
+            setValue(
+                "evaluation.recommendations",
+                truncatedValue,
+            );
+        }
+    }, [currentRecommendations, setValue]);
 
     return (
         <Controller
@@ -179,6 +215,7 @@ const RecommendationsInput = () => {
                         }
                         multiline
                         numberOfLines={4}
+                        maxLength={5000}
                         textAlignVertical="top"
                     />
 

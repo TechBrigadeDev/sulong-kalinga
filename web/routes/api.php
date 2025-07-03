@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\ShiftTrackApiController;
 use App\Http\Controllers\Api\RecordsManagementApiController;
 use App\Http\Middleware\RoleMiddleware;
+use App\Services\NotificationService;
 
 // Public routes
 Route::get('/public-test', function () {
@@ -159,7 +160,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // Weekly Care Plans
     Route::get('/records/weekly-care-plans', [RecordsManagementApiController::class, 'listWeekly']);
     Route::get('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'showWeekly']);
-    Route::patch('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'updateWeekly']);
+    Route::post('/records/weekly-care-plans/{id}', [RecordsManagementApiController::class, 'updateWeekly']);
 
     // General Care Plans REMOVED
     // Route::get('/records/general-care-plans', [\App\Http\Controllers\Api\RecordsManagementApiController::class, 'listGeneral']);
@@ -189,3 +190,81 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
 });
 require __DIR__.'/apiBeneficiaryRoutes.php';
 require __DIR__.'/apiFamilyRoutes.php';
+
+// // Test route to register a token
+// Route::post('/test/register-token', function (Request $request) {
+//     $request->validate([
+//         'user_id' => 'required|integer',
+//         'role' => 'required|string|in:cose_staff,beneficiary,family_member',
+//         'token' => 'required|string'
+//     ]);
+    
+//     try {
+//         $service = new NotificationService();
+//         $result = $service->register($request->user_id, $request->role, $request->token);
+        
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'Token registered successfully',
+//             'data' => $result
+//         ]);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => $e->getMessage()
+//         ], 400);
+//     }
+// });
+
+// // Test route to send push notification
+// Route::post('/test/send-push', function (Request $request) {
+//     $request->validate([
+//         'user_id' => 'required|integer',
+//         'role' => 'required|string|in:cose_staff,beneficiary,family_member',
+//         'title' => 'required|string',
+//         'message' => 'required|string'
+//     ]);
+    
+//     try {
+//         $service = new NotificationService();
+        
+//         switch ($request->role) {
+//             case 'cose_staff':
+//                 $result = $service->notifyStaff($request->user_id, $request->title, $request->message);
+//                 break;
+//             case 'beneficiary':
+//                 $result = $service->notifyBeneficiary($request->user_id, $request->title, $request->message);
+//                 break;
+//             case 'family_member':
+//                 $result = $service->notifyFamilyMember($request->user_id, $request->title, $request->message);
+//                 break;
+//         }
+        
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'Notification sent successfully',
+//             'data' => $result
+//         ]);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => $e->getMessage()
+//         ], 400);
+//     }
+// });
+
+// // Test route to check if token exists
+// Route::get('/test/check-token/{user_id}/{role}', function ($userId, $role) {
+//     $service = new NotificationService();
+//     $token = $service->getTokenByUser($userId, $role);
+    
+//     return response()->json([
+//         'user_id' => $userId,
+//         'role' => $role,
+//         'token_exists' => $token ? true : false,
+//         'token' => $token ? $token->token : null
+//     ]);
+// });
+// Route::get('/debug/providers', function () {
+//     return array_keys(app()->getLoadedProviders());
+// });

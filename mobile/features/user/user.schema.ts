@@ -133,7 +133,7 @@ const careManagerProfileSchema =
 // Care worker profile schema
 const careWorkerProfileSchema =
     staffBaseProfileSchema.extend({
-        organization_role_id: z.number(),
+        role_id: z.number(),
         role: z.literal("care_worker"),
     });
 

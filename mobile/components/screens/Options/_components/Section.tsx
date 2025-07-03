@@ -14,7 +14,9 @@ const Section = ({
 };
 
 const style = StyleSheet.create({
-    section: {},
+    section: {
+        paddingBottom: 30,
+    },
 });
 
 export default Section;

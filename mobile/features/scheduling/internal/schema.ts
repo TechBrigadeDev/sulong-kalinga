@@ -41,7 +41,11 @@ export const internalAppointmentSchema = z.object(
 export const internalAppointmentsResponseSchema =
     z.object({
         success: z.boolean(),
-        data: z.array(internalAppointmentSchema),
+        data: z.array(
+            internalAppointmentSchema.omit({
+                participants: true,
+            }),
+        ),
     });
 
 export const internalAppointmentResponseSchema =

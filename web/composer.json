@@ -5,10 +5,17 @@
     "description": "The skeleton application for the Laravel framework.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
+    "repositories": [
+      {
+        "type": "composer",
+        "url": "https://packagist.org"
+      },
+      { "packagist": false }
+    ],
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
-        "laravel-notification-channels/expo": "^2.1",
+        "laravel-notification-channels/expo": "2.1",
         "laravel/framework": "^11.31",
         "laravel/octane": "^2.9",
         "laravel/sanctum": "^4.0",

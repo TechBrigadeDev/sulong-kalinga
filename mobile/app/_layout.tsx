@@ -11,10 +11,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import Providers from "~/components/Providers";
 import { authStore } from "~/features/auth/auth.store";
-import {
-    notificationHandler,
-    registerForPushNotificationsAsync,
-} from "~/lib/notification/service";
+import { notificationHandler } from "~/features/notification/service";
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -59,18 +56,6 @@ function RootLayoutNav() {
     const isAuthenticated =
         authStore((state) => state.token) !==
         null;
-
-    const register = async () => {
-        await Promise.all([
-            registerForPushNotificationsAsync(),
-        ]);
-    };
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            register();
-        }
-    }, [isAuthenticated]);
 
     return (
         <Providers>

@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 import WCPForm from "features/care-plan/form";
 import { useGetInterventions } from "features/care-plan/hook";
 import {
-    SafeAreaProvider,
+    SafeAreaView,
     useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
@@ -19,15 +19,9 @@ const Screen = () => {
         );
 
     return (
-        <SafeAreaProvider
-            style={{
-                flex: 1,
-                marginBottom: insets.bottom,
-                alignItems: "center",
-            }}
-        >
+        <SafeAreaView style={{ flex: 1 }}>
             <Form />
-        </SafeAreaProvider>
+        </SafeAreaView>
     );
 };
 

@@ -73,6 +73,10 @@ class InternalSchedulingController extends Controller {
             `/internal-appointments/${id}`,
         );
 
+        console.log(
+            "Internal appointment response",
+            response.data.data.participants,
+        );
         const valid =
             await internalAppointmentResponseSchema.safeParseAsync(
                 response.data,

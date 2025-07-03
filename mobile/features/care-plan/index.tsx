@@ -3,6 +3,7 @@ import {
     HttpStatusCode,
 } from "axios";
 import { Controller } from "common/api";
+import { log } from "common/debug";
 import { listResponseSchema } from "common/schema";
 import { toastServerError } from "common/toast";
 import { showToastable } from "react-native-toastable";
@@ -128,6 +129,12 @@ class CarePlanController extends Controller {
             );
         }
 
+        console.log(
+            "Patching care plan with ID:",
+            id,
+        );
+        console.log("Data to patch:", data);
+
         try {
             const apiData =
                 await mapCarePlanFormToApiData(
@@ -135,7 +142,7 @@ class CarePlanController extends Controller {
                 );
 
             const response = await this.api.patch(
-                `/weekly-care-plans/${id}`,
+                `/records/weekly-care-plans/${id}`,
                 apiData,
                 {
                     headers: {
@@ -145,8 +152,18 @@ class CarePlanController extends Controller {
                 },
             );
 
+            log(
+                "Care plan patched successfully:",
+                response.status,
+                response.data,
+            );
+
             return response.data;
         } catch (error) {
+            log(
+                "Error patching care plan:",
+                error,
+            );
             if (error instanceof AxiosError) {
                 switch (error.response?.status) {
                     case HttpStatusCode.Forbidden:
@@ -171,7 +188,7 @@ class CarePlanController extends Controller {
                             status: "danger",
                             duration: 4000,
                         });
-                        return;
+                        break;
                     default:
                         toastServerError({
                             data: JSON.stringify(
@@ -185,8 +202,8 @@ class CarePlanController extends Controller {
                                 ?.status,
                         });
                 }
-                return;
             }
+            throw error;
         }
     }
 }

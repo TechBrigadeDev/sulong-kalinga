@@ -228,22 +228,8 @@ const TabScroll = ({
         }
     };
 
-    return (
-        <>
-            <ScrollView
-                ref={ref}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
-                contentContainerStyle={{
-                    paddingBlockEnd: 110,
-                    ...(contentContainerStyle as any),
-                }}
-                {...props}
-            >
-                {children}
-            </ScrollView>
-
-            {/* Scroll Up Button */}
+    const ScrollUp = () =>
+        _showScrollUpProp ? (
             <Animated.View
                 style={[
                     styles.scrollUpButton,
@@ -269,6 +255,25 @@ const TabScroll = ({
                     />
                 </Pressable>
             </Animated.View>
+        ) : null;
+
+    return (
+        <>
+            <ScrollView
+                ref={ref}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                contentContainerStyle={{
+                    paddingBlockEnd: 110,
+                    ...(contentContainerStyle as any),
+                }}
+                {...props}
+            >
+                {children}
+            </ScrollView>
+
+            {/* Scroll Up Button */}
+            <ScrollUp />
 
             {/* Scroll Down Indicator */}
             <Animated.View

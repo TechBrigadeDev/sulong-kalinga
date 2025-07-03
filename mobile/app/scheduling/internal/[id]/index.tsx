@@ -24,7 +24,14 @@ const Screen = () => {
     }
 
     return (
-        <ScrollView flex={1} px="$4" pt="$4">
+        <ScrollView
+            flex={1}
+            px="$4"
+            pt="$4"
+            contentContainerStyle={{
+                paddingBlockEnd: 100,
+            }}
+        >
             <InternalAppointmentDetail
                 appointment={data}
             />

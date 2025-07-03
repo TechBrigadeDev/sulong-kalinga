@@ -20,16 +20,19 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ExpensesExport;
 use App\Exports\BudgetsExport;
 use App\Services\UploadService;
+use App\Services\NotificationService; // Add this import
 
 class ExpenseTrackerController extends Controller
 {
     protected $logService;
     protected $uploadService;
+    protected $notificationService; // Add this property
 
-    public function __construct(LogService $logService, UploadService $uploadService)
+    public function __construct(LogService $logService, UploadService $uploadService, NotificationService $notificationService)
     {
         $this->logService = $logService;
         $this->uploadService = $uploadService;
+        $this->notificationService = $notificationService; // Set the property
     }
 
     /**
@@ -229,11 +232,15 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for admins
-            $this->createNotificationForAdmins(
-                'New Expense Added',
-                'A new expense of ₱' . number_format($expense->amount, 2) . ' for ' . $expense->title . ' has been recorded by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
-            );
+            // Notify all admins using NotificationService
+            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+            foreach ($adminUsers as $admin) {
+                $this->notificationService->notifyStaff(
+                    $admin->id,
+                    'New Expense Added',
+                    'A new expense of ₱' . number_format($expense->amount, 2) . ' for ' . $expense->title . ' has been recorded by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+                );
+            }
             
             return response()->json([
                 'success' => true,
@@ -455,12 +462,16 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for all admins with change details
-            $this->createNotificationForAdmins(
-                'Expense Updated',
-                'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . 
-                Auth::user()->first_name . ' ' . Auth::user()->last_name . '. ' . implode('. ', $changeDetails)
-            );
+            // Notify all admins using NotificationService
+            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+            foreach ($adminUsers as $admin) {
+                $this->notificationService->notifyStaff(
+                    $admin->id,
+                    'Expense Updated',
+                    'An expense record for ₱' . number_format($expense->amount, 2) . ' (' . $expense->title . ') has been updated by ' . 
+                    Auth::user()->first_name . ' ' . Auth::user()->last_name . '. ' . implode('. ', $changeDetails)
+                );
+            }
             
             return response()->json([
                 'success' => true,
@@ -522,11 +533,15 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for all admins
-            $this->createNotificationForAdmins(
-                'Expense Deleted',
-                'An expense record for ₱' . number_format($expenseAmount, 2) . ' (' . $expenseTitle . ') has been deleted by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
-            );
+            // Notify all admins using NotificationService
+            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+            foreach ($adminUsers as $admin) {
+                $this->notificationService->notifyStaff(
+                    $admin->id,
+                    'Expense Deleted',
+                    'An expense record for ₱' . number_format($expenseAmount, 2) . ' (' . $expenseTitle . ') has been deleted by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+                );
+            }
             
             return response()->json([
                 'success' => true,
@@ -593,11 +608,15 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for all admins
-            $this->createNotificationForAdmins(
-                'New Budget Allocation Added',
-                'A new budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been added by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
-            );
+            // Notify all admins using NotificationService
+            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+            foreach ($adminUsers as $admin) {
+                $this->notificationService->notifyStaff(
+                    $admin->id,
+                    'New Budget Allocation Added',
+                    'A new budget allocation of ₱' . number_format($budget->amount, 2) . ' (' . $budget->budgetType->name . ') has been added by ' . Auth::user()->first_name . ' ' . Auth::user()->last_name . '.'
+                );
+            }
             
             return response()->json([
                 'success' => true,
@@ -783,11 +802,15 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for admins
-            $this->createNotificationForAdmins(
-                'Budget Allocation Updated',
-                Auth::user()->first_name . ' updated a budget allocation. Changes: ' . implode(', ', $changeDetails)
-            );
+            // Notify all admins using NotificationService
+            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+            foreach ($adminUsers as $admin) {
+                $this->notificationService->notifyStaff(
+                    $admin->id,
+                    'Budget Allocation Updated',
+                    Auth::user()->first_name . ' updated a budget allocation. Changes: ' . implode(', ', $changeDetails)
+                );
+            }
             
             return response()->json([
                 'success' => true,
@@ -847,11 +870,15 @@ class ExpenseTrackerController extends Controller
                 Auth::id()
             );
             
-            // Create notification for admins
-            $this->createNotificationForAdmins(
-                'Budget Allocation Deleted',
-                Auth::user()->first_name . ' deleted a ' . $budgetTypeName . ' budget allocation of ₱' . number_format($amount, 2)
-            );
+            // Notify all admins using NotificationService
+            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+            foreach ($adminUsers as $admin) {
+                $this->notificationService->notifyStaff(
+                    $admin->id,
+                    'Budget Allocation Deleted',
+                    Auth::user()->first_name . ' deleted a ' . $budgetTypeName . ' budget allocation of ₱' . number_format($amount, 2)
+                );
+            }
             
             return response()->json([
                 'success' => true,
@@ -1081,31 +1108,32 @@ class ExpenseTrackerController extends Controller
         return $stats;
     }
     
-    /**
-     * Create notifications for all admin users
-     */
-    private function createNotificationForAdmins($title, $message)
-    {
-        try {
-            // Get all admin users (role_id = 1)
-            $adminUsers = \App\Models\User::where('role_id', 1)->get();
+    // DO NOT USE, USE NOTIFICATION SERVICE INSTEAD
+    // /**
+    //  * Create notifications for all admin users
+    //  */
+    // private function createNotificationForAdmins($title, $message)
+    // {
+    //     try {
+    //         // Get all admin users (role_id = 1)
+    //         $adminUsers = \App\Models\User::where('role_id', 1)->get();
             
-            // Create notification for each admin
-            foreach ($adminUsers as $admin) {
-                Notification::create([
-                    'user_id' => $admin->id,
-                    'user_type' => 'cose_staff', // Admin users are staff type
-                    'message_title' => $title,
-                    'message' => $message,
-                    'date_created' => Carbon::now(),
-                    'is_read' => false
-                ]);
-            }
+    //         // Create notification for each admin
+    //         foreach ($adminUsers as $admin) {
+    //             Notification::create([
+    //                 'user_id' => $admin->id,
+    //                 'user_type' => 'cose_staff', // Admin users are staff type
+    //                 'message_title' => $title,
+    //                 'message' => $message,
+    //                 'date_created' => Carbon::now(),
+    //                 'is_read' => false
+    //             ]);
+    //         }
             
-            \Log::info('Notifications created for all admins: ' . $title);
-        } catch (\Exception $e) {
-            \Log::error('Failed to create admin notifications: ' . $e->getMessage());
-        }
-    }
+    //         \Log::info('Notifications created for all admins: ' . $title);
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to create admin notifications: ' . $e->getMessage());
+    //     }
+    // }
    
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\FamilyMember;
+use NotificationChannels\Expo\ExpoPushToken;
 
 class Beneficiary extends Authenticatable
 {
@@ -77,5 +78,30 @@ class Beneficiary extends Authenticatable
     public function assignedCareWorker()
     {
         return $this->belongsTo(\App\Models\User::class, 'assigned_care_worker_id', 'id');
+    }
+
+    public function routeNotificationForExpo($notification = null)
+{
+    $token = \App\Models\FcmToken::where('user_id', $this->beneficiary_id)
+        ->where('role', 'beneficiary')
+        ->value('token');
+    \Log::info('routeNotificationForExpo called', [
+        'beneficiary_id' => $this->beneficiary_id,
+        'token' => $token,
+    ]);
+    // Use the static make() method
+    return $token ? [\NotificationChannels\Expo\ExpoPushToken::make($token)] : [];
+}
+
+    public function routeNotificationForFcm($notification = null)
+    {
+        $token = \App\Models\FcmToken::where('user_id', $this->beneficiary_id)
+            ->where('role', 'beneficiary')
+            ->value('token');
+        \Log::info('routeNotificationForFcm called', [
+            'beneficiary_id' => $this->beneficiary_id,
+            'token' => $token,
+        ]);
+        return $token ? [$token] : [];
     }
 }

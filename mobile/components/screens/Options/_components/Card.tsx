@@ -19,6 +19,7 @@ const OptionCard = ({
 const styles = StyleSheet.create({
     card: {
         backgroundColor: "#fff",
+        paddingHorizontal: 20,
     },
 });
 
