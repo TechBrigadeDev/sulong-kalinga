@@ -67,7 +67,7 @@
                     <a class="nav-link dropdown-toggle {{ Request::routeIs('family.profile.*') ? 'active' : '' }}" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown">
                         Account
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
+                    <ul class="dropdown-menu dropdown-menu-end" style="width:200px">
                         <li>
                             <a class="dropdown-item {{ Request::routeIs('family.profile.index') ? 'active' : '' }}" href="{{ route('family.profile.index') }}">Account Profile</a>
                         </li>

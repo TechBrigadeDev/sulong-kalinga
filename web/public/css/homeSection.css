@@ -16,8 +16,8 @@
   background: #E4E9F7;
   height: calc(100vh - 56px);
   padding: 10px;
-  left: 310px;
-  width: calc(100% - 310px);
+  left: 285px;
+  width: calc(100% - 285px);
   transition: all 0.5s ease;
   overflow-x: hidden;
   z-index: 1; /* Add this line */
