@@ -79,6 +79,7 @@ const ScrollView = ({
                 style={styles}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
+                keyboardShouldPersistTaps="handled"
                 {...props}
             >
                 {children}

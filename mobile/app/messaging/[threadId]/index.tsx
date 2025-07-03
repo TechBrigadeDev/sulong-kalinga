@@ -71,6 +71,7 @@ const Screen = () => {
                 contentContainerStyle={{
                     padding: 16,
                 }}
+                keyboardShouldPersistTaps="handled"
             >
                 {messages.map((msg) => (
                     <XStack

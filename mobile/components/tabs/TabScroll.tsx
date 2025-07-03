@@ -263,6 +263,7 @@ const TabScroll = ({
                 ref={ref}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
+                keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{
                     paddingBlockEnd: 110,
                     ...(contentContainerStyle as any),
