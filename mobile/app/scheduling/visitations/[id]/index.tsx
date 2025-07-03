@@ -4,6 +4,7 @@ import { Redirect, Stack } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
 import VisitationDetail from "features/scheduling/visitation/detail";
 import { useVisitation } from "features/scheduling/visitation/hook";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Screen = () => {
     const { id } = useLocalSearchParams<{
@@ -23,12 +24,17 @@ const Screen = () => {
     }
 
     return (
-        <ScrollView flex={1} px="$4" pt="$4">
+        <SafeAreaView
+            style={{
+                flex: 1,
+                backgroundColor: "#fff",
+            }}
+        >
             <VisitationDetail
                 visitation={data}
                 flex={1}
             />
-        </ScrollView>
+        </SafeAreaView>
     );
 };
 

@@ -1,7 +1,8 @@
+import { CheckCircle, Calendar, XCircle } from "lucide-react-native";
 import {
     Card,
-    H6,
-    Paragraph,
+    H4,
+    Text,
     XStack,
     YStack,
 } from "tamagui";
@@ -18,38 +19,168 @@ const StatusCard = ({
     confirmedOn,
 }: Props) => {
     return (
-        <Card bordered p="$4" mb="$2">
-            <YStack space="$4">
-                <H6>Care Plan Status</H6>
-                <YStack space="$2">
-                    <XStack justify="space-between">
-                        <Paragraph>
+        <Card
+            elevate
+            mb="$4"
+            p="$4"
+            style={{ borderRadius: 16 }}
+        >
+            <YStack gap="$3">
+                <XStack
+                    style={{
+                        alignItems: "center",
+                    }}
+                    gap="$2"
+                >
+                    <CheckCircle
+                        size={24}
+                        color="#3b82f6"
+                    />
+                    <H4 color="#111827">
+                        Confirmation Status
+                    </H4>
+                </XStack>
+
+                <YStack gap="$3">
+                    <XStack
+                        style={{
+                            backgroundColor: "#f3f4f6",
+                            padding: 12,
+                            borderRadius: 8,
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Text
+                            fontSize="$4"
+                            style={{
+                                color: "#6b7280",
+                            }}
+                        >
                             Beneficiary:
-                        </Paragraph>
-                        <Paragraph>
-                            {beneficiaryConfirmed
-                                ? "Confirmed"
-                                : "Not Confirmed"}
-                        </Paragraph>
+                        </Text>
+                        <XStack
+                            style={{
+                                alignItems: "center",
+                            }}
+                            gap="$2"
+                        >
+                            {beneficiaryConfirmed ? (
+                                <CheckCircle
+                                    size={16}
+                                    color="#22c55e"
+                                />
+                            ) : (
+                                <XCircle
+                                    size={16}
+                                    color="#ef4444"
+                                />
+                            )}
+                            <Text
+                                fontSize="$4"
+                                fontWeight="500"
+                                style={{
+                                    color: beneficiaryConfirmed
+                                        ? "#22c55e"
+                                        : "#ef4444",
+                                }}
+                            >
+                                {beneficiaryConfirmed
+                                    ? "Confirmed"
+                                    : "Not Confirmed"}
+                            </Text>
+                        </XStack>
                     </XStack>
-                    <XStack justify="space-between">
-                        <Paragraph>
+
+                    <XStack
+                        style={{
+                            backgroundColor: "#f3f4f6",
+                            padding: 12,
+                            borderRadius: 8,
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Text
+                            fontSize="$4"
+                            style={{
+                                color: "#6b7280",
+                            }}
+                        >
                             Family:
-                        </Paragraph>
-                        <Paragraph>
-                            {familyConfirmed
-                                ? "Confirmed"
-                                : "Not Confirmed"}
-                        </Paragraph>
+                        </Text>
+                        <XStack
+                            style={{
+                                alignItems: "center",
+                            }}
+                            gap="$2"
+                        >
+                            {familyConfirmed ? (
+                                <CheckCircle
+                                    size={16}
+                                    color="#22c55e"
+                                />
+                            ) : (
+                                <XCircle
+                                    size={16}
+                                    color="#ef4444"
+                                />
+                            )}
+                            <Text
+                                fontSize="$4"
+                                fontWeight="500"
+                                style={{
+                                    color: familyConfirmed
+                                        ? "#22c55e"
+                                        : "#ef4444",
+                                }}
+                            >
+                                {familyConfirmed
+                                    ? "Confirmed"
+                                    : "Not Confirmed"}
+                            </Text>
+                        </XStack>
                     </XStack>
+
                     {confirmedOn && (
-                        <XStack justify="space-between">
-                            <Paragraph>
-                                Confirmed On:
-                            </Paragraph>
-                            <Paragraph>
+                        <XStack
+                            style={{
+                                backgroundColor: "#f0f9ff",
+                                padding: 12,
+                                borderRadius: 8,
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                            }}
+                        >
+                            <XStack
+                                style={{
+                                    alignItems: "center",
+                                }}
+                                gap="$2"
+                            >
+                                <Calendar
+                                    size={16}
+                                    color="#0369a1"
+                                />
+                                <Text
+                                    fontSize="$4"
+                                    style={{
+                                        color: "#0369a1",
+                                    }}
+                                    fontWeight="500"
+                                >
+                                    Confirmed On:
+                                </Text>
+                            </XStack>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#0369a1",
+                                }}
+                                fontWeight="600"
+                            >
                                 {confirmedOn}
-                            </Paragraph>
+                            </Text>
                         </XStack>
                     )}
                 </YStack>
