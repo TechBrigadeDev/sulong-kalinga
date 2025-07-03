@@ -75,7 +75,14 @@ class ProfileApiController extends Controller
         $familyMember->email = $request->email;
         $familyMember->save();
 
-        // Notify the actor
+        // Notify the actor (in-app)
+        $this->notificationService->notifyFamilyMember(
+            $user->family_member_id,
+            'Email Updated',
+            'Your email was updated successfully.'
+        );
+
+        // Send push notification
         $this->notificationService->notifyFamilyMember(
             $user->family_member_id,
             'Email Updated',
@@ -155,7 +162,14 @@ class ProfileApiController extends Controller
             $beneficiary->password = $hashed;
             $beneficiary->save();
 
-            // Notify the actor
+            // Notify the actor (in-app)
+            $this->notificationService->notifyBeneficiary(
+                $user->beneficiary_id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
+
+            // Send push notification
             $this->notificationService->notifyBeneficiary(
                 $user->beneficiary_id,
                 'Password Updated',
@@ -170,7 +184,14 @@ class ProfileApiController extends Controller
             $familyMember->password = $hashed;
             $familyMember->save();
 
-            // Notify the actor
+            // Notify the actor (in-app)
+            $this->notificationService->notifyFamilyMember(
+                $user->family_member_id,
+                'Password Updated',
+                'Your password was updated successfully.'
+            );
+
+            // Send push notification
             $this->notificationService->notifyFamilyMember(
                 $user->family_member_id,
                 'Password Updated',
