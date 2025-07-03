@@ -120,6 +120,99 @@ class FcmApiController extends Controller
     }
 
     /**
+     * Remove FCM token for authenticated user and device (revoke)
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function revoke(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            // COMMENTED OUT IF NO MOBILE DEVICES TABLE USAGE
+            // 'device_uuid' => 'nullable|string',
+            'fcm_token' => 'nullable|string',
+        ]);
+
+        if ($validator->fails() || (!$request->filled('device_uuid') && !$request->filled('fcm_token'))) {
+            return response()->json([
+                'success' => false,
+                // COMMENTED OUT IF NO MOBILE DEVICES TABLE USAGE
+                // 'message' => 'Validation failed. Provide either device_uuid or fcm_token.',
+                'message' => 'Fail.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            [$userId, $role] = $this->getUserIdAndRole($user);
+
+            $deleted = false;
+
+            // Revoke by fcm_token
+            if ($request->filled('fcm_token')) {
+                $fcmToken = FcmToken::where('user_id', $userId)
+                    ->where('role', $role)
+                    ->where('token', $request->input('fcm_token'))
+                    ->first();
+
+                // COMMENTED OUT IF NO MOBILE DEVICES TABLE USAGE
+                // if ($fcmToken) {
+                //     $mobileDeviceId = $fcmToken->mobile_device_id;
+                //     $fcmToken->delete();
+                //     // Always delete the device entry
+                //     MobileDevice::where('id', $mobileDeviceId)
+                //         ->where('user_id', $userId)
+                //         ->where('user_type', $role)
+                //         ->delete();
+                //     $deleted = true;
+                // }
+
+                // IF COMMENTED OUT, DELETE ONLY FCM TOKEN
+                $fcmToken->delete();
+            }
+
+            // // Revoke by device_uuid
+            // if (!$deleted && $request->filled('device_uuid')) {
+            //     $mobileDevice = MobileDevice::where('device_uuid', $request->input('device_uuid'))
+            //         ->where('user_id', $userId)
+            //         ->where('user_type', $role)
+            //         ->first();
+
+            //     if ($mobileDevice) {
+            //         FcmToken::where('user_id', $userId)
+            //             ->where('role', $role)
+            //             ->where('mobile_device_id', $mobileDevice->id)
+            //             ->delete();
+
+            //         $mobileDevice->delete();
+            //         $deleted = true;
+            //     }
+            // }
+
+            if ($deleted) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'FCM token and device unregistered successfully'
+                ], 200);
+            } 
+            // else {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'No matching FCM token or device found'
+            //     ], 404);
+            // }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to unregister FCM token',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get user ID and role based on the authenticated user's role_id
      *
      * @param mixed $user
