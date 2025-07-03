@@ -14,6 +14,7 @@ import {
     XStack,
     YStack,
 } from "tamagui";
+import { useStore } from "zustand";
 
 import {
     emergencyFormOpts,
@@ -68,13 +69,22 @@ const EmergencyAssistanceForm = ({
         },
     });
 
-    const request = store.getState().request;
+    // Use reactive subscription with useStore for context-based stores
+    const request = useStore(
+        store,
+        (state) => state.request,
+    );
+    
     useEffect(() => {
         if (request?.type === "service") {
             return;
         }
 
         if (request) {
+            console.log(
+                "Emergency form: Populating form with request data:",
+                request,
+            );
             form.reset({
                 emergency_type_id:
                     request.emergency_type_id.toString(),

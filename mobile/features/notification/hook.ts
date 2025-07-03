@@ -137,7 +137,8 @@ export const useRegisterNotification = () => {
     const { data: notificationToken } =
         useGetNotificationToken();
 
-    const { role, token } = authStore();
+    const { role, token, setNotificationToken } =
+        authStore();
 
     return useQuery({
         queryKey: QK.notification.registerToken(
@@ -185,6 +186,9 @@ export const useRegisterNotification = () => {
                             role,
                             token,
                         },
+                    );
+                    setNotificationToken(
+                        notificationToken,
                     );
                 } catch {
                     return;
