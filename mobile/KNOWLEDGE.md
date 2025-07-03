@@ -91,6 +91,189 @@ interface State {
 - Implement proper loading states during form submission
 - Handle form cleanup to prevent memory leaks
 
+## React Hook Form State Management Best Practices (2025)
+
+### Form State Persistence Issues
+
+**Problem**: Form input values persist when navigating from edit mode back to create mode, even when using form.reset().
+
+**Root Cause**: React Hook Form's reset function and lifecycle hooks (useEffect, useFocusEffect) don't properly differentiate between different navigation scenarios, leading to incomplete form cleanup.
+
+**Common Scenarios**:
+1. **Edit → Create**: Form retains edit values instead of resetting to defaults
+2. **Route Parameter Changes**: Form doesn't detect mode changes properly
+3. **Navigation Stack Issues**: Previous form state bleeds into new form instances
+
+### Best Practices for Form Mode Management
+
+#### 1. **Explicit Mode Detection**
+```tsx
+// ✅ Detect mode based on props rather than internal state
+const isEditMode = !!record; // Explicit boolean
+const isCreateMode = !record;
+
+// Use mode to determine form behavior
+useEffect(() => {
+    if (isEditMode && record) {
+        // Populate form with edit data
+        formReset(mapRecordToFormData(record));
+    } else {
+        // Reset to clean defaults for create mode
+        formReset(getDefaultFormValues());
+    }
+}, [isEditMode, record, formReset]);
+```
+
+#### 2. **Proper useFocusEffect Implementation**
+```tsx
+// ✅ Clean up form state on screen blur/focus
+useFocusEffect(
+    useCallback(() => {
+        // Screen focused - initialize based on mode
+        if (!record) {
+            // Create mode - ensure clean state
+            setRecord(null);
+            resetStep();
+            formReset(getDefaultFormValues());
+        }
+        
+        return () => {
+            // Screen blurred - cleanup for next visit
+            if (!record) {
+                setRecord(null);
+                resetStep();
+                formReset({});
+            }
+        };
+    }, [record, resetStep, formReset, setRecord])
+);
+```
+
+#### 3. **Store State Management for Forms**
+```tsx
+// ✅ Clear store state when switching modes
+const clearFormState = useCallback(() => {
+    setRecord(null);
+    resetStep();
+    formReset(getDefaultFormValues());
+}, [setRecord, resetStep, formReset]);
+
+// Call when explicitly switching to create mode
+const handleCreateNew = () => {
+    clearFormState();
+    router.push('/form-route');
+};
+```
+
+### Form Reset Strategies
+
+#### **Complete Form Reset Pattern**
+```tsx
+const resetFormCompletely = useCallback(() => {
+    // 1. Reset React Hook Form
+    formReset(getDefaultFormValues());
+    
+    // 2. Reset Zustand store state
+    setRecord(null);
+    resetStep();
+    
+    // 3. Reset any local component state
+    setLocalState(initialState);
+    
+    // 4. Clear any cached values
+    clearCache();
+}, [formReset, setRecord, resetStep]);
+```
+
+#### **Conditional Reset Based on Navigation**
+```tsx
+useEffect(() => {
+    // Only reset when truly switching modes
+    if (prevRecord !== record) {
+        if (record) {
+            // Edit mode
+            formReset(mapRecordToFormData(record));
+            setRecord(record);
+        } else {
+            // Create mode
+            formReset(getDefaultFormValues());
+            setRecord(null);
+            resetStep();
+        }
+    }
+}, [record, prevRecord, formReset, setRecord, resetStep]);
+```
+
+### Navigation-Aware Form Cleanup
+
+#### **Route-Based Cleanup**
+```tsx
+// ✅ Detect route changes and clean up accordingly
+const { pathname } = useRouter();
+const isCreateRoute = pathname.includes('/create');
+const isEditRoute = pathname.includes('/edit');
+
+useFocusEffect(
+    useCallback(() => {
+        if (isCreateRoute) {
+            // Force create mode setup
+            setRecord(null);
+            resetStep();
+            formReset(getDefaultFormValues());
+        }
+    }, [isCreateRoute, setRecord, resetStep, formReset])
+);
+```
+
+#### **Expo Router Integration**
+```tsx
+// ✅ Use Expo Router's navigation events
+import { useFocusEffect, useRouter } from 'expo-router';
+
+const router = useRouter();
+
+useFocusEffect(
+    useCallback(() => {
+        const segments = router.pathname.split('/');
+        const isEditMode = segments.includes('edit');
+        const hasId = segments.some(segment => /^\d+$/.test(segment));
+        
+        if (!isEditMode && !hasId) {
+            // This is create mode - clean slate
+            clearFormState();
+        }
+    }, [router.pathname])
+);
+```
+
+### React Hook Form DefaultValues Management
+
+#### **Dynamic Default Values**
+```tsx
+// ✅ Create form with dynamic defaults based on mode
+const createForm = (mode: 'create' | 'edit', data?: FormData) => {
+    return useForm({
+        resolver: zodResolver(schema),
+        defaultValues: mode === 'create' 
+            ? getCreateModeDefaults()
+            : getEditModeDefaults(data),
+        mode: 'onChange'
+    });
+};
+```
+
+#### **Reset with New Defaults**
+```tsx
+// ✅ Reset form with specific defaults
+const switchToCreateMode = () => {
+    const createDefaults = getCreateModeDefaults();
+    formReset(createDefaults);
+    // Ensure form recognizes this as a complete reset
+    form.clearErrors();
+    form.setFocus(); // Optional: focus first field
+};
+```
+
 ### Common Patterns and Solutions
 
 #### 1. **State Synchronization Timing**

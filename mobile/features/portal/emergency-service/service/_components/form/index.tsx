@@ -72,7 +72,7 @@ const ServiceAssistanceForm = ({
         store,
         (state) => state.request,
     );
-    
+
     useEffect(() => {
         if (request?.type === "emergency") {
             return;

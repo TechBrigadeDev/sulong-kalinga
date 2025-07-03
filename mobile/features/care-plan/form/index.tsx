@@ -33,6 +33,7 @@ import {
     useCarePlanForm,
 } from "./form";
 import { useCarePlanFormStore } from "./store";
+import { CarePlanFormData } from "./type";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
@@ -45,6 +46,31 @@ const FORM_STEPS = [
     { label: "Household Keeping" },
     { label: "Evaluation" },
 ];
+
+// Helper function to get default form values for create mode
+const getDefaultFormValues =
+    (): Partial<CarePlanFormData> => ({
+        personalDetails: {
+            beneficiaryId: "",
+            illness: "",
+            assessment: "",
+            bloodPressure: "",
+            pulseRate: 72,
+            temperature: 36.5,
+            respiratoryRate: 16,
+        },
+        mobility: [],
+        cognitive: [],
+        selfSustainability: [],
+        diseaseTherapy: [],
+        socialContact: [],
+        outdoorActivity: [],
+        householdKeeping: [],
+        evaluation: {
+            pictureUri: "",
+            recommendations: "",
+        },
+    });
 
 interface Props {
     record?: IRecordDetail;
@@ -59,11 +85,8 @@ const Form = ({ record }: Props) => {
         resetStep,
     } = useCarePlanFormStore();
 
-    const { reset: formReset, getValues } =
+    const { reset: formReset } =
         useCarePlanForm();
-
-    const formHasValues =
-        Object.keys(getValues()).length > 0;
 
     // Helper function to map interventions for each category
     const mapInterventions = (
@@ -169,23 +192,36 @@ const Form = ({ record }: Props) => {
             console.log(
                 "Form reset on record change or unmount",
             );
-            formReset({});
+            formReset(getDefaultFormValues());
         };
-    }, [
-        record,
-        setRecord,
-        formReset,
-        formHasValues,
-    ]);
+    }, [record, setRecord, formReset]);
 
     useFocusEffect(
         useCallback(() => {
-            return () => {
+            // Screen focused - ensure proper mode setup
+            if (!record) {
+                // Create mode - reset to clean defaults
                 setRecord(null);
                 resetStep();
-                formReset();
+                formReset(getDefaultFormValues());
+            }
+
+            return () => {
+                // Screen blurred - cleanup only if in create mode
+                if (!record) {
+                    setRecord(null);
+                    resetStep();
+                    formReset(
+                        getDefaultFormValues(),
+                    );
+                }
             };
-        }, [resetStep, formReset, setRecord]),
+        }, [
+            record,
+            resetStep,
+            formReset,
+            setRecord,
+        ]),
     );
 
     const handleNext = () => {

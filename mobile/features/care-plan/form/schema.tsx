@@ -19,8 +19,8 @@ export const personalDetailsSchema = z.object({
             "Assessment must be at least 20 characters",
         )
         .max(
-            5000,
-            "Assessment cannot exceed 5000 characters",
+            10000,
+            "Assessment cannot exceed 10000 characters",
         ),
     bloodPressure: z
         .string()
@@ -146,8 +146,8 @@ export const evaluationSchema = z.object({
             "Evaluation and recommendations must be at least 20 characters",
         )
         .max(
-            5000,
-            "Evaluation and recommendations cannot exceed 5000 characters",
+            10000,
+            "Evaluation and recommendations cannot exceed 10000 characters",
         ),
 });
 
