@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
 
 # Set up the cron job for Laravel Scheduler
 RUN (crontab -l ; \
-    echo "* * * * * cd /app && php artisan schedule:run >> /app/schedule.log 2>&1" ; \
+    echo "* * * * * cd /app && /usr/local/bin/php artisan schedule:run >> /app/schedule.log 2>&1" ; \
     echo "* * * * * echo \"cron test \$(date)\" >> /app/cron_test.log" \
     ) | crontab -
 
