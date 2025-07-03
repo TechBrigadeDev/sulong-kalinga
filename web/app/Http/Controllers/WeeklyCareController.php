@@ -128,12 +128,12 @@ class WeeklyCareController extends Controller
         // Validate the request
         $validated = $request->validate([
             'beneficiary_id' => 'required|exists:beneficiaries,beneficiary_id',
-            'assessment' => 'required|string|min:20|max:5000',
+            'assessment' => 'required|string|min:20|max:10000',
             'blood_pressure' => 'required|string|regex:/^\d{2,3}\/\d{2,3}$/',
             'body_temperature' => 'required|numeric|between:35,42',
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
-            'evaluation_recommendations' => 'required|string|min:20|max:5000',
+            'evaluation_recommendations' => 'required|string|min:20|max:10000',
             'upload_picture' => 'required|image|mimes:jpeg,png,jpg|max:7168',
             'selected_interventions' => 'required|array',
             'duration_minutes' => 'required|array',
@@ -150,7 +150,7 @@ class WeeklyCareController extends Controller
 
             'assessment.required' => 'Please provide an assessment',
             'assessment.min' => 'Assessment must be at least 20 characters',
-            'assessment.max' => 'Assessment cannot exceed 5000 characters',
+            'assessment.max' => 'Assessment cannot exceed 10000 characters',
             'assessment.regex' => 'Assessment must contain some text and cannot consist of only numbers or symbols',
 
             'blood_pressure.required' => 'Blood pressure is required',
@@ -167,7 +167,7 @@ class WeeklyCareController extends Controller
 
             'evaluation_recommendations.required' => 'Please provide evaluation recommendations',
             'evaluation_recommendations.min' => 'Evaluation recommendations must be at least 20 characters',
-            'evaluation_recommendations.max' => 'Evaluation recommendations cannot exceed 5000 characters',
+            'evaluation_recommendations.max' => 'Evaluation recommendations cannot exceed 10000 characters',
             'evaluation_recommendations.regex' => 'Evaluation recommendations must contain some text and cannot consist of only numbers or symbols',
 
             'selected_interventions.required' => 'Please select at least one intervention',
@@ -626,12 +626,12 @@ class WeeklyCareController extends Controller
         // Validate the request (same validation as store method)
         $validated = $request->validate([
             'beneficiary_id' => 'required|exists:beneficiaries,beneficiary_id',
-            'assessment' => 'required|string|min:20|max:5000',
+            'assessment' => 'required|string|min:20|max:10000',
             'blood_pressure' => 'required|string|regex:/^\d{2,3}\/\d{2,3}$/',
             'body_temperature' => 'required|numeric|between:35,42',
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
-            'evaluation_recommendations' => 'required|string|min:20|max:5000',
+            'evaluation_recommendations' => 'required|string|min:20|max:10000',
             'upload_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:7168',
             'selected_interventions' => 'required|array',
             'duration_minutes' => 'required|array',

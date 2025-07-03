@@ -108,7 +108,7 @@
                                        value="{{ old('nationality', $caremanager->nationality) }}" placeholder="Enter nationality">
                             </div>
                             <div class="col-md-3">
-                                <label for="municipality" class="form-label">{{ T::translate(Municipality'', 'Munisipalidad')}}<label style="color:red;"> * </label></label>
+                                <label for="municipality" class="form-label">{{ T::translate('Municipality', 'Munisipalidad')}}<label style="color:red;"> * </label></label>
                                 <select class="form-select" id="municipality" name="municipality" required>
                                     <option value="" disabled>Select municipality</option>
                                     @foreach ($municipalities as $municipality)

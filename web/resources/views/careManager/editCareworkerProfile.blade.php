@@ -264,7 +264,7 @@
                             <div class="col-md-4">
                                 <label for="confirmPassword" class="form-label">{{ T::translate('Confirm Password', 'Kumpirmahin ang Password')}}</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="confirmPassword" name="account[confirm_password]" placeholder="{{ T::translate('Confirm password', 'Kumpirmahin ang password')}}">
+                                    <input type="password" class="form-control" id="confirmPassword" name="account[password_confirmation]" placeholder="{{ T::translate('Confirm password', 'Kumpirmahin ang password')}}">
                                     <span class="input-group-text password-toggle" data-target="confirmPassword">
                                         <i class="bi bi-eye-slash"></i>
                                     </span>
