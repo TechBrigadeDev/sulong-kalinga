@@ -1,4 +1,4 @@
-import {
+    import {
     Stack,
     useLocalSearchParams,
 } from "expo-router";
