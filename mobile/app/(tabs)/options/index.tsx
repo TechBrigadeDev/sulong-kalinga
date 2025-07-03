@@ -26,6 +26,9 @@ const Screen = () => {
                 contentContainerStyle={{
                     paddingBlockEnd: 200,
                 }}
+                showsVerticalScrollIndicator={
+                    false
+                }
             >
                 <ProfileSettings />
                 <UserManagement />
@@ -38,7 +41,7 @@ const Screen = () => {
 
 const style = StyleSheet.create({
     scroll: {
-        display: "flex",
+        flex: 1,
         paddingHorizontal: 40,
     },
 });
