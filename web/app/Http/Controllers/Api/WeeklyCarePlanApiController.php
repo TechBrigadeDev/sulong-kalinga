@@ -38,12 +38,12 @@ class WeeklyCarePlanApiController extends Controller
 
         $validator = Validator::make($request->all(), [
             'beneficiary_id' => 'required|exists:beneficiaries,beneficiary_id',
-            'assessment' => 'required|string|min:20|max:5000',
+            'assessment' => 'required|string|min:20|max:10000',
             'blood_pressure' => 'required|string|regex:/^\d{2,3}\/\d{2,3}$/',
             'body_temperature' => 'required|numeric|between:29,42',
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
-            'evaluation_recommendations' => 'required|string|min:20|max:5000',
+            'evaluation_recommendations' => 'required|string|min:20|max:10000',
             'photo' => 'required|file|image|max:4096',
             'selected_interventions' => 'required|array|min:1',
             'duration_minutes' => 'required|array|min:1',
