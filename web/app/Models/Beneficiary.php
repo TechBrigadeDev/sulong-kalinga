@@ -81,20 +81,17 @@ class Beneficiary extends Authenticatable
     }
 
     public function routeNotificationForExpo($notification = null)
-    {
-        $tokens = \App\Models\FcmToken::where('user_id', $this->beneficiary_id) // or $this->beneficiary_id, $this->family_member_id
-            ->where('role', 'beneficiary') // or 'beneficiary', 'family_member'
-            ->pluck('token')
-            ->filter()
-            ->unique()
-            ->map(fn($token) => \NotificationChannels\Expo\ExpoPushToken::make($token))
-            ->toArray();
-        \Log::info('routeNotificationForExpo called', [
-            'user_id' => $this->id ?? $this->beneficiary_id ?? $this->family_member_id,
-            'tokens' => $tokens,
-        ]);
-        return $tokens;
-    }
+{
+    $token = \App\Models\FcmToken::where('user_id', $this->beneficiary_id)
+        ->where('role', 'beneficiary')
+        ->value('token');
+    \Log::info('routeNotificationForExpo called', [
+        'beneficiary_id' => $this->beneficiary_id,
+        'token' => $token,
+    ]);
+    // Use the static make() method
+    return $token ? [\NotificationChannels\Expo\ExpoPushToken::make($token)] : [];
+}
 
     public function routeNotificationForFcm($notification = null)
     {

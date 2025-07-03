@@ -114,7 +114,6 @@ class NotificationService
         return $notifications;
     }
 
-    //UNUSED FOR MULTI DEVICE, REPLACED BY CODE IN FCMAPICONTROLLER
     /**
      * Register FCM token for a user
      *
@@ -133,7 +132,6 @@ class NotificationService
         return FcmToken::registerToken($userId, $role, $token);
     }
 
-    // UNUSED FOR MULTI DEVICE, REPLACED BY CODE IN FCMAPICONTROLLER
     /**
      * Get FCM token by user ID and role
      *
@@ -223,6 +221,7 @@ class NotificationService
      */
     private function sendExpoPush($notifiable, string $title, string $message, string $role): void
     {
+        $fcmToken = null;
         $userId = null;
 
         \Log::info('=== PUSH NOTIFICATION DEBUG START ===');
@@ -243,36 +242,29 @@ class NotificationService
         \Log::info('User ID resolved', ['user_id' => $userId]);
         
         if ($userId) {
-            // Fetch all tokens for this user/role (all devices)
-            $fcmTokens = FcmToken::where('user_id', $userId)
-                ->where('role', $role)
-                ->pluck('token')
-                ->filter()
-                ->unique();
-
+            $fcmToken = FcmToken::getTokenByUser($userId, $role);
             \Log::info('Token lookup result', [
-                'tokens_found' => $fcmTokens->count(),
-                'tokens' => $fcmTokens->all()
+                'token_found' => $fcmToken ? 'YES' : 'NO',
+                'token_value' => $fcmToken ? $fcmToken->token : 'NONE'
             ]);
-        } else {
-            $fcmTokens = collect();
         }
         
-        // Only send if FCM tokens exist
-        if ($fcmTokens->isNotEmpty()) {
-            foreach ($fcmTokens as $token) {
-                try {
-                    \Log::info('Attempting to send push notification to token', ['token' => $token]);
-                    \Illuminate\Support\Facades\Notification::route('custom_expo', $token)
-                        ->notify(new ExpoPushNotification($title, $message));
-                    \Log::info('✅ Push notification sent successfully to token', ['token' => $token]);
-                } catch (\Exception $e) {
-                    \Log::error('❌ Failed to send push notification to token: ' . $token . ' - ' . $e->getMessage());
-                    \Log::error('Exception trace: ' . $e->getTraceAsString());
-                }
+        // Only send if FCM token exists
+        if ($fcmToken) {
+            try {
+                \Log::info('Attempting to send push notification');
+                \Illuminate\Support\Facades\Notification::send(
+                    $notifiable,
+                    new ExpoPushNotification($title, $message)
+                    // new ExpoPushNotification($title, $message, $fcmToken->token)
+                );
+                \Log::info('✅ Push notification sent successfully');
+            } catch (\Exception $e) {
+                \Log::error('❌ Failed to send push notification: ' . $e->getMessage());
+                \Log::error('Exception trace: ' . $e->getTraceAsString());
             }
         } else {
-            \Log::warning('❌ No FCM tokens found - push notification skipped');
+            \Log::warning('❌ No FCM token found - push notification skipped');
         }
         
         \Log::info('=== PUSH NOTIFICATION DEBUG END ===');
