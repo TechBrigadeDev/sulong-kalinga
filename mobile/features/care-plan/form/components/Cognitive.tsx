@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCarePlanForm } from "features/care-plan/form/form";
+import { useGetInterventions } from "features/care-plan/hook";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import {
@@ -18,7 +19,8 @@ export interface CognitiveIntervention {
     name: string;
     minutes: number;
     isCustom?: boolean;
-    categoryId?: string;
+    interventionId?: number; // Database intervention_id for standard interventions
+    categoryId?: number; // care_category_id for custom interventions
     description?: string;
 }
 
@@ -30,15 +32,6 @@ interface CognitiveProps {
     data?: CognitiveData;
     onChange?: (data: CognitiveData) => void;
 }
-
-const DEFAULT_INTERVENTIONS = [
-    "Assist in communication with family members",
-    "Help with memory exercises and cognitive games",
-    "Support in following daily routines",
-    "Aid in using communication devices",
-    "Help with reading and writing tasks",
-    "Support in decision-making activities",
-];
 
 export const Cognitive = ({
     data: _data,
@@ -77,6 +70,8 @@ export const Cognitive = ({
 
 const InterventionList = () => {
     const { control } = useCarePlanForm();
+    const { interventions } =
+        useGetInterventions();
 
     return (
         <Controller
@@ -91,15 +86,14 @@ const InterventionList = () => {
                         Available Interventions
                     </Text>
 
-                    {DEFAULT_INTERVENTIONS.map(
-                        (
-                            interventionName,
-                            index,
-                        ) => (
+                    {interventions[
+                        "Cognitive/Communication"
+                    ].map(
+                        (intervention, index) => (
                             <InterventionItem
                                 key={index}
-                                interventionName={
-                                    interventionName
+                                intervention={
+                                    intervention
                                 }
                                 interventions={
                                     field.value ||
@@ -131,7 +125,10 @@ const InterventionList = () => {
 };
 
 interface InterventionItemProps {
-    interventionName: string;
+    intervention: {
+        intervention_id: number;
+        intervention_description: string;
+    };
     interventions: CognitiveIntervention[];
     onChange: (
         interventions: CognitiveIntervention[],
@@ -139,10 +136,15 @@ interface InterventionItemProps {
 }
 
 const InterventionItem = ({
-    interventionName,
+    intervention,
     interventions,
     onChange,
 }: InterventionItemProps) => {
+    const interventionName =
+        intervention.intervention_description;
+    const interventionId =
+        intervention.intervention_id;
+
     const existingIntervention =
         interventions.find(
             (i) =>
@@ -167,10 +169,12 @@ const InterventionItem = ({
             // Add intervention
             const newIntervention: CognitiveIntervention =
                 {
-                    id: Date.now().toString(),
+                    id: `cognitive_${interventionId}_${Date.now()}`,
                     name: interventionName,
-                    minutes: 0,
+                    minutes: 1,
                     isCustom: false,
+                    interventionId:
+                        interventionId,
                 };
             onChange([
                 ...interventions,
@@ -197,7 +201,7 @@ const InterventionItem = ({
     };
 
     return (
-        <XStack gap="$3" ai="center">
+        <XStack gap="$3" items="center">
             <Checkbox
                 checked={isChecked}
                 onCheckedChange={
@@ -218,7 +222,10 @@ const InterventionItem = ({
                     {interventionName}
                 </Text>
                 {isChecked && (
-                    <XStack gap="$2" ai="center">
+                    <XStack
+                        gap="$2"
+                        items="center"
+                    >
                         <Input
                             flex={1}
                             placeholder="Duration"
@@ -247,8 +254,15 @@ const InterventionItem = ({
 
 const CustomIntervention = () => {
     const { control } = useCarePlanForm();
+    const { getCategoryId } =
+        useGetInterventions();
     const [customText, setCustomText] =
         useState("");
+
+    // Get the care_category_id for Cognitive/Communication category
+    const cognitiveCategoryId = getCategoryId(
+        "Cognitive/Communication",
+    );
 
     return (
         <Controller
@@ -280,11 +294,13 @@ const CustomIntervention = () => {
                                 ) {
                                     const newIntervention: CognitiveIntervention =
                                         {
-                                            id: Date.now().toString(),
+                                            id: `custom_cognitive_${Date.now()}_${Math.random()}`,
                                             name: customText.trim(),
-                                            minutes: 0,
+                                            minutes: 1,
                                             isCustom:
                                                 true,
+                                            categoryId:
+                                                cognitiveCategoryId,
                                         };
                                     field.onChange(
                                         [
@@ -373,16 +389,16 @@ const CustomInterventionItem = ({
     return (
         <XStack
             gap="$3"
-            ai="center"
+            items="center"
             p="$3"
             bg="gray"
-            br="$4"
+            rounded="$4"
         >
             <YStack flex={1} gap="$2">
                 <Text fontSize="$4">
                     {intervention.name}
                 </Text>
-                <XStack gap="$2" ai="center">
+                <XStack gap="$2" items="center">
                     <Input
                         flex={1}
                         placeholder="Duration"

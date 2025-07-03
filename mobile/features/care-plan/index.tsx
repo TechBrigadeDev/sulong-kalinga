@@ -10,6 +10,7 @@ import { showToastable } from "react-native-toastable";
 
 import { mapCarePlanFormToApiData } from "./form/mapper";
 import { CarePlanFormData } from "./form/type";
+import { interventionListSchema } from "./schema";
 
 class CarePlanController extends Controller {
     async postCarePlan(data: CarePlanFormData) {
@@ -49,7 +50,17 @@ class CarePlanController extends Controller {
                         });
 
                     default:
-                        toastServerError(error);
+                        toastServerError({
+                            data: JSON.stringify(
+                                data,
+                                null,
+                                2,
+                            ),
+                            error: error.response
+                                ?.data,
+                            status: error.response
+                                ?.status,
+                        });
 
                         break;
                 }

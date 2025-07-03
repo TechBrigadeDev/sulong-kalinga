@@ -122,8 +122,9 @@ class ReportController extends Controller {
             );
 
         if (!validate.success) {
-            console.error(
+            log(
                 "Invalid WCP record data:",
+                JSON.stringify(data, null, 2),
                 validate.error,
             );
             throw new Error(

@@ -5,85 +5,118 @@ import { useEffect, useState } from "react";
 import { Button, Spinner } from "tamagui";
 
 const SubmitEmergency = () => {
-    const form = useEmergencyForm();
-    const {
-        mutate: submitEmergencyRequest,
-        isPending: isSubmitting,
-    } = useEmergencyRequest();
+    const store = useEmergencyServiceStore();
+    const form = useEmergencyFormContext();
 
-    const onSuccess = async (
-        data: IEmergencyForm,
-    ) => {
-        try {
-            submitEmergencyRequest(data);
+    const [currentRequest, setCurrentRequest] =
+        useState<IEmergencyServiceRequest | null>(
+            null,
+        );
+    const request = store.getState().request;
 
-            showToastable({
-                title: "Request Submitted",
-                message:
-                    "Your emergency request has been submitted successfully.",
-                status: "success",
-            });
+    useEffect(() => {
+        if (
+            request &&
+            request.type === "emergency"
+        ) {
+            setCurrentRequest(request);
+            // form.reset({
+            //     message: request.description,
+            //     emergency_type_id:
+            //         request.emergency_type_id.toString(),
+            // });
+        } else {
+            setCurrentRequest(null);
             form.reset({
                 message: "",
                 emergency_type_id: "",
             });
-        } catch (error) {
-            console.error(
-                "Error submitting form:",
-                error,
-            );
         }
+
+        store.subscribe(() => {
+            const updatedRequest =
+                store.getState().request;
+            if (updatedRequest) {
+                setCurrentRequest(updatedRequest);
+                form.reset({
+                    message:
+                        updatedRequest?.description,
+                    emergency_type_id:
+                        updatedRequest.emergency_type_id?.toString(),
+                });
+            } else {
+                setCurrentRequest(null);
+                form.reset({
+                    message: "",
+                    emergency_type_id: "",
+                });
+            }
+        });
+    }, [store, request, form]);
+
+    const isEditing =
+        currentRequest?.type === "emergency";
+
+    const resetForm = () => {
+        form.reset({
+            message: "",
+            emergency_type_id: "",
+        });
+        store.setState({
+            request: null,
+        });
     };
 
-    const onError: SubmitErrorHandler<
-        IEmergencyForm
-    > = (errors) => {
-        // Handle form validation errors
-        console.error(
-            "Form submission errors:",
-            errors,
+    const Edit = () =>
+        isEditing && (
+            <Button
+                onPress={resetForm}
+                disabled={form.state.isSubmitting}
+                size="$5"
+                theme="red"
+                fontSize="$5"
+                fontWeight="600"
+            >
+                Reset
+            </Button>
         );
-        // You can show a toast or alert with the error messages
-    };
-
-    const handleSubmit = async () => {
-        try {
-            await form.handleSubmit(
-                onSuccess,
-                onError,
-            )();
-        } catch (error) {
-            console.error(
-                "Error submitting form:",
-                error,
-            );
-        }
-    };
-
-    const disabled =
-        form.formState.isSubmitting ||
-        isSubmitting;
 
     return (
-        <Button
-            onPress={handleSubmit}
-            disabled={disabled}
-            size="$5"
-            mt="$8"
-            theme="blue"
-            fontSize="$5"
-            fontWeight="600"
+        <form.Subscribe
+            selector={(state) => state}
         >
-            {form.formState.isSubmitting ||
-                (isSubmitting && (
-                    <Spinner
-                        size="small"
-                        mr="$2"
-                        color="$white1"
-                    />
-                ))}
-            Submit
-        </Button>
+            {(state) => (
+                <>
+                    <Button
+                        onPress={
+                            form.handleSubmit
+                        }
+                        disabled={
+                            state.isSubmitting
+                        }
+                        size="$5"
+                        mt="$8"
+                        theme="light_blue"
+                        fontSize="$5"
+                        fontWeight="600"
+                    >
+                        {form.state
+                            .isSubmitting && (
+                            <Spinner
+                                size="small"
+                                mr="$2"
+                                color="$white1"
+                            />
+                        )}
+                        {currentRequest?.id
+                            ? "Update"
+                            : "Submit"}
+                        {form.state.isSubmitting}
+                    </Button>
+                    <Edit />
+                </>
+            )}
+        </form.Subscribe>
     );
 };
 

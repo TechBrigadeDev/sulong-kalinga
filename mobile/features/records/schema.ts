@@ -72,7 +72,7 @@ export const wcpInterventionSchema = z.object({
 export const wcpRecordSchema = z.object({
     id: z.number(),
     date: z.string(),
-    beneficiary: z.string(),
+    beneficiary: wcpBeneficiarySchema,
     care_worker: z.string(),
     assessment: z.string().optional(),
     evaluation_recommendations: z
@@ -93,6 +93,8 @@ export const wcpRecordSchema = z.object({
     photo_url: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
+    acknowledge_status: z.string(),
+    who_acknowledged: z.string().nullable(),
 });
 
 export const wcpRecordResponseSchema = z.object({

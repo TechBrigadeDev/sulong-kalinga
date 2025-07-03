@@ -6,14 +6,13 @@ import {
 import React from "react";
 import {
     Card,
-    Image,
     Text,
     XStack,
     YStack,
 } from "tamagui";
 
 interface VitalSignsProps {
-    vitalSigns?: VitalSignsType[];
+    vitalSigns?: VitalSignsType;
 }
 
 const VitalSignItem: React.FC<{
@@ -27,17 +26,17 @@ const VitalSignItem: React.FC<{
     label,
     value,
     unit,
-    iconColor = "$blue10",
+    iconColor = "#3b82f6",
 }) => (
     <XStack
         items="center"
         justify="space-between"
-        paddingBlock="$2"
+        py="$2"
         borderBottomWidth={1}
         borderBottomColor="$borderColor"
     >
         <XStack items="center" gap="$2" flex={1}>
-            {() => {
+            {(() => {
                 const IconComponent = icons[icon];
                 return (
                     <IconComponent
@@ -45,7 +44,7 @@ const VitalSignItem: React.FC<{
                         color={iconColor}
                     />
                 );
-            }}
+            })()}
             <Text
                 fontSize="$4"
                 color="$color"
@@ -67,12 +66,8 @@ const VitalSignItem: React.FC<{
 );
 
 const VitalSigns: React.FC<VitalSignsProps> = ({
-    vitalSigns = [],
+    vitalSigns,
 }) => {
-    // Get the most recent vital signs
-    const latestVitalSigns =
-        vitalSigns[vitalSigns.length - 1];
-
     return (
         <Card
             backgroundColor="$background"
@@ -86,7 +81,7 @@ const VitalSigns: React.FC<VitalSignsProps> = ({
                 <XStack items="center" gap="$2">
                     <Activity
                         size={20}
-                        color="$green10"
+                        color="#10b981"
                     />
                     <Text
                         fontSize="$5"
@@ -97,93 +92,57 @@ const VitalSigns: React.FC<VitalSignsProps> = ({
                     </Text>
                 </XStack>
 
-                {latestVitalSigns ? (
+                {vitalSigns ? (
                     <YStack gap="$1">
                         <VitalSignItem
                             icon="Heart"
                             label="Blood Pressure"
                             value={
-                                latestVitalSigns.blood_pressure ||
+                                vitalSigns.blood_pressure ||
                                 undefined
                             }
-                            iconColor="$red10"
+                            iconColor="#ef4444"
                         />
                         <VitalSignItem
                             icon="Thermometer"
                             label="Temperature"
                             value={
-                                latestVitalSigns.temperature ||
+                                vitalSigns.body_temperature ||
                                 undefined
                             }
                             unit="°C"
-                            iconColor="$orange10"
+                            iconColor="#f97316"
                         />
                         <VitalSignItem
                             icon="Activity"
                             label="Pulse Rate"
                             value={
-                                latestVitalSigns.pulse_rate ||
+                                vitalSigns.pulse_rate ||
                                 undefined
                             }
                             unit="bpm"
-                            iconColor="$blue10"
+                            iconColor="#3b82f6"
                         />
                         <VitalSignItem
                             icon="Wind"
                             label="Respiratory Rate"
                             value={
-                                latestVitalSigns.respiratory_rate ||
+                                vitalSigns.respiratory_rate ||
                                 undefined
                             }
                             unit="rpm"
-                            iconColor="$green10"
+                            iconColor="#10b981"
                         />
 
-                        {latestVitalSigns.photo_documentation && (
-                            <YStack
-                                gap="$2"
-                                marginBlockStart="$2"
-                            >
-                                <Text
-                                    fontSize="$3"
-                                    fontWeight="500"
-                                    color={"grey"}
-                                >
-                                    Photo
-                                    Documentation
-                                </Text>
-                                <Card
-                                    borderWidth={
-                                        1
-                                    }
-                                    borderColor="$borderColor"
-                                    borderRadius="$3"
-                                    overflow="hidden"
-                                >
-                                    <Image
-                                        source={{
-                                            uri: latestVitalSigns.photo_documentation,
-                                        }}
-                                        width="100%"
-                                        height={
-                                            200
-                                        }
-                                        resizeMode="cover"
-                                    />
-                                </Card>
-                            </YStack>
-                        )}
-
-                        {latestVitalSigns.recorded_at && (
+                        {vitalSigns.created_at && (
                             <Text
                                 fontSize="$2"
                                 color="grey"
-                                marginBlockStart="$2"
-                                text="right"
+                                mt="$2"
                             >
                                 Recorded:{" "}
                                 {new Date(
-                                    latestVitalSigns.recorded_at,
+                                    vitalSigns.created_at,
                                 ).toLocaleDateString(
                                     "en-US",
                                     {
@@ -202,23 +161,9 @@ const VitalSigns: React.FC<VitalSignsProps> = ({
                         fontSize="$4"
                         color="grey"
                         fontStyle="italic"
-                        text="center"
-                        paddingBlock="$2"
+                        py="$2"
                     >
                         No vital signs recorded
-                    </Text>
-                )}
-
-                {vitalSigns.length > 1 && (
-                    <Text
-                        fontSize="$2"
-                        color="$blue10"
-                        text="center"
-                        marginBlockStart="$2"
-                    >
-                        {vitalSigns.length}{" "}
-                        records available •
-                        Showing latest
                     </Text>
                 )}
             </YStack>

@@ -10,5 +10,9 @@ export const emergencyAssistanceFormSchema =
             .min(
                 2,
                 "Emergency description is required",
+            )
+            .max(
+                1000,
+                "Emergency type is too long",
             ),
     });

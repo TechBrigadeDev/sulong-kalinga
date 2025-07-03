@@ -47,7 +47,7 @@ export const paginatedResponseSchema = <
             current_page: z.number(),
             data: z.array(itemSchema),
             first_page_url: z.string(),
-            from: z.number(),
+            from: z.number().nullable(),
             last_page: z.number(),
             last_page_url: z.string(),
             links: z.array(
@@ -61,7 +61,7 @@ export const paginatedResponseSchema = <
             path: z.string(),
             per_page: z.number(),
             prev_page_url: z.string().nullable(),
-            to: z.number(),
+            to: z.number().nullable(),
             total: z.number(),
         }),
     });

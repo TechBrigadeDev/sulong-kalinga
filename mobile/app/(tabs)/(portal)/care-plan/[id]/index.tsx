@@ -4,7 +4,6 @@ import {
 } from "expo-router";
 import CarePlanDetail from "features/portal/care-plan/detail";
 import { useCarePlanById } from "features/portal/care-plan/hook";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const Screen = () => {
     const { id } = useLocalSearchParams<{
@@ -13,11 +12,7 @@ const Screen = () => {
 
     useCarePlanById(id);
     console.log("Care Plan ID:", id);
-    return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <CarePlanDetail />
-        </SafeAreaView>
-    );
+    return <CarePlanDetail />;
 };
 
 const Layout = () => {

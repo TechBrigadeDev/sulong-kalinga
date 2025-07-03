@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCarePlanForm } from "features/care-plan/form/form";
+import { useGetInterventions } from "features/care-plan/hook";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import {
@@ -18,25 +19,13 @@ export interface MobilityIntervention {
     name: string;
     minutes: number;
     isCustom?: boolean;
-    categoryId?: string;
+    interventionId?: number; // Database intervention_id for standard interventions
+    categoryId?: number; // care_category_id for custom interventions
     description?: string;
 }
 
 // Use the array type directly from schema
 export type MobilityData = MobilityIntervention[];
-
-const DEFAULT_INTERVENTIONS = [
-    "Assist/aid in sitting",
-    "Support/aid in walking and other movements",
-    "Transfer/move from bed to wheelchair",
-    "Aide in using assistive device",
-    "Assist in using the toilet",
-    "Assistance getting to the health center, hospital, and other health facilities",
-    "Assist in repositioning in bed",
-    "Supervise activity to prevent falls",
-    "Monitor and assist in personal hygiene",
-    "Assist in feeding",
-];
 
 export const Mobility = () => {
     return (
@@ -68,6 +57,35 @@ export const Mobility = () => {
 
 const InterventionList = () => {
     const { control } = useCarePlanForm();
+    const { interventions, isLoading, error } =
+        useGetInterventions();
+
+    if (isLoading) {
+        return (
+            <YStack gap="$3">
+                <Text
+                    fontWeight="600"
+                    fontSize="$5"
+                >
+                    Loading Interventions...
+                </Text>
+            </YStack>
+        );
+    }
+
+    if (error) {
+        return (
+            <YStack gap="$3">
+                <Text
+                    fontWeight="600"
+                    fontSize="$5"
+                    color="$red10"
+                >
+                    Error loading interventions
+                </Text>
+            </YStack>
+        );
+    }
 
     return (
         <Controller
@@ -82,15 +100,14 @@ const InterventionList = () => {
                         Available Interventions
                     </Text>
 
-                    {DEFAULT_INTERVENTIONS.map(
-                        (
-                            interventionName,
-                            index,
-                        ) => (
+                    {interventions[
+                        "Mobility"
+                    ].map(
+                        (intervention, index) => (
                             <InterventionItem
                                 key={index}
-                                interventionName={
-                                    interventionName
+                                intervention={
+                                    intervention
                                 }
                                 interventions={
                                     field.value ||
@@ -122,7 +139,10 @@ const InterventionList = () => {
 };
 
 interface InterventionItemProps {
-    interventionName: string;
+    intervention: {
+        intervention_id: number;
+        intervention_description: string;
+    };
     interventions: MobilityIntervention[];
     onChange: (
         interventions: MobilityIntervention[],
@@ -130,10 +150,15 @@ interface InterventionItemProps {
 }
 
 const InterventionItem = ({
-    interventionName,
+    intervention,
     interventions,
     onChange,
 }: InterventionItemProps) => {
+    const interventionName =
+        intervention.intervention_description;
+    const interventionId =
+        intervention.intervention_id;
+
     const existingIntervention =
         interventions.find(
             (i) =>
@@ -148,10 +173,12 @@ const InterventionItem = ({
         if (checked) {
             const newIntervention: MobilityIntervention =
                 {
-                    id: `mobility_${Date.now()}_${Math.random()}`,
+                    id: `mobility_${interventionId}_${Date.now()}`,
                     name: interventionName,
-                    minutes: 0,
+                    minutes: 1,
                     isCustom: false,
+                    interventionId:
+                        interventionId,
                 };
             onChange([
                 ...interventions,
@@ -238,12 +265,18 @@ const InterventionItem = ({
 
 const CustomIntervention = () => {
     const { control } = useCarePlanForm();
+    const { getCategoryId } =
+        useGetInterventions();
     const [customName, setCustomName] =
         useState("");
     const [
         customDescription,
         setCustomDescription,
     ] = useState("");
+
+    // Get the care_category_id for Mobility category
+    const mobilityCategoryId =
+        getCategoryId("Mobility");
 
     return (
         <Controller
@@ -330,9 +363,11 @@ const CustomIntervention = () => {
                                     {
                                         id: `custom_mobility_${Date.now()}_${Math.random()}`,
                                         name: customName.trim(),
-                                        minutes: 0,
+                                        minutes: 1,
                                         isCustom:
                                             true,
+                                        categoryId:
+                                            mobilityCategoryId,
                                         description:
                                             customDescription.trim() ||
                                             undefined,
