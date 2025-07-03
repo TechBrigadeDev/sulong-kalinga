@@ -38,12 +38,12 @@ class WeeklyCarePlanApiController extends Controller
 
         $validator = Validator::make($request->all(), [
             'beneficiary_id' => 'required|exists:beneficiaries,beneficiary_id',
-            'assessment' => 'required|string|min:20|max:5000',
+            'assessment' => 'required|string|min:20|max:10000',
             'blood_pressure' => 'required|string|regex:/^\d{2,3}\/\d{2,3}$/',
             'body_temperature' => 'required|numeric|between:29,42',
             'pulse_rate' => 'required|integer|between:40,200',
             'respiratory_rate' => 'required|integer|between:8,40',
-            'evaluation_recommendations' => 'required|string|min:20|max:5000',
+            'evaluation_recommendations' => 'required|string|min:20|max:10000',
             'photo' => 'required|file|image|max:4096',
             'selected_interventions' => 'required|array|min:1',
             'duration_minutes' => 'required|array|min:1',
@@ -60,7 +60,7 @@ class WeeklyCarePlanApiController extends Controller
 
             'assessment.required' => 'Please provide an assessment',
             'assessment.min' => 'Assessment must be at least 20 characters',
-            'assessment.max' => 'Assessment cannot exceed 5000 characters',
+            'assessment.max' => 'Assessment cannot exceed 10000 characters',
 
             'blood_pressure.required' => 'Blood pressure is required',
             'blood_pressure.regex' => 'Blood pressure must be in format 120/80',
@@ -76,7 +76,7 @@ class WeeklyCarePlanApiController extends Controller
 
             'evaluation_recommendations.required' => 'Please provide evaluation and recommendations',
             'evaluation_recommendations.min' => 'Evaluation and recommendations must be at least 20 characters',
-            'evaluation_recommendations.max' => 'Evaluation and recommendations cannot exceed 5000 characters',
+            'evaluation_recommendations.max' => 'Evaluation and recommendations cannot exceed 10000 characters',
 
             'photo.required' => 'A photo is required for documentation purposes',
             'photo.image' => 'The uploaded file must be an image',
