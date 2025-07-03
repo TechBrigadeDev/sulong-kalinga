@@ -57,8 +57,8 @@ class ProfileApiController extends Controller
         }
 
         $request->validate([
-            'email' => 'required|email|unique:family_members,email,' . $user->family_member_id . ',family_member_id',
-            'current_password' => 'required',
+            'new_email' => 'required|email|unique:family_members,email,' . $user->family_member_id . ',family_member_id',
+            'password' => 'required',
         ]);
 
         if (!\Hash::check($request->current_password, $user->password)) {
@@ -140,8 +140,7 @@ class ProfileApiController extends Controller
 
         $request->validate([
             'current_password' => 'required',
-            'new_password' => ['required', 'confirmed', Password::defaults()],
-            'new_password_confirmation' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
         ]);
 
         if (!Hash::check($request->current_password, $user->password)) {
