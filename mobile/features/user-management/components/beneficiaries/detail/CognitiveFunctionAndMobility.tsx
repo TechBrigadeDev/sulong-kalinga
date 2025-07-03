@@ -1,4 +1,8 @@
 import {
+    Accessibility,
+    Brain,
+} from "lucide-react-native";
+import {
     Card,
     H3,
     Text,
@@ -35,23 +39,53 @@ const CognitiveFunctionAndMobility = ({
     };
 
     return (
-        <XStack gap="$4" flexWrap="wrap">
-            <Card elevate flex={1} minWidth={300}>
-                <Card.Header padded>
-                    <H3>Cognitive Function</H3>
-                </Card.Header>
-                <YStack p="$4">
+        <YStack gap="$4" mb="$4">
+            <Card
+                elevate
+                style={{ borderRadius: 16 }}
+                backgroundColor="$background"
+                borderColor="$borderColor"
+            >
+                <YStack gap="$4" p="$4">
+                    <XStack
+                        gap="$3"
+                        style={{
+                            alignItems: "center",
+                        }}
+                    >
+                        <Brain
+                            size={24}
+                            color="#8b5cf6"
+                        />
+                        <H3
+                            color="#111827"
+                            fontWeight="600"
+                        >
+                            Cognitive Function
+                        </H3>
+                    </XStack>
                     <YStack gap="$3">
                         {Object.entries(
                             cognitiveInfo,
                         ).map(([key, value]) => (
                             <YStack key={key}>
                                 <Text
-                                    opacity={0.6}
+                                    fontSize="$3"
+                                    style={{
+                                        color: "#6b7280",
+                                    }}
+                                    fontWeight="500"
+                                    mb="$2"
                                 >
                                     {key}
                                 </Text>
-                                <Text>
+                                <Text
+                                    fontSize="$4"
+                                    style={{
+                                        color: "#111827",
+                                    }}
+                                    fontWeight="400"
+                                >
                                     {value}
                                 </Text>
                             </YStack>
@@ -60,22 +94,53 @@ const CognitiveFunctionAndMobility = ({
                 </YStack>
             </Card>
 
-            <Card elevate flex={1} minWidth={300}>
-                <Card.Header padded>
-                    <H3>Mobility</H3>
-                </Card.Header>
-                <YStack p="$4">
+            <Card
+                elevate
+                style={{ borderRadius: 16 }}
+                backgroundColor="$background"
+                borderColor="$borderColor"
+            >
+                <YStack gap="$4" p="$4">
+                    <XStack
+                        gap="$3"
+                        style={{
+                            alignItems: "center",
+                        }}
+                    >
+                        <Accessibility
+                            size={24}
+                            color="#059669"
+                        />
+                        <H3
+                            color="#111827"
+                            fontWeight="600"
+                        >
+                            Mobility &
+                            Transportation
+                        </H3>
+                    </XStack>
                     <YStack gap="$3">
                         {Object.entries(
                             mobilityInfo,
                         ).map(([key, value]) => (
                             <YStack key={key}>
                                 <Text
-                                    opacity={0.6}
+                                    fontSize="$3"
+                                    style={{
+                                        color: "#6b7280",
+                                    }}
+                                    fontWeight="500"
+                                    mb="$2"
                                 >
                                     {key}
                                 </Text>
-                                <Text>
+                                <Text
+                                    fontSize="$4"
+                                    style={{
+                                        color: "#111827",
+                                    }}
+                                    fontWeight="400"
+                                >
                                     {value}
                                 </Text>
                             </YStack>
@@ -83,7 +148,7 @@ const CognitiveFunctionAndMobility = ({
                     </YStack>
                 </YStack>
             </Card>
-        </XStack>
+        </YStack>
     );
 };
 

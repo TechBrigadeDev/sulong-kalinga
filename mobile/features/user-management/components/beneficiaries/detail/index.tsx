@@ -1,12 +1,12 @@
 import TabScroll from "components/tabs/TabScroll";
 import { Stack } from "expo-router";
-import { SafeAreaView } from "react-native";
 import { YStack } from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
 import AssignedCareWorker from "./AssignedCareWorker";
 import BeneficiaryHeader from "./BeneficiaryHeader";
+import CareInformation from "./CareInformation";
 import CareNeeds from "./CareNeeds";
 import CognitiveFunctionAndMobility from "./CognitiveFunctionAndMobility";
 import EmergencyContact from "./EmergencyContact";
@@ -22,49 +22,44 @@ interface IDetailProps {
 const BeneficiaryDetail = ({
     beneficiary,
 }: IDetailProps) => {
+    const fullName = `${beneficiary.first_name} ${beneficiary.last_name}`;
+
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <>
             <Stack.Screen
                 options={{
-                    title: "VIEW BENEFICIARY PROFILE DETAILS",
+                    headerTitle: fullName,
                     headerShown: true,
                 }}
             />
-            <TabScroll>
-                <YStack
-                    gap="$4"
-                    style={{ padding: 16 }}
-                >
+            <TabScroll
+                flex={1}
+                style={{
+                    backgroundColor: "#f9fafb",
+                }}
+                contentContainerStyle={{
+                    paddingBlockEnd: 110,
+                }}
+            >
+                <YStack gap="$4" p="$4">
                     <BeneficiaryHeader
                         beneficiary={beneficiary}
                     />
-
-                    <YStack gap="$4">
-                        <PersonalInformation
-                            beneficiary={
-                                beneficiary
-                            }
-                        />
-                        <MedicalHistory
-                            beneficiary={
-                                beneficiary
-                            }
-                        />
-                    </YStack>
-
-                    <YStack gap="$4">
-                        <EmergencyContact
-                            beneficiary={
-                                beneficiary
-                            }
-                        />
-                        <MedicationManagement
-                            beneficiary={
-                                beneficiary
-                            }
-                        />
-                    </YStack>
-
+                    <PersonalInformation
+                        beneficiary={beneficiary}
+                    />
+                    <CareInformation
+                        beneficiary={beneficiary}
+                    />
+                    <MedicalHistory
+                        beneficiary={beneficiary}
+                    />
+                    <EmergencyContact
+                        beneficiary={beneficiary}
+                    />
+                    <MedicationManagement
+                        beneficiary={beneficiary}
+                    />
                     <CareNeeds
                         beneficiary={beneficiary}
                     />
@@ -79,7 +74,7 @@ const BeneficiaryDetail = ({
                     />
                 </YStack>
             </TabScroll>
-        </SafeAreaView>
+        </>
     );
 };
 

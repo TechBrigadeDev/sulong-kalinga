@@ -1,7 +1,12 @@
 import AvatarImage from "components/Avatar";
 import {
+    Calendar,
+    User,
+} from "lucide-react-native";
+import {
     Avatar,
-    H2,
+    Card,
+    H3,
     Text,
     XStack,
     YStack,
@@ -26,26 +31,103 @@ const BeneficiaryHeader = ({
     });
 
     return (
-        <XStack
-            display="flex"
-            flexDirection="column"
-            items="center"
-            marginBlock="$4"
+        <Card
+            elevate
+            mb="$4"
+            p="$4"
+            style={{ borderRadius: 16 }}
+            backgroundColor="$background"
+            borderColor="$borderColor"
         >
-            <Avatar size="$12" circular>
-                <AvatarImage
-                    uri={beneficiary.photo}
-                    fallback={beneficiary.beneficiary_id.toString()}
-                />
-            </Avatar>
-            <YStack ml="$4" items="center">
-                <H2>{fullName}</H2>
-                <Text opacity={0.6}>
-                    A Beneficiary since{" "}
-                    {sinceDate}
-                </Text>
+            <YStack gap="$3">
+                <XStack
+                    style={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                    gap="$4"
+                >
+                    <Avatar size="$10" circular>
+                        <AvatarImage
+                            uri={
+                                beneficiary.photo
+                            }
+                            fallback={beneficiary.beneficiary_id.toString()}
+                        />
+                    </Avatar>
+                    <YStack
+                        flex={1}
+                        style={{
+                            alignItems: "center",
+                        }}
+                    >
+                        <H3
+                            color="#111827"
+                            style={{
+                                textAlign:
+                                    "center",
+                            }}
+                            numberOfLines={2}
+                        >
+                            {fullName}
+                        </H3>
+                        <XStack
+                            style={{
+                                alignItems:
+                                    "center",
+                            }}
+                            gap="$2"
+                            mt="$2"
+                        >
+                            <Calendar
+                                size={16}
+                                color="#6b7280"
+                            />
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                            >
+                                {
+                                    "Beneficiary since "
+                                }
+                                {sinceDate}
+                            </Text>
+                        </XStack>
+                    </YStack>
+                </XStack>
+
+                <YStack
+                    style={{
+                        backgroundColor:
+                            "#dbeafe",
+                        padding: 12,
+                        borderRadius: 8,
+                        alignItems: "center",
+                    }}
+                    gap="$2"
+                >
+                    <User
+                        size={20}
+                        color="#3b82f6"
+                    />
+                    <Text
+                        fontSize="$4"
+                        style={{
+                            color: "#1e40af",
+                            textAlign: "center",
+                        }}
+                        fontWeight="500"
+                    >
+                        {"Beneficiary ID: "}
+                        {
+                            beneficiary.beneficiary_id
+                        }
+                    </Text>
+                </YStack>
             </YStack>
-        </XStack>
+        </Card>
     );
 };
 

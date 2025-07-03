@@ -1,4 +1,11 @@
-import { Card, H3, Text, YStack } from "tamagui";
+import { Shield } from "lucide-react-native";
+import {
+    Card,
+    H3,
+    Text,
+    XStack,
+    YStack,
+} from "tamagui";
 
 import { IBeneficiary } from "~/features/user-management/management.type";
 
@@ -55,40 +62,76 @@ const CareNeeds = ({
     ];
 
     return (
-        <Card elevate>
-            <Card.Header padded>
-                <H3>Care Needs</H3>
-            </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$3">
+        <Card
+            elevate
+            mb="$4"
+            style={{ borderRadius: 16 }}
+            backgroundColor="$background"
+            borderColor="$borderColor"
+        >
+            <YStack gap="$4" p="$4">
+                <XStack
+                    gap="$3"
+                    style={{
+                        alignItems: "center",
+                    }}
+                >
+                    <Shield
+                        size={24}
+                        color="#16a34a"
+                    />
+                    <H3
+                        color="#111827"
+                        fontWeight="600"
+                    >
+                        Care Needs
+                    </H3>
+                </XStack>
+                <YStack gap="$4">
                     {careNeeds.map(
                         (need, index) => (
                             <Card
                                 key={index}
-                                bordered
+                                style={{
+                                    backgroundColor:
+                                        "#f3f4f6",
+                                    borderRadius: 12,
+                                    padding: 16,
+                                }}
+                                borderColor="$borderColor"
                             >
-                                <Card.Header
-                                    padded
-                                >
-                                    <Text fontSize="$5">
+                                <YStack gap="$3">
+                                    <Text
+                                        fontSize="$5"
+                                        color="#111827"
+                                        fontWeight="600"
+                                    >
                                         {
                                             need.type
                                         }
                                     </Text>
-                                </Card.Header>
-                                <YStack padded>
                                     <YStack gap="$2">
                                         <Text
-                                            opacity={
-                                                0.6
-                                            }
+                                            fontSize="$3"
+                                            style={{
+                                                color: "#6b7280",
+                                            }}
+                                            fontWeight="500"
                                         >
-                                            Frequency:{" "}
+                                            {
+                                                "Frequency: "
+                                            }
                                             {
                                                 need.frequency
                                             }
                                         </Text>
-                                        <Text>
+                                        <Text
+                                            fontSize="$4"
+                                            style={{
+                                                color: "#111827",
+                                            }}
+                                            fontWeight="400"
+                                        >
                                             {
                                                 need.assistance
                                             }

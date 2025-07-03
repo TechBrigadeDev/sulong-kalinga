@@ -1,3 +1,4 @@
+import { Pill } from "lucide-react-native";
 import {
     Card,
     H3,
@@ -39,79 +40,131 @@ const MedicationManagement = ({
     ];
 
     return (
-        <Card elevate>
-            <Card.Header padded>
-                <H3>Medication Management</H3>
-            </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$3">
+        <Card
+            elevate
+            mb="$4"
+            style={{ borderRadius: 16 }}
+            backgroundColor="$background"
+            borderColor="$borderColor"
+        >
+            <YStack gap="$4" p="$4">
+                <XStack
+                    gap="$3"
+                    style={{
+                        alignItems: "center",
+                    }}
+                >
+                    <Pill
+                        size={24}
+                        color="#3b82f6"
+                    />
+                    <H3
+                        color="#111827"
+                        fontWeight="600"
+                    >
+                        Medication Management
+                    </H3>
+                </XStack>
+                <YStack gap="$4">
                     {medications.map(
                         (med, index) => (
                             <Card
                                 key={index}
-                                bordered
+                                style={{
+                                    backgroundColor:
+                                        "#dbeafe",
+                                    borderRadius: 12,
+                                    padding: 16,
+                                }}
+                                borderColor="$borderColor"
                             >
-                                <Card.Header
-                                    padded
-                                >
-                                    <Text fontSize="$5">
+                                <YStack gap="$3">
+                                    <Text
+                                        fontSize="$5"
+                                        color="#1e40af"
+                                        fontWeight="600"
+                                        textTransform="capitalize"
+                                    >
                                         {med.name}
                                     </Text>
-                                </Card.Header>
-                                <YStack padded>
-                                    <YStack gap="$2">
-                                        <XStack gap="$4">
-                                            <YStack
-                                                flex={
-                                                    1
-                                                }
-                                            >
-                                                <Text
-                                                    opacity={
-                                                        0.6
-                                                    }
-                                                >
-                                                    Dosage
-                                                </Text>
-                                                <Text>
-                                                    {
-                                                        med.dosage
-                                                    }
-                                                </Text>
-                                            </YStack>
-                                            <YStack
-                                                flex={
-                                                    1
-                                                }
-                                            >
-                                                <Text
-                                                    opacity={
-                                                        0.6
-                                                    }
-                                                >
-                                                    Frequency
-                                                </Text>
-                                                <Text>
-                                                    {
-                                                        med.frequency
-                                                    }
-                                                </Text>
-                                            </YStack>
-                                        </XStack>
-                                        <YStack>
+                                    <XStack gap="$4">
+                                        <YStack
+                                            flex={
+                                                1
+                                            }
+                                        >
                                             <Text
-                                                opacity={
-                                                    0.6
-                                                }
+                                                fontSize="$3"
+                                                style={{
+                                                    color: "#6b7280",
+                                                }}
+                                                fontWeight="500"
+                                                mb="$1"
                                             >
-                                                Instructions
+                                                Dosage
                                             </Text>
-                                            <Text>
+                                            <Text
+                                                fontSize="$4"
+                                                style={{
+                                                    color: "#111827",
+                                                }}
+                                                fontWeight="400"
+                                            >
                                                 {
-                                                    med.instructions
+                                                    med.dosage
                                                 }
                                             </Text>
                                         </YStack>
+                                        <YStack
+                                            flex={
+                                                1
+                                            }
+                                        >
+                                            <Text
+                                                fontSize="$3"
+                                                style={{
+                                                    color: "#6b7280",
+                                                }}
+                                                fontWeight="500"
+                                                mb="$1"
+                                            >
+                                                Frequency
+                                            </Text>
+                                            <Text
+                                                fontSize="$4"
+                                                style={{
+                                                    color: "#111827",
+                                                }}
+                                                fontWeight="400"
+                                            >
+                                                {
+                                                    med.frequency
+                                                }
+                                            </Text>
+                                        </YStack>
+                                    </XStack>
+                                    <YStack>
+                                        <Text
+                                            fontSize="$3"
+                                            style={{
+                                                color: "#6b7280",
+                                            }}
+                                            fontWeight="500"
+                                            mb="$1"
+                                        >
+                                            Instructions
+                                        </Text>
+                                        <Text
+                                            fontSize="$4"
+                                            style={{
+                                                color: "#111827",
+                                            }}
+                                            fontWeight="400"
+                                        >
+                                            {
+                                                med.instructions
+                                            }
+                                        </Text>
                                     </YStack>
                                 </YStack>
                             </Card>

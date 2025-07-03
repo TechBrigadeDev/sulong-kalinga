@@ -1,3 +1,4 @@
+import { Phone } from "lucide-react-native";
 import {
     Card,
     H3,
@@ -16,17 +17,50 @@ const EmergencyContact = ({
     beneficiary,
 }: Props) => {
     return (
-        <Card elevate>
-            <Card.Header padded>
-                <H3>Emergency Contact</H3>
-            </Card.Header>
-            <YStack p="$4">
-                <YStack gap="$3">
+        <Card
+            elevate
+            mb="$4"
+            style={{ borderRadius: 16 }}
+            backgroundColor="$background"
+            borderColor="$borderColor"
+        >
+            <YStack gap="$4" p="$4">
+                <XStack
+                    gap="$3"
+                    style={{
+                        alignItems: "center",
+                    }}
+                >
+                    <Phone
+                        size={24}
+                        color="#ea580c"
+                    />
+                    <H3
+                        color="#111827"
+                        fontWeight="600"
+                    >
+                        Emergency Contact
+                    </H3>
+                </XStack>
+                <YStack gap="$4">
                     <YStack>
-                        <Text opacity={0.6}>
+                        <Text
+                            fontSize="$3"
+                            style={{
+                                color: "#6b7280",
+                            }}
+                            fontWeight="500"
+                            mb="$2"
+                        >
                             Contact Name
                         </Text>
-                        <Text>
+                        <Text
+                            fontSize="$4"
+                            style={{
+                                color: "#111827",
+                            }}
+                            fontWeight="400"
+                        >
                             {
                                 beneficiary.emergency_contact_name
                             }
@@ -34,20 +68,46 @@ const EmergencyContact = ({
                     </YStack>
                     <XStack gap="$4">
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Relation
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {
                                     beneficiary.emergency_contact_relation
                                 }
                             </Text>
                         </YStack>
                         <YStack flex={1}>
-                            <Text opacity={0.6}>
+                            <Text
+                                fontSize="$3"
+                                style={{
+                                    color: "#6b7280",
+                                }}
+                                fontWeight="500"
+                                mb="$2"
+                            >
                                 Mobile
                             </Text>
-                            <Text>
+                            <Text
+                                fontSize="$4"
+                                style={{
+                                    color: "#111827",
+                                }}
+                                fontWeight="400"
+                            >
                                 {
                                     beneficiary.emergency_contact_mobile
                                 }
@@ -55,10 +115,23 @@ const EmergencyContact = ({
                         </YStack>
                     </XStack>
                     <YStack>
-                        <Text opacity={0.6}>
+                        <Text
+                            fontSize="$3"
+                            style={{
+                                color: "#6b7280",
+                            }}
+                            fontWeight="500"
+                            mb="$2"
+                        >
                             Emergency Procedure
                         </Text>
-                        <Text>
+                        <Text
+                            fontSize="$4"
+                            style={{
+                                color: "#111827",
+                            }}
+                            fontWeight="400"
+                        >
                             {
                                 beneficiary.emergency_procedure
                             }
