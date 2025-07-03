@@ -5,12 +5,10 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Visitation;
 use App\Models\VisitationOccurrence;
-use App\Models\Notification;
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\NotificationService;
 
@@ -64,7 +62,7 @@ class SendAppointmentReminders extends Command
         $this->info("Found {$flexibleOccurrences->count()} flexible time occurrences for today");
 
         foreach ($flexibleOccurrences as $occurrence) {
-            $this->sendReminderNotifications($occurrence->visitation, $occurrence->occurrence_date);
+            $this->sendReminderNotifications($occurrence->visitation, $occurrence->occurrence_date, true);
         }
 
         // Also check directly in visitations table for non-recurring flexible time appointments
@@ -78,7 +76,7 @@ class SendAppointmentReminders extends Command
         $this->info("Found {$flexibleVisitations->count()} flexible time visitations for today");
             
         foreach ($flexibleVisitations as $visitation) {
-            $this->sendReminderNotifications($visitation, $visitation->visitation_date);
+            $this->sendReminderNotifications($visitation, $visitation->visitation_date, true);
         }
     }
 
@@ -116,7 +114,7 @@ class SendAppointmentReminders extends Command
             $this->info("Found {$timedOccurrences->count()} timed occurrences starting in approximately 3 hours");
 
             foreach ($timedOccurrences as $occurrence) {
-                $this->sendReminderNotifications($occurrence->visitation, $occurrence->occurrence_date);
+                $this->sendReminderNotifications($occurrence->visitation, $occurrence->occurrence_date, false);
             }
 
             // Also check directly in visitations table for non-recurring timed appointments
@@ -131,7 +129,7 @@ class SendAppointmentReminders extends Command
             $this->info("Found {$timedVisitations->count()} timed visitations starting in approximately 3 hours");
                 
             foreach ($timedVisitations as $visitation) {
-                $this->sendReminderNotifications($visitation, $visitation->visitation_date);
+                $this->sendReminderNotifications($visitation, $visitation->visitation_date, false);
             }
         } catch (\Exception $e) {
             $this->error("Error processing timed appointments: " . $e->getMessage());
@@ -144,7 +142,7 @@ class SendAppointmentReminders extends Command
     /**
      * Send reminder notifications for a specific visitation
      */
-    private function sendReminderNotifications(Visitation $visitation, $occurrenceDate)
+    private function sendReminderNotifications(Visitation $visitation, $occurrenceDate, $isFlexible = false)
     {
         $beneficiary = Beneficiary::find($visitation->beneficiary_id);
         $careWorker = User::find($visitation->care_worker_id);
@@ -171,7 +169,16 @@ class SendAppointmentReminders extends Command
                   "Visit type: {$visitType}. " .
                   "This appointment is between {$beneficiary->first_name} {$beneficiary->last_name} " .
                   "and care worker {$careWorker->first_name} {$careWorker->last_name}.";
-        
+
+        // --- CACHE LOGIC ---
+        // Unique cache key per visitation, date, and flexible/timed
+        $cacheKey = 'appt_reminder_sent_' . $visitation->visitation_id . '_' . $occurrenceDate . '_' . ($isFlexible ? 'flex' : 'timed');
+        if (cache()->has($cacheKey)) {
+            $this->info("Skipping duplicate reminder for visitation #{$visitation->visitation_id} on {$occurrenceDate}");
+            return;
+        }
+        cache()->put($cacheKey, true, now()->addMinutes(30)); // Cache for 30 minutes
+
         // Get care manager of the care worker
         $careManager = null;
         if ($careWorker && $careWorker->assigned_care_manager_id) {
