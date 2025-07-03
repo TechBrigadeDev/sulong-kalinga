@@ -91,7 +91,10 @@ const RequestCard = ({
     } = useEmergencyCancelRequest();
     const handleCancel = async () => {
         try {
-            cancelRequest(request.id.toString());
+            cancelRequest({
+                id: request.id.toString(),
+                request: request.type,
+            });
             showToastable({
                 title: "Request Cancelled",
                 message:

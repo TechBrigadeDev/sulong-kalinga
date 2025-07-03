@@ -161,6 +161,7 @@ class EmergencyController extends Controller {
 
     async cancelEmergencyRequest(
         requestId: string,
+        request: string,
         role: IRole,
     ) {
         const path = portalPath(
@@ -172,10 +173,16 @@ class EmergencyController extends Controller {
             const response = await this.api.post(
                 path,
                 {
-                    type: "emergency",
+                    type: request,
                     id: requestId,
                 },
             );
+
+            if (!response.data.success) {
+                throw new Error(
+                    "Failed to cancel emergency request",
+                );
+            }
 
             log(
                 "EmergencyController.cancelEmergencyRequest",
@@ -184,10 +191,13 @@ class EmergencyController extends Controller {
 
             return response.data;
         } catch (error) {
-            log(
-                "Error canceling emergency request:",
-                error,
-            );
+            if (error instanceof AxiosError) {
+                console.log(error.response?.data);
+            }
+            // log(
+            //     "Error canceling emergency request:",
+            //     error,
+            // );
             throw new Error(
                 "Failed to cancel emergency request",
             );

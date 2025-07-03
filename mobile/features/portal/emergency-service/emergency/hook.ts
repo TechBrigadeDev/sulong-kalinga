@@ -123,7 +123,13 @@ export const useEditEmergencyRequest = () => {
 export const useEmergencyCancelRequest = () => {
     const { role, token } = authStore();
     return useMutation({
-        mutationFn: async (id: string) => {
+        mutationFn: async ({
+            id,
+            request,
+        }: {
+            id: string;
+            request: string;
+        }) => {
             if (!role || !token) {
                 throw new Error(
                     "User role or token is not available",
@@ -132,6 +138,7 @@ export const useEmergencyCancelRequest = () => {
             const response =
                 await api.cancelEmergencyRequest(
                     id,
+                    request,
                     role,
                 );
             return response;

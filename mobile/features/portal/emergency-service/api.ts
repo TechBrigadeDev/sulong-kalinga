@@ -7,6 +7,7 @@ import {
     emergencyServiceHistorySchema,
     emergencyServiceRequestSchema,
 } from "./schema";
+import { AxiosError } from "axios";
 
 class EmergencyServicenController extends Controller {
     async getActiveRequests(role: IRole) {
@@ -77,10 +78,12 @@ class EmergencyServicenController extends Controller {
 
             return validate.data;
         } catch (error) {
-            console.error(
-                "Error fetching emergency requests history:",
-                error,
-            );
+            if (error instanceof AxiosError) {
+                console.error(
+                    "Axios error fetching emergency requests history:",
+                    error.response?.data,
+                );
+            }
             throw new Error(
                 "Failed to fetch emergency requests history",
             );

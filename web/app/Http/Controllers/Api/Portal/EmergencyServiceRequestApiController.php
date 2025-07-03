@@ -94,7 +94,7 @@ class EmergencyServiceRequestApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Beneficiary not found.'], 404);
         }
 
-        $emergencies = EmergencyNotice::with(['emergencyType', 'assignedUser'])
+        $emergencies = collect(EmergencyNotice::with(['emergencyType', 'assignedUser'])
             ->where('beneficiary_id', $beneficiary->beneficiary_id)
             ->whereIn('status', ['resolved', 'archived'])
             ->orderByDesc('created_at')
@@ -109,9 +109,9 @@ class EmergencyServiceRequestApiController extends Controller
                     'assigned_to' => $item->assignedUser ? $item->assignedUser->first_name . ' ' . $item->assignedUser->last_name : null,
                     'actions' => $this->getActions($item->status, $item->assignedUser),
                 ];
-            });
+            }));
 
-        $services = ServiceRequest::with(['serviceType', 'careWorker'])
+        $services = collect(ServiceRequest::with(['serviceType', 'careWorker'])
             ->where('beneficiary_id', $beneficiary->beneficiary_id)
             ->whereIn('status', ['rejected', 'completed'])
             ->orderByDesc('created_at')
@@ -126,7 +126,7 @@ class EmergencyServiceRequestApiController extends Controller
                     'assigned_to' => $item->careWorker ? $item->careWorker->first_name . ' ' . $item->careWorker->last_name : null,
                     'actions' => $this->getActions($item->status, $item->careWorker),
                 ];
-            });
+            }));
 
         return response()->json([
             'success' => true,
