@@ -535,8 +535,7 @@
                                 <label for="emailAddress" class="form-label">Email Address</label>
                                 <input type="email" class="form-control" id="emailAddress" name="emergency_contact[email]" 
                                     value="{{ old('emergency_contact.email', $beneficiary->emergency_contact_email) }}"
-                                    placeholder="Enter email address" 
-                                    required>
+                                    placeholder="Enter email address" >
                             </div>
                         </div>
 

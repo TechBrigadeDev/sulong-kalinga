@@ -535,8 +535,7 @@
                                 <label for="emailAddress" class="form-label">{{ T::translate('Email Address', 'Email Address')}}</label>
                                 <input type="email" class="form-control" id="emailAddress" name="emergency_contact[email]" 
                                     value="{{ old('emergency_contact.email', $beneficiary->emergency_contact_email) }}"
-                                    placeholder="{{ T::translate('Enter email address', 'Ilagay ang email address')}}" 
-                                    required>
+                                    placeholder="{{ T::translate('Enter email address', 'Ilagay ang email address')}}" >
                             </div>
                         </div>
 
