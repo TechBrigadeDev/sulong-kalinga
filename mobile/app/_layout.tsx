@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Providers from "~/components/Providers";
 import { authStore } from "~/features/auth/auth.store";
 import { notificationHandler } from "~/features/notification/service";
+import { useRegisterNotification } from "../features/notification/hook";
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -67,36 +68,43 @@ function RootLayoutNav() {
                     <Stack.Protected
                         guard={isAuthenticated}
                     >
-                        <Stack.Screen
-                            name="(tabs)"
-                            options={{
-                                headerShown:
-                                    false,
-                            }}
-                        />
-                        <Stack.Screen
-                            name="wcp/index"
-                            options={{
-                                title: "Care Plan",
-                                headerTitle:
-                                    "Care Plan",
-                            }}
-                        />
-                        <Stack.Screen
-                            name="messaging"
-                            options={{
-                                animation: "fade",
-                                headerShown:
-                                    false,
-                            }}
-                        />
-                        <Stack.Screen
-                            name="scheduling"
-                            options={{
-                                headerShown:
-                                    false,
-                            }}
-                        />
+                        <Stack.Protected
+                            guard={
+                                isAuthenticated
+                            }
+                        >
+                            <Stack.Screen
+                                name="(tabs)"
+                                options={{
+                                    headerShown:
+                                        false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="wcp/index"
+                                options={{
+                                    title: "Care Plan",
+                                    headerTitle:
+                                        "Care Plan",
+                                }}
+                            />
+                            <Stack.Screen
+                                name="messaging"
+                                options={{
+                                    animation:
+                                        "fade",
+                                    headerShown:
+                                        false,
+                                }}
+                            />
+                            <Stack.Screen
+                                name="scheduling"
+                                options={{
+                                    headerShown:
+                                        false,
+                                }}
+                            />
+                        </Stack.Protected>
                     </Stack.Protected>
                 </Stack>
             </GestureHandlerRootView>

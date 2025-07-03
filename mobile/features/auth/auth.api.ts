@@ -1,25 +1,13 @@
-import { AxiosInstance } from "axios";
 import { isEmail } from "common/validate";
 
-import { axiosClient } from "~/common/api";
+import {
+    axiosClient,
+    Controller,
+} from "~/common/api";
 
 import { loginSchema } from "./auth.schema";
 
-class AuthController {
-    private jsonApi: AxiosInstance;
-
-    constructor(
-        private api: AxiosInstance = axiosClient,
-    ) {
-        this.jsonApi = api;
-        this.jsonApi.defaults.headers.common[
-            "Accept"
-        ] = "application/json";
-        this.jsonApi.defaults.headers.common[
-            "Content-Type"
-        ] = "application/json";
-    }
-
+class AuthController extends Controller {
     async login(login: string, password: string) {
         const formData = new FormData();
         if (isEmail(login)) {
@@ -57,7 +45,11 @@ class AuthController {
     }
 
     async logout(token: string) {
-        const response = await this.jsonApi.post(
+        console.log(
+            "Logging out with token:",
+            token,
+        );
+        const response = await this.api.post(
             "/logout",
             {},
             {
@@ -65,6 +57,10 @@ class AuthController {
                     Authorization: `Bearer ${token}`,
                 },
             },
+        );
+        console.log(
+            "Logout response:",
+            response.data,
         );
         return response.data;
     }
