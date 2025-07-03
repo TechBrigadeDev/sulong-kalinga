@@ -6,8 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Municipality & Barangay Information</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/municipality.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+        /* Only for this page: make the table scrollable */
+        .municipality-table-scroll {
+            max-height: 60vh; /* Adjust as needed */
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
     @php
@@ -80,7 +89,7 @@
 
             <div class="row" id="municipality">
                 <div class="col-12">
-                    <div class="table-responsive">
+                    <div class="table-responsive municipality-table-scroll">
                         <table class="table table-striped w-100 align-middle">
                             <thead>
                                 <tr>
