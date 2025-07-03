@@ -102,6 +102,7 @@ Route::middleware('auth:sanctum', \App\Http\Middleware\RoleMiddleware::class . '
     // FCM Push Notifications
     Route::post('/fcm/register', [FcmApiController::class, 'register']);
     Route::get('/fcm/token', [FcmApiController::class, 'getToken']);
+    Route::post('/fcm/revoke', [FcmApiController::class, 'revoke']);
 
     // Reports Management API
     Route::get('/reports', [ReportsApiController::class, 'index']);
