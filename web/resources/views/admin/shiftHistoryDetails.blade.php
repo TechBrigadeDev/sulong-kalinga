@@ -53,18 +53,30 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="detail-grid">
                                         <div class="detail-row">
-                                            <div class="detail-label">{{ T::translate('Care Worker:', 'Tagapag-alaga:')}}</div>
-                                            <div class="detail-value" id="detail-care-worker">John Smith</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">{{ T::translate('Date:', 'Petsa:')}}</div>
-                                            <div class="detail-value" id="detail-date">May 20, 2025</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">{{ T::translate('Shift Time:', 'Oras ng Shift')}}</div>
-                                            <div class="detail-value" id="detail-shift-time">08:00 AM - 04:00 PM</div>
+                                                <div class="detail-label">{{ T::translate('Shift Time', 'Oras ng Shift')}}:</div>
+                                                <div class="detail-value" id="detail-shift-time">
+                                                    {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
+                                                    {{ $shift->updated_at ? \Carbon\Carbon::parse($shift->updated_at)->format('h:i A') : '--:--' }}
+                                                </div>
+                                            </div>
+                                            <div class="detail-row">
+                                                <div class="detail-label">{{ T::translate('Total Hours', 'Kabuuang Oras')}}:</div>
+                                                <div class="detail-value" id="detail-total-hours">
+                                                    @if($shift->updated_at)
+                                                        @php
+                                                            $start = \Carbon\Carbon::parse($shift->time_in);
+                                                            $end = \Carbon\Carbon::parse($shift->updated_at);
+                                                            $totalMinutes = $start->diffInMinutes($end);
+                                                            $hours = floor($totalMinutes / 60);
+                                                            $minutes = $totalMinutes % 60;
+                                                        @endphp
+                                                        {{ $hours }} hours{{ $minutes > 0 ? ' ' . $minutes . ' minutes' : '' }}
+                                                    @else
+                                                        In Progress
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
