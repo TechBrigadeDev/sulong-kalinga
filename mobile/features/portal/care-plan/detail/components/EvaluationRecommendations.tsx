@@ -27,7 +27,7 @@ const EvaluationRecommendations: React.FC<
                 <XStack items="center" gap="$2">
                     <Lightbulb
                         size={20}
-                        color="$yellow10"
+                        color="#eab308"
                     />
                     <Text
                         fontSize="$5"

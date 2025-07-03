@@ -165,7 +165,6 @@ const CarePlanCard = ({
                         </Text>
                     </XStack>
 
-                    {/* Date Information */}
                     <XStack
                         items="center"
                         gap="$2"
@@ -174,46 +173,19 @@ const CarePlanCard = ({
                             fontSize="$4"
                             color="#6b7280"
                         >
-                            Date Created:
+                            Date Created
                         </Text>
                         <Text
                             fontSize="$4"
                             fontWeight="500"
-                            color="#374151"
+                            color="#059669"
                         >
                             {formatDate(
-                                new Date(
-                                    carePlan.date,
-                                ),
+                                carePlan.date,
+                                "MMM dd, yyyy",
                             )}
                         </Text>
                     </XStack>
-
-                    {/* Acknowledged Information */}
-                    {carePlan.acknowledged && (
-                        <XStack
-                            items="center"
-                            gap="$2"
-                        >
-                            <Text
-                                fontSize="$4"
-                                color="#6b7280"
-                            >
-                                Acknowledged:
-                            </Text>
-                            <Text
-                                fontSize="$4"
-                                fontWeight="500"
-                                color="#059669"
-                            >
-                                {formatDate(
-                                    new Date(
-                                        carePlan.acknowledged,
-                                    ),
-                                )}
-                            </Text>
-                        </XStack>
-                    )}
 
                     {/* Action Buttons */}
                     <XStack

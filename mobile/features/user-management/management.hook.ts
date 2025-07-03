@@ -17,15 +17,14 @@ export const useGetBeneficiaries = (props?: {
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
 
     return useInfiniteQuery({
         queryKey: [
             QK.user.management.getBeneficiaries,
             token,
             props?.search,
+            props?.limit,
         ],
         queryFn: async ({ pageParam = 1 }) => {
             const response =
@@ -52,23 +51,32 @@ export const useGetBeneficiary = (
     id?: string,
 ) => {
     const { token } = authStore();
-    if (!token || !id) {
-        throw new Error("No token found");
-    }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
 
     return useQuery({
         queryKey:
-            QK.user.management.getBeneficiary(id),
+            QK.user.management.getBeneficiary(
+                id!,
+            ),
         queryFn: async () => {
-            const response =
-                await api.getBeneficiary(id);
-            return response;
+            try {
+                console.log(
+                    "Fetching beneficiary with ID:",
+                    id,
+                );
+                const response =
+                    await api.getBeneficiary(id!);
+                return response;
+            } catch (error) {
+                console.error(
+                    "Error fetching beneficiary:",
+                    error,
+                );
+                return;
+            }
         },
-        enabled: !!token,
+        enabled: !!token && !!id,
     });
 };
 
@@ -76,13 +84,8 @@ export const useGetFamilyMembers = (props?: {
     search?: string;
 }) => {
     const { token } = authStore();
-    if (!token) {
-        throw new Error("No token found");
-    }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
     return useQuery({
         queryKey:
             QK.user.management.getFamilyMembers({
@@ -105,9 +108,7 @@ export const useGetFamilyMember = (
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
 
     return useQuery({
         queryKey:
@@ -131,9 +132,7 @@ export const useGetCareWorkers = (props?: {
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
     return useQuery({
         queryKey: [
             QK.user.management.getCareWorkers,
@@ -156,9 +155,7 @@ export const useGetCareWorker = (id?: string) => {
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
 
     return useQuery({
         queryKey:
@@ -180,9 +177,7 @@ export const useGetCareManagers = (props?: {
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
     return useQuery({
         queryKey: [
             QK.user.management.getCareManagers,
@@ -208,9 +203,7 @@ export const useGetCareManager = (
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
 
     return useQuery({
         queryKey:
@@ -236,9 +229,7 @@ export const useGetAdministrators = (props?: {
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
     return useQuery({
         queryKey: [
             QK.user.management.getAdministrators,
@@ -262,9 +253,7 @@ export const useGetAdmin = (id?: string) => {
         throw new Error("No token found");
     }
 
-    const api = new UserManagementController(
-        token,
-    );
+    const api = new UserManagementController();
 
     return useQuery({
         queryKey: QK.user.management.getAdmin(id),

@@ -1,12 +1,8 @@
+import TabScroll from "components/tabs/TabScroll";
 import { useLocalSearchParams } from "expo-router";
 import { useCarePlanById } from "features/portal/care-plan/hook";
 import React from "react";
-import {
-    ScrollView,
-    Spinner,
-    Text,
-    YStack,
-} from "tamagui";
+import { Spinner, Text, YStack } from "tamagui";
 
 import {
     Assessment,
@@ -96,20 +92,18 @@ const CarePlanDetail = () => {
     }
 
     const data = response.data;
-    const illnesses = JSON.parse(
-        data.illnesses || "[]",
-    );
 
     return (
-        <ScrollView
+        <TabScroll
             flex={1}
             style={{ backgroundColor: "#fff" }}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-                paddingBlockEnd: 110,
+                paddingBlockEnd: 150,
             }}
             keyboardShouldPersistTaps="handled"
             bounces={false}
+            tabbed
         >
             <YStack
                 gap="$3"
@@ -119,28 +113,23 @@ const CarePlanDetail = () => {
                     data={{
                         beneficiary:
                             data.beneficiary,
-                        author: data.author,
                         care_worker:
                             data.care_worker,
                         plan_date:
                             data.created_at,
-                        status: data.acknowledged_by_beneficiary
-                            ? "acknowledged"
-                            : "pending",
+                        status: data.acknowledge_status,
+                        acknowledged_by:
+                            data.who_acknowledged,
                     }}
                 />
 
                 <Assessment
                     assessment={data.assessment}
-                    illnesses={illnesses}
+                    illnesses={data.illnesses}
                 />
 
                 <VitalSigns
-                    vitalSigns={
-                        data?.vital_signs
-                            ? [data?.vital_signs]
-                            : []
-                    }
+                    vitalSigns={data?.vital_signs}
                 />
 
                 <EvaluationRecommendations
@@ -151,11 +140,11 @@ const CarePlanDetail = () => {
 
                 <CareInterventions
                     interventions={
-                        data?.interventions
+                        data?.interventions || []
                     }
                 />
             </YStack>
-        </ScrollView>
+        </TabScroll>
     );
 };
 

@@ -85,6 +85,41 @@ export const useEmergencyDeleteRequest = () => {
     });
 };
 
+export const useEditEmergencyRequest = () => {
+    const { role, token } = authStore();
+    return useMutation({
+        mutationKey: [
+            QK.emergencyService.emergency
+                .editRequest,
+        ],
+        mutationFn: async ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: IEmergencyForm;
+        }) => {
+            if (!role || !token) {
+                throw new Error(
+                    "User role or token is not available",
+                );
+            }
+            const response =
+                await api.putEmergencyRequest(
+                    id,
+                    data,
+                    role,
+                );
+            return response;
+        },
+        onSuccess: async () => {
+            await invalidateQK(
+                QK.emergencyService.getActiveRequests(),
+            );
+        },
+    });
+};
+
 export const useEmergencyCancelRequest = () => {
     const { role, token } = authStore();
     return useMutation({
