@@ -48,7 +48,10 @@ class WeeklyCarePlanApiController extends Controller
             'selected_interventions' => 'required|array|min:1',
             'duration_minutes' => 'required|array|min:1',
             'duration_minutes.*' => 'required|numeric|min:0.01|max:999.99',
-            'illness' => 'nullable|string|max:500',
+
+            // Illness validation now matches updateWeekly:
+            'illness' => 'nullable|array|max:20',
+            'illness.*' => 'string|max:100',
 
             // Custom interventions validations
             'custom_category.*' => 'sometimes|nullable|exists:care_categories,care_category_id',
@@ -101,7 +104,10 @@ class WeeklyCarePlanApiController extends Controller
             'custom_duration.*.min' => 'Custom intervention duration must be greater than 0',
             'custom_duration.*.max' => 'Custom intervention duration cannot exceed 999.99 minutes',
 
-            'illness.max' => 'The illnesses list cannot exceed 500 characters',
+            // Illness error messages
+            'illness.array' => 'Illnesses must be an array.',
+            'illness.*.string' => 'Each illness must be a string.',
+            'illness.*.max' => 'Each illness cannot exceed 100 characters.',
         ]);
 
         if ($validator->fails()) {

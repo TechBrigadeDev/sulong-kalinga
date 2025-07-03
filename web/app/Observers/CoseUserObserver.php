@@ -42,6 +42,7 @@ class CoseUserObserver
         $unifiedUser = UnifiedUser::where('cose_user_id', $coseUser->id)->first();
         $data = [
             'email' => $coseUser->email,
+            'password' => $coseUser->password,
             'first_name' => $coseUser->first_name,
             'last_name' => $coseUser->last_name,
             'mobile' => $coseUser->mobile,
