@@ -484,3 +484,114 @@ To prevent similar issues in the future:
 4. **Document store subscription patterns in component comments**
 
 ---
+
+## Expo Router Tab Navigation Best Practices (2025)
+
+### Tab Re-press Navigation Patterns
+
+**Use Case**: Implementing custom behavior when a user presses a tab that is already active (tab re-press).
+
+**Implementation Strategy**: Use Expo Router's `screenListeners` and `tabPress` event handlers to detect when the active tab is pressed again and trigger custom navigation.
+
+#### **Basic Tab Re-press Pattern**
+```tsx
+// Tab layout with custom re-press behavior
+export default function TabLayout() {
+    const router = useRouter();
+    const segments = useSegments();
+
+    const handleTabPress = useCallback((tabName: string, targetRoute: string) => {
+        return (e: any) => {
+            // Check if we're already on this tab
+            const currentTab = segments[1]; // Get current tab segment
+            
+            if (currentTab === tabName) {
+                // We're on the same tab - navigate to specific route
+                e.preventDefault();
+                router.push(targetRoute);
+            }
+            // Otherwise, let default navigation happen
+        };
+    }, [router, segments]);
+
+    return (
+        <Tabs
+            screenListeners={{
+                tabPress: handleTabPress('options', '/options/profile'),
+            }}
+        >
+            {/* Tab content */}
+        </Tabs>
+    );
+}
+```
+
+#### **Advanced Tab Re-press with Route Detection**
+```tsx
+// More sophisticated re-press handling
+const handleOptionsTabPress = useCallback((e: any) => {
+    const currentRoute = router.pathname;
+    const isOnOptionsTab = currentRoute.includes('/options');
+    
+    if (isOnOptionsTab) {
+        // Already on options tab - redirect to profile
+        e.preventDefault();
+        router.push('/(tabs)/options/profile');
+    }
+    // Let default navigation happen for other cases
+}, [router]);
+
+// Usage in Tabs component
+<Tabs
+    screenListeners={{
+        tabPress: (e) => {
+            if (e.target?.includes('options')) {
+                handleOptionsTabPress(e);
+            }
+        }
+    }}
+>
+```
+
+#### **Expo Router UI Pattern (Latest)**
+For projects using Expo Router UI components with `TabTrigger`:
+```tsx
+<TabTrigger
+    name="/(tabs)/options/index"
+    href="/(tabs)/options"
+    onPress={(e) => {
+        // Check if already on options tab
+        if (currentRoute.includes('/options')) {
+            e.preventDefault();
+            router.push('/(tabs)/options/profile');
+        }
+    }}
+    asChild
+>
+    <TabButton icon="EllipsisVertical">
+        Options
+    </TabButton>
+</TabTrigger>
+```
+
+### **Key Considerations for Tab Re-press**
+
+1. **Route State Detection**: Use `useSegments()` or `useRouter().pathname` to detect current route
+2. **Event Prevention**: Call `e.preventDefault()` to override default navigation
+3. **User Experience**: Ensure the re-press behavior is intuitive and expected
+4. **Performance**: Memoize event handlers to avoid unnecessary re-renders
+5. **Cross-Platform**: Test behavior on both iOS and Android
+
+### **Common Tab Re-press Use Cases**
+- **Home Tab**: Scroll to top of feed or refresh data
+- **Profile Tab**: Navigate to edit profile or settings
+- **Options Tab**: Jump to most commonly used setting (profile)
+- **Search Tab**: Clear search and focus input
+- **Notifications Tab**: Mark all as read or navigate to settings
+
+### **Implementation Best Practices**
+- Use `useCallback` for event handlers to optimize performance
+- Implement proper TypeScript types for event handlers
+- Add haptic feedback for better user experience on mobile
+- Consider analytics tracking for tab re-press events
+- Test edge cases like rapid tab pressing

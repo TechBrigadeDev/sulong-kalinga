@@ -56,8 +56,14 @@ class CarePlanController extends Controller {
                                 null,
                                 2,
                             ),
-                            error: error.response
-                                ?.data,
+                            error: JSON.stringify(
+                                error.response
+                                    ?.data,
+                                null,
+                                2,
+                            ),
+                            message:
+                                "An error occurred while submitting the care plan form.",
                             status: error.response
                                 ?.status,
                         });

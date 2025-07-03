@@ -1,6 +1,10 @@
 import TabButton from "components/screens/Home/_components/button";
 import { portalMenuItems } from "components/screens/Home/paths";
-import { useRouter } from "expo-router";
+import {
+    useNavigation,
+    useRouter,
+    useSegments,
+} from "expo-router";
 import {
     TabList,
     Tabs,
@@ -8,6 +12,7 @@ import {
     TabTrigger,
 } from "expo-router/ui";
 import { isPortal } from "features/auth/auth.util";
+import { useCallback } from "react";
 import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View } from "tamagui";
@@ -15,6 +20,21 @@ import { View } from "tamagui";
 export default function Layout() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const segments = useSegments();
+
+    // Handle options tab re-press to redirect to profile
+    const handleOptionsTabPress =
+        useCallback(() => {
+            const currentSegment = segments[1]; // Get current tab segment
+            const isOnOptionsTab =
+                currentSegment === "options";
+
+            if (isOnOptionsTab) {
+                // Already on options tab - redirect to profile
+                router.replace("/(tabs)/options");
+            }
+            // Otherwise, let default navigation happen
+        }, [router, segments]);
 
     return (
         <Tabs
@@ -62,12 +82,29 @@ export default function Layout() {
                         name="/(tabs)/options/index"
                         href="/(tabs)/options"
                         reset="always"
+                        onPress={
+                            handleOptionsTabPress
+                        }
                         asChild
                     >
                         <TabButton icon="EllipsisVertical">
                             Options
                         </TabButton>
                     </TabTrigger>
+                    {/* <TabTrigger
+                        name="/(tabs)/reports/care-records/index"
+                        href="/(tabs)/options/reports/care-records"
+                        style={{
+                            display: "none",
+                        }}
+                    /> */}
+                    {/* <TabTrigger
+                        name="/(tabs)/reports/user-management/index"
+                        href="/(tabs)/options/reports/user-management/"
+                        style={{
+                            display: "none",
+                        }}
+                    /> */}
                     <TabTrigger
                         name="/(tabs)/shifts/index"
                         href="/(tabs)/shifts"

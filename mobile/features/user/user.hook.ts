@@ -149,5 +149,11 @@ export const useUpdatePassword = (params?: {
                 await params.onSuccess();
             }
         },
+        onError: (error) => {
+            console.error(
+                "Error updating password:",
+                error,
+            );
+        },
     });
 };
