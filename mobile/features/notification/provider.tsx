@@ -6,7 +6,6 @@ const NotificationProvider = ({
     children,
 }: PropsWithChildren) => {
     useRegisterNotification();
-
     // const register = async () => {
     //     await Promise.all([
     //         registerForPushNotificationsAsync(),

@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { isDev } from "common/env";
 import { invalidateQK, QK } from "common/query";
+import { isDevice } from "expo-device";
 import { authStore } from "features/auth/auth.store";
 
 import notificationController from "./api";
@@ -21,9 +22,13 @@ export const useNotifications = (props?: {
     return useInfiniteQuery({
         queryKey: [
             QK.notification.getNotifications,
-            token,
         ],
         queryFn: async ({ pageParam = 1 }) => {
+            if (!role || !token) {
+                throw new Error(
+                    "Role or token is not defined",
+                );
+            }
             const response =
                 await api.getNotifications({
                     role: role!,
@@ -132,7 +137,7 @@ export const useRegisterNotification = () => {
     const { data: notificationToken } =
         useGetNotificationToken();
 
-    const { role } = authStore();
+    const { role, token } = authStore();
 
     return useQuery({
         queryKey: QK.notification.registerToken(
@@ -140,43 +145,57 @@ export const useRegisterNotification = () => {
             notificationToken,
         ),
         queryFn: async () => {
-            if (!role) {
-                throw new Error(
-                    "Token is not defined",
-                );
+            console.log(
+                "Register notification token",
+                !!role || !!token,
+                role,
+                token,
+            );
+            if (!role || !token) {
+                return;
             }
 
-            if (!notificationToken) {
-                const token =
-                    await registerForPushNotification();
-
-                if (!token) {
-                    throw new Error(
-                        "Failed to get notification token",
-                    );
-                }
-
-                console.log(
-                    "Register token:",
-                    token,
-                );
-
-                await api.registerNotification({
+            console.log(
+                "Register notification token",
+                {
                     role,
                     token,
-                });
+                    notificationToken,
+                },
+            );
+
+            if (!notificationToken) {
+                try {
+                    const token =
+                        await registerForPushNotification();
+
+                    if (!token) {
+                        throw new Error(
+                            "Failed to get notification token",
+                        );
+                    }
+
+                    console.log(
+                        "Register token:",
+                        token,
+                    );
+
+                    await api.registerNotification(
+                        {
+                            role,
+                            token,
+                        },
+                    );
+                } catch {
+                    return;
+                }
             }
 
             return "yellow";
         },
-        enabled: !!role,
+        enabled: !!role && !!token && isDevice,
         staleTime: isDev
             ? Infinity
             : 1000 * 60 * 60 * 24,
-        // ...(isDev
-        //     ? {
-        //           refetchInterval: 5000,
-        //       }
-        //     : {}),
     });
 };

@@ -7,6 +7,7 @@ import {
     ArrowRight,
 } from "lucide-react-native";
 import { useCallback, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     Button,
     View,
@@ -30,7 +31,6 @@ import {
     useCarePlanForm,
 } from "./form";
 import { useCarePlanFormStore } from "./store";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const FORM_STEPS = [
     { label: "Personal Details" },
@@ -102,8 +102,8 @@ const Form = ({ record }: Props) => {
     };
 
     useEffect(() => {
+        console.log("has record", record);
         if (record) {
-            console.log("setting");
             setRecord(record);
             formReset({
                 personalDetails: {
@@ -163,8 +163,16 @@ const Form = ({ record }: Props) => {
                 },
             });
         } else {
-            formReset();
+
+
         }
+
+        return () => {
+            console.log(
+                "Form reset on record change or unmount",
+            );
+            formReset({});
+        };
     }, [
         record,
         setRecord,
@@ -173,23 +181,13 @@ const Form = ({ record }: Props) => {
     ]);
 
     // Reset step when component unmounts or user navigates away
-    useFocusEffect(
-        useCallback(() => {
-            return () => {
-                // Reset step when leaving this screen
-                resetStep();
-            };
-        }, [resetStep]),
-    );
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         resetStep();
+    //         formReset();
+    //     }, [resetStep, formReset]),
+    // );
 
-    useEffect(() => {
-        return () => {
-            console.log(
-                "Form unmounted, resetting form state",
-            );
-            formReset({});
-        };
-    }, [formReset]);
 
     const handleNext = () => {
         if (currentStep < FORM_STEPS.length - 1) {

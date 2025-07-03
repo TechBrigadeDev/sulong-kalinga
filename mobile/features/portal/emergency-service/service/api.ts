@@ -67,6 +67,22 @@ class ServiceController extends Controller {
                 "Error submitting service request:",
                 error,
             );
+            if (error instanceof AxiosError) {
+                switch (error.status) {
+                    case 422:
+                        console.log(
+                            "Invalid data provided:",
+                            error.response?.data,
+                            data,
+                        );
+                        showToastable({
+                            message:
+                                "Invalid data provided. Please check your input and try again.",
+                            status: "danger",
+                            duration: 6000,
+                        });
+                }
+            }
             throw new Error(
                 "Failed to submit service request",
             );
