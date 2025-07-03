@@ -7,12 +7,9 @@ use App\Models\User; // cose_users table
 use App\Models\Beneficiary;
 use App\Models\FamilyMember;
 use App\Models\UnifiedUser; // users table
-use App\Models\FcmToken;
-use App\Models\MobileDevice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\UploadService;
-use Illuminate\Support\Facades\Validator;
 
 class AuthApiController extends Controller
 {
@@ -157,12 +154,12 @@ class AuthApiController extends Controller
     }
 
     /**
-     * Logout user (revoke token and device-specific push token)
+     * Logout user (revoke token)
      */
     public function logout(Request $request)
     {
-        $user = $request->user();
-        $user->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()->delete();
+
         return response()->json([
             'success' => true,
             'message' => 'Successfully logged out'
