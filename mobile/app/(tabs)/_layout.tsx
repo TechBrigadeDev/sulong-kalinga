@@ -1,7 +1,6 @@
 import TabButton from "components/screens/Home/_components/button";
 import { portalMenuItems } from "components/screens/Home/paths";
 import {
-    useNavigation,
     useRouter,
     useSegments,
 } from "expo-router";

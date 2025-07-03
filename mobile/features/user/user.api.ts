@@ -6,6 +6,7 @@ import {
     isRoleStaff,
     portalPath,
 } from "features/auth/auth.util";
+import { showToastable } from "react-native-toastable";
 
 import {
     dtoEmailUpdate,
@@ -93,6 +94,17 @@ class UserController extends Controller {
                             "Validation error:",
                             error.response?.data,
                         );
+                        showToastable({
+                            status: "danger",
+                            message:
+                                "Validation error: " +
+                                JSON.stringify(
+                                    error.response
+                                        ?.data,
+                                    null,
+                                    2,
+                                ),
+                        });
                         break;
                 }
             }
@@ -101,6 +113,16 @@ class UserController extends Controller {
                 error,
                 JSON.stringify(error, null, 2),
             );
+            showToastable({
+                status: "danger",
+                message:
+                    "Error updating email: " +
+                    JSON.stringify(
+                        error,
+                        null,
+                        2,
+                    ),
+            });
             throw error;
         }
     }
@@ -142,6 +164,18 @@ class UserController extends Controller {
                             "Validation error:",
                             error.response?.data,
                         );
+                        showToastable({
+                            status: "danger",
+                            message:
+                                "Validation error: " +
+                                JSON.stringify(
+                                    error.response
+                                        ?.data,
+                                    null,
+                                    2,
+                                ),
+                        });
+
                         break;
                 }
             }
@@ -149,6 +183,16 @@ class UserController extends Controller {
                 "Error updating password:",
                 error,
             );
+            showToastable({
+                status: "danger",
+                message:
+                    "Error updating password: " +
+                    JSON.stringify(
+                        error,
+                        null,
+                        2,
+                    ),
+            });
             throw error;
         }
     }

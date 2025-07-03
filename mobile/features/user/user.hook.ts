@@ -4,6 +4,7 @@ import {
 } from "@tanstack/react-query";
 import { authStore } from "features/auth/auth.store";
 import { useMemo } from "react";
+import { showToastable } from "react-native-toastable";
 
 import { invalidateQK, QK } from "~/common/query";
 
@@ -148,6 +149,11 @@ export const useUpdatePassword = (params?: {
             if (params?.onSuccess) {
                 await params.onSuccess();
             }
+            showToastable({
+                status: "success",
+                message:
+                    "Password updated successfully!",
+            });
         },
         onError: (error) => {
             console.error(
