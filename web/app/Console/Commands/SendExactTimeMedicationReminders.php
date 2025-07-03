@@ -48,10 +48,15 @@ class SendExactTimeMedicationReminders extends Command
 
             foreach ($medications as $medication) {
                 $scheduled = Carbon::parse($medication->$field);
-                // Compare only hour and minute
                 if (abs($now->diffInMinutes($scheduled)) <= $windowMinutes) {
-                    $this->sendMedicationReminder($medication, $label, $scheduled->format('g:i A'));
-                    $count++;
+                    // Build a unique cache key for this reminder
+                    $beneficiaryId = $medication->beneficiary ? $medication->beneficiary->beneficiary_id : 'unknown';
+                    $cacheKey = 'med_reminder_sent_' . $medication->id . '_' . $field . '_' . $scheduled->format('YmdHi') . '_' . $beneficiaryId;
+                    if (!cache()->has($cacheKey)) {
+                        $this->sendMedicationReminder($medication, $label, $scheduled->format('g:i A'));
+                        cache()->put($cacheKey, true, now()->addMinutes(15)); // Cache for 15 minutes
+                        $count++;
+                    }
                 }
             }
         }
