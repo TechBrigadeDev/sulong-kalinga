@@ -88,7 +88,7 @@
                                                 </td>
                                                 <td>
                                                     {{ \Carbon\Carbon::parse($shift->time_in)->format('h:i A') }} - 
-                                                    {{ $shift->time_out ? \Carbon\Carbon::parse($shift->time_out)->format('h:i A') : '--:--' }}
+                                                    {{ $shift->updated_at ? \Carbon\Carbon::parse($shift->updated_at)->format('h:i A') : '--:--' }}
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="action-icons">
