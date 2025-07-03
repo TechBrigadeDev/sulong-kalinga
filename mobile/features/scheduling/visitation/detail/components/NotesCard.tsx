@@ -32,18 +32,18 @@ const NotesCard = ({ notes }: Props) => {
                         size={24}
                         color="#3b82f6"
                     />
-                    <H4 color="#111827">
-                        Notes
-                    </H4>
+                    <H4 color="#111827">Notes</H4>
                 </XStack>
 
                 <YStack
                     style={{
-                        backgroundColor: "#fed7aa",
+                        backgroundColor:
+                            "#fed7aa",
                         padding: 12,
                         borderRadius: 8,
                         borderLeftWidth: 3,
-                        borderLeftColor: "#ea580c",
+                        borderLeftColor:
+                            "#ea580c",
                     }}
                 >
                     <Text

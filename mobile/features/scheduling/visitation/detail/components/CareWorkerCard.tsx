@@ -37,7 +37,8 @@ const CareWorkerCard = ({ name }: Props) => {
 
                 <YStack
                     style={{
-                        backgroundColor: "#f3f4f6",
+                        backgroundColor:
+                            "#f3f4f6",
                         padding: 12,
                         borderRadius: 8,
                     }}

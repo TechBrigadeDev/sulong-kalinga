@@ -1,4 +1,8 @@
-import { CheckCircle, Calendar, XCircle } from "lucide-react-native";
+import {
+    Calendar,
+    CheckCircle,
+    XCircle,
+} from "lucide-react-native";
 import {
     Card,
     H4,
@@ -44,10 +48,12 @@ const StatusCard = ({
                 <YStack gap="$3">
                     <XStack
                         style={{
-                            backgroundColor: "#f3f4f6",
+                            backgroundColor:
+                                "#f3f4f6",
                             padding: 12,
                             borderRadius: 8,
-                            justifyContent: "space-between",
+                            justifyContent:
+                                "space-between",
                             alignItems: "center",
                         }}
                     >
@@ -61,7 +67,8 @@ const StatusCard = ({
                         </Text>
                         <XStack
                             style={{
-                                alignItems: "center",
+                                alignItems:
+                                    "center",
                             }}
                             gap="$2"
                         >
@@ -94,10 +101,12 @@ const StatusCard = ({
 
                     <XStack
                         style={{
-                            backgroundColor: "#f3f4f6",
+                            backgroundColor:
+                                "#f3f4f6",
                             padding: 12,
                             borderRadius: 8,
-                            justifyContent: "space-between",
+                            justifyContent:
+                                "space-between",
                             alignItems: "center",
                         }}
                     >
@@ -111,7 +120,8 @@ const StatusCard = ({
                         </Text>
                         <XStack
                             style={{
-                                alignItems: "center",
+                                alignItems:
+                                    "center",
                             }}
                             gap="$2"
                         >
@@ -145,16 +155,20 @@ const StatusCard = ({
                     {confirmedOn && (
                         <XStack
                             style={{
-                                backgroundColor: "#f0f9ff",
+                                backgroundColor:
+                                    "#f0f9ff",
                                 padding: 12,
                                 borderRadius: 8,
-                                justifyContent: "space-between",
-                                alignItems: "center",
+                                justifyContent:
+                                    "space-between",
+                                alignItems:
+                                    "center",
                             }}
                         >
                             <XStack
                                 style={{
-                                    alignItems: "center",
+                                    alignItems:
+                                        "center",
                                 }}
                                 gap="$2"
                             >

@@ -1,5 +1,4 @@
 import LoadingScreen from "components/loaders/LoadingScreen";
-import ScrollView from "components/ScrollView";
 import { Redirect, Stack } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
 import VisitationDetail from "features/scheduling/visitation/detail";

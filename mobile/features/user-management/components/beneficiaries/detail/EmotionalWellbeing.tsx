@@ -1,7 +1,6 @@
 import { Smile } from "lucide-react-native";
 import {
     Card,
-    H3,
     H4,
     Text,
     XStack,
