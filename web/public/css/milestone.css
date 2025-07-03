@@ -1,0 +1,295 @@
+        :root {
+            --cose-primary: #1a6e46;
+            --cose-primary-dark: #0d4b2a;
+            --cose-primary-light: #4c9d6f;
+            --cose-secondary: #f5f0e6;
+            --cose-accent: #e63946;
+            --cose-text: #333333;
+            --cose-text-light: #6c757d;
+            --cose-bg-light: #f8f9fa;
+            --cose-white: #ffffff;
+            --cose-black: #212529;
+            --cose-gradient: linear-gradient(135deg, var(--cose-primary) 0%, var(--cose-primary-dark) 100%);
+        }
+
+        body {
+            font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+            color: var(--cose-text);
+            background-color: var(--cose-bg-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .header-banner {
+            background: var(--cose-gradient);
+            color: var(--cose-white);
+            padding: clamp(4rem, 6vw, 6rem) 0;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header-banner h1 {
+            font-weight: 700;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header-banner p {
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        .milestone {
+            background-color: var(--cose-white);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: clamp(2rem, 3vw, 3rem);
+            margin-bottom: 3rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .milestone::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--cose-gradient);
+            transition: all 0.4s ease;
+        }
+
+        @media (min-width: 768px) {
+            .milestone {
+                flex-direction: row;
+            }
+        }
+
+        .milestone:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .milestone:hover::after {
+            width: 6px;
+        }
+
+        .milestone-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .milestone-number {
+                margin-bottom: 0;
+                min-width: 220px;
+                margin-right: 2rem;
+            }
+        }
+
+        .milestone-number h1 {
+            color: var(--cose-primary);
+            font-size: clamp(4rem, 10vw, 6rem);
+            font-weight: 700;
+            line-height: 1;
+            margin: 0;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 5px 15px rgba(26, 110, 70, 0.2);
+        }
+
+        .milestone-number::before {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: rgba(76, 157, 111, 0.1);
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+        }
+
+        .milestone-content {
+            flex: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .milestone-title {
+            color: var(--cose-primary-dark);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+            position: relative;
+            padding-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+
+        .milestone-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--cose-gradient);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .milestone:hover .milestone-title::after {
+            width: 80px;
+        }
+
+        .milestone-text {
+            color: var(--cose-text);
+            font-size: clamp(1rem, 1.2vw, 1.1rem);
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        /* Enhanced Image Track */
+        .image-scroller-container {
+            position: relative;
+            margin-top: 2rem;
+            padding: 1rem 0;
+        }
+
+        .image-scroller {
+            position: relative;
+            overflow: hidden;
+            height: 180px;
+            border-radius: 12px;
+            background-color: rgba(245, 240, 230, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .image-track {
+            display: flex;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            will-change: transform;
+            gap: 20px;
+            padding: 0 20px;
+            animation: scroll 14s linear infinite;
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0) translateY(-50%); }
+            to { transform: translateX(-50%) translateY(-50%); }
+        }
+
+        .scroller-image {
+            height: 140px;
+            width: auto;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            flex-shrink: 0;
+            filter: brightness(0.95);
+        }
+
+        .scroller-image:hover {
+            transform: scale(1.05);
+            filter: brightness(1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Pause animation on hover */
+        .image-scroller:hover .image-track {
+            animation-play-state: paused;
+        }
+
+        /* Scroll gradient edges */
+        .image-scroller::before,
+        .image-scroller::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .image-scroller::before {
+            left: 0;
+            background: linear-gradient(to right, var(--cose-white), rgba(255,255,255,0));
+        }
+
+        .image-scroller::after {
+            right: 0;
+            background: linear-gradient(to left, var(--cose-white), rgba(255,255,255,0));
+        }
+
+        /* Floating elements */
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(76, 157, 111, 0.05);
+            z-index: 1;
+        }
+
+        .shape-1 {
+            width: 100px;
+            height: 100px;
+            top: -30px;
+            right: -30px;
+        }
+
+        .shape-2 {
+            width: 60px;
+            height: 60px;
+            bottom: -20px;
+            left: -20px;
+        }
+
+        /* Animation classes */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }

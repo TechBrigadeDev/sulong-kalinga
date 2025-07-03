@@ -1,0 +1,208 @@
+
+        /* Shared Variables and Base Styles */
+        :root {
+            --cose-primary: #1a6e46;       /* Primary brand green */
+            --cose-primary-dark: #0d4b2a;  /* Darker green for contrast */
+            --cose-primary-light: #4c9d6f; /* Lighter green */
+            --cose-secondary: #f5f0e6;     /* Beige for backgrounds */
+            --cose-accent: #e63946;        /* Red for important actions */
+            --cose-text: #333333;          /* High contrast text */
+            --cose-text-light: #6c757d;    /* Secondary text */
+            --cose-bg-light: #f8f9fa;      /* Light background */
+            --cose-white: #ffffff;         /* Pure white */
+            --cose-black: #212529;         /* Almost black */
+        }
+
+        /* Header Section - Matches events page */
+        .header-banner {
+            
+            color: var(--cose-white);
+            padding: 8rem 0 6rem;
+            margin-bottom: 3rem;
+            position: relative;
+            height: 420px;
+            align-content: center;
+        }
+
+        .header-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Card - Matches event cards styling */
+        .hero-card {
+            background-color: var(--cose-white);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 3rem;
+            margin-top: -5rem;
+            position: relative;
+            z-index: 10;
+            border-top: 5px solid var(--cose-primary);
+        }
+
+        /* Stats Section - Consistent with events layout */
+        .stats-section {
+            padding: 5rem 0;
+        }
+
+        .stat-card {
+            background-color: var(--cose-white);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 2rem;
+            height: 100%;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-top: 4px solid var(--cose-primary);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--cose-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Services Section - Consistent with events cards */
+        .services-section {
+            background: linear-gradient(135deg, var(--cose-primary-dark) 0%, var(--cose-primary) 100%);
+            color: var(--cose-white);
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card {
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            height: 100%;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--cose-primary-light);
+            backdrop-filter: blur(5px);
+        }
+
+        .service-card:hover {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            color: var(--cose-white);
+            margin-bottom: 1.5rem;
+            background-color: rgba(255,255,255,0.2);
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        /* Approach Cards - Matches event cards */
+        .approach-card {
+            background-color: var(--cose-white);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 2rem;
+            height: 100%;
+            border-left: 4px solid var(--cose-primary);
+            transition: all 0.3s ease;
+        }
+
+        .approach-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        /* Beyond Section - Consistent styling */
+        .beyond-card {
+            background-color: var(--cose-white);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            padding: 2rem;
+            text-align: center;
+            height: 100%;
+            border-top: 4px solid var(--cose-primary);
+        }
+
+        .beyond-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        /* Shared Section Titles */
+        .section-title {
+            position: relative;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background-color: var(--cose-primary);
+        }
+
+        .services-section .section-title::after {
+            background-color: var(--cose-white);
+        }
+
+        /* Footer - Matches events page */
+        .footer {
+            background-color: var(--cose-primary-dark);
+            color: var(--cose-white);
+            padding: 4rem 0 2rem;
+            margin-top: 5rem;
+        }
+
+        /* Animations - Shared with events page */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header-banner {
+                padding: 6rem 0 4rem;
+                background-attachment: scroll;
+            }
+            
+            .hero-card {
+                margin-top: -3rem;
+                padding: 2rem;
+            }
+        }
