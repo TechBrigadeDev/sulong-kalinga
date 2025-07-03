@@ -10,6 +10,8 @@ use App\Models\FamilyMember;
 use App\Models\FcmToken;
 use Carbon\Carbon;
 use App\Notifications\ExpoPushNotification;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\View;
 
 class NotificationService
 {
@@ -282,5 +284,71 @@ class NotificationService
         // and have a specific format
         $pattern = '/^(ExponentPushToken|ExpoPushToken)\[[\w-]+\]$/';
         return preg_match($pattern, $token) === 1;
+    }
+
+    /**
+     * Send an email notification to a specific care manager (stub, not implemented)
+     *
+     * @param int $careManagerId
+     * @param string $subject
+     * @param string $message
+     * @return void
+     */
+    public function notifyCareManagerByEmail($careManagerId, $subject, $message)
+    {
+        // Not implemented yet
+    }
+
+    /**
+     * Send an email notification to all care managers
+     *
+     * @param string $subject
+     * @param string $message
+     * @return array
+     */
+    public function notifyAllCareManagersByEmail($subject, $message)
+    {
+        $careManagers = User::where('role_id', 2)->whereNotNull('email')->get();
+        $results = [];
+
+        foreach ($careManagers as $manager) {
+            // Render the email HTML using a Blade view
+            $htmlContent = View::make('emails.care-manager-notification', [
+                'subject' => $subject,
+                'message' => $message,
+                'careManager' => $manager
+            ])->render();
+
+            // Send email via ZeptoMail API
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Zoho-enczapikey ' . env('ZEPTO_API_KEY'),
+            ])->post('https://api.zeptomail.com/v1.1/email', [
+                'from' => [
+                    'address' => env('ZEPTO_FROM_ADDRESS'),
+                    'name' => env('ZEPTO_FROM_NAME'),
+                ],
+                'to' => [
+                    [
+                        'email_address' => [
+                            'address' => $manager->email,
+                            'name' => $manager->first_name ?? 'Care Manager'
+                        ]
+                    ]
+                ],
+                'subject' => $subject,
+                'htmlbody' => $htmlContent,
+            ]);
+
+            $results[] = [
+                'care_manager_id' => $manager->id,
+                'email' => $manager->email,
+                'success' => $response->successful(),
+                'response' => $response->json()
+            ];
+        }
+
+        return $results;
     }
 }
