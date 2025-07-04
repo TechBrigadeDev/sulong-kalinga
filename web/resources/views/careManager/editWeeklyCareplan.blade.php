@@ -94,7 +94,7 @@
                             </div>
                         </div>
                         
-                        <form id="weeklyCarePlanForm" action="{{ route('care-manager.weeklycareplans.update', $weeklyCarePlan->weekly_care_plan_id) }}" method="POST" novalidate>
+                        <form id="weeklyCarePlanForm" action="{{ route('care-manager.weeklycareplans.update', $weeklyCarePlan->weekly_care_plan_id) }}" method="POST" enctype="multipart/form-data" novalidate>
                             @csrf
                             @method('PUT')
                             <div class="row">
@@ -553,64 +553,78 @@
             return;
         }
         
-        // Fetch beneficiary details via AJAX
-        fetch(`{{ route('care-manager.weeklycareplans.beneficiaryDetails', ['id' => ':id']) }}`.replace(':id', beneficiaryId))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const beneficiary = data.data;
-                    
-                    // Calculate age
-                    const birthDate = new Date(beneficiary.birthday);
-                    const today = new Date();
-                    let age = today.getFullYear() - birthDate.getFullYear();
-                    const monthDiff = today.getMonth() - birthDate.getMonth();
-                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                        age--;
+        document.getElementById('beneficiary_id').addEventListener('change', function() {
+            const beneficiaryId = this.value;
+            
+            if (!beneficiaryId) {
+                // Clear all fields if no beneficiary selected
+                document.getElementById('age').value = '';
+                document.getElementById('birthDate').value = '';
+                document.getElementById('gender').value = '';
+                document.getElementById('civilStatus').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('medicalConditions').value = '';
+                return;
+            }
+            
+            // Fetch beneficiary details via AJAX
+            fetch(`/care-manager/weekly-care-plans/beneficiary/${beneficiaryId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
-                    
-                    // Populate form fields
-                    document.getElementById('age').value = age;
-                    document.getElementById('birthDate').value = beneficiary.birthday;
-                    document.getElementById('gender').value = beneficiary.gender;
-                    document.getElementById('civilStatus').value = beneficiary.civil_status;
-                    document.getElementById('address').value = beneficiary.street_address;
-                    
-                    // Set medical conditions if available
-                    let medicalConditions = '{{ T::translate('No medical conditions recorded', 'Walang medikal na kondisyon ang naitala')}}';
-
-                    if (beneficiary.general_care_plan && beneficiary.general_care_plan.health_history) {
-                        const medicalConditionsData = beneficiary.general_care_plan.health_history.medical_conditions || 'None';
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const beneficiary = data.data;
                         
-                        // Format as comma-separated list if it's JSON
-                        try {
-                            const conditionsArray = JSON.parse(medicalConditionsData);
-                            if (Array.isArray(conditionsArray)) {
-                                medicalConditions = conditionsArray.join(', ');
-                            } else {
+                        // Calculate age
+                        const birthDate = new Date(beneficiary.birthday);
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = today.getMonth() - birthDate.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                        }
+                        
+                        // Populate form fields
+                        document.getElementById('age').value = age;
+                        document.getElementById('birthDate').value = beneficiary.birthday;
+                        document.getElementById('gender').value = beneficiary.gender;
+                        document.getElementById('civilStatus').value = beneficiary.civil_status;
+                        document.getElementById('address').value = beneficiary.street_address;
+                        
+                        // Set medical conditions if available
+                        let medicalConditions = 'No medical conditions recorded';
+
+                        if (beneficiary.general_care_plan && beneficiary.general_care_plan.health_history) {
+                            const medicalConditionsData = beneficiary.general_care_plan.health_history.medical_conditions || 'None';
+                            
+                            // Format as comma-separated list if it's JSON
+                            try {
+                                const conditionsArray = JSON.parse(medicalConditionsData);
+                                if (Array.isArray(conditionsArray)) {
+                                    medicalConditions = conditionsArray.join(', ');
+                                } else {
+                                    medicalConditions = medicalConditionsData;
+                                }
+                            } catch (e) {
+                                // If not valid JSON, use as is
                                 medicalConditions = medicalConditionsData;
                             }
-                        } catch (e) {
-                            // If not valid JSON, use as is
-                            medicalConditions = medicalConditionsData;
                         }
-                    }
 
-                    document.getElementById('medicalConditions').value = medicalConditions;
-                } else {
-                    alert('{{ T::translate('Failed to load beneficiary details', 'Nabigong i-load ang detalye ng benepisyaryo')}}');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('{{ T::translate('An error occurred while fetching beneficiary data', 'Isang error ang naganap habang kumukuha ng datos ng benepisyaryo')}}');
-            });
-    });
+                        document.getElementById('medicalConditions').value = medicalConditions;
+                    } else {
+                        alert('Failed to load beneficiary details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while fetching beneficiary data');
+                });
+        });
         
         // Handle intervention checkboxes
         document.querySelectorAll('.intervention-checkbox').forEach(checkbox => {
@@ -1135,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (assessment.length < 20) {
                 errors.push('{{ T::translate('Assessment must be at least 20 characters', 'Ang pagtatasa ay dapat hindi bababa sa 20 na karakter')}}');
             }
-            
+
             // If errors, show them and stop submission
             if (errors.length > 0) {
                 showValidationError(1, errors);

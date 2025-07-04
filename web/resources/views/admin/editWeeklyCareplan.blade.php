@@ -129,7 +129,7 @@
                             </div>
                         </div>
                         
-                        <form id="weeklyCarePlanForm" action="{{ Auth::user()->role_id == 1 ? route('admin.weeklycareplans.update', $weeklyCarePlan->weekly_care_plan_id) : route('careworker.weeklycareplans.update', $weeklyCarePlan->weekly_care_plan_id) }}" method="POST" novalidate>
+                        <form id="weeklyCarePlanForm" action="{{ Auth::user()->role_id == 1 ? route('admin.weeklycareplans.update', $weeklyCarePlan->weekly_care_plan_id) : route('careworker.weeklycareplans.update', $weeklyCarePlan->weekly_care_plan_id) }}" method="POST" enctype="multipart/form-data" novalidate>
                             @csrf
                             @method('PUT')
                             <div class="row">
