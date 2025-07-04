@@ -833,6 +833,48 @@
             const eventDate = new Date(event.start);
             const formattedDate = eventDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
+            let carePlanStatusHtml = '';
+            const rawVisitType = String(event.extendedProps.visit_type || '').toLowerCase();
+            const hideSection = rawVisitType.includes('service') || rawVisitType.includes('emergency');
+            
+            console.log('[DEBUG] Visit type:', rawVisitType, 'Hide section?', hideSection);
+            
+            if (!hideSection) {
+                carePlanStatusHtml = `
+                <div class="detail-section">
+                    <div class="section-title"><i class="bi bi-check-circle"></i> {{ T::translate('Care Plan Status', 'Status ng Care Plan')}}</div>
+                    ${event.extendedProps.has_weekly_care_plan ? `
+                        <div class="detail-item">
+                            <div class="detail-label">Beneficiary: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_beneficiary ? '{{ T::translate('Confirmed', 'Nakumpirma')}}' : '{{ T::translate('Not Confirmed', 'Hindi Nakumpirma')}}'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Family: </div>
+                            <div class="detail-value">
+                                <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
+                                    ${event.extendedProps.confirmed_by_family ? '{{ T::translate('Confirmed', 'Nakumpirma')}}' : '{{ T::translate('Not Confirmed', 'Hindi Nakumpirma')}}'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">{{ T::translate('Confirmed On', 'Nakumpirma sa')}}: </div>
+                            <div class="detail-value">
+                                ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : '{{ T::translate('Not confirmed yet', 'Hindi pa nakumpirma')}}'}
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="detail-value text-muted">
+                            <i class="bi bi-info-circle me-1"></i> {{ T::translate('No care plan has been created yet for this visit.', 'Walang care plan ang nagawa para sa pagbisita na ito.')}}
+                        </div>
+                    `}
+                </div>
+                `;
+            }
+
             // Build details HTML
             if (appointmentDetailsEl) {
                 appointmentDetailsEl.innerHTML = `
@@ -873,37 +915,7 @@
                     </div>
                     
                     <!-- Add confirmation status section -->
-                    <div class="detail-section">
-                        <div class="section-title"><i class="bi bi-check-circle"></i> {{ T::translate('Care Plan Status', 'Status ng Care Plan')}}</div>
-                        ${event.extendedProps.has_weekly_care_plan ? `
-                            <div class="detail-item">
-                                <div class="detail-label">{{ T::translate('Beneficiary:', 'Benepisyaryo:')}} </div>
-                                <div class="detail-value">
-                                    <span class="badge ${event.extendedProps.confirmed_by_beneficiary ? 'bg-success' : 'bg-secondary'}">
-                                        ${event.extendedProps.confirmed_by_beneficiary ? '{{ T::translate('Confirmed', 'Nakumpirma')}}' : '{{ T::translate('Not Confirmed', 'Hindi Nakumpirma')}}'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">{{ T::translate('Family:', 'Pamilya:')}} </div>
-                                <div class="detail-value">
-                                    <span class="badge ${event.extendedProps.confirmed_by_family ? 'bg-success' : 'bg-secondary'}">
-                                        ${event.extendedProps.confirmed_by_family ? '{{ T::translate('Confirmed', 'Nakumpirma')}}' : '{{ T::translate('Not Confirmed', 'Hindi Nakumpirma')}}'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">{{ T::translate('Confirmed On:', 'Nakumpirma noong:')}}</div>
-                                <div class="detail-value">
-                                    ${event.extendedProps.confirmed_on ? new Date(event.extendedProps.confirmed_on).toLocaleString() : '{{ T::translate('Not confirmed yet', 'Hindi pa nakumpirma')}}'}
-                                </div>
-                            </div>
-                        ` : `
-                            <div class="detail-value text-muted">
-                                <i class="bi bi-info-circle me-1"></i> {{ T::translate('No care plan has been created yet for this visit.', 'Wala pang nagawang plano sa pangangalaga para sa pagbisitang ito.')}}
-                            </div>
-                        `}
-                    </div>
+                    ${carePlanStatusHtml}
                     
                     ${event.extendedProps.notes ? `
                     <div class="detail-section">
