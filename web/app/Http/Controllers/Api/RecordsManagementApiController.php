@@ -315,6 +315,7 @@ class RecordsManagementApiController extends Controller
                     ) {
                         WeeklyCarePlanInterventions::create([
                             'weekly_care_plan_id' => $plan->weekly_care_plan_id,
+                            'intervention_id' => null,
                             'care_category_id' => $cat,
                             'intervention_description' => $request->custom_description[$idx] ?? '',
                             'duration_minutes' => $request->custom_duration[$idx] ?? null,
