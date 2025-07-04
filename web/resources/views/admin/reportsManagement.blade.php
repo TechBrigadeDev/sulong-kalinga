@@ -407,7 +407,7 @@
             
             // Create form and submit
             const form = $('<form>', {
-                'action': '/admin/exports/reports-pdf',
+                'action': '/admin/export/reports-pdf',
                 'method': 'post',
                 'target': '_blank'
             });
