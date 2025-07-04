@@ -74,12 +74,13 @@ class BeneficiaryApiController extends Controller
         $user = $request->user();
         $query = Beneficiary::with(['category', 'status', 'municipality']);
 
+        // REMOVED FOR NOW, TO ALLOW CARE WORKERS TO CREATE WCP FOR SPECIFIC VISITATIONS IN MOBILE
         // If care worker, filter to only assigned beneficiaries
-        if ($user && $user->role_id == 3) {
-            $query->whereHas('generalCarePlan', function ($q) use ($user) {
-                $q->where('care_worker_id', $user->id);
-            });
-        }
+        // if ($user && $user->role_id == 3) {
+        //     $query->whereHas('generalCarePlan', function ($q) use ($user) {
+        //         $q->where('care_worker_id', $user->id);
+        //     });
+        // }
 
         if ($request->has('search') && $request->get('search') !== null) {
             $search = $request->get('search');
