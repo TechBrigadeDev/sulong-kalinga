@@ -471,7 +471,7 @@
 
         document.querySelectorAll('input[type="text"]').forEach(input => {
             input.addEventListener('input', function () {
-                this.value = this.value.replace(/[^a-zA-ZÑñ\s\-'.]/g, '');
+                this.value = this.value.replace(/[^a-zA-Z0-9Ññ\s\-'.]/g, '');
             });
         });
 
