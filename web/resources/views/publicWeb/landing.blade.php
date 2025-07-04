@@ -6,6 +6,7 @@
     <title>Sulong Kalinga</title>
     <link rel="stylesheet" href="{{ asset('css/landing.css')}}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     <style>
     
     img.logo{

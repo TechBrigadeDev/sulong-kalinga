@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="role-prefix" content="{{ $rolePrefix }}">
-<script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
-    <title>Messaging - SulongKalinga</title>
+    <script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
+    <title>Messaging | Care Worker</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
