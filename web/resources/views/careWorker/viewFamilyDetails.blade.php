@@ -34,9 +34,6 @@
                     <a href="{{ route('care-worker.families.index') }}" class="btn btn-secondary d-inline-flex d-md-none" style="margin-bottom: 8px;">
                         <i class="bi bi-arrow-left"></i> {{ T::translate('Back', 'Bumalik')}}
                     </a>
-                    <a href="{{ route('care-worker.families.edit', $family_member->family_member_id) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-square me-1"></i> {{ T::translate('Edit', 'I-Edit')}}
-                    </a>
                 </div>
             </div>
             
