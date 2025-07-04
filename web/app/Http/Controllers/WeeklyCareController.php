@@ -76,18 +76,22 @@ class WeeklyCareController extends Controller
         
         // Fetch all beneficiaries for admins and care managers
         // For care workers, only fetch their assigned beneficiaries
-        if (Auth::user()->role_id == 3) {
-            $beneficiaries = Beneficiary::whereHas('generalCarePlan', function($query) {
-                $query->where('care_worker_id', Auth::id());
-            })
-            ->orderBy('last_name')
+        // if (Auth::user()->role_id == 3) {
+        //     $beneficiaries = Beneficiary::whereHas('generalCarePlan', function($query) {
+        //         $query->where('care_worker_id', Auth::id());
+        //     })
+        //     ->orderBy('last_name')
+        //     ->orderBy('first_name')
+        //     ->get();
+        // } else {
+        //     $beneficiaries = Beneficiary::orderBy('last_name')
+        //         ->orderBy('first_name')
+        //         ->get();
+        // }
+
+        $beneficiaries = Beneficiary::orderBy('last_name')
             ->orderBy('first_name')
             ->get();
-        } else {
-            $beneficiaries = Beneficiary::orderBy('last_name')
-                ->orderBy('first_name')
-                ->get();
-        }
         
         // Get all care categories with their interventions
         $careCategories = CareCategory::with('interventions')->get();
@@ -200,16 +204,16 @@ class WeeklyCareController extends Controller
         Log::info('Validation passed');
 
         try {
-            if ($user->role_id == 3) {
-                $assignedBeneficiaryIds = Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
-                    $query->where('care_worker_id', $user->id);
-                })->pluck('beneficiary_id');
+            // if ($user->role_id == 3) {
+            //     $assignedBeneficiaryIds = Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
+            //         $query->where('care_worker_id', $user->id);
+            //     })->pluck('beneficiary_id');
                 
-                if (!$assignedBeneficiaryIds->contains($request->beneficiary_id)) {
-                    return redirect()->route($rolePrefix . '.weeklycareplans.create')
-                        ->with('error', 'You can only create plans for your assigned beneficiaries.');
-                }
-            }
+            //     if (!$assignedBeneficiaryIds->contains($request->beneficiary_id)) {
+            //         return redirect()->route($rolePrefix . '.weeklycareplans.create')
+            //             ->with('error', 'You can only create plans for your assigned beneficiaries.');
+            //     }
+            // }
             
             DB::beginTransaction();
 
@@ -553,18 +557,22 @@ class WeeklyCareController extends Controller
         }
         
         // Get all relevant data for the form
-        if ($user->role_id == 3) {
-            $beneficiaries = Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
-                $query->where('care_worker_id', $user->id);
-            })
-            ->orderBy('last_name')
+        // if ($user->role_id == 3) {
+        //     $beneficiaries = Beneficiary::whereHas('generalCarePlan', function($query) use ($user) {
+        //         $query->where('care_worker_id', $user->id);
+        //     })
+        //     ->orderBy('last_name')
+        //     ->orderBy('first_name')
+        //     ->get();
+        // } else {
+        //     $beneficiaries = Beneficiary::orderBy('last_name')
+        //         ->orderBy('first_name')
+        //         ->get();
+        // }
+
+        $beneficiaries = Beneficiary::orderBy('last_name')
             ->orderBy('first_name')
             ->get();
-        } else {
-            $beneficiaries = Beneficiary::orderBy('last_name')
-                ->orderBy('first_name')
-                ->get();
-        }
 
         // Set the selected beneficiary explicitly
         $selectedBeneficiary = $weeklyCarePlan->beneficiary;
