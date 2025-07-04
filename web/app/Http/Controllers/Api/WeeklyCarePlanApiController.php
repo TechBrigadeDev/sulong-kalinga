@@ -202,6 +202,7 @@ class WeeklyCarePlanApiController extends Controller
                     ) {
                         WeeklyCarePlanInterventions::create([
                             'weekly_care_plan_id' => $wcp->weekly_care_plan_id,
+                            'intervention_id' => null,
                             'care_category_id' => $categoryId,
                             'intervention_description' => $request->custom_description[$index],
                             'duration_minutes' => $request->custom_duration[$index],
