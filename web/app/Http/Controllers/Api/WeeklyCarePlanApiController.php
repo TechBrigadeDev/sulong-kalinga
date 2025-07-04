@@ -132,10 +132,8 @@ class WeeklyCarePlanApiController extends Controller
 
             // 2. Prepare illnesses as JSON (trim, filter, only if not empty)
             $illnesses = null;
-            if ($request->has('illness') && !empty($request->illness)) {
-                $illnessesArray = array_filter(array_map('trim', explode(',', $request->illness)), function($value) {
-                    return !empty($value);
-                });
+            if ($request->has('illness') && is_array($request->illness)) {
+                $illnessesArray = array_filter(array_map('trim', $request->illness));
                 if (count($illnessesArray) > 0) {
                     $illnesses = json_encode($illnessesArray);
                 }
