@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Our Mobile Healthcare Service | COSE</title>
+    <title>About Our MHCS | Sulong Kalinga</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/aboutUs.css') }}">
     <link rel="stylesheet" href="{{ asset('css/events.css') }}">

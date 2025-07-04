@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Profile Details | Care Worker</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/viewProfileDetails.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
@@ -22,7 +23,7 @@
             <!-- Header with buttons -->
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <!-- Back button for large screens -->
-                <a href="{{ route('care-worker.families.index') }}" class="btn btn-secondary d-none d-md-inline-flex">
+                <a href="{{ route('care-worker.families.index') }}" class="btn btn-secondary d-md-inline-flex">
                     <i class="bi bi-arrow-left"></i> {{ T::translate('Back', 'Bumalik')}}
                 </a>
                 

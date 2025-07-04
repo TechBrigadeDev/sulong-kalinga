@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Records Management | Care Manager</title>
+    <title>Records Management | Manager</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/careRecords.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
@@ -86,7 +87,7 @@
                                     <button type="button" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" id="sortToggle" 
                                         onclick="toggleSortOrder()">
                                         <i class="bi {{ ($sortOrder ?? 'asc') == 'desc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up' }} me-1 me-sm-2"></i> 
-                                        <span class="d-none d-sm-inline">{{ ($sortOrder ?? 'asc') == 'desc' ? 'Newest First' : 'Oldest First' }}</span>
+                                        <span class="d-sm-inline">{{ ($sortOrder ?? 'asc') == 'desc' ? 'Newest First' : 'Oldest First' }}</span>
                                     </button>
                                     <input type="hidden" name="sort" id="sortOrder" value="{{ $sortOrder ?? 'asc' }}">
                                 </div>
@@ -95,7 +96,7 @@
                                 <div>
                                     <div class="dropdown">
                                         <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export', 'I-Export')}}</span>
+                                            <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-sm-inline">{{ T::translate('Export', 'I-Export')}}</span>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                             <li><a class="dropdown-item" href="#" onclick="checkSelectedReports()"><i class="bi bi-file-earmark-pdf me-2"></i>{{ T::translate('Selected as PDF', 'Pinili bilang PDF')}}</a></li>

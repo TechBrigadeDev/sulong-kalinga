@@ -7,7 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="role-prefix" content="{{ $rolePrefix }}">
     <script>const role_base_url = '{{ url("/".$rolePrefix) }}';</script>
-    <title>Messaging - SulongKalinga</title>
+    <title>Messaging | Family Portal</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
