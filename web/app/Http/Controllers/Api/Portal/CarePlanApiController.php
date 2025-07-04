@@ -256,6 +256,20 @@ class CarePlanApiController extends Controller
 
         $carePlan->save();
 
+        // Update confirmation status
+        $visitation = \App\Models\Visitation::where('beneficiary_id', $beneficiary->beneficiary_id)
+            ->whereDate('visitation_date', $carePlan->date)
+            ->first();
+
+        if ($visitation) {
+            if ($user->role_id == 4) {
+                $visitation->confirmed_by_beneficiary = $user->beneficiary_id;
+            } elseif ($user->role_id == 5) {
+                $visitation->confirmed_by_family = $user->family_member_id;
+            }
+            $visitation->save();
+        }
+
         // Log the action
         $this->logService->createLog(
             'WeeklyCarePlan',
