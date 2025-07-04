@@ -61,15 +61,6 @@
                                     </ul>
                                 </div>
                             </div>
-
-                            <!-- Add Family Member Button -->
-                            <div>
-                                <a href="{{ route('care-worker.families.create') }}" class="w-100">
-                                    <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                        <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-sm-inline">{{ T::translate('Add Family', 'Magdagdag ng Pamilya') }}</span>
-                                    </button>
-                                </a>
-                            </div>
                         </div>
                     </div>
 
@@ -93,7 +84,7 @@
                                     <th scope="col">{{ T::translate('Full Name', 'Buong Pangalan') }}</th>
                                     <th scope="col">{{ T::translate('Mobile Number', 'Numero sa Mobile') }}</th>
                                     <th scope="col">{{ T::translate('Registered Beneficiary', 'Nakarehistrong Benepisyaryo') }}</th>
-                                    <th scope="col">{{ T::translate('Actions', 'Mga Aksyon') }}</th>
+                                    <th scope="col">{{ T::translate('Action', 'Aksyon') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -114,9 +105,6 @@
                                                         <i class="bi bi-eye"></i>
                                                     </button>
                                                 </form>
-                                                <a href="{{ route('care-worker.families.edit', $family_member->family_member_id) }}" class="btn btn-link" title="{{ T::translate('Edit', 'I-edit') }}">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
