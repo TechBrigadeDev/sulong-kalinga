@@ -71,7 +71,7 @@ class RecordsManagementApiController extends Controller
                     // 'assessment' => $plan->assessment,
                     'photo_url' => $plan->photo_path
                         ? $this->uploadService->getTemporaryPrivateUrl($plan->photo_path, 30)
-                        : null,
+                        : '',
                 ];
             }),
             'meta' => [
@@ -196,7 +196,7 @@ class RecordsManagementApiController extends Controller
                 }),
                 'photo_url' => $plan->photo_path
                     ? $this->uploadService->getTemporaryPrivateUrl($plan->photo_path, 30)
-                    : null,
+                    : '',
                 'created_at' => $plan->created_at,
                 'updated_at' => $plan->updated_at,
                 'acknowledge_status' => $acknowledgeStatus,
