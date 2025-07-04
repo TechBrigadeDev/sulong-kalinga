@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Summary | Care Manager</title>
+    <title>AI Summary | Manager</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{asset('images/favicon-white-16x16.png')}}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/homeSection.css') }}">
@@ -42,10 +42,10 @@
         
         .page-header {
             color:rgb(39, 39, 39);
-            font-weight: 600;
-            padding: 15px;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 10px;
             border-radius: 5px;
-            margin-bottom: 20px;
         }
         .search-filter-row {
             display: flex;
