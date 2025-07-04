@@ -364,6 +364,76 @@ class CareWorkerPerformanceController extends Controller
             ];
         }
 
+        // Service Request Performance data
+        $serviceRequestPerformance = [];
+        $serviceRequestData = DB::table('cose_users as cu')
+            ->leftJoin('visitations as v', function($join) use ($startDate, $endDate) {
+                $join->on('cu.id', '=', 'v.care_worker_id')
+                    ->whereBetween('v.visitation_date', [$startDate, $endDate])
+                    ->where('v.visit_type', '=', 'service_request')
+                    ->where('v.status', '=', 'completed'); // Only include completed service requests
+            })
+            ->where('cu.role_id', 3) // Care workers only
+            ->when($selectedMunicipalityId, function($query) use ($selectedMunicipalityId) {
+                return $query->where('cu.assigned_municipality_id', $selectedMunicipalityId);
+            })
+            ->select(
+                'cu.id as care_worker_id',
+                'cu.first_name',
+                'cu.last_name',
+                DB::raw('COUNT(v.visitation_id) as service_requests_completed'),
+                DB::raw('SUM(CASE WHEN v.start_time IS NOT NULL AND v.end_time IS NOT NULL 
+                            THEN EXTRACT(EPOCH FROM (v.end_time - v.start_time))/3600 
+                            ELSE 0 END) as total_hours')
+            )
+            ->groupBy('cu.id', 'cu.first_name', 'cu.last_name')
+            ->orderBy('cu.last_name')
+            ->get();
+
+        // Calculate total service request hours across all care workers
+        $totalServiceRequestHours = DB::table('visitations as v')
+            ->whereBetween('v.visitation_date', [$startDate, $endDate])
+            ->where('v.visit_type', '=', 'service_request')
+            ->where('v.status', '=', 'completed')
+            ->when($selectedMunicipalityId, function($query) use ($selectedMunicipalityId) {
+                return $query->join('cose_users as cu', 'v.care_worker_id', '=', 'cu.id')
+                            ->where('cu.assigned_municipality_id', $selectedMunicipalityId);
+            })
+            ->when($selectedCareWorkerId, function($query) use ($selectedCareWorkerId) {
+                return $query->where('v.care_worker_id', $selectedCareWorkerId);
+            })
+            ->select(
+                DB::raw('SUM(CASE WHEN v.start_time IS NOT NULL AND v.end_time IS NOT NULL 
+                        THEN EXTRACT(EPOCH FROM (v.end_time - v.start_time))/3600 
+                        ELSE 0 END) as total_hours')
+            )
+            ->first();
+
+        // Format service request hours into hours and minutes
+        $totalServiceRequestHoursValue = $totalServiceRequestHours->total_hours ?? 0;
+        $serviceRequestHours = floor($totalServiceRequestHoursValue);
+        $serviceRequestMinutes = round(($totalServiceRequestHoursValue - $serviceRequestHours) * 60);
+        $formattedServiceRequestTime = [
+            'hours' => $serviceRequestHours,
+            'minutes' => $serviceRequestMinutes
+        ];
+
+        foreach ($serviceRequestData as $worker) {
+            $hours = floor($worker->total_hours);
+            $minutes = round(($worker->total_hours - $hours) * 60);
+            
+            $serviceRequestPerformance[] = [
+                'id' => $worker->care_worker_id,
+                'name' => $worker->last_name . ', ' . $worker->first_name,
+                'hours_worked' => [
+                    'hours' => $hours,
+                    'minutes' => $minutes,
+                    'formatted_time' => $hours . ' hrs ' . ($minutes > 0 ? $minutes . ' min' : '')
+                ],
+                'requests_completed' => $worker->service_requests_completed ?: 0,
+                'is_selected' => $selectedCareWorkerId == $worker->care_worker_id
+            ];
+        }
 
         
         return view('admin.careWorkerPerformance', compact(
@@ -388,7 +458,9 @@ class CareWorkerPerformanceController extends Controller
             'categorySummaries',
             'categoryTimeBreakdown',
             'clientCareBreakdown',
-            'careWorkerPerformance'
+            'careWorkerPerformance',
+            'serviceRequestPerformance',
+            'formattedServiceRequestTime'
         ));
 
     }

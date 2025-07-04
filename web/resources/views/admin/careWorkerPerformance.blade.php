@@ -163,7 +163,7 @@
                     <!-- Summary Cards -->
                     <div class="row mb-2">
                         <!-- Total Care Hours -->
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-3 mb-2">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Total Care Hours', 'Kabuuang Oras ng Pangangalaga')}}</h5>
@@ -176,7 +176,7 @@
                         </div>
                         
                         <!-- Active Care Workers -->
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-3 mb-2">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Active Care Workers', 'Aktibong mga Tagapag-alaga')}}</h5>
@@ -187,11 +187,24 @@
                         </div>
                         
                         <!-- Total Care Services -->
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-3 mb-2">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Total Care Services', 'Kabuuang Serbisyo sa Pangangalaga')}}</h5>
                                     <h2 class="text-warning" style="font-size: clamp(1.5rem, 2vw, 2rem);">{{ $totalInterventions }}</h2>
+                                    <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">{{ $dateRangeLabel }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Service Request Hours -->
+                        <div class="col-md-3 mb-2">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Total Service Request Hours', 'Kabuuang Oras ng Kahilingan sa Serbisyo')}}</h5>
+                                    <h2 class="text-danger" style="font-size: clamp(1.5rem, 2vw, 2rem);">
+                                        {{ $formattedServiceRequestTime['hours'] }} hrs {{ $formattedServiceRequestTime['minutes'] > 0 ? $formattedServiceRequestTime['minutes'] . ' min' : '' }}
+                                    </h2>
                                     <p class="text-muted" style="font-size: clamp(0.8rem, 1vw, 1rem);">{{ $dateRangeLabel }}</p>
                                 </div>
                             </div>
@@ -350,6 +363,54 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Service Request Performance Table -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0" style="font-size: clamp(1rem, 1.5vw, 1.2rem);">{{ T::translate('Service Request Performance', 'Performance ng mga Service Request')}}</h5>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-secondary service-sort-btn" data-sort="asc">
+                                                <i class="bi bi-sort-alpha-down"></i> A-Z
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary service-sort-btn" data-sort="desc">
+                                                <i class="bi bi-sort-alpha-up"></i> Z-A
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>{{ T::translate('Care Worker', 'Care Worker')}}</th>
+                                                    <th class="text-center">{{ T::translate('Service Requests Completed', 'Nakumpletong Service Requests')}}</th>
+                                                    <th class="text-center">{{ T::translate('Hours Worked (Service Requests)', 'Oras na Nagtrabaho (Service Requests)')}}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="serviceRequestTableBody">
+                                                @forelse($serviceRequestPerformance as $worker)
+                                                    <tr @if($worker['is_selected']) class="table-primary" @endif>
+                                                        <td>{{ $worker['name'] }}</td>
+                                                        <td class="text-center">{{ $worker['requests_completed'] }}</td>
+                                                        <td class="text-center">{{ $worker['hours_worked']['formatted_time'] }}</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center">{{ T::translate('No service request data available', 'Walang available na datos para sa mga service request.')}}</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -920,6 +981,51 @@
             form.method = 'POST'; // Explicitly set method again to ensure POST is used
             form.submit();
         });
+
+        // Sorting functions for the service request table
+        const serviceSortButtons = document.querySelectorAll('.service-sort-btn');
+        if (serviceSortButtons) {
+            serviceSortButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const sortDirection = this.getAttribute('data-sort');
+                    sortServiceTable(sortDirection);
+                });
+            });
+        }
+
+        function sortServiceTable(direction) {
+            const tableBody = document.getElementById('serviceRequestTableBody');
+            if (!tableBody) return; // Safety check
+            
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            if (rows.length <= 1) return; // Don't sort if only one or zero rows
+            
+            // Sort the rows
+            rows.sort((a, b) => {
+                // Skip empty rows or rows with less than 1 cell
+                if (!a.cells[0] || !b.cells[0]) return 0;
+                
+                const nameA = a.cells[0].textContent.trim().toLowerCase();
+                const nameB = b.cells[0].textContent.trim().toLowerCase();
+                
+                if (direction === 'asc') {
+                    return nameA.localeCompare(nameB);
+                } else {
+                    return nameB.localeCompare(nameA);
+                }
+            });
+            
+            // Remove existing rows
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+            
+            // Append sorted rows
+            rows.forEach(row => tableBody.appendChild(row));
+        }
+
+        // Sort service request table alphabetically (A-Z) by default on page load
+        sortServiceTable('asc');
 
         </script>
 </body>
