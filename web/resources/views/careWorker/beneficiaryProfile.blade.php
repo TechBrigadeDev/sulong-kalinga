@@ -32,13 +32,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             @endif
-            
-            <!-- Information Alert -->
-            <div class="alert alert-info alert-dismissible fade show">
-                <i class="bi bi-info-circle me-2"></i>
-                {{ T::translate('You can view and edit beneficiary details, but only administrators and care managers can change a beneficiary\'s status.', 'Maaari mong tingnan at i-edit ang mga detalye ng benepisyaryo, ngunit ang mga administrator at care manager lamang ang maaaring magbago ng status ng isang benepisyaryo.') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
 
             <div class="filter-section">
                 <div class="filter-row">
@@ -76,22 +69,13 @@
                     <div>
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-center" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-sm-inline">{{ T::translate('Export', 'I-export') }}</span>
+                                <i class="bi bi-download me-1 me-sm-2"></i> <span class="d-none d-sm-inline">{{ T::translate('Export', 'I-export') }}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                 <li><a class="dropdown-item" href="#" id="exportPdf"><i class="bi bi-file-earmark-pdf me-2"></i>PDF</a></li>
                                 <li><a class="dropdown-item" href="#" id="exportExcel"><i class="bi bi-file-earmark-excel me-2"></i>Excel</a></li>
                             </ul>
                         </div>
-                    </div>
-
-                    <!-- Add Beneficiary Button -->
-                    <div>
-                        <a href="{{ route('care-worker.beneficiaries.create') }}" class="w-100">
-                            <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" id="addButton">
-                                <i class="bi bi-plus-lg me-1 me-sm-2"></i> <span class="d-sm-inline">{{ T::translate('Add Beneficiary', 'Magdagdag ng Benepisyaryo') }}</span>
-                            </button>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -119,7 +103,7 @@
                             <th scope="col">{{ T::translate('Barangay', 'Barangay') }}</th>
                             <th scope="col">{{ T::translate('Municipality', 'Munisipalidad') }}</th>
                             <th scope="col">{{ T::translate('Status', 'Status') }}</th>
-                            <th scope="col">{{ T::translate('Actions', 'Mga Aksyon') }}</th>
+                            <th scope="col">{{ T::translate('Action', 'Aksyon') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -148,9 +132,6 @@
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </form>
-                                        <a href="{{ route('care-worker.beneficiaries.edit', $beneficiary->beneficiary_id) }}" class="btn btn-link" title="{{ T::translate('Edit', 'I-edit') }}">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
                                     </div>
                                 </td>
                             </tr>
